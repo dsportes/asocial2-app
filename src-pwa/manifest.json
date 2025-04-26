@@ -1,0 +1,18 @@
+{
+  "name": "asocial 2",
+  "short_name": "asocial 2",
+  "description": "Tests divers",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icons/pwa-192x192.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
