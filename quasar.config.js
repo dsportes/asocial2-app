@@ -63,6 +63,24 @@ export default defineConfig((ctx) => {
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
 
+      extendViteConf (viteConf, { isServer, isClient }) {
+        // We return an Object which will get deeply merged into
+        // the config, instead of directly tampering with viteConf
+        return {
+          base: './',
+          build: {
+            // assetsInlineLimit: 0,
+            chunkSizeWarningLimit: 3000
+          }
+        }
+        // equivalent of following vite.config.js/vite.config.ts:
+        // export default defineConfig({
+        //   build: {
+        //     chunkSizeWarningLimit: 750
+        //   }
+        // })
+      },
+
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
           // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
