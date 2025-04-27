@@ -16,6 +16,7 @@ mv $depl/.git $temp
 cd $base
 yarn quasar build -m pwa
 sed -i s"/href=\"\//href=\".\//g" $dist/index.html
+sed -i s"/content=\"\//content=\".\//g" $dist/index.html
 
 rm -rf $depl/*
 cp -r $dist/* $depl

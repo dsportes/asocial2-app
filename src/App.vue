@@ -8,22 +8,24 @@
   </q-toolbar>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+
+// import { ref } from 'vue';
+// @ts-ignore
 import { useQuasar } from 'quasar'
-const $q = useQuasar()
-import { useConfigStore } from './stores/config-store.js'
-const config = useConfigStore()
-
-// import { useI18n } from 'vue-i18n'
-// const $t = useI18n().t
-
+import { useConfigStore } from './stores/config-store'
+// @ts-ignore
+import { useI18n } from 'vue-i18n'
 import BoutonLangue from './components/BoutonLangue.vue'
 
-const plus1 = () => {
+const $q = useQuasar()
+const config = useConfigStore()
+config.$t = useI18n().t // Pour rendre accessible $t dans le code
+
+function plus1 () : void {
   config.dataSt.cpt++
 }
-const moins1 = () => {
+function moins1 () : void {
   config.dataSt.cpt--
 }
 </script>

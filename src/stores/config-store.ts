@@ -1,29 +1,40 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
+// @ts-ignore
+import { ref, computed } from 'vue';
+// @ts-ignore
+import { defineStore, acceptHMRUpdate } from 'pinia';
 
-import { useDataStore } from '../stores/data-store.js'
-
+// @ts-ignore
+import { useDataStore } from '../stores/data-store.ts'
 
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues
   const localeMap = new Map()
   const localeOptions = ref()
-  const setLocaleOptions = (opts) => {
+  const setLocaleOptions = (opts: Array<object>) => {
     localeOptions.value = opts
     localeMap.clear()
+    // @ts-ignore
     opts.forEach(l => { localeMap.set(l.value, l) })
   }
   setLocaleOptions([{ value: 'en-EN', label: 'English',  flag: '🇬🇧' }])
 
   const locale = ref(localeOptions.value[0].value)
-  const setLocale = (loc) => { locale.value = loc}
+  const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
   // Gestion des stores
   const dataSt = computed(() => useDataStore())
+  const $t = ref()
 
   return {
+    $t,
     locale, localeOptions, setLocaleOptions, optionLocale, setLocale,
     dataSt
   }
-})
+});
+
+// @ts-ignore
+if (import.meta.hot) {
+  // @ts-ignore
+  import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot));
+}

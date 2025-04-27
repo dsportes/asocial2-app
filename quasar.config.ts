@@ -1,14 +1,17 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
+// @ts-ignore
 import { defineConfig } from '#q-app/wrappers'
+// @ts-ignore
 import { fileURLToPath } from 'node:url'
+// @ts-ignore
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
-    supportTS: false,
+    supportTS: true,
 
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -62,6 +65,24 @@ export default defineConfig((ctx) => {
 
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
+
+      extendViteConf (viteConf, { isServer, isClient }) {
+        // We return an Object which will get deeply merged into
+        // the config, instead of directly tampering with viteConf
+        return {
+          base: './',
+          build: {
+            // assetsInlineLimit: 0,
+            chunkSizeWarningLimit: 3000
+          }
+        }
+        // equivalent of following vite.config.js/vite.config.ts:
+        // export default defineConfig({
+        //   build: {
+        //     chunkSizeWarningLimit: 750
+        //   }
+        // })
+      },
 
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
