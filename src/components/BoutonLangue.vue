@@ -1,3 +1,24 @@
+<script setup lang="ts">
+// @ts-ignore
+import { computed } from 'vue'
+// @ts-ignore
+import { useI18n } from 'vue-i18n'
+import { useConfigStore, localeOption } from '../stores/config-store'
+
+const i18n = useI18n()
+const config = useConfigStore()
+
+// const x = config.$t('langue') // test d'accès à $t
+
+const loc = computed<localeOption>(() => config.optionLocale)
+
+const choix = (lg: string) : void => {
+  i18n.locale.value = lg
+  config.setLocale(lg)
+}
+
+</script>
+
 <template>
   <span class="flag cursor-pointer">{{ loc.flag }}
     <q-menu dense transition-show="flip-up" transition-hide="flip-down">
@@ -10,27 +31,6 @@
     <q-tooltip class="ttip">{{$t('langue')}}</q-tooltip>
   </span>
 </template>
-
-<script setup lang="ts">
-// @ts-ignore
-import { computed } from 'vue'
-// @ts-ignore
-import { useI18n } from 'vue-i18n'
-import { useConfigStore } from '../stores/config-store'
-
-const i18n = useI18n()
-const config:any = useConfigStore()
-
-// const x = config.$t('langue') // test d'accès à $t
-
-const loc = computed(() => config.optionLocale)
-
-function choix (lg: string) : void {
-  i18n.locale.value = lg
-  config.setLocale(lg)
-}
-
-</script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';

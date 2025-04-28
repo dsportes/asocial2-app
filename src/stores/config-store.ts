@@ -1,24 +1,27 @@
 // @ts-ignore
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 // @ts-ignore
-import { defineStore, acceptHMRUpdate } from 'pinia';
+import type { Ref } from 'vue'
+// @ts-ignore
+import { defineStore, acceptHMRUpdate } from 'pinia'
 
 // @ts-ignore
 import { useDataStore } from '../stores/data-store.ts'
 
+export interface localeOption { value: string, label: string, flag: string }
+
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues
-  const localeMap = new Map()
-  const localeOptions = ref()
-  const setLocaleOptions = (opts: Array<object>) => {
-    localeOptions.value = opts
+  const defaultLocaleOption: localeOption = { value: 'en-EN', label: 'English',  flag: '🇬🇧' }
+  const localeMap = new Map().set('en-EN', defaultLocaleOption)
+  const localeOptions: Ref<localeOption[]> = ref([defaultLocaleOption])
+  const resetLocaleOptions = (opts: localeOption[]) => {
     localeMap.clear()
-    // @ts-ignore
+    localeOptions.value = opts
     opts.forEach(l => { localeMap.set(l.value, l) })
   }
-  setLocaleOptions([{ value: 'en-EN', label: 'English',  flag: '🇬🇧' }])
 
-  const locale = ref(localeOptions.value[0].value)
+  const locale: Ref<string> = ref(localeOptions.value[0].value)
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
@@ -28,7 +31,7 @@ export const useConfigStore = defineStore('config', () => {
 
   return {
     $t,
-    locale, localeOptions, setLocaleOptions, optionLocale, setLocale,
+    locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
     dataSt
   }
 });
