@@ -14,8 +14,6 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
 // @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
-// @ts-ignore
-import { process } from '@types/node'
 
 self.skipWaiting()
 clientsClaim()
@@ -23,6 +21,7 @@ const mf = self.__WB_MANIFEST
 console.log('Dans SW')
 console.log('WB_MANIFEST >>>>>>>')
 mf.forEach(x => {
+  // @ts-ignore
   console.log('WB_MANIFEST: ' + x.url)
 })
 console.log('WB_MANIFEST <<<<<<<')

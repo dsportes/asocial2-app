@@ -16,6 +16,7 @@ import { useQuasar } from 'quasar'
 import { useConfigStore } from './stores/config-store'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
+// @ts-ignore
 import BoutonLangue from './components/BoutonLangue.vue'
 
 const $q = useQuasar()
