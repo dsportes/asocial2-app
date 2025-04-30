@@ -4,5 +4,6 @@
 export default {
   langue: 'Language',
 
-  titre: 'Very simple test - counter: {0}'
+  titre: 'Very simple test - counter: {0}',
+  echo: 'text to be echoed'
 }
