@@ -7,13 +7,15 @@
     <bouton-langue class="q-mr-sm" style="position:relative;top:2px;"/>
     <q-btn icon="contrast" round @click="$q.dark.toggle()"/>
   </q-toolbar>
-  <div class="row q-pa-sm justify-center">
+  <div class="row q-pa-sm justify-center q-gutter-md">
     <q-input filled v-model="echo" :label="$t('echo')">
       <template v-slot:append>
-        <q-btn icon="search" :disable="echo === ''" @click="op"/>
+        <q-btn icon="check" :disable="echo === ''" @click="op"/>
       </template>
     </q-input>
+    <q-btn icon="send" :label="$t('ping')" @click="ping"/>
   </div>
+  <div class="font-mono q-pa-sm">{{res}}</div>
 </div>
 </template>
 
@@ -48,6 +50,16 @@ async function op () {
   try {
     const res = await post('EchoTexte', { text: echo.value })
     echo.value = res['echo']
+  } catch (e) {
+    echo.value = 'err:' + (e.code || '???')
+  }
+}
+
+const res = ref('')
+async function ping () {
+  try {
+    const x = await post('PingDB', { })
+    res.value = x['status'] + ' - ' + x['msg']
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }

@@ -5,5 +5,6 @@ export default {
   langue: 'Langue',
 
   titre: 'Test très simple - compteur: {0}',
-  echo: 'texte à recevoir en écho'
+  echo: 'texte à recevoir en écho',
+  ping: 'PING DB'
 }
