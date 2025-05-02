@@ -6,5 +6,8 @@ export default {
 
   titre: 'Very simple test - counter: {0}',
   echo: 'text to be echoed',
-  ping: 'PING DB'
+  ping: 'PING DB',
+  moins1: 'Minus 1',
+  plus1: 'Plus 1',
+  pickfile: 'Pick a local file'
 }

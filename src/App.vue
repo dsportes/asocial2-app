@@ -2,26 +2,36 @@
 <div>
   <q-toolbar class="bg-primary text-white q-ma-none">
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
-    <q-btn icon="add" label="Plus 1" @click="plus1"/>
-    <q-btn class="q-mr-sm" icon="remove" label="Moins 1" @click="moins1"/>
+    <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
+    <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
     <bouton-langue class="q-mr-sm" style="position:relative;top:2px;"/>
     <q-btn icon="contrast" round @click="$q.dark.toggle()"/>
   </q-toolbar>
   <div class="row q-pa-sm justify-center q-gutter-md">
     <q-input filled v-model="echo" :label="$t('echo')">
       <template v-slot:append>
-        <q-btn icon="check" :disable="echo === ''" @click="op"/>
+        <q-btn icon="check" :disable="echo === ''" @click="opEcho"/>
       </template>
     </q-input>
-    <q-btn icon="send" :label="$t('ping')" @click="ping"/>
+    <q-btn icon="send" :label="$t('ping')" @click="opPing"/>
   </div>
-  <div class="font-mono q-pa-sm">{{res}}</div>
+  <div class="font-mono q-pa-sm">{{echo}}</div>
+  <q-file class="full-width q-ma-xs" filled v-model="fileList"
+    :label="$t('pickfile')" max-file-size="50000000" max-file="1">
+    <template v-slot:append>
+      <q-btn icon="upload" class="q-mr-SM" :disable="fd.size === 0" @click="uploadFile"/>
+      <q-btn icon="download" :disable="fd.size === 0" @click="downloadFile"/>
+    </template>
+  </q-file>
 </div>
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
+import ext2mime from 'ext2mime'
 
-import { ref } from 'vue';
+// @ts-ignore
+import { ref, computed, watch } from 'vue';
 // @ts-ignore
 import { useQuasar } from 'quasar'
 // @ts-ignore
@@ -31,7 +41,7 @@ import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import BoutonLangue from './components/BoutonLangue.vue'
 
-import { post } from './app/util'
+import { postOp, getData, putData, readFile, fileDescr } from './app/util'
 
 const $q = useQuasar()
 const config = useConfigStore()
@@ -46,17 +56,57 @@ function moins1 () : void {
 
 const echo = ref('')
 
-async function op () {
+const fileList = ref(null)
+const defFd: fileDescr = { name: 'titi.jpg', size: 0 }
+const fd = ref(defFd)
+const fileType = computed(() => !fd.value ? '' :
+  ( fd.value.type ? fd.value.type : ext2mime(fd.value.name || '')))
+
+watch(fileList, async (file: any) : Promise<void> => {
+  if (file) fd.value = await readFile(file, true)
+})
+
+async function opEcho () : Promise<void>  {
   try {
-    const res = await post('EchoTexte', { text: echo.value })
+    const res = await postOp('EchoTexte', { text: echo.value })
     echo.value = res['echo']
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
 }
 
+async function getPutUrl (put: boolean) : Promise<void> {
+  try {
+    const res = await postOp('GetPutUrl', { id1: 'toto', id2: 'tata', id3: fd.value.name, put: put })
+    echo.value = res['url']
+  } catch (e) {
+    echo.value = ''
+  }
+}
+
+async function downloadFile () : Promise<void> {
+  await getPutUrl(false)
+  if (echo.value) try {
+    const data = await getData(echo.value)
+    const blob = new Blob([data], { type: fileType.value })
+    const url = URL.createObjectURL(blob)
+    setTimeout(() => { window.open(url, '_blank') }, 100)
+  } catch (e) {
+    echo.value = 'err:' + (e.code || '???')
+  }
+}
+
+async function uploadFile () : Promise<void> {
+  await getPutUrl(false)
+  if (echo.value) try {
+    await putData(echo.value, fd.value.u8)
+  } catch (e) {
+    echo.value = 'err:' + (e.code || '???')
+  }
+}
+
 const res = ref('')
-async function ping () {
+async function opPing () : Promise<void> {
   try {
     const x = await post('PingDB', { })
     res.value = x['status'] + ' - ' + x['msg']

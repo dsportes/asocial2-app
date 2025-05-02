@@ -25,25 +25,28 @@ export class AppExc {
     this.org = arg.org || ''
     this.args = arg.args || []
     this.stack = arg.stack || ''
-    this.message = 'AppExc: ' + this.code + ':' + this.label + 
+    this.message = 'AppExc: ' + this.code + ':' + this.label +
       (this.opName ? '@' + this.opName + ':': '') + JSON.stringify(this.args || [])
   }
 }
 
-export async function post (opName: string, args: any) {
+const urlsrv = 'http://localhost:8080/'
+
+export async function postOp (opName: string, args: any) : Promise<any>{
   const body = new Uint8Array(encode(args || {}))
   try {
-    const response = await fetch('http://localhost:8080/op/' + opName, {
+    const response = await fetch(urlsrv + 'op/' + opName, {
       method: 'POST',
-      headers:{'Content-Type': 'application/octet-stream' },    
+      headers:{'Content-Type': 'application/octet-stream' },
       body
     })
     if (response.status === 200) {
       // @ts-ignore
       const buf = await response.bytes()
-      return decode(buf)
-    } 
-    if (response.status === 400 || response.status === 401) { 
+      const x = decode(buf)
+      return x
+    }
+    if (response.status === 400 || response.status === 401) {
       // @ts-ignore
       const err = await response.bytes()
       const exc = decode(err)
@@ -53,4 +56,70 @@ export async function post (opName: string, args: any) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     throw e
   }
+}
+
+export async function getData (url: string) : Promise<Uint8Array> {
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers:{'Content-Type': 'application/octet-stream' }
+    })
+    if (response.status === 200) {
+      // @ts-ignore
+      const buf = await response.bytes()
+      return buf
+    }
+    throw new AppExc({ code: response.status, label: response.statusText, args: ['getData'] })
+  } catch (e) {
+    console.log(e.message + (e.stack ? '\n' + e.stack : ''))
+    throw e
+  }
+}
+
+export async function putData (url: string, data: Uint8Array) : Promise<void> {
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers:{'Content-Type': 'application/octet-stream' },
+      body: data
+    })
+    if (response.status !== 200)
+      throw new AppExc({ code: response.status, label: response.statusText, args: ['putData'] })
+  } catch (e) {
+    console.log(e.message + (e.stack ? '\n' + e.stack : ''))
+    throw e
+  }
+}
+
+export interface fileDescr {
+  size?: number
+  name: string
+  type?: string
+  b64?: string
+  u8?: Uint8Array
+}
+
+export async function readFile (file: any, bin: boolean) : Promise<fileDescr> {
+  return new Promise((resolve, reject) => {
+    const fd: fileDescr = { size: file.size, name: file.name }
+    if (!file.type) {
+      fd.type = file.name.endsWith('.md') || file.name.endsWith('.markdown') ? 'text/markdown' : 'application/octet-stream'
+    } else fd.type = file.type
+
+    const reader = new FileReader()
+    reader.addEventListener('load', (event: any) => {
+      if (!bin) {
+        fd.b64 = event.target.result
+      } else {
+        fd.u8 = new Uint8Array(event.target.result)
+      }
+      resolve(fd)
+    })
+    reader.onerror = (error) => reject(error)
+    if (!bin) {
+      reader.readAsDataURL(file)
+    } else {
+      reader.readAsArrayBuffer(file)
+    }
+  })
 }
