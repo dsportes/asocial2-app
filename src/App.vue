@@ -108,7 +108,7 @@ async function uploadFile () : Promise<void> {
 const res = ref('')
 async function opPing () : Promise<void> {
   try {
-    const x = await post('PingDB', { })
+    const x = await postOp('PingDB', { })
     res.value = x['status'] + ' - ' + x['msg']
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
