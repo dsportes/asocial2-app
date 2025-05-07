@@ -1,6 +1,9 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
+// @ts-ignore
+import { useConfigStore } from '../stores/config-store'
+
 export class AppExc {
   /* code
   1000: erreurs fonctionnelles FW
@@ -30,12 +33,17 @@ export class AppExc {
   }
 }
 
-const urlsrv = 'http://localhost:8080/'
+let config: null
+
+export function init (_config) {
+  config = _config
+}
 
 export async function postOp (opName: string, args: any) : Promise<any>{
   const body = new Uint8Array(encode(args || {}))
   try {
-    const response = await fetch(urlsrv + 'op/' + opName, {
+    // @ts-ignore
+    const response = await fetch(config.urlsrv + 'op/' + opName, {
       method: 'POST',
       headers:{'Content-Type': 'application/octet-stream' },
       body

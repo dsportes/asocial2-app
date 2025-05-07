@@ -41,10 +41,11 @@ import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import BoutonLangue from './components/BoutonLangue.vue'
 
-import { postOp, getData, putData, readFile, fileDescr } from './app/util'
+import { init, postOp, getData, putData, readFile, fileDescr } from './app/util'
 
 const $q = useQuasar()
 const config = useConfigStore()
+init(config)
 config.$t = useI18n().t // Pour rendre accessible $t dans le code
 
 function plus1 () : void {

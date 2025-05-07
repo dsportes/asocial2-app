@@ -29,10 +29,14 @@ export const useConfigStore = defineStore('config', () => {
   const dataSt = computed(() => useDataStore())
   const $t = ref()
 
+  const urlsrv = 'http://localhost:8080/'
+  // const urlsrv = 'https://europe-west1-asocial-test1.cloudfunctions.net/asocialGCF/'
+
   return {
     $t,
     locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
-    dataSt
+    dataSt,
+    urlsrv
   }
 });
 
