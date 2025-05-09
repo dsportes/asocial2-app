@@ -30,30 +30,54 @@ export class AppExc {
   }
 }
 
+export let config: any = null
+export let $t: any
+export let $q: any
+
+export function setConfig (_config: any, _$t, _$q) {
+  config = _config
+  $t = _$t
+  $q = _$q
+}
+
 const urlsrv = 'http://localhost:8080/'
 
+const controller = new AbortController()
+
+export function abortPostOp() {
+  // console.log('Abort ' + config.opEncours);
+  controller.abort()
+}
+
 export async function postOp (opName: string, args: any) : Promise<any>{
+  config.opStart(opName)
   const body = new Uint8Array(encode(args || {}))
   try {
+    const signal = controller.signal
     const response = await fetch(urlsrv + 'op/' + opName, {
       method: 'POST',
       headers:{'Content-Type': 'application/octet-stream' },
+      signal: signal,
       body
     })
     if (response.status === 200) {
       // @ts-ignore
       const buf = await response.bytes()
       const x = decode(buf)
+      config.opEnd()
       return x
     }
     if (response.status === 400 || response.status === 401) {
       // @ts-ignore
       const err = await response.bytes()
       const exc = decode(err)
+      config.opEnd()
       throw new AppExc(exc)
     }
   } catch (e) {
-    console.log(e.message + (e.stack ? '\n' + e.stack : ''))
+    if (e.name !== 'AbortError')
+      console.log(e.message + (e.stack ? '\n' + e.stack : ''))
+    config.opEnd()
     throw e
   }
 }

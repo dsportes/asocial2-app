@@ -6,7 +6,10 @@
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
     <bouton-langue class="q-mr-sm" style="position:relative;top:2px;"/>
     <q-btn icon="contrast" round @click="$q.dark.toggle()"/>
+
+    <q-icon class="wifi bg-white" v-if="config.opSignal" size="30px" color="purple-7" name="wifi"/>
   </q-toolbar>
+
   <div class="row q-pa-sm justify-center q-gutter-md">
     <q-input filled v-model="echo" :label="$t('echo')">
       <template v-slot:append>
@@ -23,6 +26,12 @@
       <q-btn icon="download" :disable="fd.size === 0" @click="downloadFile"/>
     </template>
   </q-file>
+
+  <!-- Affiche l'opération en cours et propose son interruption -->
+  <q-dialog v-model="config.opDialog" maximized persistent backdrop-filter="sepia(90%)">
+    <stop-operation/>
+  </q-dialog>
+
 </div>
 </template>
 
@@ -31,7 +40,7 @@
 import ext2mime from 'ext2mime'
 
 // @ts-ignore
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue'
 // @ts-ignore
 import { useQuasar } from 'quasar'
 // @ts-ignore
@@ -40,12 +49,15 @@ import { useConfigStore } from './stores/config-store'
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import BoutonLangue from './components/BoutonLangue.vue'
+// @ts-ignore
+import StopOperation from './components/StopOperation.vue'
 
-import { postOp, getData, putData, readFile, fileDescr } from './app/util'
+import { setConfig, postOp, abortPostOp, getData, putData, readFile, fileDescr } from './app/util'
 
 const $q = useQuasar()
-const config = useConfigStore()
-config.$t = useI18n().t // Pour rendre accessible $t dans le code
+const config: any = useConfigStore()
+const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
+setConfig(config, $t, $q)
 
 function plus1 () : void {
   config.dataSt.cpt++
@@ -108,7 +120,7 @@ async function uploadFile () : Promise<void> {
 const res = ref('')
 async function opPing () : Promise<void> {
   try {
-    const x = await post('PingDB', { })
+    const x = await postOp('PingDB', { })
     res.value = x['status'] + ' - ' + x['msg']
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
@@ -119,4 +131,5 @@ async function opPing () : Promise<void> {
 
 <style lang="scss" scoped>
 @import './css/app.scss';
+.wifi { position: fixed; right: 3px; top: 3px; border-radius: 15px; }
 </style>
