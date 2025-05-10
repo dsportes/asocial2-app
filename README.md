@@ -1,3 +1,6 @@
+1.8 - Version fonctionnant avec un appel de GCF déployée sur asocial2
+(juste EchoTexte)
+
 Application "asocial-2 (tests divers)":
 
 Build
