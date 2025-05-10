@@ -40,7 +40,8 @@ export function setConfig (_config: any, _$t, _$q) {
   $q = _$q
 }
 
-const urlsrv = 'http://localhost:8080/'
+// const urlsrv = 'http://localhost:8080/'
+const urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
 
 const controller = new AbortController()
 
@@ -50,11 +51,12 @@ export function abortPostOp() {
 }
 
 export async function postOp (opName: string, args: any) : Promise<any>{
+  const u = urlsrv + (urlsrv.endsWith('/') ? '' : '/')
   config.opStart(opName)
   const body = new Uint8Array(encode(args || {}))
   try {
     const signal = controller.signal
-    const response = await fetch(urlsrv + 'op/' + opName, {
+    const response = await fetch(u + 'op/' + opName, {
       method: 'POST',
       headers:{'Content-Type': 'application/octet-stream' },
       signal: signal,
