@@ -27,6 +27,7 @@ mf.forEach(x => {
 console.log('WB_MANIFEST <<<<<<<')
 
 // Use with precache injection
+// @ts-ignore
 if (process.env.PROD) {
   console.log('precacheAndRoute')
   precacheAndRoute(mf)
@@ -37,11 +38,21 @@ cleanupOutdatedCaches()
 // Non-SSR fallbacks to index.html
 // Production SSR fallbacks to offline.html (except for dev)
 
+// @ts-ignore
 if (process.env.PROD) {
   registerRoute(
     new NavigationRoute(
+      // @ts-ignore
       createHandlerBoundToURL(process.env.PWA_FALLBACK_HTML),
+      // @ts-ignore
       { denylist: [new RegExp(process.env.PWA_SERVICE_WORKER_REGEX), /workbox-(.)*\.js$/] }
     )
   )
 }
+
+/* On peut appeler une fonction du SW depuis une app Web */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FROM_APP') {
+    console.log('Appel depuis app:' + JSON.stringify(event.data.payload))
+  }
+})

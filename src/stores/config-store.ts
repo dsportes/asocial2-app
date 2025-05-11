@@ -61,11 +61,40 @@ export const useConfigStore = defineStore('config', () => {
     opTimer2 = setTimeout(() => { opSignal.value = false }, 1000)
   }
 
+  let registration = null
+
+  function setRegistration(_registration) {
+    // await this.listenPerm()
+    registration = _registration
+    // if (this.permState === 'granted') await this.setSubscription()
+    // console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 200))
+    console.log('SW ready')
+  }
+
+  function callSW (payload) {
+    // while (!this.registration) await sleep(1000)
+    registration.active.postMessage({ type: 'FROM_APP', payload })
+  }
+
+  const focus = ref(false)
+
+  function getFocus () {
+    focus.value = true
+    callSW('Got focus')
+  }
+
+  function lostFocus () {
+    focus.value = false
+    callSW('Focus lost')
+  }
+
   return {
     $t,
     locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
     dataSt,
-    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd
+    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
+    setRegistration, callSW,
+    focus, getFocus, lostFocus
   }
 });
 

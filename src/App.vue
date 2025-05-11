@@ -1,6 +1,7 @@
 <template>
 <div>
   <q-toolbar class="bg-primary text-white q-ma-none">
+    <q-btn label="T1" :color="config.focus ? 'green' : 'red'" @click="t1"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -125,6 +126,22 @@ async function opPing () : Promise<void> {
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
+}
+
+const t1 = () => {
+  config.callSW("coucou")
+}
+
+onfocus = (event) => {
+  config.getFocus()
+}
+
+onblur = (event) => {
+  config.lostFocus()
+}
+
+onbeforeunload = (event) => {
+  config.callSW('App closing')
 }
 
 </script>

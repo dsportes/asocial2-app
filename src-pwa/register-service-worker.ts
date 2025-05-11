@@ -1,18 +1,22 @@
+// @ts-ignore
 import { register } from 'register-service-worker'
+import { useConfigStore } from '../src/stores/config-store'
 
 // The ready(), registered(), cached(), updatefound() and updated()
 // events passes a ServiceWorkerRegistration instance in their arguments.
 // ServiceWorkerRegistration: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
 
-register('./sw.js', {
+register('./totosw.js', {
   // The registrationOptions object will be passed as the second argument
   // to ServiceWorkerContainer.register()
   // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register#Parameter
 
   // registrationOptions: { scope: './' },
 
-  ready (/* registration */) {
+  ready (registration) {
     console.log('DS >> Service worker is active.')
+    const config = useConfigStore()
+    config.setRegistration(registration)
   },
 
   registered (/* registration */) {
