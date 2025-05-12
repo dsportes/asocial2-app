@@ -32,7 +32,7 @@
 
 .font-mono { font-family: 'Ubuntu Mono' }
 .font-def { font-family: 'Ubuntu Sans'; font-weight: 200 }
-.titre, .titre-xs, .titre-sm, .titre-md, .titre-lg, .titre-xl {
+.titre, .titre-xs, .titre-sm, .titre-md, .titre-lg, .titre-xl, .titre-xxl {
   font-family: "Comfortaa"
 }
 
@@ -41,4 +41,6 @@
 .fs-sm, .titre-sm { font-size:  0.8rem }
 .fs-md, .titre-md { font-size:  0.9rem }
 .fs-lg, .titre-lg { font-size:  1.1rem }
-.fs-xl { font-size:  1.3rem }
+.fs-xl, .titre-xl { font-size:  1.3rem }
+.fs-xxl, .titre-xxl { font-size:  2rem }
+

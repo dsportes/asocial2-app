@@ -6,6 +6,14 @@ import { useConfigStore } from '../src/stores/config-store'
 // events passes a ServiceWorkerRegistration instance in their arguments.
 // ServiceWorkerRegistration: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
 
+navigator.serviceWorker.onmessage = (message) => {
+  if (message.data) console.log(JSON.stringify(message.data))
+  if (message.data && message.data.type === 'STOP') {
+    const config = useConfigStore()
+    config.setSTOP()
+  }
+}
+
 register('./totosw.js', {
   // The registrationOptions object will be passed as the second argument
   // to ServiceWorkerContainer.register()

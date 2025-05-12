@@ -69,6 +69,7 @@ export const useConfigStore = defineStore('config', () => {
     // if (this.permState === 'granted') await this.setSubscription()
     // console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 200))
     console.log('SW ready')
+    registration.active.postMessage({ type: 'STARTING', payload : '' })
   }
 
   function callSW (payload) {
@@ -88,12 +89,19 @@ export const useConfigStore = defineStore('config', () => {
     callSW('Focus lost')
   }
 
+  const dialogSTOP = ref(false)
+
+  function setSTOP () {
+    console.log('Config setSTOP')
+    dialogSTOP.value = true
+  }
+
   return {
     $t,
     locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
     dataSt,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    setRegistration, callSW,
+    setRegistration, callSW, setSTOP, dialogSTOP,
     focus, getFocus, lostFocus
   }
 });

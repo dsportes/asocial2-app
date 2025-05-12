@@ -33,6 +33,10 @@
     <stop-operation/>
   </q-dialog>
 
+  <div class="stop row justify-center q-pa-xl" v-if="config.dialogSTOP">
+    <div class="titre-xxl">Fermer la fenêtre</div>
+  </div>
+
 </div>
 </template>
 
@@ -54,6 +58,8 @@ import BoutonLangue from './components/BoutonLangue.vue'
 import StopOperation from './components/StopOperation.vue'
 
 import { setConfig, postOp, abortPostOp, getData, putData, readFile, fileDescr } from './app/util'
+
+console.log('Open App.vue')
 
 const $q = useQuasar()
 const config: any = useConfigStore()
@@ -132,6 +138,7 @@ const t1 = () => {
   config.callSW("coucou")
 }
 
+/*
 onfocus = (event) => {
   config.getFocus()
 }
@@ -143,10 +150,13 @@ onblur = (event) => {
 onbeforeunload = (event) => {
   config.callSW('App closing')
 }
+*/
 
 </script>
 
 <style lang="scss" scoped>
 @import './css/app.scss';
 .wifi { position: fixed; right: 3px; top: 3px; border-radius: 15px; }
+.stop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: white; color: black; z-index: 1000}
 </style>

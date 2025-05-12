@@ -55,4 +55,17 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'FROM_APP') {
     console.log('Appel depuis app:' + JSON.stringify(event.data.payload))
   }
+  if (event.data && event.data.type === 'STARTING') {
+    console.log('STARTING (dans SW)')
+    event.waitUntil(
+      clients
+        .matchAll()
+        .then((clientList) => {
+          if (clientList.length) {
+            event.source.postMessage({ type: 'STOP' })
+          }
+        })
+    )
+  }
 })
+
