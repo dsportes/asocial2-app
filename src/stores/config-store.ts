@@ -90,9 +90,11 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   const dialogSTOP = ref(false)
+  const dialogIDX = ref('')
 
-  function setSTOP () {
-    console.log('Config setSTOP')
+  function setSTOP (idx) {
+    console.log('Config setSTOP ', idx.id)
+    dialogIDX.value = idx
     dialogSTOP.value = true
   }
 
@@ -101,7 +103,7 @@ export const useConfigStore = defineStore('config', () => {
     locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
     dataSt,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    setRegistration, callSW, setSTOP, dialogSTOP,
+    setRegistration, callSW, setSTOP, dialogSTOP, dialogIDX,
     focus, getFocus, lostFocus
   }
 });

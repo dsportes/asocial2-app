@@ -61,8 +61,15 @@ self.addEventListener('message', (event) => {
       clients
         .matchAll()
         .then((clientList) => {
-          if (clientList.length) {
-            event.source.postMessage({ type: 'STOP' })
+          const myId = event.source.id
+          let n = 0
+          let idx
+          for(const client of clientList) {
+            if (client.id !== myId) { n++; idx = client.id }
+          }
+          console.log(n + ' autres clients ouverts')
+          if (idx) {
+            event.source.postMessage({ type: 'STOP', idx: idx })
           }
         })
     )

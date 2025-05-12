@@ -10,7 +10,7 @@ navigator.serviceWorker.onmessage = (message) => {
   if (message.data) console.log(JSON.stringify(message.data))
   if (message.data && message.data.type === 'STOP') {
     const config = useConfigStore()
-    config.setSTOP()
+    config.setSTOP(message.data.idx)
   }
 }
 

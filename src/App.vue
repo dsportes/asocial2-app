@@ -34,7 +34,8 @@
   </q-dialog>
 
   <div class="stop row justify-center q-pa-xl" v-if="config.dialogSTOP">
-    <div class="titre-xxl">Fermer la fenêtre</div>
+    <div class="titre-xxl cursor-pointer" @click="fermer">Fermer la fenêtre</div>
+    <div>{{config.dialogIDX}}</div>
   </div>
 
 </div>
@@ -72,6 +73,27 @@ function plus1 () : void {
 function moins1 () : void {
   config.dataSt.cpt--
 }
+
+const fermer = () => {
+  const idx = config.dialogIDX
+  console.log('Fermer - focus >>> ', idx)
+  /*
+  const w = browser.windows.get(idx)
+  w.then((x) => {
+    console.log('x?')
+  })
+  */
+  window.location.href = 'https://asocialapps.github.io/frdocs/about.html'
+}
+
+/* ça ne marche pas !
+const toStop = computed(() => config.dialogSTOP)
+
+watch(toStop, () => {
+  fermer()
+})
+*/
+
 
 const echo = ref('')
 
