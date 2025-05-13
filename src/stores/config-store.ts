@@ -8,6 +8,13 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { useDataStore } from '../stores/data-store.ts'
 
+export const byeHtml =  `<html><head><meta charset="utf-8"></head>
+<body style="font-size:24px;">
+<div>Duplicate application launch in this browser not allowed.</div> 
+<div>Le lancement de l'application plus d'une fois dans ce browser n'est pas autorisé.</div>
+<a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
+</body></html>`
+
 export interface localeOption { value: string, label: string, flag: string }
 
 export const useConfigStore = defineStore('config', () => {
@@ -68,34 +75,29 @@ export const useConfigStore = defineStore('config', () => {
     registration = _registration
     // if (this.permState === 'granted') await this.setSubscription()
     // console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 200))
-    console.log('SW ready')
-    registration.active.postMessage({ type: 'STARTING', payload : '' })
   }
 
-  function callSW (payload) {
+  function callSW (data: any) {
     // while (!this.registration) await sleep(1000)
-    registration.active.postMessage({ type: 'FROM_APP', payload })
+    if (registration) registration.active.postMessage(data)
   }
 
-  const focus = ref(false)
+  const focus = ref(true)
 
   function getFocus () {
     focus.value = true
-    callSW('Got focus')
+    callSW({ type: 'FOCUS', arg: true})
   }
 
   function lostFocus () {
     focus.value = false
-    callSW('Focus lost')
+    callSW({ type: 'FOCUS', arg: false})
   }
 
-  const dialogSTOP = ref(false)
-  const dialogIDX = ref('')
+  const swMessage = ref(null)
 
-  function setSTOP (idx) {
-    console.log('Config setSTOP ', idx.id)
-    dialogIDX.value = idx
-    dialogSTOP.value = true
+  function onSwMessage (m: any) {
+    swMessage.value = m
   }
 
   return {
@@ -103,7 +105,7 @@ export const useConfigStore = defineStore('config', () => {
     locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
     dataSt,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    setRegistration, callSW, setSTOP, dialogSTOP, dialogIDX,
+    setRegistration, callSW, swMessage, onSwMessage,
     focus, getFocus, lostFocus
   }
 });

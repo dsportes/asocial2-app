@@ -1,17 +1,29 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
-import { useConfigStore } from '../src/stores/config-store'
+import { useConfigStore, byeHtml } from '../src/stores/config-store'
+import { urlFromText } from '../src/app/util'
 
 // The ready(), registered(), cached(), updatefound() and updated()
 // events passes a ServiceWorkerRegistration instance in their arguments.
 // ServiceWorkerRegistration: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
 
 navigator.serviceWorker.onmessage = (message) => {
-  if (message.data) console.log(JSON.stringify(message.data))
   if (message.data && message.data.type === 'STOP') {
-    const config = useConfigStore()
-    config.setSTOP(message.data.idx)
+    window.location.href = urlFromText(byeHtml)
   }
+  useConfigStore().onSwMessage(message.data)
+}
+
+onfocus = (event) => {
+  useConfigStore().getFocus()
+}
+
+onblur = (event) => {
+  useConfigStore().lostFocus()
+}
+
+onbeforeunload = (event) => {
+  useConfigStore().callSW('App closing')
 }
 
 register('./totosw.js', {
@@ -22,9 +34,9 @@ register('./totosw.js', {
   // registrationOptions: { scope: './' },
 
   ready (registration) {
-    console.log('DS >> Service worker is active.')
-    const config = useConfigStore()
-    config.setRegistration(registration)
+    console.log('Service worker is active')
+    useConfigStore().setRegistration(registration)
+    registration.active.postMessage({ type: 'STARTING' })
   },
 
   registered (/* registration */) {

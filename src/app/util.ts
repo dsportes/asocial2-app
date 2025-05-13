@@ -40,6 +40,8 @@ export function setConfig (_config: any, _$t, _$q) {
   $q = _$q
 }
 
+const encoder = new TextEncoder()
+
 // const urlsrv = 'http://localhost:8080/'
 const urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
 
@@ -148,4 +150,23 @@ export async function readFile (file: any, bin: boolean) : Promise<fileDescr> {
       reader.readAsArrayBuffer(file)
     }
   })
+}
+
+export function urlFromText (text: string, type?: string) : string {
+  const blob = new Blob([encoder.encode(text)], { type: type || 'text/html' })
+  return URL.createObjectURL(blob)
+}
+
+export function reloadPage () {
+  const hr = window.location.href
+  const t =  `<html><head><meta charset="utf-8">
+<script>
+setTimeout(() => { window.location.href = "${hr}" }, 2000)
+</script>
+<style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
+</head><body>
+<div>Application reloading, please wait 2s.</div>
+<div>Rechargement de l'application, merci d'attendre 2s.</div>
+</body></html>`
+  window.location.href = urlFromText(t)
 }

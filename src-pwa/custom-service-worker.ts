@@ -18,13 +18,12 @@ import { registerRoute, NavigationRoute } from 'workbox-routing'
 self.skipWaiting()
 clientsClaim()
 const mf = self.__WB_MANIFEST
-console.log('Dans SW')
-console.log('WB_MANIFEST >>>>>>>')
+console.log('SW: WB_MANIFEST >>>>>>>')
 mf.forEach(x => {
   // @ts-ignore
   console.log('WB_MANIFEST: ' + x.url)
 })
-console.log('WB_MANIFEST <<<<<<<')
+console.log('SW: WB_MANIFEST <<<<<<<')
 
 // Use with precache injection
 // @ts-ignore
@@ -53,25 +52,22 @@ if (process.env.PROD) {
 /* On peut appeler une fonction du SW depuis une app Web */
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'FROM_APP') {
-    console.log('Appel depuis app:' + JSON.stringify(event.data.payload))
+    console.log('SW: call from App:' + JSON.stringify(event.data))
   }
-  if (event.data && event.data.type === 'STARTING') {
-    console.log('STARTING (dans SW)')
+  else if (event.data && event.data.type === 'FOCUS') {
+    // @ts-ignore
+    console.log('SW: focus: ' + (event.data.arg ? 'ON' : 'OFF'))
+  }
+  else if (event.data && event.data.type === 'STARTING') {
+    console.log('SW: Duplicate App detection')
+    // @ts-ignore
     event.waitUntil(
-      clients
-        .matchAll()
-        .then((clientList) => {
-          const myId = event.source.id
-          let n = 0
-          let idx
-          for(const client of clientList) {
-            if (client.id !== myId) { n++; idx = client.id }
-          }
-          console.log(n + ' autres clients ouverts')
-          if (idx) {
-            event.source.postMessage({ type: 'STOP', idx: idx })
-          }
-        })
+      // @ts-ignore
+      clients.matchAll().then((clientList) => {
+        for(const client of clientList)
+          // @ts-ignore
+          if (client.id !== event.source.id) event.source.postMessage({ type: 'STOP' })
+      })
     )
   }
 })

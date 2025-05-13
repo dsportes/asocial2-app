@@ -33,11 +33,6 @@
     <stop-operation/>
   </q-dialog>
 
-  <div class="stop row justify-center q-pa-xl" v-if="config.dialogSTOP">
-    <div class="titre-xxl cursor-pointer" @click="fermer">Fermer la fenêtre</div>
-    <div>{{config.dialogIDX}}</div>
-  </div>
-
 </div>
 </template>
 
@@ -58,9 +53,7 @@ import BoutonLangue from './components/BoutonLangue.vue'
 // @ts-ignore
 import StopOperation from './components/StopOperation.vue'
 
-import { setConfig, postOp, abortPostOp, getData, putData, readFile, fileDescr } from './app/util'
-
-console.log('Open App.vue')
+import { setConfig, postOp, getData, putData, readFile, fileDescr, reloadPage } from './app/util'
 
 const $q = useQuasar()
 const config: any = useConfigStore()
@@ -73,27 +66,6 @@ function plus1 () : void {
 function moins1 () : void {
   config.dataSt.cpt--
 }
-
-const fermer = () => {
-  const idx = config.dialogIDX
-  console.log('Fermer - focus >>> ', idx)
-  /*
-  const w = browser.windows.get(idx)
-  w.then((x) => {
-    console.log('x?')
-  })
-  */
-  window.location.href = 'https://asocialapps.github.io/frdocs/about.html'
-}
-
-/* ça ne marche pas !
-const toStop = computed(() => config.dialogSTOP)
-
-watch(toStop, () => {
-  fermer()
-})
-*/
-
 
 const echo = ref('')
 
@@ -157,28 +129,13 @@ async function opPing () : Promise<void> {
 }
 
 const t1 = () => {
-  config.callSW("coucou")
+  reloadPage()
+  // config.callSW({ type: 'FROM_APP', arg: 'coucou'})
 }
-
-/*
-onfocus = (event) => {
-  config.getFocus()
-}
-
-onblur = (event) => {
-  config.lostFocus()
-}
-
-onbeforeunload = (event) => {
-  config.callSW('App closing')
-}
-*/
 
 </script>
 
 <style lang="scss" scoped>
 @import './css/app.scss';
 .wifi { position: fixed; right: 3px; top: 3px; border-radius: 15px; }
-.stop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background-color: white; color: black; z-index: 1000}
 </style>
