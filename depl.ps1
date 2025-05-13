@@ -8,7 +8,6 @@ $dist = "D:/git/asocial2-app/dist/pwa"
 Copy-Item -Force -Verbose -Path $dt2/README.md -Destination $pub/
 Set-Location -Path $base
 yarn quasar build -m pwa
-./edit.ps1
 
 Set-Location -Path $depl
 Get-ChildItem -exclude .git | Remove-Item -recurse -force

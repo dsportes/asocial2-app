@@ -6,7 +6,6 @@ Application "asocial-2 (tests divers)":
 Build
 
         yarn quasar build -m pwa
-        ./edit.sh
 
 Run
 

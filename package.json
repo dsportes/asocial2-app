@@ -14,7 +14,6 @@
     "@msgpack/msgpack": "^3.1.1",
     "@quasar/extras": "^1.16.4",
     "@types/node": "^22.15.3",
-    "axios": "^1.2.1",
     "ext2mime": "^2.0.1",
     "pinia": "^3.0.1",
     "quasar": "^2.16.0",

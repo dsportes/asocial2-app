@@ -8,6 +8,16 @@ import { fileURLToPath } from 'node:url'
 // @ts-ignore
 import { VitePWA } from 'vite-plugin-pwa'
 
+const htmlPlugin = () => {
+  return {
+    name: 'html-transform',
+    transformIndexHtml(html) {
+      return html.replaceAll('href="/', 'href="./').replaceAll('content="/', 'content="./')
+    },
+  }
+}
+
+// @ts-ignore
 export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
@@ -19,7 +29,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['i18n', 'axios', 'appconfig' ],
+    boot: ['i18n', 'appconfig' ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -103,10 +113,11 @@ export default defineConfig((ctx) => {
           strategies: 'injectManifest',
           injectManifest: { maximumFileSizeToCacheInBytes: 3000000 },
           srcDir: 'src-pwa',
-          filename: 'custom-service-worker.ts',
+          filename: 'totosw.ts',
           injectRegister: null,
           manifest: false // pris dans src-pwa
-        }]
+        }],
+        [htmlPlugin, {}]
       ]
     },
 
