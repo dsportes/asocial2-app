@@ -8,8 +8,10 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { useDataStore } from '../stores/data-store.ts'
 
-export const byeHtml =  `<html><head><meta charset="utf-8"></head>
-<body style="font-size:24px;">
+export const byeHtml =  `<html><head><meta charset="utf-8">
+<style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
+</head>
+<body>
 <div>Duplicate application launch in this browser not allowed.</div> 
 <div>Le lancement de l'application plus d'une fois dans ce browser n'est pas autorisé.</div>
 <a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
