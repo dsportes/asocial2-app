@@ -44,3 +44,36 @@
 .fs-xl, .titre-xl { font-size:  1.3rem }
 .fs-xxl, .titre-xxl { font-size:  2rem }
 
+.height-2 { height: 2rem }
+.height-3 { height: 3rem }
+.height-4 { height: 4rem }
+.height-5 { height: 5rem }
+.height-8 { height: 8rem }
+
+.dark, .dark0 { background-color: $dark  !important; color: white !important }
+.clear, .clear0 { background-color: $clear !important; color: black !important }
+.dark1 { background-color: $dark1 !important; color: white !important }
+.clear1 { background-color: $clear1 !important; color: black !important }
+
+.bsclear { box-shadow: 5px -5px 5px 0px rgba(0,0,0,0.75) !important }
+.bsdark { box-shadow: 5px -5px 5px 0px rgba(89,89,89,0.75) !important }
+
+.pwsm { width: 30rem; max-width: 95vw }
+.pwmd { width: 40rem; max-width: 95vw }
+.pwlg { width: 50rem; max-width: 95vw }
+.pwxl { width: 90rem; max-width: 95vw }
+
+.tbp { background: var(--q-primary) !important; color: var(--q-tbptc) !important }
+.tbs { background: var(--q-secondary) !important; color: var(--q-tbstc) !important }
+.tbw { background: var(--q-warning) !important; color: white !important }
+.text-btwtc { color: var(--q-btwtc) !important }
+.bg-btwtc { background: var(--q-btwtc) !important }
+.text-btwbg { color: var(--q-btwbg) !important }
+.bg-btwbg { background: var(--q-btwbg) !important }
+.text-btntc { color: var(--q-btntc) !important }
+.bg-btntc { background: var(--q-btntc) !important }
+.text-btnbg { color: var(--q-btnbg) !important }
+.bg-btnbg { background: var(--q-btnbg) !important }
+
+/* surcharges de quasar */
+.q-toolbar { padding: 0 !important; min-height: 0 !important }

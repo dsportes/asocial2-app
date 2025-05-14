@@ -17,20 +17,14 @@ export const byeHtml =  `<html><head><meta charset="utf-8">
 <a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
 </body></html>`
 
-export interface localeOption { value: string, label: string, flag: string }
+import { localeOption, K } from '../app/constants'
 
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues
-  const defaultLocaleOption: localeOption = { value: 'en-EN', label: 'English',  flag: '🇬🇧' }
-  const localeMap = new Map().set('en-EN', defaultLocaleOption)
-  const localeOptions: Ref<localeOption[]> = ref([defaultLocaleOption])
-  const resetLocaleOptions = (opts: localeOption[]) => {
-    localeMap.clear()
-    localeOptions.value = opts
-    opts.forEach(l => { localeMap.set(l.value, l) })
-  }
-
-  const locale: Ref<string> = ref(localeOptions.value[0].value)
+  const localeMap = new Map()
+  K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
+  
+  const locale: Ref<string> = ref(K.localeOptions[0].value)
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
@@ -48,9 +42,9 @@ export const useConfigStore = defineStore('config', () => {
   function opCount () {
     if (opTimer) clearTimeout(opTimer)
     opTimer = setTimeout(() => {
-      opSpinner.value++
+      opSpinner.value += 2
       opCount()
-    }, 1000)
+    }, 2000)
   }
 
   function opStart (op) {
@@ -79,6 +73,13 @@ export const useConfigStore = defineStore('config', () => {
     // console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 200))
   }
 
+  const newVersionReady = ref(false)
+  const newVersionDialog = ref(false)
+  function setAppUpdated () {
+    newVersionReady.value = true
+    newVersionDialog.value = true
+  }
+
   function callSW (data: any) {
     // while (!this.registration) await sleep(1000)
     if (registration) registration.active.postMessage(data)
@@ -102,15 +103,20 @@ export const useConfigStore = defineStore('config', () => {
     swMessage.value = m
   }
 
+  function getHelpPages () : Set<string> {
+    return new Set()
+  }
+
   return {
     $t,
-    locale, localeOptions, resetLocaleOptions, optionLocale, setLocale,
+    locale, optionLocale, setLocale,
     dataSt,
+    getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    setRegistration, callSW, swMessage, onSwMessage,
+    setRegistration, callSW, swMessage, onSwMessage, setAppUpdated, newVersionDialog, newVersionReady,
     focus, getFocus, lostFocus
   }
-});
+})
 
 // @ts-ignore
 if (import.meta.hot) {

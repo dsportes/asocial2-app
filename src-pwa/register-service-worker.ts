@@ -53,6 +53,7 @@ register('./totosw.js', {
 
   updated (/* registration */) {
     // console.log('New content is available; please refresh.')
+    useConfigStore().setAppUpdated()
   },
 
   offline () {

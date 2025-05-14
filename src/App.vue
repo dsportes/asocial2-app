@@ -5,20 +5,11 @@
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
-    <bouton-langue class="q-mr-sm" style="position:relative;top:2px;"/>
-    <q-btn icon="contrast" round @click="$q.dark.toggle()"/>
 
-    <q-icon class="wifi bg-white" v-if="config.opSignal" size="30px" color="purple-7" name="wifi"/>
+    <settings-button class="q-mr-sm"/>
+    <help-button page="x1"/>
   </q-toolbar>
 
-  <div class="row q-pa-sm justify-center q-gutter-md">
-    <q-input filled v-model="echo" :label="$t('echo')">
-      <template v-slot:append>
-        <q-btn icon="check" :disable="echo === ''" @click="opEcho"/>
-      </template>
-    </q-input>
-    <q-btn icon="send" :label="$t('ping')" @click="opPing"/>
-  </div>
   <div class="font-mono q-pa-sm">{{echo}}</div>
   <q-file class="full-width q-ma-xs" filled v-model="fileList"
     :label="$t('pickfile')" max-file-size="50000000" max-file="1">
@@ -27,11 +18,6 @@
       <q-btn icon="download" :disable="fd.size === 0" @click="downloadFile"/>
     </template>
   </q-file>
-
-  <!-- Affiche l'opération en cours et propose son interruption -->
-  <q-dialog v-model="config.opDialog" maximized persistent backdrop-filter="sepia(90%)">
-    <stop-operation/>
-  </q-dialog>
 
 </div>
 </template>
@@ -49,9 +35,8 @@ import { useConfigStore } from './stores/config-store'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
-import BoutonLangue from './components/BoutonLangue.vue'
-// @ts-ignore
-import StopOperation from './components/StopOperation.vue'
+import SettingsButton from './components/SettingsButton.vue'
+import HelpButton from './components/HelpButton.vue'
 
 import { setConfig, postOp, getData, putData, readFile, fileDescr, reloadPage } from './app/util'
 
@@ -78,15 +63,6 @@ const fileType = computed(() => !fd.value ? '' :
 watch(fileList, async (file: any) : Promise<void> => {
   if (file) fd.value = await readFile(file, true)
 })
-
-async function opEcho () : Promise<void>  {
-  try {
-    const res = await postOp('EchoTexte', { text: echo.value })
-    echo.value = res['echo']
-  } catch (e) {
-    echo.value = 'err:' + (e.code || '???')
-  }
-}
 
 async function getPutUrl (put: boolean) : Promise<void> {
   try {
@@ -118,18 +94,9 @@ async function uploadFile () : Promise<void> {
   }
 }
 
-const res = ref('')
-async function opPing () : Promise<void> {
-  try {
-    const x = await postOp('PingDB', { })
-    res.value = x['status'] + ' - ' + x['msg']
-  } catch (e) {
-    echo.value = 'err:' + (e.code || '???')
-  }
-}
-
 const t1 = () => {
-  reloadPage()
+  config.setAppUpdated()
+  // reloadPage()
   // config.callSW({ type: 'FROM_APP', arg: 'coucou'})
 }
 

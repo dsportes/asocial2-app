@@ -1,5 +1,6 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+import { K } from './constants'
 
 export class AppExc {
   /* code
@@ -30,6 +31,10 @@ export class AppExc {
   }
 }
 
+const encoder = new TextEncoder()
+
+let controller: AbortController
+
 export let config: any = null
 export let $t: any
 export let $q: any
@@ -40,30 +45,35 @@ export function setConfig (_config: any, _$t, _$q) {
   $q = _$q
 }
 
-const encoder = new TextEncoder()
+export function sty (sz?: string) {
+  if (!sz) return $q.dark.isActive ? 'dark ' : 'clear '
+  return ($q.dark.isActive ? 'dark bsfdark pw' : 'clear bsclear pw') + sz
+}
 
-// const urlsrv = 'http://localhost:8080/'
-const urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
-
-const controller = new AbortController()
+export function sleep (delai: number) {
+  if (delai <= 0) return
+  return new Promise((resolve: Function) => { setTimeout(() => resolve(), delai) })
+}
 
 export function abortPostOp() {
   // console.log('Abort ' + config.opEncours);
-  controller.abort()
+  if (controller) controller.abort()
 }
 
 export async function postOp (opName: string, args: any) : Promise<any>{
-  const u = urlsrv + (urlsrv.endsWith('/') ? '' : '/')
   config.opStart(opName)
+  const u = K.urlsrv + (K.urlsrv.endsWith('/') ? '' : '/')
+  args.APIVERSION = K.APIVERSION
   const body = new Uint8Array(encode(args || {}))
+  controller = new AbortController()
   try {
-    const signal = controller.signal
     const response = await fetch(u + 'op/' + opName, {
       method: 'POST',
       headers:{'Content-Type': 'application/octet-stream' },
-      signal: signal,
+      signal: controller.signal,
       body
     })
+    controller = null
     if (response.status === 200) {
       // @ts-ignore
       const buf = await response.bytes()
@@ -79,8 +89,9 @@ export async function postOp (opName: string, args: any) : Promise<any>{
       throw new AppExc(exc)
     }
   } catch (e) {
-    if (e.name !== 'AbortError')
-      console.log(e.message + (e.stack ? '\n' + e.stack : ''))
+    controller = null
+    // if (e.name !== 'AbortError')
+    console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     config.opEnd()
     throw e
   }
@@ -150,6 +161,22 @@ export async function readFile (file: any, bin: boolean) : Promise<fileDescr> {
       reader.readAsArrayBuffer(file)
     }
   })
+}
+
+export function openHelp (page: string) {
+  const ph = config.getHelpPages()
+  if (!ph.has(page)) {
+    $q.dialog({
+      // title: 'Alert',
+      message: $t('HLPaidebd', [page]),
+      ok: { label: $t('gotit'), flat:true, color: "primary" }
+    }).onOk(() => { }).onCancel(() => { }).onDismiss(() => { })
+  }
+  else {
+    // TODO
+    console.log('Ouverture page aide ', page)
+    return 
+  }
 }
 
 export function urlFromText (text: string, type?: string) : string {
