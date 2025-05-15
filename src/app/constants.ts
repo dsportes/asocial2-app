@@ -4,6 +4,17 @@ export class K {
   static BUILD = 'v2.1'
   static APIVERSION = 1
 
+  static vapidPublicKey = 'BEcZEGpf91huQEhcU7IfllzhoMVCRXXp4zX-ytGVzyjbhw9lJHr4wB5LzvCQkeHF2r6jOEy6kPo4VsIhO_0i5Qk'
+
+  static firebaseConfig = {
+    apiKey: "AIzaSyCj0MhJu2Q190ucs71PVv2XPH2SdnTfj1M",
+    authDomain: "asocial2.firebaseapp.com",
+    projectId: "asocial2",
+    storageBucket: "asocial2.firebasestorage.app",
+    messagingSenderId: "286456497845",
+    appId: "1:286456497845:web:7171b8915f42d3c087e0fc"
+  }
+
   static urlsrv = 'http://localhost:8080/'
   // static urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   
@@ -30,5 +41,14 @@ export class K {
     btwtc: ['#FFFFFF', '#FFFFFF'],
     mdtitre: ['#64B5F6', '#1565C0']
   }
+
+  static byeHtml =  `<html><head><meta charset="utf-8">
+<style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
+</head>
+<body>
+<div>Duplicate application launch in this browser not allowed.</div> 
+<div>Le lancement de l'application plus d'une fois dans ce browser n'est pas autorisé.</div>
+<a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
+</body></html>`
 
 }

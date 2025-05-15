@@ -113,7 +113,7 @@ export default defineConfig((ctx) => {
           strategies: 'injectManifest',
           injectManifest: { maximumFileSizeToCacheInBytes: 3000000 },
           srcDir: 'src-pwa',
-          filename: 'totosw.ts',
+          filename: 'firebase-messaging-sw.js',
           injectRegister: null,
           manifest: false // pris dans src-pwa
         }],
@@ -167,7 +167,8 @@ export default defineConfig((ctx) => {
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
-      swFilename: 'totosw.js',
+      // swFilename: 'totosw.ts',
+      swFilename: 'firebase-messaging-sw.js',
       // manifestFilename: 'manifest.json',
       // extendManifestJson (json) {},
       // useCredentialsForManifestTag: true,

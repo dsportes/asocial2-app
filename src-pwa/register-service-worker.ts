@@ -1,7 +1,10 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
-import { useConfigStore, byeHtml } from '../src/stores/config-store'
+import { useConfigStore } from '../src/stores/config-store'
 import { urlFromText } from '../src/app/util'
+import { K } from '../src/app/constants'
+import { initializeApp } from 'firebase/app'
+import { getMessaging } from 'firebase/messaging'
 
 // The ready(), registered(), cached(), updatefound() and updated()
 // events passes a ServiceWorkerRegistration instance in their arguments.
@@ -9,7 +12,7 @@ import { urlFromText } from '../src/app/util'
 
 navigator.serviceWorker.onmessage = (message) => {
   if (message.data && message.data.type === 'STOP') {
-    window.location.href = urlFromText(byeHtml)
+    window.location.href = urlFromText(K.byeHtml)
   }
   useConfigStore().onSwMessage(message.data)
 }
@@ -26,7 +29,10 @@ onbeforeunload = (event) => {
   useConfigStore().callSW('App closing')
 }
 
-register('./totosw.js', {
+export const app = initializeApp(K.firebaseConfig)
+export const messaging = getMessaging(app)
+
+register('./firebase-messaging-sw.js', {
   // The registrationOptions object will be passed as the second argument
   // to ServiceWorkerContainer.register()
   // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register#Parameter
@@ -37,6 +43,8 @@ register('./totosw.js', {
     console.log('Service worker is active')
     useConfigStore().setRegistration(registration)
     registration.active.postMessage({ type: 'STARTING' })
+    // @ts-ignore
+    messaging.useServiceworker(registration)
   },
 
   registered (/* registration */) {

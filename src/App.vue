@@ -6,6 +6,7 @@
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
 
+    <permission-button class="q-mr-sm"/>
     <settings-button class="q-mr-sm"/>
     <help-button page="x1"/>
   </q-toolbar>
@@ -27,23 +28,39 @@
 import ext2mime from 'ext2mime'
 
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 // @ts-ignore
 import { useQuasar } from 'quasar'
-// @ts-ignore
-import { useConfigStore } from './stores/config-store'
+
+import { useConfigStore} from './stores/config-store'
+import { initFCM } from './app/fcmutil'
+
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
-// @ts-ignore
+
 import SettingsButton from './components/SettingsButton.vue'
+import PermissionButton from './components/PermissionButton.vue'
 import HelpButton from './components/HelpButton.vue'
 
-import { setConfig, postOp, getData, putData, readFile, fileDescr, reloadPage } from './app/util'
+import { setConfig, postOp, getData, putData, readFile, fileDescr, sleep } from './app/util'
+
 
 const $q = useQuasar()
 const config: any = useConfigStore()
 const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
 setConfig(config, $t, $q)
+
+onMounted(async () => { 
+  let p
+  while (p !== 'granted') {
+    p = await config.listenPerm()
+    if (p !== 'granted') {
+      console.log('Waiting for granted')
+      await sleep(5000)
+    }
+  }
+  await initFCM()
+})
 
 function plus1 () : void {
   config.dataSt.cpt++
