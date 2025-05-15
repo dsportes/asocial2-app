@@ -49,6 +49,11 @@ export default {
   THbtwtc: 'btwtc: texte d\'un bouton warning',
   THmdtitre: 'mdtitre: texte des titres dans MD',
 
+  PEtit: 'Le navigateur bloque les "notifications',
+  PEinfo: 'L\'application ne peut pas fonctionner correctement si les notifications sont bloquées.',
+  PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
+  PEopt2: 'Demander au navigateur d\'autoriser les notifications',
+
   moins1: 'Moins 1',
   plus1: 'Plus 1',
   pickfile: 'Choisir un fichier local',

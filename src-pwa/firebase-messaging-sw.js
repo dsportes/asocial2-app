@@ -1,6 +1,5 @@
 // @ts-ignore
-declare const self: ServiceWorkerGlobalScope &
-  typeof globalThis & { skipWaiting: () => void };
+// declare const self: ServiceWorkerGlobalScope &  typeof globalThis & { skipWaiting: () => void };
 
 /*
  * This file (which will be your service worker)

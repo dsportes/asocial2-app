@@ -8,16 +8,9 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { useDataStore } from '../stores/data-store.ts'
 
-export const byeHtml =  `<html><head><meta charset="utf-8">
-<style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
-</head>
-<body>
-<div>Duplicate application launch in this browser not allowed.</div> 
-<div>Le lancement de l'application plus d'une fois dans ce browser n'est pas autorisé.</div>
-<a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
-</body></html>`
+import { K } from '../app/constants'
 
-import { localeOption, K } from '../app/constants'
+// import { sleep } from '../app/util'
 
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues
@@ -85,6 +78,35 @@ export const useConfigStore = defineStore('config', () => {
     if (registration) registration.active.postMessage(data)
   }
 
+  let notificationPerm = null
+  const permState = ref('') // granted denied prompt
+
+  /*
+  async function getPerm () {
+    if (!notificationPerm)
+      notificationPerm = await navigator.permissions.query({ name: 'notifications' })
+    const p = notificationPerm.state
+    if (p !== permState.value) permState.value = p
+  }
+  */
+
+  async function requestPermission () {
+    permState.value = await Notification.requestPermission()
+    console.log('permState : ', permState.value)
+  }
+
+  async function listenPerm () {
+    if (!notificationPerm)
+      notificationPerm = await navigator.permissions.query({ name: 'notifications' })
+    notificationPerm.onchange = async () => {
+      const p = notificationPerm.state
+      console.log("User decided to change his settings. New permission: " + p)
+      if (p !== permState.value) permState.value = p
+    }
+    await requestPermission()
+    return permState.value
+  }
+
   const focus = ref(true)
 
   function getFocus () {
@@ -114,6 +136,7 @@ export const useConfigStore = defineStore('config', () => {
     getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     setRegistration, callSW, swMessage, onSwMessage, setAppUpdated, newVersionDialog, newVersionReady,
+    listenPerm, requestPermission, permState,
     focus, getFocus, lostFocus
   }
 })
