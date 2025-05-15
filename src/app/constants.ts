@@ -6,15 +6,6 @@ export class K {
 
   static vapidPublicKey = 'BEcZEGpf91huQEhcU7IfllzhoMVCRXXp4zX-ytGVzyjbhw9lJHr4wB5LzvCQkeHF2r6jOEy6kPo4VsIhO_0i5Qk'
 
-  static firebaseConfig = {
-    apiKey: "AIzaSyCj0MhJu2Q190ucs71PVv2XPH2SdnTfj1M",
-    authDomain: "asocial2.firebaseapp.com",
-    projectId: "asocial2",
-    storageBucket: "asocial2.firebasestorage.app",
-    messagingSenderId: "286456497845",
-    appId: "1:286456497845:web:7171b8915f42d3c087e0fc"
-  }
-
   static urlsrv = 'http://localhost:8080/'
   // static urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   
