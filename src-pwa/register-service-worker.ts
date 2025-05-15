@@ -3,6 +3,7 @@ import { register } from 'register-service-worker'
 import { useConfigStore } from '../src/stores/config-store'
 import { urlFromText } from '../src/app/util'
 import { K } from '../src/app/constants'
+import { firebaseConfig } from '../src/app/firebaseConfig'
 import { initializeApp } from 'firebase/app'
 import { getMessaging } from 'firebase/messaging'
 
@@ -29,7 +30,7 @@ onbeforeunload = (event) => {
   useConfigStore().callSW('App closing')
 }
 
-export const app = initializeApp(K.firebaseConfig)
+export const app = initializeApp(firebaseConfig)
 export const messaging = getMessaging(app)
 
 register('./firebase-messaging-sw.js', {
