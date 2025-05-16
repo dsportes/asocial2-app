@@ -33,7 +33,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 
 import { useConfigStore} from './stores/config-store'
-import { initFCM } from './app/fcmutil'
+import { initFCM, token } from './app/fcmutil'
 
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
@@ -43,7 +43,6 @@ import PermissionButton from './components/PermissionButton.vue'
 import HelpButton from './components/HelpButton.vue'
 
 import { setConfig, postOp, getData, putData, readFile, fileDescr, sleep } from './app/util'
-
 
 const $q = useQuasar()
 const config: any = useConfigStore()
@@ -111,7 +110,12 @@ async function uploadFile () : Promise<void> {
   }
 }
 
-const t1 = () => {
+const t1 = async () => {
+  await postOp('TestMessage', { token: token.token})
+  console.log('Demande notif')
+}
+
+const t1b = () => {
   config.setAppUpdated()
   // reloadPage()
   // config.callSW({ type: 'FROM_APP', arg: 'coucou'})

@@ -1,28 +1,36 @@
-// Import the functions you need from the SDKs you need
-// @ts-ignore
-// import { initializeApp } from 'firebase/app'
-// @ts-ignore
+import { sha224 } from 'js-sha256'
+
 import { getToken } from 'firebase/messaging'
-// @ts-ignore
 import { messaging } from '../../src-pwa/register-service-worker'
 
 import { K } from './constants'
+import { postOp } from './util'
+
+export function shortHash (s: string) { return sha224(s).substring(0, 16) }
+
+export const token = {
+  token: null,
+  hash: ''
+}
 
 export async function initFCM () {
-
   try {
-    const token = await getToken(messaging, {vapidKey: K.vapidPublicKey})
-    if (token) {
-      console.log('token: ', token)
-      // Send the token to your server and update the UI if necessary
-      // ...
+    token.token = await getToken(messaging, {vapidKey: K.vapidPublicKey})
+    if (token.token) {
+      token.hash = shortHash(token.token)
+      console.log('token: [' + token.hash + '] - [' + token.token + ']')
+      await postOp('RegisterToken', { token: token.token })
     } else {
       // Show permission request UI
       console.log('No registration token available. Request permission to generate one.')
-      // ...
+      // TODO
     } 
   } catch (err) {
     console.log('An error occurred while retrieving token. ', err)
+    // TODO
   }
+}
 
+export function onPaylaod (payload) {
+  console.log(JSON.stringify(payload))
 }
