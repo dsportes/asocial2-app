@@ -1,6 +1,6 @@
 import { sha224 } from 'js-sha256'
 
-import { getToken } from 'firebase/messaging'
+import { getToken, onMessage } from 'firebase/messaging'
 import { messaging } from '../../src-pwa/register-service-worker'
 
 import { K } from './constants'
@@ -15,8 +15,11 @@ export const token = {
 
 export async function initFCM () {
   try {
-    token.token = await getToken(messaging, {vapidKey: K.vapidPublicKey})
+    // token.token = await getToken(messaging, {vapidKey: K.vapidPublicKey})
+
+    token.token = await getToken(messaging)
     if (token.token) {
+      onMessage(messaging, onPayload)
       token.hash = shortHash(token.token)
       console.log('token: [' + token.hash + '] - [' + token.token + ']')
       await postOp('RegisterToken', { token: token.token })
@@ -31,6 +34,15 @@ export async function initFCM () {
   }
 }
 
-export function onPaylaod (payload) {
+/*
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    onMessage(messaging, (payload) => {
+      console.log("Message received: ", payload);
+      resolve(payload);
+    });
+  });
+*/
+export function onPayload (payload) {
   console.log(JSON.stringify(payload))
 }

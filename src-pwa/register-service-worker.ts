@@ -2,7 +2,6 @@
 import { register } from 'register-service-worker'
 import { useConfigStore } from '../src/stores/config-store'
 import { urlFromText } from '../src/app/util'
-import { onPaylaod } from '../src/app/fcmutil'
 import { K } from '../src/app/constants'
 import { firebaseConfig } from '../src/app/firebaseConfig'
 import { initializeApp } from 'firebase/app'
@@ -33,12 +32,14 @@ onbeforeunload = (event) => {
 
 export const app = initializeApp(firebaseConfig)
 export const messaging = getMessaging(app)
+
+/*
 onMessage (messaging, (payload) => {
   console.log('Message received. ', payload);
   onPaylaod(payload)
   // ...
 })
-
+*/
 
 register('./firebase-messaging-sw.js', {
   // The registrationOptions object will be passed as the second argument

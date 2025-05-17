@@ -10,6 +10,11 @@ Build
 Run
 
         cd dist
-        npx http-server . -p 8086 --cors
-    
+        npx http-server . -p 8086 --cors -c-1 -S -C "../../asocial2-srv/cert/fullchain.pem" -K "../../asocial2-srv/cert/privkey.pem" -a test.sportes.fr
+
+
+        cd dist/pwa
+        npx http-server . -p 8086 --cors -c-1 -S -C "../../../asocial2-srv/cert/fullchain.pem" -K "../../../asocial2-srv/cert/privkey.pem" -a test.sportes.fr
+
 PUIS: localhost:8086/pwa
+

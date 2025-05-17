@@ -66,6 +66,27 @@ export const useConfigStore = defineStore('config', () => {
     // console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 200))
   }
 
+  /*
+  let subscription
+  let subJSON
+  async function subscribeWebPush () {
+    const pm = registration.pushManager
+    console.log('pushManager getSubscription')
+    try {
+      let subscription = await pm.getSubscription() // déjà faite
+      if (!subscription) subscription = await pm.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64ToU8(this.vapid_public_key)
+        })
+      this.subJSON = JSON.stringify(subscription)
+      console.log('subJSON: ' + this.subJSON.substring(0, 200))
+    } catch (e) {
+      console.log(e.toString())
+      this.subJSON = '??? Souscription non obtenue - ' + e.message
+    }
+  }
+  */
+
   const newVersionReady = ref(false)
   const newVersionDialog = ref(false)
   function setAppUpdated () {

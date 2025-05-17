@@ -72,3 +72,51 @@ self.addEventListener('message', (event) => {
   }
 })
 
+/*
+import { getMessaging } from "firebase/messaging/sw";
+import { onBackgroundMessage } from "firebase/messaging/sw";
+
+const messaging = getMessaging();
+onBackgroundMessage(messaging, (payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  // Customize notification here
+  const notificationTitle = 'Background Message Title';
+  const notificationOptions = {
+    body: 'Background Message body.',
+    icon: '/firebase-logo.png'
+  };
+
+  self.registration.showNotification(notificationTitle,
+    notificationOptions);
+});
+*/
+
+import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
+import { initializeApp } from "firebase/app"
+
+initializeApp({
+    apiKey: "AIzaSyCj0MhJu2Q190ucs71PVv2XPH2SdnTfj1M",
+    authDomain: "asocial2.firebaseapp.com",
+    projectId: "asocial2",
+    storageBucket: "asocial2.firebasestorage.app",
+    messagingSenderId: "286456497845",
+    appId: "1:286456497845:web:7171b8915f42d3c087e0fc"
+})
+
+// Retrieve an instance of Firebase Messaging so that it can handle background
+// messages.
+const messaging = getMessaging();
+
+onBackgroundMessage(messaging, (payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  // Customize notification here
+  const notificationTitle = 'Background Message Title';
+  const notificationOptions = {
+    body: 'Background Message body.',
+    icon: '/firebase-logo.png'
+  };
+// @ts-ignore
+  self.registration.showNotification(notificationTitle,
+    notificationOptions);
+})
+
