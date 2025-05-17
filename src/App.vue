@@ -1,7 +1,9 @@
 <template>
 <div>
   <q-toolbar class="bg-primary text-white q-ma-none">
-    <q-btn label="T1" :color="config.focus ? 'green' : 'red'" @click="t1"/>
+    <q-btn label="Focus" :color="config.focus ? 'green' : 'red'" size="sm"/>
+    <q-btn label="T1" @click="t1"/>
+    <q-btn label="T2" @click="t2"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -34,6 +36,7 @@ import { useQuasar } from 'quasar'
 
 import { useConfigStore} from './stores/config-store'
 import { initFCM, token } from './app/fcmutil'
+import { K } from './app/constants'
 
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
@@ -111,8 +114,26 @@ async function uploadFile () : Promise<void> {
 }
 
 const t1 = async () => {
-  await postOp('TestMessage', { token: token.token})
-  console.log('Demande notif')
+  const res = await postOp('TestMessage', { token: token.token})
+  console.log('Demande notif:' + JSON.stringify(res.message))
+}
+
+const t2 = async () => {
+  const args = {
+    token: token.token,
+    title: 'Hello world',
+    body: 'coucou'
+  }
+  const response = await fetch(K.urlsrv + 'send-notification', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(args)
+  })
+  const content = await response.json()
+  console.log(content)
 }
 
 const t1b = () => {

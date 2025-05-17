@@ -197,3 +197,15 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
 </body></html>`
   window.location.href = urlFromText(t)
 }
+
+/*
+export function b64ToU8 (s) {
+  const diff = s.length % 4
+  let x = s
+  if (diff) {
+    const pad = '===='.substring(0, 4 - diff)
+    x = s + pad
+  }
+  return toByteArray(x.replace(/-/g, '+').replace(/_/g, '/'))
+}
+*/
