@@ -15,6 +15,10 @@ import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from
 // @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 
+import { firebaseConfig } from '../src/app/firebaseConfig'
+
+import { b64ToObj } from '../src/app/util'
+
 self.skipWaiting()
 clientsClaim()
 const mf = self.__WB_MANIFEST
@@ -53,17 +57,20 @@ if (process.env.PROD) {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'FROM_APP') {
     console.log('SW: call from App:' + JSON.stringify(event.data))
-  }
-  else if (event.data && event.data.type === 'FOCUS') {
+  } else if (event.data && event.data.type === 'FOCUS') {
     // @ts-ignore
     console.log('SW: focus: ' + (event.data.arg ? 'ON' : 'OFF'))
-  }
-  else if (event.data && event.data.type === 'STARTING') {
+  } else if (event.data && event.data.type === 'CLOSING') {
+    console.log('SW: App closing')
+  } else if (event.data && event.data.type === 'SHOWNOTIF') {
+    const payload = b64ToObj(event.data.payload)
+    showNotif(payload, false)
+  } else if (event.data && event.data.type === 'STARTING') {
     console.log('SW: Duplicate App detection')
     // @ts-ignore
     event.waitUntil(
       // @ts-ignore
-      clients.matchAll().then((clientList) => {
+      clients.matchAll({ includeUncontrolled: true, type: 'all' }).then((clientList) => {
         for(const client of clientList)
           // @ts-ignore
           if (client.id !== event.source.id) event.source.postMessage({ type: 'STOP' })
@@ -72,51 +79,75 @@ self.addEventListener('message', (event) => {
   }
 })
 
-/*
-import { getMessaging } from "firebase/messaging/sw";
-import { onBackgroundMessage } from "firebase/messaging/sw";
-
-const messaging = getMessaging();
-onBackgroundMessage(messaging, (payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  // Customize notification here
-  const notificationTitle = 'Background Message Title';
-  const notificationOptions = {
-    body: 'Background Message body.',
-    icon: '/firebase-logo.png'
-  };
-
-  self.registration.showNotification(notificationTitle,
-    notificationOptions);
-});
-*/
-
 import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
 import { initializeApp } from "firebase/app"
 
-initializeApp({
-    apiKey: "AIzaSyCj0MhJu2Q190ucs71PVv2XPH2SdnTfj1M",
-    authDomain: "asocial2.firebaseapp.com",
-    projectId: "asocial2",
-    storageBucket: "asocial2.firebasestorage.app",
-    messagingSenderId: "286456497845",
-    appId: "1:286456497845:web:7171b8915f42d3c087e0fc"
-})
+initializeApp(firebaseConfig)
 
-// Retrieve an instance of Firebase Messaging so that it can handle background
-// messages.
+// Retrieve an instance of Firebase Messaging so that it can handle background messages.
 const messaging = getMessaging();
 
 onBackgroundMessage(messaging, (payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  // Customize notification here
-  const notificationTitle = 'Background Message Title';
-  const notificationOptions = {
-    body: 'Background Message body.',
-    icon: '/firebase-logo.png'
-  };
-// @ts-ignore
-  self.registration.showNotification(notificationTitle,
-    notificationOptions);
+  console.log('Received background message: ', self.location.origin)
+  showNotif(payload, true)
 })
 
+const notifsDone: string[] = []
+
+function showNotif (payload, bg: boolean) {
+  const msgid = payload.messageId
+  if (notifsDone.indexOf(msgid) !== -1) return
+  if (notifsDone.length > 20) notifsDone.length = 10
+  notifsDone.unshift(msgid)
+
+  console.log('Show notif explicite: ', msgid)
+  const options = {
+    body: (bg ? 'Reçu par onBackground: ' : 'Reçu par onMsg: ') + payload.notification.body,
+    data: { url: self.location.origin }
+  }
+  // @ts-ignore
+  return self.registration.showNotification(
+    payload.notification.title,
+    options
+  )
+}
+
+self.addEventListener('notificationclick', (event) => {
+    console.log('notificationclick')
+    // @ts-ignore
+    event.notification.close(); // CLosing the notification when clicked
+    // @ts-ignore
+    let urlToOpen = event?.notification?.data?.url 
+    if (!urlToOpen) return
+    if (!urlToOpen.endsWith('/')) urlToOpen += '/'
+    // Focus OR Open the URL in the default browser.
+    // @ts-ignore
+    event.waitUntil(
+      // @ts-ignore
+      clients.matchAll({ includeUncontrolled: true, type: 'window' })
+      // clients.matchAll({ includeUncontrolled: true, type: 'all' })
+      // clients.matchAll({ type: 'window' })
+      .then((windowClients) => {
+        console.log('notificationclick Clients: ' + windowClients.length)
+        // Check if there is already a window/tab open with the target URL
+        let found = false
+        for (const client of windowClients) {
+          if (client.url.startsWith(urlToOpen) && client.focus) {
+            if (!client.focused)
+              try { 
+                client.focus()
+                console.log('FOCUS set !') 
+              } catch (e) { 
+                console.log('Set Focus err: (' + client.url + ') ' + e.toString())
+              }
+            found = true
+          }
+        }
+        // If not, open a new window/tab with the target URL
+        // @ts-ignore
+        if (!found && clients.openWindow) 
+          // @ts-ignore
+          clients.openWindow(urlToOpen)
+      })
+    )
+  })
