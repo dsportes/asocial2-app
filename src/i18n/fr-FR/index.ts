@@ -15,6 +15,7 @@ export default {
   theme: 'Théme graphique',
   pings: 'Server "pings"',
   buildapi: 'Build: {0} - API: {1}',
+  closeApp: 'Fermer l\'application',
 
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',

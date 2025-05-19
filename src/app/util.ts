@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { fromByteArray, toByteArray } from './base64'
 import { K } from './constants'
+import { sha224 } from 'js-sha256'
 
 export class AppExc {
   /* code
@@ -199,6 +200,10 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
   window.location.href = urlFromText(t)
 }
 
+export function coolBye () {
+  window.location.href = urlFromText(K.coolbyeHtml)
+}
+
 export function objToB64 (obj: any, url?: boolean) : string {
   if (!obj) return ''
   const bin = new Uint8Array(encode(obj))
@@ -222,14 +227,4 @@ export function clone (obj: any) : any {
   return b64ToObj(objToB64(obj))
 }
 
-/*
-export function b64ToU8 (s) {
-  const diff = s.length % 4
-  let x = s
-  if (diff) {
-    const pad = '===='.substring(0, 4 - diff)
-    x = s + pad
-  }
-  return toByteArray(x.replace(/-/g, '+').replace(/_/g, '/'))
-}
-*/
+export function shortHash (s: string) { return sha224(s).substring(0, 16) }
