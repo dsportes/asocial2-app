@@ -1,11 +1,11 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
 import { useConfigStore } from '../src/stores/config-store'
-import { urlFromText } from '../src/app/util'
+import { urlFromText, objToB64, b64ToObj, clone } from '../src/app/util'
 import { K } from '../src/app/constants'
 import { firebaseConfig } from '../src/app/firebaseConfig'
 import { initializeApp } from 'firebase/app'
-import { getMessaging, onMessage } from 'firebase/messaging'
+import { getMessaging } from 'firebase/messaging'
 
 // The ready(), registered(), cached(), updatefound() and updated()
 // events passes a ServiceWorkerRegistration instance in their arguments.
@@ -18,35 +18,20 @@ navigator.serviceWorker.onmessage = (message) => {
   useConfigStore().onSwMessage(message.data)
 }
 
-onfocus = (event) => {
-  useConfigStore().getFocus()
-}
-
-onblur = (event) => {
-  useConfigStore().lostFocus()
-}
-
-onbeforeunload = (event) => {
-  useConfigStore().callSW('App closing')
-}
+/*
+onfocus = (event) => { useConfigStore().getFocus() }
+onblur = (event) => { useConfigStore().lostFocus() }
+onbeforeunload = (event) => { useConfigStore().closingApp() }
+*/
 
 export const app = initializeApp(firebaseConfig)
 export const messaging = getMessaging(app)
 
-/*
-onMessage (messaging, (payload) => {
-  console.log('Message received. ', payload);
-  onPaylaod(payload)
-  // ...
-})
-*/
-
 register('./firebase-messaging-sw.js', {
-  // The registrationOptions object will be passed as the second argument
-  // to ServiceWorkerContainer.register()
-  // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register#Parameter
-
-  // registrationOptions: { scope: './' },
+  /* messaging.useServiceworker(registration)
+  Permet de ne pas avoir un service-worker à la racine du domaine
+  et typiquement à un niveau supérieur: https://...domain.org:8080/monapp
+  */
 
   ready (registration) {
     console.log('Service worker is active')

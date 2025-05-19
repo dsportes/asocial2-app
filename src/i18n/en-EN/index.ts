@@ -24,6 +24,7 @@ export default {
 
   op_PingDB: 'PING database',
   op_EchoTexte: 'Echo of sent text',
+  op_TestMessage: 'Test de réception de push du serveur',
 
   HLPaidebd: 'Page "{0}" bientôt disponible',
 

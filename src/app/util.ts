@@ -1,5 +1,6 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+import { fromByteArray, toByteArray } from './base64'
 import { K } from './constants'
 
 export class AppExc {
@@ -196,6 +197,29 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
 <div>Rechargement de l'application, merci d'attendre 2s.</div>
 </body></html>`
   window.location.href = urlFromText(t)
+}
+
+export function objToB64 (obj: any, url?: boolean) : string {
+  if (!obj) return ''
+  const bin = new Uint8Array(encode(obj))
+  const s = fromByteArray(bin)
+  return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+export function b64ToObj (b64: string) : any {
+  if (!b64) return null
+  const diff = b64.length % 4
+  let x = b64
+  if (diff) {
+    const pad = '===='.substring(0, 4 - diff)
+    x = b64 + pad
+  }
+  const bin = toByteArray(x.replace(/-/g, '+').replace(/_/g, '/'))
+  return decode(bin)
+}
+
+export function clone (obj: any) : any {
+  return b64ToObj(objToB64(obj))
 }
 
 /*

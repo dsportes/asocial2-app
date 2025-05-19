@@ -3,8 +3,8 @@ import { sha224 } from 'js-sha256'
 import { getToken, onMessage } from 'firebase/messaging'
 import { messaging } from '../../src-pwa/register-service-worker'
 
-import { K } from './constants'
-import { postOp } from './util'
+// import { K } from './constants'
+import { postOp, config, objToB64 } from './util'
 
 export function shortHash (s: string) { return sha224(s).substring(0, 16) }
 
@@ -19,7 +19,7 @@ export async function initFCM () {
 
     token.token = await getToken(messaging)
     if (token.token) {
-      onMessage(messaging, onPayload)
+      onMessage(messaging, onmsg)
       token.hash = shortHash(token.token)
       console.log('token: [' + token.hash + '] - [' + token.token + ']')
       await postOp('RegisterToken', { token: token.token })
@@ -34,15 +34,17 @@ export async function initFCM () {
   }
 }
 
-/*
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    onMessage(messaging, (payload) => {
-      console.log("Message received: ", payload);
-      resolve(payload);
-    });
-  });
-*/
-export function onPayload (payload) {
-  console.log(JSON.stringify(payload))
+async function onmsg (payload) {
+  console.log('Message received sur onMessage.')
+  // Si on veut notifier dans le tray (mais pas deux fois pour le même message)
+  if (payload.notification)
+    config.callSW( { type: 'SHOWNOTIF', payload: objToB64(payload)})
+  /*
+  const registration = await navigator.serviceWorker.getRegistrations()
+  let options = {
+    body: 'Depuis onMessage',
+    data: { url: window.location.origin}
+  }
+  registration[0].showNotification(notification.title, options)
+  */
 }

@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "yarn quasar dev",
+    "test": "yarn quasar dev -m pwa",
     "build:pwa": "yarn quasar build -m pwa"
   },
   "dependencies": {

@@ -140,6 +140,10 @@ export const useConfigStore = defineStore('config', () => {
     callSW({ type: 'FOCUS', arg: false})
   }
 
+  function closingApp () {
+    callSW({ type: 'CLOSING'})
+  }
+
   const swMessage = ref(null)
 
   function onSwMessage (m: any) {
@@ -158,7 +162,7 @@ export const useConfigStore = defineStore('config', () => {
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     setRegistration, callSW, swMessage, onSwMessage, setAppUpdated, newVersionDialog, newVersionReady,
     listenPerm, requestPermission, permState,
-    focus, getFocus, lostFocus
+    focus, getFocus, lostFocus, closingApp
   }
 })
 
