@@ -1,14 +1,13 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
 import { useConfigStore } from '../src/stores/config-store'
-import { urlFromText, objToB64, b64ToObj, clone } from '../src/app/util'
+import { urlFromText } from '../src/app/util'
+import { onmsg } from '../src/app/fcmutil'
 import { K } from '../src/app/constants'
 import { firebaseConfig } from '../src/app/firebaseConfig'
 import { initializeApp } from 'firebase/app'
-import { getMessaging } from 'firebase/messaging'
+import { getMessaging, getToken, onMessage } from 'firebase/messaging'
 
-// The ready(), registered(), cached(), updatefound() and updated()
-// events passes a ServiceWorkerRegistration instance in their arguments.
 // ServiceWorkerRegistration: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
 
 navigator.serviceWorker.onmessage = (message) => {
@@ -27,42 +26,56 @@ onbeforeunload = (event) => { useConfigStore().closingApp() }
 export const app = initializeApp(firebaseConfig)
 export const messaging = getMessaging(app)
 
-register('./firebase-messaging-sw.js', {
-  /* messaging.useServiceworker(registration)
-  Permet de ne pas avoir un service-worker à la racine du domaine
-  et typiquement à un niveau supérieur: https://...domain.org:8080/monapp
-  */
+/* 
+Pour que SW de FCM s'initialise avec un firebase-messaging-sw.js
+qui N'EST PAS à la racine du domaine, il faut demander un token
+juste après obtention de registration.
+MAIS il faut que la permiison de notification ait été préalablement accordée.
+*/
 
-  ready (registration) {
-    console.log('Service worker is active')
-    useConfigStore().setRegistration(registration)
-    registration.active.postMessage({ type: 'STARTING' })
-    // @ts-ignore
-    messaging.useServiceworker(registration)
-  },
+const notificationPerm = await navigator.permissions.query({ name: 'notifications' })
+notificationPerm.onchange = async () => {
+  const config = useConfigStore()
+  const p = notificationPerm.state
+  config.changePerm(p)
+}
 
-  registered (/* registration */) {
-    // console.log('Service worker has been registered.')
-  },
+if (notificationPerm.state === 'granted') {
+  myRegister()
+} else {
+  const config = useConfigStore()
+  config.askForPerm(notificationPerm.state)
+  config.permState = notificationPerm.state
+  config.permDialog = true
+}
 
-  cached (/* registration */) {
-    // console.log('Content has been cached for offline use.')
-  },
+export function myRegister() {
+  register('./firebase-messaging-sw.js', {
+    ready (registration) {
+      const config = useConfigStore()
+      // @ts-ignore
+      getToken(messaging, { serviceWorkerRegistration: registration })
+      .then((token) => {
+        console.log('Service worker is active')
+        config.setToken(token)
+        config.setRegistration(registration)
+        registration.active.postMessage({ type: 'STARTING' })
+        onMessage(messaging, onmsg)
+      })
+      .catch((e) => {
+        console.log('<<<<<<<<<<<<<<<<<<<<< ' + e.toString())
+        // TODO
+      })
+    },
 
-  updatefound (/* registration */) {
-    // console.log('New content is downloading.')
-  },
+    updated (/* registration */) {
+      useConfigStore().setAppUpdated()
+    },
 
-  updated (/* registration */) {
-    // console.log('New content is available; please refresh.')
-    useConfigStore().setAppUpdated()
-  },
-
-  offline () {
-    // console.log('No internet connection found. App is running in offline mode.')
-  },
-
-  error (/* err */) {
-    // console.error('Error during service worker registration:', err)
-  }
-})
+    registered (/* registration */) { } ,// console.log('Service worker has been registered.')
+    cached (/* registration */) { }, // console.log('Content has been cached for offline use.')
+    updatefound (/* registration */) { }, // console.log('New content is downloading.')
+    offline () { }, // console.log('No internet connection found. App is running in offline mode.')
+    error (/* err */) { } // console.error('Error during service worker registration:', err)
+  })
+}

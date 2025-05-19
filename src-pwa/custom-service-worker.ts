@@ -88,22 +88,22 @@ initializeApp(firebaseConfig)
 const messaging = getMessaging();
 
 onBackgroundMessage(messaging, (payload) => {
-  console.log('Received background message: ', self.location.origin)
-  showNotif(payload, true)
+  console.log('Received background message: ')
+  /*
+  Si payload.webpush.fcm_options.link : la notification dans le tray est automatique
+  Sinon on peut notifier EXPLICITEMENT ici si payload.data.notifme n'est pas un string vide
+  - l'URL est dans payload.data.url
+  */
+  if (payload?.data?.notifme) 
+    showNotif(payload, true)
 })
-
-const notifsDone: string[] = []
 
 function showNotif (payload, bg: boolean) {
   const msgid = payload.messageId
-  if (notifsDone.indexOf(msgid) !== -1) return
-  if (notifsDone.length > 20) notifsDone.length = 10
-  notifsDone.unshift(msgid)
-
-  console.log('Show notif explicite: ', msgid)
+  console.log('Show notif EXPLICITE: ', msgid)
   const options = {
     body: (bg ? 'Reçu par onBackground: ' : 'Reçu par onMsg: ') + payload.notification.body,
-    data: { url: self.location.origin }
+    data: { url: payload.data.url }
   }
   // @ts-ignore
   return self.registration.showNotification(
@@ -117,9 +117,8 @@ self.addEventListener('notificationclick', (event) => {
     // @ts-ignore
     event.notification.close(); // CLosing the notification when clicked
     // @ts-ignore
-    let urlToOpen = event?.notification?.data?.url 
+    const urlToOpen = event?.notification?.data?.url 
     if (!urlToOpen) return
-    if (!urlToOpen.endsWith('/')) urlToOpen += '/'
     // Focus OR Open the URL in the default browser.
     // @ts-ignore
     event.waitUntil(
@@ -132,6 +131,7 @@ self.addEventListener('notificationclick', (event) => {
         // Check if there is already a window/tab open with the target URL
         let found = false
         for (const client of windowClients) {
+          console.log('client.url: ' + client.url + ' / toOpen: ' + urlToOpen)
           if (client.url.startsWith(urlToOpen) && client.focus) {
             if (!client.focused)
               try { 

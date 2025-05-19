@@ -47,6 +47,11 @@
 
         <q-separator />
 
+        <q-item clickable dense v-close-popup @click="coolBye">
+          <q-item-section avatar><q-avatar size="xl" icon="close"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
+        </q-item>
+
         <q-item>
           <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [K.BUILD, K.APIVERSION]) }}</q-item-section>
         </q-item> 
@@ -54,11 +59,17 @@
     </q-menu>
   </q-btn>
 
+  <!-- Contrôle de l'autorisation des notifications-->
+  <q-dialog v-model="config.permDialog" persistent>
+    <permission-dialog/>
+  </q-dialog>
+
   <!-- Information / option d'installation d'une nouvelle version -->
   <q-dialog v-model="config.newVersionDialog" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" :label="$t('later')" @click="config.newVersionDialog = false"/>
+        <q-btn dense icon="close" color="warning" :label="$t('later')" 
+          @click="config.newVersionDialog = false"/>
         <q-toolbar-title>{{$t('RLtit1')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
       </q-toolbar>
@@ -67,11 +78,13 @@
         <div class="titre-md q-my-md">{{$t('RLtit2')}}</div>
         <div class="row q-my-sm justify-between items-center">
           <div class="titre-md text-bold">{{$t('RLopt1')}}</div>
-          <q-btn dense padding="none" icon="system_update" color="primary" :label="$t('clickhere')" @click="reloadPage"/>
+          <q-btn dense padding="none" icon="system_update" color="primary" 
+            :label="$t('clickhere')" @click="reloadPage"/>
         </div>
         <div class="row q-my-sm justify-between items-center">
           <div class="col titre-md q-my-sm text-italic">{{$t('RLopt2')}}</div>
-          <q-btn class="col-auto q-ml-sm" dense padding="none" icon="close" color="primary" :label="$t('gotit')" @click="config.newVersionDialog = false"/>
+          <q-btn class="col-auto q-ml-sm" dense padding="none" icon="close" 
+            color="primary" :label="$t('gotit')" @click="config.newVersionDialog = false"/>
         </div>
       </div>
     </q-card>
@@ -265,19 +278,23 @@
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
-import { ref } from 'vue'
-// @ts-ignore
+
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, setCssVar } from 'quasar'
 
 import HelpButton from './HelpButton.vue'
-import { config, abortPostOp, sty, reloadPage, openHelp, postOp, sleep } from '../app/util'
+import PermissionDialog from './PermissionDialog.vue'
+import { config, abortPostOp, sty, reloadPage, openHelp, postOp, sleep, coolBye } from '../app/util'
 import { localeOption, K } from '../app/constants'
 
 const i18n = useI18n()
 const $t = useI18n().t
 const $q = useQuasar()
+
+onMounted(async () => { 
+  await config.listenPerm()
+})
 
 const confirmstopop = ref(false)
 const theme = ref(false)

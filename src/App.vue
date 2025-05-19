@@ -8,7 +8,6 @@
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
 
-    <permission-button class="q-mr-sm"/>
     <settings-button class="q-mr-sm"/>
     <help-button page="x1"/>
   </q-toolbar>
@@ -35,14 +34,12 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 
 import { useConfigStore} from './stores/config-store'
-import { initFCM, token } from './app/fcmutil'
 import { K } from './app/constants'
 
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 
 import SettingsButton from './components/SettingsButton.vue'
-import PermissionButton from './components/PermissionButton.vue'
 import HelpButton from './components/HelpButton.vue'
 
 import { setConfig, postOp, getData, putData, readFile, fileDescr, sleep } from './app/util'
@@ -51,18 +48,6 @@ const $q = useQuasar()
 const config: any = useConfigStore()
 const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
 setConfig(config, $t, $q)
-
-onMounted(async () => { 
-  let p
-  while (p !== 'granted') {
-    p = await config.listenPerm()
-    if (p !== 'granted') {
-      console.log('Waiting for granted')
-      await sleep(5000)
-    }
-  }
-  await initFCM()
-})
 
 function plus1 () : void {
   config.dataSt.cpt++
@@ -114,13 +99,20 @@ async function uploadFile () : Promise<void> {
 }
 
 const t1 = async () => {
-  const res = await postOp('TestMessage', { token: token.token})
+  const appurl = window.location.origin + window.location.pathname
+  const res = await postOp('TestMessage', { token: config.token, appurl})
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
 const t2 = async () => {
+  const appurl = window.location.origin + window.location.pathname
+  const res = await postOp('TestMessage', { token: config.token, notifme: true, appurl })
+  console.log('Demande notif:' + JSON.stringify(res.message))
+}
+
+const t2b = async () => {
   const args = {
-    token: token.token,
+    token: config.token,
     title: 'Hello world',
     body: 'coucou'
   }

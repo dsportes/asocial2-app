@@ -45,4 +45,14 @@ export class K {
 <a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
 </body></html>`
 
+  static coolbyeHtml =  `<html><head><meta charset="utf-8">
+<style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
+</head>
+<body>
+<div>Goodbye, see you soon !</div> 
+<div>Au revoir et à bientôt !</div>
+<div><a href="${window.location.href}">Back => Application</a></div>
+<div><a href="https://asocialapps.github.io/frdocs/">Help / Aide</a></div>
+</body></html>`
+
 }
