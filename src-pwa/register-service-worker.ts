@@ -32,22 +32,29 @@ qui N'EST PAS à la racine du domaine, il faut demander un token
 juste après obtention de registration.
 MAIS il faut que la permiison de notification ait été préalablement accordée.
 */
+navigator.permissions.query({ name: 'notifications' })
+.then(notificationPerm => {
+  notificationPerm.onchange = async () => {
+    const config = useConfigStore()
+    const p = notificationPerm.state
+    config.changePerm(p)
+  }
 
-const notificationPerm = await navigator.permissions.query({ name: 'notifications' })
-notificationPerm.onchange = async () => {
-  const config = useConfigStore()
-  const p = notificationPerm.state
-  config.changePerm(p)
-}
-
-if (notificationPerm.state === 'granted') {
-  myRegister()
-} else {
-  const config = useConfigStore()
-  config.askForPerm(notificationPerm.state)
-  config.permState = notificationPerm.state
-  config.permDialog = true
-}
+  if (notificationPerm.state === 'granted') {
+    myRegister()
+  } else {
+    // setTimeout(() => {
+      const config = useConfigStore()
+      const p = notificationPerm.state
+      config.askForPerm(p)
+      config.permState = p
+      config.permDialog = true
+    //}, 500)
+  }
+})
+.catch(e => {
+  console.log('Permissions cannot be asked')
+})
 
 export function myRegister() {
   register('./firebase-messaging-sw.js', {

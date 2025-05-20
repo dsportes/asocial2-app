@@ -78,15 +78,21 @@ export const useConfigStore = defineStore('config', () => {
 
   const permState = ref('') // granted denied prompt
   const permDialog = ref(false)
+  const permChange = ref(false)
 
   /* La permission de notification avait été accordée.
   Le service-worker est enregistré.
   Si elle l'est toujours, rien ne change
-  Sinon il faut informer l'utilisateur et SORTIR de l'application.
+  Sinon il faut informer l'utilisateur et SORTIR ou RECHARGER l'application.
   */
   function changePerm (p: string) {
-    if (p === 'granted') return
-    // TODO
+    if (p === 'granted') {
+      permDialog.value = false
+      permChange.value = false
+    } else {
+      permDialog.value = true
+      permChange.value = true
+    }
   }
 
   function askForPerm (p: string) {
@@ -134,7 +140,7 @@ export const useConfigStore = defineStore('config', () => {
     getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, callSW, swMessage, onSwMessage, setAppUpdated, newVersionDialog, newVersionReady,
-    permState, permDialog, changePerm, askForPerm,
+    permState, permDialog, changePerm, askForPerm, permChange,
     token, setToken,
     focus, getFocus, lostFocus, closingApp
   }
