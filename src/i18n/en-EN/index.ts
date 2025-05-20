@@ -16,6 +16,7 @@ export default {
   pings: 'Server "pings"',
   buildapi: 'Build: {0} - API: {1}',
   closeApp: 'Close application',
+  restartApp: 'Reload application',
 
   MLAopc: 'Operation running',
   MLAint: 'Click here for interrupting it',

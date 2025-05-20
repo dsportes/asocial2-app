@@ -201,7 +201,7 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
 }
 
 export function coolBye () {
-  window.location.href = urlFromText(K.coolbyeHtml)
+  window.location.href = urlFromText(K.coolbyeHtml(window.location.href))
 }
 
 export function objToB64 (obj: any, url?: boolean) : string {

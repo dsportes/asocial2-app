@@ -47,6 +47,11 @@
 
         <q-separator />
 
+        <q-item clickable dense v-close-popup @click="reloadPage">
+          <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('restartApp')}}</q-item-section>
+        </q-item>
+
         <q-item clickable dense v-close-popup @click="coolBye">
           <q-item-section avatar><q-avatar size="xl" icon="close"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
@@ -291,10 +296,6 @@ import { localeOption, K } from '../app/constants'
 const i18n = useI18n()
 const $t = useI18n().t
 const $q = useQuasar()
-
-onMounted(async () => { 
-  await config.listenPerm()
-})
 
 const confirmstopop = ref(false)
 const theme = ref(false)
