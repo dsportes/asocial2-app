@@ -1,9 +1,13 @@
 <template>
 <div>
   <q-toolbar class="bg-primary text-white q-ma-none">
-    <q-btn label="Focus" :color="config.focus ? 'green' : 'red'" size="sm"/>
+    <q-btn label="FCM" size="md" @click="startFCM"
+      :color="config.token ? 'green' : 'red'"
+      :disable="!fcmStartable"
+    />
     <q-btn label="T1" @click="t1"/>
     <q-btn label="T2" @click="t2"/>
+    <q-btn label="T3" @click="t3"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -25,29 +29,29 @@
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
 import ext2mime from 'ext2mime'
-
-// @ts-ignore
-import { ref, computed, watch, onMounted } from 'vue'
-// @ts-ignore
+import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 
 import { useConfigStore} from './stores/config-store'
 import { K } from './app/constants'
-
-// @ts-ignore
-import { useI18n } from 'vue-i18n'
+import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
+import { initFCM } from './app/fcmutil'
 
 import SettingsButton from './components/SettingsButton.vue'
 import HelpButton from './components/HelpButton.vue'
-
-import { setConfig, postOp, getData, putData, readFile, fileDescr, sleep } from './app/util'
 
 const $q = useQuasar()
 const config: any = useConfigStore()
 const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
 setConfig(config, $t, $q)
+
+const fcmStartable = computed(() => config.permState === 'granted' && config.registration && !config.token)
+
+const startFCM = async () => {
+  await initFCM()
+}
 
 function plus1 () : void {
   config.dataSt.cpt++
@@ -107,6 +111,11 @@ const t1 = async () => {
 const t2 = async () => {
   const appurl = window.location.origin + window.location.pathname
   const res = await postOp('TestMessage', { token: config.token, notifme: true, appurl })
+  console.log('Demande notif:' + JSON.stringify(res.message))
+}
+
+const t3 = async () => {
+  const res = await postOp('TestMessage', { token: config.token })
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
