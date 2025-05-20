@@ -13,7 +13,7 @@ import { K } from '../app/constants'
 import { shortHash } from '../app/util'
 
 export const useConfigStore = defineStore('config', () => {
-  // Gestion des langues
+  // Gestion des langues ***************************************************
   const localeMap = new Map()
   K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
   
@@ -21,10 +21,11 @@ export const useConfigStore = defineStore('config', () => {
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
-  // Gestion des stores
+  // Gestion des stores ***************************************************
   const dataSt = computed(() => useDataStore())
   const $t = ref()
 
+  // Gestion des opérations ************************************************
   const opEncours = ref('')
   const opDialog = ref(false)
   const opSpinner = ref(0)
@@ -57,25 +58,31 @@ export const useConfigStore = defineStore('config', () => {
     opTimer2 = setTimeout(() => { opSignal.value = false }, 1000)
   }
 
+  // Gestion du SW ******************************************************
   const registration = ref(null)
+  const newVersionReady = ref(false)
+  const newVersionDialog = ref(false)
 
   function setRegistration(_registration) {
-    // await this.listenPerm()
     registration.value = _registration
   }
 
-  const newVersionReady = ref(false)
-  const newVersionDialog = ref(false)
   function setAppUpdated () {
     newVersionReady.value = true
     newVersionDialog.value = true
   }
 
+  const swMessage = ref(null)
+
+  function onSwMessage (m: any) {
+    swMessage.value = m
+  }
+
   function callSW (data: any) {
-    // while (!this.registration) await sleep(1000)
     if (registration.value) registration.value.active.postMessage(data)
   }
 
+  // Gestion des permissions *********************************************
   const permState = ref('') // granted denied prompt
   const permDialog = ref(false)
   const permChange = ref(false)
@@ -86,6 +93,7 @@ export const useConfigStore = defineStore('config', () => {
   Sinon il faut informer l'utilisateur et SORTIR ou RECHARGER l'application.
   */
   function changePerm (p: string) {
+    permState.value = p
     if (p === 'granted') {
       permDialog.value = false
       permChange.value = false
@@ -100,6 +108,7 @@ export const useConfigStore = defineStore('config', () => {
     permDialog.value = true
   }
 
+  // Gestion de messaging ********************************************
   const token = ref(null)
 
   function setToken (tk) {
@@ -107,6 +116,7 @@ export const useConfigStore = defineStore('config', () => {
     console.log('token: [' + shortHash(tk) + '] - [' + tk + ']')
   }
 
+  /*
   const focus = ref(true)
 
   function getFocus () {
@@ -122,12 +132,9 @@ export const useConfigStore = defineStore('config', () => {
   function closingApp () {
     callSW({ type: 'CLOSING'})
   }
+  */
 
-  const swMessage = ref(null)
 
-  function onSwMessage (m: any) {
-    swMessage.value = m
-  }
 
   function getHelpPages () : Set<string> {
     return new Set()
@@ -139,10 +146,11 @@ export const useConfigStore = defineStore('config', () => {
     dataSt,
     getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, setRegistration, callSW, swMessage, onSwMessage, setAppUpdated, newVersionDialog, newVersionReady,
+    registration, setRegistration, setAppUpdated,
+    callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     token, setToken,
-    focus, getFocus, lostFocus, closingApp
+    // focus, getFocus, lostFocus, closingApp
   }
 })
 

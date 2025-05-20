@@ -1,10 +1,29 @@
-import { sha224 } from 'js-sha256'
-
-import { getToken, onMessage } from 'firebase/messaging'
-import { messaging } from '../../src-pwa/register-service-worker'
-
-// import { K } from './constants'
+import { firebaseConfig } from './firebaseConfig'
+import { initializeApp } from 'firebase/app'
+import { getMessaging, getToken, onMessage } from 'firebase/messaging'
 import { postOp, config, objToB64 } from './util'
+
+export async function initFCM () {
+  try {
+    const app = initializeApp(firebaseConfig)
+    const messaging = getMessaging(app)
+    const token = await getToken(messaging, { serviceWorkerRegistration: config.registration })
+    if (!token) {
+      console.log('FCM - cannot get token.')
+      // TODO
+      return
+    }
+    config.setToken(token)
+    onMessage(messaging, async (payload) => {
+      await onmsg(payload, false)
+    })
+    await postToken()
+    console.log('FCM - initialization DONE.')
+  } catch (e) {
+    console.log('FCM - initialization failed: ', e.toString())
+    // TODO
+  }
+}
 
 export async function postToken () {
   try {
@@ -15,12 +34,22 @@ export async function postToken () {
   }
 }
 
-export async function onmsg (payload) {
-  console.log('Message received sur onMessage.')
-  /* Il n'y a aucune notification automatique dans le tray
-  Si on veut notifier EXPLICITEMENT dans le tray payload.data.notifme 
-  doit être un string non vide.
-  */
-  if (payload?.data?.notifme)
-    config.callSW( { type: 'SHOWNOTIF', payload: objToB64(payload)})
+export async function onmsg (payload: any, bg: boolean) {
+  console.log('Message received sur onMessage - ' + (bg ? 'BACKGROUND' : ''))
+  
+  // Choix du test: on ne dédouble pas la notification faite par FCM
+  // et le message du serveur sollicite une notif
+  if (!bg && payload?.data?.notifme) {
+    showNotifFG(payload)
+  }
+}
+
+function showNotifFG (payload: any) {
+  const msgid = payload.messageId
+  console.log('Show notif EXPLICITE de foreground: ', msgid)
+  const options = { body: 'Reçu en foreground: ' + payload.notification.body }
+  // @ts-ignore
+  if (payload.data.url) options.data = { url: payload.data.url }
+  // @ts-ignore
+  config.registration.showNotification(payload.notification.title, options)
 }

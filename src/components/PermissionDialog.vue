@@ -30,32 +30,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { config, sty, coolBye, reloadPage } from '../app/util'
 import HelpButton from './HelpButton.vue'
-import { myRegister } from 'app/src-pwa/register-service-worker'
 
 const perm = computed(() => config.permState)
 
 const rp = async () => {
   const p = await Notification.requestPermission()
-  config.permState = p
-  if (p === 'granted') {
-    if (!config.registration) {
-      myRegister()
-      config.permDialog = false
-    }
-  }
+  config.changePerm(p)
 }
-
-watch(perm, (p: string) => {
-  if (p === 'granted') {
-    if (!config.registration) {
-      myRegister()
-      config.permDialog = false
-    }
-  }
-})
 
 </script>
 
