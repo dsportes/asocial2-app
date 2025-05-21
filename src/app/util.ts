@@ -2,7 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { fromByteArray, toByteArray } from './base64'
 import { K } from './constants'
-import { sha224 } from 'js-sha256'
+import { sha224, sha256 } from 'js-sha256'
 
 export class AppExc {
   /* code
@@ -206,12 +206,17 @@ export function coolBye () {
 
 export function objToB64 (obj: any, url?: boolean) : string {
   if (!obj) return ''
-  const bin = new Uint8Array(encode(obj))
-  const s = fromByteArray(bin)
+  const u8 = new Uint8Array(encode(obj))
+  return u8ToB64(u8, url)
+}
+
+export function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
+  if (!u8) return ''
+  const s = fromByteArray(u8)
   return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
 
-export function b64ToObj (b64: string) : any {
+export function b64ToU8 (b64: string) : Uint8Array {
   if (!b64) return null
   const diff = b64.length % 4
   let x = b64
@@ -219,7 +224,11 @@ export function b64ToObj (b64: string) : any {
     const pad = '===='.substring(0, 4 - diff)
     x = b64 + pad
   }
-  const bin = toByteArray(x.replace(/-/g, '+').replace(/_/g, '/'))
+  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
+}
+
+export function b64ToObj (b64: string) : any {
+  const bin = b64ToU8(b64)
   return decode(bin)
 }
 
@@ -228,3 +237,5 @@ export function clone (obj: any) : any {
 }
 
 export function shortHash (s: string) { return sha224(s).substring(0, 16) }
+
+export function longHash (s: string) { return sha256(s) }

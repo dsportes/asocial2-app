@@ -4,11 +4,8 @@ export class K {
   static BUILD = 'v2.1'
   static APIVERSION = 1
 
-  // static vapidPublicKey = 'BEcZEGpf91huQEhcU7IfllzhoMVCRXXp4zX-ytGVzyjbhw9lJHr4wB5LzvCQkeHF2r6jOEy6kPo4VsIhO_0i5Qk'
-
-  static vapidPublicKey = 'BETfhRy5t_IFePJgM_WBmcGls4NWOg4_X09XknMXYEF44hxhkkt9K-Lrg8dOU9ktuKNXKX1tgDLGr_T7dS_Uj18'
-  // static vapidPublicKey = 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew'
-
+  static vapidPublicKey = 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew'
+  
   static urlsrv = 'http://localhost:8080/'
   // static urlsrv = 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   

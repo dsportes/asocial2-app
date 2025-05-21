@@ -1,9 +1,9 @@
 <template>
 <div>
   <q-toolbar class="bg-primary text-white q-ma-none">
-    <q-btn label="FCM" size="md" @click="startFCM"
-      :color="config.token ? 'green' : 'red'"
-      :disable="!fcmStartable"
+    <q-btn label="WP" size="md" @click="startWP"
+      :color="config.hashSub ? 'green' : 'red'"
+      :disable="!wpStartable"
     />
     <q-btn label="T1" @click="t1"/>
     <q-btn label="T2" @click="t2"/>
@@ -37,7 +37,7 @@ import { useI18n } from 'vue-i18n'
 import { useConfigStore} from './stores/config-store'
 import { K } from './app/constants'
 import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
-import { initFCM } from './app/fcmutil'
+import { initWP } from './app/wputil'
 
 import SettingsButton from './components/SettingsButton.vue'
 import HelpButton from './components/HelpButton.vue'
@@ -47,10 +47,10 @@ const config: any = useConfigStore()
 const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
 setConfig(config, $t, $q)
 
-const fcmStartable = computed(() => config.permState === 'granted' && config.registration && !config.token)
+const wpStartable = computed(() => config.permState === 'granted' && config.registration && config.hashSub)
 
-const startFCM = async () => {
-  await initFCM()
+const startWP = async () => {
+  await initWP()
 }
 
 function plus1 () : void {
@@ -104,18 +104,18 @@ async function uploadFile () : Promise<void> {
 
 const t1 = async () => {
   const appurl = window.location.origin + window.location.pathname
-  const res = await postOp('TestMessage', { token: config.token, appurl})
+  const res = await postOp('TestMessage', { hashSub: config.hashSub, appurl})
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
 const t2 = async () => {
   const appurl = window.location.origin + window.location.pathname
-  const res = await postOp('TestMessage', { token: config.token, notifme: true, appurl })
+  const res = await postOp('TestMessage', { hashSub: config.hashSub, notifme: true, appurl })
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
 const t3 = async () => {
-  const res = await postOp('TestMessage', { token: config.token })
+  const res = await postOp('TestMessage', { hashSub: config.hashSub })
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
