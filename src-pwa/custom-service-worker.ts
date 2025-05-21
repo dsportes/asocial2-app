@@ -8,13 +8,12 @@ declare const self: ServiceWorkerGlobalScope &
  * quasar.config file > pwa > workboxMode is set to "InjectManifest"
  */
 
-
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
+import { decode } from '@msgpack/msgpack'
+import { b64ToObj } from 'src/app/util'
 
-import { firebaseConfig } from '../src/app/firebaseConfig'
-import { b64ToObj, objToB64 } from '../src/app/util'
 
 self.skipWaiting()
 clientsClaim()
@@ -69,9 +68,8 @@ self.addEventListener('message', async (event) => {
 })
 
 self.addEventListener('notificationclick', async (event) => {
-  // console.log('notificationclick')
-  // @ts-ignore
-  event.notification.close(); // CLosing the notification when clicked
+  console.log('notificationclick')
+
   // @ts-ignore
   const urlToOpen = event?.notification?.data?.url 
   if (!urlToOpen) return
@@ -80,35 +78,73 @@ self.addEventListener('notificationclick', async (event) => {
   const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
   // console.log('notificationclick Clients: ' + windowClients.length)
   let found = false
+  let promise
   for (const client of windowClients) {
     if (client.url.startsWith(urlToOpen) && client.focus) {
-      if (client.visibilityState !== 'visible')
-        try { client.focus(); /* console.log('FOCUS set !') */ } 
-        catch (e) { console.log('Set Focus err: (' + client.url + ') ' + e.toString()) }
+      if (client.visibilityState === 'hidden') // "hidden", "visible", or "prerender"
+      promise = client.focus()
       found = true
+      break
     }
   }
 
   // @ts-ignore
-  if (!found && clients.openWindow) clients.openWindow(urlToOpen)
+  if (!found && clients.openWindow) {
+    promise = new Promise(function(resolve) {
+        setTimeout(resolve, 3000);
+      }).then(() => {
+          // return the promise returned by openWindow, just in case.
+          // Opening any origin only works in Chrome 43+.
+          // @ts-ignore
+          return clients.openWindow(urlToOpen)
+      });
+
+    // Now wait for the promise to keep the permission alive.
+    // @ts-ignore
+  }
+
+  // @ts-ignore
+  event.waitUntil(promise)
+  // @ts-ignore
+  event.notification.close() // CLosing the notification when clicked
 })
 
-// Gestion de FCM *******************************************************************
-// Retrieve an instance of Firebase Messaging so that it can handle background messages.
-import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw'
-import { initializeApp } from "firebase/app"
-
-initializeApp(firebaseConfig)
-const messaging = getMessaging()
-
-onBackgroundMessage(messaging, async (payload) => {
-  console.log('Received background message: ')
+// Gestion de Web-Push *******************************************************************
+self.addEventListener('push', async (event) => {
   // @ts-ignore
-  const clientList = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
-  let found = false
-  for(const client of clientList) {
-    found = true
-    client.postMessage({ type: 'ONBG', payload: objToB64(payload) })
+  const buf = event.data ? event.data.text() : null
+  try {
+    // @ts-ignore
+    const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+    let found = false
+    for (const client of windowClients) {
+      if (client.focus && (client.visibilityState === 'hidden' || client.visibilityState === 'visible'))  { // "hidden", "visible", or "prerender"
+        client.postMessage({ type: 'PUSH', payload: buf })
+        found = true
+      }
+    }
+    if (!found) { // Pas d'appli ni bg ni fg - notification par browser
+      /*
+      const message = {
+        notification: {
+          title: 'Hello',
+          body: 'Depuis serveur'
+        },
+        data: { 
+          url: this.params.appurl || '',
+          notifme: ''
+        }
+      }
+      */
+      const payload = b64ToObj(buf)
+      // @ts-ignore
+      const options = { body: 'From browser: ' + payload.notification.body }
+      // @ts-ignore
+      if (payload.data.url) options.data = { url: payload.data.url }
+      // @ts-ignore
+      await self.registration.showNotification(payload.notification.title, options)
+    }
+  } catch (e) {
+    console.log('SW: error on push: ' + e.toString())
   }
-  // if (!found && payload?.data?.notifme) showNotif(payload, true) // ????
 })

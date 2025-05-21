@@ -1,16 +1,10 @@
-// @ts-ignore
 import { ref, computed } from 'vue'
-// @ts-ignore
 import type { Ref } from 'vue'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-
-// @ts-ignore
-import { useDataStore } from '../stores/data-store.ts'
+import { useDataStore } from '../stores/data-store'
 
 import { K } from '../app/constants'
-
-import { shortHash } from '../app/util'
+import { shortHash, b64ToU8 } from '../app/util'
 
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues ***************************************************
@@ -62,9 +56,37 @@ export const useConfigStore = defineStore('config', () => {
   const registration = ref(null)
   const newVersionReady = ref(false)
   const newVersionDialog = ref(false)
+  const subJSON = ref('')
+  const hashSub = ref('')
 
   function setRegistration(_registration) {
     registration.value = _registration
+    // @ts-ignore
+    const pm = _registration.pushManager
+    if (!pm) {
+      subJSON.value = '??? Souscription non obtenue - pushManager non accessible'
+      return
+    }
+    pm.getSubscription()
+    .then((sub: any) => {
+      if (sub) {
+        subJSON.value = JSON.stringify(sub)
+        hashSub.value = shortHash(sub.endpoint)
+      } else {
+        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.vapidPublicKey) }
+        pm.subscribe(opt).then((nsub) => {
+          subJSON.value = JSON.stringify(nsub)
+          hashSub.value = shortHash(nsub.endpoint)
+          console.log('subJSON: ' + subJSON.value.substring(0, 200))
+        }).catch(e => {
+          subJSON.value = '??? Souscription non obtenue - ' + e.message
+          console.log('subJSON: ' + subJSON.value)
+        })
+      }
+    }).catch(e => {
+      subJSON.value = '??? Souscription non obtenue - ' + e.message
+      console.log('subJSON: ' + subJSON.value)
+    })
   }
 
   function setAppUpdated () {
@@ -108,14 +130,6 @@ export const useConfigStore = defineStore('config', () => {
     permDialog.value = true
   }
 
-  // Gestion de messaging ********************************************
-  const token = ref(null)
-
-  function setToken (tk) {
-    token.value = tk
-    console.log('token: [' + shortHash(tk) + '] - [' + tk + ']')
-  }
-
   /*
   const focus = ref(true)
 
@@ -134,8 +148,6 @@ export const useConfigStore = defineStore('config', () => {
   }
   */
 
-
-
   function getHelpPages () : Set<string> {
     return new Set()
   }
@@ -146,10 +158,9 @@ export const useConfigStore = defineStore('config', () => {
     dataSt,
     getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, setRegistration, setAppUpdated,
+    registration, setRegistration, setAppUpdated, subJSON, hashSub,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    token, setToken,
     // focus, getFocus, lostFocus, closingApp
   }
 })
