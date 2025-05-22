@@ -14,7 +14,7 @@ import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 
 import { firebaseConfig } from '../src/app/firebaseConfig'
-import { b64ToObj, objToB64 } from '../src/app/util'
+import { objToB64 } from '../src/app/util'
 
 self.skipWaiting()
 clientsClaim()
@@ -68,29 +68,24 @@ self.addEventListener('message', async (event) => {
   }
 })
 
-self.addEventListener('notificationclick', async (event) => {
-  // console.log('notificationclick')
+self.addEventListener('notificationclick', (event) => {
+  console.log('SW: On notification click')
   // @ts-ignore
-  event.notification.close(); // CLosing the notification when clicked
+  event.notification.close()
   // @ts-ignore
   const urlToOpen = event?.notification?.data?.url 
   if (!urlToOpen) return
-  // Focus OR Open the URL in the default browser.
-  // @ts-ignore
-  const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
-  // console.log('notificationclick Clients: ' + windowClients.length)
-  let found = false
-  for (const client of windowClients) {
-    if (client.url.startsWith(urlToOpen) && client.focus) {
-      if (client.visibilityState !== 'visible')
-        try { client.focus(); /* console.log('FOCUS set !') */ } 
-        catch (e) { console.log('Set Focus err: (' + client.url + ') ' + e.toString()) }
-      found = true
-    }
-  }
 
+  // This looks to see if the current is already open and focuses if it is
   // @ts-ignore
-  if (!found && clients.openWindow) clients.openWindow(urlToOpen)
+  event.waitUntil( clients.matchAll({type: 'window'})
+    .then((clientList) => {
+      for (const client of clientList)
+        if ('focus' in client) return client.focus()
+      // @ts-ignore
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
+    })
+  )
 })
 
 // Gestion de FCM *******************************************************************
