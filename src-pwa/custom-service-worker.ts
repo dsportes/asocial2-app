@@ -59,7 +59,7 @@ self.addEventListener('message', async (event) => {
       if (client.id !== event.source.id) event.source.postMessage({ type: 'STOP' })
     }
   } else if (event.data && event.data.type === 'CLOSING') {
-    // utile un jour ?
+    // usage futur ?
     console.log('SW: App closing')
   } else if (event.data && event.data.type === 'FROM_APP') {
     // usage futur ?
@@ -67,46 +67,24 @@ self.addEventListener('message', async (event) => {
   }
 })
 
-self.addEventListener('notificationclick', async (event) => {
-  console.log('notificationclick')
-
+self.addEventListener('notificationclick', (event) => {
+  console.log('SW: On notification click')
+  // @ts-ignore
+  event.notification.close()
   // @ts-ignore
   const urlToOpen = event?.notification?.data?.url 
   if (!urlToOpen) return
-  // Focus OR Open the URL in the default browser.
-  // @ts-ignore
-  const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
-  // console.log('notificationclick Clients: ' + windowClients.length)
-  let found = false
-  let promise
-  for (const client of windowClients) {
-    if (client.url.startsWith(urlToOpen) && client.focus) {
-      if (client.visibilityState === 'hidden') // "hidden", "visible", or "prerender"
-      promise = client.focus()
-      found = true
-      break
-    }
-  }
 
+  // This looks to see if the current is already open and focuses if it is
   // @ts-ignore
-  if (!found && clients.openWindow) {
-    promise = new Promise(function(resolve) {
-        setTimeout(resolve, 3000);
-      }).then(() => {
-          // return the promise returned by openWindow, just in case.
-          // Opening any origin only works in Chrome 43+.
-          // @ts-ignore
-          return clients.openWindow(urlToOpen)
-      });
-
-    // Now wait for the promise to keep the permission alive.
-    // @ts-ignore
-  }
-
-  // @ts-ignore
-  event.waitUntil(promise)
-  // @ts-ignore
-  event.notification.close() // CLosing the notification when clicked
+  event.waitUntil( clients.matchAll({type: 'window'})
+    .then((clientList) => {
+      for (const client of clientList)
+        if ('focus' in client) return client.focus()
+      // @ts-ignore
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
+    })
+  )
 })
 
 // Gestion de Web-Push *******************************************************************
@@ -124,18 +102,10 @@ self.addEventListener('push', async (event) => {
       }
     }
     if (!found) { // Pas d'appli ni bg ni fg - notification par browser
-      /*
-      const message = {
-        notification: {
-          title: 'Hello',
-          body: 'Depuis serveur'
-        },
-        data: { 
-          url: this.params.appurl || '',
-          notifme: ''
-        }
-      }
-      */
+      /* const message = {
+        notification: { title: 'Hello', body: 'Depuis serveur' },
+        data: { url: 'http...', notifme: ''}
+      } */
       const payload = b64ToObj(buf)
       // @ts-ignore
       const options = { body: 'From browser: ' + payload.notification.body }
