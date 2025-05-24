@@ -1,3 +1,4 @@
+import { u8ToB64 } from './util'
 export class Crypt {
 
   static buildSalt () {
@@ -11,8 +12,8 @@ export class Crypt {
   static async crypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
       // const x0 = new Uint8Array(1).fill(n)
-      const key = await window.crypto.subtle.importKey('raw', cle, 'AES-GCM', false, ['encrypt'])
-      return new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: Crypt.salt }, key, buf))
+      const key = await window.crypto.subtle.importKey('raw', cle, 'AES-CBC', false, ['encrypt'])
+      return new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv: Crypt.salt }, key, buf))
     } catch (e) {
       return null
     }
@@ -20,14 +21,13 @@ export class Crypt {
 
   static async decrypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
-      const key = await window.crypto.subtle.importKey('raw', cle, 'AES-GCM', false, ['decrypt'])
-      return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: Crypt.salt }, key, buf))
+      const key = await window.crypto.subtle.importKey('raw', cle, 'AES-CBC', false, ['decrypt'])
+      return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-CBC', iv: Crypt.salt }, key, buf))
     } catch (e) {
       return null
     }
   }
 }
-
 
 export class ECDH {
   static format = 'raw'
@@ -50,7 +50,7 @@ export class ECDH {
     const k = await crypto.subtle.deriveKey(
       { name: 'ECDH', public: imp },
       this.pair.privateKey,
-      { name: 'AES-GCM', length: 256 },
+      { name: 'AES-CBC', length: 256 },
       true,
       ['encrypt', 'decrypt']
     )
@@ -59,22 +59,21 @@ export class ECDH {
 }
 
 export async function testECDH () {
-    // Dans app
-    const appPair = await new ECDH().initKeyPair()
-    const appPub = appPair.pub
-    console.log(appPub)
+  // Dans app
+  const appPair = await new ECDH().initKeyPair()
+  const appPub = appPair.pub
+  console.log(u8ToB64(appPub))
 
-    // Dans srv
-    const srvPair = await new ECDH().initKeyPair()
-    const srvPub = await srvPair.pub
-    console.log(srvPub)
+  // Dans srv
+  const srvPair = await new ECDH().initKeyPair()
+  const srvPub = await srvPair.pub
+  console.log(u8ToB64(srvPub))
 
-    const aesSrv = await srvPair.getAESKey(appPub)
-    const x1 = await Crypt.crypterSrv(aesSrv, new TextEncoder().encode('toto est tres beau'))
+  const aesSrv = await srvPair.getAESKey(appPub)
+  const x1 = await Crypt.crypterSrv(aesSrv, new TextEncoder().encode('toto est tres beau'))
 
-    // Dans app
-    const aesApp = await appPair.getAESKey(srvPub)
-    const x2 = new TextDecoder().decode(await Crypt.decrypterSrv(aesApp, x1))
-    console.log(x2)
-
-  }
+  // Dans app
+  const aesApp = await appPair.getAESKey(srvPub)
+  const x2 = new TextDecoder().decode(await Crypt.decrypterSrv(aesApp, x1))
+  console.log(x2)
+}
