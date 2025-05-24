@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { fromByteArray, toByteArray } from './base64'
 import { K } from './constants'
+// @ts-ignore
 import { sha224, sha256 } from 'js-sha256'
 
 export class AppExc {
@@ -177,7 +178,7 @@ export function openHelp (page: string) {
   else {
     // TODO
     console.log('Ouverture page aide ', page)
-    return 
+    return
   }
 }
 

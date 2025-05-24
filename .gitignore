@@ -5,6 +5,8 @@ node_modules
 src/app/firebaseConfig.ts
 
 .yarn
+.pnp.cjs
+.pnp.loader.mjs
 
 # Quasar core related directories
 .quasar
