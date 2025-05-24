@@ -4,6 +4,8 @@ node_modules
 
 src/app/firebaseConfig.ts
 
+.yarn
+
 # Quasar core related directories
 .quasar
 /dist
