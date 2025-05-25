@@ -37,7 +37,7 @@ import { useI18n } from 'vue-i18n'
 import { useConfigStore} from './stores/config-store'
 import { K } from './app/constants'
 import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
-import { testECDH } from './app/crypt'
+import { testECDH, testSH } from './app/crypt'
 import { initWP } from './app/wputil'
 
 import SettingsButton from './components/SettingsButton.vue'
@@ -116,7 +116,8 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
-  await testECDH()
+  // await testECDH()
+  await testSH()
 }
 
 const t3a = async () => {
