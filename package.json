@@ -9,12 +9,16 @@
   "scripts": {
     "test": "yarn quasar dev -m pwa",
     "build": "yarn quasar build -m pwa"
+    "test": "yarn quasar dev -m pwa",
+    "build": "yarn quasar build -m pwa"
   },
   "dependencies": {
     "@msgpack/msgpack": "^3.1.1",
     "@quasar/extras": "^1.16.4",
     "@types/node": "^22.15.3",
     "ext2mime": "^2.0.1",
+    "firebase": "^11.7.3",
+    "js-sha256": "^0.11.1",
     "firebase": "^11.7.3",
     "js-sha256": "^0.11.0",
     "pinia": "^3.0.1",

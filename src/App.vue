@@ -8,6 +8,13 @@
     <q-btn label="T1" @click="t1"/>
     <q-btn label="T2" @click="t2"/>
     <q-btn label="T3" @click="t3"/>
+    <q-btn label="WP" size="md" @click="startWP"
+      :color="config.hashSub ? 'green' : 'red'"
+      :disable="!wpStartable"
+    />
+    <q-btn label="T1" @click="t1"/>
+    <q-btn label="T2" @click="t2"/>
+    <q-btn label="T3" @click="t3"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -37,6 +44,7 @@ import { useI18n } from 'vue-i18n'
 import { useConfigStore} from './stores/config-store'
 import { K } from './app/constants'
 import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
+import { testECDH, testSH } from './app/crypt'
 import { initWP } from './app/wputil'
 
 import SettingsButton from './components/SettingsButton.vue'
@@ -115,6 +123,11 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
+  // await testECDH()
+  await testSH()
+}
+
+const t3a = async () => {
   const res = await postOp('TestMessage', { hashSub: config.hashSub })
   console.log('Demande notif:' + JSON.stringify(res.message))
 }

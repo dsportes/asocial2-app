@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { fromByteArray, toByteArray } from './base64'
 import { K } from './constants'
+// @ts-ignore
 import { sha224, sha256 } from 'js-sha256'
 
 export class AppExc {
@@ -177,7 +178,7 @@ export function openHelp (page: string) {
   else {
     // TODO
     console.log('Ouverture page aide ', page)
-    return 
+    return
   }
 }
 
@@ -239,3 +240,16 @@ export function clone (obj: any) : any {
 export function shortHash (s: string) { return sha224(s).substring(0, 16) }
 
 export function longHash (s: string) { return sha256(s) }
+
+export function concat (views: ArrayBufferView[]) {
+  let length = 0
+  for (const v of views) length += v.byteLength
+  const buf = new Uint8Array(length)
+  let offset = 0
+  for (const v of views) {
+      const uint8view = new Uint8Array(v.buffer, v.byteOffset, v.byteLength)
+      buf.set(uint8view, offset)
+      offset += uint8view.byteLength
+  }
+  return buf
+}
