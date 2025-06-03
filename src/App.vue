@@ -8,13 +8,6 @@
     <q-btn label="T1" @click="t1"/>
     <q-btn label="T2" @click="t2"/>
     <q-btn label="T3" @click="t3"/>
-    <q-btn label="WP" size="md" @click="startWP"
-      :color="config.hashSub ? 'green' : 'red'"
-      :disable="!wpStartable"
-    />
-    <q-btn label="T1" @click="t1"/>
-    <q-btn label="T2" @click="t2"/>
-    <q-btn label="T3" @click="t3"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -46,6 +39,8 @@ import { K } from './app/constants'
 import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
 import { testECDH, testSH } from './app/crypt'
 import { initWP } from './app/wputil'
+
+import { Crypt } from './app/crypt'
 
 import SettingsButton from './components/SettingsButton.vue'
 import HelpButton from './components/HelpButton.vue'
@@ -123,8 +118,12 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
+  const x = 'toto est tres tres beau'
+  console.log(Crypt.sha32(x))
+  console.log(Crypt.sha12(x))
+  console.log(Crypt.shaInt(x))
   // await testECDH()
-  await testSH()
+  // await testSH()
 }
 
 const t3a = async () => {

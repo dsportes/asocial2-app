@@ -2,9 +2,10 @@ import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { useDataStore } from '../stores/data-store'
+import { Crypt } from '../app/crypt'
 
 import { K } from '../app/constants'
-import { shortHash, b64ToU8 } from '../app/util'
+import { b64ToU8 } from '../app/util'
 
 export const useConfigStore = defineStore('config', () => {
   // Gestion des langues ***************************************************
@@ -71,12 +72,12 @@ export const useConfigStore = defineStore('config', () => {
     .then((sub: any) => {
       if (sub) {
         subJSON.value = JSON.stringify(sub)
-        hashSub.value = shortHash(sub.endpoint)
+        hashSub.value = Crypt.sha12(sub.endpoint)
       } else {
         const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.vapidPublicKey) }
         pm.subscribe(opt).then((nsub) => {
           subJSON.value = JSON.stringify(nsub)
-          hashSub.value = shortHash(nsub.endpoint)
+          hashSub.value = Crypt.sha12(nsub.endpoint)
           console.log('subJSON: ' + subJSON.value.substring(0, 200))
         }).catch(e => {
           subJSON.value = '??? Souscription non obtenue - ' + e.message

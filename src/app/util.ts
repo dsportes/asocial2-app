@@ -9,10 +9,10 @@ export class AppExc {
   /* code
   1000: erreurs fonctionnelles FW
   2000: erreurs fonctionnelles APP
-  3000: asserions FW
-  4000: asserions APP
-  8000: asserions FW - transmises à l'administrateur
-  9000: asserions APP - transmises à l'administrateur
+  3000: assertions FW
+  4000: assertions APP
+  8000: assertions FW - transmises à l'administrateur
+  9000: assertions APP - transmises à l'administrateur
 */
   public code: number
   public label: string
@@ -236,10 +236,6 @@ export function b64ToObj (b64: string) : any {
 export function clone (obj: any) : any {
   return b64ToObj(objToB64(obj))
 }
-
-export function shortHash (s: string) { return sha224(s).substring(0, 16) }
-
-export function longHash (s: string) { return sha256(s) }
 
 export function concat (views: ArrayBufferView[]) {
   let length = 0
