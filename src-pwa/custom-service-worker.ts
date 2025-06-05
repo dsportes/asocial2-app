@@ -7,9 +7,11 @@ declare const self: ServiceWorkerGlobalScope &
  * is picked up by the build system ONLY if
  * quasar.config file > pwa > workboxMode is set to "InjectManifest"
  */
-
+// @ts-ignore
 import { clientsClaim } from 'workbox-core'
+// @ts-ignore
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
+// @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { b64ToObj } from 'src/app/util'
 
@@ -25,6 +27,7 @@ mf.forEach(x => {
 console.log('SW: WB_MANIFEST <<<<<<<')
 
 // Use with precache injection
+// @ts-ignore
 if (process.env.PROD) {
   console.log('precacheAndRoute')
   precacheAndRoute(mf)

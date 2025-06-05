@@ -1,6 +1,7 @@
 import { u8ToB64, concat } from './util'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+// @ts-ignore
 import { sha256 } from 'js-sha256'
 import { fromByteArray } from './base64'
 
