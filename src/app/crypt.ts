@@ -82,6 +82,14 @@ export class Crypt {
     return u8ToB64(res, true)
   }
 
+  /*
+  static async aSha32 (x: any) { // 9 fois plus long que js-sha256 
+    const u8 = new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(x)))
+    const s = fromByteArray(u8)
+    return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
+  }
+  */
+
   static sha32 (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
     const s = fromByteArray(u8)
@@ -103,7 +111,17 @@ export class Crypt {
 }
 
 export async function testSH () {
-  console.log(await Crypt.strongHash('pierre', 'legrand'))
+  const x = 'toto est tres tres beau'
+  // console.log(Crypt.sha32(x))
+  // console.log(Crypt.sha12(x))
+  // console.log(Crypt.shaInt(x))
+  /*
+  const t = Date.now()
+  for (let i= 0; i< 100000; i++) await Crypt.sha32(x)
+  const n = Date.now() - t
+  console.log('sha32 : ', n)
+  */
+  // console.log(await Crypt.strongHash('pierre', 'legrand'))
 }
 
 export async function testECDH () {

@@ -118,12 +118,8 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
-  const x = 'toto est tres tres beau'
-  console.log(Crypt.sha32(x))
-  console.log(Crypt.sha12(x))
-  console.log(Crypt.shaInt(x))
   // await testECDH()
-  // await testSH()
+  await testSH()
 }
 
 const t3a = async () => {
