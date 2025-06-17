@@ -1,32 +1,35 @@
-
+// Liste ordonnnée de noms de propriétés identifiantes
 export type props = string[]
-export type idx = [ string, varType ]
-export type docref = [ string, number ]
-export type actVar = [ n: string, t: varType, lst: boolean ]
 
+// Type de variable : INTEGER correspond à un int 32 bits
 export enum varType { STRING, INTEGER, FLOAT }
-export enum activityVarType { STRING, LSTRING, LTUPLE }
+
+// Index spécifique d'un document : nom, type de valeur
+export type idx = [ string, varType ]
+
+// Constituant d'un bag : type de document, clé de sélection d'appartenance au bag
+export type docbag = [ string, number ]
 
 const regvar = /^[a-z][a-zA-Z0-9]*$/
 export function isVarName (n: string) { return regvar.test(n)}
 const regdoc = /^[A-Z][a-zA-Z_$0-9]*$/
 export function isDocName (n: string) { return regdoc.test(n)}
-const regdt = /^[$][a-zA-Z_$0-9]*$/
-export function isDTName (n: string) { return regdt.test(n)}
+const regbag = /^[$][a-zA-Z_$0-9]*$/
+export function isBagName (n: string) { return regbag.test(n)}
 
 /* Un type de document est défini par:
 - son nom: nom de la classe qui l'implémente
-- ses clés: chaque clé est une liste de propriétés identifiantes
-  - elles sont nommées 0 à N
-  - keys[0] est la clé primaire
-- ses indexes. Chaque index a pour nom celui d'une propriété du document.
-  - la propriété peut être calculée (un get)
-  - elle de type string / integer / float
+- ses clés (nommées 0 à N) : chaque clé est une liste de propriétés identifiantes
+  - keys[0] est la clé primaire, keys[1...] sont les clés secondaires
+  - en l'absence de keys, c'est un singleton
+  - les propriétés citées en clés secondaires font partie de la clé primaire
+  Un index N définit une sous-collection de documents.
+- ses indexes éventuels. Chaque index a pour nom celui d'UNE propriété du document.
+  - son type peut être STRING, INTEGER, FLOAT
 */
-
 export class DocType {
   static readonly types = new Map<string, DocType>()
-  static getType (d: string) { return DocType.types.get(d)}
+  static getType (dt: string) { return DocType.types.get(dt)}
 
   readonly name: string
   readonly keys : props[]
@@ -62,51 +65,85 @@ export class DocType {
         }
       }
     }
+    for (let i = 0; i < this.indexes.length; i++) {
+      const [ name, varType ] = this.indexes[i]
+      if (!isVarName(name)) return 'invalid index property name [' + name +'] ' + this.name
+      if (ps0.has(name))
+        return 'index property [' + name +'] cannot bue in primary key : ' + this.name
+    }
   }
 }
 
-export type docKey = [ DocType, number ]
-
-export class DTType {
-  static readonly types = new Map<string, DTType>()
-  static getType (dt: string) { return DTType.types.get(dt)} 
+/* Un type de bag est défini par:
+- son nom
+- sa clé : liste de noms de propriétés identifiantes
+  - si la clé est absente, le bag est un singleton
+- la liste des autres propriétés immuables non identifiantes 
+  pouvant être requises pour le credential
+- le type de credential et la liste des propriétés ci-dessus en paramètres de son constructeur
+- la liste des types de documents pouvant appartenir au bag
+  - pour chaque type son numéro de clé de sélection
+  - pour un type singleton 0 par convention
+*/
+export class BagType {
+  static readonly types = new Map<string, BagType>()
+  static getType (bt: string) { return BagType.types.get(bt)} 
 
   readonly name : string
   readonly pkey : props
-  readonly docsKeys : Map<string, docKey> // docKey : DocType, index
+  // Pour chaque type de document participant, ses ou ses numéros de  clés de sélection
+  readonly docTypes : Map<DocType, number>
 
-  constructor (name: string, pkey: props, docrefs: docref[]) {
+  constructor (name: string, pkey: props, docbags: docbag[]) {
     this.name = name
     this.pkey = pkey && pkey.length ? pkey : null
-    this.docsKeys = new Map<string, docKey>()
-    docrefs.forEach(dr => { this.docsKeys.set(dr[0], [ DocType.getType(dr[0]), dr[1] ])})
-    const err = this.checks(docrefs)
+    this.docTypes = new Map<DocType, number>()
+
+    const err = this.checks(docbags)
     if (err) throw Error(err)
-    DTType.types.set(name, this)
+    BagType.types.set(name, this)
   }
 
   get isSingleton () { return !this.pkey }
 
-  checks (docrefs) {
-    if (!isDTName(this.name)) return 'invalid document thread name: ' + this.name
-    if (DTType.types.has(this.name)) return 'duplicate name: ' + this.name
-    const pks = new Set(); this.pkey.forEach(p => { pks.add(p) })
-    const drn = new Set()
-    for (const [d, i] of docrefs) {
-      const dt = DocType.getType(d)
-      if (!dt) return 'unknown document type [' + d + '] in document thread : ' + this.name
-      const px = dt.keys[i]
-      if (!px) return 'no index [' + i + '] for document type [' + d + '] in document thread : ' + this.name
-      if (px.length !== pks.size) return 'index [' + i + '] for document type [' + d + '] not compatible with keys of document thread : ' + this.name
-      for (const p of px) {
-        if (!pks.has(p)) return 'index [' + i + '] for document type [' + d + '] not compatible with keys of document thread : ' + this.name
+  checks (docbags: docbag[]) {
+    if (!isBagName(this.name)) return 'invalid bag name: ' + this.name
+    if (BagType.types.has(this.name)) return 'duplicate bag name: ' + this.name
+    const pks = new Set()
+    if (!this.isSingleton) for(const p of this.pkey) {
+      if (!isVarName(p)) return 'invalid property name [' + p + '] in key of bag : ' + this.name
+      if (pks.has(p)) return 'duplicate property name [' + p + '] in key of bag : ' + this.name
+      pks.add(p)
+    }
+
+    const drn = new Set<DocType>()
+    for (const [n, selk] of docbags) {
+      const dt = DocType.getType(n)
+      if (!dt) return 'unknown document type [' + n + '] in bag : ' + this.name
+      if (drn.has(dt)) return 'duplicate document type [' + n+ '] in bag : ' + this.name
+      drn.add(dt)
+
+      if (this.isSingleton) {
+        this.docTypes.set(dt, 0)
+        continue
       }
-      if (drn.has(d)) return 'duplicate document reference [' + d + '] in document thread : ' + this.name
-      drn.add(d)
-      this.docsKeys.set(d, [dt, i])
+      if (selk === undefined)
+        return 'missing selection key for type [' + n + '] in bag : ' + this.name
+      const px = dt.keys[selk]
+      if (!px) return 'invalid selection key [' + selk + '] for document type [' + n + '] in bag : ' + this.name
+      if (px.length !== pks.size) return 'invalid selection key length [' + selk + '] for document type [' + n + '] in bag : ' + this.name
+      for (const p of px) {
+        if (!pks.has(p)) return 'selection key [' + selk + '] for document type [' + n + '] has property [' + p + '] not in keys of bag : ' + this.name
+      }
+      this.docTypes.set(dt, selk)
     }
   }
 }
+
+// Variable d'activité : nom, type de donées, liste ou non
+export type actVar = [ n: string, t: varType, lst: boolean ]
+
+export enum activityVarType { STRING, LSTRING, LTUPLE }
 
 export class CredType {
   static readonly types = new Map<string, CredType>()
