@@ -74,12 +74,37 @@ export class DocType {
   }
 }
 
+export class CredType {
+  static readonly types = new Map<string, CredType>()
+  static getType (cr: string) { return CredType.types.get(cr)} 
+
+  readonly name : string // nom du type de credential
+  readonly props : props // liste des propriétés constructives
+  readonly nbpk : number // nombre de celles-ci étant clés
+
+  constructor (name: string, props: props, nbpk: number) {
+    this.name = name
+    this.props = props && props.length ? props : null
+    this.nbpk = nbpk
+    const err = this.checks()
+    if (err) throw Error(err)
+    CredType.types.set(name, this)
+  }
+
+  get isSingleton () { return !this.nbpk }
+
+  checks () {
+    if (!isDocName(this.name)) return 'invalid credential name: ' + this.name
+    if (CredType.types.has(this.name)) return 'duplicate credential name: ' + this.name
+    if (this.nbpk < 0 || this.nbpk > this.props.length)
+      return 'invalid key properties number [' + this.nbpk + '] for credential : ' + this.name
+  }
+}
+
 /* Un type de bag est défini par:
 - son nom
-- sa clé : liste de noms de propriétés identifiantes
-  - si la clé est absente, le bag est un singleton
-- la liste des autres propriétés immuables non identifiantes 
-  pouvant être requises pour le credential
+- la liste des noms des propriétés constructives
+- le nombre de celles-ci étant clé : si 0, le bag est un singleton
 - le type de credential et la liste des propriétés ci-dessus en paramètres de son constructeur
 - la liste des types de documents pouvant appartenir au bag
   - pour chaque type son numéro de clé de sélection
@@ -90,30 +115,49 @@ export class BagType {
   static getType (bt: string) { return BagType.types.get(bt)} 
 
   readonly name : string
-  readonly pkey : props
+  readonly props : props
+  readonly nbpk : number // nombre de celles-ci étant clés
+  readonly credType : CredType // type de credential associé
+  readonly credArgs : string[] // varaibles de son constructeur
   // Pour chaque type de document participant, ses ou ses numéros de  clés de sélection
   readonly docTypes : Map<DocType, number>
 
-  constructor (name: string, pkey: props, docbags: docbag[]) {
+  constructor (name: string, props: props, nbpk: number, credName: string, credArgs: string[], docbags: docbag[]) {
     this.name = name
-    this.pkey = pkey && pkey.length ? pkey : null
+    this.props = props && props.length ? props : []
+    this.nbpk = nbpk
+    this.credType = CredType.getType(credName)
+    this.credArgs = credArgs
     this.docTypes = new Map<DocType, number>()
 
-    const err = this.checks(docbags)
+    const err = this.checks(credName, docbags)
     if (err) throw Error(err)
     BagType.types.set(name, this)
   }
 
-  get isSingleton () { return !this.pkey }
+  get isSingleton () { return !this.nbpk }
 
-  checks (docbags: docbag[]) {
+  checks (credName: string, docbags: docbag[]) {
     if (!isBagName(this.name)) return 'invalid bag name: ' + this.name
     if (BagType.types.has(this.name)) return 'duplicate bag name: ' + this.name
+    if (this.nbpk < 0 || this.nbpk > this.props.length)
+      return 'invalid key properties number [' + this.nbpk + '] for bag : ' + this.name
     const pks = new Set()
-    if (!this.isSingleton) for(const p of this.pkey) {
+    const vs = new Set()
+    for(let i = 0; i < this.props.length; i++) {
+      const p = this.props[i]
       if (!isVarName(p)) return 'invalid property name [' + p + '] in key of bag : ' + this.name
-      if (pks.has(p)) return 'duplicate property name [' + p + '] in key of bag : ' + this.name
-      pks.add(p)
+      if (vs.has(p)) return 'duplicate property name [' + p + '] in bag : ' + this.name
+      vs.add(p)
+      if (i < this.nbpk) pks.add(p)
+    }
+
+    if (!this.credType) 
+      return 'invalid credential type [' + credName + '] in bag : ' + this.name
+    if (this.credArgs.length !== this.credType.props.length)
+      return 'invalid credential argument list for bag : ' + this.name
+    for(const p of this.credArgs) {
+      if (!vs.has(p)) return 'invalid credential argument [' + p + '] for bag : ' + this.name
     }
 
     const drn = new Set<DocType>()
@@ -140,29 +184,13 @@ export class BagType {
   }
 }
 
+/*
 // Variable d'activité : nom, type de donées, liste ou non
 export type actVar = [ n: string, t: varType, lst: boolean ]
 
 export enum activityVarType { STRING, LSTRING, LTUPLE }
 
-export class CredType {
-  static readonly types = new Map<string, CredType>()
-  static getType (cr: string) { return CredType.types.get(cr)} 
-
-  readonly name : string // nom du type de credential
-  readonly pkey : props // liste des noms des propriétés clés
-
-  constructor (name: string, pkey: props) {
-    this.name = name
-    this.pkey = pkey && pkey.length ? pkey : null
-    // const err = this.checks()
-    // if (err) throw Error(err)
-    CredType.types.set(name, this)
-  }
-
-}
-
-export type dtTypeLst = { t: DTType, lst: boolean }
+export type dtTypeLst = { t: BagType, lst: boolean }
 
 export class ActivityType {
   static readonly types = new Map<string, ActivityType>()
@@ -191,6 +219,7 @@ export class ActivityType {
   }
 
 }
+*/
 
 try {
   new DocType('RG')
@@ -216,7 +245,18 @@ try {
 }
 
 try {
-  new DTType('$CMDGC', ['gc', 'gp', 'livr'], [['BCG', 0], ['CART', 1], ['BCC', 1]])
+  new CredType('CREDCO', ['gc', 'co', 'initials', 'pwd'], 2)
+} catch (e) {
+  console.log(e)
+}
+
+//   constructor (name: string, props: props, nbpk: number, credName: string, credArgs: string[], docbags: docbag[]) {
+
+try {
+  new BagType('$CMDGC', ['gc', 'gp', 'livr', 'co', 'initials', 'pwd'], 2, 
+    'CREDCO', ['co', 'initials', 'pwd'],
+    [['BCG', 0], ['CART', 1], ['BCC', 1]])
+  
 } catch (e) {
   console.log(e)
 }
