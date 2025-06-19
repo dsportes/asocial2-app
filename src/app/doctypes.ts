@@ -7,9 +7,6 @@ export enum varType { STRING, INTEGER, FLOAT }
 // Index spécifique d'un document : nom, type de valeur
 export type idx = [ string, varType ]
 
-// Constituant d'un bag : type de document, clé de sélection d'appartenance au bag
-export type docbag = [ string, number ]
-
 const regvar = /^[a-z][a-zA-Z0-9]*$/
 export function isVarName (n: string) { return regvar.test(n)}
 const regdoc = /^[A-Z][a-zA-Z_$0-9]*$/
@@ -74,6 +71,17 @@ export class DocType {
   }
 }
 
+/* Un type de credential est défini par:
+- son nom, celui de sa classe
+- la liste des arguments du constructeur d'un credential. 
+- les nbpk premiers arguments son identifiants.
+Un credential comporte deux parties:
+- une partie immable après création, tout credential peut être vérifié depuis ces éléments.
+- une partie optionnelle retournée par un serveur validante du credential.
+Cette partie permet à un serveur de valider à moindre coût un credential présenté,
+sachant que si elle est absente ou non acceptable, la validation se fait
+sur la partie immuable.
+*/
 export class CredType {
   static readonly types = new Map<string, CredType>()
   static getType (cr: string) { return CredType.types.get(cr)} 
@@ -101,85 +109,70 @@ export class CredType {
   }
 }
 
+export type credFilters = Map<CredType, props>
+
+// Constituant d'un bag : type de document, clé de sélection d'appartenance au bag
+export type docInBag = Map<DocType, number>
+
 /* Un type de bag est défini par:
 - son nom
-- la liste des noms des propriétés constructives
-- le nombre de celles-ci étant clé : si 0, le bag est un singleton
-- le type de credential et la liste des propriétés ci-dessus en paramètres de son constructeur
+- la liste des noms des propriétés constructives / identifiantes
+- une liste des types de credential acceptables et pour chacun la ou les proprités identifiantes
+requises. Pour lire / s'abonner à un bag, l'application terminale doit
+fournir dans son opération au moins un credential répondant à cette liste.
 - la liste des types de documents pouvant appartenir au bag
   - pour chaque type son numéro de clé de sélection
   - pour un type singleton 0 par convention
 */
 export class BagType {
-  static readonly types = new Map<string, BagType>()
-  static getType (bt: string) { return BagType.types.get(bt)} 
 
   readonly name : string
-  readonly props : props
-  readonly nbpk : number // nombre de celles-ci étant clés
-  readonly credType : CredType // type de credential associé
-  readonly credArgs : string[] // varaibles de son constructeur
+  readonly pkeys : props
+  readonly credFilters : credFilters // credentials acceptables
   // Pour chaque type de document participant, ses ou ses numéros de  clés de sélection
-  readonly docTypes : Map<DocType, number>
+  readonly docTypes : docInBag
+  readonly err : string
 
-  constructor (name: string, props: props, nbpk: number, credName: string, credArgs: string[], docbags: docbag[]) {
+  constructor (name: string, pkeys: props, credFilters: credFilters, docTypes: docInBag) {
     this.name = name
-    this.props = props && props.length ? props : []
-    this.nbpk = nbpk
-    this.credType = CredType.getType(credName)
-    this.credArgs = credArgs
-    this.docTypes = new Map<DocType, number>()
-
-    const err = this.checks(credName, docbags)
-    if (err) throw Error(err)
-    BagType.types.set(name, this)
+    this.pkeys = pkeys && pkeys.length ? pkeys : []
+    this.credFilters = credFilters
+    this.docTypes = docTypes
+    this.err = this.checks()
   }
 
-  get isSingleton () { return !this.nbpk }
+  get isSingleton () { return this.pkeys.length === 0 }
 
-  checks (credName: string, docbags: docbag[]) {
+  checks () {
     if (!isBagName(this.name)) return 'invalid bag name: ' + this.name
-    if (BagType.types.has(this.name)) return 'duplicate bag name: ' + this.name
-    if (this.nbpk < 0 || this.nbpk > this.props.length)
-      return 'invalid key properties number [' + this.nbpk + '] for bag : ' + this.name
     const pks = new Set()
-    const vs = new Set()
-    for(let i = 0; i < this.props.length; i++) {
-      const p = this.props[i]
+    for(let i = 0; i < this.pkeys.length; i++) {
+      const p = this.pkeys[i]
       if (!isVarName(p)) return 'invalid property name [' + p + '] in key of bag : ' + this.name
-      if (vs.has(p)) return 'duplicate property name [' + p + '] in bag : ' + this.name
-      vs.add(p)
-      if (i < this.nbpk) pks.add(p)
+      if (pks.has(p)) return 'duplicate property name [' + p + '] in bag : ' + this.name
+      pks.add(p)
     }
 
-    if (!this.credType) 
-      return 'invalid credential type [' + credName + '] in bag : ' + this.name
-    if (this.credArgs.length !== this.credType.props.length)
-      return 'invalid credential argument list for bag : ' + this.name
-    for(const p of this.credArgs) {
-      if (!vs.has(p)) return 'invalid credential argument [' + p + '] for bag : ' + this.name
+    for (const [ct, props] of this.credFilters) {
+      for(const p of props) {
+        if (ct.props.indexOf(p) === -1) 
+          return 'invalid credential argument [' + p + '] of credentiel [' + ct.name + '] for bag : ' + this.name
+        if (!pks.has(p)) 
+          return 'invalid credential argument [' + p + '] of credentiel [' + ct.name + '] for bag : ' + this.name
+      }
     }
 
     const drn = new Set<DocType>()
-    for (const [n, selk] of docbags) {
-      const dt = DocType.getType(n)
-      if (!dt) return 'unknown document type [' + n + '] in bag : ' + this.name
-      if (drn.has(dt)) return 'duplicate document type [' + n+ '] in bag : ' + this.name
+    for (const [dt, selk] of this.docTypes) {
+      if (drn.has(dt)) return 'duplicate document type [' + dt.name + '] in bag : ' + this.name
       drn.add(dt)
-
-      if (this.isSingleton) {
-        this.docTypes.set(dt, 0)
-        continue
-      }
       if (selk === undefined)
-        return 'missing selection key for type [' + n + '] in bag : ' + this.name
+        return 'missing selection key for type [' + dt.name + '] in bag : ' + this.name
       const px = dt.keys[selk]
-      if (!px) return 'invalid selection key [' + selk + '] for document type [' + n + '] in bag : ' + this.name
-      if (px.length !== pks.size) return 'invalid selection key length [' + selk + '] for document type [' + n + '] in bag : ' + this.name
+      if (px.length !== pks.size) return 'invalid selection key length [' + selk + '] for document type [' + dt.name + '] in bag : ' + this.name
       for (const p of px) {
-        if (!pks.has(p)) return 'selection key [' + selk + '] for document type [' + n + '] has property [' + p + '] not in keys of bag : ' + this.name
+        if (!pks.has(p)) return 'selection key [' + selk + '] for document type [' + dt.name + '] has property [' + p + '] not in keys of bag : ' + this.name
       }
-      this.docTypes.set(dt, selk)
     }
   }
 }
@@ -221,42 +214,36 @@ export class ActivityType {
 }
 */
 
-try {
-  new DocType('RG')
-  new DocType('RC', [['gc']])
-  new DocType('RP', [['gp']])
-  new DocType('FGC', [['gc']])
-  new DocType('FCO', [['gc', 'co'], ['gc'], ['co']])
-  new DocType('FGP', [['gp']])
-  new DocType('FPR', [['gp', 'pr'], ['gp'], ['pr']])
-  new DocType('CATG', [['gp']])
-  new DocType('CATL', [['gp', 'livr']])
-  new DocType('CALG', [['gp']])
-  new DocType('LIVRG', [['gp', 'livr'], ['gp']])
-  new DocType('BCC', [['gc', 'co', 'gp', 'livr'], ['gc', 'gp', 'livr'], ['gc', 'co', 'livr']])
-  new DocType('BCG', [['gc', 'gp', 'livr'], ['gc', 'gp'], ['gp', 'livr']])
-  new DocType('CART', [['gp', 'pr', 'livr', 'gc'], ['gp', 'livr', 'gc'], ['gp', 'pr'], ['gr', 'livr']])
-  new DocType('CHL', [['gp', 'livr'], ['gp']])
-  new DocType('CHD', [['gp', 'livr', 'gc'], ['gp', 'livr'], ['gp', 'gc']])
-  new DocType('CHCO', [['gc']])
-  new DocType('CHPR', [['gp']])
-} catch (e) {
-  console.log(e)
+export const DocTypes = {
+  RG: new DocType('RG'),
+  RC: new DocType('RC', [['gc']]),
+  RP: new DocType('RP', [['gp']]),
+  FGC: new DocType('FGC', [['gc']]),
+  FCO: new DocType('FCO', [['gc', 'co'], ['gc'], ['co']]),
+  FGP: new DocType('FGP', [['gp']]),
+  FPR: new DocType('FPR', [['gp', 'pr'], ['gp'], ['pr']]),
+  CATG: new DocType('CATG', [['gp']]),
+  CATL: new DocType('CATL', [['gp', 'livr']]),
+  CALG: new DocType('CALG', [['gp']]),
+  LIVRG: new DocType('LIVRG', [['gp', 'livr'], ['gp']]),
+  BCC: new DocType('BCC', [['gc', 'co', 'gp', 'livr'], ['gc', 'gp', 'livr'], ['gc', 'co', 'livr']]),
+  BCG: new DocType('BCG', [['gc', 'gp', 'livr'], ['gc', 'gp'], ['gp', 'livr']]),
+  CART: new DocType('CART', [['gp', 'pr', 'livr', 'gc'], ['gp', 'livr', 'gc'], ['gp', 'pr'], ['gr', 'livr']]),
+  CHL: new DocType('CHL', [['gp', 'livr'], ['gp']]),
+  CHD: new DocType('CHD', [['gp', 'livr', 'gc'], ['gp', 'livr'], ['gp', 'gc']]),
+  CHCO: new DocType('CHCO', [['gc']]),
+  CHPR: new DocType('CHPR', [['gp']])
 }
 
-try {
-  new CredType('CREDCO', ['gc', 'co', 'initials', 'pwd'], 2)
-} catch (e) {
-  console.log(e)
+export const CredTypes = {
+  CO: new CredType('CO', ['gc', 'co', 'initials', 'pwd'], 2),
+  GC: new CredType('GC', ['gc', 'initials', 'pwd'], 1)
 }
 
-//   constructor (name: string, props: props, nbpk: number, credName: string, credArgs: string[], docbags: docbag[]) {
+//  constructor (name: string, pkeys: props, credFilters: credFilterArg[], docbags: docbag[]) {
 
-try {
-  new BagType('$CMDGC', ['gc', 'gp', 'livr', 'co', 'initials', 'pwd'], 2, 
-    'CREDCO', ['co', 'initials', 'pwd'],
-    [['BCG', 0], ['CART', 1], ['BCC', 1]])
-  
-} catch (e) {
-  console.log(e)
+export const BagTypes = {
+  CMDGC: new BagType('CMDGC', ['gc', 'gp', 'livr', 'initials', 'pwd'], 
+    new Map([[CredTypes.CO, ['gc']], [CredTypes.GC, ['gc']]]),
+    new Map([[DocTypes.BCG, 0], [DocTypes.CART, 1], [DocTypes.BCC, 1]]))
 }
