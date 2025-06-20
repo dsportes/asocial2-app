@@ -11,7 +11,7 @@ const regvar = /^[a-z][a-zA-Z0-9]*$/
 export function isVarName (n: string) { return regvar.test(n)}
 const regdoc = /^[A-Z][a-zA-Z_$0-9]*$/
 export function isDocName (n: string) { return regdoc.test(n)}
-const regbag = /^[$][a-zA-Z_$0-9]*$/
+const regbag = /^[A-Z][a-zA-Z_$0-9]*$/
 export function isBagName (n: string) { return regbag.test(n)}
 
 /* Un type de document est défini par:
@@ -25,29 +25,25 @@ export function isBagName (n: string) { return regbag.test(n)}
   - son type peut être STRING, INTEGER, FLOAT
 */
 export class DocType {
-  static readonly types = new Map<string, DocType>()
-  static getType (dt: string) { return DocType.types.get(dt)}
 
   readonly name: string
   readonly keys : props[]
   readonly indexes: idx[]
+  readonly err: string
 
   constructor (name: string, keys?: props[], indexes?: idx[]) {
     this.name = name
-    this.keys = keys && keys.length ? keys : null
-    this.indexes = indexes && indexes.length ? indexes : null
-    const err = this.checks()
-    if (err) throw Error(err)
-    DocType.types.set(name, this)
+    this.keys = keys && keys.length ? keys : []
+    this.indexes = indexes && indexes.length ? indexes : []
+    this.err = this.checks()
   }
 
-  get isSingleton () { return !this.keys }
+  get isSingleton () { return !this.keys.length }
 
-  checks () {
+  checks () : string {
     if (!isDocName(this.name)) return 'invalid document name: ' + this.name
-    if (DocType.types.has(this.name)) return 'duplicate name: ' + this.name
-    if (this.isSingleton)
-      return !this.indexes ? false : 'singletons cannot have indexes: ' + this.name
+    if (this.isSingleton && this.indexes.length)
+      return 'singletons cannot have indexes: ' + this.name
     const ps0 = new Set()
     for (let i = 0; i < this.keys.length; i++) {
       const props = this.keys[i]
@@ -83,27 +79,23 @@ sachant que si elle est absente ou non acceptable, la validation se fait
 sur la partie immuable.
 */
 export class CredType {
-  static readonly types = new Map<string, CredType>()
-  static getType (cr: string) { return CredType.types.get(cr)} 
 
   readonly name : string // nom du type de credential
   readonly props : props // liste des propriétés constructives
   readonly nbpk : number // nombre de celles-ci étant clés
+  readonly err : string
 
   constructor (name: string, props: props, nbpk: number) {
     this.name = name
-    this.props = props && props.length ? props : null
+    this.props = props && props.length ? props : []
     this.nbpk = nbpk
-    const err = this.checks()
-    if (err) throw Error(err)
-    CredType.types.set(name, this)
+    this.err = this.checks()
   }
 
   get isSingleton () { return !this.nbpk }
 
-  checks () {
+  checks () : string {
     if (!isDocName(this.name)) return 'invalid credential name: ' + this.name
-    if (CredType.types.has(this.name)) return 'duplicate credential name: ' + this.name
     if (this.nbpk < 0 || this.nbpk > this.props.length)
       return 'invalid key properties number [' + this.nbpk + '] for credential : ' + this.name
   }
@@ -143,7 +135,7 @@ export class BagType {
 
   get isSingleton () { return this.pkeys.length === 0 }
 
-  checks () {
+  checks () : string {
     if (!isBagName(this.name)) return 'invalid bag name: ' + this.name
     const pks = new Set()
     for(let i = 0; i < this.pkeys.length; i++) {
@@ -166,8 +158,10 @@ export class BagType {
     for (const [dt, selk] of this.docTypes) {
       if (drn.has(dt)) return 'duplicate document type [' + dt.name + '] in bag : ' + this.name
       drn.add(dt)
-      if (selk === undefined)
-        return 'missing selection key for type [' + dt.name + '] in bag : ' + this.name
+      if (selk === -1) {
+        if (dt.isSingleton) continue
+        else return 'missing selection key for type [' + dt.name + '] in bag : ' + this.name
+      }
       const px = dt.keys[selk]
       if (px.length !== pks.size) return 'invalid selection key length [' + selk + '] for document type [' + dt.name + '] in bag : ' + this.name
       for (const p of px) {
@@ -228,7 +222,7 @@ export const DocTypes = {
   LIVRG: new DocType('LIVRG', [['gp', 'livr'], ['gp']]),
   BCC: new DocType('BCC', [['gc', 'co', 'gp', 'livr'], ['gc', 'gp', 'livr'], ['gc', 'co', 'livr']]),
   BCG: new DocType('BCG', [['gc', 'gp', 'livr'], ['gc', 'gp'], ['gp', 'livr']]),
-  CART: new DocType('CART', [['gp', 'pr', 'livr', 'gc'], ['gp', 'livr', 'gc'], ['gp', 'pr'], ['gr', 'livr']]),
+  CART: new DocType('CART', [['gp', 'pr', 'livr', 'gc'], ['gp', 'livr', 'gc'], ['gp', 'pr'], ['gp', 'livr']]),
   CHL: new DocType('CHL', [['gp', 'livr'], ['gp']]),
   CHD: new DocType('CHD', [['gp', 'livr', 'gc'], ['gp', 'livr'], ['gp', 'gc']]),
   CHCO: new DocType('CHCO', [['gc']]),
@@ -237,13 +231,75 @@ export const DocTypes = {
 
 export const CredTypes = {
   CO: new CredType('CO', ['gc', 'co', 'initials', 'pwd'], 2),
-  GC: new CredType('GC', ['gc', 'initials', 'pwd'], 1)
+  GC: new CredType('GC', ['gc', 'initials', 'pwd'], 1),
+  GP: new CredType('GP', ['gp', 'initials', 'pwd'], 1)
 }
 
 //  constructor (name: string, pkeys: props, credFilters: credFilterArg[], docbags: docbag[]) {
 
+const ALLCRED = new Map([[CredTypes.GP, []], [CredTypes.GC, []], [CredTypes.CO, []]])
+const CREDGCCO = new Map([[CredTypes.CO, ['gc']], [CredTypes.GC, ['gc']]])
+
 export const BagTypes = {
-  CMDGC: new BagType('CMDGC', ['gc', 'gp', 'livr', 'initials', 'pwd'], 
+  // commande d'un groupe gc à un groupement gp pour une livraison livr
+  CMDGC: new BagType('CMDGC', ['gc', 'gp', 'livr'], 
     new Map([[CredTypes.CO, ['gc']], [CredTypes.GC, ['gc']]]),
-    new Map([[DocTypes.BCG, 0], [DocTypes.CART, 1], [DocTypes.BCC, 1]]))
+    new Map([[DocTypes.BCG, 0], [DocTypes.CART, 1], [DocTypes.BCC, 1]])),
+
+  // commandes d'un consommateur gc co pour une livraison livr (tous groupements confondus)
+  BCC: new BagType('BCC', ['gc', 'co', 'livr'],
+    CREDGCCO,
+    new Map([[DocTypes.BCC, 2]])),
+  
+  // commandes d'un groupe gc à un groupement gp
+  CMDOV: new BagType('CMDOV', ['gc', 'gp'],
+    new Map([[CredTypes.GP, ['gp']], [CredTypes.GC, ['gc']]]),
+    new Map([[DocTypes.BCG, 1]])),
+
+  // calendrier des livraisons d'un groupement gp
+  CALGP: new BagType('CALGP', ['gp'],
+    ALLCRED,
+    new Map([[DocTypes.CALG, 0], [DocTypes.LIVRG, 1], [DocTypes.CHL, 1]])),
+  
+  // commandes à un groupement gp pour une livraison livr
+  CMDGP: new BagType('CMDGP', ['gp', 'livr'],
+    ALLCRED,
+    new Map([[DocTypes.CHD, 1], [DocTypes.BCG, 2], [DocTypes.CART, 3]])),
+
+  // répertoire général des groupes et groupements
+  RG: new BagType('RG', [], ALLCRED, new Map([[DocTypes.RG, -1]])),
+
+  // fiche d'un groupe gc, ses consommateurs, son chat 
+  RGC: new BagType('RGC', ['gc'],
+    CREDGCCO,
+    new Map([[DocTypes.RC, 0], [DocTypes.CHCO, 0], [DocTypes.FGC, 0], [DocTypes.FCO, 1]])),
+
+  // fiche du consommateur gc co
+  FCO: new BagType('FCO', ['gc', 'co'],
+    new Map([[CredTypes.CO, ['gc', 'co']], [CredTypes.GC, ['gc']]]),
+    new Map([[DocTypes.FCO, 0]])),
+  
+  // 
+  CHD: new BagType('CHD', ['gp', 'gc'],
+    CREDGCCO,
+    new Map([[DocTypes.CHD, 2]])),
+  
 }
+
+export function compileReport () {
+  let n = 0
+  for (const [k, v] of Object.entries(DocTypes)) { 
+    if (k !== v.name) { n++ ; console.log('names mismatch [' + k + ' / ' + v.name + ']')}
+    if (v.err) { console.log(v.err); n++ } 
+  }
+  for (const [k, v] of Object.entries(CredTypes)) { 
+    if (k !== v.name) { n++ ; console.log('names mismatch [' + k + ' / ' + v.name + ']')}
+    if (v.err) { console.log(v.err); n++ } 
+  }
+  for (const [k, v] of Object.entries(BagTypes)) { 
+    if (k !== v.name) { n++ ; console.log('names mismatch [' + k + ' / ' + v.name + ']')}
+    if (v.err) { console.log(v.err); n++ } 
+  }
+  return n
+}
+
