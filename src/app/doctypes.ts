@@ -1,3 +1,6 @@
+// @ts-ignore
+import { encode } from '@msgpack/msgpack'
+
 // Liste ordonnnée de noms de propriétés identifiantes
 export type props = string[]
 
@@ -171,43 +174,6 @@ export class BagType {
   }
 }
 
-/*
-// Variable d'activité : nom, type de donées, liste ou non
-export type actVar = [ n: string, t: varType, lst: boolean ]
-
-export enum activityVarType { STRING, LSTRING, LTUPLE }
-
-export type dtTypeLst = { t: BagType, lst: boolean }
-
-export class ActivityType {
-  static readonly types = new Map<string, ActivityType>()
-
-  readonly name : string // classe de l'activité
-  readonly pkey : props // liste des noms des propriétés clés
-  readonly vcst : props // liste des noms des propriétés immuables
-  readonly vars : actVar[] // liste et type des variables (nom, varType, estListe) ???
-  readonly creds: Map<String, CredType> // map des types de credentials à générer
-  readonly dttypes: Map<String, dtTypeLst> // map des types de fils gérés par l'activité (liste ou non)
-
-  constructor (name: string, pkey: props, vcst: props, vars: actVar[], creds: string[], dttypes: string[]) {
-    this.name = name
-    this.pkey = pkey && pkey.length ? pkey : null
-    this.vcst = vcst && vcst.length ? vcst : null
-    this.creds = new Map<String, CredType>()
-    creds.forEach(cr => { this.creds.set(cr, CredType.getType(cr)) })
-    this.dttypes = new Map<String, dtTypeLst>()
-    dttypes.forEach(dt => { 
-      if (dt.startsWith('*')) this.dttypes.set(dt.substring(1), { t: DTType.getType(dt.substring(1)), lst: true})
-      else this.dttypes.set(dt, { t: DTType.getType(dt), lst: false}) 
-    })
-    // const err = this.checks()
-    // if (err) throw Error(err)
-    ActivityType.types.set(name, this)
-  }
-
-}
-*/
-
 export const DocTypes = {
   RG: new DocType('RG'),
   RC: new DocType('RC', [['gc']]),
@@ -303,3 +269,123 @@ export function compileReport () {
   return n
 }
 
+export class Cred {
+  static readonly credentials = new Map<string, Cred>()
+
+  readonly id : string
+  readonly type: CredType
+  readonly org : string
+  readonly keys : string[]
+
+  constructor (ct: CredType, org: string, keys: string[]) {
+    this.id = [ct.name, org, ...keys].join('/')
+    this.type = ct
+    this.org = org
+    this.keys = keys
+    Cred.credentials.set(this.id, this)
+  }
+}
+
+export class CREDCO extends Cred {
+
+  readonly gc : string
+  readonly co : string
+  initials : string
+  pwd : string
+
+  constructor (ct: CredType, org: string, gc: string, co: string, initials: string, pwd: string) {
+    super(ct, org, [gc, co])
+    this.initials = initials
+    this.pwd = pwd
+  }
+
+}
+
+export class Activity {
+  static readonly activities = new Map<string, Activity>()
+  
+  readonly id : string
+  readonly type : string
+  readonly org : string
+  readonly keys : string[]
+
+  credentials : Cred[]
+
+  constructor (type: string, org: string, keys: string[]) {
+    this.id = [type, org, ...keys].join('/')
+    this.type = type
+    this.org = org
+    this.keys = keys
+    this.credentials = []
+    Activity.activities.set(this.id, this)
+  }
+
+  getCred (type: string) : Cred {
+    for(const c of this.credentials) if (c.type.name === type) return c
+    return null
+  }
+
+}
+
+export type gplivr = {
+  gp : string,
+  livr : string
+}
+
+export class ActCMDCO extends Activity {
+
+  readonly gc : string
+  readonly co : string
+
+  lgp : string[]
+  lx : gplivr[]
+
+  constructor (type: string, org: string, gc: string, co: string, initials: string, pwd: string) {
+    super(type, org, [gc, co])
+    this.gc = gc
+    this.co = co
+    this.lgp = []
+    this.lx = []
+    this.credentials.push(new CREDCO(CredTypes.CO, org, gc, co, initials, pwd))
+  }
+
+  genBagSubs () : BagSub[] {
+    const l : BagSub[] = []
+    l.push(new BagSub(BagTypes.RG, this.org, []))
+    l.push(new BagSub(BagTypes.RGC, this.org, [this.gc]))
+    l.push(new BagSub(BagTypes.FCO, this.org, [this.gc, this.co]))
+    for (const gp of this.lgp) {
+      l.push(new BagSub(BagTypes.CALGP, this.org, [gp]))
+      l.push(new BagSub(BagTypes.CHD, this.org, [gp, this.gc]))
+    }
+    for (const {gp, livr} of this.lx) {
+      l.push(new BagSub(BagTypes.CMDGC, this.org, [this.gc, gp, livr]))
+    }
+    return l
+  }
+
+}
+
+export class BagSub {
+
+  readonly type : string
+  readonly org : string
+  readonly keys : string[]
+  readonly exclDT : string[]
+
+  constructor (bt: BagType, org: string, keys: string[], exclDT?: DocType[]) {
+    this.type = bt.name
+    this.org = org
+    this.keys = keys
+    if (exclDT) { 
+      this.exclDT = []
+      exclDT.forEach(t => { this.exclDT.push(t.name) })
+    }
+  }
+
+  get serial () {
+    return encode({ type: this.type, org: this.org, keys: this.keys, exclDT: this.exclDT || null })
+  }
+
+
+}
