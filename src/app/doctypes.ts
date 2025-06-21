@@ -367,11 +367,28 @@ export class ActCMDCO extends Activity {
 }
 
 export class BagSub {
+  private static next = 0
+  static readonly list : BagSub[] = []
+  static readonly all = new Map<string, number>()
+
+  static get (bt: BagType, org: string, keys: string[], exclDT?: DocType[]) {
+    const x = new BagSub(bt, org, keys, exclDT)
+    return BagSub.list[x.idx]
+  }
+
+  static getFromId (id: string) {
+    const idx = BagSub.all.get(id)
+    return idx ? BagSub.list[idx] : null
+  }
 
   readonly type : string
   readonly org : string
   readonly keys : string[]
   readonly exclDT : string[]
+  // id: type/org/k0/k1/..@dt0/dt1/... (@... absent si pas d'exclusion de DocType)
+  readonly id : string
+  // index local en session
+  readonly idx : number 
 
   constructor (bt: BagType, org: string, keys: string[], exclDT?: DocType[]) {
     this.type = bt.name
@@ -380,11 +397,16 @@ export class BagSub {
     if (exclDT) { 
       this.exclDT = []
       exclDT.forEach(t => { this.exclDT.push(t.name) })
+      this.exclDT.sort()
     }
-  }
-
-  get serial () {
-    return encode({ type: this.type, org: this.org, keys: this.keys, exclDT: this.exclDT || null })
+    this.id = this.type + '/' + this.org + keys.join('/') + (exclDT ? '@' + this.exclDT.join('/') : '')
+    let idx = BagSub.all.get(this.id)
+    if (!idx) {
+      idx = BagSub.next++
+      BagSub.all.set(this.id, idx)
+      BagSub.list[idx] = this
+    }
+    this.idx = idx
   }
 
 
