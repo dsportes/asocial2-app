@@ -3,12 +3,12 @@
 </template>
 
 <script setup lang="ts">
-import { openHelp } from '../app/util'
+  import { openHelp } from '../app/util'
+  import { ref } from 'vue'
 
-const props = defineProps({ 
-  page: String
-})
-
+  const props = defineProps({
+    page: String
+  })
 </script>
 
 <style lang="scss" scoped>
