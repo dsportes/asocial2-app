@@ -118,8 +118,8 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
-  // await testECDH()
-  await testSH()
+  await testECDH()
+  // await testSH()
 }
 
 const t3a = async () => {

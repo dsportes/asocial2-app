@@ -5,6 +5,12 @@ import { K } from './constants'
 // @ts-ignore
 import { sha224, sha256 } from 'js-sha256'
 
+import { gzip, ungzip } from './pako.mjs'
+
+export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
+
+export function ungzipT (data: Uint8Array) { return ungzip(data) }
+
 export class AppExc {
   /* code
   1000: erreurs fonctionnelles FW

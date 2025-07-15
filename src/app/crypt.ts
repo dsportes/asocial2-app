@@ -19,6 +19,8 @@ function u8ToHex (u8) {
 export class Crypt {
 
   static alg = { name: 'ECDH', namedCurve: 'P-521' }
+  static ecdsa = { name: 'ECDSA', namedCurve: 'P-521' }
+  static ecdsaSV = { name: 'ECDSA', hash: 'SHA-256' }
 
   static async crypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
@@ -57,6 +59,15 @@ export class Crypt {
     ]
   }
 
+  static async getSVKeyPair () : Promise<Uint8Array[]> {
+    const p = await crypto.subtle.generateKey(Crypt.ecdsa, true, ['sign', 'verify'])
+    const jwk = await crypto.subtle.exportKey('jwk', p.privateKey)
+    return [
+      new Uint8Array(await crypto.subtle.exportKey('raw', p.publicKey)),
+      new Uint8Array(encode(jwk))
+    ]
+  }
+
   static async getAESKey (pubKey: Uint8Array, myPrivKey: Uint8Array): Promise<Uint8Array> {
     const pub = await crypto.subtle.importKey('raw', pubKey, Crypt.alg, true, [])
     const priv = await crypto.subtle.importKey('jwk', decode(myPrivKey), Crypt.alg, true, ['deriveKey'])
@@ -64,6 +75,16 @@ export class Crypt {
       { name: 'ECDH', public: pub }, priv, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
     )
     return new Uint8Array(await crypto.subtle.exportKey('raw', k))
+  }
+
+  static async sign (privKey: Uint8Array, data: Uint8Array) : Promise<Uint8Array> {
+    const priv = await crypto.subtle.importKey('jwk', decode(privKey), Crypt.ecdsa, false, ['sign'])
+    return new Uint8Array(await crypto.subtle.sign(Crypt.ecdsaSV, priv, data))
+  }
+
+  static async verify (pubKey: Uint8Array, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
+    const pub = await crypto.subtle.importKey('raw', pubKey, Crypt.ecdsa, true, ['verify'])
+    return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature, data)
   }
 
   static async strongHash (s1: string, s2: string) : Promise<string> {
@@ -126,19 +147,31 @@ export async function testSH () {
 }
 
 export async function testECDH () {
+  const x = new TextEncoder().encode('toto est tres tres beau')
+  const xx = new TextEncoder().encode('toto est tres tres beaux')
+
   // Dans app
   const appPair = await Crypt.getKeyPair()
   const appPub = appPair[0]
   console.log(u8ToB64(appPub), u8ToB64(appPair[1]))
 
+  const appSVPair = await Crypt.getSVKeyPair()
+  const appSVPub = appSVPair[0]
+  const sign = await Crypt.sign(appSVPair[1], x)
+
   // Dans srv
+  const verif1 = await Crypt.verify(appSVPub, sign, x)
+  console.log('verif1 = ', verif1)
+  const verif2 = await Crypt.verify(appSVPub, sign, xx)
+  console.log('verif2 = ', verif2)
+
   const srvPair = await Crypt.getKeyPair()
   const srvPub = srvPair[0]
   console.log(u8ToB64(srvPub), u8ToB64(srvPair[1]))
 
   const aesSrv = await Crypt.getAESKey(appPub, srvPair[1])
   console.log('aesSrv: ', u8ToB64(aesSrv))
-  const x1 = await Crypt.crypterSrv(aesSrv, new TextEncoder().encode('toto est tres beau'))
+  const x1 = await Crypt.crypterSrv(aesSrv, x)
 
   // Dans app
   const aesApp = await Crypt.getAESKey(srvPub, appPair[1])
