@@ -25,9 +25,9 @@ export class Crypt {
   static async crypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
       const iv = crypto.getRandomValues(new Uint8Array(12))
-      const key = await crypto.subtle.importKey('raw', cle, 'AES-GCM', false, ['encrypt'])
+      const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['encrypt'])
       const enc = new Uint8Array(await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv, tagLength: 128 }, key, buf))
+        { name: 'AES-GCM', iv, tagLength: 128 }, key, buf as BufferSource))
       const x = concat([iv, enc])
       // const authTag = buf.subarray(buf.byteLength - 16)
       // console.log('crypterSrv authTag ', u8ToHex(authTag))
@@ -39,9 +39,9 @@ export class Crypt {
 
   static async decrypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
-      const key = await crypto.subtle.importKey('raw', cle, 'AES-GCM', false, ['decrypt'])
-      const iv = buf.subarray(0, 12)
-      const enc = buf.subarray(12)
+      const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['decrypt'])
+      const iv = buf.subarray(0, 12) as BufferSource
+      const enc = buf.subarray(12) as BufferSource
       // const authTag = buf.subarray(buf.byteLength - 16)
       // console.log('decrypterSrv authTag ', u8ToHex(authTag))
       return new Uint8Array(await crypto.subtle.decrypt(
@@ -69,7 +69,7 @@ export class Crypt {
   }
 
   static async getAESKey (pubKey: Uint8Array, myPrivKey: Uint8Array): Promise<Uint8Array> {
-    const pub = await crypto.subtle.importKey('raw', pubKey, Crypt.alg, true, [])
+    const pub = await crypto.subtle.importKey('raw', pubKey  as BufferSource, Crypt.alg, true, [])
     const priv = await crypto.subtle.importKey('jwk', decode(myPrivKey), Crypt.alg, true, ['deriveKey'])
     const k = await crypto.subtle.deriveKey(
       { name: 'ECDH', public: pub }, priv, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
@@ -79,12 +79,12 @@ export class Crypt {
 
   static async sign (privKey: Uint8Array, data: Uint8Array) : Promise<Uint8Array> {
     const priv = await crypto.subtle.importKey('jwk', decode(privKey), Crypt.ecdsa, false, ['sign'])
-    return new Uint8Array(await crypto.subtle.sign(Crypt.ecdsaSV, priv, data))
+    return new Uint8Array(await crypto.subtle.sign(Crypt.ecdsaSV, priv, data as BufferSource))
   }
 
   static async verify (pubKey: Uint8Array, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
-    const pub = await crypto.subtle.importKey('raw', pubKey, Crypt.ecdsa, true, ['verify'])
-    return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature, data)
+    const pub = await crypto.subtle.importKey('raw', pubKey as BufferSource, Crypt.ecdsa, true, ['verify'])
+    return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature as BufferSource, data as BufferSource)
   }
 
   static async strongHash (s1: string, s2: string) : Promise<string> {
@@ -118,9 +118,9 @@ export class Crypt {
     return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
   }
 
-  static sha12 (x: any) {
+  static sha16 (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
-    const s = fromByteArray(u8.subarray(3, 15))
+    const s = fromByteArray(u8.subarray(3, 18))
     return s.replace(/\+/g, '-').replace(/\//g, '_')
   }
 
@@ -135,15 +135,21 @@ export class Crypt {
 export async function testSH () {
   const x = 'toto est tres tres beau'
   console.log(Crypt.sha32(x))
-  console.log(Crypt.sha12(x))
+  console.log(Crypt.sha16(x))
   console.log(Crypt.shaInt(x))
+
+  console.log(await Crypt.strongHash('pierre', 'legrand'))
+  // console.log( Crypt.syncStrongHash('pierre', 'legrand'))
+  console.log(Crypt.sha32(x))
+  console.log(Crypt.sha16(x))
+  console.log(Crypt.shaInt(x))
+
   /*
   const t = Date.now()
   for (let i= 0; i< 100000; i++) await Crypt.sha32(x)
   const n = Date.now() - t
   console.log('sha32 : ', n)
   */
-  // console.log(await Crypt.strongHash('pierre', 'legrand'))
 }
 
 export async function testECDH () {
