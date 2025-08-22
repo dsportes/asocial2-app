@@ -22,7 +22,7 @@ export class Crypt {
   static ecdsa = { name: 'ECDSA', namedCurve: 'P-521' }
   static ecdsaSV = { name: 'ECDSA', hash: 'SHA-256' }
 
-  static async crypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
+  static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
       const iv = crypto.getRandomValues(new Uint8Array(12))
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['encrypt'])
@@ -30,20 +30,20 @@ export class Crypt {
         { name: 'AES-GCM', iv, tagLength: 128 }, key, buf as BufferSource))
       const x = concat([iv, enc])
       // const authTag = buf.subarray(buf.byteLength - 16)
-      // console.log('crypterSrv authTag ', u8ToHex(authTag))
+      // console.log('crypt authTag ', u8ToHex(authTag))
       return x
     } catch (e) {
       return null
     }
   }
 
-  static async decrypterSrv (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
+  static async decrypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['decrypt'])
       const iv = buf.subarray(0, 12) as BufferSource
       const enc = buf.subarray(12) as BufferSource
       // const authTag = buf.subarray(buf.byteLength - 16)
-      // console.log('decrypterSrv authTag ', u8ToHex(authTag))
+      // console.log('decrypt authTag ', u8ToHex(authTag))
       return new Uint8Array(await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv, tagLength: 128 }, key, enc))
     } catch (e) {
@@ -177,12 +177,12 @@ export async function testECDH () {
 
   const aesSrv = await Crypt.getAESKey(appPub, srvPair[1])
   console.log('aesSrv: ', u8ToB64(aesSrv))
-  const x1 = await Crypt.crypterSrv(aesSrv, x)
+  const x1 = await Crypt.crypt(aesSrv, x)
 
   // Dans app
   const aesApp = await Crypt.getAESKey(srvPub, appPair[1])
   console.log('aesApp: ', u8ToB64(aesApp))
-  const x3 = await Crypt.decrypterSrv(aesApp, x1)
+  const x3 = await Crypt.decrypt(aesApp, x1)
   const x2 = decoder.decode(x3)
   console.log(x2)
 }
