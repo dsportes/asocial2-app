@@ -28,11 +28,12 @@ export default {
   op_EchoTexte: 'Echo du texte envoyé',
   op_TestMessage: 'Test de réception de push du serveur',
   op_RegisterSubscription: 'Enregistrement de web-push',
+  op_TestAuth: 'Test d\'authentification',
 
   HLPaidebd: 'Page "{0}" bientôt disponible',
 
   RLtit1: 'Nouvelle version disponible',
-  RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.', 
+  RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
   RLopt1: 'Première Option : en général efficace. ',
   RLopt2: 'Seconde option : fermer TOUS les onglets et fenêtres où s\'exécute l\'application puis l\'appeler à nouveau dans une nouvelle fenêtre / onglet.',
 

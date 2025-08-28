@@ -119,7 +119,10 @@ const t2 = async () => {
 }
 
 const t3 = async () => {
-  await testECDH()
+  // await testECDH()
+  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
+  console.log(ps)
+  console.log(Crypt.sha32(ps))
   // await testSH()
 }
 
@@ -158,7 +161,7 @@ const t4 = async () => {
       devAppToken : 'bof',
       time: Date.now(),
       tokens : [
-        { type: 'ADMIN', val: 'ok'},
+        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
         { type: 'TEST1', toto: 'titi'},
         { type: 'TEST2', toto: 'titi'},
       ]

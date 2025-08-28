@@ -5,7 +5,6 @@ import { encode, decode } from '@msgpack/msgpack'
 import { sha256 } from 'js-sha256'
 import { fromByteArray } from './base64'
 
-const padding = 'abcdefghijklmnopqrstuvwzyzABCDEF'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
@@ -87,12 +86,18 @@ export class Crypt {
     return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature as BufferSource, data as BufferSource)
   }
 
-  static async strongHash (s1: string, s2: string) : Promise<string> {
-    const x = s1.length >= padding.length ? s1 : s1 + padding.substring(0, padding.length - s1.length)
-    const y = s2.length >= padding.length ? s2 : s2 + padding.substring(0, padding.length - s2.length)
-    const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(x)))
+  static async strongHash (s1: string, s2: string, sep?: string) : Promise<string> {
+    let s = sep || ''
+    if (s) {
+      s = sep
+      const l = (s1 ? s1.length : 0) + (s2 ? s2.length : 0)
+      while (l + s.length < 40) s += sep
+    }
+    const x = (s1 || '') + s + (s2 || '')
+    const ex = encoder.encode(x)
+    const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", ex))
     const salt = h1.subarray(0, 16)
-    const p = await crypto.subtle.importKey('raw', encoder.encode(x + '@@@' + y), 'PBKDF2', false, ['deriveKey'])
+    const p = await crypto.subtle.importKey('raw', ex, 'PBKDF2', false, ['deriveKey'])
     const key = await crypto.subtle.deriveKey(
       { name: 'PBKDF2', salt : salt, iterations: 20000, hash: 'SHA-256' },
       p,
@@ -138,8 +143,8 @@ export async function testSH () {
   console.log(Crypt.sha16(x))
   console.log(Crypt.shaInt(x))
 
-  console.log(await Crypt.strongHash('pierre', 'legrand'))
-  // console.log( Crypt.syncStrongHash('pierre', 'legrand'))
+  console.log(await Crypt.strongHash('pierre', 'legrand', '$/@'))
+  console.log( await Crypt.strongHash('pierre', 'legrand', '$/@'))
   console.log(Crypt.sha32(x))
   console.log(Crypt.sha16(x))
   console.log(Crypt.shaInt(x))
