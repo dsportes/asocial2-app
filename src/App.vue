@@ -7,7 +7,7 @@
     />
     <q-btn label="T1" @click="t1"/>
     <q-btn label="T2" @click="t2"/>
-    <q-btn label="T3" @click="t3"/>
+    <q-btn label="T4" @click="t4"/>
     <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
@@ -36,7 +36,8 @@ import { useI18n } from 'vue-i18n'
 
 import { useConfigStore} from './stores/config-store'
 import { K } from './app/constants'
-import { setConfig, postOp, getData, putData, readFile, fileDescr } from './app/util'
+import { setConfig, readFile, fileDescr } from './app/util'
+import { postOp, getData, putData } from './app/net'
 import { testECDH, testSH } from './app/crypt'
 import { initWP } from './app/wputil'
 
@@ -149,6 +150,21 @@ const t1b = () => {
   config.setAppUpdated()
   // reloadPage()
   // config.callSW({ type: 'FROM_APP', arg: 'coucou'})
+}
+
+const t4 = async () => {
+  const res = await postOp('TestAuth', {
+    authRecord: {
+      devAppToken : 'bof',
+      time: Date.now(),
+      tokens : [
+        { type: 'ADMIN', val: 'ok'},
+        { type: 'TEST1', toto: 'titi'},
+        { type: 'TEST2', toto: 'titi'},
+      ]
+    }
+   })
+  console.log('TestAuth:' + res.auths)
 }
 
 </script>

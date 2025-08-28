@@ -1,4 +1,5 @@
-import { postOp, config } from './util'
+import { config } from './util'
+import { postOp } from './net'
 
 export async function initWP () {
   if (config.subJSON.startsWith('???')) {
@@ -15,7 +16,7 @@ export async function initWP () {
 
 export async function onmsg (payload: any) {
   console.log('Message received by web-push')
-  
+
   if (payload?.data?.notifme) {
     await showNotifFG(payload)
   }

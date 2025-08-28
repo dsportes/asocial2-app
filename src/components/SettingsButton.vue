@@ -4,8 +4,8 @@
   <q-btn v-else flat dense icon="settings" :class="config.newVersionReady ? 'bg-negative text-white' : ''">
     <q-menu>
       <q-list style="min-width: 300px">
-        
-        <q-item v-if="config.newVersionReady" clickable dense v-close-popup 
+
+        <q-item v-if="config.newVersionReady" clickable dense v-close-popup
           class="bg-negative text-white"
           @click="config.newVersionDialog = true">
           <q-item-section avatar><q-avatar size="xl" icon="system_update"/></q-item-section>
@@ -59,7 +59,7 @@
 
         <q-item>
           <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [K.BUILD, K.APIVERSION]) }}</q-item-section>
-        </q-item> 
+        </q-item>
       </q-list>
     </q-menu>
   </q-btn>
@@ -73,7 +73,7 @@
   <q-dialog v-model="config.newVersionDialog" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" :label="$t('later')" 
+        <q-btn dense icon="close" color="warning" :label="$t('later')"
           @click="config.newVersionDialog = false"/>
         <q-toolbar-title>{{$t('RLtit1')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
@@ -83,12 +83,12 @@
         <div class="titre-md q-my-md">{{$t('RLtit2')}}</div>
         <div class="row q-my-sm justify-between items-center">
           <div class="titre-md text-bold">{{$t('RLopt1')}}</div>
-          <q-btn dense padding="none" icon="system_update" color="primary" 
+          <q-btn dense padding="none" icon="system_update" color="primary"
             :label="$t('clickhere')" @click="reloadPage"/>
         </div>
         <div class="row q-my-sm justify-between items-center">
           <div class="col titre-md q-my-sm text-italic">{{$t('RLopt2')}}</div>
-          <q-btn class="col-auto q-ml-sm" dense padding="none" icon="close" 
+          <q-btn class="col-auto q-ml-sm" dense padding="none" icon="close"
             color="primary" :label="$t('gotit')" @click="config.newVersionDialog = false"/>
         </div>
       </div>
@@ -157,7 +157,7 @@
         <div class="text-bold titre-md">Titre italic md</div>
         <div class="text-italic text-bold titre-md">Titre italic bold md</div>
         <div class="titre-xl">Titre xl</div>
-      
+
         <q-separator color="orange" class="q-my-md"/>
         <div class="spsm">
         <div class="q-my-sm row reverse q-gutter-sm items-center">
@@ -271,7 +271,7 @@
       </div>
 
       <q-separator color="orange" class="q-my-md"/>
-      
+
       <div class="column items-center">
         <q-btn icon-right="send" color="primary":label="$t('ping')" @click="opPing"/>
         <div class="q-mt-sm q-mx-sm font-mono height-4 text-center">{{resping}}</div>
@@ -290,7 +290,8 @@ import { useQuasar, setCssVar } from 'quasar'
 
 import HelpButton from './HelpButton.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { config, abortPostOp, sty, reloadPage, openHelp, postOp, sleep, coolBye } from '../app/util'
+import { config, sty, reloadPage, openHelp, sleep, coolBye } from '../app/util'
+import { postOp, abortPostOp } from '../app/net'
 import { localeOption, K } from '../app/constants'
 
 const i18n = useI18n()
