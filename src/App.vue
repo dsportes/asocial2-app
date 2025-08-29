@@ -29,9 +29,13 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import ext2mime from 'ext2mime'
+// @ts-ignore
 import { ref, computed, watch } from 'vue'
+// @ts-ignore
 import { useQuasar } from 'quasar'
+// @ts-ignore
 import { useI18n } from 'vue-i18n'
 
 import { useConfigStore} from './stores/config-store'
@@ -89,7 +93,7 @@ async function downloadFile () : Promise<void> {
   await getPutUrl(false)
   if (echo.value) try {
     const data = await getData(echo.value)
-    const blob = new Blob([data], { type: fileType.value })
+    const blob = new Blob([new Uint8Array(data)], { type: fileType.value })
     const url = URL.createObjectURL(blob)
     setTimeout(() => { window.open(url, '_blank') }, 100)
   } catch (e) {

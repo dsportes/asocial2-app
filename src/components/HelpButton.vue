@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
   import { openHelp } from '../app/util'
-  import { ref } from 'vue'
+  // import { ref } from 'vue'
 
   const props = defineProps({
     page: String
