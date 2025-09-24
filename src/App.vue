@@ -162,6 +162,7 @@ const t1b = () => {
 const t4 = async () => {
   const res = await postOp('TestAuth', {
     authRecord: {
+      sessionId : 'session789',
       devAppToken : 'bof',
       time: Date.now(),
       tokens : [

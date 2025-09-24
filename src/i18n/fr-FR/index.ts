@@ -17,6 +17,10 @@ export default {
   buildapi: 'Build: {0} - API: {1}',
   closeApp: 'Fermer l\'application',
   restartApp: 'Redémmarrer l\'application',
+  srvStatus_0: 'Statut du service inconnu',
+  srvStatus_1: 'Statut du service UP (dernière mise à jour: {0})',
+  srvStatus_2: 'Statut du service DOWN (dernière mise à jour: {0})',
+  srvStatus: '{0} - {1} - Build:[{2}] - {3}',
 
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',

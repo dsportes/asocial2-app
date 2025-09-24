@@ -273,7 +273,7 @@
       <q-separator color="orange" class="q-my-md"/>
 
       <div class="column items-center">
-        <q-btn icon-right="send" color="primary":label="$t('ping')" @click="opPing"/>
+        <q-btn icon-right="send" color="primary":label="$t('ping')" @click="opGetSrvStatus"/>
         <div class="q-mt-sm q-mx-sm font-mono height-4 text-center">{{resping}}</div>
       </div>
 
@@ -290,7 +290,7 @@ import { useQuasar, setCssVar } from 'quasar'
 
 import HelpButton from './HelpButton.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { config, sty, reloadPage, openHelp, sleep, coolBye } from '../app/util'
+import { $t, config, sty, reloadPage, openHelp, sleep, coolBye } from '../app/util'
 import { postOp, abortPostOp } from '../app/net'
 import { localeOption, K } from '../app/constants'
 
@@ -340,12 +340,19 @@ async function opEcho () : Promise<void>  {
 }
 
 const resping = ref('')
-async function opPing () : Promise<void> {
+async function opGetSrvStatus () : Promise<void> {
   try {
     resping.value = ''
     await sleep(1000)
-    const x = await postOp('PingDB', { })
-    resping.value = x['status'] + ' - ' + x['msg']
+    const res = await postOp('GetSrvStatus', { })
+    // this.setRes('srvStatus', { st, at, txt})
+    const { st, at, txt } = res['srvStatus']
+    const now = res['now']
+    const nowS = new Date(now).toISOString()
+    const atS = at ? new Date(at).toISOString() : '?'
+    const stS = $t('srvStatus_'+ st, [atS])
+    const srvBUILD = res['srvBUILD']
+    resping.value = $t('srvStatus', [nowS, stS, srvBUILD, txt || ''])
   } catch (e) {
     resping.value = 'err:' + (e.code || '???')
   }
