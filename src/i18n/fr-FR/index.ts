@@ -33,6 +33,8 @@ export default {
   op_TestMessage: 'Test de réception de push du serveur',
   op_RegisterSubscription: 'Enregistrement de web-push',
   op_TestAuth: 'Test d\'authentification',
+  op_GetSrvStatus: 'Status du service',
+  op_SetSrvStatus: 'Fixe le status du service',
 
   HLPaidebd: 'Page "{0}" bientôt disponible',
 

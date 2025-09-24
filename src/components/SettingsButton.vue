@@ -258,6 +258,8 @@
       <q-toolbar class="tbp">
         <q-btn dense icon="close" color="warning" @click="pings = false"/>
         <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
+        <q-btn dense icon="check" color="primary" @click="opSetSrvStatus(1)"/>
+        <q-btn dense icon="check" color="warning" @click="opSetSrvStatus(2)"/>
         <help-button page="reloadApp"/>
       </q-toolbar>
 
@@ -343,14 +345,34 @@ const resping = ref('')
 async function opGetSrvStatus () : Promise<void> {
   try {
     resping.value = ''
-    await sleep(1000)
     const res = await postOp('GetSrvStatus', { })
-    // this.setRes('srvStatus', { st, at, txt})
-    const { st, at, txt } = res['srvStatus']
-    const now = res['now']
+    const { now, st, at, txt } = res['srvStatus']
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_'+ st, [atS])
+    const srvBUILD = res['srvBUILD']
+    resping.value = $t('srvStatus', [nowS, stS, srvBUILD, txt || ''])
+  } catch (e) {
+    resping.value = 'err:' + (e.code || '???')
+  }
+}
+
+async function opSetSrvStatus (stx) : Promise<void> {
+  try {
+    resping.value = ''
+    const authRecord = {
+      sessionId : 'session789',
+      time: Date.now(),
+      tokens : [
+        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
+      ]
+    }
+    const args = { authRecord, st: stx, txt: 'info ' + stx}
+    const res = await postOp('SetSrvStatus', args)
+    const { now, st, at, txt } = res['srvStatus']
+    const nowS = new Date(now).toISOString()
+    const atS = at ? new Date(at).toISOString() : '?'
+    const stS = $t('srvStatus_' + st, [atS])
     const srvBUILD = res['srvBUILD']
     resping.value = $t('srvStatus', [nowS, stS, srvBUILD, txt || ''])
   } catch (e) {

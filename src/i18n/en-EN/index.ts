@@ -32,6 +32,8 @@ export default {
   op_EchoTexte: 'Echo of sent text',
   op_TestMessage: 'Test de réception de push du serveur',
   op_RegisterSubscription: 'Registration of web-push',
+  op_GetSrvStatus: 'Status du service',
+  op_SetSrvStatus: 'Fixe le status du service',
 
   HLPaidebd: 'Page "{0}" bientôt disponible',
 
