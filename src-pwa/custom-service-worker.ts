@@ -74,7 +74,7 @@ self.addEventListener('notificationclick', (event) => {
   // @ts-ignore
   event.notification.close()
   // @ts-ignore
-  const urlToOpen = event?.notification?.data?.url 
+  const urlToOpen = event?.notification?.data?.url
   if (!urlToOpen) return
 
   // This looks to see if the current is already open and focuses if it is
@@ -93,28 +93,40 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('push', async (event) => {
   // @ts-ignore
   const buf = event.data ? event.data.text() : null
+  /* buf : objet "message" sérialisé en base6
+  const message = {
+    title: 'Hello',
+    body: 'Depuis serveur',
+    url: 'http...'
+    defs: [a/v/c c/d/e ...]
+  }
+  */
   try {
     // @ts-ignore
     const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
     let found = false
     for (const client of windowClients) {
       if (client.focus && (client.visibilityState === 'hidden' || client.visibilityState === 'visible'))  { // "hidden", "visible", or "prerender"
+        // Appli running : on lui poste directement buf
         client.postMessage({ type: 'PUSH', payload: buf })
         found = true
       }
     }
     if (!found) { // Pas d'appli ni bg ni fg - notification par browser
-      /* const message = {
-        notification: { title: 'Hello', body: 'Depuis serveur' },
-        data: { url: 'http...', notifme: ''}
-      } */
       const payload = b64ToObj(buf)
+      const options = {
+        body: payload.body, // texte à afficher
+        data: { url: payload.url } // données arbitraires à transmettre sur click
+      }
+      await self.registration.showNotification(payload.title, options)
+      /*
       // @ts-ignore
       const options = { body: 'From browser: ' + payload.notification.body }
       // @ts-ignore
       if (payload.data.url) options.data = { url: payload.data.url }
       // @ts-ignore
       await self.registration.showNotification(payload.notification.title, options)
+      */
     }
   } catch (e) {
     console.log('SW: error on push: ' + e.toString())
