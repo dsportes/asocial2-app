@@ -74,7 +74,8 @@ self.addEventListener('notificationclick', (event) => {
   // @ts-ignore
   event.notification.close()
   // @ts-ignore
-  const urlToOpen = event?.notification?.data?.url
+  // const urlToOpen = event?.notification?.data?.url
+  const urlToOpen = 'url-de-lancement-appli'
   if (!urlToOpen) return
 
   // This looks to see if the current is already open and focuses if it is
@@ -93,11 +94,10 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('push', async (event) => {
   // @ts-ignore
   const buf = event.data ? event.data.text() : null
-  /* buf : objet "message" sérialisé en base6
+  /* buf : objet "message" sérialisé en base64
   const message = {
-    title: 'Hello',
-    body: 'Depuis serveur',
-    url: 'http...'
+    org: 'demo',
+    body: 'texte donné par l'appli',
     defs: [a/v/c c/d/e ...]
   }
   */
@@ -118,6 +118,7 @@ self.addEventListener('push', async (event) => {
         body: payload.body, // texte à afficher
         data: { url: payload.url } // données arbitraires à transmettre sur click
       }
+      const title = 'appName' + ' / ' + payload.org
       await self.registration.showNotification(payload.title, options)
       /*
       // @ts-ignore
