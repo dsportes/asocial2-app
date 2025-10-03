@@ -50,6 +50,8 @@ if (process.env.PROD) {
   )
 }
 
+const localState = { }
+
 /* On peut appeler une fonction du SW depuis une app Web */
 self.addEventListener('message', async (event) => {
   if (event.data && event.data.type === 'STARTING') {
@@ -63,19 +65,20 @@ self.addEventListener('message', async (event) => {
   } else if (event.data && event.data.type === 'CLOSING') {
     // usage futur ?
     console.log('SW: App closing')
-  } else if (event.data && event.data.type === 'FROM_APP') {
-    // usage futur ?
+  } else if (event.data && event.data.type === 'SETSTATE') {
+    const state = event.data.state
+    if (state) for(const f in state) localState[f] = state[f]
     console.log('SW: call from App:' + JSON.stringify(event.data))
   }
 })
 
 self.addEventListener('notificationclick', (event) => {
   console.log('SW: On notification click')
-  // @ts-ignore
+
   event.notification.close()
   // @ts-ignore
-  // const urlToOpen = event?.notification?.data?.url
-  const urlToOpen = 'url-de-lancement-appli'
+  const u = event?.notification?.data?.url
+  const urlToOpen = u || localState['location']
   if (!urlToOpen) return
 
   // This looks to see if the current is already open and focuses if it is
@@ -97,6 +100,8 @@ self.addEventListener('push', async (event) => {
   /* buf : objet "message" sérialisé en base64
   const message = {
     org: 'demo',
+    title: 'myApp - demo'
+    url: 'url d'ouverture de myApp avec ?options'
     body: 'texte donné par l'appli',
     defs: [a/v/c c/d/e ...]
   }
@@ -118,8 +123,8 @@ self.addEventListener('push', async (event) => {
         body: payload.body, // texte à afficher
         data: { url: payload.url } // données arbitraires à transmettre sur click
       }
-      const title = 'appName' + ' / ' + payload.org
-      await self.registration.showNotification(payload.title, options)
+      const title = payload.title || (localState['APPNAME'] + ' - ' + payload.org)
+      await self.registration.showNotification(title, options)
       /*
       // @ts-ignore
       const options = { body: 'From browser: ' + payload.notification.body }

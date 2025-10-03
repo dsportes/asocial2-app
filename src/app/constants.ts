@@ -3,6 +3,7 @@ export interface localeOption { value: string, label: string, flag: string }
 export class K {
   static BUILD = 'v2.1'
   static APIVERSION = 1
+  static APPNAME = 'asocial2'
 
   static vapidPublicKey = 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew'
   

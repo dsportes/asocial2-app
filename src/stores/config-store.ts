@@ -1,5 +1,8 @@
+// @ts-ignore
 import { ref, computed } from 'vue'
+// @ts-ignore
 import type { Ref } from 'vue'
+// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { useDataStore } from '../stores/data-store'
 import { Crypt } from '../app/crypt'
@@ -8,6 +11,8 @@ import { K } from '../app/constants'
 import { b64ToU8 } from '../app/util'
 
 export const useConfigStore = defineStore('config', () => {
+  const location = window.location
+
   // Gestion des langues ***************************************************
   const localeMap = new Map()
   K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
@@ -72,12 +77,12 @@ export const useConfigStore = defineStore('config', () => {
     .then((sub: any) => {
       if (sub) {
         subJSON.value = JSON.stringify(sub)
-        hashSub.value = Crypt.sha12(sub.endpoint)
+        hashSub.value = Crypt.shaS(sub.endpoint)
       } else {
         const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.vapidPublicKey) }
         pm.subscribe(opt).then((nsub) => {
           subJSON.value = JSON.stringify(nsub)
-          hashSub.value = Crypt.sha12(nsub.endpoint)
+          hashSub.value = Crypt.shaS(nsub.endpoint)
           console.log('subJSON: ' + subJSON.value.substring(0, 200))
         }).catch(e => {
           subJSON.value = '??? Souscription non obtenue - ' + e.message
@@ -158,6 +163,7 @@ export const useConfigStore = defineStore('config', () => {
     locale, optionLocale, setLocale,
     dataSt,
     getHelpPages,
+    location,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, hashSub,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,

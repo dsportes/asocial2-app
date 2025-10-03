@@ -52,6 +52,7 @@ register('./firebase-messaging-sw.js', {
   ready (registration) { 
     console.log('Service worker is active')
     registration.active.postMessage({ type: 'STARTING' })
+    registration.active.postMessage({ type: 'SETSTATE', location: window.location, APPNAME: K.APPNAME })
   },
 
   updated (/* registration */) {

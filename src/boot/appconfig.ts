@@ -6,6 +6,7 @@ import { compileReport } from '../app/doctypes'
 export default defineBoot(async ({ app }) => {
   console.log('appconfig')
   // const config = useConfigStore()
+  // config.location = window.location
   
   const n = compileReport()
   console.log('Types compile : ' + (n ? n + ' errors' : 'OK'))

@@ -123,7 +123,7 @@ export class Crypt {
     return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
   }
 
-  static sha16 (x: any) {
+  static shaS (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
     const s = fromByteArray(u8.subarray(3, 18))
     return s.replace(/\+/g, '-').replace(/\//g, '_')
@@ -140,13 +140,13 @@ export class Crypt {
 export async function testSH () {
   const x = 'toto est tres tres beau'
   console.log(Crypt.sha32(x))
-  console.log(Crypt.sha16(x))
+  console.log(Crypt.shaS(x))
   console.log(Crypt.shaInt(x))
 
   console.log(await Crypt.strongHash('pierre', 'legrand', '$/@'))
   console.log( await Crypt.strongHash('pierre', 'legrand', '$/@'))
   console.log(Crypt.sha32(x))
-  console.log(Crypt.sha16(x))
+  console.log(Crypt.shaS(x))
   console.log(Crypt.shaInt(x))
 
   /*
