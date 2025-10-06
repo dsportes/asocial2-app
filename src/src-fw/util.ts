@@ -1,11 +1,14 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { fromByteArray, toByteArray } from './base64'
-import { K } from './constants'
 // @ts-ignore
 import { sha224, sha256 } from 'js-sha256'
-
 import { gzip, ungzip } from './pako.mjs'
+
+export let $t: any
+export let $q: any
+
+export function setTQ (_$t, _$q) { $t = _$t; $q = _$q }
 
 export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
 
@@ -41,16 +44,6 @@ export class AppExc {
 }
 
 const encoder = new TextEncoder()
-
-export let config: any = null
-export let $t: any
-export let $q: any
-
-export function setConfig (_config: any, _$t, _$q) {
-  config = _config
-  $t = _$t
-  $q = _$q
-}
 
 export function sty (sz?: string) {
   if (!sz) return $q.dark.isActive ? 'dark ' : 'clear '
@@ -131,7 +124,7 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
 }
 
 export function coolBye () {
-  window.location.href = urlFromText(K.coolbyeHtml(window.location.href))
+  window.location.href = urlFromText(config.K.coolbyeHtml(window.location.href))
 }
 
 export function objToB64 (obj: any, url?: boolean) : string {

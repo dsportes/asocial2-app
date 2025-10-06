@@ -38,22 +38,22 @@ import { useQuasar } from 'quasar'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 
-import { useConfigStore} from './stores/config-store'
+import { useConfigStore } from './stores/config-store'
 import { K } from './app/constants'
-import { setConfig, readFile, fileDescr } from './app/util'
-import { postOp, getData, putData } from './app/net'
-import { testECDH, testSH } from './app/crypt'
-import { initWP } from './app/wputil'
+import { setTQ, $t, readFile, fileDescr } from './src-fw/util'
+import { TestAuth } from './src-fw/operations'
+import { postOp, getData, putData } from './src-fw/net'
+import { Crypt, testECDH, testSH } from './src-fw/crypt'
+import { initWP } from './src-fw/wputil'
 
-import { Crypt } from './app/crypt'
+import SettingsButton from './components-fw/SettingsButton.vue'
+import HelpButton from './components-fw/HelpButton.vue'
 
-import SettingsButton from './components/SettingsButton.vue'
-import HelpButton from './components/HelpButton.vue'
-
-const $q = useQuasar()
 const config: any = useConfigStore()
-const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
-setConfig(config, $t, $q)
+// const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
+const $q = useQuasar()
+setTQ(useI18n().t, $q)
+console.log($t('plus1'))
 
 const wpStartable = computed(() => config.permState === 'granted' && config.registration && config.hashSub)
 
@@ -136,12 +136,13 @@ const t3a = async () => {
 }
 
 const t2b = async () => {
+  /*
   const args = {
     token: config.token,
     title: 'Hello world',
     body: 'coucou'
   }
-  const response = await fetch(K.urlsrv + 'send-notification', {
+  const response = await fetch(config.K.urlsrv + 'send-notification', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -151,6 +152,7 @@ const t2b = async () => {
   })
   const content = await response.json()
   console.log(content)
+  */
 }
 
 const t1b = () => {
@@ -160,19 +162,8 @@ const t1b = () => {
 }
 
 const t4 = async () => {
-  const res = await postOp('TestAuth', {
-    authRecord: {
-      sessionId : 'session789',
-      devAppToken : 'bof',
-      time: Date.now(),
-      tokens : [
-        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
-        { type: 'TEST1', toto: 'titi'},
-        { type: 'TEST2', toto: 'titi'},
-      ]
-    }
-   })
-  console.log('TestAuth:' + res.auths)
+  const res = await new TestAuth().run()
+  console.log('TestAuth:' + res)
 }
 
 </script>

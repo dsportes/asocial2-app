@@ -4,26 +4,52 @@ import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
+import { fromByteArray, toByteArray } from '../src-fw/base64'
 import { useDataStore } from '../stores/data-store'
-import { Crypt } from '../app/crypt'
+import { Crypt } from '../src-fw/crypt'
 
-import { K } from '../app/constants'
-import { b64ToU8 } from '../app/util'
+export interface localeOption { value: string, label: string, flag: string }
+
+export function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
+  if (!u8) return ''
+  const s = fromByteArray(u8)
+  return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+export function b64ToU8 (b64: string) : Uint8Array {
+  if (!b64) return null
+  const diff = b64.length % 4
+  let x = b64
+  if (diff) {
+    const pad = '===='.substring(0, 4 - diff)
+    x = b64 + pad
+  }
+  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
+}
+
+type typeK ={
+  localeOptions: localeOption[]
+  vapidPublicKey: string
+}
 
 export const useConfigStore = defineStore('config', () => {
-  const location = window.location
+  const location = ref(window.location)
 
   // Gestion des langues ***************************************************
   const localeMap = new Map()
-  K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
-  
-  const locale: Ref<string> = ref(K.localeOptions[0].value)
+  const locale: Ref<string> = ref()
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
+  let K = null
+  const initK = (k: any) => {
+    K = k
+    K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
+    locale.value = K.localeOptions[0].value
+  }
+
   // Gestion des stores ***************************************************
   const dataSt = computed(() => useDataStore())
-  const $t = ref()
 
   // Gestion des opérations ************************************************
   const opEncours = ref('')
@@ -41,7 +67,7 @@ export const useConfigStore = defineStore('config', () => {
     }, 2000)
   }
 
-  function opStart (op) {
+  function opStart (op: any) {
     opEncours.value = op
     opSpinner.value = 0
     opSignal.value = true
@@ -52,7 +78,7 @@ export const useConfigStore = defineStore('config', () => {
 
   function opEnd () {
     if (opTimer) clearTimeout(opTimer)
-    opEncours.value = ''
+    opEncours.value = null
     opSpinner.value = 0
     opDialog.value = false
     opTimer2 = setTimeout(() => { opSignal.value = false }, 1000)
@@ -63,7 +89,7 @@ export const useConfigStore = defineStore('config', () => {
   const newVersionReady = ref(false)
   const newVersionDialog = ref(false)
   const subJSON = ref('')
-  const hashSub = ref('')
+  const sessionId = ref('')
 
   function setRegistration(_registration) {
     registration.value = _registration
@@ -77,12 +103,12 @@ export const useConfigStore = defineStore('config', () => {
     .then((sub: any) => {
       if (sub) {
         subJSON.value = JSON.stringify(sub)
-        hashSub.value = Crypt.shaS(sub.endpoint)
+        sessionId.value = Crypt.shaS(sub.endpoint)
       } else {
         const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.vapidPublicKey) }
         pm.subscribe(opt).then((nsub) => {
           subJSON.value = JSON.stringify(nsub)
-          hashSub.value = Crypt.shaS(nsub.endpoint)
+          sessionId.value = Crypt.shaS(nsub.endpoint)
           console.log('subJSON: ' + subJSON.value.substring(0, 200))
         }).catch(e => {
           subJSON.value = '??? Souscription non obtenue - ' + e.message
@@ -115,11 +141,11 @@ export const useConfigStore = defineStore('config', () => {
   const permDialog = ref(false)
   const permChange = ref(false)
 
-  /* La permission de notification avait été accordée.
-  Le service-worker est enregistré.
-  Si elle l'est toujours, rien ne change
-  Sinon il faut informer l'utilisateur et SORTIR ou RECHARGER l'application.
-  */
+  // La permission de notification avait été accordée.
+  // le service-worker est enregistré.
+  // Si elle l'est toujours, rien ne change
+  // Sinon il faut informer l'utilisateur et SORTIR ou RECHARGER l'application.
+
   function changePerm (p: string) {
     permState.value = p
     if (p === 'granted') {
@@ -135,9 +161,38 @@ export const useConfigStore = defineStore('config', () => {
     permState.value = p
     permDialog.value = true
   }
+ 
+  function getHelpPages () : Set<string> {
+    return new Set()
+  }
 
-  /*
-  const focus = ref(true)
+  return {
+    location, K, initK, locale, optionLocale, setLocale,
+    dataSt,
+    getHelpPages,
+    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
+    registration, setRegistration, setAppUpdated, subJSON, sessionId,
+    callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
+    permState, permDialog, changePerm, askForPerm, permChange
+    // focus, getFocus, lostFocus, closingApp
+  }
+
+})
+
+/*
+https://pinia.vuejs.org/cookbook/hot-module-replacement.html
+Pinia supports Hot Module replacement so you can edit your stores 
+and interact with them directly in your app without reloading the page, 
+allowing you to keep the existing state, add, or even remove state, actions, and getters.
+*/
+// @ts-ignore
+if (import.meta.hot) {
+  // @ts-ignore
+  import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot));
+}
+
+/*
+ const focus = ref(true)
 
   function getFocus () {
     focus.value = true
@@ -153,27 +208,3 @@ export const useConfigStore = defineStore('config', () => {
     callSW({ type: 'CLOSING'})
   }
   */
-
-  function getHelpPages () : Set<string> {
-    return new Set()
-  }
-
-  return {
-    $t,
-    locale, optionLocale, setLocale,
-    dataSt,
-    getHelpPages,
-    location,
-    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, setRegistration, setAppUpdated, subJSON, hashSub,
-    callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
-    permState, permDialog, changePerm, askForPerm, permChange,
-    // focus, getFocus, lostFocus, closingApp
-  }
-})
-
-// @ts-ignore
-if (import.meta.hot) {
-  // @ts-ignore
-  import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot));
-}

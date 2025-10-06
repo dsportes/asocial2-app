@@ -13,7 +13,7 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
 // @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
-import { b64ToObj } from 'src/app/util'
+import { b64ToObj } from 'src/src-fw/util'
 
 
 self.skipWaiting()

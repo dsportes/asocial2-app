@@ -20,7 +20,7 @@
 
         <q-separator />
 
-        <q-item v-for="lg in K.localeOptions" :key="lg.value" dense :class="cl(lg)"
+        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense :class="cl(lg)"
           @click="choix(lg)" clickable v-close-popup>
           <q-item-section avatar><q-avatar size="xl">{{lg.flag}}</q-avatar></q-item-section>
           <q-item-section class="fs-lg">{{lg.label}}</q-item-section>
@@ -58,7 +58,7 @@
         </q-item>
 
         <q-item>
-          <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [K.BUILD, K.APIVERSION]) }}</q-item-section>
+          <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [config.K.BUILD, config.K.APIVERSION]) }}</q-item-section>
         </q-item>
       </q-list>
     </q-menu>
@@ -292,13 +292,11 @@ import { useQuasar, setCssVar } from 'quasar'
 
 import HelpButton from './HelpButton.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { $t, config, sty, reloadPage, openHelp, sleep, coolBye } from '../app/util'
-import { postOp, abortPostOp } from '../app/net'
-import { localeOption, K } from '../app/constants'
+import { $t, $q, config, sty, reloadPage, openHelp, sleep, coolBye } from '../src-fw/util'
+import { Echo, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
+import { localeOption } from '../stores/config-store'
 
 const i18n = useI18n()
-const $t = useI18n().t
-const $q = useQuasar()
 
 const confirmstopop = ref(false)
 const theme = ref(false)
@@ -324,7 +322,7 @@ function darkClear () {
 $q.dark.set(true)
 setCss()
 
-const styd = (c: string) => 'background:' + K.theme[c][0]
+const styd = (c: string) => 'background:' + config.K.theme[c][0]
 
 const pings = ref(false)
 const toecho = ref('')
@@ -333,9 +331,7 @@ const echo = ref('')
 async function opEcho () : Promise<void>  {
   try {
     echo.value = ''
-    await sleep(1000)
-    const res = await postOp('EchoTexte', { text: toecho.value })
-    echo.value = res['echo']
+    echo.value = await new Echo().run(toecho.value)
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
@@ -345,8 +341,7 @@ const resping = ref('')
 async function opGetSrvStatus () : Promise<void> {
   try {
     resping.value = ''
-    const res = await postOp('GetSrvStatus', { })
-    const { now, st, at, txt } = res['srvStatus']
+    const { now, st, at, txt } = await new GetSrvStatus().run()
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_'+ st, [atS])
@@ -360,16 +355,7 @@ async function opGetSrvStatus () : Promise<void> {
 async function opSetSrvStatus (stx) : Promise<void> {
   try {
     resping.value = ''
-    const authRecord = {
-      sessionId : 'session789',
-      time: Date.now(),
-      tokens : [
-        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
-      ]
-    }
-    const args = { authRecord, st: stx, txt: 'info ' + stx}
-    const res = await postOp('SetSrvStatus', args)
-    const { now, st, at, txt } = res['srvStatus']
+    const { now, st, at, txt } = await ServSrvStatus().run(stx)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_' + st, [atS])

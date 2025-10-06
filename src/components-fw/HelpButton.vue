@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-  import { openHelp } from '../app/util'
+  import { openHelp } from '../src-fw/util'
   // import { ref } from 'vue'
 
   const props = defineProps({

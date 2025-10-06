@@ -1,8 +1,8 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
 import { useConfigStore } from '../src/stores/config-store'
-import { urlFromText, b64ToObj } from '../src/app/util'
-import { onmsg } from '../src/app/wputil'
+import { urlFromText, b64ToObj } from '../src/src-fw/util'
+import { onmsg } from '../src/src-fw/wputil'
 import { K } from '../src/app/constants'
 // import { decode } from '@msgpack/msgpack'
 

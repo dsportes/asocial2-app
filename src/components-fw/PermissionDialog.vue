@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { config, sty, coolBye, reloadPage } from '../app/util'
+import { config, sty, coolBye, reloadPage } from '../src-fw/util'
 import HelpButton from './HelpButton.vue'
 
 const perm = computed(() => config.permState)

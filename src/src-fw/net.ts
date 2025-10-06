@@ -1,7 +1,6 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { AppExc, config } from './util'
-import { K } from './constants'
 
 let controller: AbortController
 
@@ -12,8 +11,8 @@ export function abortPostOp() {
 
 export async function postOp (opName: string, args: any) : Promise<any>{
   config.opStart(opName)
-  const u = K.urlsrv + (K.urlsrv.endsWith('/') ? '' : '/')
-  args.APIVERSION = K.APIVERSION
+  const u = config.K.urlsrv + (config.K.urlsrv.endsWith('/') ? '' : '/')
+  args.APIVERSION = config.K.APIVERSION
   const body = new Uint8Array(encode(args || {}))
   controller = new AbortController()
   try {
