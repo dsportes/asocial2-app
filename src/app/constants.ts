@@ -2,6 +2,7 @@ export const K = {
   BUILD: 'v2.1',
   APIVERSION: 1,
   APPNAME: 'asocial2',
+  ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
 
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
   

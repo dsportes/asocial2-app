@@ -12,5 +12,5 @@
 </script>
 
 <style lang="scss" scoped>
-@import '../css/app.scss'
+@import '../css/app.scss';
 </style>

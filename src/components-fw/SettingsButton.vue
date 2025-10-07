@@ -33,14 +33,14 @@
           <q-item-section class="fs-lg">{{$t('darkclear')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="theme = true">
+        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'theme')">
           <q-item-section avatar><q-avatar size="xl" icon="palette"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('theme')}}</q-item-section>
         </q-item>
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="pings = true">
+        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('pings')}}</q-item-section>
         </q-item>
@@ -118,21 +118,21 @@
   </q-dialog>
 
   <!-- Confirmation d'interruption de l'opération en cours -->
-  <q-dialog v-model="confirmstopop">
+  <q-dialog v-model="ui.dModels[idc].confirmstopop">
     <q-card>
       <q-card-section class="q-pa-md fs-md text-center">
         {{$t('MLAcf', [$t('op_' + config.opEncours)])}}</q-card-section>
       <q-card-actions vertical align="right" class="q-gutter-sm">
-        <q-btn flat color="primary" :label="$t('MLAcf3')" @click="confirmstopop = false"/>
-        <q-btn flat color="primary" :label="$t('MLAcf4')" @click="confirmstopop = false; abortPostOp()"/>
+        <q-btn flat color="primary" :label="$t('MLAcf3')" @click="ui.fD"/>
+        <q-btn flat color="primary" :label="$t('MLAcf4')" @click="ui.fD(); abortPostOp()"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
 
-  <q-dialog v-model="theme" persistent>
+  <q-dialog v-model="ui.dModels[idc].theme" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" @click="theme = false"/>
+        <q-btn dense icon="close" color="warning" @click="ui.fD"/>
         <q-toolbar-title>{{$t('theme')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
       </q-toolbar>
@@ -253,10 +253,10 @@
   </q-dialog>
 
   <!-- Pings du serveur -->
-  <q-dialog v-model="pings" persistent>
+  <q-dialog v-model="ui.dModels[idc].pings" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" @click="pings = false"/>
+        <q-btn dense icon="close" color="warning" @click="ui.fD"/>
         <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
         <q-btn dense icon="check" color="primary" @click="opSetSrvStatus(1)"/>
         <q-btn dense icon="check" color="warning" @click="opSetSrvStatus(2)"/>
@@ -286,34 +286,28 @@
 
 <script setup lang="ts">
 
-import { ref, onMounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, setCssVar } from 'quasar'
 
 import stores from '../stores/all'
 import HelpButton from './HelpButton.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { $t, $q, sty, reloadPage, openHelp, sleep, coolBye } from '../src-fw/util'
-import { Echo, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
+import { $t, $q, sty, reloadPage, openHelp, sleep, coolBye, setCss } from '../src-fw/util'
+import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 
 const i18n = useI18n()
 const config = stores.config
-
-const confirmstopop = ref(false)
-const theme = ref(false)
+const ui = stores.ui
+const idc = ui.getIdc()
+onUnmounted(() => ui.closeVue(idc))
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
 
 const choix = (lg: localeOption) : void => {
   i18n.locale.value = lg.value
   config.setLocale(lg.value)
-}
-
-function setCss() {
-  const d = $q.dark.isActive ? 0 : 1
-  const t = config.theme
-  for(const c in t) setCssVar(c, t[c][d])
 }
 
 function darkClear () {
@@ -326,14 +320,13 @@ setCss()
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
 
-const pings = ref(false)
 const toecho = ref('')
 const echo = ref('')
 
 async function opEcho () : Promise<void>  {
   try {
     echo.value = ''
-    echo.value = await new Echo().run(toecho.value)
+    echo.value = await new EchoText().run(toecho.value)
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
@@ -347,8 +340,7 @@ async function opGetSrvStatus () : Promise<void> {
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_'+ st, [atS])
-    const srvBUILD = res['srvBUILD']
-    resping.value = $t('srvStatus', [nowS, stS, srvBUILD, txt || ''])
+    resping.value = $t('srvStatus', [nowS, stS, txt || ''])
   } catch (e) {
     resping.value = 'err:' + (e.code || '???')
   }
@@ -357,12 +349,11 @@ async function opGetSrvStatus () : Promise<void> {
 async function opSetSrvStatus (stx) : Promise<void> {
   try {
     resping.value = ''
-    const { now, st, at, txt } = await ServSrvStatus().run(stx)
+    const { now, st, at, txt } = await new SetSrvStatus().run(stx)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_' + st, [atS])
-    const srvBUILD = res['srvBUILD']
-    resping.value = $t('srvStatus', [nowS, stS, srvBUILD, txt || ''])
+    resping.value = $t('srvStatus', [nowS, stS, txt || ''])
   } catch (e) {
     resping.value = 'err:' + (e.code || '???')
   }

@@ -23,6 +23,10 @@
     </template>
   </q-file>
 
+  <got-it v-if="ui.dModels['0'].diag"/>
+  <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
+  <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
+
 </div>
 </template>
 
@@ -32,13 +36,13 @@ import ext2mime from 'ext2mime'
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 // @ts-ignore
-import { useQuasar } from 'quasar'
+import { useQuasar, setCssVar } from 'quasar'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 
 import stores from './stores/all'
 
-import { setTQ, readFile, fileDescr } from './src-fw/util'
+import { setTQ, readFile, fileDescr, setCss } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { postOp, getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
@@ -46,6 +50,9 @@ import { initWP } from './src-fw/wputil'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
+import GotIt from './components-fw/Gotit.vue'
+import ConfirmQuit from './components-fw/ConfirmQuit.vue'
+import DialogExc from './components-fw/DialogExc.vue'
 
 const $t = useI18n().t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
@@ -53,6 +60,10 @@ setTQ($t, $q)
 
 const config = stores.config
 const dataSt = stores.data
+const ui = stores.ui
+
+$q.dark.set(true)
+setCss()
 
 const wpStartable = computed(() => 
   config.permState === 'granted' && config.registration && config.sessionId)

@@ -8,6 +8,7 @@ import stores from '../stores/all'
 export class Operation {
   opName: string
   controller: AbortController
+  aborted: boolean
 
   constructor (opName: string) { 
     this.opName = opName 
@@ -16,6 +17,7 @@ export class Operation {
   get label () { return $t('OP_' + this.opName) }
 
   abort () {
+    this.aborted = true
     if (this.controller) this.controller.abort()
   }
 
@@ -26,6 +28,7 @@ export class Operation {
     args.APIVERSION = config.K.APIVERSION
     const body = new Uint8Array(encode(args || {}))
     this.controller = new AbortController()
+    this.aborted = false
     try {
       const response = await fetch(u + 'op/' + this.opName, {
         method: 'POST',
@@ -41,20 +44,28 @@ export class Operation {
         config.opEnd()
         return x
       }
+      const serial = await response.bytes()
       if (response.status === 400 || response.status === 401) {
-        // @ts-ignore
-        const err = await response.bytes()
-        const exc = decode(err)
-        config.opEnd()
-        throw new AppExc(exc)
+        // 400: AppExc
+        // 401: AppExc inattendue
+        const obj = decode(serial)
+        throw new AppExc(obj)
       }
+      // autres status: 500...
+      const txt = new TextDecoder().decode(serial)
+      throw new AppExc({ code:11001, label: 'Unexpected from server', 
+        args:[response.status, (u || '?'), txt]})
     } catch (e) {
-      this.controller = null
-      // if (e.name !== 'AbortError')
-      console.log(e.message + (e.stack ? '\n' + e.stack : ''))
       config.opEnd()
-      throw e
+      this.controller = null
+      if (e instanceof AppExc) throw e
+      if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
+      throw new AppExc({ code:11002, label: 'Unexpected network/server/response', 
+        args:[(u || '?'), e.toString()]})
     }
   }
 
+  async ko (e: AppExc) {
+    await stores.ui.displayExc(e)
+  }
 }

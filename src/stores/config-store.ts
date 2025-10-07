@@ -6,7 +6,6 @@ import type { Ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { fromByteArray, toByteArray } from '../src-fw/base64'
 import { Crypt } from '../src-fw/crypt'
-import { b64ToU8 } from '../src-fw/util'
 
 export interface localeOption { value: string, label: string, flag: string }
 
@@ -16,6 +15,7 @@ export function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
   const s = fromByteArray(u8)
   return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
+*/
 
 export function b64ToU8 (b64: string) : Uint8Array {
   if (!b64) return null
@@ -27,7 +27,7 @@ export function b64ToU8 (b64: string) : Uint8Array {
   }
   return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
 }
-*/
+
 type typeK ={
   localeOptions: localeOption[]
   vapidPublicKey: string
@@ -181,12 +181,13 @@ https://pinia.vuejs.org/cookbook/hot-module-replacement.html
 Pinia supports Hot Module replacement so you can edit your stores 
 and interact with them directly in your app without reloading the page, 
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
-*/
+
 // @ts-ignore
 if (import.meta.hot) {
   // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot));
 }
+*/
 
 /*
  const focus = ref(true)

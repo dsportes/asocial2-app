@@ -9,6 +9,7 @@ export default {
   echo: 'Texte reçu en écho : {0}',
   ping: 'PING base de données',
   later: 'Plus tard',
+  important: 'Information importante',
   gotit: 'J\'ai lu',
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
@@ -20,7 +21,12 @@ export default {
   srvStatus_0: 'Statut du service inconnu',
   srvStatus_1: 'Statut du service UP (dernière mise à jour: {0})',
   srvStatus_2: 'Statut du service DOWN (dernière mise à jour: {0})',
-  srvStatus: '{0} - {1} - Build:[{2}] - {3}',
+  srvStatus: '{0} - {1} - {2}',
+
+  quitConfirm: 'Confirmer ...',
+  quitQuit: 'Je confirme quitter l\'application',
+  quitReload: 'Je confirme relancer l\'application',
+  quitContinue: 'Je continue ma session',
 
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',
@@ -29,7 +35,7 @@ export default {
   MLAcf4: 'Oui, je veux l\'interrompre (si possible)',
 
   op_PingDB: 'PING de la base de données',
-  op_EchoTexte: 'Echo du texte envoyé',
+  op_EchoText: 'Echo du texte envoyé',
   op_TestMessage: 'Test de réception de push du serveur',
   op_RegisterSubscription: 'Enregistrement de web-push',
   op_TestAuth: 'Test d\'authentification',
@@ -68,4 +74,47 @@ export default {
   moins1: 'Moins 1',
   plus1: 'Plus 1',
   pickfile: 'Choisir un fichier local',
+
+  EX_1: 'Données saisies non conformes',
+  EX_2: 'Données saisies non conformes',
+  EX_3: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
+  EX_4: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
+  EX_5: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
+  EX_6: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
+
+  EX_10: 'Interruption volontaire (appui sur le bouton rouge)',
+  EX_11: 'Erreur d`accès au serveur, réseau indisponible ?',
+  EX_12: 'Erreur d\'accès à la base locale',
+  EX_13: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
+  EX_14: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
+
+  EX_1999: 'Bug probable: erreur inattendue\n{0}',
+  EX_10000: 'Interruption volontaire',
+
+  // 11000: Toutes erreurs de réseau
+  EX_11001: 'Erreur inattendue du serveur. Status:{0} URL:{1}.\n{2}',
+  EX_11002: 'Erreur inattendue d\'envoi au serveur, de réseau, ou de réception de la réponse. URL:{0}.\n{1}',
+  EX_11003: 'Rupture de la liaison avec le serveur par le serveur ou URL mal configurée ( {0} ).',
+  EX_11005: 'Erreur de transfert du fichier vers le serveur de fichier. Détail: {0}',
+  EX_11006: 'Erreur de transfert du fichier vers l\'application locale de stockage de fichiers. Détail: {0}',
+
+  // 12000: Toutes erreurs d'accès à la base locale
+  EX_12001: 'Ouverture de la base locale impossible.\nDétail: {0}',
+  EX_12002: 'Erreur d\'accès à la base locale impossible.\nDétail: {0}',
+
+  // 13000:  Erreur inattendue trappée sur le browser
+  EX_13000: 'Bug probable de l\'application.\nDétail: {0}',
+  EX_13001: 'Retour de la requête mal formé : parse JSON en erreur. Opération: {0}\nDétail: {1}',
+  EX_13002: 'Retour de la requête mal formé : désérialisation en erreur. Opération: {0}\nDétail: {1}',
+  EX_13007: 'Echec d\'encryption. Buffer: {0} - Clé: {1} - Détail: {2}',
+  EX_13008: 'Echec de decryption. Buffer: {0} - Clé: {1} - Détail: {2}',
+  EX_13021: 'Bug probable de \'opération "{0}" après plusieurs tentatives aynat échoué.',
+  EX_13022: 'Fichier impossible à décrypter: {0}',
+  EX_13023: 'Echec de decryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
+  EX_13024: 'Echec d\'encryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
+
+  EX_quit: 'Quiiter l\'application',
+  EX_reload: 'Relancer l\'application',
+  EX_continue: 'Poursuivre la session quand même'
+
 }

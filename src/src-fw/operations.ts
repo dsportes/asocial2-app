@@ -2,13 +2,17 @@ import { Operation } from './operation'
 import { sleep } from './util'
 import stores from '../stores/all'
 
-export class Echo extends Operation {
-  constructor () { super('Echo') }
+export class EchoText extends Operation {
+  constructor () { super('EchoText') }
 
   async run (toecho: string) {
-    await sleep(1000)
-    const res = await this.post({ text: toecho })
-    return res['echo']
+    try {
+      await sleep(1000)
+      const res = await this.post({ text: toecho })
+      return res['echo']
+    } catch(e) {
+      this.ko(e)
+    }
   }
 }
 
@@ -16,25 +20,34 @@ export class  GetSrvStatus extends Operation {
   constructor () { super('GetSrvStatus') }
 
   async run () {
-    const res = await this.post({ })
-    return res['srvStatus']
+    try {
+      const res = await this.post({ })
+      return res['srvStatus']
+    } catch(e) {
+      this.ko(e)
+    }
   }
 }
 
 export class SetSrvStatus extends Operation {
-  constructor () { super('GetSrvStatus') }
+  constructor () { super('SetSrvStatus') }
 
   async run (stx: number) {
-    const authRecord = {
-      sessionId : stores.config.sessionId,
-      time: Date.now(),
-      tokens : [
-        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
-      ]
+    try {
+      const config = stores.config
+      const authRecord = {
+        sessionId : config.sessionId,
+        time: Date.now(),
+        tokens : [
+          { type: 'ADMIN', value: config.K.ADMIN }
+        ]
+      }
+      const args = { authRecord, st: stx, txt: 'info ' + stx}
+      const res = await this.post(args)
+      return res['srvStatus']
+    } catch(e) {
+      this.ko(e)
     }
-    const args = { authRecord, st: stx, txt: 'info ' + stx}
-    const res = await this.post(args)
-    return res['srvStatus']
   }
 }
 
@@ -42,16 +55,21 @@ export class TestAuth extends Operation {
   constructor () { super('TestAuth') }
 
   async run () {
-    const authRecord = {
-      sessionId : stores.config.sessionId,
-      time: Date.now(),
-      tokens : [
-        { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
-        { type: 'TEST1', toto: 'titi'},
-        { type: 'TEST2', toto: 'titi'},
-      ]
+    try {
+      const config = stores.config
+      const authRecord = {
+        sessionId : config.sessionId,
+        time: Date.now(),
+        tokens : [
+          { type: 'ADMIN', value: config.K.ADMIN },
+          { type: 'TEST1', toto: 'titi'},
+          { type: 'TEST2', toto: 'titi'},
+        ]
+      }
+      const res = await this.post({ authRecord })
+      return res['auths']
+    } catch(e) {
+      this.ko(e)
     }
-    const res = await this.post({ authRecord })
-    return res['auths']
   }
 }
