@@ -5,11 +5,12 @@ import type { Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { fromByteArray, toByteArray } from '../src-fw/base64'
-import { useDataStore } from '../stores/data-store'
 import { Crypt } from '../src-fw/crypt'
+import { b64ToU8 } from '../src-fw/util'
 
 export interface localeOption { value: string, label: string, flag: string }
 
+/*
 export function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
   if (!u8) return ''
   const s = fromByteArray(u8)
@@ -26,7 +27,7 @@ export function b64ToU8 (b64: string) : Uint8Array {
   }
   return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
 }
-
+*/
 type typeK ={
   localeOptions: localeOption[]
   vapidPublicKey: string
@@ -41,15 +42,12 @@ export const useConfigStore = defineStore('config', () => {
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
-  let K = null
+  const K = ref()
   const initK = (k: any) => {
-    K = k
-    K.localeOptions.forEach(l => { localeMap.set(l.value, l) })
-    locale.value = K.localeOptions[0].value
+    K.value = k
+    k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
+    locale.value = k.localeOptions[0].value
   }
-
-  // Gestion des stores ***************************************************
-  const dataSt = computed(() => useDataStore())
 
   // Gestion des opérations ************************************************
   const opEncours = ref('')
@@ -105,7 +103,7 @@ export const useConfigStore = defineStore('config', () => {
         subJSON.value = JSON.stringify(sub)
         sessionId.value = Crypt.shaS(sub.endpoint)
       } else {
-        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.vapidPublicKey) }
+        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(K.value.vapidPublicKey) }
         pm.subscribe(opt).then((nsub) => {
           subJSON.value = JSON.stringify(nsub)
           sessionId.value = Crypt.shaS(nsub.endpoint)
@@ -168,7 +166,6 @@ export const useConfigStore = defineStore('config', () => {
 
   return {
     location, K, initK, locale, optionLocale, setLocale,
-    dataSt,
     getHelpPages,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId,

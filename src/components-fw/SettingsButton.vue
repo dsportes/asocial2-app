@@ -290,13 +290,15 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, setCssVar } from 'quasar'
 
+import stores from '../stores/all'
 import HelpButton from './HelpButton.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { $t, $q, config, sty, reloadPage, openHelp, sleep, coolBye } from '../src-fw/util'
+import { $t, $q, sty, reloadPage, openHelp, sleep, coolBye } from '../src-fw/util'
 import { Echo, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 
 const i18n = useI18n()
+const config = stores.config
 
 const confirmstopop = ref(false)
 const theme = ref(false)

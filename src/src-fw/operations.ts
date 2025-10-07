@@ -1,5 +1,6 @@
 import { Operation } from './operation'
-import { sleep, config } from './util'
+import { sleep } from './util'
+import stores from '../stores/all'
 
 export class Echo extends Operation {
   constructor () { super('Echo') }
@@ -25,7 +26,7 @@ export class SetSrvStatus extends Operation {
 
   async run (stx: number) {
     const authRecord = {
-      sessionId : config.sessionId,
+      sessionId : stores.config.sessionId,
       time: Date.now(),
       tokens : [
         { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},
@@ -42,7 +43,7 @@ export class TestAuth extends Operation {
 
   async run () {
     const authRecord = {
-      sessionId : config.sessionId,
+      sessionId : stores.config.sessionId,
       time: Date.now(),
       tokens : [
         { type: 'ADMIN', value: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg'},

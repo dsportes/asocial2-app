@@ -1,6 +1,8 @@
-import { AppExc, $t, config } from './util'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+
+import { AppExc, $t } from './util'
+import stores from '../stores/all'
 
 /* Opération générique ******************************************/
 export class Operation {
@@ -18,6 +20,7 @@ export class Operation {
   }
 
   async post (args: any) : Promise<any>{
+    const config = stores.config
     config.opStart(this)
     const u = config.K.urlsrv + (config.K.urlsrv.endsWith('/') ? '' : '/')
     args.APIVERSION = config.K.APIVERSION

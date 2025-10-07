@@ -1,13 +1,15 @@
-import { config } from './util'
 import { postOp } from './net'
+import stores from '../stores/all'
 
 export async function initWP () {
+  // POUR TEST de web-push: n'est plus opérationnel
+  const config = stores.config
   if (config.subJSON.startsWith('???')) {
     console.log('WP - initialization failed: ', config.subJSON)
     // TODO
   } else try {
     await postOp('RegisterSubscription', { subJSON: config.subJSON })
-    console.log('WP - initialization DONE. ', config.hashSub)
+    console.log('WP - initialization DONE. ', config.sessionId)
   } catch (e) {
     console.log('WP - initialization failed: ', e.toString())
     // TODO

@@ -1,6 +1,7 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
-import { AppExc, config } from './util'
+import stores from '../stores/all'
+import { AppExc } from './util'
 
 let controller: AbortController
 
@@ -9,7 +10,8 @@ export function abortPostOp() {
   if (controller) controller.abort()
 }
 
-export async function postOp (opName: string, args: any) : Promise<any>{
+export async function postOp (opName: string, args: any) : Promise<any> {
+  const config = stores.config
   config.opStart(opName)
   const u = config.K.urlsrv + (config.K.urlsrv.endsWith('/') ? '' : '/')
   args.APIVERSION = config.K.APIVERSION

@@ -31,10 +31,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { config, sty, coolBye, reloadPage } from '../src-fw/util'
+import stores from '../stores/all'
+import { sty, coolBye, reloadPage } from '../src-fw/util'
 import HelpButton from './HelpButton.vue'
 
-const perm = computed(() => config.permState)
+const perm = computed(() => stores.config.permState)
 
 const rp = async () => {
   const p = await Notification.requestPermission()

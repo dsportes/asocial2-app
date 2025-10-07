@@ -5,10 +5,8 @@
       :color="config.hashSub ? 'green' : 'red'"
       :disable="!wpStartable"
     />
-    <q-btn label="T1" @click="t1"/>
-    <q-btn label="T2" @click="t2"/>
     <q-btn label="T4" @click="t4"/>
-    <q-toolbar-title class="titre-md">{{$t('titre', [config.dataSt.cpt])}}</q-toolbar-title>
+    <q-toolbar-title class="titre-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
     <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
     <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
 
@@ -38,9 +36,9 @@ import { useQuasar } from 'quasar'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 
-import { useConfigStore } from './stores/config-store'
-import { K } from './app/constants'
-import { setTQ, $t, readFile, fileDescr } from './src-fw/util'
+import stores from './stores/all'
+
+import { setTQ, readFile, fileDescr } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { postOp, getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
@@ -49,23 +47,25 @@ import { initWP } from './src-fw/wputil'
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 
-const config: any = useConfigStore()
-// const $t: Function = useI18n().t // Pour rendre accessible $t dans le code
+const $t = useI18n().t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
-setTQ(useI18n().t, $q)
-console.log($t('plus1'))
+setTQ($t, $q)
 
-const wpStartable = computed(() => config.permState === 'granted' && config.registration && config.hashSub)
+const config = stores.config
+const dataSt = stores.data
+
+const wpStartable = computed(() => 
+  config.permState === 'granted' && config.registration && config.sessionId)
 
 const startWP = async () => {
   await initWP()
 }
 
 function plus1 () : void {
-  config.dataSt.cpt++
+  dataSt.cpt++
 }
 function moins1 () : void {
-  config.dataSt.cpt--
+  dataSt.cpt--
 }
 
 const echo = ref('')
@@ -110,6 +110,7 @@ async function uploadFile () : Promise<void> {
   }
 }
 
+/*
 const t1 = async () => {
   const appurl = window.location.origin + window.location.pathname
   const res = await postOp('TestMessage', { hashSub: config.hashSub, appurl})
@@ -122,21 +123,12 @@ const t2 = async () => {
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
-const t3 = async () => {
-  // await testECDH()
-  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
-  console.log(ps)
-  console.log(Crypt.sha32(ps))
-  // await testSH()
-}
-
 const t3a = async () => {
   const res = await postOp('TestMessage', { hashSub: config.hashSub })
   console.log('Demande notif:' + JSON.stringify(res.message))
 }
 
 const t2b = async () => {
-  /*
   const args = {
     token: config.token,
     title: 'Hello world',
@@ -152,7 +144,15 @@ const t2b = async () => {
   })
   const content = await response.json()
   console.log(content)
-  */
+}
+*/
+
+const t3 = async () => {
+  // await testECDH()
+  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
+  console.log(ps)
+  console.log(Crypt.sha32(ps))
+  // await testSH()
 }
 
 const t1b = () => {
