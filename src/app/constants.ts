@@ -10,9 +10,11 @@ export const K = {
   // urlsrv: 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   
   localeOptions: [
-    { value: 'en-EN', label: 'English',  flag: '🇬🇧' },
-    { value: 'fr-FR', label: 'Français', flag: '🇫🇷' }
+    { value: 'en', label: 'English',  flag: '🇬🇧' },
+    { value: 'fr', label: 'Français', flag: '🇫🇷' }
   ],
+
+  docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

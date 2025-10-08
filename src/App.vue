@@ -15,7 +15,7 @@
 
         <settings-button class="q-ml-sm"/>
 
-        <help-button class="q-ml-xs" page="x1"/>
+        <help-button class="q-ml-xs" page="DOCpg"/>
     </q-toolbar>
   </q-header>
   
@@ -35,6 +35,7 @@
   <got-it v-if="ui.dModels['0'].diag"/>
   <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
   <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
+  <dialog-help v-if="ui.dModels['0'].dialogHelp"/>
 
 </q-layout>
 </template>
@@ -43,7 +44,7 @@
 // @ts-ignore
 import ext2mime from 'ext2mime'
 // @ts-ignore
-import { ref, computed, watch, watchEffect } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
@@ -63,9 +64,17 @@ import BtnCond from './components-fw/BtnCond.vue'
 import GotIt from './components-fw/Gotit.vue'
 import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
+import DialogHelp from './components-fw/DialogHelp.vue'
+import { Help } from './src-fw/help'
+import { res } from './src-fw/net'
 
 const $t = useI18n().t // Pour rendre accessible $t dans le code
 set$t($t)
+
+onMounted(async () => {
+  const readme = await res('README.md')
+  Help.setPlan(await res('help/a_plan.json'), readme) 
+})
 
 const config = stores.config
 const session = stores.session

@@ -8,7 +8,7 @@
         <div class="titre-md" v-html="html"/>
       </q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
-        <btn-cond color="primary" icon="arrow_forward"
+        <btn-cond v-if="!exc.background" color="primary" icon="arrow_forward"
           :label="$t('EX_continue')" @ok="cont"/>
         <btn-cond color="warning" icon="logout" 
           :label="$t('EX_quit')" @ok="reload"/>
@@ -38,6 +38,8 @@ public org: string
 public stack: string
 public args: string[]
 public message: string
+
+background: true si l'opération a été lancé en mode background
 */
 
 const ui = stores.ui

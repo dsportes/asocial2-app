@@ -25,6 +25,9 @@ export default {
   srvStatus_1: 'Statut du service UP (dernière mise à jour: {0})',
   srvStatus_2: 'Statut du service DOWN (dernière mise à jour: {0})',
   srvStatus: '{0} - {1} - {2}',
+  readme: 'LISEZMOI',
+  deplier: 'Déplier',
+  replier: 'Replier',
 
   quitConfirm: 'Confirmer ...',
   quitQuit: 'Je confirme quitter l\'application',
@@ -44,8 +47,6 @@ export default {
   op_TestAuth: 'Test d\'authentification',
   op_GetSrvStatus: 'Status du service',
   op_SetSrvStatus: 'Fixe le status du service',
-
-  HLPaidebd: 'Page "{0}" bientôt disponible',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -119,6 +120,30 @@ export default {
 
   EX_quit: 'Quitter l\'application',
   EX_reload: 'Relancer l\'application',
-  EX_continue: 'Poursuivre la session quand même'
+  EX_continue: 'Poursuivre la session quand même',
+
+  // DialogueHelp.vue
+  HLPaidebd: 'Page "{0}" bientôt disponible',
+  HLPfermer: 'Fermer l\'aide',
+  HLPprec: 'Page d\'aide précédente',
+  HLPfiltre: 'Filtre sur les titres',
+  HLPdg: 'Site de documentation de l\'application',
+  HLPmenu: 'Voir le détail dans le menu ci-dessus, rubrique _{0}_',
+  HLPrm1: 'Note à propos de la révision de l\'application: quels sources ...',
+
+  // Showdown
+  SHed: 'Editer',
+  SHpe: 'Plein écran',
+  SHre: 'Réduire',
+
+  // Pages d'aide
+  A_boite_automaj: 'Mise à jour automatique des données d\'une session',
+  A_dial_editeur: 'L\'éditeur des textes',
+  A_DOCpg: 'L\'application "a-social"',
+  A_pages: 'Pages de l\'application',
+  A_pages_struct: 'Disposition générale d\'une page',
+  A_panel_outils: 'Boîte à outils',
+  A_top_bar: 'Barre du haut',
+  A_dial: 'Dialogues ...'
 
 }

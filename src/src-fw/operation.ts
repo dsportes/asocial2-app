@@ -9,9 +9,11 @@ export class Operation {
   opName: string
   controller: AbortController
   aborted: boolean
+  background: boolean
 
-  constructor (opName: string) { 
-    this.opName = opName 
+  constructor (opName: string, background?: boolean) { 
+    this.opName = opName
+    this.background = background || false
   }
 
   get label () { return $t('OP_' + this.opName) }
@@ -67,6 +69,6 @@ export class Operation {
   }
 
   async ko (e: AppExc) {
-    await stores.ui.displayExc(e)
+    await stores.ui.displayExc(e, this.background)
   }
 }

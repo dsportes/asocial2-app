@@ -1,11 +1,11 @@
-import enEN from './en-EN'
-import frFR from './fr-FR'
+import en from './en'
+import fr from './fr'
 
-const en = {}
-for(const e in frFR) en[e] = frFR[e]
-for(const e in enEN) en[e] = enEN[e]
+const enx = {}
+for(const e in fr) enx[e] = fr[e]
+for(const e in en) enx[e] = en[e]
 
 export default {
-  'en': en,
-  'fr': frFR
+  'en': enx,
+  'fr': fr
 }

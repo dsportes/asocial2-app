@@ -1,0 +1,9 @@
+[
+  "DOCpg",  
+  ["pages",
+    [ "pages_struct", "top_bar" ],
+    "boite_automaj",
+    "panel_outils"
+  ],
+  ["dial", "dial_editeur" ]
+]

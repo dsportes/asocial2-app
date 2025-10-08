@@ -7,6 +7,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { setCssVar } from 'quasar'
 import stores from './all'
+import { Help } from '../src-fw/help'
 
 const large = 900
 
@@ -89,9 +90,10 @@ export const useUiStore = defineStore('ui', () => {
   const excResolve = ref(null)
   const exc = ref(null) // Exception trappée : en attente de décision de l'utilisateu
 
-  const displayExc = async (e) => {
+  const displayExc = async (e, background?: boolean) => {
     if (isOpenD('0', 'dialogExc')) return
     exc.value = e
+    if (background) exc.value.background = true
     oD('0', 'dialogExc')
     return new Promise((resolve) => {
       excResolve.value = resolve
@@ -118,8 +120,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   const openHelp = (page: string) => {
-    const ph = stores.config.getHelpPages()
-    if (!ph.has(page)) {
+    if (!Help.hasPage(page)) {
       $q.value.dialog({
         // title: 'Alert',
         message: $t.value('HLPaidebd', [page]),
@@ -127,19 +128,37 @@ export const useUiStore = defineStore('ui', () => {
       }).onOk(() => { }).onCancel(() => { }).onDismiss(() => { })
     }
     else {
-      // TODO
+      pushhelp(page)
       console.log('Ouverture page aide ', page)
       return
     }
   }
 
+  const helpstack = ref([])
+
+  const fermerHelp = () => { fD(); helpstack.value.length = 0 }
+
+  const pushhelp = (page) => {
+    if (helpstack.value.length === 0) oD('0', 'dialogHelp')
+    helpstack.value.push(page)
+  }
+
+  const pophelp = () => {
+    if (helpstack.value.length === 1) {
+      fD()
+      helpstack.value.length = 0
+    } else {
+      helpstack.value.splice(helpstack.value.length - 1, 1)
+    }
+  }
+
   return {
-    set$t$q, setDark, isDark,
+    set$t$q, setDark, isDark, $q,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,
     diag, diagResolve, diagDisplay,
-    openHelp
+    openHelp, helpstack, fermerHelp, pushhelp, pophelp
   }
 })
 

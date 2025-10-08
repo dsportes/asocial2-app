@@ -9,6 +9,7 @@ import BtnCond from './BtnCond.vue'
 const props = defineProps({
   page: String
 })
+
 </script>
 
 <style lang="scss" scoped>
