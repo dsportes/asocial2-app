@@ -13,8 +13,39 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
 // @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
-import { b64ToObj } from 'src/src-fw/util'
 
+// @ts-ignore
+import { encode, decode } from '@msgpack/msgpack'
+// @ts-ignore
+import { fromByteArray, toByteArray } from '../src/src-fw/base64'
+
+function objToB64 (obj: any, url?: boolean) : string {
+  if (!obj) return ''
+  const u8 = new Uint8Array(encode(obj))
+  return u8ToB64(u8, url)
+}
+
+function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
+  if (!u8) return ''
+  const s = fromByteArray(u8)
+  return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+function b64ToU8 (b64: string) : Uint8Array {
+  if (!b64) return null
+  const diff = b64.length % 4
+  let x = b64
+  if (diff) {
+    const pad = '===='.substring(0, 4 - diff)
+    x = b64 + pad
+  }
+  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
+}
+
+function b64ToObj (b64: string) : any {
+  const bin = b64ToU8(b64)
+  return decode(bin)
+}
 
 self.skipWaiting()
 clientsClaim()

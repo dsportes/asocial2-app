@@ -40,7 +40,7 @@ import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
 const ui = stores.ui
-import { $t, $q } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 
 const props = defineProps({
   color: String, // defaut primary
@@ -69,10 +69,10 @@ const tc = computed(() => {
 
 const clr = computed(() => {
   if (diag.value) return 'negative'
-  if (!props.color) return 'text-btnbg'
-  if (props.color === 'warning') return 'text-btwbg'
-  if (props.color === 'primary') return 'text-btnbg'
-  if (props.color === 'nb') return $q.dark.isActive ? 'white' : 'black'
+  if (!props.color) return 'btnbg'
+  if (props.color === 'warning') return 'btwbg'
+  if (props.color === 'primary') return 'btnbg'
+  if (props.color === 'nb') return ui.isDark ? 'white' : 'black'
   return props.color
 })
 

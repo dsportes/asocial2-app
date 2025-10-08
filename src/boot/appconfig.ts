@@ -7,7 +7,7 @@ import { K } from '../app/constants'
 import stores from '../stores/all'
 
 export default defineBoot(async ({ app }) => {
-  stores.config.initK(K)
+  stores.config.initK(K, window.location)
 
   if (docTypeErrors.length) {
     console.error(docTypeErrors.join('\n'))

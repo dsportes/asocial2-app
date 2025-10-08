@@ -23,7 +23,8 @@ export class Operation {
 
   async post (args: any) : Promise<any>{
     const config = stores.config
-    config.opStart(this)
+    const session = stores.session
+    session.opStart(this)
     const u = config.K.urlsrv + (config.K.urlsrv.endsWith('/') ? '' : '/')
     args.APIVERSION = config.K.APIVERSION
     const body = new Uint8Array(encode(args || {}))
@@ -41,7 +42,7 @@ export class Operation {
         // @ts-ignore
         const buf = await response.bytes()
         const x = decode(buf)
-        config.opEnd()
+        session.opEnd()
         return x
       }
       const serial = await response.bytes()
@@ -56,7 +57,7 @@ export class Operation {
       throw new AppExc({ code:11001, label: 'Unexpected from server', 
         args:[response.status, (u || '?'), txt]})
     } catch (e) {
-      config.opEnd()
+      session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})

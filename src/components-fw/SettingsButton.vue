@@ -1,19 +1,19 @@
 <template>
 <div>
-  <q-btn v-if="config.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
-  <q-btn v-else flat dense icon="settings" :class="config.newVersionReady ? 'bg-negative text-white' : ''">
+  <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
+  <q-btn v-else flat dense icon="settings" :class="session.newVersionReady ? 'bg-negative text-white' : ''">
     <q-menu>
       <q-list style="min-width: 300px">
 
-        <q-item v-if="config.newVersionReady" clickable dense v-close-popup
+        <q-item v-if="session.newVersionReady" clickable dense v-close-popup
           class="bg-negative text-white"
-          @click="config.newVersionDialog = true">
+          @click="session.newVersionDialog = true">
           <q-item-section avatar><q-avatar size="xl" icon="system_update"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('RLtit1')}}</q-item-section>
         </q-item>
-        <q-separator v-if="config.newVersionReady"/>
+        <q-separator v-if="session.newVersionReady"/>
 
-        <q-item clickable dense v-close-popup @click="openHelp('topHelp')">
+        <q-item clickable dense v-close-popup @click="ui.openHelp('topHelp')">
           <q-item-section avatar><q-avatar size="xl" icon="help"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('genhelp')}}</q-item-section>
         </q-item>
@@ -47,12 +47,12 @@
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="reloadPage">
+        <q-item clickable dense v-close-popup @click="cfReloadPage">
           <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('restartApp')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="coolBye">
+        <q-item clickable dense v-close-popup @click="cfCoolBye">
           <q-item-section avatar><q-avatar size="xl" icon="close"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
         </q-item>
@@ -60,21 +60,27 @@
         <q-item>
           <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [config.K.BUILD, config.K.APIVERSION]) }}</q-item-section>
         </q-item>
+        <!-- Test surcharge traductions
+        <q-item>
+          <q-item-section class="font-mono text-center text-italic">{{ $t('blabla') + ' - ' + $t('blabla1') }}</q-item-section>
+        </q-item>
+        -->
+
       </q-list>
     </q-menu>
   </q-btn>
 
   <!-- Contrôle de l'autorisation des notifications-->
-  <q-dialog v-model="config.permDialog" persistent>
+  <q-dialog v-model="session.permDialog" persistent>
     <permission-dialog/>
   </q-dialog>
 
   <!-- Information / option d'installation d'une nouvelle version -->
-  <q-dialog v-model="config.newVersionDialog" persistent>
+  <q-dialog v-model="session.newVersionDialog" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" :label="$t('later')"
-          @click="config.newVersionDialog = false"/>
+        <btn-cond icon="close" color="warning" :label="$t('later')"
+          @ok="session.newVersionDialog = false"/>
         <q-toolbar-title>{{$t('RLtit1')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
       </q-toolbar>
@@ -83,33 +89,33 @@
         <div class="titre-md q-my-md">{{$t('RLtit2')}}</div>
         <div class="row q-my-sm justify-between items-center">
           <div class="titre-md text-bold">{{$t('RLopt1')}}</div>
-          <q-btn dense padding="none" icon="system_update" color="primary"
-            :label="$t('clickhere')" @click="reloadPage"/>
+          <btn-cond icon="system_update" color="primary"
+            :label="$t('clickhere')" @ok="reloadPage"/>
         </div>
         <div class="row q-my-sm justify-between items-center">
           <div class="col titre-md q-my-sm text-italic">{{$t('RLopt2')}}</div>
-          <q-btn class="col-auto q-ml-sm" dense padding="none" icon="close"
-            color="primary" :label="$t('gotit')" @click="config.newVersionDialog = false"/>
+          <btn-cond class="col-auto q-ml-sm" icon="close"
+            color="primary" :label="$t('gotit')" @ok="session.newVersionDialog = false"/>
         </div>
       </div>
     </q-card>
   </q-dialog>
 
   <!-- Affiche l'opération en cours et propose son interruption -->
-  <q-dialog v-model="config.opDialog" maximized persistent>
-    <div v-if="config.opSpinner >= 2" class="column items-center q-ma-lg">
+  <q-dialog v-model="session.opDialog" maximized persistent>
+    <div v-if="session.opSpinner >= 2" class="column items-center q-ma-lg">
       <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-        <div :class="sty() + 'cursor-pointer stop'" @click="confirmstopop = true">
+        <div :class="sty() + 'cursor-pointer stop'" @click="ui.oD(idc, 'confirmstopop')">
           <div class="row items-center justify-between q-pa-sm" style="width:20rem">
             <div class="col column items-center">
               <div class="text-bold titre-md">{{$t('MLAopc')}}</div>
-              <div class="text-bold text-italic">{{$t('op_' + config.opEncours)}}</div>
+              <div class="text-bold text-italic">{{$t('op_' + session.opEncours.opName)}}</div>
               <div class="titre-sm">{{$t('MLAint')}}</div>
             </div>
             <div class="col-auto row items-center justify-center q-pa-sm">
               <q-spinner color="primary" size="40px" :thickness="4"/>
               <div class="font-mono fs-xs text-center text-white text-bold bg-negative tag">
-                {{config.opSpinner}}</div>
+                {{session.opSpinner}}</div>
             </div>
           </div>
         </div>
@@ -121,10 +127,10 @@
   <q-dialog v-model="ui.dModels[idc].confirmstopop">
     <q-card>
       <q-card-section class="q-pa-md fs-md text-center">
-        {{$t('MLAcf', [$t('op_' + config.opEncours)])}}</q-card-section>
-      <q-card-actions vertical align="right" class="q-gutter-sm">
-        <q-btn flat color="primary" :label="$t('MLAcf3')" @click="ui.fD"/>
-        <q-btn flat color="primary" :label="$t('MLAcf4')" @click="ui.fD(); abortPostOp()"/>
+        {{$t('MLAcf', [$t('op_' + session.opEncours.opName)])}}</q-card-section>
+      <q-card-actions vertical align="center" class="q-gutter-sm">
+        <btn-cond flat :label="$t('MLAcf3')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('MLAcf4')" @ok="ui.fD(); session.opEncours.abort()"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -132,7 +138,7 @@
   <q-dialog v-model="ui.dModels[idc].theme" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" @click="ui.fD"/>
+        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
         <q-toolbar-title>{{$t('theme')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
       </q-toolbar>
@@ -256,17 +262,17 @@
   <q-dialog v-model="ui.dModels[idc].pings" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <q-btn dense icon="close" color="warning" @click="ui.fD"/>
+        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
         <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
-        <q-btn dense icon="check" color="primary" @click="opSetSrvStatus(1)"/>
-        <q-btn dense icon="check" color="warning" @click="opSetSrvStatus(2)"/>
+        <btn-cond icon="check" @ok="opSetSrvStatus(1)"/>
+        <btn-cond icon="check" color="warning" @ok="opSetSrvStatus(2)"/>
         <help-button page="reloadApp"/>
       </q-toolbar>
 
       <div class="column q-pa-sm q-gutter-md">
         <q-input filled v-model="toecho" :label="$t('toecho')">
           <template v-slot:append>
-            <q-btn icon="send" color="primary" :disable="toecho === ''" @click="opEcho"/>
+            <btn-cond icon="send" :disable="toecho === ''" @ok="opEcho"/>
           </template>
         </q-input>
         <div class="font-mono">{{$t('echo', [echo])}}</div>
@@ -275,7 +281,7 @@
       <q-separator color="orange" class="q-my-md"/>
 
       <div class="column items-center">
-        <q-btn icon-right="send" color="primary":label="$t('ping')" @click="opGetSrvStatus"/>
+        <btn-cond icon-right="send" :label="$t('ping')" @click="opGetSrvStatus"/>
         <div class="q-mt-sm q-mx-sm font-mono height-4 text-center">{{resping}}</div>
       </div>
 
@@ -288,17 +294,18 @@
 
 import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useQuasar, setCssVar } from 'quasar'
 
 import stores from '../stores/all'
 import HelpButton from './HelpButton.vue'
+import BtnCond from './BtnCond.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { $t, $q, sty, reloadPage, openHelp, sleep, coolBye, setCss } from '../src-fw/util'
+import { $t, $q, sty, reloadPage, sleep, coolBye } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 
 const i18n = useI18n()
 const config = stores.config
+const session = stores.session
 const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
@@ -311,12 +318,10 @@ const choix = (lg: localeOption) : void => {
 }
 
 function darkClear () {
-  $q.dark.toggle()
-  setCss()
+  ui.setDark(!ui.isDark)
 }
 
-$q.dark.set(true)
-setCss()
+ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
 
@@ -358,6 +363,9 @@ async function opSetSrvStatus (stx) : Promise<void> {
     resping.value = 'err:' + (e.code || '???')
   }
 }
+
+const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }
+const cfCoolBye = () => { ui.oD('0', 'confirmQuit') }
 
 </script>
 

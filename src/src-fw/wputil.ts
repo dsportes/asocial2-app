@@ -1,15 +1,14 @@
-import { postOp } from './net'
 import stores from '../stores/all'
 
 export async function initWP () {
   // POUR TEST de web-push: n'est plus opérationnel
-  const config = stores.config
-  if (config.subJSON.startsWith('???')) {
-    console.log('WP - initialization failed: ', config.subJSON)
+  const session = stores.session
+  if (session.subJSON.startsWith('???')) {
+    console.log('WP - initialization failed: ', session.subJSON)
     // TODO
   } else try {
-    await postOp('RegisterSubscription', { subJSON: config.subJSON })
-    console.log('WP - initialization DONE. ', config.sessionId)
+    // await postOp('RegisterSubscription', { subJSON: session.subJSON })
+    console.log('WP - initialization DONE. ', session.sessionId)
   } catch (e) {
     console.log('WP - initialization failed: ', e.toString())
     // TODO
@@ -30,5 +29,5 @@ async function showNotifFG (payload: any) {
   // @ts-ignore
   if (payload.data.url) options.data = { url: payload.data.url }
   // @ts-ignore
-  await config.registration.showNotification(payload.notification.title, options)
+  await session.registration.showNotification(payload.notification.title, options)
 }

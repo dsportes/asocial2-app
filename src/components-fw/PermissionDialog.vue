@@ -8,21 +8,21 @@
   <div class="q-pa-sm">
     <div class="titre-md text-italic q-my-md">{{ $t(('PEinfo')) }}</div>
 
-    <q-btn v-if="!config.permChange && perm === 'prompt'" flat 
-      :label="$t('PEopt2')" class="q-my-md" @click="rp"/>
+    <btn-cond v-if="!session.permChange && perm === 'prompt'" flat 
+      :label="$t('PEopt2')" class="q-my-md" @ok="rp"/>
 
     <div v-if="perm !== 'granted'"
       class="titre-md text-bold q-my-md">{{ $t(('PEopt1')) }}</div>
 
     <div class="q-ma-md column justify-center q-gutter-md">
-     <q-btn v-if="config.permChange" dense icon="restart_alt" flat color="warning"
+     <btn-cond v-if="session.permChange" icon="restart_alt" flat color="warning"
         :disable="perm !== 'granted'"
         :label="$t('restartApp')" 
-        @click="reloadPage"/>
+        @ok="reloadPage"/>
 
-      <q-btn dense icon="close" flat color="warning" 
+      <btn-cond dense icon="close" flat color="warning" 
         :label="$t('closeApp')" 
-        @click="coolBye"/>
+        @ok="coolBye"/>
     </div>
 
   </div>
@@ -34,12 +34,15 @@ import { computed } from 'vue'
 import stores from '../stores/all'
 import { sty, coolBye, reloadPage } from '../src-fw/util'
 import HelpButton from './HelpButton.vue'
+import BtnCond from './BtnCond.vue'
 
-const perm = computed(() => stores.config.permState)
+const session = stores.session
+
+const perm = computed(() => session.permState)
 
 const rp = async () => {
   const p = await Notification.requestPermission()
-  config.changePerm(p)
+  session.changePerm(p)
 }
 
 </script>

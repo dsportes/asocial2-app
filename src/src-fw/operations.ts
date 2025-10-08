@@ -35,8 +35,9 @@ export class SetSrvStatus extends Operation {
   async run (stx: number) {
     try {
       const config = stores.config
+      const session = stores.session
       const authRecord = {
-        sessionId : config.sessionId,
+        sessionId : session.sessionId,
         time: Date.now(),
         tokens : [
           { type: 'ADMIN', value: config.K.ADMIN }
@@ -57,8 +58,9 @@ export class TestAuth extends Operation {
   async run () {
     try {
       const config = stores.config
+      const session = stores.session
       const authRecord = {
-        sessionId : config.sessionId,
+        sessionId : session.sessionId,
         time: Date.now(),
         tokens : [
           { type: 'ADMIN', value: config.K.ADMIN },

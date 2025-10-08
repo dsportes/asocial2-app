@@ -2,6 +2,8 @@
 // so you can safely delete all default props below
 
 export default {
+  blabla: 'blu blu', // Test surcharge traductions
+
   darkclear: 'Dark / clear',
 
   titre: 'Very simple test - counter: {0}',
@@ -26,7 +28,7 @@ export default {
   quitConfirm: 'Confirmer ...',
   quitQuit: 'Je confirme quitter l\'application',
   quitReload: 'Je confirme relancer l\'application',
-  quitContinue: 'Je continue ma session',
+  quitCont: 'Je continue ma session',
 
   MLAopc: 'Operation running',
   MLAint: 'Click here for interrupting it',
@@ -76,10 +78,10 @@ export default {
 
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
-  EX_3: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
-  EX_4: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
-  EX_5: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
-  EX_6: '"BUG" très probable: erreur inattendue survenue dans le traitement sur le serveur',
+  EX_3: '"BUG" probable: erreur inattendue récupérée par le serveur',
+  EX_4: '"BUG" probable: erreur inattendue récupérée par le serveur',
+  EX_5: '"BUG" probable: erreur inattendue récupérée par le serveur',
+  EX_6: '"BUG" probable: erreur inattendue récupérée par le serveur',
 
   EX_10: 'Interruption volontaire (appui sur le bouton rouge)',
   EX_11: 'Erreur d`accès au serveur, réseau indisponible ?',
@@ -87,7 +89,8 @@ export default {
   EX_13: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
   EX_14: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
 
-  EX_1999: 'Bug probable: erreur inattendue\n{0}',
+  EX_1001: 'Erreur "fake" pour test\n{0}',
+  EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau
@@ -112,7 +115,7 @@ export default {
   EX_13023: 'Echec de decryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
   EX_13024: 'Echec d\'encryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
   
-  EX_quit: 'Quiiter l\'application',
+  EX_quit: 'Quitter l\'application',
   EX_reload: 'Relancer l\'application',
   EX_continue: 'Poursuivre la session quand même'
 

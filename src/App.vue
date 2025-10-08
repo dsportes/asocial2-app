@@ -1,82 +1,97 @@
 <template>
-<div>
-  <q-toolbar class="bg-primary text-white q-ma-none">
-    <q-btn label="WP" size="md" @click="startWP"
-      :color="config.hashSub ? 'green' : 'red'"
-      :disable="!wpStartable"
-    />
-    <q-btn label="T4" @click="t4"/>
-    <q-toolbar-title class="titre-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
-    <q-btn icon="add" :label="$t('plus1')" @click="plus1"/>
-    <q-btn class="q-mr-sm" icon="remove" :label="$t('moins1')" @click="moins1"/>
+<q-layout view="hHh lpR fFf">
+  <q-header>
+    <q-toolbar class="full-width tbp">
+      <btn-cond label="WP" @ok="startWP"
+        :color="config.sessionId ? 'green' : 'red'" :disable="!wpStartable"/>
+  
+        <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
 
-    <settings-button class="q-mr-sm"/>
-    <help-button page="x1"/>
-  </q-toolbar>
+        <q-toolbar-title class="titre-md q-mx-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
 
-  <div class="font-mono q-pa-sm">{{echo}}</div>
-  <q-file class="full-width q-ma-xs" filled v-model="fileList"
-    :label="$t('pickfile')" max-file-size="50000000" max-file="1">
-    <template v-slot:append>
-      <q-btn icon="upload" class="q-mr-SM" :disable="fd.size === 0" @click="uploadFile"/>
-      <q-btn icon="download" :disable="fd.size === 0" @click="downloadFile"/>
-    </template>
-  </q-file>
+        <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
+  
+        <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
+
+        <settings-button class="q-ml-sm"/>
+
+        <help-button class="q-ml-xs" page="x1"/>
+    </q-toolbar>
+  </q-header>
+  
+  <q-page-container class="font-def">
+    <q-page>
+      <div class="font-mono q-pa-sm">{{echo}}</div>
+      <q-file class="full-width q-ma-xs tbs" filled v-model="fileList"
+        :label="$t('pickfile')" max-file-size="50000000" max-file="1">
+        <template v-slot:append>
+          <btn-cond icon="upload" class="q-mr-SM" :disable="fd.size === 0" @ok="uploadFile"/>
+          <btn-cond icon="download" :disable="fd.size === 0" @ok="downloadFile"/>
+        </template>
+      </q-file>
+    </q-page>
+  </q-page-container>
 
   <got-it v-if="ui.dModels['0'].diag"/>
   <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
   <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
 
-</div>
+</q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import ext2mime from 'ext2mime'
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
-// @ts-ignore
-import { useQuasar, setCssVar } from 'quasar'
+import { ref, computed, watch, watchEffect } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
+// @ts-ignore
+import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
 
-import { setTQ, readFile, fileDescr, setCss } from './src-fw/util'
+import { set$t, readFile, fileDescr } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
-import { postOp, getData, putData } from './src-fw/net'
+import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
 import { initWP } from './src-fw/wputil'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
+import BtnCond from './components-fw/BtnCond.vue'
 import GotIt from './components-fw/Gotit.vue'
 import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 
 const $t = useI18n().t // Pour rendre accessible $t dans le code
-const $q = useQuasar()
-setTQ($t, $q)
+set$t($t)
 
 const config = stores.config
+const session = stores.session
 const dataSt = stores.data
 const ui = stores.ui
 
-$q.dark.set(true)
-setCss()
+const $q = useQuasar()
+ui.set$t$q($t, $q)
+ui.setScreenWH($q.screen.width, $q.screen.height)
+watchEffect(() => {
+  ui.setScreenWH($q.screen.width, $q.screen.height)
+})
 
 const wpStartable = computed(() => 
-  config.permState === 'granted' && config.registration && config.sessionId)
+  session.permState === 'granted' && session.registration && session.sessionId)
 
 const startWP = async () => {
   await initWP()
 }
 
 function plus1 () : void {
-  dataSt.cpt++
+  dataSt.setCpt(dataSt.cpt + 1)
 }
+
 function moins1 () : void {
-  dataSt.cpt--
+  dataSt.setCpt(dataSt.cpt - 1)
 }
 
 const echo = ref('')
@@ -121,6 +136,25 @@ async function uploadFile () : Promise<void> {
   }
 }
 
+const t3 = async () => {
+  // await testECDH()
+  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
+  console.log(ps)
+  console.log(Crypt.sha32(ps))
+  // await testSH()
+}
+
+const t1b = () => {
+  session.setAppUpdated()
+  // reloadPage()
+  // session.callSW({ type: 'FROM_APP', arg: 'coucou'})
+}
+
+const t4 = async () => {
+  const res = await new TestAuth().run()
+  console.log('TestAuth:' + res)
+}
+
 /*
 const t1 = async () => {
   const appurl = window.location.origin + window.location.pathname
@@ -157,26 +191,6 @@ const t2b = async () => {
   console.log(content)
 }
 */
-
-const t3 = async () => {
-  // await testECDH()
-  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
-  console.log(ps)
-  console.log(Crypt.sha32(ps))
-  // await testSH()
-}
-
-const t1b = () => {
-  config.setAppUpdated()
-  // reloadPage()
-  // config.callSW({ type: 'FROM_APP', arg: 'coucou'})
-}
-
-const t4 = async () => {
-  const res = await new TestAuth().run()
-  console.log('TestAuth:' + res)
-}
-
 </script>
 
 <style lang="scss" scoped>

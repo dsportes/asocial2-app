@@ -1,14 +1,14 @@
 <template>
-  <q-btn icon="help" size="md" dense padding="none" @click="openHelp(page)"></q-btn>
+  <btn-cond icon="help" @ok="stores.ui.openHelp(page)"/>
 </template>
 
 <script setup lang="ts">
-  import { openHelp } from '../src-fw/util'
-  // import { ref } from 'vue'
+import stores from '../stores/all'
+import BtnCond from './BtnCond.vue'
 
-  const props = defineProps({
-    page: String
-  })
+const props = defineProps({
+  page: String
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,6 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
-import { setCssVar } from 'quasar'
 import { fromByteArray, toByteArray } from './base64'
 import stores from '../stores/all'
 
@@ -12,19 +11,11 @@ import { gzip, ungzip } from './pako.mjs'
 // const stores = null
 
 export let $t: any
-export let $q: any
-
-export function setTQ (_$t, _$q) { $t = _$t; $q = _$q }
+export function set$t (_$t) { $t = _$t }
 
 export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
-
-export function setCss () {
-  const d = $q.dark.isActive ? 0 : 1
-  const t = stores.config.K.theme
-  for(const c in t) setCssVar(c, t[c][d])
-}
 
 export class AppExc {
   /* 
@@ -102,8 +93,9 @@ export class AppExc {
 const encoder = new TextEncoder()
 
 export function sty (sz?: string) {
-  if (!sz) return $q.dark.isActive ? 'dark ' : 'clear '
-  return ($q.dark.isActive ? 'dark bsfdark pw' : 'clear bsclear pw') + sz
+  const d = stores.ui.isDark
+  if (!sz) return d ? 'dark ' : 'clear '
+  return (d ? 'dark bsfdark pw' : 'clear bsclear pw') + sz
 }
 
 export function sleep (delai: number) {
@@ -142,22 +134,6 @@ export async function readFile (file: any, bin: boolean) : Promise<fileDescr> {
       reader.readAsArrayBuffer(file)
     }
   })
-}
-
-export function openHelp (page: string) {
-  const ph = stores.config.getHelpPages()
-  if (!ph.has(page)) {
-    $q.dialog({
-      // title: 'Alert',
-      message: $t('HLPaidebd', [page]),
-      ok: { label: $t('gotit'), flat:true, color: "primary" }
-    }).onOk(() => { }).onCancel(() => { }).onDismiss(() => { })
-  }
-  else {
-    // TODO
-    console.log('Ouverture page aide ', page)
-    return
-  }
 }
 
 export function urlFromText (text: string, type?: string) : string {

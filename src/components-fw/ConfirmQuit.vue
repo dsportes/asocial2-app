@@ -7,13 +7,9 @@
         <help-button page="page1"/>
       </q-toolbar>
       <q-card-actions vertical align="center" class="titre-md q-gutter-sm">
-        <q-btn flat dense :label="$t('quitQuit')" @click="bye">
-          <q-icon right name="logout" color="warning" size="lg"/>
-        </q-btn>
-        <q-btn flat dense :label="$t('quitReload')" @click="reload">
-          <q-icon right name="logout" color="warning" size="lg"/>
-        </q-btn>
-        <q-btn flat dense :label="$t('quitCont')" @click="ui.fD"/>
+        <btn-cond flat icon="logout" color="warning" :label="$t('quitQuit')" @ok="bye"/>
+        <btn-cond flat icon="refresh" color="warning" :label="$t('quitReload')" @ok="reload"/>
+        <btn-cond flat icon="arrow_forward" color="primary" :label="$t('quitCont')" @ok="ui.fD"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -24,6 +20,7 @@
 import HelpButton from './HelpButton.vue'
 import stores from '../stores/all'
 import { sty, coolBye, reloadPage } from '../src-fw/util'
+import BtnCond from './BtnCond.vue'
 
 const ui = stores.ui
 

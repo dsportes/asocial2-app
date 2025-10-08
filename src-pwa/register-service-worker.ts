@@ -1,21 +1,21 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
-import { useConfigStore } from '../src/stores/config-store'
 import { urlFromText, b64ToObj } from '../src/src-fw/util'
 import { onmsg } from '../src/src-fw/wputil'
-import { K } from '../src/app/constants'
+import stores from '../src/stores/all'
+
 // import { decode } from '@msgpack/msgpack'
 
 // Ecoute les changements de permissions et les route vers config
 navigator.permissions.query({ name: 'notifications' })
 .then(notificationPerm => {
-  const config = useConfigStore()
+  const session = stores.session
   notificationPerm.onchange = () => {
     const p = notificationPerm.state
-    config.changePerm(p)
+    session.changePerm(p)
   }
   const p = notificationPerm.state
-  config.changePerm(p)
+  session.changePerm(p)
 })
 .catch(e => {
   console.log('Permissions cannot be asked')
@@ -25,12 +25,12 @@ navigator.permissions.query({ name: 'notifications' })
 navigator.serviceWorker.onmessage = async (message) => {
   if (message.data) {
     if (message.data.type === 'STOP') {
-      window.location.href = urlFromText(K.byeHtml)
+      window.location.href = urlFromText(stores.config.K.byeHtml)
     } else if (message.data.type === 'PUSH') {
       const payload = b64ToObj(message.data.payload)
       await onmsg(payload)
     } else {
-      useConfigStore().onSwMessage(message.data)
+      stores.session.onSwMessage(message.data)
     }
   }
 }
@@ -45,18 +45,19 @@ register('./firebase-messaging-sw.js', {
 
   registered (registration) { 
     console.log('Service worker is registered')
-    const config = useConfigStore()
-    config.setRegistration(registration)
+    stores.session.setRegistration(registration, stores.config.K.vapidPublicKey)
   } ,// console.log('Service worker has been registered.')
 
   ready (registration) { 
     console.log('Service worker is active')
     registration.active.postMessage({ type: 'STARTING' })
-    registration.active.postMessage({ type: 'SETSTATE', location: window.location, APPNAME: K.APPNAME })
+    registration.active.postMessage({ type: 'SETSTATE', 
+      location: stores.config.location, APPNAME: stores.config.K.APPNAME 
+    })
   },
 
   updated (/* registration */) {
-    useConfigStore().setAppUpdated()
+    stores.session.setAppUpdated()
   },
 
   cached (/* registration */) { }, // console.log('Content has been cached for offline use.')
