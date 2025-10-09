@@ -17,6 +17,18 @@ export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
 
+let audioContext = null
+export async function beep (son: string) {
+  if (!audioContext) audioContext = new AudioContext()
+  const b64 = son.substring(son.indexOf(',') + 1)
+  const buf = b64ToU8(b64).buffer
+  const b = await audioContext.decodeAudioData(buf) // (arrayBuffer)
+  const source = audioContext.createBufferSource() // creates a sound source
+  source.buffer = b // tell the source which sound to play
+  source.connect(audioContext.destination) // connect the source to the context's destination (the speakers)
+  source.start() // play the source now
+}
+
 export class AppExc {
   /* 
   codes: serveur

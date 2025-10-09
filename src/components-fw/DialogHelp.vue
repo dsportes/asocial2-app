@@ -10,7 +10,7 @@
       <btn-cond v-if="!stackvide" class="q-ml-xs" icon="arrow_back" @ok="back">
         <q-tooltip class="bg-white text-primary">{{$t('HLPprec')}}</q-tooltip>
       </btn-cond>
-      <q-toolbar-title class="titre-lg">{{$t('A_' + selected)}}
+      <q-toolbar-title class="titre-lg">{{label(selected)}}
         <q-tooltip class="bg-white text-primary">{{selected}}</q-tooltip>
       </q-toolbar-title>
     </q-toolbar>
@@ -77,11 +77,11 @@
             <div v-if="prop.node.type === 1" class="row items-start no-wrap bord"
               :style="!prop.node.children.length ? 'margin-left:8px;' : ''">
               <q-icon name="library_books" color="orange" size="24px" class="col-auto q-mr-sm" />
-              <div :class="'col text-bold text-italic' + cl(prop.node.id)">{{ prop.node.label }}</div>
+              <div :class="'col text-bold text-italic' + cl(prop.node.id)">{{ label(prop.node.id) }}</div>
             </div>
             <div v-else class="row items-start no-wrap">
               <q-icon name="note" color="primary" size="24px" class="col-auto q-mr-sm" />
-              <div :class="'col ' + cl(prop.node.id)">{{ prop.node.label }}</div>
+              <div :class="'col ' + cl(prop.node.id)">{{ label(prop.node.id) }}</div>
             </div>
           </div>
         </template>
@@ -113,7 +113,6 @@ import { ref, watch, computed } from 'vue'
 import stores from '../stores/all'
 import { sty, $t } from '../src-fw/util'
 import { Help } from '../src-fw/help'
-import { res } from '../src-fw/net'
 
 import BtnCond from './BtnCond.vue'
 import ShowHtml from './ShowHtml.vue'
@@ -125,27 +124,31 @@ const config = stores.config
 const docsurl = config.K.docsurls[config.locale] || 'http://localhost:8080/fr'
 const urld = '<a href="' + docsurl + '/'
 const nodes = Help.tree()
+const sources = Help.sources
 const pages = Help.pages() // Key: nom page, value: nom de sa page mère (null si racine)
+const labels = Help.labels
 
-async function getImgUrl (name) {
-  try {
-    const x = await res('help/' + name)
-    return x ? x : await res('help/defaut.png')
-  } catch (e) {
-    return await res('help/defaut.png')
-  }
+function label (p) {
+  let l = labels[config.locale][p]
+  if (l) return l
+  l = labels['fr'][p]
+  return l || p
 }
 
-async function getMd (page, lang) {
-  try {
-    let x = await res('help/' + page + '_' + lang + '.md' ) // + '.txt'
-    if (x) return x
-    if (lang !== 'fr') x = await res('help/' + page + '_fr.md')
-    if (x) return x
-    return await res('help/bientot_' + lang + '.md')
-  } catch (e) {
-    return await res('help/bientot_' + lang + '.md')
-  }
+function getImgUrl (name) {
+  const i = name.indexOf('.')
+  const n = name.substring(0, i)
+  const ext = name.substring(i + 1)
+  let x = sources[n + '$' + ext]
+  return x || sources['defaut$png']
+}
+
+function getMd (page, lang) {
+  let x = sources[page + '_' + lang]
+  if (x) return x
+  x = sources[page + '_fr']
+  if (x) return x
+  return sources['bientot_' + lang]
 }
 
 function parents (n) { // nom d'une page ou section
@@ -180,8 +183,8 @@ function resetFilter () {
   filterRef.value.focus()
 }
 
-async function setChaps (id) {
-  const y = await getMd(id, config.locale)
+function setChaps (id) {
+  const y = getMd(id, config.locale)
   const x = y.replaceAll('\r\n', '\n').split('\n')
   intro.value = ''
   chaps.value = []
@@ -203,7 +206,7 @@ async function setChaps (id) {
           const code = l.trim()
           if (code) {
             if (pages.has(code)) {
-              const titre = ($t('A_' + code) || '').trim()
+              const titre = label(code).trim()
               if (titre) m.push({ label: titre, value: code })
             } else {
               console.log('Help : page non trouvée [' + code + ']')
@@ -213,14 +216,14 @@ async function setChaps (id) {
       }
     } else {
       const l2 = l.replaceAll('<a href="$$/', urld)
-      tx.push(await remplaceImg(l2))
+      tx.push(remplaceImg(l2))
     }
   }
   if (!t && tx.length) { intro.value = tx.join('\n') }
   if (t) { chaps.value.push({t, tx: tx.join('\n'), m}) }
 }
 
-async function remplaceImg (l) {
+function remplaceImg (l) {
   const lx = []
   let i = 0, j = 0
   while (true){
@@ -233,7 +236,7 @@ async function remplaceImg (l) {
       if (j !== i) lx.push(l.substring(j, i))
       j = l.indexOf('"', i + 10)
       const n = l.substring(i + 10, j)
-      const u = await getImgUrl(n)
+      const u = getImgUrl(n)
       lx.push('<img src="' + u)
     }
   }

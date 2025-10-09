@@ -41,19 +41,18 @@ onblur = (event) => { useConfigStore().lostFocus() }
 onbeforeunload = (event) => { useConfigStore().closingApp() }
 */
 
+export let myRegistration = null
+
 register('./firebase-messaging-sw.js', {
 
   registered (registration) { 
+    myRegistration = registration
     console.log('Service worker is registered')
-    stores.session.setRegistration(registration, stores.config.K.vapidPublicKey)
-  } ,// console.log('Service worker has been registered.')
+  },
 
   ready (registration) { 
     console.log('Service worker is active')
     registration.active.postMessage({ type: 'STARTING' })
-    registration.active.postMessage({ type: 'SETSTATE', 
-      location: stores.config.location, APPNAME: stores.config.K.APPNAME 
-    })
   },
 
   updated (/* registration */) {

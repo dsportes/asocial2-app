@@ -2,27 +2,28 @@
 <q-layout view="hHh lpR fFf">
   <q-header>
     <q-toolbar class="full-width tbp">
-      <btn-cond label="WP" @ok="startWP"
+      <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
+      <btn-cond label="WP" @ok="startWP" class="q-ml-xs"
         :color="config.sessionId ? 'green' : 'red'" :disable="!wpStartable"/>
   
-        <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
+      <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
 
-        <q-toolbar-title class="titre-md q-mx-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
+      <q-toolbar-title class="titre-md q-mx-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
 
-        <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
-  
-        <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
+      <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
 
-        <settings-button class="q-ml-sm"/>
+      <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
 
-        <help-button class="q-ml-xs" page="DOCpg"/>
+      <settings-button class="q-ml-sm"/>
+
+      <help-button class="q-ml-xs" page="DOCpg"/>
     </q-toolbar>
   </q-header>
   
   <q-page-container class="font-def">
     <q-page>
       <div class="font-mono q-pa-sm">{{echo}}</div>
-      <q-file class="full-width q-ma-xs tbs" filled v-model="fileList"
+      <q-file class="full-width q-ma-xs" filled v-model="fileList"
         :label="$t('pickfile')" max-file-size="50000000" max-file="1">
         <template v-slot:append>
           <btn-cond icon="upload" class="q-mr-SM" :disable="fd.size === 0" @ok="uploadFile"/>
@@ -51,8 +52,10 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
+// import mybeep from './assets/beep.mp3?inline'
+import incognito from './assets/incognito_blanc.svg'
 
-import { set$t, readFile, fileDescr } from './src-fw/util'
+import { set$t, readFile, fileDescr, beep } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
@@ -66,20 +69,24 @@ import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
-import { res } from './src-fw/net'
+import { myRegistration } from '../src-pwa/register-service-worker'
 
 const $t = useI18n().t // Pour rendre accessible $t dans le code
 set$t($t)
-
-onMounted(async () => {
-  const readme = await res('README.md')
-  Help.setPlan(await res('help/a_plan.json'), readme) 
-})
 
 const config = stores.config
 const session = stores.session
 const dataSt = stores.data
 const ui = stores.ui
+
+session.saveRegistration(myRegistration)
+
+onMounted(async () => {
+  await session.setRegistration(myRegistration, config.K.vapidPublicKey)
+  myRegistration.active.postMessage(
+    { type: 'SETSTATE', location: stores.config.location, APPNAME: stores.config.K.APPNAME }
+  )
+})
 
 const $q = useQuasar()
 ui.set$t$q($t, $q)

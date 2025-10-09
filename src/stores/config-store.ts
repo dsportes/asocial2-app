@@ -22,18 +22,15 @@ export const useConfigStore = defineStore('config', () => {
   const optionLocale = computed(() => localeMap.get(locale.value))
 
   const K = ref()
-  const initK = (k: any, location: string) => {
+  const initK = (k: any, _location: Object) => {
+    location.value = _location['href']
     K.value = k
     k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = k.localeOptions[0].value
   }
 
-  function getHelpPages () : Set<string> {
-    return new Set()
-  }
-
   return {
-    location, K, initK, locale, optionLocale, setLocale, getHelpPages,
+    location, K, initK, locale, optionLocale, setLocale
   }
 
 })

@@ -58,7 +58,41 @@ export const useSessionStore = defineStore('session', () => {
   const subJSON = ref('')
   const sessionId = ref('')
 
-  function setRegistration(_registration, vapidPK) {
+  function saveRegistration (_registration) {
+    registration.value = _registration
+  }
+
+  async function setRegistration (vapidPK) {
+    // @ts-ignore
+    const pm = registration.value.pushManager
+    if (!pm) {
+      subJSON.value = '??? Souscription non obtenue - pushManager non accessible'
+      return
+    }
+    try {
+      const sub = await pm.getSubscription()
+      if (sub) {
+        subJSON.value = JSON.stringify(sub)
+        sessionId.value = Crypt.shaS(sub.endpoint)
+      } else {
+        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(vapidPK) }
+        try {
+          const nsub = pm.subscribe(opt)
+          subJSON.value = JSON.stringify(nsub)
+          sessionId.value = Crypt.shaS(nsub.endpoint)
+          console.log('subJSON: ' + subJSON.value.substring(0, 200))
+        } catch(e) {
+          subJSON.value = '??? Souscription non obtenue - ' + e.message
+          console.log('subJSON: ' + subJSON.value)
+        }
+      }
+    } catch(e) {
+      subJSON.value = '??? Souscription non obtenue - ' + e.message
+      console.log('subJSON: ' + subJSON.value)
+    }
+  }
+
+  function setRegistration2 (_registration, vapidPK) {
     registration.value = _registration
     // @ts-ignore
     const pm = _registration.pushManager
@@ -131,7 +165,7 @@ export const useSessionStore = defineStore('session', () => {
 
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, setRegistration, setAppUpdated, subJSON, sessionId,
+    registration, saveRegistration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange
     // focus, getFocus, lostFocus, closingApp

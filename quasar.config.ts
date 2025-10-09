@@ -82,9 +82,11 @@ export default defineConfig((ctx) => {
         return {
           base: './',
           build: {
-            // assetsInlineLimit: 0,
+            assetsInlineLimit: 50000,
             chunkSizeWarningLimit: 3000
-          }
+          },
+          // assetsInclude: ['**/*.gltf'],
+          assetsInclude: ['./assets/*.*'],
         }
         // equivalent of following vite.config.js/vite.config.ts:
         // export default defineConfig({

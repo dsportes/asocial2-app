@@ -136,14 +136,4 @@ export default {
   SHpe: 'Plein écran',
   SHre: 'Réduire',
 
-  // Pages d'aide
-  A_boite_automaj: 'Mise à jour automatique des données d\'une session',
-  A_dial_editeur: 'L\'éditeur des textes',
-  A_DOCpg: 'L\'application "a-social"',
-  A_pages: 'Pages de l\'application',
-  A_pages_struct: 'Disposition générale d\'une page',
-  A_panel_outils: 'Boîte à outils',
-  A_top_bar: 'Barre du haut',
-  A_dial: 'Dialogues ...'
-
 }
