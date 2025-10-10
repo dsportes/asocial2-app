@@ -231,6 +231,11 @@ export const useDataStore = defineStore('data', () => {
     if (pkv) for (const pk in pkv) {
       const v = pkv[pk]
       // TODO
+      /* Faut-il mettre à jour la liste des auteurs dans 
+      les articles dont zola ne fait plus partie ? 
+      le document pk a changé mais on ne l'a pas dans sa nouvelle version:
+      il serait à recharger ?
+      */
     }
   }
 
