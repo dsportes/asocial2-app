@@ -13,7 +13,7 @@ export class Document {
 
   static getClazz (clazz: string) : Function{ return Document.classes[clazz]}
 
-  static compile (clazz: string, data: Uint8Array) {
+  static async compile (clazz: string, data: Uint8Array) {
     const cl = Document.classes[clazz]
     if (!cl) return null
     const dt = DocType.get(clazz)
@@ -23,10 +23,10 @@ export class Document {
     const d = data ? decode(data) : {}
     for(const f in d) doc[f] = d[f]
     doc._pk = doc._dt.pkValue(doc)
-    doc.compile()
+    await doc.compile()
     return doc
   }
 
-  compile() { }
+  async compile() { }
 
 }

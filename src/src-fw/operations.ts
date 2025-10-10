@@ -1,6 +1,7 @@
 import { Operation } from './operation'
 import { sleep } from './util'
 import stores from '../stores/all'
+import { subsToSync } from '../stores/data-store'
 
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
@@ -69,6 +70,52 @@ export class TestAuth extends Operation {
         ]
       }
       const res = await this.post({ authRecord })
+      return res['auths']
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+/* Sync : synchronise les abonnements cités *************************
+- toSync = subsToSync[]
+Retourne pour chaque 'def' les documents/rowQ nouveaux depuis t.
+Si t est 0, retourne les documents sans filtre de version.
+Retour: { def0: [data], def1: data, def2: [data[], pkv] ... }
+- data: Uint8Array
+- pkv: object donnant pour chaque pk sa version la plus récente ayant quitté la collection
+*/
+export class Sync extends Operation {
+  constructor () { super('TestAuth') }
+
+  async run (subsToSync: subsToSync) {
+    try {
+      const org = subsToSync.org
+      const type = subsToSync.def.split('/').length - 1
+      const dataSt = stores.data
+      const session = stores.session
+      const authRecord = {
+        sessionId : session.sessionId,
+        time: Date.now(),
+        tokens : [
+        ]
+      }
+      const res = await this.post({ authRecord, org, toSync: [subsToSync] })
+      const x = res[subsToSync.def]
+      switch (type) {
+        case 0 : {
+          dataSt.retSync0(subsToSync, x)
+          break
+        }
+        case 1 : {
+          dataSt.retSync1(subsToSync, x)
+          break
+        }
+        case 3 : {
+          dataSt.retSync2(subsToSync, x[0], x[1])
+          break
+        }
+      }
       return res['auths']
     } catch(e) {
       this.ko(e)

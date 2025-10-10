@@ -6,6 +6,7 @@ import type { Ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import { Document } from '../src-fw/document'
+import { Sync } from '../src-fw/operations'
 
 /* Opération Sync du serveur : synchronise les souscriptions citées ***********
 - defs: { def1: t1, def2: t2 ... } - t: version détenue par la session
@@ -67,7 +68,7 @@ class SubsDefs {
 type subsOrg = Map<string, subsClass> // souscriptions de toutes les classes d'une org
 type subsClass = Map<string, SubsDefs> // souscriptions aux documents d'une classe
 
-type subsToSync = {
+export type subsToSync = {
   org: string, 
   def: string, 
   v: number,
@@ -180,18 +181,74 @@ export const useDataStore = defineStore('data', () => {
       setTimeout(async () => {
         sts.order = 0
         // syncOp
+        await new Sync().run(sts)
         syncQueue.value.delete(sts.org + '/' + sts.def)
         sts = nextToSync()
       }, 1)
     }
     syncRunning.value = false
   }
-  
+
+  /* Retour de sync de la collection des documents d'une classe: enregistrement des documents
+  OU chargement initial depuis IDB
+  */
+  const retSync0 = (subsToSync: subsToSync, datas: Uint8Array[]) => {
+    const s = subsToSync.def.split('/')
+    const org = s[0]
+    const clazz = s[1]
+    for (const data of datas) {
+      const doc = Document.compile(clazz, data)
+      // TODO
+    }
+  }
+
+  /* Retour de sync d'un document: enregistrement DU document
+  OU chargement initial depuis IDB
+  */
+  const retSync1 = (subsToSync: subsToSync, data: Uint8Array) => {
+    const s = subsToSync.def.split('/')
+    const org = s[0]
+    const clazz = s[1]
+    const pk = s[2]
+    const doc = Document.compile(clazz, data)
+    // TODO
+  }
+
+  /* Retour de sync d'une sous-collection colName/colValue: 
+  enregistrement DES documents et des documents ayant quitté la collection
+  OU chargement initial depuis IDB
+  */
+  const retSync2 = (subsToSync: subsToSync, datas: Uint8Array[], pkv: Object) => {
+    const s = subsToSync.def.split('/')
+    const org = s[0]
+    const clazz = s[1]
+    const colName = s[2]
+    const colValue = s[3]
+    for (const data of datas) {
+      const doc = Document.compile(clazz, data)
+      // TODO
+    }
+    if (pkv) for (const pk in pkv) {
+      const v = pkv[pk]
+      // TODO
+    }
+  }
+
+  /* Traitement des notifications reçues (souscriptions ayant changé) defs reçues:
+  - par web-push
+  - retour d'opération
+  */
+  const onNotif = (org: string, defs: string[]) => {
+
+  }
+
   return { 
     setCpt, cpt,
-    setDoc, getDocDefs, setSubs, queueForSync
+    setDoc, getDocDefs, setSubs, queueForSync, startSyncQueue,
+    retSync0, retSync1, retSync2, onNotif
   }
 })
+
 
 /*
 https://pinia.vuejs.org/cookbook/hot-module-replacement.html

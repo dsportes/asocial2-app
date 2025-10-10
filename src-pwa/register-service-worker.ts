@@ -27,8 +27,8 @@ navigator.serviceWorker.onmessage = async (message) => {
     if (message.data.type === 'STOP') {
       window.location.href = urlFromText(stores.config.K.byeHtml)
     } else if (message.data.type === 'PUSH') {
-      const payload = b64ToObj(message.data.payload)
-      await onmsg(payload)
+      console.log('Notification received by web-push')
+      await onmsg(message.data.payload)
     } else {
       stores.session.onSwMessage(message.data)
     }

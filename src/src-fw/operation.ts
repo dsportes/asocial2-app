@@ -3,6 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
 import stores from '../stores/all'
+import { onmsg } from './wputil'
 
 /* Opération générique ******************************************/
 export class Operation {
@@ -24,6 +25,7 @@ export class Operation {
   }
 
   async post (args: any) : Promise<any>{
+    const org = args.org
     const config = stores.config
     const session = stores.session
     session.opStart(this)
@@ -45,6 +47,11 @@ export class Operation {
         const buf = await response.bytes()
         const x = decode(buf)
         session.opEnd()
+        const msg = x['notification']
+        if (msg) {
+          console.log('Notification received on operation return')
+          await onmsg(x) // traitement des notifications sur retour d'opération
+        }
         return x
       }
       const serial = await response.bytes()
