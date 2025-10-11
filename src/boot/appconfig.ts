@@ -8,6 +8,9 @@ import stores from '../stores/all'
 import { Help } from '../src-fw/help'
 
 import readme from '../assets/README.md?raw'
+import custom from '../assets/custom.json'
+
+// Help
 import plan from '../assets/help/a_plan.json'
 import bientot_fr from '../assets/help/bientot_fr.md?raw'
 import bientot_en from '../assets/help/bientot_en.md?raw'
@@ -22,7 +25,8 @@ import top_bar_fr from '../assets/help/top_bar_fr.md?raw'
 import top_bar$png from '../assets/help/top_bar.png'
 
 export default defineBoot(async ({ app }) => {
-  stores.config.initK(K, window.location)
+
+  stores.config.initK(K, window.location, custom)
   
   if (docTypeErrors.length) {
     console.error(docTypeErrors.join('\n'))

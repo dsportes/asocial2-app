@@ -1,14 +1,12 @@
 export const K = {
-  BUILD: 'v2.1',
-  APIVERSION: 1,
   APPNAME: 'asocial2',
   ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
-
+  DIRECTORY_URL: 'http://localhost:8080/',
+  // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
-  
-  urlsrv: 'http://localhost:8080/',
-  // urlsrv: 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
-  
+
+  BUILD: 'v2.1',
+  APIVERSION: 1,
   localeOptions: [
     { value: 'en', label: 'English',  flag: '🇬🇧' },
     { value: 'fr', label: 'Français', flag: '🇫🇷' }

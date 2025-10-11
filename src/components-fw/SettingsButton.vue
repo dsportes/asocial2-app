@@ -135,6 +135,7 @@
     </q-card>
   </q-dialog>
 
+  <!-- Affichage des thèmes clair / foncé -->
   <q-dialog v-model="ui.dModels[idc].theme" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
@@ -264,15 +265,26 @@
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
         <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
-        <btn-cond icon="check" @ok="opSetSrvStatus(1)"/>
-        <btn-cond icon="check" color="warning" @ok="opSetSrvStatus(2)"/>
+        <btn-cond icon="check" :disable='!url' @ok="opSetSrvStatus(1)"/>
+        <btn-cond icon="check" :disable='!url' color="warning" @ok="opSetSrvStatus(2)"/>
         <help-button page="reloadApp"/>
       </q-toolbar>
 
       <div class="column q-pa-sm q-gutter-md">
+        <q-input filled v-model="org" :label="$t('org')">
+          <template v-slot:append>
+            <btn-cond icon="send" :label="$t('getUrl')" :disable="org === ''" @ok="opGetUrl"/>
+          </template>
+        </q-input>
+        <div class="font-mono">{{$t('url', [url || errUrl])}}</div>
+      </div>
+
+      <q-separator color="orange" class="q-my-md"/>
+
+      <div class="column q-pa-sm q-gutter-md">
         <q-input filled v-model="toecho" :label="$t('toecho')">
           <template v-slot:append>
-            <btn-cond icon="send" :disable="toecho === ''" @ok="opEcho"/>
+            <btn-cond icon="send" :disable="toecho === '' || !url" @ok="opEcho"/>
           </template>
         </q-input>
         <div class="font-mono">{{$t('echo', [echo])}}</div>
@@ -281,7 +293,8 @@
       <q-separator color="orange" class="q-my-md"/>
 
       <div class="column items-center">
-        <btn-cond icon-right="send" :label="$t('ping')" @click="opGetSrvStatus"/>
+        <btn-cond icon-right="send" :label="$t('ping')" :disable='!url'
+          @click="opGetSrvStatus"/>
         <div class="q-mt-sm q-mx-sm font-mono height-4 text-center">{{resping}}</div>
       </div>
 
@@ -302,6 +315,7 @@ import PermissionDialog from './PermissionDialog.vue'
 import { $t, $q, sty, reloadPage, sleep, coolBye } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
+import { getUrl } from '../src-fw/net'
 
 const i18n = useI18n()
 const config = stores.config
@@ -317,6 +331,12 @@ const choix = (lg: localeOption) : void => {
   config.setLocale(lg.value)
 }
 
+const org = ref('')
+const url = ref('')
+const errUrl = ref('')
+const toecho = ref('')
+const echo = ref('')
+
 function darkClear () {
   ui.setDark(!ui.isDark)
 }
@@ -325,13 +345,20 @@ ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
 
-const toecho = ref('')
-const echo = ref('')
+async function opGetUrl() : Promise<void>  {
+  url.value = ''
+  errUrl.value = ''
+  try {
+    url.value = await getUrl(org.value)
+  } catch (e) {
+    errUrl.value = e.message
+  }
+}
 
 async function opEcho () : Promise<void>  {
   try {
     echo.value = ''
-    echo.value = await new EchoText().run(toecho.value)
+    echo.value = await new EchoText().run(org.value, toecho.value)
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
@@ -341,7 +368,7 @@ const resping = ref('')
 async function opGetSrvStatus () : Promise<void> {
   try {
     resping.value = ''
-    const { now, st, at, txt } = await new GetSrvStatus().run()
+    const { now, st, at, txt } = await new GetSrvStatus().run(org.value)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_'+ st, [atS])
@@ -354,7 +381,7 @@ async function opGetSrvStatus () : Promise<void> {
 async function opSetSrvStatus (stx) : Promise<void> {
   try {
     resping.value = ''
-    const { now, st, at, txt } = await new SetSrvStatus().run(stx)
+    const { now, st, at, txt } = await new SetSrvStatus().run(org.value, stx)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_' + st, [atS])

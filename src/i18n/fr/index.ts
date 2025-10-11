@@ -28,6 +28,8 @@ export default {
   readme: 'LISEZMOI',
   deplier: 'Déplier',
   replier: 'Replier',
+  org: 'Organisation',
+  url: 'URL du serveur pour cette organisation: {0}',
 
   quitConfirm: 'Confirmer ...',
   quitQuit: 'Je confirme quitter l\'application',
@@ -102,6 +104,7 @@ export default {
   EX_11003: 'Rupture de la liaison avec le serveur par le serveur ou URL mal configurée ( {0} ).',
   EX_11005: 'Erreur de transfert du fichier vers le serveur de fichier. Détail: {0}',
   EX_11006: 'Erreur de transfert du fichier vers l\'application locale de stockage de fichiers. Détail: {0}',
+  EX_11007: 'Aucun serveur ne prend en charge l\'organisation "{0}".\nDétail: {1}',
 
   // 12000: Toutes erreurs d'accès à la base locale
   EX_12001: 'Ouverture de la base locale impossible.\nDétail: {0}',

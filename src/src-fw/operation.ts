@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
+import { getUrl } from './net'
 import stores from '../stores/all'
 import { onmsg } from './wputil'
 
@@ -25,16 +26,18 @@ export class Operation {
   }
 
   async post (args: any) : Promise<any>{
-    const org = args.org
     const config = stores.config
     const session = stores.session
-    session.opStart(this)
-    const u = config.K.urlsrv + (config.K.urlsrv.endsWith('/') ? '' : '/')
-    args.APIVERSION = config.K.APIVERSION
-    const body = new Uint8Array(encode(args || {}))
-    this.controller = new AbortController()
-    this.aborted = false
+    let u = '?'
     try {
+      const org = args.org
+      u = await getUrl(org)
+      session.opStart(this)
+      args.APIVERSION = config.K.APIVERSION
+      const body = new Uint8Array(encode(args || {}))
+      this.controller = new AbortController()
+      this.aborted = false
+
       const response = await fetch(u + 'op/' + this.opName, {
         method: 'POST',
         headers:{'Content-Type': 'application/octet-stream' },

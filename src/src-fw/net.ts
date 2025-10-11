@@ -1,4 +1,29 @@
 import { AppExc } from './util'
+import stores from '../stores/all'
+
+const urls = new Map<string, string>()
+
+// Retourne l'URL du serveur hébergeant org
+export async function getUrl (org: string) : Promise<string> {
+  const config = stores.config
+  let u = urls.get(org)
+  if (!u) {
+    const url = config.K.DIRECTORY_URL + 'url/' + org
+    let response
+    try {
+      response = await fetch(url)
+    } catch (e) {
+      throw new AppExc({ code:11007, label: 'Unserved org', args:[(org || '?'), e.toString()]})
+    }
+    if (!response.ok) 
+      throw new AppExc({ code:11007, label: 'Unserved org', args:[(org || '?'), response.statusText]})
+    u = await response.text()
+    if (u.startsWith('$')) 
+      throw new AppExc({ code:11007, label: 'Unserved org', args:[(org || '?'), u]})
+    urls.set(org, u)
+  }
+  return u
+}
 
 export async function getData (url: string) : Promise<Uint8Array> {
   try {

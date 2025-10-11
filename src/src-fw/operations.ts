@@ -6,10 +6,10 @@ import { subsToSync } from '../stores/data-store'
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
 
-  async run (toecho: string) {
+  async run (org: string, toecho: string) {
     try {
       await sleep(1000)
-      const res = await this.post({ text: toecho })
+      const res = await this.post({ org, text: toecho })
       return res['echo']
     } catch(e) {
       this.ko(e)
@@ -20,9 +20,9 @@ export class EchoText extends Operation {
 export class  GetSrvStatus extends Operation {
   constructor () { super('GetSrvStatus') }
 
-  async run () {
+  async run (org: string) {
     try {
-      const res = await this.post({ })
+      const res = await this.post({ org })
       return res['srvStatus']
     } catch(e) {
       this.ko(e)
@@ -33,7 +33,7 @@ export class  GetSrvStatus extends Operation {
 export class SetSrvStatus extends Operation {
   constructor () { super('SetSrvStatus') }
 
-  async run (stx: number) {
+  async run (org: string, stx: number) {
     try {
       const config = stores.config
       const session = stores.session
@@ -44,7 +44,7 @@ export class SetSrvStatus extends Operation {
           { type: 'ADMIN', value: config.K.ADMIN }
         ]
       }
-      const args = { authRecord, st: stx, txt: 'info ' + stx}
+      const args = { org, authRecord, st: stx, txt: 'info ' + stx}
       const res = await this.post(args)
       return res['srvStatus']
     } catch(e) {
@@ -56,7 +56,7 @@ export class SetSrvStatus extends Operation {
 export class TestAuth extends Operation {
   constructor () { super('TestAuth') }
 
-  async run () {
+  async run (org: string) {
     try {
       const config = stores.config
       const session = stores.session
