@@ -6,7 +6,13 @@ export class Document {
   _clazz: string
   _dt: DocType
   _pk: string
+  deleted?: boolean
   v: number
+
+  propertyAsSet (name: string) : Set<string> {
+    const v = this[name]
+    return !v ? new Set() : new Set(v)
+  }
 
   static classes: Object
   static setClasses (arg: Object) { Document.classes = arg }
