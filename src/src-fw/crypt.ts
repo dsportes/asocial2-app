@@ -57,7 +57,7 @@ export class Crypt {
       new Uint8Array(encode(await crypto.subtle.exportKey('jwk', p.privateKey)))
     ]
   }
-
+    
   static async getSVKeyPair () : Promise<Uint8Array[]> {
     const p = await crypto.subtle.generateKey(Crypt.ecdsa, true, ['sign', 'verify'])
     const jwk = await crypto.subtle.exportKey('jwk', p.privateKey)
