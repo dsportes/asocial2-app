@@ -11,6 +11,7 @@ export const K = {
     { value: 'en', label: 'English',  flag: '🇬🇧' },
     { value: 'fr', label: 'Français', flag: '🇫🇷' }
   ],
+  SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
 
   docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 

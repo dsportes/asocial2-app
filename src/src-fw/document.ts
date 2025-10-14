@@ -28,7 +28,7 @@ export class Document {
     doc._dt = DocType.get(clazz)
     const d = data ? decode(data) : {}
     for(const f in d) doc[f] = d[f]
-    doc._pk = doc._dt.pkValue(doc)
+    doc._pk = d._pk || doc._dt.pkValue(doc)
     await doc.compile()
     return doc
   }

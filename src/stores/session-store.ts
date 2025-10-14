@@ -1,5 +1,7 @@
 // @ts-ignore
-import { ref } from 'vue';
+import { ref } from 'vue'
+// @ts-ignore
+import type { Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
@@ -163,11 +165,20 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
+  const dbName = ref('idbloc')
+  const setDbName = (name) => { dbName.value = name }
+
+  const phase: Ref<number> = ref(0)
+  // 0 : session en phase d'initialisation
+  // 1 : session running (initialisée)
+  const setPhase = (p: number) => { phase.value = p}
+
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, saveRegistration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
-    permState, permDialog, changePerm, askForPerm, permChange
+    permState, permDialog, changePerm, askForPerm, permChange,
+    dbName, setDbName, phase, setPhase
     // focus, getFocus, lostFocus, closingApp
   }
 })

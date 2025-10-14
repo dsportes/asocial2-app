@@ -103,18 +103,9 @@ export class Sync extends Operation {
       const res = await this.post({ authRecord, org, toSync: [subsToSync] })
       const x = res[subsToSync.def]
       switch (type) {
-        case 0 : {
-          dataSt.retSync0(subsToSync, x)
-          break
-        }
-        case 1 : {
-          dataSt.retSync1(subsToSync, x)
-          break
-        }
-        case 3 : {
-          dataSt.retSync2(subsToSync, x[0], x[1])
-          break
-        }
+        case 0 : { dataSt.retSync0(subsToSync, x); break }
+        case 1 : { dataSt.retSync1(subsToSync, x); break }
+        case 3 : { dataSt.retSync2(subsToSync, x); break }
       }
       return res['auths']
     } catch(e) {

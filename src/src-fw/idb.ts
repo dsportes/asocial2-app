@@ -4,27 +4,42 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
+import { subsToSync } from '../stores/data-store'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
+import { Document } from './document'
 
 const STORES = {
-  singletons: 'name', // singletons
+  singletons: 'name', // singletons { name, bin }
   auths: 'id',
-  defs: 'id',
-  documents: 'id'
+  defs: '[org+id]', // { org, id, bin }
+  documents: '[org+id]' // { org, id, bin }
 }
 
 const encoder = new TextEncoder()
 
-class IDB {
+type dbRecord = {
+  org: string
+  id: string,
+  bin: Uint8Array
+}
+
+type docRecord = {
+  clazz: string
+  data: Uint8Array
+}
+
+export class IDB {
   static idb: IDB
 
   db : any
   keyK: Uint8Array
   config?: any
+  dataSt: any
 
-  constructor () {
+  constructor (name: string) {
     this.config = stores.config
+    this.dataSt = stores.data
     this.keyK = b64ToU8(this.config['keyK'])
     if (!this.keyK)
       throw new AppExc({code: 12003, label: 'IDB error: keyK not declared' })
@@ -34,11 +49,12 @@ class IDB {
     IDB.idb = this
   }
 
-  static async open(name: string) {
-    const config = stores.config
+  static async open() {
+    const session = stores.session
     try {
-      const x = new IDB()
-      await x.db.open()
+      const idb = new IDB(session.dbName)
+      await idb.db.open()
+      return idb
     } catch (e) {
       throw IDB.EX(e, 1)
     }
@@ -67,28 +83,56 @@ class IDB {
     return u8ToB64(x)
   }
 
-  async cryptData (data: any): Promise<Uint8Array> {
-    return await Crypt.crypt(encode(data), this.keyK)
+  async cryptRecord (rec: any): Promise<Uint8Array> {
+    return await Crypt.crypt(encode(rec), this.keyK)
+  }
+
+  async decryptRecord (bin: any): Promise<Object> {
+    const x = await Crypt.decrypt(bin, this.keyK)
+    return decode(x)
   }
 
   async getState (name: string) : Promise<Object> {
     try {
-      const x = await this.db.singletons.get(name)
-      return x || { }
+      const r = await this.db.singletons.get(name)
+      return r ? await this.decryptRecord(r.bin) : { }
     } catch (e) {
       throw IDB.EX(e, 2)
     }
   }
 
-  async putState (name: string, value: any) {
+  async putState (name: string, rec: any) {
     try {
-      const data = await this.cryptData(value)
-      await this.db.transaction('rw', ['singletons'], async () => {
-        await this.db.singletons.put({ name, data })
+      const bin = await this.cryptRecord(rec)
+      await this.db.singletons.put({ name, bin })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
+  }
+
+  async getDefs (integral: boolean) : Promise<void> {
+    try {
+      const ar = await this.db.defs.each(async (dbr: dbRecord) => {
+        const x = await this.decryptRecord(dbr.bin) as subsToSync
+        x.org = dbr.org
+        await this.dataSt.setDef(x.org, x.def, integral ? 0 : x.v)
+        await this.dataSt.queueForSync(x)
       })
     } catch (e) {
       throw IDB.EX(e, 2)
     }
+  }
+
+  async deleteAllDocs () {
+    await this.db.documents.delete()
+  }
+
+  async loadAllDocs () : Promise<void> {
+    await this.db.documents.each(async (dbr: dbRecord) => {
+      const rec = await this.decryptRecord(dbr.bin) as docRecord
+      const doc = await Document.compile(rec.clazz, rec.data)
+      this.dataSt.setDoc(dbr.org, doc)
+    })
   }
 
 }
