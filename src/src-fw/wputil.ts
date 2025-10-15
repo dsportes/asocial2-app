@@ -40,10 +40,11 @@ export async function onmsg (payload: string) {
 
 async function showNotifFG (messageNotif: messageNotif) {
   console.log('Show notif EXPLICITE from app')
+  const config = stores.config
   const options = { body: messageNotif }
   // @ts-ignore
-  if (messageNotif.url) options.data = { url: payload.data.url }
-  const t = messageNotif.title || ( stores.config.K.APPNAME + ' - ' + messageNotif.org)
+  if (messageNotif.url) options.data = { url: payload.data.url || config.location}
+  const t = messageNotif.title || ( config.K.APPNAME + ' - ' + messageNotif.org)
   // @ts-ignore
   await session.registration.showNotification(t, options)
 }

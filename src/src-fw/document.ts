@@ -2,6 +2,24 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { DocType } from './doctypes'
 
+/* 
+- sessionId : shaS de subJSON clé primaire
+- subJSON : token web-push
+- url : url de l'application à ouvrir par le terminal sur web-push
+- title : titre des notifications web-push
+- v : version
+- defs : un object `{ def: msg ... }` liste les définitions
+  - def: sa définition.
+  - msg: est un message ou ''
+*/
+export type subscription = {
+  sessionId: string
+  subJSON: string
+  url: string
+  title: string
+  defs: Object
+}
+
 export class Document {
   _clazz: string
   _dt: DocType

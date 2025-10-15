@@ -94,36 +94,6 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  function setRegistration2 (_registration, vapidPK) {
-    registration.value = _registration
-    // @ts-ignore
-    const pm = _registration.pushManager
-    if (!pm) {
-      subJSON.value = '??? Souscription non obtenue - pushManager non accessible'
-      return
-    }
-    pm.getSubscription()
-    .then((sub: any) => {
-      if (sub) {
-        subJSON.value = JSON.stringify(sub)
-        sessionId.value = Crypt.shaS(sub.endpoint)
-      } else {
-        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(vapidPK) }
-        pm.subscribe(opt).then((nsub) => {
-          subJSON.value = JSON.stringify(nsub)
-          sessionId.value = Crypt.shaS(nsub.endpoint)
-          console.log('subJSON: ' + subJSON.value.substring(0, 200))
-        }).catch(e => {
-          subJSON.value = '??? Souscription non obtenue - ' + e.message
-          console.log('subJSON: ' + subJSON.value)
-        })
-      }
-    }).catch(e => {
-      subJSON.value = '??? Souscription non obtenue - ' + e.message
-      console.log('subJSON: ' + subJSON.value)
-    })
-  }
-
   function setAppUpdated () {
     newVersionReady.value = true
     newVersionDialog.value = true

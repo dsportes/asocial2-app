@@ -1,6 +1,7 @@
 
 import stores from '../stores/all'
 import { IDB } from './idb'
+import { subscription } from'./document'
 
 type age = {
   lsd: number // jour (EPOCH) de dernière synchro aboutie
@@ -21,10 +22,8 @@ export const initSync = async (dbReset: boolean) => {
   const j = Math.floor(Date.now() / 86400000)
   const integral = !age.lsd || (j - age.lsd) > config.K.SYNCINCRNBD
 
-  await idb.getDefs(integral)
-  /* les souscriptions sont en data-store:
-  leur version détenue en local a été mise à 0 si "integral"
-  la syncQueue est remplie: elle n'est pas started (phase 0) */
+  const allSubs: Map<string, subscription> = await idb.getSubscriptions()
+
 
   if (integral) {
     await idb.deleteAllDocs()

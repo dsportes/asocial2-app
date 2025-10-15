@@ -7,12 +7,12 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
-import { Document } from './document'
+import { Document, subscription } from './document'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
   auths: 'id',
-  defs: '[org+id]', // { org, id, bin }
+  subsriptions: '[org]', // { org, bin } - souscriptions pour cette organisation
   documents: '[org+id]' // { org, id, bin }
 }
 
@@ -110,14 +110,51 @@ export class IDB {
     }
   }
 
-  async getDefs (integral: boolean) : Promise<void> {
+  async putSubscription (org: string, subs: subscription) {
     try {
-      const ar = await this.db.defs.each(async (dbr: dbRecord) => {
+      const bin = await this.cryptRecord(subs)
+      await this.db.subsriptions.put({ org, bin })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
+  }
+
+  async delSubscription (org: string) {
+    try {
+      await this.db.subsriptions.delete({ org })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
+  }
+
+  async getSubscriptions () : Promise<Map<string, subscription>> {
+    try {
+      const m: Map<string, subscription> = new Map<string, subscription>()
+      this.db.subsriptions.each(async (r) => {
+        const s = await this.decryptRecord(r.bin) as subscription
+        m.set(r.org, s)
+      })
+      return m
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
+  }
+
+  /* Enregistre toutes les souscriptions dans le store data
+  Retourne une map avec pour chaque organisation la liste de ses définitions
+  */
+  async getDefs (integral: boolean) : Promise<Map<string, string[]>> {
+    const m: Map<string, string[]> = new Map<string, string[]>()
+    try {
+      await this.db.defs.each(async (dbr: dbRecord) => {
         const x = await this.decryptRecord(dbr.bin) as subsToSync
         x.org = dbr.org
         await this.dataSt.setDef(x.org, x.def, integral ? 0 : x.v)
-        await this.dataSt.queueForSync(x)
+        let e = m.get(x.org)
+        if (!e) { e = []; m.set(x.org, e) }
+        e.push(x.def)
       })
+      return m
     } catch (e) {
       throw IDB.EX(e, 2)
     }

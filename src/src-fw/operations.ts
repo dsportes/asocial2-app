@@ -2,6 +2,7 @@ import { Operation } from './operation'
 import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
+import { subscription } from'./document'
 
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
@@ -71,6 +72,36 @@ export class TestAuth extends Operation {
       }
       const res = await this.post({ authRecord })
       return res['auths']
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+/* SetSubscription enregistre la sousciption d'une session *************************
+- Supprime la précédente s'il y en avait une
+- Créé une nouvelle si l'argument subscription n'est pas null
+*/
+export class SetSubscription extends Operation {
+  constructor () { super('TestAuth') }
+
+  async run (org: string, defs: Object, longLife: boolean, title?: string, url?: string, ) {
+    try {
+      const session = stores.session
+      const subJSON = session.subJSON
+      const sessionId = session.sessionId
+      const authRecord = {
+        sessionId,
+        time: Date.now(),
+        tokens : [
+        ]
+      }
+      const subscription: subscription = { 
+        sessionId, subJSON, defs,
+        url: url || '', 
+        title: title || ''
+      }
+      const res = await this.post({ authRecord, org, subscription, longLife })
     } catch(e) {
       this.ko(e)
     }

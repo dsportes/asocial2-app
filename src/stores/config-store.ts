@@ -13,7 +13,7 @@ type typeK ={
 }
 
 export const useConfigStore = defineStore('config', () => {
-  const location = ref(null)
+  const location = ref(null) // le href
 
   // Gestion des langues ***************************************************
   const localeMap = new Map()
