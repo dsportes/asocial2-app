@@ -2,6 +2,8 @@
 import stores from '../stores/all'
 import { IDB } from './idb'
 import { subscription } from'./document'
+import { SetSubscription } from './operations'
+import { modes } from '../stores/session-store'
 
 type age = {
   lsd: number // jour (EPOCH) de dernière synchro aboutie
@@ -13,6 +15,8 @@ export const initSync = async (dbReset: boolean) => {
   const dataSt = stores.data
   const config = stores.config
 
+  session.setDbName('dbloc')
+  session.setMode(modes.SYNC)
   if (dbReset)
     await IDB.delete(session.dbName)
 
@@ -22,8 +26,24 @@ export const initSync = async (dbReset: boolean) => {
   const j = Math.floor(Date.now() / 86400000)
   const integral = !age.lsd || (j - age.lsd) > config.K.SYNCINCRNBD
 
-  const allSubs: Map<string, subscription> = await idb.getSubscriptions()
+  // Inscription en data-store des defs de toutes les sousciptions
+  const m = await idb.getSubs()
+  for(const [org, mo] of m) {
+    for(const [clazz, subs] of mo)
+      dataSt.initDefs(org, clazz, subs)
+  }
 
+  /* Enregistrement / abonnement au serveur des souscriptions de "session active"
+  Ouverture pour redéfinir title / url
+  Des notifications peuvent parvenir mais la queue de traitement 
+  n'est ouverte qu'à la fin de la phase 0
+  */
+  const orgs = new Set<string>()
+  const allSubs: Map<string, subscription> = await idb.getSubscriptions()
+  for(const [org, subsciption] of allSubs) {
+    orgs.add(org)
+    await new SetSubscription().run(org, subsciption.defs, true, subsciption.title, subsciption.url)
+  }
 
   if (integral) {
     await idb.deleteAllDocs()
@@ -31,11 +51,13 @@ export const initSync = async (dbReset: boolean) => {
     await idb.loadAllDocs()
   }
   
-  // synchro immediate de toutes les souscriptions
+  // synchro immediate (sequentielle) de toutes les souscriptions
   await dataSt.syncAll()
   // Marquage de l'age de l'état de synchro de IDB
   await idb.putState('age', { lsd: j })
+
   // Fin de phase 1
   session.setPhase(1)
-  dataSt.startSyncQueue()
+  // Les notifications reçues demandant des sync ne sont plus bloquées en queue
+  dataSt.startSyncQueue() 
 }

@@ -32,7 +32,7 @@ export async function onmsg (payload: string) {
   if (payload) {
     const messageNotif = b64ToObj(payload)
     if (messageNotif.defs && messageNotif.defs.length)
-      stores.data.onNotif(messageNotif.now, messageNotif.org, messageNotif.defs)
+      await stores.data.onNotif(messageNotif.now, messageNotif.org, messageNotif.defs)
     if (messageNotif.body) 
       await showNotifFG(messageNotif)
   }

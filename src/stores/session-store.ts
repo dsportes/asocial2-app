@@ -8,6 +8,8 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { toByteArray } from '../src-fw/base64'
 import { Crypt } from '../src-fw/crypt'
 
+export enum modes { SYNC, INCOGNITO, PLANE }
+
 export const useSessionStore = defineStore('session', () => {
   function b64ToU8 (b64: string) : Uint8Array {
     if (!b64) return null
@@ -135,8 +137,13 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const dbName = ref('idbloc')
-  const setDbName = (name) => { dbName.value = name }
+  const dbName = ref()
+  const setDbName = (name: string) => { dbName.value = name }
+
+  const mode = ref(modes.SYNC)
+  const setMode = (m: modes) => { mode.value = m }
+  const hasIDB = () => mode.value === modes.SYNC || mode.value === modes.INCOGNITO
+  const hasNet = () => mode.value !== modes.PLANE
 
   const phase: Ref<number> = ref(0)
   // 0 : session en phase d'initialisation
@@ -148,7 +155,7 @@ export const useSessionStore = defineStore('session', () => {
     registration, saveRegistration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    dbName, setDbName, phase, setPhase
+    dbName, setDbName, phase, setPhase, mode, setMode, hasIDB, hasNet
     // focus, getFocus, lostFocus, closingApp
   }
 })

@@ -108,13 +108,21 @@ export class SetSubscription extends Operation {
   }
 }
 
-/* Sync : synchronise les abonnements cités *************************
+
+/* Sync : synchronise les souscriptions citées *************************
 - toSync = subsToSync[]
-Retourne pour chaque 'def' les documents/rowQ nouveaux depuis t.
-Si t est 0, retourne les documents sans filtre de version.
-Retour: { def0: [data], def1: data, def2: [data[], pkv] ... }
-- data: Uint8Array
-- pkv: object donnant pour chaque pk sa version la plus récente ayant quitté la collection
+subsToSync = {
+  def: string, 
+  v: number - version 'vs' la plus récente détenue en session
+}
+Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des documents (par exemple: Article/auteurs/Zola)
+- si vs est absent: connue actuellement (à now)
+- changements (documents ajoutés ou partis de la sous-collection ou zombifiés) depuis la version vs
+    de la sous-collection connue en session.
+- { def0: [Uint8Array], def1: Uint8array, def2: { pk: data | v ... }}
+  Pour les 'def2', un objet { pk: data | v ... }
+  - v: version du document si n'est PLUS dans la collection
+  - data: data du document s'il est dans la collection
 */
 export class Sync extends Operation {
   constructor () { super('TestAuth') }
@@ -132,13 +140,9 @@ export class Sync extends Operation {
         ]
       }
       const res = await this.post({ authRecord, org, toSync: [subsToSync] })
-      const x = res[subsToSync.def]
-      switch (type) {
-        case 0 : { dataSt.retSync0(subsToSync, x); break }
-        case 1 : { dataSt.retSync1(subsToSync, x); break }
-        case 3 : { dataSt.retSync2(subsToSync, x); break }
-      }
-      return res['auths']
+      const x = res[subsToSync.def] // data[] / data / data[]
+      const opTime = res['now']
+      await dataSt.retSync(opTime, org, subsToSync.def, x)
     } catch(e) {
       this.ko(e)
     }

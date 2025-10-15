@@ -4,7 +4,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { subsToSync } from '../stores/data-store'
+import { subsToSync, Subs } from '../stores/data-store'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
 import { Document, subscription } from './document'
@@ -13,6 +13,7 @@ const STORES = {
   singletons: 'name', // singletons { name, bin }
   auths: 'id',
   subsriptions: '[org]', // { org, bin } - souscriptions pour cette organisation
+  subs: '[org+clazz]', // { org, clazz, bin:serial crypté de l'objet Subs}
   documents: '[org+id]' // { org, id, bin }
 }
 
@@ -92,6 +93,10 @@ export class IDB {
     return decode(x)
   }
 
+  async decryptRecordSer (bin: any): Promise<Uint8Array> {
+    return await Crypt.decrypt(bin, this.keyK)
+  }
+
   async getState (name: string) : Promise<Object> {
     try {
       const r = await this.db.singletons.get(name)
@@ -140,19 +145,17 @@ export class IDB {
     }
   }
 
-  /* Enregistre toutes les souscriptions dans le store data
-  Retourne une map avec pour chaque organisation la liste de ses définitions
+  /* Récupère les objets Subs de toutes les org/clazz
   */
-  async getDefs (integral: boolean) : Promise<Map<string, string[]>> {
-    const m: Map<string, string[]> = new Map<string, string[]>()
+  async getSubs () : Promise<Map<string, Map<string, Subs>>> {
+    const m: Map<string, Map<string, Subs>> = new Map<string, Map<string, Subs>>()
     try {
-      await this.db.defs.each(async (dbr: dbRecord) => {
-        const x = await this.decryptRecord(dbr.bin) as subsToSync
-        x.org = dbr.org
-        await this.dataSt.setDef(x.org, x.def, integral ? 0 : x.v)
-        let e = m.get(x.org)
-        if (!e) { e = []; m.set(x.org, e) }
-        e.push(x.def)
+      await this.db.subs.each(async (rec) => {
+        const s = await this.decryptRecordSer(rec.bin)
+        const subs = Subs.deserial(s)
+        let eorg = m.get(rec.org)
+        if (!eorg) { eorg = new Map<string, Subs>(); m.set(rec.org, eorg)}
+        eorg.set(rec.clazz, subs)
       })
       return m
     } catch (e) {
@@ -172,4 +175,23 @@ export class IDB {
     })
   }
 
+  /* Retour de sync: sauvegarde en IDB,
+  - le Subs qui contient les versions mise à jour (peut être null si inchangé !?)
+  - la liste des documents créés / modifiés
+  - la liste des pk des documents supprimés
+  */
+  async retSync (org: string, clazz: string, subs: Subs, docs: Document[], delPks: string[])
+    : Promise<void> {
+
+  }
+
+  /* Sauvegarde en IDB d'un Subs
+  - le Subs qui contient les versions mise à jour (peut être null si inchangé !?)
+  Sur retour de notification d'une souscription : nouvelle version sur le serveur
+  Sur enregistrement d'une nouvelle souscription
+  */
+  async updSubs (org: string, clazz: string, subs: Subs)
+    : Promise<void> {
+
+  }
 }
