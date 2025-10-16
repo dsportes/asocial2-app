@@ -7,7 +7,7 @@ import stores from '../stores/all'
 import { subsToSync, Subs } from '../stores/data-store'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
-import { Document, subscription } from './document'
+import { Document, Subscription } from './document'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
@@ -115,7 +115,7 @@ export class IDB {
     }
   }
 
-  async putSubscription (org: string, subs: subscription) {
+  async putSubscription (org: string, subs: Subscription) {
     try {
       const bin = await this.cryptRecord(subs)
       await this.db.subsriptions.put({ org, bin })
@@ -132,17 +132,23 @@ export class IDB {
     }
   }
 
-  async getSubscriptions () : Promise<Map<string, subscription>> {
+  async getSubscriptions () : Promise<Map<string, Subscription>> {
     try {
-      const m: Map<string, subscription> = new Map<string, subscription>()
+      const m: Map<string, Subscription> = new Map<string, Subscription>()
       this.db.subsriptions.each(async (r) => {
-        const s = await this.decryptRecord(r.bin) as subscription
-        m.set(r.org, s)
+        const bin = await this.decryptRecordSer(r.bin)
+        m.set(r.org, Subscription.fromSerial(bin))
       })
       return m
     } catch (e) {
       throw IDB.EX(e, 2)
     }
+  }
+
+  /* Met à jour une souscription et les subs élémentaires modifiés */
+  async updateSubscription (org: string, subscription: Subscription, 
+    delta: Object, newDefs: Set<string>, delDefs: Set<string>) {
+    // TODO
   }
 
   /* Récupère les objets Subs de toutes les org/clazz
@@ -185,10 +191,9 @@ export class IDB {
 
   }
 
-  /* Sauvegarde en IDB d'un Subs
-  - le Subs qui contient les versions mise à jour (peut être null si inchangé !?)
-  Sur retour de notification d'une souscription : nouvelle version sur le serveur
-  Sur enregistrement d'une nouvelle souscription
+  /* Sauvegarde en IDB d'un Subs sur retour de notification d'une souscription
+  Le Subs contient les versions mise à jour (nouvelle version sur le serveur)
+  Sur notification reçue
   */
   async updSubs (org: string, clazz: string, subs: Subs)
     : Promise<void> {

@@ -2,7 +2,7 @@ import { Operation } from './operation'
 import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
-import { subscription } from'./document'
+import { Subscription } from'./document'
 
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
@@ -78,14 +78,14 @@ export class TestAuth extends Operation {
   }
 }
 
-/* SetSubscription enregistre la sousciption d'une session *************************
+/* SetSubscription enregistre la souscription d'une session *************************
 - Supprime la précédente s'il y en avait une
 - Créé une nouvelle si l'argument subscription n'est pas null
 */
 export class SetSubscription extends Operation {
-  constructor () { super('TestAuth') }
+  constructor () { super('SetSubscription') }
 
-  async run (org: string, defs: Object, longLife: boolean, title?: string, url?: string, ) {
+  async run (org: string, subscription: Subscription, longLife: boolean ) {
     try {
       const session = stores.session
       const subJSON = session.subJSON
@@ -93,15 +93,31 @@ export class SetSubscription extends Operation {
       const authRecord = {
         sessionId,
         time: Date.now(),
-        tokens : [
-        ]
-      }
-      const subscription: subscription = { 
-        sessionId, subJSON, defs,
-        url: url || '', 
-        title: title || ''
+        tokens : [ ]
       }
       const res = await this.post({ authRecord, org, subscription, longLife })
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+/* UpdateSubscription enregistre la mise à jour d'une souscription d'une session 
+*/
+export class UpdateSubscription extends Operation {
+  constructor () { super('UpdateSubscription') }
+
+  async run (org: string, title: string, url: string, defs: Object ) {
+    try {
+      const session = stores.session
+      const subJSON = session.subJSON
+      const sessionId = session.sessionId
+      const authRecord = {
+        sessionId,
+        time: Date.now(),
+        tokens : [ ]
+      }
+      const res = await this.post({ authRecord, org, title, url, defs })
     } catch(e) {
       this.ko(e)
     }

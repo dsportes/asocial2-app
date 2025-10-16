@@ -1,7 +1,7 @@
 
 import stores from '../stores/all'
 import { IDB } from './idb'
-import { subscription } from'./document'
+import { Subscription } from'./document'
 import { SetSubscription } from './operations'
 import { modes } from '../stores/session-store'
 
@@ -10,7 +10,7 @@ type age = {
 }
 
 export const initSync = async (dbReset: boolean) => {
-  // Acquisition des souscriptions et souscriptions
+  // Acquisition des souscriptions et documents
   const session = stores.session
   const dataSt = stores.data
   const config = stores.config
@@ -27,22 +27,25 @@ export const initSync = async (dbReset: boolean) => {
   const integral = !age.lsd || (j - age.lsd) > config.K.SYNCINCRNBD
 
   // Inscription en data-store des defs de toutes les sousciptions
-  const m = await idb.getSubs()
-  for(const [org, mo] of m) {
-    for(const [clazz, subs] of mo)
-      dataSt.initDefs(org, clazz, subs)
+  {
+    const m = await idb.getSubs()
+    for(const [org, mo] of m) {
+      for(const [clazz, subs] of mo)
+        dataSt.initDefs(org, clazz, subs)
+    }
   }
 
   /* Enregistrement / abonnement au serveur des souscriptions de "session active"
-  Ouverture pour redéfinir title / url
-  Des notifications peuvent parvenir mais la queue de traitement 
-  n'est ouverte qu'à la fin de la phase 0
+  Redéfinition possible de title, donnée de url
+  Des notifications peuvent désormais parvenir mais sont accumulées et NON traitées:
+  la queue de traitement n'est ouverte qu'à la fin de la phase 0.
   */
-  const orgs = new Set<string>()
-  const allSubs: Map<string, subscription> = await idb.getSubscriptions()
-  for(const [org, subsciption] of allSubs) {
-    orgs.add(org)
-    await new SetSubscription().run(org, subsciption.defs, true, subsciption.title, subsciption.url)
+  {
+    const allSubs: Map<string, Subscription> = await idb.getSubscriptions()
+    for(const [org, subscription] of allSubs) {
+      dataSt.setSubscription(org, subscription)
+      await subscription.subscribe(org, true)
+    }
   }
 
   if (integral) {
