@@ -1,7 +1,3 @@
-/* TODO
-Suppression des def et des docs -> IDB
-*/
-
 // @ts-ignore
 import { ref } from 'vue';
 // @ts-ignore
@@ -12,7 +8,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { Document, Subscription } from '../src-fw/document'
+import { Document, Subscription, Subs, versions } from '../src-fw/document'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
 
@@ -31,43 +27,6 @@ Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des docum
   - v: version du document si n'est PLUS dans la collection
   - data: data du document s'il est dans la collection
 */
-
-/* versions d'une souscription: sur le serveur, détenue localement
-si versions[0] === versions[1] la souscription est à jour en session 
-*/
-type versions = [number, number]
-
-// Souscriptions d'une classe de documents pour une organisation
-export class Subs {
-  vdef0 : versions // versions de la collection de tous les documents de la classe
-  vdef1 : Map<string, versions> // versions pour chaque pk
-  vdef2 : Map<string, versions> // pour chaque collection colName/colValue
-
-  constructor () {
-    this.vdef0 = null
-    this.vdef1 = new Map<string, versions>()
-    this.vdef2 = new Map<string, versions>()
-  }
-
-  static deserial (bin: Uint8Array) : Subs {
-    const { vdef0, vdef1, vdef2} = decode(bin)
-    const subs = new Subs()
-    if (vdef0) subs.vdef0 = vdef0
-    for (const x in vdef1) subs.vdef1.set(x, vdef1[x])
-    for (const x in vdef2) subs.vdef2.set(x, vdef1[x])
-    return subs
-  }
-
-  serial () : Uint8Array {
-    const s = { vdef0: null, vdef1: {}, vdef2: {} }
-    if (this.vdef0) s.vdef0 = this.vdef0
-    for(const [k, v] of this.vdef1) s.vdef1[k] = v
-    for(const [k, v] of this.vdef2) s.vdef2[k] = v
-    return encode(s)
-  }
-
-  hasRefs () { return this.vdef0 === null && this.vdef1.size === 0 && this.vdef2.size === 0}
-}
 
 export type subsToSync = {
   org: string, 
@@ -250,75 +209,100 @@ export const useDataStore = defineStore('data', () => {
     return subs
   }
 
-  /* Enregistre une nouvelle souscription élémentaire
-  La version "serveur" est mise à 0
+  /* Enregistre la version détenue en "locale" d'une souscription élémentaire 
+  La version "serveur" est inchangée (si elle existait) sinon mise à 0
+  Retourne [clazz, Subs] qui contient le def
+  - déclaration / mise à jour d'une souscription
+  - retour de Sync
   */
-  const newDef = (org: string, def: string) => {
+  const setDefLoc = (org: string, def: string, v: number): [string, Subs] => {
     const s = def.split('/')
     const clazz = s[0]
-    let eorg: Map<string, Subs> = allSubs.value.get(org)
-    if (!eorg) { eorg = new Map<string, Subs>();  allSubs.value.set(org, eorg) }
-    let subs: Subs = eorg.get(clazz)
-    if (subs) return
-    subs = new Subs()
-    eorg.set(clazz, subs)
-    switch (s.length - 1) {
-      case 0 : { subs.vdef0 = [0, 0] ; break }
-      case 1 : { subs.vdef1.set(s[1], [0, 0]); break }
-      case 2 : { subs.vdef1.set(s[1] + '/' + s[2], [0, 0]); break }
-    }
-    queueForSync({ org, def, v: 0 })
-  }
-
-  /* Met à jour la version détenue en session d'une souscription élémentaire
-  La version "serveur" est conservée.
-  */
-  const updDef = (org: string, def: string, v: number) => {
-    const s = def.split('/')
-    const clazz = s[0]
-    const eorg: Map<string, Subs> = allSubs.value.get(org)
-    if (!eorg) return
-    const subs: Subs = eorg.get(clazz)
-    if (!subs) return
+    const subs: Subs = getSubs(org, clazz)
+    let versions: versions
     switch (s.length - 1) {
       case 0 : { 
-        if (subs.vdef0 === null) subs.vdef0 = [0, v]
-        else subs.vdef0[1] = v
-        break
+        versions = subs.vdef0
+        if (!versions) { versions = [0, 0]; subs.vdef0 = versions }
+        versions[1] = v
+        break 
       }
       case 1 : { 
         const pk = s[1]
-        let vdef1 = subs.vdef1.get(pk)
-        if (!vdef1) { vdef1 = [0, 0]; subs.vdef1.set(pk, vdef1)}
-        vdef1[1] = v
-        break
+        versions = subs.vdef1.get(pk)
+        if (!versions) { versions = [0, 0];  subs.vdef1.set(pk, versions)}
+        versions[1] = v
+        break 
       }
       case 2 : { 
-        const nv = s[1] + '/' + s[2] // 'colName/colValue'
-        let vdef2 = subs.vdef1.get(nv)
-        if (!vdef2) { vdef2 = [0, 0]; subs.vdef2.set(nv, vdef2)}
-        vdef2[1] = v
-        break
+        const nv = s[1] + '/' + s[2]
+        versions = subs.vdef2.get(nv)
+        if (!versions) { versions = [0, 0];  subs.vdef2.set(nv, versions)}
+        versions[1] = v
+        break 
       }
     }
-    queueForSync({ org, def, v })
+    if (versions[1] < versions[0]) queueForSync({ org, def, v: versions[1] })
+    return [clazz, subs]
+  }
+
+  /* Met à jour la version sur le "serveur" d'une souscription élémentaire
+  La version "locale" est conservée.
+  Retourne [clazz, subs] le Subs qui contient le def
+  - sur notification
+  */
+   const setDefSrv = (org: string, def: string, v: number): [string, Subs] => {
+    const s = def.split('/')
+    const clazz = s[0]
+    const eorg: Map<string, Subs> = allSubs.value.get(org)
+    if (!eorg) return [clazz, null]
+    const subs: Subs = eorg.get(clazz)
+    if (!subs) return [clazz, null]
+
+    let versions: versions
+    switch (s.length - 1) {
+      case 0 : { 
+        versions = subs.vdef0
+        if (!versions) return [clazz, null]
+        versions[0] = v
+        break 
+      }
+      case 1 : { 
+        const pk = s[1]
+        versions = subs.vdef1.get(pk)
+        if (!versions) return [clazz, null]
+        versions[0] = v
+        break 
+      }
+      case 2 : { 
+        const nv = s[1] + '/' + s[2]
+        versions = subs.vdef2.get(nv)
+        if (!versions) return [clazz, null]
+        versions[0] = v
+        break 
+      }
+    }
+    if (versions[1] < versions[0]) queueForSync({ org, def, v: versions[1] })
+    return [clazz, subs]
   }
 
   /* Suppression d'une souscription élémentaire
-  Recalcul pour chaque document concerné
-  de son docInfo.defs et le cas échéant suppression du document
+  Recalcule pour chaque document concerné de son docInfo.defs
+  et si "inutile" le supprime
+  Retourne le Subs qui contenait le def
   */
-  const delDef = (org: string, def: string) => {
+  const delDefLoc = (org: string, def: string): [string, Subs]  => {
     const eorg = allSubs.value.get(org)
     if (!eorg) return
     const s = def.split('/')
     const clazz = s[0]
-    const subs = eorg.get(clazz)
-    if (!subs) return
+    const subs: Subs = eorg.get(clazz)
+    if (!subs) return [clazz, null]
+
     switch (s.length - 1) {
       case 0 : { 
         if (subs.vdef0) {
-          // TOUS les documents sont inutiles et à supprimer
+          // TODO - TOUS les documents sont inutiles et à supprimer
 
         }
         subs.vdef0 = null
@@ -336,7 +320,7 @@ export const useDataStore = defineStore('data', () => {
       case 2 : { 
         const colName = s[1]
         const colValue = s[2]
-        const nv = colName + '/' + colName
+        const nv = colName + '/' + colValue
         let vPks = subs.vdef2.get(nv)
         if (vPks) { 
           // TODO - gestion de la sous-collection souscrite org / clazz / colName / colValue
@@ -347,6 +331,7 @@ export const useDataStore = defineStore('data', () => {
     }
     if (!subs.hasRefs) eorg.delete(clazz)
     if (eorg.size === 0) allSubs.value.delete(org)
+    return [clazz, subs]
   }
 
   const syncRunning: Ref<boolean> = ref(false)
@@ -419,9 +404,7 @@ export const useDataStore = defineStore('data', () => {
   /* Retour de sync de la collection des documents d'une classe: enregistrement des documents
   */
   const retSync = async (opTime: number, org: string, def: string, x: Uint8Array[] | Uint8Array) => {
-    const s = def.split('/')
-    const clazz = s[0]
-    const [subs, updated, versions] = updDefInSubs(org, def, false, opTime)
+    const [clazz, subs] = setDefLoc(org, def, opTime)
 
     const docs: Document[] = []
     const delPks: string[] = []
@@ -437,47 +420,10 @@ export const useDataStore = defineStore('data', () => {
       else delPks.push(doc._pk)
     }
 
-    if (updated || docs.length || delPks ) { // Maj en IDB
-      await IDB.idb.retSync(org, clazz, updated ? subs : null, docs, delPks)
+    if (docs.length || delPks ) { // Maj en IDB
+      await IDB.idb.retSync(org, clazz, subs, docs, delPks)
     }
     
-  }
-
-  /* Met à jour le Subs en considérant la version détenue, 
-  soit sur le serveur, soit en local
-  Retourne [subs, updated, versions]
-  */
-  const updDefInSubs = (org: string, def: string, srv: boolean, v: number): 
-    [Subs, boolean, versions] => {
-    const s = def.split('/')
-    const clazz = s[0]
-    const subs = getSubs(org, clazz)
-    let updated = false
-    switch (s.length - 1) {
-      case 0 : {
-        if (subs.vdef0 === null) return [subs, false, null] 
-        if (srv && v < subs.vdef0[0]) {subs.vdef0[0] = v; updated = true}
-        if (!srv && v < subs.vdef0[1]) {subs.vdef0[1] = v; updated = true}
-        return [subs, updated, subs.vdef0]
-      }
-      case 1 : { 
-        const pk = s[1]
-        let vdef1 = subs.vdef1.get(pk)
-        if (vdef1 === null) return [subs, false, null] 
-        if (srv && v < vdef1[0]) {vdef1[0] = v; updated = true}
-        if (!srv && v < vdef1[1]) {vdef1[1] = v; updated = true}
-        return [subs, updated, vdef1]
-      }
-      case 2 : { 
-        const nv = s[1] + '/' + s[2] // 'colName/colValue'
-        let vdef2 = subs.vdef1.get(nv)
-        if (vdef2 === null) return [subs, false, null] 
-        if (srv && v < vdef2[0]) {vdef2[0] = v; updated = true}
-        if (!srv && v < vdef2[1]) {vdef2[1] = v; updated = true}
-        return [subs, updated, vdef2]
-      }
-    }
-    return [subs, false, null]
   }
 
   /* Traitement des notifications reçues (souscriptions ayant changé) defs reçues:
@@ -486,29 +432,22 @@ export const useDataStore = defineStore('data', () => {
   Enregistre les souscriptions reçues en notification (si postérieure à celle connue)
   - si sa version détenue est plus ancienne que la version du serveur,
     l'inscrit en queue pour synchronisation.
-    N'est jamais en mode AVION
+    N'est jamais invoquée en mode AVION
   */
   const onNotif = async (now: number, org: string, defs: string[]) => {
     const session = stores.session
     if (defs) for(const def of defs) {
-      const s = def.split('/')
-      const clazz = s[0]
-
-      const [subs, updated, versions] = updDefInSubs(org, def, true, now)
-
-      if (updated && session.hasIDB && session.phase !== 0)
+      const [clazz, subs] = setDefSrv(org, def, now)
+      if (subs && session.hasIDB)
         await IDB.idb.updSubs(org, clazz, subs) // Maj de subs en IDB
-      
-      if (versions && versions[0] > versions[1])
-        queueForSync({ org, def, v: versions[1] })
     }
   }
 
   return { 
     setCpt, cpt,
     setDoc, getDocInfo, deleteDoc, getColl, getClDocs, getOrgs,
-    setSubscription, getSubscription, getOrgsSubscription,
-    initDefs, newDef, updDef, delDef,
+    setSubscription, getSubscription, getOrgsSubscription, getSubs,
+    initDefs, setDefLoc, setDefSrv, delDefLoc,
     queueForSync, startSyncQueue, syncAll,
     retSync, onNotif
   }

@@ -4,10 +4,9 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { subsToSync, Subs } from '../stores/data-store'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
-import { Document, Subscription } from './document'
+import { Document, Subscription, Subs } from './document'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
@@ -88,12 +87,16 @@ export class IDB {
     return await Crypt.crypt(encode(rec), this.keyK)
   }
 
+  async cryptRecordSer (bin: Uint8Array): Promise<Uint8Array> {
+    return await Crypt.crypt(bin, this.keyK)
+  }
+
   async decryptRecord (bin: any): Promise<Object> {
     const x = await Crypt.decrypt(bin, this.keyK)
     return decode(x)
   }
 
-  async decryptRecordSer (bin: any): Promise<Uint8Array> {
+  async decryptRecordSer (bin: Uint8Array): Promise<Uint8Array> {
     return await Crypt.decrypt(bin, this.keyK)
   }
 
@@ -115,6 +118,7 @@ export class IDB {
     }
   }
 
+  /*
   async putSubscription (org: string, subs: Subscription) {
     try {
       const bin = await this.cryptRecord(subs)
@@ -123,6 +127,7 @@ export class IDB {
       throw IDB.EX(e, 2)
     }
   }
+  */
 
   async delSubscription (org: string) {
     try {
@@ -145,10 +150,30 @@ export class IDB {
     }
   }
 
-  /* Met à jour une souscription et les subs élémentaires modifiés */
-  async updateSubscription (org: string, subscription: Subscription, 
-    delta: Object, newDefs: Set<string>, delDefs: Set<string>) {
-    // TODO
+  /* Met à jour une souscription et les subs élémentaires modifiés 
+  en une seule tyransaction
+  */
+  async updateSubscription (
+    org: string, subscription: Subscription, msubs: Map<string, Subs>) {
+    try {
+      const bin = await this.cryptRecordSer(subscription.serial())
+      const binSubs = new Map<string, Uint8Array>()
+      for(const [clazz, subs] of msubs)
+        if (subs) binSubs.set(clazz, subs.serial())
+      await this.db.transaction('rw', ['subscriptions', 'defs'], async () => {
+        await this.db.subscriptions.put({ org, bin })
+        for(const [clazz, subs] of msubs) {
+          if (subs) {
+            const bin = binSubs.get(clazz)
+            await this.db.subs.put({ org, clazz, bin })
+          } else {
+            await this.db.subs.delete({ org, clazz })
+          }
+        }
+      })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
   }
 
   /* Récupère les objets Subs de toutes les org/clazz
@@ -181,22 +206,24 @@ export class IDB {
     })
   }
 
-  /* Retour de sync: sauvegarde en IDB,
-  - le Subs qui contient les versions mise à jour (peut être null si inchangé !?)
+  /* Retour de sync: sauvegarde transactionnelle en IDB,
+  - le Subs contient les versions mise à jour
   - la liste des documents créés / modifiés
   - la liste des pk des documents supprimés
   */
   async retSync (org: string, clazz: string, subs: Subs, docs: Document[], delPks: string[])
     : Promise<void> {
-
+    // TODO
   }
 
-  /* Sauvegarde en IDB d'un Subs sur retour de notification d'une souscription
-  Le Subs contient les versions mise à jour (nouvelle version sur le serveur)
-  Sur notification reçue
+  /* Sauvegarde ou suppression en IDB d'un Subs sur retour de notification d'une souscription
+  Le Subs contient les nouvelles versions sur le serveur.
+  La subs peut être devenu "inutile" si toutes ses defs ont été supprimées
   */
   async updSubs (org: string, clazz: string, subs: Subs)
     : Promise<void> {
+    const toDel = !subs.hasRefs
+    // TODO
 
   }
 }
