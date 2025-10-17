@@ -12,21 +12,15 @@ const STORES = {
   singletons: 'name', // singletons { name, bin }
   auths: 'id',
   subsriptions: '[org]', // { org, bin } - souscriptions pour cette organisation
-  subs: '[org+clazz]', // { org, clazz, bin:serial crypté de l'objet Subs}
-  documents: '[org+id]' // { org, id, bin }
+  subs: '[org+clazz]', // { org, clazz, bin } bin:serial crypté de l'objet Subs (état des souscriptions de la classe)
+  documents: '[org+id]' // { org, id, bin } : bin: serial crypté d'un docRecord { clazz, data }
 }
 
 const encoder = new TextEncoder()
 
-type dbRecord = {
-  org: string
-  id: string,
-  bin: Uint8Array
-}
-
 type docRecord = {
-  clazz: string
-  data: Uint8Array
+  clazz: string // classe du document
+  data: Uint8Array // document "sérialisé" tel que reçu du serveur (à compiler)
 }
 
 export class IDB {
@@ -34,16 +28,15 @@ export class IDB {
 
   db : any
   keyK: Uint8Array
-  config?: any
-  dataSt: any
+  mondebug: boolean
 
   constructor (name: string) {
-    this.config = stores.config
-    this.dataSt = stores.data
-    this.keyK = b64ToU8(this.config['keyK'])
+    const config = stores.config
+    this.mondebug = config.mondebug
+    this.keyK = b64ToU8(config['keyK'])
     if (!this.keyK)
       throw new AppExc({code: 12003, label: 'IDB error: keyK not declared' })
-    if (this.config.mondebug) console.log('Open IDB: [' + name + ']')
+    if (this.mondebug) console.log('Open IDB: [' + name + ']')
     this.db = new Dexie(name, { autoOpen: true })
     this.db.version(1).stores(STORES)
     IDB.idb = this
@@ -61,13 +54,13 @@ export class IDB {
   }
 
   static async delete (name: string) {
-    const config = stores.config
+    const mondebug = stores.config.mondebug
     try {
       await Dexie.delete(name)
       await sleep(100)
-      if (config.mondebug) console.log('RAZ db')
+      if (mondebug) console.log('RAZ db')
     } catch (e) {
-      if (config.mondebug) console.log(e.toString())
+      if (mondebug) console.log(e.toString())
     }
     IDB.idb = null
   }
@@ -173,19 +166,19 @@ export class IDB {
     else await this.db.documents.delete()
   }
 
-  /* Charge en dataSt tous les documents de la basqe */
-  async loadAllDocs () : Promise<void> {
-    await this.db.documents.each(async (dbr: dbRecord) => {
-      const rec = await this.decryptRecord(dbr.bin) as docRecord
+  /* Retourne sur la fonction cb(org, doc) tous les documents (compilés) de la base */
+  async loadAllDocs (cb: Function) : Promise<void> {
+    await this.db.documents.each(async ({org, id, bin }) => {
+      const rec = await this.decryptRecord(bin) as docRecord
       const doc = await Document.compile(rec.clazz, rec.data)
-      this.dataSt.setDoc(dbr.org, doc)
+      cb(org, doc)
     })
   }
 
-  /* Retour de sync: sauvegarde transactionnelle en IDB,
-  - le Subs contient les versions mise à jour
-  - la liste des documents créés / modifiés
-  - la liste des pk des documents supprimés
+  /* Retour de sync: sauvegarde transactionnelle en IDB du nouvel état résultant:
+  - subs: état (versions) des souscriptions de la classe mis à jour
+  - binDocs: map (par pk) des documents (en binaire issu du serveur) créés / modifiés
+  - delPks: liste des pk des documents supprimés
   */
   async retSync (org: string, clazz: string, subs: Subs, 
     binDocs: Map<string, Uint8Array>, delPks: string[]) : Promise<void> {
@@ -213,8 +206,8 @@ export class IDB {
     }
   }
 
-  /* Met à jour une souscription et les subs élémentaires modifiés 
-  en une seule tyransaction
+  /* Met à jour (en une seule transaction) une souscription et les subs élémentaires modifiés 
+  suite à son édition locale
   */
   async updateSubscription (
     org: string, subscription: Subscription, msubs: Map<string, Subs>) {
@@ -239,9 +232,11 @@ export class IDB {
     }
   }
 
-  /* Sauvegarde ou suppression en IDB d'un Subs sur retour de notification d'une souscription
-  Le Subs contient les nouvelles versions sur le serveur.
-  La subs peut être devenu "inutile" si toutes ses defs ont été supprimées
+  /* Sur retour de notification d'une souscription, mis à jour de l'état des sousciptions
+  de la classe.
+  - subs: nouvel état des souscriptions de la classe (du fait des versions remontées du serveur).
+  subs peut être devenu "inutile" si toutes ses defs ont été supprimées
+  et dans ce cas est supprimé de la base.
   */
   async updSubs (org: string, clazz: string, subs: Subs) : Promise<void> {
     try {

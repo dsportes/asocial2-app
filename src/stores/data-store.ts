@@ -1,11 +1,20 @@
+/* TODO
+- Forcer la resynchronisation (synchrone) des souscriptions:
+  - pour une org / classe. En dataSt et en IDB:
+    - interruption de queue et suppression des defs en queue
+    - suppression des documents de la classe
+    - remise à 0 dans les subs de la version détenue en session
+    - restart de la queue
+  - pour une org: sur itération sur ses classes
+  - totale : sur itération sur les orgs
+*/
+
 // @ts-ignore
 import { ref } from 'vue';
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { isSameSet } from '../src-fw/util'
@@ -13,27 +22,70 @@ import { Document, Subscription, Subs, versions } from '../src-fw/document'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
 
-/* Sync : synchronise les abonnements cités *************************
-- toSync = subsToSync[]
-subsToSync = {
-  def: string, 
-  v: number - version 'vs' la plus récente détenue en session
-}
-Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des documents (par exemple: Article/auteurs/Zola)
-- si vs est absent: connue actuellement (à now)
-- changements (documents ajoutés ou partis de la sous-collection ou zombifiés) depuis la version vs
-    de la sous-collection connue en session.
-- { def0: [Uint8Array], def1: Uint8array, def2: { pk: data | v ... }}
-  Pour les 'def2', un objet { pk: data | v ... }
-  - v: version du document si n'est PLUS dans la collection
-  - data: data du document s'il est dans la collection
+/* Le store "data" mémorise trois collections:
+documents: une triple Map par org / clazz / pk qui détient pour chaque document, son "docInfo",
+  - l'objet document (compilé)
+  - le set des "définitions" (relatives à sa classe) dont le document fait partie.
+
+  getOrgs() : retourne la liste des organisations ayant des documents stockés
+  getClDocs() : retourne la liste des documents stockés d'une classe donnée
+  getDocInfo() : retourne le docInfo (doc, defs) du document dans la stucture
+  getColl() : retourne une sous-collection d'une organisation, la liste des documents stockés 
+
+  setDoc() : range un document dans la structure documents
+
+*******************************************************************************
+subscriptions: une Map par org donnant l'objet "Suscriptions" contenant "defs",
+  la liste des définitions des subscriptions de la classe.
+  - Subscription ne dit rien l'état effectif des abonnements élémentaires.
+
+  setSubscription() : enregistrement en phase 0 de la souscription d'une organisation
+  getSubscription() : retourne un clone de la subscription enregistrée en vue d'édition
+  getOrgsSubscription() : retourne la liste des organisations ayant une souscription
+
+*******************************************************************************
+allSubs: une double Map par org / classe donnant "l'état de synchronisation" de 
+  chaque subscription élémentaire de la classe selon trois maps:
+  - '0' : subscription à la classe
+  - 'pk' : N1 subscriptions, une par pk de document
+  - 'colName/colValue' : N2 subscriptions, une par sous-collection colName/colValue.
+  Un état de synchronisation d'une sous-collection est fixé par deux versions:
+    - celle détenue sur le serveur (du moins la dernière "notifiée à la session")
+    - celle détenue effectivement en store "data" (et IDB sauf modes.INCOGNITO)
+
+  initDefs() : enregistre en phase 0 l'état courant des souscriptions d'une class (Subs)
+  setDefLoc() : enregistre la version détenue en "locale" d'une souscription élémentaire 
+    - retour de Sync
+    - fin d'édition locale d'une souscription
+  delDefLoc() : à la fin de l'édition locale d'une souscription, suppression d'une souscription élémentaire
+
+*******************************************************************************
+La "queue" des synchronisations en attente ou en cours est décrite par:
+- syncRunning: booléen indiquant si la queue de synchro est active et lance en
+  séquence les synchronisations demandées et en attente.
+- qOrder: un numéro d'ordre pour assurer un épuisement de la queue en FOFO.
+- syncQueue: la map des synchros en attente:
+  - clé: org / def
+  - valeur: subsToSync (org, def, version détenue en session, numéro d'ordre dans la queue)
+
+queueForSync() : enregistre une souscription à synchroniser au plus tôt
+nextToSync() : retourne la prochaine synchronisation à traiter de la queue
+startSyncQueue() : active le démon de synchronisation s'il ne l'était pas
+
+syncAll() : synchronisation initaile "synchrone" de toutes les souscriptions (phase 0 de session)
+
+retSync() : handler de traitement de retour d'une synchrisation
+  - range les documents
+  - met à jour les versions détenues en session
+
+onNotif() : handler de traitement des notifications reçues (souscriptions ayant changé)
 */
 
 export type subsToSync = {
   org: string, 
-  def: string, 
-  v: number,
-  order?: number // ordre d'entrée dans la queue de synchro : 0 si synchro en cours
+  def: string, // définition à synchroniser - clazz class/pk clazz/colName/colValue
+  v: number, // version de la sous-collection détenue en session
+  order?: number // numéro ordre d'entrée dans la queue de synchro
 }
 
 type docInfo = {
@@ -47,14 +99,24 @@ type docInfo = {
 }
 
 export const useDataStore = defineStore('data', () => {
-  const cpt: Ref<number> = ref(0)
-  const setCpt = (v: number) => cpt.value = v
 
   /* Map des documents hiérarchisée par org / clazz / pk */
   const documents: Ref<Map<string, Map<string, Map<string, Document>>>> 
     = ref(new Map<string, Map<string, Map<string, Document>>>())
 
-  /* Range un document dans la structure documents
+  /* Map des subscriptions hiérarchisée par org */
+  const subscriptions: Ref<Map<string, Subscription>>
+    = ref(new Map<string, Subscription>())
+
+  /* Map des états de synchronisation des souscriptions hiérarchisée par org / classe */
+  const allSubs: Ref<Map<string, Map<string, Subs>>> 
+    = ref(new Map<string, Map<string, Subs>>())
+
+  const syncRunning: Ref<boolean> = ref(false)
+  const qOrder: Ref<number> = ref(0)
+  const syncQueue: Ref<Map<string, subsToSync>> = ref(new Map<string, subsToSync>())
+
+  /* setDoc() : range un document dans la structure documents
   S'il y existait déjà ne remplace le document que si celui 
   en arguments est plus récent.
   Supprime le document si doc est "deleted".
@@ -121,7 +183,7 @@ export const useDataStore = defineStore('data', () => {
     return defs
   }
 
-  /* Supprime le document donné par sa classe et sa pk */
+  /* Supprime le document donné par sa classe et sa pk
   const deleteDoc = (org: string, clazz: string, pk: string) => {
     let eorg = documents.value.get(org)
     if (!eorg) return
@@ -131,8 +193,10 @@ export const useDataStore = defineStore('data', () => {
     if (ecl.size === 0) eorg.delete(clazz)
     if (eorg.size === 0) eorg.delete(org)
   }
+  */
 
-  /* Retourne le docInfo (doc, defs) du document dans la stucture ou null s'il n'y est pas */
+  /* getDocInfo() : retourne le docInfo (doc, defs) du document dans la stucture 
+  ou null s'il n'y est pas */
   const getDocInfo = (org: string, clazz: string, pk: string) : docInfo => {
     let eorg = documents.value.get(org)
     if (!eorg) return null
@@ -141,7 +205,7 @@ export const useDataStore = defineStore('data', () => {
     return ecl.get(pk) || null
   }
 
-  /* Retourne la liste des documents stockés d'une classe donnée */
+  /* getClDocs() : retourne la liste des documents stockés d'une classe donnée */
   const getClDocs = (org: string, clazz: string)
     : Document[] => {
     const r: Document[] = []
@@ -153,7 +217,7 @@ export const useDataStore = defineStore('data', () => {
     return r
   }
 
-  /* Remet à jour les docInfo des documents d'une classe donnée.
+  /* PRIVATE: Remet à jour les docInfo des documents d'une classe donnée.
   Supprime les documents "inutiles"
   */
   const updateDocInfosCl = (org: string, clazz: string) => {
@@ -174,12 +238,12 @@ export const useDataStore = defineStore('data', () => {
     if (eorg.size === 0) documents.value.delete(org)
   }
 
-  /* Retourne la liste des organisations ayant des documents stockés */
+  /* getOrgs() : retourne la liste des organisations ayant des documents stockés */
   const getOrgs = (org: string) : string[] => {
     return Array.from(documents.value.keys())
   }
 
-  /* Retourne une sous-collection d'une organisation, la liste des documents stockés 
+  /* getColl() : retourne une sous-collection d'une organisation, la liste des documents stockés 
   dont la propriété colName contient (ou a) la valeur colValue
   */
   const getColl = (org: string, clazz: string, colName: string, colValue: string)
@@ -195,26 +259,23 @@ export const useDataStore = defineStore('data', () => {
     return r
   }
 
-  const subscriptions: Ref<Map<string, Subscription>> = ref(new Map<string, Subscription>())
-
+  /* setSubscription() : enregistrement en phase 0 de la souscription d'une organisation */
   const setSubscription = (org: string, subscription: Subscription) => {
     subscriptions.set(org, subscription)
   }
 
+  /* getOrgsSubscription() : retourne la liste des organisations ayant une souscription */
   const getOrgsSubscription = () : string[] => {
     return Array.from(subscriptions.keys())
   }
 
-  /* Retourne un clone de la subscription enregistrée */
+  /* getSubscription() : retourne un clone de la subscription enregistrée en vue d'édition */
   const getSubscription = (org: string) : Subscription => {
     const s = subscriptions.get(org)
     return !s ? null : Subscription.fromSerial(s.serial())
   }
 
-  /* Map des souscriptions par classe hiérarchisée par org / clazz */
-  const allSubs: Ref<Map<string, Map<string, Subs>>> = ref(new Map<string, Map<string, Subs>>())
-
-  /* Enregistre les defs des souscriptions d'une class (Subs) 
+  /* initDefs() : enregistre en phase 0 l'état courant des souscriptions d'une class (Subs) 
   */
   const initDefs = (org: string, clazz: string, subs: Subs) => {
     let eorg: Map<string, Subs> = allSubs.value.get(org)
@@ -222,7 +283,7 @@ export const useDataStore = defineStore('data', () => {
     eorg.set(clazz, subs)
   }
 
-  /* Retourne la Subs existante (ou la créé vide) */
+  /* PRIVATE : Retourne la Subs existante (ou la créé vide) */
   const getSubs = (org: string, clazz: string) : Subs => {
     let eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) { eorg = new Map<string, Subs>();  allSubs.value.set(org, eorg) }
@@ -231,11 +292,11 @@ export const useDataStore = defineStore('data', () => {
     return subs
   }
 
-  /* Enregistre la version détenue en "locale" d'une souscription élémentaire 
+  /* setDefLoc() : enregistre la version détenue en "locale" d'une souscription élémentaire 
+  - retour de Sync
+  - fin d'édition locale d'une souscription
   La version "serveur" est inchangée (si elle existait) sinon mise à 0
   Retourne [clazz, Subs] qui contient le def
-  - déclaration / mise à jour d'une souscription
-  - retour de Sync
   */
   const setDefLoc = (org: string, def: string, v: number): [string, Subs] => {
     const s = def.split('/')
@@ -270,10 +331,9 @@ export const useDataStore = defineStore('data', () => {
     return [clazz, subs]
   }
 
-  /* Met à jour la version sur le "serveur" d'une souscription élémentaire
+  /* PRIVATE: met à jour sur notification la version "serveur" d'une souscription élémentaire
   La version "locale" est conservée.
   Retourne [clazz, subs] le Subs qui contient le def
-  - sur notification
   */
    const setDefSrv = (org: string, def: string, v: number): [string, Subs] => {
     const s = def.split('/')
@@ -310,7 +370,7 @@ export const useDataStore = defineStore('data', () => {
     return [clazz, subs]
   }
 
-  /* Suppression d'une souscription élémentaire
+  /* delDefLoc() : à la fin de l'édition locale d'une souscription, suppression d'une souscription élémentaire
   Recalcule pour chaque document concerné de son docInfo.defs
   et si "inutile" le supprime
   Retourne le Subs qui contenait le def
@@ -334,18 +394,11 @@ export const useDataStore = defineStore('data', () => {
     return [clazz, subs]
   }
 
-  const syncRunning: Ref<boolean> = ref(false)
-  const qOrder: Ref<number> = ref(0)
-  const syncQueue: Ref<Map<string, subsToSync>> = ref(new Map<string, subsToSync>())
+  /***********************************************************************
+  Gestion des synchronisations
+  ***********************************************************************/
 
-  const nextToSync = () : subsToSync => {
-    let sts = null
-    for (const [, s] of syncQueue.value)
-      if (!sts || s.order < sts.order) sts = s
-    return sts
-  }
-
-  /* Enregistre une souscription à synchroniser au plus tôt */
+  /* queueForSync : enregistre une souscription à synchroniser au plus tôt */
   const queueForSync = (subsToSync: subsToSync) => {
     const qo = qOrder.value + 1
     qOrder.value = qo
@@ -362,6 +415,18 @@ export const useDataStore = defineStore('data', () => {
     if (stores.session.phase === 1) startSyncQueue()
   }
 
+  /* nextToSync() : retourne la prochaine synchronisation à traiter de la queue */
+  const nextToSync = () : subsToSync => {
+    let sts = null
+    for (const [, s] of syncQueue.value)
+      if (!sts || s.order < sts.order) sts = s
+    return sts
+  }
+
+  /* startSyncQueue() : active le démon de synchronisation s'il ne l'était pas
+  Le démon s'interrompt lorsque la "queue" est épuisée. 
+  Il est relancé dès que la "queue" a à nouveau au moins une synchronisation à traiter.
+  */
   const startSyncQueue = () => {
     if (syncRunning.value) return
     syncRunning.value = true
@@ -377,6 +442,22 @@ export const useDataStore = defineStore('data', () => {
     }
     syncRunning.value = false
   }
+
+  /* Sync : synchronise les abonnements cités *************************
+  - toSync = subsToSync[]
+  subsToSync = {
+    def: string, 
+    v: number - version 'vs' la plus récente détenue en session
+  }
+  Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des documents (par exemple: Article/auteurs/Zola)
+  - si vs est absent: connue actuellement (à now)
+  - changements (documents ajoutés ou partis de la sous-collection ou zombifiés) depuis la version vs
+      de la sous-collection connue en session.
+  - { def0: [Uint8Array], def1: Uint8array, def2: { pk: data | v ... }}
+    Pour les 'def2', un objet { pk: data | v ... }
+    - v: version du document si n'est PLUS dans la collection
+    - data: data du document s'il est dans la collection
+  */
 
   /* Synchronisation INITIALE en séquence de toutes les souscriptions
   const allSubs: Ref<Map<string, Map<string, Subs>>> = ref(new Map<string, Map<string, Subs>>())
@@ -401,7 +482,7 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  /* Retour de sync de la collection des documents d'une classe: enregistrement des documents
+  /* retSync() : retour de sync de la collection des documents d'une classe: enregistrement des documents
   */
   const retSync = async (opTime: number, org: string, def: string, x: Uint8Array[] | Uint8Array) => {
     const [clazz, subs] = setDefLoc(org, def, opTime)
@@ -426,14 +507,15 @@ export const useDataStore = defineStore('data', () => {
     
   }
 
-  /* Traitement des notifications reçues (souscriptions ayant changé) defs reçues:
+  /***************************************************************************
+  onNotif() : tTraitement des notifications reçues (souscriptions ayant changé) defs reçues:
   - par web-push
   - retour d'opération
   Enregistre les souscriptions reçues en notification (si postérieure à celle connue)
   - si sa version détenue est plus ancienne que la version du serveur,
     l'inscrit en queue pour synchronisation.
     N'est jamais invoquée en mode AVION
-  */
+  ******************************************************************************/
   const onNotif = async (now: number, org: string, defs: string[]) => {
     const session = stores.session
     if (defs) for(const def of defs) {
@@ -443,13 +525,16 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  const cpt: Ref<number> = ref(0)
+  const setCpt = (v: number) => cpt.value = v
+
   return { 
-    setCpt, cpt,
-    setDoc, getDocInfo, deleteDoc, getColl, getClDocs, getOrgs,
-    setSubscription, getSubscription, getOrgsSubscription, getSubs,
-    initDefs, setDefLoc, setDefSrv, delDefLoc,
+    setDoc, getDocInfo, getColl, getClDocs, getOrgs,
+    setSubscription, getSubscription, getOrgsSubscription,
+    initDefs, setDefLoc, delDefLoc,
     queueForSync, startSyncQueue, syncAll,
-    retSync, onNotif
+    retSync, onNotif,
+    setCpt, cpt // Pour test
   }
 })
 

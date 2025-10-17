@@ -35,9 +35,9 @@ export const sessionPhase0 = async (
 
   // Inscription en data-store des defs de toutes les sousciptions
   if (session.mode !== modes.PLANE) {
-    const m = await idb.getSubs()
-    for(const [org, mo] of m) {
-      for(const [clazz, subs] of mo)
+    const morg = await idb.getSubs()
+    for(const [org, mclazz] of morg) {
+      for(const [clazz, subs] of mclazz)
         dataSt.initDefs(org, clazz, subs)
     }
   }
@@ -58,7 +58,9 @@ export const sessionPhase0 = async (
   if (session.mode === modes.SYNC && integral)
     await idb.deleteAllDocs()
   if (session.hasIDB && !integral)
-    await idb.loadAllDocs()
+    await idb.loadAllDocs((org: string, doc: Document) => {
+      dataSt.setDoc(org, doc)
+    })
   
   // synchro immediate (sequentielle) de toutes les souscriptions
   if (session.hasNet)
