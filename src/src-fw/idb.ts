@@ -100,6 +100,8 @@ export class IDB {
     return await Crypt.decrypt(bin, this.keyK)
   }
 
+  /* Retourne le contenu d'un "state" (singleton nommé)
+  ou un objet vide s'il n'existait pas */
   async getState (name: string) : Promise<Object> {
     try {
       const r = await this.db.singletons.get(name)
@@ -109,6 +111,7 @@ export class IDB {
     }
   }
 
+  /* Enregistre le contenu d'un "state" nommé */
   async putState (name: string, rec: any) {
     try {
       const bin = await this.cryptRecord(rec)
@@ -118,25 +121,21 @@ export class IDB {
     }
   }
 
-  /*
-  async putSubscription (org: string, subs: Subscription) {
-    try {
-      const bin = await this.cryptRecord(subs)
-      await this.db.subsriptions.put({ org, bin })
-    } catch (e) {
-      throw IDB.EX(e, 2)
-    }
-  }
+  /* Supprime la subscription d'une organisation
+  et tous ses subs de classe
   */
-
   async delSubscription (org: string) {
     try {
-      await this.db.subsriptions.delete({ org })
+      await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
+        await this.db.subs.where({ org }).delete()
+        await this.db.subsriptions.where({ org }).delete()
+      })
     } catch (e) {
       throw IDB.EX(e, 2)
     }
   }
 
+  /* Retourne une map de toutes les Subscriptions */
   async getSubscriptions () : Promise<Map<string, Subscription>> {
     try {
       const m: Map<string, Subscription> = new Map<string, Subscription>()
@@ -150,34 +149,8 @@ export class IDB {
     }
   }
 
-  /* Met à jour une souscription et les subs élémentaires modifiés 
-  en une seule tyransaction
-  */
-  async updateSubscription (
-    org: string, subscription: Subscription, msubs: Map<string, Subs>) {
-    try {
-      const bin = await this.cryptRecordSer(subscription.serial())
-      const binSubs = new Map<string, Uint8Array>()
-      for(const [clazz, subs] of msubs)
-        if (subs) binSubs.set(clazz, subs.serial())
-      await this.db.transaction('rw', ['subscriptions', 'defs'], async () => {
-        await this.db.subscriptions.put({ org, bin })
-        for(const [clazz, subs] of msubs) {
-          if (subs) {
-            const bin = binSubs.get(clazz)
-            await this.db.subs.put({ org, clazz, bin })
-          } else {
-            await this.db.subs.delete({ org, clazz })
-          }
-        }
-      })
-    } catch (e) {
-      throw IDB.EX(e, 2)
-    }
-  }
-
   /* Récupère les objets Subs de toutes les org/clazz
-  */
+  Map par org / map par classe */
   async getSubs () : Promise<Map<string, Map<string, Subs>>> {
     const m: Map<string, Map<string, Subs>> = new Map<string, Map<string, Subs>>()
     try {
@@ -194,10 +167,13 @@ export class IDB {
     }
   }
 
-  async deleteAllDocs () {
-    await this.db.documents.delete()
+  /* Supprime tous les documents (d'une organisation ou de toutes) */
+  async deleteAllDocs (org?: string) {
+    if (org) await this.db.documents.where({ org }).delete()
+    else await this.db.documents.delete()
   }
 
+  /* Charge en dataSt tous les documents de la basqe */
   async loadAllDocs () : Promise<void> {
     await this.db.documents.each(async (dbr: dbRecord) => {
       const rec = await this.decryptRecord(dbr.bin) as docRecord
@@ -211,19 +187,71 @@ export class IDB {
   - la liste des documents créés / modifiés
   - la liste des pk des documents supprimés
   */
-  async retSync (org: string, clazz: string, subs: Subs, docs: Document[], delPks: string[])
-    : Promise<void> {
-    // TODO
+  async retSync (org: string, clazz: string, subs: Subs, 
+    binDocs: Map<string, Uint8Array>, delPks: string[]) : Promise<void> {
+    try {
+      const binSubs = subs ? await this.cryptRecordSer(subs.serial()) : null
+      const cbinDocs = new Map<string, Uint8Array>()
+      const binPks = new Map<string, string>()
+      for(const [pk, binDoc] of binDocs) {
+        cbinDocs.set(pk, await this.cryptRecord(binDoc))
+        binPks.set(pk, await this.cryptId(pk))
+      }
+      for(const pk of delPks)
+        binPks.set(pk, await this.cryptId(pk))
+
+      await this.db.transaction('rw', ['documents', 'subs'], async () => {
+        if (binSubs)
+          await this.db.subs.put({ org, clazz, binSubs })
+        for(const [pk, bin] of cbinDocs)
+          await this.db.documents.put({ org, id: binPks.get(pk), bin })
+        for(const pk of delPks)
+          await this.db.documents.where({ org, id: binPks.get(pk) }).delete()
+      })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
+  }
+
+  /* Met à jour une souscription et les subs élémentaires modifiés 
+  en une seule tyransaction
+  */
+  async updateSubscription (
+    org: string, subscription: Subscription, msubs: Map<string, Subs>) {
+    try {
+      const bin = await this.cryptRecordSer(subscription.serial())
+      const binSubs = new Map<string, Uint8Array>()
+      for(const [clazz, subs] of msubs)
+        if (subs) binSubs.set(clazz, await this.cryptRecordSer(subs.serial()))
+      await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
+        await this.db.subscriptions.put({ org, bin })
+        for(const [clazz, subs] of msubs) {
+          if (subs) {
+            const bin = binSubs.get(clazz)
+            await this.db.subs.put({ org, clazz, bin })
+          } else {
+            await this.db.subs.where({ org, clazz }).delete()
+          }
+        }
+      })
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
   }
 
   /* Sauvegarde ou suppression en IDB d'un Subs sur retour de notification d'une souscription
   Le Subs contient les nouvelles versions sur le serveur.
   La subs peut être devenu "inutile" si toutes ses defs ont été supprimées
   */
-  async updSubs (org: string, clazz: string, subs: Subs)
-    : Promise<void> {
-    const toDel = !subs.hasRefs
-    // TODO
-
+  async updSubs (org: string, clazz: string, subs: Subs) : Promise<void> {
+    try {
+      if (subs.hasRefs) {
+        const binSubs = await this.cryptRecordSer(subs.serial())
+        await this.db.subs.put({ org, clazz, binSubs })
+      } else 
+        await this.db.subs.where({ org, clazz }).delete()
+    } catch (e) {
+      throw IDB.EX(e, 2)
+    }
   }
 }

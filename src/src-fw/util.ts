@@ -215,3 +215,8 @@ export function concat (views: ArrayBufferView[]) {
   }
   return buf
 }
+
+export const isSameSet = (s1, s2) => {
+  if (s1.size !== s2.size) return false
+  return [...s1].every(i => s2.has(i))
+}

@@ -8,6 +8,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
+import { isSameSet } from '../src-fw/util'
 import { Document, Subscription, Subs, versions } from '../src-fw/document'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
@@ -79,7 +80,7 @@ export const useDataStore = defineStore('data', () => {
       if (eorg.size === 0) eorg.delete(org)
       return null
     }
-    const defs = defsOfDoc(org, doc)
+    const defs = deflocsOfDoc(org, doc)
     if (defs.size) { // le document est "utile", référencé dans des souscriptions
       ecl.set(doc._pk, { doc, defs })
       return docInfo
@@ -88,13 +89,16 @@ export const useDataStore = defineStore('data', () => {
     ecl.delete(doc._pk)
     if (ecl.size === 0) eorg.delete(doc._clazz)
     if (eorg.size === 0) eorg.delete(org)
+    if (eorg.size === 0) documents.value.delete(org)
     return null
   }
 
-  /* Retourne le set des defs dont le document doc fait 
-  partie de la sous-collection
+  /* Retourne le Set des "defloc" de sa classe dont le document doc fait.
+  - '0' : fait partie de 'clazz'
+  - 'pk' : fait partie de 'clazz/pk'
+  - 'colName/colValue' : fait partie de 'clazz/colName/colValue'
   */
-  const defsOfDoc = (org: string, doc: Document) : Set<string> => {
+  const deflocsOfDoc = (org: string, doc: Document) : Set<string> => {
     const defs = new Set<string>()
     const eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) return defs
@@ -102,10 +106,7 @@ export const useDataStore = defineStore('data', () => {
     if (!subs) return defs
   
     if (subs.vdef0) defs.add('0')
-
-    for (const [pk,] of subs.vdef1)
-      if (pk === doc._pk) defs.add(pk)
-
+    if (subs.vdef1.has(doc._pk)) defs.add(doc._pk)
     for (const [nv,] of subs.vdef2) {
       const i = nv.indexOf('/')
       const colName = nv.substring(0, i)
@@ -150,6 +151,27 @@ export const useDataStore = defineStore('data', () => {
     if (!ecl) return r
     for(const [, { doc, defs }] of ecl) r.push(doc)
     return r
+  }
+
+  /* Remet à jour les docInfo des documents d'une classe donnée.
+  Supprime les documents "inutiles"
+  */
+  const updateDocInfosCl = (org: string, clazz: string) => {
+    let eorg = documents.value.get(org)
+    if (!eorg) return
+    let ecl = eorg.get(clazz)
+    if (!ecl) return
+    const toDel: string[] = []
+    for(const [pk, { doc, defs }] of ecl) {
+      const ndefs = deflocsOfDoc(org, doc)
+      if (!isSameSet(defs, ndefs)) {
+        if (ndefs.size) ecl.set(pk, { doc, ndefs })// document "utile"
+        else toDel.push(doc._pk)
+      }
+    }
+    for (const pk of toDel) ecl.delete(pk)
+    if (ecl.size === 0) eorg.delete(clazz)
+    if (eorg.size === 0) documents.value.delete(org)
   }
 
   /* Retourne la liste des organisations ayant des documents stockés */
@@ -220,28 +242,30 @@ export const useDataStore = defineStore('data', () => {
     const clazz = s[0]
     const subs: Subs = getSubs(org, clazz)
     let versions: versions
+    let defloc: string
     switch (s.length - 1) {
       case 0 : { 
         versions = subs.vdef0
-        if (!versions) { versions = [0, 0]; subs.vdef0 = versions }
+        if (!versions) { defloc = '0'; versions = [0, 0]; subs.vdef0 = versions }
         versions[1] = v
         break 
       }
       case 1 : { 
         const pk = s[1]
         versions = subs.vdef1.get(pk)
-        if (!versions) { versions = [0, 0];  subs.vdef1.set(pk, versions)}
+        if (!versions) { defloc = pk; versions = [0, 0];  subs.vdef1.set(pk, versions)}
         versions[1] = v
         break 
       }
       case 2 : { 
         const nv = s[1] + '/' + s[2]
         versions = subs.vdef2.get(nv)
-        if (!versions) { versions = [0, 0];  subs.vdef2.set(nv, versions)}
+        if (!versions) { defloc = nv; versions = [0, 0];  subs.vdef2.set(nv, versions)}
         versions[1] = v
         break 
       }
     }
+    updateDocInfosCl(org, clazz)
     if (versions[1] < versions[0]) queueForSync({ org, def, v: versions[1] })
     return [clazz, subs]
   }
@@ -300,35 +324,11 @@ export const useDataStore = defineStore('data', () => {
     if (!subs) return [clazz, null]
 
     switch (s.length - 1) {
-      case 0 : { 
-        if (subs.vdef0) {
-          // TODO - TOUS les documents sont inutiles et à supprimer
-
-        }
-        subs.vdef0 = null
-        break 
-      }
-      case 1 : { 
-        const pk = s[1]
-        let vdef1 = subs.vdef1.get(pk)
-        if (subs.vdef1) {
-          // TODO - gestion du document souscrits org / clazz / pk
-        }
-        subs.vdef1.delete(pk)
-        break
-      }
-      case 2 : { 
-        const colName = s[1]
-        const colValue = s[2]
-        const nv = colName + '/' + colValue
-        let vPks = subs.vdef2.get(nv)
-        if (vPks) { 
-          // TODO - gestion de la sous-collection souscrite org / clazz / colName / colValue
-        }
-        subs.vdef2.delete(nv)
-        break
-      }
+      case 0 : { subs.vdef0 = null; break }
+      case 1 : { subs.vdef1.delete(s[1]); break }
+      case 2 : { subs.vdef2.delete(s[1] + '/' + s[2]); break }
     }
+    updateDocInfosCl(org, clazz)
     if (!subs.hasRefs) eorg.delete(clazz)
     if (eorg.size === 0) allSubs.value.delete(org)
     return [clazz, subs]
@@ -406,22 +406,22 @@ export const useDataStore = defineStore('data', () => {
   const retSync = async (opTime: number, org: string, def: string, x: Uint8Array[] | Uint8Array) => {
     const [clazz, subs] = setDefLoc(org, def, opTime)
 
-    const docs: Document[] = []
+    const binDocs: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     const delPks: string[] = []
     if (Array.isArray(x)) for (const data of x) {
       const doc = await Document.compile(clazz, data)
       const docInfo: docInfo = setDoc(org, doc)
-      if (docInfo) docs.push(doc) // document utile et existant
+      if (docInfo) binDocs.set(doc._pk, data) // document utile et existant
       else delPks.push(doc._pk)
     } else {
       const doc = await Document.compile(clazz, x)
       const docInfo: docInfo = setDoc(org, doc)
-      if (docInfo) docs.push(doc) // document utile et existant
+      if (docInfo) binDocs.set(doc._pk, x) // document utile et existant
       else delPks.push(doc._pk)
     }
 
-    if (docs.length || delPks ) { // Maj en IDB
-      await IDB.idb.retSync(org, clazz, subs, docs, delPks)
+    if (binDocs.size || delPks ) { // Maj en IDB
+      await IDB.idb.retSync(org, clazz, subs, binDocs, delPks)
     }
     
   }

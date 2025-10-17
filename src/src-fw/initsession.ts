@@ -10,9 +10,7 @@ type age = {
 }
 
 export const sessionPhase0 = async (
-  mode: modes, dbReset: boolean, dbName: string
-  // TODO - arguments pour subscriptions et auths en INCOGNITO
-  ) => {
+  mode: modes, dbReset: boolean, dbName: string, context: Object ) => {
   
   // Acquisition des souscriptions et documents
   const session = stores.session
