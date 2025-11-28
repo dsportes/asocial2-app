@@ -16,5 +16,4 @@ Run
         cd dist/pwa
         npx http-server . -p 8086 --cors -c-1 -S -C "../../../asocial2-srv/cert/fullchain.pem" -K "../../../asocial2-srv/cert/privkey.pem" -a test.sportes.fr
 
-PUIS: localhost:8086/pwa
-
+ET PUIS: localhost:8086/pwa
