@@ -13,7 +13,6 @@ const large = 900
 
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
-
   const $q = ref()
   const set$t$q = (t, q) => { 
     $t.value = t

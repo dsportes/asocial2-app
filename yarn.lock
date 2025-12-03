@@ -3574,6 +3574,7 @@ __metadata:
     "@types/node": "npm:^22.15.3"
     "@vue/eslint-config-typescript": "npm:^14.4.0"
     autoprefixer: "npm:^10.4.2"
+    dexie: "npm:^4.2.1"
     eslint: "npm:^9.14.0"
     eslint-plugin-vue: "npm:^9.30.0"
     ext2mime: "npm:^2.0.1"
@@ -4428,6 +4429,13 @@ __metadata:
   version: 1.2.0
   resolution: "destroy@npm:1.2.0"
   checksum: 10c0/bd7633942f57418f5a3b80d5cb53898127bcf53e24cdf5d5f4396be471417671f0fee48a4ebe9a1e9defbde2a31280011af58a57e090ff822f589b443ed4e643
+  languageName: node
+  linkType: hard
+
+"dexie@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "dexie@npm:4.2.1"
+  checksum: 10c0/2e96bb21fc559290e545b740d943cdaa0cad4281f89e7355c332a8bc83870fc05ae9460be586fdb4b55f3860489070b17234a41a78cf469ed6464f6e0616125b
   languageName: node
   linkType: hard
 

@@ -4,24 +4,25 @@ import { ref } from 'vue'
 import type { Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-
 import { toByteArray } from '../src-fw/base64'
 import { Crypt } from '../src-fw/crypt'
+import { myRegistration } from '../../src-pwa/register-service-worker'
 
 export enum modes { SYNC, INCOGNITO, PLANE }
 
-export const useSessionStore = defineStore('session', () => {
-  function b64ToU8 (b64: string) : Uint8Array {
-    if (!b64) return null
-    const diff = b64.length % 4
-    let x = b64
-    if (diff) {
-      const pad = '===='.substring(0, 4 - diff)
-      x = b64 + pad
-    }
-    return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
+function b64ToU8 (b64: string) : Uint8Array {
+  if (!b64) return null
+  const diff = b64.length % 4
+  let x = b64
+  if (diff) {
+    const pad = '===='.substring(0, 4 - diff)
+    x = b64 + pad
   }
-  
+  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
+}
+
+export const useSessionStore = defineStore('session', () => {
+
   // Gestion des opérations ************************************************
   const opEncours = ref('')
   const opDialog = ref(false)
@@ -62,11 +63,10 @@ export const useSessionStore = defineStore('session', () => {
   const subJSON = ref('')
   const sessionId = ref('')
 
-  function saveRegistration (_registration) {
-    registration.value = _registration
-  }
+  // function saveRegistration (_registration) { registration.value = _registration }
 
-  async function setRegistration (vapidPK) {
+  async function setRegistration (vapidPK: string) {
+    registration.value = myRegistration
     // @ts-ignore
     const pm = registration.value.pushManager
     if (!pm) {
@@ -152,7 +152,7 @@ export const useSessionStore = defineStore('session', () => {
 
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, saveRegistration, setRegistration, setAppUpdated, subJSON, sessionId,
+    registration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase, mode, setMode, hasIDB, hasNet

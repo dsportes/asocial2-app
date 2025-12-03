@@ -24,6 +24,38 @@ import panel_outils_fr from '../assets/help/panel_outils_fr.md?raw'
 import top_bar_fr from '../assets/help/top_bar_fr.md?raw'
 import top_bar$png from '../assets/help/top_bar.png'
 
+import incognito from '../assets/incognito_blanc.svg'
+
+const helpPages = { 
+  bientot_fr, 
+  bientot_en, 
+  boite_automaj_fr, 
+  defaut$png, 
+  dial_editeur_fr,
+  DOCpg_fr, 
+  pages_fr, 
+  pages_struct_fr, 
+  panel_outils_fr, 
+  top_bar_fr, 
+  top_bar$png
+}
+
+const helpLabels = {
+  fr: {
+    boite_automaj: 'Mise à jour automatique des données d\'une session',
+    dial_editeur: 'L\'éditeur des textes',
+    DOCpg: 'L\'application "a-social"',
+    pages: 'Pages de l\'application',
+    pages_struct: 'Disposition générale d\'une page',
+    panel_outils: 'Boîte à outils',
+    top_bar: 'Barre du haut',
+    dial: 'Dialogues ...'
+  },
+  en: {
+
+  }
+}
+
 export default defineBoot(async ({ app }) => {
 
   stores.config.initK(K, window.location, custom)
@@ -32,27 +64,6 @@ export default defineBoot(async ({ app }) => {
     console.error(docTypeErrors.join('\n'))
     window.alert('appconfig: ' + docTypeErrors.length + ' compile schema errors')
   } else console.log('appconfig: ' + DocType.docTypes.size + ' document classes')
-
-  const helpPages = { 
-    bientot_fr, bientot_en, boite_automaj_fr, defaut$png, dial_editeur_fr,
-    DOCpg_fr, pages_fr, pages_struct_fr, panel_outils_fr, top_bar_fr, top_bar$png
-  }
-
-  const helpLabels = {
-    fr: {
-      boite_automaj: 'Mise à jour automatique des données d\'une session',
-      dial_editeur: 'L\'éditeur des textes',
-      DOCpg: 'L\'application "a-social"',
-      pages: 'Pages de l\'application',
-      pages_struct: 'Disposition générale d\'une page',
-      panel_outils: 'Boîte à outils',
-      top_bar: 'Barre du haut',
-      dial: 'Dialogues ...'
-    },
-    en: {
-
-    }
-  }
 
   Help.setPlan(plan, readme, helpPages, helpLabels)
 

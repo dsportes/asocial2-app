@@ -70,7 +70,7 @@ export class TestAuth extends Operation {
           { type: 'TEST2', toto: 'titi'},
         ]
       }
-      const res = await this.post({ authRecord })
+      const res = await this.post({ authRecord, org })
       return res['auths']
     } catch(e) {
       this.ko(e)

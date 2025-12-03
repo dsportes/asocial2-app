@@ -31,11 +31,7 @@ export async function getData (url: string) : Promise<Uint8Array> {
       method: 'GET',
       headers: {'Content-Type': 'application/octet-stream' }
     })
-    if (response.status === 200) {
-      // @ts-ignore
-      const buf = await response.bytes()
-      return buf
-    }
+    if (response.status === 200) return await response.bytes()
     throw new AppExc({ code: response.status, label: response.statusText, args: ['getData'] })
   } catch (e) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))

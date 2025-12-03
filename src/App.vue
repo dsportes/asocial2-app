@@ -42,13 +42,9 @@
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
 import ext2mime from 'ext2mime'
-// @ts-ignore
 import { ref, computed, watch, watchEffect, onMounted } from 'vue'
-// @ts-ignore
 import { useI18n } from 'vue-i18n'
-// @ts-ignore
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
@@ -64,32 +60,32 @@ import { initWP } from './src-fw/wputil'
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import BtnCond from './components-fw/BtnCond.vue'
-import GotIt from './components-fw/Gotit.vue'
+import GotIt from './components-fw/GotIt.vue'
 import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
-import { myRegistration } from '../src-pwa/register-service-worker'
-
-const $t = useI18n().t // Pour rendre accessible $t dans le code
-set$t($t)
+// import { myRegistration } from '../src-pwa/register-service-worker'
 
 const config = stores.config
 const session = stores.session
 const dataSt = stores.data
 const ui = stores.ui
 
-session.saveRegistration(myRegistration)
+const $t = useI18n().t // Pour rendre accessible $t dans le code
+const $q = useQuasar()
+set$t($t)
+ui.set$t$q($t, $q)
+
+// session.saveRegistration(myRegistration)
 
 onMounted(async () => {
-  await session.setRegistration(myRegistration, config.K.vapidPublicKey)
-  myRegistration.active.postMessage(
+  await session.setRegistration(config.K.vapidPublicKey)
+  session.registration.active.postMessage(
     { type: 'SETSTATE', location: stores.config.location, APPNAME: stores.config.K.APPNAME }
   )
 })
 
-const $q = useQuasar()
-ui.set$t$q($t, $q)
 ui.setScreenWH($q.screen.width, $q.screen.height)
 watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
@@ -167,7 +163,7 @@ const t1b = () => {
 }
 
 const t4 = async () => {
-  const res = await new TestAuth().run()
+  const res = await new TestAuth().run('demo')
   console.log('TestAuth:' + res)
 }
 
