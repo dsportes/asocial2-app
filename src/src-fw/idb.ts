@@ -76,21 +76,13 @@ export class IDB {
     return u8ToB64(x)
   }
 
-  async cryptRecord (rec: any): Promise<Uint8Array> {
-    return await Crypt.crypt(encode(rec), this.keyK)
+  async cryptRecord (bin: Uint8Array | Object): Promise<Uint8Array> {
+    return await Crypt.crypt(typeof bin !== 'object' ? bin : encode(bin), this.keyK)
   }
 
-  async cryptRecordSer (bin: Uint8Array): Promise<Uint8Array> {
-    return await Crypt.crypt(bin, this.keyK)
-  }
-
-  async decryptRecord (bin: any): Promise<Object> {
+  async decryptRecord (bin: any, raw?: boolean): Promise<Object | Uint8Array> {
     const x = await Crypt.decrypt(bin, this.keyK)
-    return decode(x)
-  }
-
-  async decryptRecordSer (bin: Uint8Array): Promise<Uint8Array> {
-    return await Crypt.decrypt(bin, this.keyK)
+    return raw ? x : decode(x)
   }
 
   /* Retourne le contenu d'un "state" (singleton nommé)
@@ -133,7 +125,7 @@ export class IDB {
     try {
       const m: Map<string, Subscription> = new Map<string, Subscription>()
       this.db.subsriptions.each(async (r) => {
-        const bin = await this.decryptRecordSer(r.bin)
+        const bin = await this.decryptRecord(r.bin, true) as Uint8Array
         m.set(r.org, Subscription.fromSerial(bin))
       })
       return m
@@ -148,7 +140,7 @@ export class IDB {
     const m: Map<string, Map<string, Subs>> = new Map<string, Map<string, Subs>>()
     try {
       await this.db.subs.each(async (rec) => {
-        const s = await this.decryptRecordSer(rec.bin)
+        const s = await this.decryptRecord(rec.bin) as Uint8Array
         const subs = Subs.deserial(s)
         let eorg = m.get(rec.org)
         if (!eorg) { eorg = new Map<string, Subs>(); m.set(rec.org, eorg)}
@@ -180,10 +172,14 @@ export class IDB {
   - binDocs: map (par pk) des documents (en binaire issu du serveur) créés / modifiés
   - delPks: liste des pk des documents supprimés
   */
-  async retSync (org: string, clazz: string, subs: Subs, 
-    binDocs: Map<string, Uint8Array>, delPks: string[]) : Promise<void> {
+  async retSync (
+      org: string, 
+      clazz: string, 
+      subs: Subs, 
+      binDocs: Map<string, Uint8Array>, 
+      delPks: string[]) : Promise<void> {
     try {
-      const binSubs = subs ? await this.cryptRecordSer(subs.serial()) : null
+      const binSubs = subs ? await this.cryptRecord(subs.serial()) : null
       const cbinDocs = new Map<string, Uint8Array>()
       const binPks = new Map<string, string>()
       for(const [pk, binDoc] of binDocs) {
@@ -210,12 +206,14 @@ export class IDB {
   suite à son édition locale
   */
   async updateSubscription (
-    org: string, subscription: Subscription, msubs: Map<string, Subs>) {
+      org: string, 
+      subscription: Subscription, 
+      msubs: Map<string, Subs>) {
     try {
-      const bin = await this.cryptRecordSer(subscription.serial())
+      const bin = await this.cryptRecord(subscription.serial())
       const binSubs = new Map<string, Uint8Array>()
       for(const [clazz, subs] of msubs)
-        if (subs) binSubs.set(clazz, await this.cryptRecordSer(subs.serial()))
+        if (subs) binSubs.set(clazz, await this.cryptRecord(subs.serial()))
       await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
         await this.db.subscriptions.put({ org, bin })
         for(const [clazz, subs] of msubs) {
@@ -232,7 +230,7 @@ export class IDB {
     }
   }
 
-  /* Sur retour de notification d'une souscription, mis à jour de l'état des sousciptions
+  /* Sur retour de notification d'une souscription, mise à jour de l'état des sousciptions
   de la classe.
   - subs: nouvel état des souscriptions de la classe (du fait des versions remontées du serveur).
   subs peut être devenu "inutile" si toutes ses defs ont été supprimées
@@ -241,7 +239,7 @@ export class IDB {
   async updSubs (org: string, clazz: string, subs: Subs) : Promise<void> {
     try {
       if (subs.hasRefs) {
-        const binSubs = await this.cryptRecordSer(subs.serial())
+        const binSubs = await this.cryptRecord(subs.serial())
         await this.db.subs.put({ org, clazz, binSubs })
       } else 
         await this.db.subs.where({ org, clazz }).delete()

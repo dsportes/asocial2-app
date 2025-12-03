@@ -10,7 +10,7 @@
 */
 
 // @ts-ignore
-import { ref } from 'vue';
+import { ref } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore

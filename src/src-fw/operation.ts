@@ -33,8 +33,7 @@ export class Operation {
       const org = args.org
       u = await getUrl(org)
       session.opStart(this)
-      args.APIVERSION = config.K.APIVERSION
-      const body = new Uint8Array(encode(args || {}))
+      if (args) args.APIVERSION = config.K.APIVERSION
       this.controller = new AbortController()
       this.aborted = false
 
@@ -42,30 +41,24 @@ export class Operation {
         method: 'POST',
         headers:{'Content-Type': 'application/octet-stream' },
         signal: this.controller.signal,
-        body
+        body: new Uint8Array(encode(args || {}))
       })
       this.controller = null
+      const buf = await response.bytes()
+      const obj = decode(buf)
       if (response.status === 200) {
-        // @ts-ignore
-        const buf = await response.bytes()
-        const x = decode(buf)
         session.opEnd()
-        const msg = x['notification']
-        if (msg) {
-          console.log('Notification received on operation return')
-          await onmsg(x) // traitement des notifications sur retour d'opération
+        const ntf = obj['notification']
+        if (ntf) {
+          if (config.mondebug) console.log('Notification received on operation return')
+          await onmsg(ntf) // traitement des notifications sur retour d'opération
         }
-        return x
+        return obj
       }
-      const serial = await response.bytes()
-      if (response.status === 400 || response.status === 401) {
-        // 400: AppExc
-        // 401: AppExc inattendue
-        const obj = decode(serial)
+      if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
         throw new AppExc(obj)
-      }
       // autres status: 500...
-      const txt = new TextDecoder().decode(serial)
+      const txt = new TextDecoder().decode(buf)
       throw new AppExc({ code:11001, label: 'Unexpected from server', 
         args:[response.status, (u || '?'), txt]})
     } catch (e) {
