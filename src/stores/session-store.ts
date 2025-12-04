@@ -10,17 +10,6 @@ import { myRegistration } from '../../src-pwa/register-service-worker'
 
 export enum modes { SYNC, INCOGNITO, PLANE }
 
-function b64ToU8 (b64: string) : Uint8Array {
-  if (!b64) return null
-  const diff = b64.length % 4
-  let x = b64
-  if (diff) {
-    const pad = '===='.substring(0, 4 - diff)
-    x = b64 + pad
-  }
-  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
-}
-
 export const useSessionStore = defineStore('session', () => {
 
   // Gestion des opérations ************************************************
@@ -63,9 +52,7 @@ export const useSessionStore = defineStore('session', () => {
   const subJSON = ref('')
   const sessionId = ref('')
 
-  // function saveRegistration (_registration) { registration.value = _registration }
-
-  async function setRegistration (vapidPK: string) {
+  async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
     registration.value = myRegistration
     // @ts-ignore
     const pm = registration.value.pushManager
@@ -79,9 +66,9 @@ export const useSessionStore = defineStore('session', () => {
         subJSON.value = JSON.stringify(sub)
         sessionId.value = Crypt.shaS(sub.endpoint)
       } else {
-        const opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(vapidPK) }
+        const opt = { userVisibleOnly: true, applicationServerKey }
         try {
-          const nsub = pm.subscribe(opt)
+          const nsub = await pm.subscribe(opt)
           subJSON.value = JSON.stringify(nsub)
           sessionId.value = Crypt.shaS(nsub.endpoint)
           console.log('subJSON: ' + subJSON.value.substring(0, 200))
@@ -90,6 +77,7 @@ export const useSessionStore = defineStore('session', () => {
           console.log('subJSON: ' + subJSON.value)
         }
       }
+      registration.value.active.postMessage({ type: 'SETSTATE', location, APPNAME })
     } catch(e) {
       subJSON.value = '??? Souscription non obtenue - ' + e.message
       console.log('subJSON: ' + subJSON.value)

@@ -3,8 +3,9 @@
   <q-header>
     <q-toolbar class="full-width tbp">
       <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
-      <btn-cond label="WP" @ok="startWP" class="q-ml-xs"
-        :color="config.sessionId ? 'green' : 'red'" :disable="!wpStartable"/>
+      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
+        <q-tooltip>{{sessionInfo}}</q-tooltip>
+      </btn-cond>
   
       <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
 
@@ -51,11 +52,11 @@ import stores from './stores/all'
 // import mybeep from './assets/beep.mp3?inline'
 import incognito from './assets/incognito_blanc.svg'
 
-import { set$t, readFile, fileDescr, beep } from './src-fw/util'
+import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
-import { initWP } from './src-fw/wputil'
+// import { initWP } from './src-fw/wputil'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
@@ -77,13 +78,8 @@ const $q = useQuasar()
 set$t($t)
 ui.set$t$q($t, $q)
 
-// session.saveRegistration(myRegistration)
-
-onMounted(async () => {
-  await session.setRegistration(config.K.vapidPublicKey)
-  session.registration.active.postMessage(
-    { type: 'SETSTATE', location: stores.config.location, APPNAME: stores.config.K.APPNAME }
-  )
+onMounted(async () => { // Sur onMounted parce que async
+  await session.setRegistration(b64ToU8(config.K.vapidPublicKey), config.location, config.K.APPNAME)
 })
 
 ui.setScreenWH($q.screen.width, $q.screen.height)
@@ -91,12 +87,10 @@ watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
 
-const wpStartable = computed(() => 
+const wpReady = computed(() => 
   session.permState === 'granted' && session.registration && session.sessionId)
 
-const startWP = async () => {
-  await initWP()
-}
+const sessionInfo = computed(() => session.subJSON.startsWith('???') ? session.subJSON : session.sessionId)
 
 function plus1 () : void {
   dataSt.setCpt(dataSt.cpt + 1)

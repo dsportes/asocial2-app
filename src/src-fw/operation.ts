@@ -4,7 +4,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { AppExc, $t } from './util'
 import { getUrl } from './net'
 import stores from '../stores/all'
-import { onmsg } from './wputil'
+import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 /* Opération générique ******************************************/
 export class Operation {
@@ -51,7 +51,7 @@ export class Operation {
         const ntf = obj['notification']
         if (ntf) {
           if (config.mondebug) console.log('Notification received on operation return')
-          await onmsg(ntf) // traitement des notifications sur retour d'opération
+          await onPushMsg(ntf) // traitement des notifications sur retour d'opération
         }
         return obj
       }

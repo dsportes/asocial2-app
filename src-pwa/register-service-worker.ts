@@ -1,7 +1,6 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
 import { urlFromText, b64ToObj } from '../src/src-fw/util'
-import { onmsg } from '../src/src-fw/wputil'
 import stores from '../src/stores/all'
 
 // import { decode } from '@msgpack/msgpack'
@@ -21,6 +20,36 @@ navigator.permissions.query({ name: 'notifications' })
   console.log('Permissions cannot be asked')
 })
 
+type messageNotif = {
+  org: string // 'demo'
+  title: string // 'myApp - demo', 
+  body: string // 'Chat reçu',
+  url: string // 'http...'
+  defs: string[] // [a/v/c c/d/e ...]
+}
+
+/* Traitement des notifications:
+- sur retour d'opération
+- sur web-push
+*/
+export async function onPushMsg (payload: string) {
+  if (payload) {
+    const messageNotif = b64ToObj(payload)
+    if (messageNotif.defs && messageNotif.defs.length)
+      await stores.data.onNotif(messageNotif.now, messageNotif.org, messageNotif.defs)
+    if (messageNotif.body) {
+      const config = stores.config
+      if (config.mondebug) console.log('Show notif EXPLICITE from app')
+      const options = { body: messageNotif }
+      // @ts-ignore
+      if (messageNotif.url) options.data = { url: payload.data.url || config.location }
+      const t = messageNotif.title || (config.K.APPNAME + ' - ' + messageNotif.org)
+      // @ts-ignore
+      await session.registration.showNotification(t, options)
+    }
+  }
+}
+
 // Traite les messages émis par le SW 
 navigator.serviceWorker.onmessage = async (message) => {
   if (message.data) {
@@ -28,7 +57,7 @@ navigator.serviceWorker.onmessage = async (message) => {
       window.location.href = urlFromText(stores.config.K.byeHtml)
     } else if (message.data.type === 'PUSH') {
       console.log('Notification received by web-push')
-      await onmsg(message.data.payload)
+      await onPushMsg(message.data.payload)
     } else {
       stores.session.onSwMessage(message.data)
     }
