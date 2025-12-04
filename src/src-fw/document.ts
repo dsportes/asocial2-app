@@ -121,7 +121,7 @@ export class Subs {
   }
 
   static deserial (bin: Uint8Array) : Subs {
-    const { vdef0, vdef1, vdef2} = decode(bin)
+    const { vdef0, vdef1, vdef2 } = decode(bin)
     const subs = new Subs()
     if (vdef0) subs.vdef0 = vdef0
     for (const x in vdef1) subs.vdef1.set(x, vdef1[x])

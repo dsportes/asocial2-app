@@ -18,10 +18,9 @@ export const sessionPhase0 = async (
   const config = stores.config
 
   session.setMode(mode)
-  if (session.hasIDB)
-    session.setDbName(dbName)
+  if (session.hasIDB) session.setDbName(dbName)
   
-  if (session.mode === modes.SYNC && dbReset)
+  if (session.mode === modes.SYNC && dbReset) 
     await IDB.delete(session.dbName)
 
   let idb = session.hasIDB ? await IDB.open() : null
