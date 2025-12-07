@@ -5,6 +5,7 @@ export default {
   blabla: 'bla bla', // Test surcharge traductions
   blabla1: 'bla1 bla1', // Test surcharge traductions
 
+  home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
 
   titre: 'Test très simple - compteur: {0}',

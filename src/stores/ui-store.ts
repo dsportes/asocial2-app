@@ -151,13 +151,22 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
+  // Gestion des pages
+  const page = ref('home')
+
+  const setPage = (p: string) => { 
+    page.value = ''
+    setTimeout(() => { page.value = p }, 350)
+  }
+
   return {
     set$t$q, setDark, isDark, $q,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,
     diag, diagResolve, diagDisplay,
-    openHelp, helpstack, fermerHelp, pushhelp, pophelp
+    openHelp, helpstack, fermerHelp, pushhelp, pophelp,
+    page, setPage
   }
 })
 

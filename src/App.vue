@@ -1,12 +1,26 @@
 <template>
 <q-layout view="hHh lpR fFf">
   <q-header>
-    <q-toolbar class="full-width tbp">
+    <q-toolbar v-if="ui.page==='home'" class="full-width tbp">
       <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
       <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{sessionInfo}}</q-tooltip>
       </btn-cond>
   
+      <q-toolbar-title class="titre-md q-mx-md">{{$t('home', [config.K.APPNAME])}}</q-toolbar-title>
+
+      <settings-button class="q-ml-sm"/>
+
+      <help-button class="q-ml-xs" page="DOCpg"/>
+    </q-toolbar>
+    <q-toolbar v-else class="full-width tbp">
+      <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
+      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
+        <q-tooltip>{{sessionInfo}}</q-tooltip>
+      </btn-cond>
+
+      <btn-cond label="Home" class="q-ml-xs" @ok="ui.setPage('home')"/>
+
       <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
 
       <q-toolbar-title class="titre-md q-mx-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
@@ -22,16 +36,29 @@
   </q-header>
   
   <q-page-container class="font-def">
-    <q-page>
-      <div class="font-mono q-pa-sm">{{echo}}</div>
-      <q-file class="full-width q-ma-xs" filled v-model="fileList"
-        :label="$t('pickfile')" max-file-size="50000000" max-file="1">
-        <template v-slot:append>
-          <btn-cond icon="upload" class="q-mr-SM" :disable="fd.size === 0" @ok="uploadFile"/>
-          <btn-cond icon="download" :disable="fd.size === 0" @ok="downloadFile"/>
-        </template>
-      </q-file>
-    </q-page>
+    <transition name="anim1">
+      <q-page v-if="ui.page === 'home'"><home-page/></q-page>
+    </transition>
+    <transition name="anim1">
+      <q-page v-if="ui.page === 'test1'">
+        <div class="font-mono q-pa-sm">{{echo}}</div>
+        <q-file class="full-width q-ma-xs" filled v-model="fileList"
+          :label="$t('pickfile')" max-file-size="50000000" max-file="1">
+          <template v-slot:append>
+            <btn-cond icon="upload" class="q-mr-SM" :disable="fd.size === 0" @ok="uploadFile"/>
+            <btn-cond icon="download" :disable="fd.size === 0" @ok="downloadFile"/>
+          </template>
+        </q-file>
+      </q-page>
+    </transition>
+    <transition name="anim1">
+      <q-page v-if="ui.page === 'test2'">
+        <div class="column full-width">
+          Page test 2
+          <btn-cond label="Go Home" @ok="ui.setPage('home')"/>
+        </div>
+      </q-page>
+    </transition>
   </q-page-container>
 
   <got-it v-if="ui.dModels['0'].diag"/>
@@ -57,6 +84,8 @@ import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
 // import { initWP } from './src-fw/wputil'
+
+import HomePage from './pages/home-page.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
@@ -202,4 +231,10 @@ const t2b = async () => {
 <style lang="scss" scoped>
 @import './css/app.scss';
 .wifi { position: fixed; right: 3px; top: 3px; border-radius: 15px; }
+
+.anim1-enter-active { transition: all 0.3s;}
+.anim1-leave-active { transition: all 0.3s;}
+.anim1-enter-from { opacity:0; transform: translateX(50%);}
+.anim1-leave-to { opacity:0; transform: translateX(-50%);}
+
 </style>

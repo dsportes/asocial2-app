@@ -40,12 +40,12 @@
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
+        <q-item v-if="ui.page !== 'home'" clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('pings')}}</q-item-section>
         </q-item>
 
-        <q-separator />
+        <q-separator v-if="ui.page !== 'home'" />
 
         <q-item clickable dense v-close-popup @click="cfReloadPage">
           <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
