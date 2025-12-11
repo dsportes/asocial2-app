@@ -13,6 +13,8 @@ export class Operation {
   aborted: boolean
   background: boolean
 
+  get isSafeOp () : boolean { return this.opName.startsWith('$')}
+
   constructor (opName: string, background?: boolean) { 
     this.opName = opName
     this.background = background || false
@@ -28,16 +30,14 @@ export class Operation {
   async post (args: any) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    let u = '?'
+    const u = this.isSafeOp ? config.K.DIRECTORY_URL + 'safe/' : await getUrl(args.org) + 'op/'
     try {
-      const org = args.org
-      u = await getUrl(org)
       session.opStart(this)
-      if (args) args.APIVERSION = config.K.APIVERSION
+      args.APIVERSION = config.K.APIVERSION
       this.controller = new AbortController()
       this.aborted = false
 
-      const response = await fetch(u + 'op/' + this.opName, {
+      const response = await fetch(u + this.opName, {
         method: 'POST',
         headers:{'Content-Type': 'application/octet-stream' },
         signal: this.controller.signal,
