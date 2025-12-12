@@ -56,8 +56,8 @@ export type TSession = {
 
 const STORES = {
   header: 'id', // singleton: id = '1'
-  trusting: 'id',
-  tsession: 'id'
+  trustings: 'id',
+  tsessions: 'id'
 }
 
 function EX (e: Error, n: number) { 
@@ -77,7 +77,7 @@ class IDBS {
     IDBS.idbs = this
     const config = stores.config
     this.mondebug = config.mondebug
-    this.keyK = b64ToU8(config['keyK'])
+    this.keyK = b64ToU8(config.K['KEYK'])
     if (!this.keyK)
       throw new AppExc({code: 12003, label: 'IDBS error: keyK not declared' })
     if (this.mondebug) console.log('Open IDBS')
@@ -109,8 +109,8 @@ export const useSafeStore = defineStore('safe', () => {
   const getHeader = async () => {
     try {
       const r = await IDBS.idbs.db.header.get('1')
-      devId.value = r.devId || ''
-      devName.value = r.devName || ''
+      devId.value = r && r.devId ? r.devId : ''
+      devName.value = r && r.devName ? r.devName : ''
     } catch (e) {
       throw EX(e, 2)
     }
@@ -134,6 +134,8 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(r.bin) as Trusting
         trustings.value.set(obj.safeId, obj)
       })
+      trustings.value.set('Bob', {pseudo: 'Bob', safeId: '123'})
+      // trustings.value.set('Alice', {pseudo: 'Alice', safeId: '456'})
     } catch (e) {
       throw EX(e, 2)
     }

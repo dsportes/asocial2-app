@@ -31,6 +31,7 @@ export default {
   replier: 'Replier',
   org: 'Organisation',
   url: 'URL du serveur pour cette organisation: {0}',
+  pressret: '"Entrée" pour valider',
 
   quitConfirm: 'Confirmer ...',
   quitQuit: 'Je confirme quitter l\'application',
@@ -77,6 +78,24 @@ export default {
   PEinfo: 'L\'application ne peut pas fonctionner correctement si les notifications sont bloquées.',
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
+
+  PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
+  PSpseudoh: 'Duke Ellington',
+  PSphrase: 'Ma phrase secrète',
+  PSphraseh: 'les 1 sanglots 2 longs 3 etc',
+  PSminmax: 'De {0} à {1} signes. ',
+  PScourt: 'Texte trop court',
+  PSlong: 'Texte trop long',
+  PSpin: 'Code PIN',
+  PSpinh: 'PIN35-zx',
+
+  HPauth: 'Je m\'authentifie ...',
+  HPseluser: 'OU je clique mon nom dans la liste de ceux ayant accordé leur confiance dans ce terminal ET saisis mon PIN.',
+  HPnotrust: 'Pour information aucun utilisateur n\'a accordé sa confiance à ce terminal.',
+  HPnoreg: 'Je ne suis pas encore enregistré, le faire mainteant.',
+  HPnet: 'J\'ai accès à Internet',
+  HPplane: 'Je suis en mode AVION (pas de réseau)',
+  HPnoplane: 'Aucun utilisateur n\'a accordé sa confiance à ce terminal, aucune session en mode AVION n\'est possible.',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

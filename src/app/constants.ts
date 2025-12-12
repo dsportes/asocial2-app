@@ -1,6 +1,7 @@
 export const K = {
   APPNAME: 'asocial2',
   ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
+  KEYK: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
   DIRECTORY_URL: 'http://localhost:8080/',
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',

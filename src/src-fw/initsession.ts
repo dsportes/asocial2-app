@@ -10,14 +10,13 @@ type age = {
 }
 
 export const sessionPhase0 = async (
-  mode: modes, dbReset: boolean, dbName: string, context: Object ) => {
+  dbReset: boolean, dbName: string, context: Object ) => {
   
   // Acquisition des souscriptions et documents
   const session = stores.session
   const dataSt = stores.data
   const config = stores.config
 
-  session.setMode(mode)
   if (session.hasIDB) session.setDbName(dbName)
   
   if (session.mode === modes.SYNC && dbReset) 

@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
@@ -7,8 +7,6 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { toByteArray } from '../src-fw/base64'
 import { Crypt } from '../src-fw/crypt'
 import { myRegistration } from '../../src-pwa/register-service-worker'
-
-export enum modes { SYNC, INCOGNITO, PLANE }
 
 export const useSessionStore = defineStore('session', () => {
 
@@ -125,14 +123,11 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const dbName = ref()
+  const hasNet = ref(true)
+  const dbName = ref('')
   const setDbName = (name: string) => { dbName.value = name }
-
-  const mode = ref(modes.SYNC)
-  const setMode = (m: modes) => { mode.value = m }
-  const hasIDB = () => mode.value === modes.SYNC || mode.value === modes.INCOGNITO
-  const hasNet = () => mode.value !== modes.PLANE
-
+  const hasIDB = computed(() => dbName.value !== '')
+  
   const phase: Ref<number> = ref(0)
   // 0 : session en phase d'initialisation
   // 1 : session running (initialisée)
@@ -143,7 +138,7 @@ export const useSessionStore = defineStore('session', () => {
     registration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    dbName, setDbName, phase, setPhase, mode, setMode, hasIDB, hasNet
+    dbName, setDbName, phase, setPhase, hasIDB, hasNet
     // focus, getFocus, lostFocus, closingApp
   }
 })
