@@ -1,7 +1,6 @@
 export const K = {
   APPNAME: 'asocial2',
   ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
-  KEYK: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
   DIRECTORY_URL: 'http://localhost:8080/',
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
@@ -60,7 +59,7 @@ export const K = {
 <style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
 </head>
 <body>
-<div>Duplicate application launch in this browser not allowed.</div> 
+<div>Duplicate application launch in this browser not allowed.</div>
 <div>Le lancement de l'application plus d'une fois dans ce browser n'est pas autorisé.</div>
 <a href="https://asocialapps.github.io/frdocs/">Help / Aide</a>
 </body></html>`,
@@ -70,7 +69,7 @@ export const K = {
 <style>div {font-size:18px;margin:12px;font-family:sans-serif;text-align:center;};</style>
 </head>
 <body>
-<div>Goodbye, see you soon !</div> 
+<div>Goodbye, see you soon !</div>
 <div>Au revoir et à bientôt !</div>
 <div><a href="${href}">Back => Application</a></div>
 <div><a href="https://asocialapps.github.io/frdocs/">Help / Aide</a></div>

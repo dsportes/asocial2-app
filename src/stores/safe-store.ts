@@ -19,7 +19,7 @@ import { Crypt } from '../src-fw/crypt'
   - `devId`: un identifiant généré aléatoirement à la création de la base _Safes_ identifiant le _device_.
   - `devName`: le _nom_ du _device_, par exemple `PC d'Alice`, plus parlant que le code technique système pour le propriétaire du _device_ et les quelques personnes pouvant l'utiliser en confiance.
 - `TRUSTING`: chaque row est associé à UN _safe_ ayant déclaré le _device_ de confiance. Il a les colonnes suivantes:
-  - `safeId`: identifiant du _safe_ (clé primaire).
+  - `userId`: identifiant du _safe_ (clé primaire).
   - `pseudo`: par exemple `Bob`.
   - `cx`: un challenge aléatoire.
   - `Ka`: clé K du safe de l'utilisateur cryptée par `SH(p0, p1)` où `p0` et `p1` sont les termes d'authentification du safe de l'utilisateur.
@@ -28,18 +28,18 @@ import { Crypt } from '../src-fw/crypt'
     - `cx cy` sont des _challenges_ générés aléatoirement à ce moment.
 - `TSESSION`: chaque row décrit une _session_ qui a été ouverte _en confiance_ sur ce _device_:
   - `app`: code l'application correspondante.
-  - `safeId`: identifiant du _safe_ de l'utilisateur.
+  - `userId`: identifiant du _safe_ de l'utilisateur.
   - `profId`: id du profil de la session.
   - `profAbout`: texte significatif pour l'utilisateur **crypté par la clé K du _safe_** décrivant le _profil_ de la session (par exemple `Revue des notes d'Alice et Jules`).
   - `prefs`: les préférences d'ouverture de la session (cryptées par la clé K du _safe_).
-  - Il existe une base de données IDB de nom `app.x` (`x = SHA(safeId / profId)`)contenant les documents en cache de cette session.
+  - Il existe une base de données IDB de nom `app.x` (`x = SHA(userId / profId)`)contenant les documents en cache de cette session.
 */
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export type Trusting = {
-  safeId: string
+  userId: string
   pseudo: string
   cx: string
   Ka: Uint8Array
@@ -48,7 +48,7 @@ export type Trusting = {
 
 export type TSession = {
   app: string
-  safeId: string
+  userId: string
   profId: string
   profAbout: string | Uint8Array
   prefs: Object | Uint8Array
@@ -60,7 +60,7 @@ const STORES = {
   tsessions: 'id'
 }
 
-function EX (e: Error, n: number) { 
+function EX (e: Error, n: number) {
   const ex = new AppExc({code: 1200 + n, label: 'IDBS error', args: [e.message] })
   if (e && e.stack) ex.stack = e.stack
   return ex
@@ -77,9 +77,7 @@ class IDBS {
     IDBS.idbs = this
     const config = stores.config
     this.mondebug = config.mondebug
-    this.keyK = b64ToU8(config.K['KEYK'])
-    if (!this.keyK)
-      throw new AppExc({code: 12003, label: 'IDBS error: keyK not declared' })
+    this.keyK = null
     if (this.mondebug) console.log('Open IDBS')
     try {
       this.db = new Dexie('safe', { autoOpen: true })
@@ -106,6 +104,10 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const setK = async (k: string) => {
+    IDBS.idbs.keyK = b64ToU8(k)
+  }
+
   const getHeader = async () => {
     try {
       const r = await IDBS.idbs.db.header.get('1')
@@ -117,10 +119,10 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setHeader = async () => {
-    try {      
-      await IDBS.idbs.db.header.put({ 
-        id: '1', 
-        devId: devId.value || '', 
+    try {
+      await IDBS.idbs.db.header.put({
+        id: '1',
+        devId: devId.value || '',
         devName: devName.value || ''
       })
     } catch (e) {
@@ -132,10 +134,10 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       IDBS.idbs.db.trustings.each(async (r) => {
         const obj = decode(r.bin) as Trusting
-        trustings.value.set(obj.safeId, obj)
+        trustings.value.set(obj.userId, obj)
       })
-      trustings.value.set('Bob', {pseudo: 'Bob', safeId: '123'})
-      // trustings.value.set('Alice', {pseudo: 'Alice', safeId: '456'})
+      trustings.value.set('Bob', {pseudo: 'Bob', userId: '123'})
+      // trustings.value.set('Alice', {pseudo: 'Alice', userId: '456'})
     } catch (e) {
       throw EX(e, 2)
     }
@@ -143,17 +145,17 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setTrusting = async (obj: Trusting) => {
     try {
-      IDBS.idbs.db.trustings.put({ id: obj.safeId, bin: encode(obj)})
-      trustings.value.set(obj.safeId, obj)
+      IDBS.idbs.db.trustings.put({ id: obj.userId, bin: encode(obj)})
+      trustings.value.set(obj.userId, obj)
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  const delTrusting = async (safeId: string) => {
+  const delTrusting = async (userId: string) => {
     try {
-      IDBS.idbs.db.trustings.delete({ id: safeId })
-      trustings.value.delete(safeId)
+      IDBS.idbs.db.trustings.delete({ id: userId })
+      trustings.value.delete(userId)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -163,7 +165,7 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       IDBS.idbs.db.tsessions.each(async (r) => {
         const obj = decode(r.bin) as TSession
-        const x = obj.app + '/' + obj.safeId + '/' + obj.profId
+        const x = obj.app + '/' + obj.userId + '/' + obj.profId
         const obj2 : TSession = { ...obj }
         obj2.profAbout = await Crypt.decrypt(cleK.value, obj.profAbout as Uint8Array)
         obj2.prefs = obj.prefs ? decode(await Crypt.decrypt(cleK.value, obj.prefs as Uint8Array)) : null
@@ -176,7 +178,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setTSession = async (obj: TSession) => {
     try {
-      const x = obj.app + '/' + obj.safeId + '/' + obj.profId
+      const x = obj.app + '/' + obj.userId + '/' + obj.profId
       const id = Crypt.shaS(encoder.encode(x))
       const obj2 : TSession = { ...obj }
       obj2.profAbout = await Crypt.crypt(cleK.value, encoder.encode(obj.profAbout as string))
@@ -188,9 +190,9 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const delTSession = async (app: string, safeId: string, profId: string) => {
+  const delTSession = async (app: string, userId: string, profId: string) => {
     try {
-      const x = app + '/' + safeId + '/' + profId
+      const x = app + '/' + userId + '/' + profId
       const id = Crypt.shaS(encoder.encode(x))
       IDBS.idbs.db.trustings.delete({ id })
       trustings.value.delete(x)
@@ -200,7 +202,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    open, devId, devName, getHeader, setHeader,
+    open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting,
     tsessions, getTSessions, setTSession, delTSession
   }

@@ -64,5 +64,5 @@
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18"
   },
-  "packageManager": "yarn@4.9.2"
+  "packageManager": "yarn@4.12.0"
 }
