@@ -82,3 +82,6 @@
 
 /* surcharges de quasar */
 .q-toolbar { padding: 0 !important; min-height: 0 !important }
+.q-item__section--avatar { min-width: 0 !important; }
+.q-item__section--side { padding-right: 5px !important; }
+.q-item { padding: 2px !important; }

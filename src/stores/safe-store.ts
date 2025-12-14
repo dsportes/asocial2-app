@@ -201,10 +201,15 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const createSafe = async () => {
+    // TODO
+  }
+
   return {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting,
-    tsessions, getTSessions, setTSession, delTSession
+    tsessions, getTSessions, setTSession, delTSession,
+    createSafe
   }
 })
 

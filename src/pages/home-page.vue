@@ -18,7 +18,7 @@
     </div>
     <p0-p1 v-if="session.hasNet || (options.length !== 0 && !session.hasNet)"
       class="wsm" :title="$t('HPauth')" @ok="auth"/>
-    <div v-if="options.length > 0 && session.hasNet" class="wsm column">
+      <div v-if="options.length > 0 && session.hasNet" class="wsm column">
       <div class="tbs q-px-xs titre-md text-italic">{{$t('HPseluser')}}</div>
       <div class="q-mb-sm wsm row justify-between items-center">
         <q-select class="col q-mr-sm" dense filled
@@ -36,26 +36,50 @@
     <q-card :class="sty('md')">
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title>{{$t('HPenreg')}}</q-toolbar-title>
+        <q-toolbar-title class="title-sm">{{$t('HPenreg')}}</q-toolbar-title>
+        <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
+          :disable="diag !== ''" @ok="createSafe"/>
         <help-button page="createSafe"/>
       </q-toolbar>
-      <div class="q-pa-md">
-        <div class="row q-my-sm full-with q-gutter-md items-center">
-          <div class="titre-md">{{$t('cauth')}}</div>
-          <div class="font-mono fs-md tewxt-bold">{{authP0}}</div>
-          <div class="font-mono fs-md tewxt-bold">{{authP1}}</div>
+      <div class="q-pa-sm">
+        <div v-if="diag !== ''" class="diag">{{diag}}</div>
+        <div class="row items-center q-my-sm">
+          <div class="titre-md">{{$t('HPtrig')}}</div>
+          <q-input class="q-ml-sm" v-model="trig" counter dense
+            input-class="font-mono"
+            :label="$t('HPtrig')"
+            :placeholder="$t('HPtrigh')"
+            bottom-slots
+            :error="trerr !== ''"
+            :hint="$t('PSminmax', [minTr, maxTr]) + (!trerr ? $t('pressret') : '')">
+            <template v-slot:append>
+              <q-icon size="sm" name="close" @click="trig = ''" class="cursor-pointer" />
+            </template>
+            <template v-slot:error>{{$t(trerr)}}</template>
+          </q-input>
         </div>
-        <div class="row q-my-sm full-with q-gutter-md items-center">
-          <div class="titre-md">{{$t('crecup')}}</div>
-          <div class="font-mono fs-md tewxt-bold">{{authR0}}</div>
-          <div class="font-mono fs-md tewxt-bold">{{authR1}}</div>
-        </div>
-        <div class="row q-gutter-sm items-center">
-          <div class="tite-md text-italic">{{$t('HPstep')}}</div>
-          <btn-cond v-for="step in [1..4]" size="lg" :label="step"
-            class="font-mono text-bold fs-lg"/>
-        <p0-p1 class="wsm" :title="$t('HPph', [step] + )" @ok="p0p1"/>
-
+        <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
+          class='q-mb-xs'
+          header-class="tbs"
+          switch-toggle-side>
+          <template v-slot:header>
+            <div class="column">
+              <div class="row q-gutter-sm">
+                <q-icon size="md" :name="icons[errors[x - 1]]"/>
+                <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
+              </div>
+              <div v-if="x === 1" class="q-ml-xl">
+                <div class="font-mono fs-md text-bold">{{$t('HPpseudo', [codes[0].p0])}}</div>
+                <div class="font-mono fs-md text-bold">{{$t('HPps', [codes[0].p1])}}</div>
+              </div>
+              <div v-if="x === 3" class="q-ml-xl">
+                <div class="font-mono fs-md text-bold">{{$t('HPpseudo', [codes[2].p0])}}</div>
+                <div class="font-mono fs-md text-bold">{{$t('HPps', [codes[2].p1])}}</div>
+              </div>
+            </div>
+          </template>
+          <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
+        </q-expansion-item>
       </div>
     </q-card>
   </q-dialog>
@@ -63,12 +87,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
+import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
-import { $t, $q, sty, reloadPage, sleep, coolBye } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
+
+const minTr = 3
+const maxTr = 8
+
+const icons = ['check', 'question_mark', 'warning']
 
 const ui = stores.ui
 const sf = stores.safe
@@ -82,6 +112,7 @@ onMounted(async () => {
   await sf.getTrustings()
 })
 
+const p0i = ref('')
 const p0p1 = ref(null)
 const pin = ref(null)
 const selectedSafe = ref(null)
@@ -107,30 +138,53 @@ const regme = () => {
   ui.oD(idc, 'createSafe')
 }
 
-const step = ref(1)
-const authCode = ref(null)
-const recupCode = ref(null)
-const authCodeV = ref(null)
-const recupCodeV = ref(null)
-const diag = ref('')
+const trig = ref('')
+const trerr = computed(() => trig.value.length < minTr ? 'PScourt' : (trig.value.length > maxTr ? 'PSlong' : ''))
+const exp = reactive([true, false, false, false])
+const codes = reactive([
+  { p0: '?', p1: '?' }, { p0: '?', p1: '?' }, { p0: '?', p1: '?' }, { p0: '?', p1: '?' }
+])
+const errors = reactive([0, 0, 0, 0])
 
 const eq = (c1, c2) => c1.p0 === c2.p0 && c1.p1 === c2.p1
 
-const p0p1 = (x) => {
-  if (step.value === 1) {
-    authCode.value = x
-    step.value = 2
-  } else if (step.value === 2) {
-    authCodeV.value = x
+const diag = computed(() => {
+  if (trerr.value) return $t('HPerr_1')
+  if (codes[0].p0 === '?') return $t('HPerr_2')
+  if (!eq(codes[0], codes[1])) return $t('HPerr_3')
+  if (codes[2].p0 === '?') return $t('HPerr_4')
+  if (!eq(codes[2], codes[3])) return $t('HPerr_5')
+  return ''
+})
 
-  }
-  else if (step.value === 3) recupCode.value = x
-  else recupCodeV.value = x
+const setCode = (x) => {
+  codes[x.ctx.s - 1] = x
+  checkCodes()
 }
 
+const checkCodes = () => {
+  let e = false
+  for (let i = 0; i < 4; i++) {
+    exp[i] = false
+    errors[i] = 0
+    if (codes[i].p0 === '?') errors[i] = 1
+    else if ((i === 1 || i === 3) && !eq(codes[i - 1], codes[i])) errors[i] = 2
+    if (errors[i] !== 0 && !e) { exp[i] = true; e = true }
+  }
+}
+
+checkCodes()
+
+const createSafe = async () => {
+  // TODO
+}
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.q-toolbar__title { font-size: medium !important;}
 .bord1 { border: 1px solid $grey-5; border-radius: 7px; width:20rem; }
+.diag { background: yellow; font-weight: bold; color: black; padding: 2px;
+  border: 2px solid $negative; border-radius: 7px; width:100%; }
 </style>
+
