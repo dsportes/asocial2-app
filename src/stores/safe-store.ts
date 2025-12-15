@@ -54,6 +54,21 @@ export type TSession = {
   prefs: Object | Uint8Array
 }
 
+export type Safe = {
+  userId: string // identifiant.
+  pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
+  hp0: string // index unique, `SH(p0)`.
+  hr0: string // index unique, `SH(r0)`.
+  hhp1: Uint8Array // SHA de `SH(p1)`.
+  hhr1: Uint8Array // SHA de `SH(r1)`.
+  hhk: Uint8Array // SHA de `SH(K)`.
+  Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
+  Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
+  devices: Object
+  creds: Object
+  profiles: Object
+}
+
 const STORES = {
   header: 'id', // singleton: id = '1'
   trustings: 'id',
