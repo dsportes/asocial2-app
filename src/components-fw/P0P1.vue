@@ -71,11 +71,20 @@ watch(() => props.p1i, (ap, av) => {
   if (props.p1i !== undefined) p1.value = ap
 })
 
+watch(p1, (v) => {
+  if (v.endsWith('*')) {
+    const x = v.substring(0, v.length - 1)
+    let s = ''
+    while (s.length < 24) s += x
+    p1.value = s
+  }
+})
+
 const validate = async () => {
   if (err.value) return
   // static async strongHash (s1: string, s2: string, sep?: string) : Promise<string> {
-  const p0h = await Crypt.strongHash(p0.value, '', '$&')
-  const p1h = await Crypt.strongHash(p1.value, '', '$&')
+  const p0h = await Crypt.strongHash(p0.value, '', Crypt.defaultSep)
+  const p1h = await Crypt.strongHash(p1.value, '', Crypt.defaultSep)
   emit('ok', { p0: p0.value, p1: p1.value, p0h, p1h, ctx: props.ctx || null })
 }
 

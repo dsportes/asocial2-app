@@ -8,10 +8,11 @@ import stores from '../stores/all'
 import { Help } from '../src-fw/help'
 
 import readme from '../assets/README.md?raw'
-import custom from '../assets/custom.json'
-
+import customR from '../assets/custom.json?raw'
+const custom = JSON.parse(customR)
 // Help
-import plan from '../assets/help/a_plan.json'
+import planR from '../assets/help/a_plan.json?raw'
+const plan = JSON.parse(planR)
 import bientot_fr from '../assets/help/bientot_fr.md?raw'
 import bientot_en from '../assets/help/bientot_en.md?raw'
 import boite_automaj_fr from '../assets/help/boite_automaj_fr.md?raw'

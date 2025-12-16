@@ -11,7 +11,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from '../src-fw/util'
-
+import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
 /*
@@ -55,13 +55,13 @@ export type TSession = {
 }
 
 export type Safe = {
-  userId: string // identifiant.
+  id: string // identifiant.
   pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
   hp0: string // index unique, `SH(p0)`.
   hr0: string // index unique, `SH(r0)`.
-  hhp1: Uint8Array // SHA de `SH(p1)`.
-  hhr1: Uint8Array // SHA de `SH(r1)`.
-  hhk: Uint8Array // SHA de `SH(K)`.
+  hhp1: string // SHA de `SH(p1)`.
+  hhr1: string // SHA de `SH(r1)`.
+  hhk: string // SHA de `SH(K)`.
   Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
   Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
   devices: Object
@@ -151,8 +151,8 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(r.bin) as Trusting
         trustings.value.set(obj.userId, obj)
       })
-      trustings.value.set('Bob', {pseudo: 'Bob', userId: '123'})
-      // trustings.value.set('Alice', {pseudo: 'Alice', userId: '456'})
+      trustings.value.set('Bob', {pseudo: 'Bob', userId: '123', cx: '', Ka: null, Kp: null })
+      // trustings.value.set('Alice', {pseudo: 'Alice', userId: '456', cx: '', Ka: null, Kp: null})
     } catch (e) {
       throw EX(e, 2)
     }
@@ -181,10 +181,10 @@ export const useSafeStore = defineStore('safe', () => {
       IDBS.idbs.db.tsessions.each(async (r) => {
         const obj = decode(r.bin) as TSession
         const x = obj.app + '/' + obj.userId + '/' + obj.profId
-        const obj2 : TSession = { ...obj }
+        const obj2 : TSession = { ...obj } as TSession
         obj2.profAbout = await Crypt.decrypt(cleK.value, obj.profAbout as Uint8Array)
         obj2.prefs = obj.prefs ? decode(await Crypt.decrypt(cleK.value, obj.prefs as Uint8Array)) : null
-        trustings.value.set(x, obj2)
+        tsessions.value.set(x, obj2)
       })
     } catch (e) {
       throw EX(e, 2)
@@ -199,7 +199,7 @@ export const useSafeStore = defineStore('safe', () => {
       obj2.profAbout = await Crypt.crypt(cleK.value, encoder.encode(obj.profAbout as string))
       obj2.prefs = obj.prefs ? await Crypt.crypt(cleK.value, encode(obj.prefs)) : null
       IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
-      trustings.value.set(x, obj)
+      tsessions.value.set(x, obj)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -216,8 +216,30 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const createSafe = async () => {
-    // TODO
+  const createSafe = async (
+    trig: string, p0: string, p1: string, hp0: string, hp1: string, 
+    r0: string, r1: string, hr0: string, hr1: string) => {
+    const K = Crypt.random(32)
+    const hk = await Crypt.strongHash(u8ToB64(K, true), '', '', true) as Uint8Array
+    const ka = await Crypt.strongHash(p0, p1, Crypt.defaultSep, true) as Uint8Array
+    const kr = await Crypt.strongHash(r0, r1, Crypt.defaultSep, true) as Uint8Array
+
+    const safe: Safe = {
+      id: Crypt.rnd(12),
+      pseudo: await Crypt.crypt(K, encoder.encode(trig)),
+      hp0,
+      hr0,
+      hhp1: Crypt.sha32(encoder.encode(hp1)),
+      hhr1: Crypt.sha32(encoder.encode(hr1)),
+      hhk: Crypt.sha32(hk),
+      Ka: await Crypt.crypt(ka, K),
+      Kr: await Crypt.crypt(kr, K),
+      devices: null,
+      creds: null,
+      profiles: null
+    }
+    const ret = await new Operation('$CreateSafe').post({ safe })
+    return ret.status
   }
 
   return {

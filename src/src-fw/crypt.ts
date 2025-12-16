@@ -16,6 +16,7 @@ function u8ToHex (u8) {
 }
 
 export class Crypt {
+  static defaultSep = '$*%@|{}#'
 
   static alg = { name: 'ECDH', namedCurve: 'P-521' }
   static ecdsa = { name: 'ECDSA', namedCurve: 'P-521' }
@@ -86,7 +87,8 @@ export class Crypt {
     return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature as BufferSource, data as BufferSource)
   }
 
-  static async strongHash (s1: string, s2: string, sep?: string) : Promise<string> {
+  static async strongHash (s1: string, s2: string, sep?: string, bin?: boolean) 
+  : Promise<string | Uint8Array> {
     let s = sep || ''
     if (s) {
       s = sep
@@ -106,7 +108,7 @@ export class Crypt {
       ['encrypt', 'decrypt']
     )
     const res = new Uint8Array(await crypto.subtle.exportKey('raw', key))
-    return u8ToB64(res, true)
+    return bin ? res : u8ToB64(res, true)
   }
 
   /*
@@ -117,6 +119,9 @@ export class Crypt {
   }
   */
 
+  /* sha256
+  // arg string : It also supports byte `Array`, `Uint8Array`, `ArrayBuffer` input
+  */
   static sha32 (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
     const s = fromByteArray(u8)
@@ -134,6 +139,17 @@ export class Crypt {
     let r = 0
     for (let i = 3, j = 0; j < 6; i++, j++) r += (p2[j] * u8[i])
     return r
+  }
+
+  static random (nbytes: number) {
+    const u8 = new Uint8Array(nbytes)
+    window.crypto.getRandomValues(u8)
+    return u8
+  }
+
+  static rnd (nbytes: number) {
+    const s = fromByteArray(Crypt.random(nbytes))
+    return s.replace(/=/g, '').replace(/\+/g, '0').replace(/\//g, '1')
   }
 }
 

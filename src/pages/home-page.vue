@@ -176,7 +176,13 @@ const checkCodes = () => {
 checkCodes()
 
 const createSafe = async () => {
-  // TODO
+  const ca = codes[0]
+  const cr = codes[2]
+  const status = await sf.createSafe(
+    trig.value, ca.p0, ca.p1, ca.hp0, ca.hp1,
+    cr.p0, cr.p1, cr.hp0, cr.hp1
+  )
+  console.log(status)
 }
 </script>
 
