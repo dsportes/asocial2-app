@@ -70,6 +70,14 @@ export type Safe = {
   K?: Uint8Array
 }
 
+export type device = {
+  about: string | Uint8Array
+  Va: Uint8Array
+  cy: string
+  sign: Uint8Array
+  nbe: number
+}
+
 const STORES = {
   header: 'id', // singleton: id = '1'
   trustings: 'id',
@@ -216,15 +224,46 @@ export const useSafeStore = defineStore('safe', () => {
       throw EX(e, 2)
     }
   }
+ /* Safe *****************************************************/
+  const userId = ref(null)
+  const keyK = ref(null)
 
-  const cSafe = ref(null)
+  const auth = ref(null)
+
+  /*
+    Chaque _device de confiance_ à une entrée  dans cette section identifiée par `devid` (un identifiant généré aléatoirement):
+  - `about` : code / texte court **crypté par la clé K du _safe_** donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
+  - `{ Va, cy, sign, nbe }` : propriétés permettant de valider que ce _device_ est de confiance (voir plus loin).
+  */
+  const devices = ref(Map<string, device>)
+
+  const compileSafe = async (safe: Safe) => {
+    auth.value = {
+      pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
+      hp0: safe.hp0,
+      hr0: safe.hr0,
+      hhp1: safe.hhp1,
+      hhr1: safe.hhr1,
+      hhk: safe.hhk,
+      Ka: safe.Ka,
+      Kr: safe.Kr,
+    }
+
+    const m = new Map<string, device>()
+    for (const devId in safe.devices) {
+      const d: device = safe.devices[devId]
+      d.about = decoder.decode(await Crypt.decrypt(keyK.value, d.about as Uint8Array))
+      m.set(devId, d)
+    }
+    devices.value = m
+
+  }
 
   const createSafe = async (
     trig: string, 
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
-    cSafe.value = null
     const K = Crypt.random(32)
     const shK = await Crypt.strongHash(K, false, true)
 
@@ -244,20 +283,19 @@ export const useSafeStore = defineStore('safe', () => {
     }
     const ret = await new Operation('$CreateSafe').post({ safe })
     if (ret.status === 0) {
-      safe.K = K
-      cSafe.value = safe
+      userId.value = safe.id
+      keyK.value = K
+      await compileSafe(safe)
     }
     return ret.status
   }
 
-  const openSafe = async (
-    sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
-    cSafe.value = null
+  const openSafe = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
     const ret = await new Operation('$OpenSafeByP0').post({sh0, sh1})
     if (ret.status === 0) {
-      ret.safe.K = await Crypt.decrypt(sh, ret.safe.Ka)
-      ret.safe.pseudo = decoder.decode(await Crypt.decrypt(ret.safe.K, ret.safe.pseudo))
-      cSafe.value = ret.safe
+      userId.value = ret.safe.id
+      keyK.value = await Crypt.decrypt(sh, ret.safe.Ka)
+      await compileSafe(ret.safe)
     }
     return ret.status
   }
@@ -266,7 +304,7 @@ export const useSafeStore = defineStore('safe', () => {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting,
     tsessions, getTSessions, setTSession, delTSession,
-    cSafe, createSafe, openSafe
+    userId, keyK, devices, createSafe, openSafe
   }
 })
 
