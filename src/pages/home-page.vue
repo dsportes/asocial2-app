@@ -68,14 +68,6 @@
                 <q-icon size="md" :name="icons[errors[x - 1]]"/>
                 <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
               </div>
-              <div v-if="x === 1" class="q-ml-xl">
-                <div class="font-mono fs-md text-bold">{{$t('HPpseudo', [codes[0].p0])}}</div>
-                <div class="font-mono fs-md text-bold">{{$t('HPps', [codes[0].p1])}}</div>
-              </div>
-              <div v-if="x === 3" class="q-ml-xl">
-                <div class="font-mono fs-md text-bold">{{$t('HPpseudo', [codes[2].p0])}}</div>
-                <div class="font-mono fs-md text-bold">{{$t('HPps', [codes[2].p1])}}</div>
-              </div>
             </div>
           </template>
           <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
@@ -93,7 +85,7 @@ import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
-import { $t, sty } from '../src-fw/util'
+import { $t, sty, equ8 } from '../src-fw/util'
 
 const minTr = 3
 const maxTr = 8
@@ -112,7 +104,6 @@ onMounted(async () => {
   await sf.getTrustings()
 })
 
-const p0i = ref('')
 const p0p1 = ref(null)
 const pin = ref(null)
 const selectedSafe = ref(null)
@@ -124,9 +115,12 @@ const options = computed(() => {
   return r
 })
 
-const auth = (args) => {
+const auth = async (args) => {
   p0p1.value = args
-  console.log(args.p0, args.p1, args.p0h, args.p1h)
+  const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
+  await ui.diagDisplay($t('HPopsret_' + status))
+  const safe = status === 0 ? sf.cSafe : null
+  console.log(status, safe ? safe.pseudo : '?')
 }
 
 const authPin = (args) => {
@@ -142,18 +136,21 @@ const trig = ref('')
 const trerr = computed(() => trig.value.length < minTr ? 'PScourt' : (trig.value.length > maxTr ? 'PSlong' : ''))
 const exp = reactive([true, false, false, false])
 const codes = reactive([
-  { p0: '?', p1: '?' }, { p0: '?', p1: '?' }, { p0: '?', p1: '?' }, { p0: '?', p1: '?' }
+  { sh0: null, sh1: null, sh: null},
+  { sh0: null, sh1: null, sh: null},
+  { sh0: null, sh1: null, sh: null},
+  { sh0: null, sh1: null, sh: null}
 ])
 const errors = reactive([0, 0, 0, 0])
 
-const eq = (c1, c2) => c1.p0 === c2.p0 && c1.p1 === c2.p1
+const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
 
 const diag = computed(() => {
   if (trerr.value) return $t('HPerr_1')
-  if (codes[0].p0 === '?') return $t('HPerr_2')
-  if (!eq(codes[0], codes[1])) return $t('HPerr_3')
-  if (codes[2].p0 === '?') return $t('HPerr_4')
-  if (!eq(codes[2], codes[3])) return $t('HPerr_5')
+  if (codes[0].sh0 === null) return $t('HPerr_2')
+  if (!eq(0, 1)) return $t('HPerr_3')
+  if (codes[2].sh0 === null) return $t('HPerr_4')
+  if (!eq(2, 3)) return $t('HPerr_5')
   return ''
 })
 
@@ -167,8 +164,8 @@ const checkCodes = () => {
   for (let i = 0; i < 4; i++) {
     exp[i] = false
     errors[i] = 0
-    if (codes[i].p0 === '?') errors[i] = 1
-    else if ((i === 1 || i === 3) && !eq(codes[i - 1], codes[i])) errors[i] = 2
+    if (codes[i].sh0 === null) errors[i] = 1
+    else if ((i === 1 || i === 3) && !eq(i - 1, i)) errors[i] = 2
     if (errors[i] !== 0 && !e) { exp[i] = true; e = true }
   }
 }
@@ -179,10 +176,12 @@ const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
   const status = await sf.createSafe(
-    trig.value, ca.p0, ca.p1, ca.hp0, ca.hp1,
-    cr.p0, cr.p1, cr.hp0, cr.hp1
+    trig.value, 
+    ca.sh0, ca.sh1, ca.sh,
+    cr.sh0, cr.sh1, cr.sh
   )
-  console.log(status)
+  await ui.diagDisplay($t('HPcsret_' + status))
+  if (status === 0) ui.fD()
 }
 </script>
 

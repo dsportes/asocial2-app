@@ -67,6 +67,7 @@ export type Safe = {
   devices: Object
   creds: Object
   profiles: Object
+  K?: Uint8Array
 }
 
 const STORES = {
@@ -216,29 +217,48 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const cSafe = ref(null)
+
   const createSafe = async (
-    trig: string, p0: string, p1: string, hp0: string, hp1: string, 
-    r0: string, r1: string, hr0: string, hr1: string) => {
+    trig: string, 
+    psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
+    rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
+
+    cSafe.value = null
     const K = Crypt.random(32)
-    const hk = await Crypt.strongHash(u8ToB64(K, true), '', '', true) as Uint8Array
-    const ka = await Crypt.strongHash(p0, p1, Crypt.defaultSep, true) as Uint8Array
-    const kr = await Crypt.strongHash(r0, r1, Crypt.defaultSep, true) as Uint8Array
+    const shK = await Crypt.strongHash(K, false, true)
 
     const safe: Safe = {
       id: Crypt.rnd(12),
       pseudo: await Crypt.crypt(K, encoder.encode(trig)),
-      hp0,
-      hr0,
-      hhp1: Crypt.sha32(encoder.encode(hp1)),
-      hhr1: Crypt.sha32(encoder.encode(hr1)),
-      hhk: Crypt.sha32(hk),
-      Ka: await Crypt.crypt(ka, K),
-      Kr: await Crypt.crypt(kr, K),
-      devices: null,
-      creds: null,
-      profiles: null
+      hp0: u8ToB64(psh0, true),
+      hr0: u8ToB64(rsh0, true),
+      hhp1: Crypt.shaS(psh1),
+      hhr1: Crypt.shaS(rsh1),
+      hhk: Crypt.shaS(shK),
+      Ka: await Crypt.crypt(psh, K),
+      Kr: await Crypt.crypt(rsh, K),
+      devices: {},
+      creds: {},
+      profiles: {}
     }
     const ret = await new Operation('$CreateSafe').post({ safe })
+    if (ret.status === 0) {
+      safe.K = K
+      cSafe.value = safe
+    }
+    return ret.status
+  }
+
+  const openSafe = async (
+    sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
+    cSafe.value = null
+    const ret = await new Operation('$OpenSafeByP0').post({sh0, sh1})
+    if (ret.status === 0) {
+      ret.safe.K = await Crypt.decrypt(sh, ret.safe.Ka)
+      ret.safe.pseudo = decoder.decode(await Crypt.decrypt(ret.safe.K, ret.safe.pseudo))
+      cSafe.value = ret.safe
+    }
     return ret.status
   }
 
@@ -246,7 +266,7 @@ export const useSafeStore = defineStore('safe', () => {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting,
     tsessions, getTSessions, setTSession, delTSession,
-    createSafe
+    cSafe, createSafe, openSafe
   }
 })
 

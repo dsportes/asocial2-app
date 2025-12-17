@@ -87,19 +87,21 @@ export class Crypt {
     return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature as BufferSource, data as BufferSource)
   }
 
-  static async strongHash (s1: string, s2: string, sep?: string, bin?: boolean) 
+  static async strongHash (s: string | Uint8Array, pad?: boolean, bin?: boolean) 
   : Promise<string | Uint8Array> {
-    let s = sep || ''
-    if (s) {
-      s = sep
-      const l = (s1 ? s1.length : 0) + (s2 ? s2.length : 0)
-      while (l + s.length < 40) s += sep
+    let x: Uint8Array = typeof s === 'string' ? encoder.encode(s) : s as Uint8Array
+    const l = 32 - x.length
+    let ex: Uint8Array
+    if (!pad || l <= 0) ex = x
+    else {
+      const p = new Uint8Array(l)
+      p.fill(35, 0, l) // 35 : ASCII de #
+      ex = concat([x, p])
     }
-    const x = (s1 || '') + s + (s2 || '')
-    const ex = encoder.encode(x)
-    const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", ex))
+    const h1 = new Uint8Array(sha256.arrayBuffer(ex))
+    // const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", ex as BufferSource))
     const salt = h1.subarray(0, 16)
-    const p = await crypto.subtle.importKey('raw', ex, 'PBKDF2', false, ['deriveKey'])
+    const p = await crypto.subtle.importKey('raw', ex as BufferSource, 'PBKDF2', false, ['deriveKey'])
     const key = await crypto.subtle.deriveKey(
       { name: 'PBKDF2', salt : salt, iterations: 20000, hash: 'SHA-256' },
       p,
@@ -112,7 +114,7 @@ export class Crypt {
   }
 
   /*
-  static async aSha32 (x: any) { // 9 fois plus long que js-sha256
+  static async sha (x: any) { // 9 fois plus long que js-sha256
     const u8 = new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(x)))
     const s = fromByteArray(u8)
     return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
@@ -122,8 +124,9 @@ export class Crypt {
   /* sha256
   // arg string : It also supports byte `Array`, `Uint8Array`, `ArrayBuffer` input
   */
-  static sha32 (x: any) {
+  static sha (x: any, bin? :boolean) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
+    if (bin) return u8
     const s = fromByteArray(u8)
     return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
   }
@@ -155,21 +158,24 @@ export class Crypt {
 
 export async function testSH () {
   const x = 'toto est tres tres beau'
-  console.log(Crypt.sha32(x))
+  console.log(Crypt.sha(x))
   console.log(Crypt.shaS(x))
   console.log(Crypt.shaInt(x))
 
-  console.log(await Crypt.strongHash('pierre', 'legrand', '$/@'))
-  console.log( await Crypt.strongHash('pierre', 'legrand', '$/@'))
-  console.log(Crypt.sha32(x))
+  console.log(await Crypt.strongHash(x))
+  console.log(await Crypt.strongHash(encoder.encode(x)))
+  console.log(await Crypt.strongHash(x, true))
+  console.log(await Crypt.strongHash(encoder.encode(x), true))
+  console.log(Crypt.sha(x))
+  console.log(Crypt.sha(encoder.encode(x)))
   console.log(Crypt.shaS(x))
   console.log(Crypt.shaInt(x))
 
   /*
   const t = Date.now()
-  for (let i= 0; i< 100000; i++) await Crypt.sha32(x)
+  for (let i= 0; i< 100000; i++) await Crypt.sha(x)
   const n = Date.now() - t
-  console.log('sha32 : ', n)
+  console.log('sha : ', n)
   */
 }
 

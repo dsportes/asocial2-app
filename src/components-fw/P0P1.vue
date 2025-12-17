@@ -49,8 +49,6 @@ const maxp1 = 40
 
 const props = defineProps({
   title: String,
-  p0i: String,
-  p1i: String,
   ctx: Object
 })
 
@@ -58,18 +56,11 @@ const emit = defineEmits(['ok'])
 
 const isPwd = ref(false)
 const type = computed(() => isPwd.value ? 'password' : 'text')
-const p0 = ref(props.p0i || '')
-const p1 = ref(props.p1i || '')
+const p0 = ref('')
+const p1 = ref('')
 const p0err = computed(() => p0.value.length < minp0 ? 'PScourt' : (p0.value.length > maxp0 ? 'PSlong' : ''))
 const p1err = computed(() => p1.value.length < minp1 ? 'PScourt' : (p1.value.length > maxp1 ? 'PSlong' : ''))
 const err = computed(() => p0err.value !== '' || p1err.value !== '')
-
-watch(() => props.p0i, (ap, av) => {
-  if (props.p0i !== undefined) p0.value = ap
-})
-watch(() => props.p1i, (ap, av) => {
-  if (props.p1i !== undefined) p1.value = ap
-})
 
 watch(p1, (v) => {
   if (v.endsWith('*')) {
@@ -82,10 +73,12 @@ watch(p1, (v) => {
 
 const validate = async () => {
   if (err.value) return
-  // static async strongHash (s1: string, s2: string, sep?: string) : Promise<string> {
-  const p0h = await Crypt.strongHash(p0.value, '', Crypt.defaultSep)
-  const p1h = await Crypt.strongHash(p1.value, '', Crypt.defaultSep)
-  emit('ok', { p0: p0.value, p1: p1.value, p0h, p1h, ctx: props.ctx || null })
+  emit('ok', { 
+    sh0: await Crypt.strongHash(p0.value, true, true),
+    sh1: await Crypt.strongHash(p1.value, true, true),
+    sh: await Crypt.strongHash(p0.value + p1.value, false, true),
+    ctx: props.ctx || null 
+  })
 }
 
 </script>

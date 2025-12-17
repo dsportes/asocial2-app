@@ -220,3 +220,12 @@ export const isSameSet = (s1, s2) => {
   if (s1.size !== s2.size) return false
   return [...s1].every(i => s2.has(i))
 }
+
+export const equ8 = (a: Uint8Array, b: Uint8Array) : boolean => {
+  if (!a && !b) return true
+  if (!a && b) return false
+  if (a && !b) return false
+  if (a.length !== b.length) return false
+  for(let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}

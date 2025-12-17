@@ -52,6 +52,7 @@ export default {
   op_TestAuth: 'Test d\'authentification',
   op_GetSrvStatus: 'Status du service',
   op_SetSrvStatus: 'Fixe le status du service',
+  op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -113,6 +114,13 @@ export default {
   HPcr: 'Codes de récupération',
   HPtrig: 'Initiales, trigramme ... :',
   HPtrigh: 'Bob',
+  HPcsret_0: 'Enregistrement effectué avec succès.',
+  HPcsret_1: 'Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
+  HPcsret_2: 'Echec de l\'enregistrement: changer de "pseudo d\'authentification".',
+  HPcsret_3: 'Echec de l\'enregistrement: changer de "pseudo de récupération".',
+  HPopsret_0: 'Authentification réussie.',
+  HPopsret_1: 'Authentification en échec: codes d\'accès invalides (0)',
+  HPopsret_2: 'Authentification en échec: codes d\'accès invalides (1)',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

@@ -108,6 +108,8 @@ set$t($t)
 ui.set$t$q($t, $q)
 
 onMounted(async () => { // Sur onMounted parce que async
+  // await testECDH()
+  // await testSH()
   await session.setRegistration(b64ToU8(config.K.vapidPublicKey), config.location, config.K.APPNAME)
 })
 
@@ -175,7 +177,7 @@ const t3 = async () => {
   // await testECDH()
   const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
   console.log(ps)
-  console.log(Crypt.sha32(ps))
+  console.log(Crypt.sha(ps))
   // await testSH()
 }
 
