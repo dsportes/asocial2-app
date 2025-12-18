@@ -287,6 +287,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
     const ret = await new Operation(createMode ? '$CreateSafe' : '$UpdCodesSafe').post({ safe })
     if (ret.status === 0) {
+      openMode.value = 1
       userId.value = id
       keyK.value = K
       await compileSafe(createMode ? safe : ret.safe)
@@ -309,7 +310,8 @@ export const useSafeStore = defineStore('safe', () => {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting,
     tsessions, getTSessions, setTSession, delTSession,
-    userId, keyK, devices, createSafe, openSafe
+    userId, keyK, openMode, auth, devices, 
+    createSafe, openSafe
   }
 })
 

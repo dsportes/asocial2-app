@@ -11,12 +11,9 @@
     <div v-if="options.length === 0 && !session.hasNet"
       class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnoplane')}}</div>
 
-    <div v-if="session.hasNet"
-      class="q-mb-md wsm row items-start">
-      <div class="col titre-sm text-italic text-center">{{$t('HPnoreg')}}</div>
-      <btn-cond class="col-auto q-ml-sm" size="sm" icon="send" @ok="regme"/>
-      <div class="col titre-sm text-italic text-center">{{$t('HPrecup')}}</div>
-      <btn-cond class="col-auto q-ml-sm" size="sm" icon="send" @ok="recup"/>
+    <div v-if="session.hasNet" class="q-mb-md wsm row justify-center items-start">
+      <div class="col titre-sm text-italic text-right">{{$t('HPnoreg')}}</div>
+      <btn-cond class="q-ml-sm" size="sm" icon="send" @ok="regme"/>
     </div>
     <p0-p1 v-if="session.hasNet || (options.length !== 0 && !session.hasNet)"
       class="wsm" :title="$t('HPauth')" @ok="auth"/>
@@ -41,7 +38,7 @@
         <q-toolbar-title class="title-sm">{{$t('HPenreg_' + (createMode ? '2' : '1'))}}</q-toolbar-title>
         <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
           :disable="diag !== ''" @ok="createSafe"/>
-        <help-button :page="createMode ? 'createSafe' : 'updSafeCodes"/>
+        <help-button :page="sf.createMode ? 'createSafe' : 'updSafeCodes'"/>
       </q-toolbar>
       <div class="q-pa-sm">
         <div v-if="diag !== ''" class="diag">{{diag}}</div>  
@@ -74,6 +71,33 @@
           </template>
           <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
         </q-expansion-item>
+      </div>
+    </q-card>
+  </q-dialog>
+
+  <!-- Ouverture de session -->
+  <q-dialog v-model="ui.dModels[idc].openSession" persistent>
+    <q-card :class="sty('md')">
+      <q-toolbar class="tbp">
+        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
+        <q-toolbar-title class="titre-sm">{{$t('HPopens_1')}}</q-toolbar-title>
+        <btn-cond class="q-mr-xs" icon="check" :label="$t('HPopens_2')"
+          :disable="diag2 !== ''" @ok="openS"/>
+        <help-button page="openSession"/>
+      </q-toolbar>
+      <q-toolbar inset class="tbp">
+        <div class="full-width titre-sm text-italic text-center">
+          {{$t('HPauthby_' + sf.openMode)}}</div>
+      </q-toolbar>
+
+      <div class="q-pa-sm">
+        <div v-if="sf.openMode !== 3" class="q-my-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPupdcodes')}}</div>
+          <btn-cond class="q-ml-sm" size="sm" icon="send" @ok="updCodes"/>
+        </div>
+
+        <div v-if="diag2 !== ''" class="diag">{{diag2}}</div> 
+        
       </div>
     </q-card>
   </q-dialog>
@@ -120,9 +144,8 @@ const options = computed(() => {
 const auth = async (args) => {
   p0p1.value = args
   const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
-  await ui.diagDisplay($t('HPopsret_' + status))
-  const safe = status === 0 ? sf.cSafe : null
-  console.log(status, safe ? safe.pseudo : '?')
+  if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
+  else ui.oD(idc, 'openSession')
 }
 
 const authPin = (args) => {
@@ -131,22 +154,34 @@ const authPin = (args) => {
 }
 
 const createMode = ref()
+const trig = ref('')
+const trerr = computed(() => trig.value.length < minTr ? 'PScourt' : (trig.value.length > maxTr ? 'PSlong' : ''))
+const exp = reactive([false, false, false, false])
+const codes = reactive([null, null, null, null])
+const errors = reactive([0, 0, 0, 0])
+
+const initCodes = () => {
+  for(let i = 0; i < 4, i++) {
+    codes[i] = { sh0: null, sh1: null, sh: null}
+    errors[i] = 0
+    exp[i] = false
+  }
+  exp[0] = true
+}
 
 const regme = () => {
   createMode.value = true
+  initCodes()
+  checkCodes()
   ui.oD(idc, 'createSafe')
 }
 
-const trig = ref('')
-const trerr = computed(() => trig.value.length < minTr ? 'PScourt' : (trig.value.length > maxTr ? 'PSlong' : ''))
-const exp = reactive([true, false, false, false])
-const codes = reactive([
-  { sh0: null, sh1: null, sh: null},
-  { sh0: null, sh1: null, sh: null},
-  { sh0: null, sh1: null, sh: null},
-  { sh0: null, sh1: null, sh: null}
-])
-const errors = reactive([0, 0, 0, 0])
+const updCodes = () => {
+  createMode.value = false
+  initCodes()
+  checkCodes()
+  ui.oD(idc, 'createSafe')
+}
 
 const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
 
@@ -175,19 +210,26 @@ const checkCodes = () => {
   }
 }
 
-checkCodes()
-
 const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
   const status = await sf.createSafe(
-    createMode,
+    createMode.value,
     trig.value, 
     ca.sh0, ca.sh1, ca.sh,
     cr.sh0, cr.sh1, cr.sh
   )
-  await ui.diagDisplay($t('HPcsret_' + status))
-  if (status === 0) ui.fD()
+  await ui.diagDisplay($t('HPcsret_' + (createMode.value ? '0' : '1') + status))
+  if (status === 0) {
+    ui.fD()
+    ui.oD(idc, 'openSession')
+  }
+}
+
+const diag2 = ref('')
+
+const openS = async () => {
+  // TODO
 }
 </script>
 

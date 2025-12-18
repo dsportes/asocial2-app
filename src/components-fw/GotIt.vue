@@ -1,7 +1,7 @@
 <template>
 <!-- Affiche d'un message demandant confirmation 'j'ai lu' -->
   <q-dialog v-model="ui.dModels['0'].diag" persistent>
-    <q-card :class="sty(sm)">
+    <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('important')}}</q-toolbar-title>
       </q-toolbar>

@@ -63,7 +63,7 @@ const p1err = computed(() => p1.value.length < minp1 ? 'PScourt' : (p1.value.len
 const err = computed(() => p0err.value !== '' || p1err.value !== '')
 
 watch(p1, (v) => {
-  if (v.endsWith('*')) {
+  if (v.length > 2 && v.endsWith('*')) {
     const x = v.substring(0, v.length - 1)
     let s = ''
     while (s.length < 24) s += x
