@@ -227,13 +227,15 @@ export const useSafeStore = defineStore('safe', () => {
  /* Safe *****************************************************/
   const userId = ref(null)
   const keyK = ref(null)
+  // 1: par P0, 2: par R0, 3: par PIN
+  const openMode : Ref<number> = ref(0) 
 
+  /* Section auth du safe */
   const auth = ref(null)
 
-  /*
-    Chaque _device de confiance_ à une entrée  dans cette section identifiée par `devid` (un identifiant généré aléatoirement):
-  - `about` : code / texte court **crypté par la clé K du _safe_** donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
-  - `{ Va, cy, sign, nbe }` : propriétés permettant de valider que ce _device_ est de confiance (voir plus loin).
+  /* Chaque _device de confiance_ à une entrée  dans cette section identifiée par `devid` (un identifiant généré aléatoirement):
+    - `about` : code / texte court **crypté par la clé K du _safe_** donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
+    - `{ Va, cy, sign, nbe }` : propriétés permettant de valider que ce _device_ est de confiance (voir plus loin).
   */
   const devices = ref(Map<string, device>)
 
@@ -260,15 +262,17 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const createSafe = async (
+    createMode: boolean,
     trig: string, 
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
-    const K = Crypt.random(32)
+    const K = createMode ? Crypt.random(32) : keyK.value
+    const id = createMode ? Crypt.rnd(12) : userId.value
     const shK = await Crypt.strongHash(K, false, true)
 
     const safe: Safe = {
-      id: Crypt.rnd(12),
+      id,
       pseudo: await Crypt.crypt(K, encoder.encode(trig)),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
@@ -281,20 +285,21 @@ export const useSafeStore = defineStore('safe', () => {
       creds: {},
       profiles: {}
     }
-    const ret = await new Operation('$CreateSafe').post({ safe })
+    const ret = await new Operation(createMode ? '$CreateSafe' : '$UpdCodesSafe').post({ safe })
     if (ret.status === 0) {
-      userId.value = safe.id
+      userId.value = id
       keyK.value = K
-      await compileSafe(safe)
+      await compileSafe(createMode ? safe : ret.safe)
     }
     return ret.status
   }
 
   const openSafe = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
-    const ret = await new Operation('$OpenSafeByP0').post({sh0, sh1})
+    const ret = await new Operation('$OpenSafeByPR').post({sh0, sh1})
     if (ret.status === 0) {
+      openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
-      keyK.value = await Crypt.decrypt(sh, ret.safe.Ka)
+      keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
       await compileSafe(ret.safe)
     }
     return ret.status

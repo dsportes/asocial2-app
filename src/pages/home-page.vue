@@ -15,6 +15,8 @@
       class="q-mb-md wsm row items-start">
       <div class="col titre-sm text-italic text-center">{{$t('HPnoreg')}}</div>
       <btn-cond class="col-auto q-ml-sm" size="sm" icon="send" @ok="regme"/>
+      <div class="col titre-sm text-italic text-center">{{$t('HPrecup')}}</div>
+      <btn-cond class="col-auto q-ml-sm" size="sm" icon="send" @ok="recup"/>
     </div>
     <p0-p1 v-if="session.hasNet || (options.length !== 0 && !session.hasNet)"
       class="wsm" :title="$t('HPauth')" @ok="auth"/>
@@ -31,18 +33,18 @@
       class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
   </div>
 
-  <!-- Création d'un safe-->
+  <!-- Création d'un safe / Changement des codes -->
   <q-dialog v-model="ui.dModels[idc].createSafe" persistent>
     <q-card :class="sty('md')">
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title class="title-sm">{{$t('HPenreg')}}</q-toolbar-title>
+        <q-toolbar-title class="title-sm">{{$t('HPenreg_' + (createMode ? '2' : '1'))}}</q-toolbar-title>
         <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
           :disable="diag !== ''" @ok="createSafe"/>
-        <help-button page="createSafe"/>
+        <help-button :page="createMode ? 'createSafe' : 'updSafeCodes"/>
       </q-toolbar>
       <div class="q-pa-sm">
-        <div v-if="diag !== ''" class="diag">{{diag}}</div>
+        <div v-if="diag !== ''" class="diag">{{diag}}</div>  
         <div class="row items-center q-my-sm">
           <div class="titre-md">{{$t('HPtrig')}}</div>
           <q-input class="q-ml-sm" v-model="trig" counter dense
@@ -128,7 +130,10 @@ const authPin = (args) => {
   console.log(args.pin, selectedSafe.value['value']['userId'])
 }
 
+const createMode = ref()
+
 const regme = () => {
+  createMode.value = true
   ui.oD(idc, 'createSafe')
 }
 
@@ -176,6 +181,7 @@ const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
   const status = await sf.createSafe(
+    createMode,
     trig.value, 
     ca.sh0, ca.sh1, ca.sh,
     cr.sh0, cr.sh1, cr.sh
