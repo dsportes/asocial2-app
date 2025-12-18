@@ -2,19 +2,15 @@
 // so you can safely delete all default props below
 
 export default {
-  blabla: 'bla bla', // Test surcharge traductions
-  blabla1: 'bla1 bla1', // Test surcharge traductions
-
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
-
-  titre: 'Test très simple - compteur: {0}',
   toecho: 'Texte à recevoir en écho',
   echo: 'Texte reçu en écho : {0}',
   ping: 'PING base de données',
   later: 'Plus tard',
   important: 'Information importante',
   gotit: 'J\'ai lu',
+  giveup: 'Je renonce',
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
   theme: 'Théme graphique',
@@ -133,10 +129,13 @@ export default {
   HPauthby_1: 'Authentification par le code principal.',
   HPauthby_2: 'Authentification par le code secondaire.',
   HPauthby_3: 'Authentification par code PIN.',
-
-  moins1: 'Moins 1',
-  plus1: 'Plus 1',
-  pickfile: 'Choisir un fichier local',
+  HPtrust: 'Ce terminal N\'A PAS ma confiance. Je veux lui accorder.',
+  HPuntrust: 'Ce terminal A ma confiance. Je veux lui retirer.',
+  HPtrust_1: 'Accorder ma confiance à ce terminal',
+  HPuntrust_1: 'Retirer ma confiance à ce terminal',
+  HPsetdev: 'Donner un nom court à ce terminal',
+  HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',
+  HPsetPIN: 'Saisir un code PIN d\'accès',
 
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
@@ -196,4 +195,10 @@ export default {
   SHpe: 'Plein écran',
   SHre: 'Réduire',
 
+  moins1: 'Moins 1',
+  plus1: 'Plus 1',
+  pickfile: 'Choisir un fichier local',
+  blabla: 'bla bla', // Test surcharge traductions
+  blabla1: 'bla1 bla1', // Test surcharge traductions
+  titre: 'Test très simple - compteur: {0}'
 }

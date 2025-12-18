@@ -82,7 +82,7 @@
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
         <q-toolbar-title class="titre-sm">{{$t('HPopens_1')}}</q-toolbar-title>
         <btn-cond class="q-mr-xs" icon="check" :label="$t('HPopens_2')"
-          :disable="diag2 !== ''" @ok="openS"/>
+          :disable="diag2 !== ''" @ok="openSession"/>
         <help-button page="openSession"/>
       </q-toolbar>
       <q-toolbar inset class="tbp">
@@ -93,12 +93,65 @@
       <div class="q-pa-sm">
         <div v-if="sf.openMode !== 3" class="q-my-sm row justify-center items-start">
           <div class="col titre-sm text-italic text-right">{{$t('HPupdcodes')}}</div>
-          <btn-cond class="q-ml-sm" size="sm" icon="send" @ok="updCodes"/>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
         </div>
-
-        <div v-if="diag2 !== ''" class="diag">{{diag2}}</div> 
+        <div v-if="sf.openMode !== 3 && myTrusting === null" class="q-my-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPtrust')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
+        </div>
+        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="q-my-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPuntrust')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
+        </div>
+        <div v-if="diag2 !== ''" class="diag">{{diag2}}</div>
+        <!-- TODO -->
         
       </div>
+    </q-card>
+  </q-dialog>
+
+  <!-- Accorder ma confiance à ce terminal -->
+  <q-dialog v-model="ui.dModels[idc].trustit" persistent>
+    <q-card :class="sty('md')">
+      <div class="q-mt-lg row items-start">
+        <div class="col-6 q-pr-sm text-right text-italic">
+          {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
+        </div>
+        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
+          v-model="devName"
+          input-class="font-mono"
+          bottom-slots
+          :error="deverr !== ''"
+          :hint="$t('PSminmax', [minDev, maxDev])">
+          <template v-slot:append>
+            <q-icon size="sm" name="close" @click="devName = ''" class="cursor-pointer" />
+          </template>
+          <template v-slot:error>{{$t(deverr)}}</template>
+        </q-input>
+      </div>
+
+      <div class="q-mb-lg q-mt-md row items-start">
+        <div class="col-6 q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
+        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
+          v-model="newPIN"
+          input-class="font-mono"
+          :type="pinPwd ? 'password' : 'text'"
+          bottom-slots
+          :error="pinerr !== ''"
+          :hint="$t('PSminmax', [minpin, maxpin])">
+          <template v-slot:append>
+            <btn-cond size="sm" class="q-mx-xs" :icon="pinPwd ? 'visibility_off' : 'visibility'" round 
+              color="none" @ok="pinPwd = !pinPwd"/>
+          </template>
+          <template v-slot:error>{{$t(pinerr)}}</template>
+        </q-input>
+      </div>
+
+      <q-card-actions vertical align="right">
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('HPtrust_1')" color="warning" 
+        :disable="trusterr" @ok="setTrust"/>
+      </q-card-actions>
     </q-card>
   </q-dialog>
 </div>
@@ -115,6 +168,10 @@ import { $t, sty, equ8 } from '../src-fw/util'
 
 const minTr = 3
 const maxTr = 8
+const minDev = 8
+const maxDev = 16
+const minpin = 8
+const maxpin = 16
 
 const icons = ['check', 'question_mark', 'warning']
 
@@ -161,7 +218,7 @@ const codes = reactive([null, null, null, null])
 const errors = reactive([0, 0, 0, 0])
 
 const initCodes = () => {
-  for(let i = 0; i < 4, i++) {
+  for(let i = 0; i < 4; i++) {
     codes[i] = { sh0: null, sh1: null, sh: null}
     errors[i] = 0
     exp[i] = false
@@ -227,9 +284,44 @@ const createSafe = async () => {
 }
 
 const diag2 = ref('')
+const myTrusting = ref(null)
+const newDev = ref(false)
+const devName = ref('')
+const newPIN = ref('')
+const pinPwd = ref(false)
 
-const openS = async () => {
+const deverr = computed(() => devName.value.length < minDev ? 'PScourt' : (devName.value.length > maxDev ? 'PSlong' : ''))
+const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN.value.length > maxpin ? 'PSlong' : ''))
+const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '')
+
+const openSession = async () => {
   // TODO
+}
+
+const openTrust = async () => {
+  myTrusting.value = sf.getMyTrusting()
+  newDev.value = sf.devId === ''
+  newPIN.value = ''
+  devName.value = newDev.value ? '' : sf.devName
+  ui.oD(idc, 'trustit')
+}
+
+const openUntrust = async () => {
+  // TODO
+  myTrusting.value = sf.getMyTrusting()
+  newDev.value = sf.devId === ''
+  newPIN.value = ''
+  devName.value = newDev.value ? '' : sf.devName
+  ui.oD(idc, 'untrustit')
+}
+
+const setTrust = () => {
+  console.log(newDev.value, devName.value, newPIN.value)
+  ui.fD()
+}
+
+const unsetTrust = () => {
+  
 }
 </script>
 

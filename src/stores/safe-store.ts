@@ -167,6 +167,13 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const getMyTrusting = () : Trusting => {
+    if (trustings.value.size === 0) return null
+    for(const [,item] of trustings.value) 
+      if (item.userId === userId.value) return item
+    return null
+  }
+
   const setTrusting = async (obj: Trusting) => {
     try {
       IDBS.idbs.db.trustings.put({ id: obj.userId, bin: encode(obj)})
@@ -308,7 +315,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   return {
     open, setK, devId, devName, getHeader, setHeader,
-    trustings, getTrustings, setTrusting, delTrusting,
+    trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, getTSessions, setTSession, delTSession,
     userId, keyK, openMode, auth, devices, 
     createSafe, openSafe

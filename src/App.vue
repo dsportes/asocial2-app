@@ -2,7 +2,8 @@
 <q-layout view="hHh lpR fFf">
   <q-header>
     <q-toolbar v-if="ui.page==='home'" class="full-width tbp">
-      <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
+      <q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
+        style="height: 30px; max-width: 30px;"/>
       <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{sessionInfo}}</q-tooltip>
       </btn-cond>
@@ -76,14 +77,12 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
-// import mybeep from './assets/beep.mp3?inline'
 import incognito from './assets/incognito_blanc.svg'
 
 import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
-// import { initWP } from './src-fw/wputil'
 
 import HomePage from './pages/home-page.vue'
 
@@ -95,7 +94,9 @@ import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
-// import { myRegistration } from '../src-pwa/register-service-worker'
+import mybeep from './assets/beep.mp3?inline'
+
+// import { initWP } from './src-fw/wputil'
 
 const config = stores.config
 const session = stores.session
@@ -123,13 +124,10 @@ const wpReady = computed(() =>
 
 const sessionInfo = computed(() => session.subJSON.startsWith('???') ? session.subJSON : session.sessionId)
 
-function plus1 () : void {
-  dataSt.setCpt(dataSt.cpt + 1)
-}
+/* scripts de test *************************************************/
 
-function moins1 () : void {
-  dataSt.setCpt(dataSt.cpt - 1)
-}
+function plus1 () : void { dataSt.setCpt(dataSt.cpt + 1)}
+function moins1 () : void { dataSt.setCpt(dataSt.cpt - 1)}
 
 const echo = ref('')
 
@@ -173,61 +171,11 @@ async function uploadFile () : Promise<void> {
   }
 }
 
-const t3 = async () => {
-  // await testECDH()
-  const ps = await Crypt.strongHash('ma belle phrase', '', '$/@')
-  console.log(ps)
-  console.log(Crypt.sha(ps))
-  // await testSH()
-}
-
-const t1b = () => {
-  session.setAppUpdated()
-  // reloadPage()
-  // session.callSW({ type: 'FROM_APP', arg: 'coucou'})
-}
-
 const t4 = async () => {
   const res = await new TestAuth().run('demo')
   console.log('TestAuth:' + res)
 }
 
-/*
-const t1 = async () => {
-  const appurl = window.location.origin + window.location.pathname
-  const res = await postOp('TestMessage', { hashSub: config.hashSub, appurl})
-  console.log('Demande notif:' + JSON.stringify(res.message))
-}
-
-const t2 = async () => {
-  const appurl = window.location.origin + window.location.pathname
-  const res = await postOp('TestMessage', { hashSub: config.hashSub, notifme: true, appurl })
-  console.log('Demande notif:' + JSON.stringify(res.message))
-}
-
-const t3a = async () => {
-  const res = await postOp('TestMessage', { hashSub: config.hashSub })
-  console.log('Demande notif:' + JSON.stringify(res.message))
-}
-
-const t2b = async () => {
-  const args = {
-    token: config.token,
-    title: 'Hello world',
-    body: 'coucou'
-  }
-  const response = await fetch(config.K.urlsrv + 'send-notification', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(args)
-  })
-  const content = await response.json()
-  console.log(content)
-}
-*/
 </script>
 
 <style lang="scss" scoped>
@@ -238,5 +186,4 @@ const t2b = async () => {
 .anim1-leave-active { transition: all 0.3s;}
 .anim1-enter-from { opacity:0; transform: translateX(50%);}
 .anim1-leave-to { opacity:0; transform: translateX(-50%);}
-
 </style>
