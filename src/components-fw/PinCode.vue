@@ -2,15 +2,15 @@
   <q-input style="min-width:11rem" v-model="pin" counter dense
     input-class="font-mono"
     :disable="disable"
-    :type="type" 
-    :label="$t('PSpin')" 
+    :type="type"
+    :label="$t('PSpin')"
     :placeholder="$t('PSpinh')"
     bottom-slots
     :error="pinerr !== ''"
     :hint="$t('PSminmax', [minpin, maxpin]) + (!err ? $t('pressret') : '')"
     @keydown.enter.prevent="validate">
     <template v-slot:append>
-      <btn-cond size="sm" class="q-mx-xs" :icon="isPwd ? 'visibility_off' : 'visibility'" round 
+      <btn-cond size="sm" class="q-mx-xs" :icon="isPwd ? 'visibility_off' : 'visibility'" round
         color="none" @ok="isPwd = !isPwd"/>
       <btn-cond size="sm" icon="check" :disable="pinerr !== ''"
         @click="validate" class="cursor-pointer" />
@@ -40,7 +40,7 @@ const err = computed(() => pinerr.value !== '')
 
 const validate = async () => {
   if (err.value) return
-  emit('ok', { pin: pin.value })
+  emit('ok', pin.value)
 }
 
 </script>

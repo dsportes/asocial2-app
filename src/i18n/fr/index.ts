@@ -30,6 +30,8 @@ export default {
   pressret: '"Entrée" pour valider',
   validate: 'Valider',
 
+  exui: 'Erreur inattendue : {0} \r détail: {1}',
+
   quitConfirm: 'Confirmer ...',
   quitQuit: 'Je confirme quitter l\'application',
   quitReload: 'Je confirme relancer l\'application',
@@ -50,6 +52,8 @@ export default {
   op_SetSrvStatus: 'Fixe le status du service',
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
+  op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
+  op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -136,6 +140,14 @@ export default {
   HPsetdev: 'Donner un nom court à ce terminal',
   HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',
   HPsetPIN: 'Saisir un code PIN d\'accès',
+  HPsttrust_0: 'Terminal {0} déclaré de confiance.',
+  HPsttrust_1: 'Echec de la déclaration de confiance: utilisateur non enregistré.',
+  HPsttrust_2: 'Echec de la déclaration de confiance: codes de l\'utilisateur incorrects.',
+  HPbypin_1: 'Ouverture par code PIN en échec: le terminal n\'est pas déclaré "de confiance".',
+  HPbypin_2: 'Ouverture par code PIN en échec: utilisateur non enregistré.',
+  HPbypin_3: 'Ouverture par code PIN en échec: le terminal n\'est pas enregistré "de confiance".',
+  HPbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
+  HPbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, désormais le TERMINAL N\'EST PLUS RECONNU "DE CONFIANCE".',
 
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',

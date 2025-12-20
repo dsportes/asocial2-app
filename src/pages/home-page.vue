@@ -41,7 +41,7 @@
         <help-button :page="sf.createMode ? 'createSafe' : 'updSafeCodes'"/>
       </q-toolbar>
       <div class="q-pa-sm">
-        <div v-if="diag !== ''" class="diag">{{diag}}</div>  
+        <div v-if="diag !== ''" class="diag">{{diag}}</div>
         <div class="row items-center q-my-sm">
           <div class="titre-md">{{$t('HPtrig')}}</div>
           <q-input class="q-ml-sm" v-model="trig" counter dense
@@ -104,8 +104,9 @@
           <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
         </div>
         <div v-if="diag2 !== ''" class="diag">{{diag2}}</div>
-        <!-- TODO -->
-        
+
+        <div class="title-lg text-italic q-ma-lg">TODO !</div>
+
       </div>
     </q-card>
   </q-dialog>
@@ -140,7 +141,7 @@
           :error="pinerr !== ''"
           :hint="$t('PSminmax', [minpin, maxpin])">
           <template v-slot:append>
-            <btn-cond size="sm" class="q-mx-xs" :icon="pinPwd ? 'visibility_off' : 'visibility'" round 
+            <btn-cond size="sm" class="q-mx-xs" :icon="pinPwd ? 'visibility_off' : 'visibility'" round
               color="none" @ok="pinPwd = !pinPwd"/>
           </template>
           <template v-slot:error>{{$t(pinerr)}}</template>
@@ -149,7 +150,7 @@
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrust_1')" color="warning" 
+        <btn-cond flat :label="$t('HPtrust_1')" color="warning"
         :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
     </q-card>
@@ -202,12 +203,15 @@ const auth = async (args) => {
   p0p1.value = args
   const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
   if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
-  else ui.oD(idc, 'openSession')
+  else openSession()
 }
 
-const authPin = (args) => {
-  pin.value = args
-  console.log(args.pin, selectedSafe.value['value']['userId'])
+const authPin = async (p) => {
+  pin.value = p
+  const userId = selectedSafe.value['value']['userId']
+  const status = await sf.openSafeByPin(pin.value, userId)
+  if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
+  else ui.oD(idc, 'openSession')
 }
 
 const createMode = ref()
@@ -272,7 +276,7 @@ const createSafe = async () => {
   const cr = codes[2]
   const status = await sf.createSafe(
     createMode.value,
-    trig.value, 
+    trig.value,
     ca.sh0, ca.sh1, ca.sh,
     cr.sh0, cr.sh1, cr.sh
   )
@@ -295,7 +299,8 @@ const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN
 const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '')
 
 const openSession = async () => {
-  // TODO
+  myTrusting.value = sf.getMyTrusting()
+  ui.oD(idc, 'openSession')
 }
 
 const openTrust = async () => {
@@ -315,13 +320,18 @@ const openUntrust = async () => {
   ui.oD(idc, 'untrustit')
 }
 
-const setTrust = () => {
-  console.log(newDev.value, devName.value, newPIN.value)
-  ui.fD()
+const setTrust = async () => {
+  try {
+    const status = await sf.setTrust(devName.value, newPIN.value)
+    await ui.diagDisplay($t('HPsttrust_' + status))
+    if (status === 0) ui.fD()
+  } catch (e) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  }
 }
 
 const unsetTrust = () => {
-  
+
 }
 </script>
 

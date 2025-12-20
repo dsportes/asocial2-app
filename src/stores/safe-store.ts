@@ -10,7 +10,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { AppExc, sleep, b64ToU8, u8ToB64 } from '../src-fw/util'
+import { AppExc, b64ToU8, u8ToB64, equ8 } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
@@ -43,6 +43,7 @@ export type Trusting = {
   pseudo: string
   cx: string
   Ka: Uint8Array
+  Kr: Uint8Array
   Kp: Uint8Array
 }
 
@@ -70,8 +71,30 @@ export type Safe = {
   K?: Uint8Array
 }
 
-export type device = {
-  about: string | Uint8Array
+export type Auth = {
+  pseudo: string
+  hp0: string // index unique, `SH(p0)`.
+  hr0: string // index unique, `SH(r0)`.
+  hhp1: string // SHA de `SH(p1)`.
+  hhr1: string // SHA de `SH(r1)`.
+  hhk: string // SHA de `SH(K)`.
+  Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
+  Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
+}
+
+export type TrustDev = {
+  userId: string
+  devId: string
+  sh1p: Uint8Array
+  sh1r: Uint8Array
+  devName: Uint8Array
+  Va: Uint8Array
+  cy: string
+  sign: Uint8Array
+}
+
+export type Device = {
+  devName: string | Uint8Array
   Va: Uint8Array
   cy: string
   sign: Uint8Array
@@ -160,16 +183,14 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(r.bin) as Trusting
         trustings.value.set(obj.userId, obj)
       })
-      trustings.value.set('Bob', {pseudo: 'Bob', userId: '123', cx: '', Ka: null, Kp: null })
-      // trustings.value.set('Alice', {pseudo: 'Alice', userId: '456', cx: '', Ka: null, Kp: null})
-    } catch (e) {
+     } catch (e) {
       throw EX(e, 2)
     }
   }
 
   const getMyTrusting = () : Trusting => {
     if (trustings.value.size === 0) return null
-    for(const [,item] of trustings.value) 
+    for(const [,item] of trustings.value)
       if (item.userId === userId.value) return item
     return null
   }
@@ -231,20 +252,23 @@ export const useSafeStore = defineStore('safe', () => {
       throw EX(e, 2)
     }
   }
- /* Safe *****************************************************/
+
+  /* Safe *****************************************************/
   const userId = ref(null)
   const keyK = ref(null)
   // 1: par P0, 2: par R0, 3: par PIN
-  const openMode : Ref<number> = ref(0) 
+  const openMode : Ref<number> = ref(0)
+  const sh1p = ref(null)
+  const sh1r = ref(null)
 
   /* Section auth du safe */
-  const auth = ref(null)
+  const auth: Ref<Auth> = ref(null)
 
   /* Chaque _device de confiance_ à une entrée  dans cette section identifiée par `devid` (un identifiant généré aléatoirement):
     - `about` : code / texte court **crypté par la clé K du _safe_** donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
     - `{ Va, cy, sign, nbe }` : propriétés permettant de valider que ce _device_ est de confiance (voir plus loin).
   */
-  const devices = ref(Map<string, device>)
+  const devices = ref(Map<string, Device>)
 
   const compileSafe = async (safe: Safe) => {
     auth.value = {
@@ -258,19 +282,25 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: safe.Kr,
     }
 
-    const m = new Map<string, device>()
+    const m = new Map<string, Device>()
     for (const devId in safe.devices) {
-      const d: device = safe.devices[devId]
-      d.about = decoder.decode(await Crypt.decrypt(keyK.value, d.about as Uint8Array))
+      const d: Device = safe.devices[devId]
+      d.devName = decoder.decode(await Crypt.decrypt(keyK.value, d.devName as Uint8Array))
       m.set(devId, d)
     }
     devices.value = m
+    const tr = getMyTrusting()
+    if (tr && (!equ8(tr.Ka, auth.value.Ka) || !equ8(tr.Kr, auth.value.Kr))) {
+      tr.Ka = auth.value.Ka
+      tr.Kr = auth.value.Kr
+      setTrusting(tr)
+    }
 
   }
 
   const createSafe = async (
     createMode: boolean,
-    trig: string, 
+    trig: string,
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
@@ -297,6 +327,8 @@ export const useSafeStore = defineStore('safe', () => {
       openMode.value = 1
       userId.value = id
       keyK.value = K
+      sh1p.value = psh1
+      sh1r.value = rsh1
       await compileSafe(createMode ? safe : ret.safe)
     }
     return ret.status
@@ -308,17 +340,95 @@ export const useSafeStore = defineStore('safe', () => {
       openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
       keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
+      if (ret.byP) { sh1p.value = sh1; sh1r.value =  null }
+      else { sh1p.value = sh1; sh1r.value = sh1 }
       await compileSafe(ret.safe)
     }
     return ret.status
+  }
+
+  const setTrust = async (name: string, pin: string) => {
+    if (!devId.value || name !== devName.value) { // put Header
+      if (!devId.value) devId.value = Crypt.rnd(12)
+      devName.value = name
+      await setHeader()
+    }
+
+    const cx = Crypt.rnd(24)
+    const cy = Crypt.rnd(24)
+    // `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN / cx / cy)`
+    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + cx + '/' + cy, false, true) as Uint8Array
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
+    const Kp = await Crypt.crypt(pincxcy, keyK.value)
+
+    let t: Trusting = getMyTrusting()
+    if (!t) t = {
+        userId: userId.value,
+        pseudo: auth.value.pseudo,
+        cx: cx,
+        Ka: auth.value.Ka,
+        Kr: auth.value.Kr,
+        Kp: Kp
+      }
+    else {
+      t.cx = cx
+      t.Ka = auth.value.Ka
+      t.Kr = auth.value.Kr
+      t.Kp = Kp
+    }
+    await setTrusting(t)
+
+    /*
+    - génère un couple `Sa Va` de clés asymétriques signature / vérification.
+    - calcule `sign`, signature par `Sa` du `SH(PIN, cx)`.
+    - transmet au module _safe terminal_
+      `userId, devId, sh1p, sh1r, devName(crypté par K), Va, cy, sign`
+    */
+    const [Va, Sa] = await Crypt.getSVKeyPair()
+    const sign = await Crypt.sign(Sa, pincx)
+    const trustDev: TrustDev = {
+      userId: userId.value,
+      devId: devId.value,
+      sh1p: sh1p.value,
+      sh1r: sh1r.value,
+      devName: await Crypt.crypt(keyK.value, encoder.encode(devName.value)),
+      Va, cy, sign
+    }
+    const ret = await new Operation('$TrustDevice').post({trustDev})
+    await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  const openSafeByPin = async ( pin: string, id: string) => {
+    userId.value = id
+    const tr = getMyTrusting()
+    if (!tr) return 1
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + tr.cx, false, true) as Uint8Array
+
+    const ret = await new Operation('$OpenSafeByPin')
+      .post({userId: userId.value, devId: devId.value, pincx})
+    if (ret.status !== 0) return ret.status
+    const cy = ret.cy
+    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + tr.cx + '/' + cy, false, true) as Uint8Array
+    try {
+      keyK.value = await Crypt.decrypt(pincxcy, tr.Kp)
+    } catch (e) {
+      return 4
+    }
+    const shk = await Crypt.strongHash(keyK.value, false, true)
+    const ret2 = await new Operation('$OpenSafeById').post({userId: userId.value, shk})
+    if (ret2.status) return 2
+    openMode.value = 3
+    await compileSafe(ret2.safe)
+    return 0
   }
 
   return {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, getTSessions, setTSession, delTSession,
-    userId, keyK, openMode, auth, devices, 
-    createSafe, openSafe
+    userId, keyK, openMode, auth, devices,
+    createSafe, openSafe, openSafeByPin, setTrust
   }
 })
 
