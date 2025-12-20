@@ -155,6 +155,39 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+
+  <!-- Retirer ma confiance à ce terminal -->
+  <q-dialog v-model="ui.dModels[idc].untrustit" persistent>
+    <q-card :class="sty('md')">
+      <div class="q-mt-md q-mb-sm titre-lg text-italic">
+        {{$t('HPutnbs', mySessions.length, {count: mySessions.length})}}
+      </div>
+      <div class="column q-mb-md">
+        <div class="titre-md">{{$t('HPutd_1')}}</div>
+        <div class="q-ml-md titre-md">{{$t('HPutd_2')}}</div>
+        <div class="q-ml-md titre-md">{{$t('HPutd_3')}}</div>
+      </div>
+
+      <div v-if="mySessions.length" class="q-mb-sm q-pa-xs row">
+        <div class="col-3 q-pr-md text-right titre-md text-italic">{{$t('HPutc1')}}</div>
+        <div class="col-9 titre-md text-italic">{{$t('HPutc2')}}</div>
+      </div>
+      <div v-if="mySessions.length" class="q-my-sm q-mx-md slist q-pa-xs">
+        <q-scroll-area style="height: 150px">
+          <div v-for="(s, idx) in mySessions" :key="idx" class="q-my-xs row">
+            <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
+            <div class="col-9 fs-md">{{s.profAbout}}</div>
+          </div>
+        </q-scroll-area>
+      </div>
+
+      <q-card-actions vertical align="right">
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('HPuntrust_1')" color="warning"
+          @ok="setUntrust"/>
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </div>
 </template>
 
@@ -186,6 +219,7 @@ onMounted(async () => {
   await sf.open()
   await sf.getHeader()
   await sf.getTrustings()
+  await sf.getTSessions()
 })
 
 const p0p1 = ref(null)
@@ -311,12 +345,18 @@ const openTrust = async () => {
   ui.oD(idc, 'trustit')
 }
 
+/*
+export type TSession = {
+  app: string
+  userId: string
+  profId: string
+  profAbout: string | Uint8Array
+  prefs: Object | Uint8Array
+}
+*/
+const mySessions = ref()
 const openUntrust = async () => {
-  // TODO
-  myTrusting.value = sf.getMyTrusting()
-  newDev.value = sf.devId === ''
-  newPIN.value = ''
-  devName.value = newDev.value ? '' : sf.devName
+  mySessions.value = sf.getMySessions()
   ui.oD(idc, 'untrustit')
 }
 
@@ -330,8 +370,14 @@ const setTrust = async () => {
   }
 }
 
-const unsetTrust = () => {
-
+const setUntrust = () => {
+  try {
+    const status = await sf.setUntrust()
+    await ui.diagDisplay($t('HPstuntrust_' + status))
+    if (status === 0) ui.fD()
+  } catch (e) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  }
 }
 </script>
 
@@ -341,5 +387,6 @@ const unsetTrust = () => {
 .bord1 { border: 1px solid $grey-5; border-radius: 7px; width:20rem; }
 .diag { background: yellow; font-weight: bold; color: black; padding: 2px;
   border: 2px solid $negative; border-radius: 7px; width:100%; }
+.slist { border-bottom: 1px solid $grey-5 !important; border-top: 1px solid $grey-5 !important; }
 </style>
 

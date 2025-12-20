@@ -27,7 +27,7 @@ import { Crypt } from '../src-fw/crypt'
     - `PIN` est le code PIN fixé par l'utilisateur à la déclaration de confiance,
     - `cx cy` sont des _challenges_ générés aléatoirement à ce moment.
 - `TSESSION`: chaque row décrit une _session_ qui a été ouverte _en confiance_ sur ce _device_:
-  - `app`: code l'application correspondante.
+  - `app`: code de l'application correspondante.
   - `userId`: identifiant du _safe_ de l'utilisateur.
   - `profId`: id du profil de la session.
   - `profAbout`: texte significatif pour l'utilisateur **crypté par la clé K du _safe_** décrivant le _profil_ de la session (par exemple `Revue des notes d'Alice et Jules`).
@@ -223,9 +223,22 @@ export const useSafeStore = defineStore('safe', () => {
         obj2.prefs = obj.prefs ? decode(await Crypt.decrypt(cleK.value, obj.prefs as Uint8Array)) : null
         tsessions.value.set(x, obj2)
       })
+      /*
+      for(let i = 1; i < 10; i++)
+        tsessions.value.set(i, { app: 'app' + i,
+        profAbout: 'bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla '  + i})
+      */
     } catch (e) {
       throw EX(e, 2)
     }
+  }
+
+  const getMySessions = () : TSession[] => {
+    const t: TSession[] = []
+    for(const [,x] of tsessions.value)
+      // if (x.userId === userId.value) t.push(x)
+      t.push(x)
+    return t
   }
 
   const setTSession = async (obj: TSession) => {
@@ -423,12 +436,16 @@ export const useSafeStore = defineStore('safe', () => {
     return 0
   }
 
+  const setUntrust = async () => {
+    // TODO
+  }
+
   return {
     open, setK, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
-    tsessions, getTSessions, setTSession, delTSession,
+    tsessions, getTSessions, setTSession, delTSession, getMySessions,
     userId, keyK, openMode, auth, devices,
-    createSafe, openSafe, openSafeByPin, setTrust
+    createSafe, openSafe, openSafeByPin, setTrust, setUntrust
   }
 })
 

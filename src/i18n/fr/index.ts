@@ -148,6 +148,13 @@ export default {
   HPbypin_3: 'Ouverture par code PIN en échec: le terminal n\'est pas enregistré "de confiance".',
   HPbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
   HPbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, désormais le TERMINAL N\'EST PLUS RECONNU "DE CONFIANCE".',
+  HPutd_1: 'Si ce terminal n\'est plus déclaré "de confiance", la ou les sessions initiées perdront leurs données sauvegardées localement:',
+  HPutd_2: '- leurs initialisations seront plus longues,',
+  HPutd_3: '- elles NE SERONT PLUS ACCESSIBLES EN MODE AVION.',
+  HPutnbs: 'Aucune session initiée sur ce terminal. | Une session est initiée sur ce terminal. | {count} sessions sont initiées sur ce terminal.',
+  HPutc1: 'Application',
+  HPutc2: 'A propos de la session ...',
+
 
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
