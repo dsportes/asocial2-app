@@ -12,7 +12,7 @@
     <template v-slot:append>
       <btn-cond size="sm" class="q-mx-xs" :icon="isPwd ? 'visibility_off' : 'visibility'" round
         color="none" @ok="isPwd = !isPwd"/>
-      <btn-cond size="sm" icon="check" :disable="pinerr !== ''"
+      <btn-cond size="md" icon="check" :disable="pinerr !== ''"
         @click="validate" class="cursor-pointer" />
     </template>
     <template v-slot:error>{{$t(pinerr)}}</template>

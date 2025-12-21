@@ -1,41 +1,80 @@
 <template>
-<div>
-  <div class="column full-width items-center">
-    <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
-    <q-toggle v-model="session.hasNet"
-      :class="'q-mb-md q-pa-xs bord1 q-pa-xs ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
-      dense color="positive"
-      checked-icon="cloud" unchecked-icon="cloud_off"
-      :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
+<div class="column items-center">
+  <q-stepper v-model="step" color="primary" animated class="pwmd"
+    header-class="titre-lg">
+    <q-step :name="1" :title="$t('HPauthentif')" icon="passkey">
+      <div class="column q-pa-sm items-center">
+        <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
+        <q-toggle v-model="session.hasNet"
+          :class="'q-pa-xs bord1 ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
+          dense color="positive"
+          checked-icon="cloud" unchecked-icon="cloud_off"
+          :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
 
-    <div v-if="options.length === 0 && !session.hasNet"
-      class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnoplane')}}</div>
+        <div v-if="options && options.length === 0 && !session.hasNet"
+          class="q-mt-sm titre-md text-italic text-center">{{$t('HPnoplane')}}</div>
 
-    <div v-if="session.hasNet" class="q-mb-md wsm row justify-center items-start">
-      <div class="col titre-sm text-italic text-right">{{$t('HPnoreg')}}</div>
-      <btn-cond class="q-ml-sm" size="sm" icon="send" @ok="regme"/>
-    </div>
-    <p0-p1 v-if="session.hasNet || (options.length !== 0 && !session.hasNet)"
-      class="wsm" :title="$t('HPauth')" @ok="auth"/>
-      <div v-if="options.length > 0 && session.hasNet" class="wsm column">
-      <div class="tbs q-px-xs titre-md text-italic">{{$t('HPseluser')}}</div>
-      <div class="q-mb-sm wsm row justify-between items-center">
-        <q-select class="col q-mr-sm" dense filled
-          transition-show="flip-up" transition-hide="flip-down"
-          v-model="selectedSafe" :options="options" />
-        <pin-code class="col" :disable="selectedSafe === null" @ok="authPin"/>
+        <div v-if="session.hasNet" class="q-mt-md row justify-center items-start">
+          <div class="col titre-md text-italic text-right">{{$t('HPnoreg')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="regme"/>
+        </div>
+
+        <p0-p1 v-if="session.hasNet || (options && options.length !== 0 && !session.hasNet)"
+          class="q-mt-md" :title="$t('HPauth')" @ok="auth"/>
+
+        <div v-if="options.length > 0 && session.hasNet">
+          <div class="tbs q-px-xs titre-md text-italic">{{$t('HPseluser')}}</div>
+          <div class="q-mb-sm row items-center">
+            <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
+              transition-show="flip-up" transition-hide="flip-down"
+              v-model="selectedSafe" :options="options" />
+            <pin-code class="col-6" :disable="selectedSafe === null" @ok="authPin"/>
+          </div>
+        </div>
+
+        <div v-if="options && options.length === 0 && session.hasNet"
+          class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
       </div>
-    </div>
-    <div v-if="options.length === 0 && session.hasNet"
-      class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
-  </div>
+    </q-step>
+
+    <q-step :name="2" :title="$t('HPsession')" icon="send">
+      <div class="column q-pa-sm items-center">
+        <div class="full-width row justify-between items-start">
+          <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
+            color="warning" @ok="step = 1"/>
+          <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
+        </div>
+
+        <div v-if="sf.openMode !== 3"
+          class="q-mt-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPupdcodes')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
+        </div>
+        <div v-if="sf.openMode !== 3 && myTrusting === null"
+          class="q-mt-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPtrust')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
+        </div>
+        <div v-if="sf.openMode !== 3 && myTrusting !== null"
+          class="q-mt-sm row justify-center items-start">
+          <div class="col titre-sm text-italic text-right">{{$t('HPuntrust')}}</div>
+          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
+        </div>
+
+        <div v-if="diag2 !== ''" class="q-mt-sm diag">{{diag2}}</div>
+
+        <div class="titre-lg text-italic q-my-lg">TODO !</div>
+
+      </div>
+    </q-step>
+  </q-stepper>
 
   <!-- Création d'un safe / Changement des codes -->
   <q-dialog v-model="ui.dModels[idc].createSafe" persistent>
     <q-card :class="sty('md')">
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title class="title-sm">{{$t('HPenreg_' + (createMode ? '2' : '1'))}}</q-toolbar-title>
+        <q-toolbar-title class="titre-smd">{{$t('HPenreg_' + (createMode ? '1' : '2'))}}</q-toolbar-title>
         <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
           :disable="diag !== ''" @ok="createSafe"/>
         <help-button :page="sf.createMode ? 'createSafe' : 'updSafeCodes'"/>
@@ -71,42 +110,6 @@
           </template>
           <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
         </q-expansion-item>
-      </div>
-    </q-card>
-  </q-dialog>
-
-  <!-- Ouverture de session -->
-  <q-dialog v-model="ui.dModels[idc].openSession" persistent>
-    <q-card :class="sty('md')">
-      <q-toolbar class="tbp">
-        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title class="titre-sm">{{$t('HPopens_1')}}</q-toolbar-title>
-        <btn-cond class="q-mr-xs" icon="check" :label="$t('HPopens_2')"
-          :disable="diag2 !== ''" @ok="openSession"/>
-        <help-button page="openSession"/>
-      </q-toolbar>
-      <q-toolbar inset class="tbp">
-        <div class="full-width titre-sm text-italic text-center">
-          {{$t('HPauthby_' + sf.openMode)}}</div>
-      </q-toolbar>
-
-      <div class="q-pa-sm">
-        <div v-if="sf.openMode !== 3" class="q-my-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPupdcodes')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
-        </div>
-        <div v-if="sf.openMode !== 3 && myTrusting === null" class="q-my-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPtrust')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
-        </div>
-        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="q-my-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPuntrust')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
-        </div>
-        <div v-if="diag2 !== ''" class="diag">{{diag2}}</div>
-
-        <div class="title-lg text-italic q-ma-lg">TODO !</div>
-
       </div>
     </q-card>
   </q-dialog>
@@ -192,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
@@ -212,6 +215,7 @@ const icons = ['check', 'question_mark', 'warning']
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
+
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
@@ -222,6 +226,7 @@ onMounted(async () => {
   await sf.getTSessions()
 })
 
+const step = ref(1)
 const p0p1 = ref(null)
 const pin = ref(null)
 const selectedSafe = ref(null)
@@ -229,9 +234,25 @@ const selectedSafe = ref(null)
 const options = computed(() => {
   const r = []
   sf.trustings.forEach(e => { r.push({ label: e.pseudo, value: e }) })
-  if (r.length) selectedSafe.value = r[0]
   return r
 })
+
+watch(options, (ap) => {
+  // selectedSafe.value = ap.length ? ap[0] : null
+})
+
+const backToAuth = () => {
+  step.value = 1
+  p0p1.value = null
+  pin.value = null
+}
+
+const openSession = () => {
+  myTrusting.value = sf.getMyTrusting()
+  step.value = 2
+}
+
+backToAuth()
 
 const auth = async (args) => {
   p0p1.value = args
@@ -245,7 +266,7 @@ const authPin = async (p) => {
   const userId = selectedSafe.value['value']['userId']
   const status = await sf.openSafeByPin(pin.value, userId)
   if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
-  else ui.oD(idc, 'openSession')
+  else step.value = 2
 }
 
 const createMode = ref()
@@ -332,10 +353,6 @@ const deverr = computed(() => devName.value.length < minDev ? 'PScourt' : (devNa
 const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN.value.length > maxpin ? 'PSlong' : ''))
 const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '')
 
-const openSession = async () => {
-  myTrusting.value = sf.getMyTrusting()
-  ui.oD(idc, 'openSession')
-}
 
 const openTrust = async () => {
   myTrusting.value = sf.getMyTrusting()
@@ -370,7 +387,7 @@ const setTrust = async () => {
   }
 }
 
-const setUntrust = () => {
+const setUntrust = async () => {
   try {
     const status = await sf.setUntrust()
     await ui.diagDisplay($t('HPstuntrust_' + status))
@@ -384,7 +401,7 @@ const setUntrust = () => {
 <style lang="scss" scoped>
 @import '../css/app.scss';
 .q-toolbar__title { font-size: medium !important;}
-.bord1 { border: 1px solid $grey-5; border-radius: 7px; width:20rem; }
+.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 .diag { background: yellow; font-weight: bold; color: black; padding: 2px;
   border: 2px solid $negative; border-radius: 7px; width:100%; }
 .slist { border-bottom: 1px solid $grey-5 !important; border-top: 1px solid $grey-5 !important; }
