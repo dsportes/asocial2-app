@@ -45,20 +45,31 @@
           <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
         </div>
 
-        <div v-if="sf.openMode !== 3"
-          class="q-mt-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPupdcodes')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
-        </div>
-        <div v-if="sf.openMode !== 3 && myTrusting === null"
-          class="q-mt-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPtrust')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
-        </div>
-        <div v-if="sf.openMode !== 3 && myTrusting !== null"
-          class="q-mt-sm row justify-center items-start">
-          <div class="col titre-sm text-italic text-right">{{$t('HPuntrust')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
+        <div class="column full-width">
+          <div v-if="sf.openMode !== 3"
+            class="self-end q-mt-sm row justify-center items-start">
+            <div class="col titre-md text-italic text-right">{{$t('HPupdcodes')}}</div>
+            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
+          </div>
+          <div v-if="sf.openMode !== 3 && myTrusting === null"
+            class="self-end q-mt-sm row justify-center items-start">
+            <div class="col titre-md text-italic text-right">{{$t('HPtrust')}}</div>
+            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
+          </div>
+          <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" class="full-width q-mt-xs"/>
+          <div v-if="sf.openMode !== 3 && myTrusting !== null"
+            class="self-center titre-md">{{$t('HPuntrust')}}</div>
+          <div v-if="sf.openMode !== 3 && myTrusting !== null"
+            class="self-end q-mt-sm row justify-center items-start">
+            <div class="col titre-md text-italic text-right">{{$t('HPuntrust_p')}}</div>
+            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
+          </div>
+          <div v-if="sf.openMode !== 3 && myTrusting !== null"
+            class="self-end q-mt-sm row justify-center items-start">
+            <div class="col titre-md text-italic text-right">{{$t('HPuntrust_r')}}</div>
+            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
+          </div>
+          <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" class="full-width q-mb-xs"/>
         </div>
 
         <div v-if="diag2 !== ''" class="q-mt-sm diag">{{diag2}}</div>
@@ -194,13 +205,15 @@
 </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+// @ts-ignore
 import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
+import type { TSession } from '../stores/safe-store'
 import { $t, sty, equ8 } from '../src-fw/util'
 
 const minTr = 3
@@ -251,8 +264,6 @@ const openSession = () => {
   myTrusting.value = sf.getMyTrusting()
   step.value = 2
 }
-
-backToAuth()
 
 const auth = async (args) => {
   p0p1.value = args
@@ -353,7 +364,6 @@ const deverr = computed(() => devName.value.length < minDev ? 'PScourt' : (devNa
 const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN.value.length > maxpin ? 'PSlong' : ''))
 const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '')
 
-
 const openTrust = async () => {
   myTrusting.value = sf.getMyTrusting()
   newDev.value = sf.devId === ''
@@ -368,10 +378,11 @@ export type TSession = {
   userId: string
   profId: string
   profAbout: string | Uint8Array
+  size: number
   prefs: Object | Uint8Array
 }
 */
-const mySessions = ref()
+const mySessions = ref<TSession>(null)
 const openUntrust = async () => {
   mySessions.value = sf.getMySessions()
   ui.oD(idc, 'untrustit')
@@ -380,8 +391,9 @@ const openUntrust = async () => {
 const setTrust = async () => {
   try {
     const status = await sf.setTrust(devName.value, newPIN.value)
+    ui.fD()
+    myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPsttrust_' + status))
-    if (status === 0) ui.fD()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
@@ -390,8 +402,9 @@ const setTrust = async () => {
 const setUntrust = async () => {
   try {
     const status = await sf.setUntrust()
+    ui.fD()
+    myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPstuntrust_' + status))
-    if (status === 0) ui.fD()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
@@ -404,6 +417,7 @@ const setUntrust = async () => {
 .bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 .diag { background: yellow; font-weight: bold; color: black; padding: 2px;
   border: 2px solid $negative; border-radius: 7px; width:100%; }
-.slist { border-bottom: 1px solid $grey-5 !important; border-top: 1px solid $grey-5 !important; }
+.bbot, .slist { border-bottom: 1px solid $grey-5 !important; }
+.btop, .slist { border-top: 1px solid $grey-5 !important; }
 </style>
 

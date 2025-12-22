@@ -23,6 +23,7 @@ import { Crypt } from '../src-fw/crypt'
   - `pseudo`: par exemple `Bob`.
   - `cx`: un challenge aléatoire.
   - `Ka`: clé K du safe de l'utilisateur cryptée par `SH(p0, p1)` où `p0` et `p1` sont les termes d'authentification du safe de l'utilisateur.
+  - `Kr`: clé K du safe de l'utilisateur cryptée par `SH(r0, r1)`.
   - `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN + cx, cy)` où,
     - `PIN` est le code PIN fixé par l'utilisateur à la déclaration de confiance,
     - `cx cy` sont des _challenges_ générés aléatoirement à ce moment.
@@ -52,6 +53,7 @@ export type TSession = {
   userId: string
   profId: string
   profAbout: string | Uint8Array
+  size: number
   prefs: Object | Uint8Array
 }
 
@@ -91,6 +93,13 @@ export type TrustDev = {
   Va: Uint8Array
   cy: string
   sign: Uint8Array
+}
+
+export type UntrustDev = {
+  userId: string
+  devId: string
+  sh1p: Uint8Array
+  sh1r: Uint8Array
 }
 
 export type Device = {
@@ -437,7 +446,19 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setUntrust = async () => {
-    // TODO
+    const tr = getMyTrusting()
+    if (!tr) return 0 // était déjà untrusted
+    await delTrusting(tr.userId)
+    const untrustDev: UntrustDev = {
+      userId: userId.value,
+      devId: devId.value,
+      sh1p: sh1p.value,
+      sh1r: sh1r.value
+    }
+    const ret = await new Operation('$UntrustDevice').post({untrustDev})
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
   }
 
   return {
