@@ -21,6 +21,8 @@ export const useConfigStore = defineStore('config', () => {
   const setLocale = (loc:string) => { locale.value = loc}
   const optionLocale = computed(() => localeMap.get(locale.value))
 
+  const appname = ref('')
+
   const K = ref()
   const initK = (k: any, _location: Object, custom: Object) => {
     location.value = _location['href']
@@ -28,10 +30,11 @@ export const useConfigStore = defineStore('config', () => {
     for(const f in custom) K.value[f] = custom[f]
     k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = k.localeOptions[0].value
+    appname.value = K.APPNAME
   }
 
   return {
-    location, K, initK, locale, optionLocale, setLocale
+    location, K, initK, locale, optionLocale, setLocale, appname
   }
 
 })

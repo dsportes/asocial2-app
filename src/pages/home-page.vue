@@ -4,6 +4,11 @@
     header-class="titre-lg">
     <q-step :name="1" :title="$t('HPauthentif')" icon="passkey">
       <div class="column q-pa-sm items-center">
+        <!--div class="q-ma-md row items-center">
+          <span style="font-size:36px; margin: 0;">{{pincode}}</span>
+          <q-btn :label="pincode" padding="none" size="36px"/>
+          <q-icon size="48px" class="q-ma-none q-pa-none" color="warning" name="push_pin" />
+        </div-->
         <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
         <q-toggle v-model="session.hasNet"
           :class="'q-pa-xs bord1 ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
@@ -215,6 +220,8 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
 import { $t, sty, equ8 } from '../src-fw/util'
+
+// const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 
 const minTr = 3
 const maxTr = 8

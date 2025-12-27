@@ -49,13 +49,16 @@ export type Trusting = {
 }
 
 export type TSession = {
-  app: string
-  userId: string
-  profId: string
-  profAbout: string | Uint8Array
-  size: number
-  prefs: Object | Uint8Array
+  app: string // code de l'application
+  userId: string // id de l'utilisateur
+  profId: string // id de sa liste de droits
+  profAbout: string | Uint8Array // commentaire de l'utilisateutr sur ce profil
+  size: number // taille "utile" des données stockées en local dans IDB
+  time: number // date-heure de dernière ouverture sur ce terminal
+  // IDB name: shaS(userId + '/' + profId)
 }
+
+export type Pref = [code: string, value: Object]
 
 export type Safe = {
   id: string // identifiant.
@@ -65,12 +68,14 @@ export type Safe = {
   hhp1: string // SHA de `SH(p1)`.
   hhr1: string // SHA de `SH(r1)`.
   hhk: string // SHA de `SH(K)`.
+  C: Uint8Array // clé publique de cryptage. id = shaS(C)
+  DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
   Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
   Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
   devices: Object
   creds: Object
   profiles: Object
-  K?: Uint8Array
+  prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
 }
 
 export type Auth = {
@@ -80,6 +85,8 @@ export type Auth = {
   hhp1: string // SHA de `SH(p1)`.
   hhr1: string // SHA de `SH(r1)`.
   hhk: string // SHA de `SH(K)`.
+  C: Uint8Array // clé publique de cryptage. id = shaS(C)
+  DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
   Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
   Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
 }
@@ -112,8 +119,9 @@ export type Device = {
 
 const STORES = {
   header: 'id', // singleton: id = '1'
-  trustings: 'id',
-  tsessions: 'id'
+  trustings: 'id', 
+  tsessions: 'id',
+  prefs: 'id' // id: app / userId - bin: cryptage par K du user de son pref ([code, value])
 }
 
 function EX (e: Error, n: number) {
@@ -145,11 +153,18 @@ class IDBS {
 }
 
 export const useSafeStore = defineStore('safe', () => {
-  const devId = ref('')
-  const devName = ref('')
+  // Safe du user chargé en mémoire
   const trustings = ref(new Map<string, Trusting>())
   const tsessions = ref(new Map<string, TSession>())
+  const safePrefs = ref(new Map<string, Pref[]>()) // appname, liste de prefs
+
+  // Données relative au user courant
   const cleK : Ref<Uint8Array> = ref()
+  const devId = ref('')
+  const devName = ref('')
+
+  // préférences du user courant pour l'application courante
+  const localPref : Ref<Pref> = ref(null)
 
   const open = async () => {
     try {
@@ -229,7 +244,6 @@ export const useSafeStore = defineStore('safe', () => {
         const x = obj.app + '/' + obj.userId + '/' + obj.profId
         const obj2 : TSession = { ...obj } as TSession
         obj2.profAbout = await Crypt.decrypt(cleK.value, obj.profAbout as Uint8Array)
-        obj2.prefs = obj.prefs ? decode(await Crypt.decrypt(cleK.value, obj.prefs as Uint8Array)) : null
         tsessions.value.set(x, obj2)
       })
       /*
@@ -256,7 +270,6 @@ export const useSafeStore = defineStore('safe', () => {
       const id = Crypt.shaS(encoder.encode(x))
       const obj2 : TSession = { ...obj }
       obj2.profAbout = await Crypt.crypt(cleK.value, encoder.encode(obj.profAbout as string))
-      obj2.prefs = obj.prefs ? await Crypt.crypt(cleK.value, encode(obj.prefs)) : null
       IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
       tsessions.value.set(x, obj)
     } catch (e) {
@@ -275,13 +288,58 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  // Charge localPref avec la préférence du user pour l'application en cours
+  const getLocalPref = async () => {
+    const app = stores.config.appname
+    const id = Crypt.shaS(app + '/' + userId.value)
+    try {
+      const x = await IDBS.idbs.db.prefs.get(id)
+      localPref.value = !x ? null : decode(await Crypt.decrypt(cleK.value, x.bin)) as Pref
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  /* Enregistre ou supprime en IDB la préférence courante
+  de l'utilisateur courant pour l'application courante
+  */
+  const setLocalPref = async (pref: Pref) => {
+    try {
+      const app = stores.config.appname
+      const id = Crypt.shaS(app + '/' + userId.value)
+      if (pref) {
+        const bin = await Crypt.crypt(keyK.value, encode(pref))
+        IDBS.idbs.db.prefs.put({ id, bin })
+        localPref.value = pref
+      } else {
+        await IDBS.idbs.db.prefs.delete(id)
+      }
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  /* Retourne depuis le Safe actuellement en mémoire
+  la liste (éventuellement vide) des pref relative à l'application (et au user)
+  */
+  const getMySafePrefs = () : Pref[] => {
+    const app = stores.config.appname
+    const x = safePrefs.value.get(app)
+    return x ? x : []
+  }
+  
+
   /* Safe *****************************************************/
   const userId = ref(null)
   const keyK = ref(null)
-  // 1: par P0, 2: par R0, 3: par PIN
+  // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
   const openMode : Ref<number> = ref(0)
+  const C : Ref<Uint8Array> = ref(null)
+  const D : Ref<Uint8Array> = ref(null)
+  const DK : Ref<Uint8Array> = ref(null)
   const sh1p = ref(null)
   const sh1r = ref(null)
+  const shK = ref(null)
 
   /* Section auth du safe */
   const auth: Ref<Auth> = ref(null)
@@ -292,6 +350,7 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const devices = ref(Map<string, Device>)
 
+  /* K et D ont été décryptés dans keyK.value et D.value */
   const compileSafe = async (safe: Safe) => {
     auth.value = {
       pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
@@ -302,8 +361,11 @@ export const useSafeStore = defineStore('safe', () => {
       hhk: safe.hhk,
       Ka: safe.Ka,
       Kr: safe.Kr,
+      C: safe.C,
+      DK: safe.DK
     }
 
+    // devices
     const m = new Map<string, Device>()
     for (const devId in safe.devices) {
       const d: Device = safe.devices[devId]
@@ -317,6 +379,15 @@ export const useSafeStore = defineStore('safe', () => {
       tr.Kr = auth.value.Kr
       setTrusting(tr)
     }
+    
+    // préférences
+    const p = new Map<string, Pref[]>() // clé: app, value: liste de prefs
+    for (const app in safe.prefs) {
+      const lx = safe.prefs[app] as Uint8Array
+      const lp = decode(await Crypt.decrypt(keyK.value, lx)) as Pref[]
+      p.set(app, lp)
+    }
+    safePrefs.value = p
 
   }
 
@@ -326,31 +397,41 @@ export const useSafeStore = defineStore('safe', () => {
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
-    const K = createMode ? Crypt.random(32) : keyK.value
-    const id = createMode ? Crypt.rnd(12) : userId.value
-    const shK = await Crypt.strongHash(K, false, true)
+    if (createMode) {
+      if (openMode.value !== 0) return 9
+      keyK.value = Crypt.random(32)
+      const [Cy, Dy] = await Crypt.getKeyPair()
+      C.value = Cy
+      D.value = Dy
+      DK.value = await Crypt.crypt(keyK.value, Dy)
+      userId.value = Crypt.shaS(C.value)
+      sh1p.value = psh1
+      sh1r.value = rsh1
+      shK.value = await Crypt.strongHash(keyK.value, false, true)
+    } else {
+      if (openMode.value === 0) return 9
+    }
 
     const safe: Safe = {
-      id,
-      pseudo: await Crypt.crypt(K, encoder.encode(trig)),
+      id: userId.value,
+      C: C.value,
+      DK: DK.value,
+      pseudo: await Crypt.crypt(cleK.value, encoder.encode(trig)),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
       hhr1: Crypt.shaS(rsh1),
       hhk: Crypt.shaS(shK),
-      Ka: await Crypt.crypt(psh, K),
-      Kr: await Crypt.crypt(rsh, K),
+      Ka: await Crypt.crypt(psh, cleK.value),
+      Kr: await Crypt.crypt(rsh, cleK.value),
       devices: {},
       creds: {},
-      profiles: {}
+      profiles: {},
+      prefs: {}
     }
     const ret = await new Operation(createMode ? '$CreateSafe' : '$UpdCodesSafe').post({ safe })
     if (ret.status === 0) {
       openMode.value = 1
-      userId.value = id
-      keyK.value = K
-      sh1p.value = psh1
-      sh1r.value = rsh1
       await compileSafe(createMode ? safe : ret.safe)
     }
     return ret.status
@@ -362,6 +443,7 @@ export const useSafeStore = defineStore('safe', () => {
       openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
       keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
+      D.value = await Crypt.decrypt(keyK.value, ret.DK)
       if (ret.byP) { sh1p.value = sh1; sh1r.value =  null }
       else { sh1p.value = sh1; sh1r.value = sh1 }
       await compileSafe(ret.safe)
@@ -441,6 +523,7 @@ export const useSafeStore = defineStore('safe', () => {
     const ret2 = await new Operation('$OpenSafeById').post({userId: userId.value, shk})
     if (ret2.status) return 2
     openMode.value = 3
+    D.value = await Crypt.decrypt(keyK.value, ret.DK)
     await compileSafe(ret2.safe)
     return 0
   }
