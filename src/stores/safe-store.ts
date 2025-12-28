@@ -58,7 +58,7 @@ export type TSession = {
   // IDB name: shaS(userId + '/' + profId)
 }
 
-export type Pref = [code: string, value: Object]
+export type Pref = [code: string, obj: Object]
 
 export type Safe = {
   id: string // identifiant.
@@ -121,7 +121,7 @@ const STORES = {
   header: 'id', // singleton: id = '1'
   trustings: 'id', 
   tsessions: 'id',
-  prefs: 'id' // id: app / userId - bin: cryptage par K du user de son pref ([code, value])
+  prefs: 'id' // id: app / userId - bin: cryptage par K du user de son pref ([code, obj])
 }
 
 function EX (e: Error, n: number) {
@@ -134,15 +134,10 @@ class IDBS {
   static idbs: IDBS
 
   db : any
-  keyK: Uint8Array
-  mondebug: boolean
 
   constructor () {
     IDBS.idbs = this
-    const config = stores.config
-    this.mondebug = config.mondebug
-    this.keyK = null
-    if (this.mondebug) console.log('Open IDBS')
+    if (stores.config.mondebug) console.log('Open IDBS')
     try {
       this.db = new Dexie('safe', { autoOpen: true })
       this.db.version(1).stores(STORES)
@@ -153,18 +148,13 @@ class IDBS {
 }
 
 export const useSafeStore = defineStore('safe', () => {
-  // Safe du user chargé en mémoire
-  const trustings = ref(new Map<string, Trusting>())
-  const tsessions = ref(new Map<string, TSession>())
-  const safePrefs = ref(new Map<string, Pref[]>()) // appname, liste de prefs
-
-  // Données relative au user courant
-  const cleK : Ref<Uint8Array> = ref()
-  const devId = ref('')
-  const devName = ref('')
-
-  // préférences du user courant pour l'application courante
-  const localPref : Ref<Pref> = ref(null)
+  // Safe IDB : image en mémoire
+  const devId = ref('') // Depuis IDB Header
+  const devName = ref('') // Depuis IDB Header
+  const trustings = ref(new Map<string, Trusting>()) // Depuis IDB trustings
+  const tsessions = ref(new Map<string, TSession>()) // Depuis IDB tsessions
+  // préférences du user COURANT pour l'application COURANTE
+  const currentPref : Ref<Pref> = ref(null)  // Depuis prefs (partiel)
 
   const open = async () => {
     try {
@@ -173,10 +163,6 @@ export const useSafeStore = defineStore('safe', () => {
     } catch (e) {
       throw EX(e, 2)
     }
-  }
-
-  const setK = async (k: string) => {
-    IDBS.idbs.keyK = b64ToU8(k)
   }
 
   const getHeader = async () => {
@@ -243,7 +229,7 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(r.bin) as TSession
         const x = obj.app + '/' + obj.userId + '/' + obj.profId
         const obj2 : TSession = { ...obj } as TSession
-        obj2.profAbout = await Crypt.decrypt(cleK.value, obj.profAbout as Uint8Array)
+        obj2.profAbout = await Crypt.decrypt(keyK.value, obj.profAbout as Uint8Array)
         tsessions.value.set(x, obj2)
       })
       /*
@@ -269,7 +255,7 @@ export const useSafeStore = defineStore('safe', () => {
       const x = obj.app + '/' + obj.userId + '/' + obj.profId
       const id = Crypt.shaS(encoder.encode(x))
       const obj2 : TSession = { ...obj }
-      obj2.profAbout = await Crypt.crypt(cleK.value, encoder.encode(obj.profAbout as string))
+      obj2.profAbout = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
       IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
       tsessions.value.set(x, obj)
     } catch (e) {
@@ -288,13 +274,13 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  // Charge localPref avec la préférence du user pour l'application en cours
-  const getLocalPref = async () => {
+  // Charge depuis IDB currentPref avec la préférence du user pour l'application en cours
+  const getCurrentPref = async () => {
     const app = stores.config.appname
     const id = Crypt.shaS(app + '/' + userId.value)
     try {
       const x = await IDBS.idbs.db.prefs.get(id)
-      localPref.value = !x ? null : decode(await Crypt.decrypt(cleK.value, x.bin)) as Pref
+      currentPref.value = !x ? null : decode(await Crypt.decrypt(keyK.value, x.bin)) as Pref
     } catch (e) {
       throw EX(e, 2)
     }
@@ -303,14 +289,13 @@ export const useSafeStore = defineStore('safe', () => {
   /* Enregistre ou supprime en IDB la préférence courante
   de l'utilisateur courant pour l'application courante
   */
-  const setLocalPref = async (pref: Pref) => {
+  const saveCurrentPref = async () => {
     try {
       const app = stores.config.appname
       const id = Crypt.shaS(app + '/' + userId.value)
-      if (pref) {
-        const bin = await Crypt.crypt(keyK.value, encode(pref))
+      if (currentPref.value) {
+        const bin = await Crypt.crypt(keyK.value, encode(currentPref.value))
         IDBS.idbs.db.prefs.put({ id, bin })
-        localPref.value = pref
       } else {
         await IDBS.idbs.db.prefs.delete(id)
       }
@@ -318,22 +303,15 @@ export const useSafeStore = defineStore('safe', () => {
       throw EX(e, 2)
     }
   }
-
-  /* Retourne depuis le Safe actuellement en mémoire
-  la liste (éventuellement vide) des pref relative à l'application (et au user)
-  */
-  const getMySafePrefs = () : Pref[] => {
-    const app = stores.config.appname
-    const x = safePrefs.value.get(app)
-    return x ? x : []
-  }
   
-
-  /* Safe *****************************************************/
+  /**********************************************************************
+  Safe central : copie locale du safe de l'utilisateur courant
+  - permet un affichage complet, y compris pour les données relatives
+    aux autres applications que celle qui s'exécute.
+  **********************************************************************/
   const userId = ref(null)
   const keyK = ref(null)
-  // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
-  const openMode : Ref<number> = ref(0)
+  const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
   const C : Ref<Uint8Array> = ref(null)
   const D : Ref<Uint8Array> = ref(null)
   const DK : Ref<Uint8Array> = ref(null)
@@ -341,17 +319,30 @@ export const useSafeStore = defineStore('safe', () => {
   const sh1r = ref(null)
   const shK = ref(null)
 
-  /* Section auth du safe */
+  /* Section "auth" */
   const auth: Ref<Auth> = ref(null)
 
-  /* Chaque _device de confiance_ à une entrée  dans cette section identifiée par `devid` (un identifiant généré aléatoirement):
-    - `about` : code / texte court **crypté par la clé K du _safe_** donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
-    - `{ Va, cy, sign, nbe }` : propriétés permettant de valider que ce _device_ est de confiance (voir plus loin).
-  */
-  const devices = ref(Map<string, Device>)
+  /* Section "devices de confiance" *****************************************************
+  Une entrée par device identifiée par `devid`:
+  - `about` : code / texte court **crypté par la clé K du _safe_** 
+    donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
+  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider 
+    que ce _device_ est de confiance.
+  ****************************************************************************************/
+  const devices = ref(Map<string, Device>) // cle devid
+
+  /* Section "préférences" **************************************************************
+  Une entrée par application** donnant une liste de couples `code, obj` 
+  ( **cryptés par la clé K**) ordonnée par dernière utilisation:
+  - `code` : texte court parlant pour l'utilisateur correspondant à un de ses usages 
+    habituels de l'application comme `mobile, large, simple, expert ...`.
+  - `obj`: objet donnant les valeurs des _préférences_ à utiliser à l'ouverture d'une session.
+  **************************************************************************************/
+  const prefs = ref(Map<String, Pref[]>) // clé app
 
   /* K et D ont été décryptés dans keyK.value et D.value */
   const compileSafe = async (safe: Safe) => {
+    const appname = stores.config.appname
     auth.value = {
       pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
       hp0: safe.hp0,
@@ -380,15 +371,35 @@ export const useSafeStore = defineStore('safe', () => {
       setTrusting(tr)
     }
     
-    // préférences
+    // prefs
     const p = new Map<string, Pref[]>() // clé: app, value: liste de prefs
     for (const app in safe.prefs) {
       const lx = safe.prefs[app] as Uint8Array
-      const lp = decode(await Crypt.decrypt(keyK.value, lx)) as Pref[]
+      const lp: Pref[] = decode(await Crypt.decrypt(keyK.value, lx)) as Pref[]
       p.set(app, lp)
+      if (app === appname && currentPref.value) {
+        const c = currentPref.value.code as string
+        let f = false
+        for (const p of lp) {
+          const [code, obj] = p
+          if (code === c) { // Rafraichissement de l'objet de préférence courante
+            currentPref.value.obj = obj
+            await saveCurrentPref()
+          }
+        }
+      }
     }
-    safePrefs.value = p
+    prefs.value = p
 
+  }
+
+  /* Retourne depuis le Safe central actuellement en mémoire
+  la liste (éventuellement vide) des prefs relative à l'application (et au user)
+  */
+  const getMySafePrefs = () : Pref[] => {
+    const app = stores.config.appname
+    const x = prefs.value.get(app)
+    return x ? x : []
   }
 
   const createSafe = async (
@@ -416,14 +427,14 @@ export const useSafeStore = defineStore('safe', () => {
       id: userId.value,
       C: C.value,
       DK: DK.value,
-      pseudo: await Crypt.crypt(cleK.value, encoder.encode(trig)),
+      pseudo: await Crypt.crypt(keyK.value, encoder.encode(trig)),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
       hhr1: Crypt.shaS(rsh1),
-      hhk: Crypt.shaS(shK),
-      Ka: await Crypt.crypt(psh, cleK.value),
-      Kr: await Crypt.crypt(rsh, cleK.value),
+      hhk: Crypt.shaS(shK.value),
+      Ka: await Crypt.crypt(psh, keyK.value),
+      Kr: await Crypt.crypt(rsh, keyK.value),
       devices: {},
       creds: {},
       profiles: {},
@@ -545,9 +556,10 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    open, setK, devId, devName, getHeader, setHeader,
+    open, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, getTSessions, setTSession, delTSession, getMySessions,
+    currentPref, getCurrentPref, saveCurrentPref,
     userId, keyK, openMode, auth, devices,
     createSafe, openSafe, openSafeByPin, setTrust, setUntrust
   }

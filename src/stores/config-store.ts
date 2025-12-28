@@ -30,7 +30,7 @@ export const useConfigStore = defineStore('config', () => {
     for(const f in custom) K.value[f] = custom[f]
     k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = k.localeOptions[0].value
-    appname.value = K.APPNAME
+    appname.value = K.value.APPNAME
   }
 
   return {

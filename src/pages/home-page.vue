@@ -244,6 +244,7 @@ onMounted(async () => {
   await sf.getHeader()
   await sf.getTrustings()
   await sf.getTSessions()
+  await sf.getCurrentPref()
 })
 
 const step = ref(1)
@@ -356,7 +357,7 @@ const createSafe = async () => {
   await ui.diagDisplay($t('HPcsret_' + (createMode.value ? '0' : '1') + status))
   if (status === 0) {
     ui.fD()
-    ui.oD(idc, 'openSession')
+    openSession()
   }
 }
 
