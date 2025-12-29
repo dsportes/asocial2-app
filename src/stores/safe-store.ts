@@ -10,7 +10,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { AppExc, b64ToU8, u8ToB64, equ8 } from '../src-fw/util'
+import { AppExc, sleep, u8ToB64, equ8 } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
@@ -39,6 +39,11 @@ import { Crypt } from '../src-fw/crypt'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
+/* Coefficients donnant le volume réel depuis le volume utile
+pour chaque type de volume (documents / fichiers)
+*/
+const coeffs = [2, 1.3]
+
 export type Trusting = {
   userId: string
   pseudo: string
@@ -53,9 +58,9 @@ export type TSession = {
   userId: string // id de l'utilisateur
   profId: string // id de sa liste de droits
   profAbout: string | Uint8Array // commentaire de l'utilisateutr sur ce profil
-  size: number // taille "utile" des données stockées en local dans IDB
+  size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
-  // IDB name: shaS(userId + '/' + profId)
+  // IDB name: app + '_' + shaS(userId + '/' + profId)
 }
 
 export type Pref = [code: string, obj: Object]
@@ -130,6 +135,15 @@ function EX (e: Error, n: number) {
   return ex
 }
 
+async function resetAllLocal () {
+  await Dexie.delete('safe')
+  const x = localStorage.getItem('$DBLIST') || ''
+  const dbl = x.split(' ')
+  for (const dbName of dbl)
+    if (dbName) await Dexie.delete(dbName)
+  localStorage.removeItem('$DBLIST')
+}
+
 class IDBS {
   static idbs: IDBS
 
@@ -189,7 +203,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const getTrustings = async () => {
     try {
-      IDBS.idbs.db.trustings.each(async (r) => {
+      await IDBS.idbs.db.trustings.each(async (r) => {
         const obj = decode(r.bin) as Trusting
         trustings.value.set(obj.userId, obj)
       })
@@ -207,36 +221,59 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setTrusting = async (obj: Trusting) => {
     try {
-      IDBS.idbs.db.trustings.put({ id: obj.userId, bin: encode(obj)})
+      await IDBS.idbs.db.trustings.put({ id: obj.userId, bin: encode(obj)})
       trustings.value.set(obj.userId, obj)
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  const delTrusting = async (userId: string) => {
+  const delTrusting = async (id: string) => {
     try {
-      IDBS.idbs.db.trustings.delete({ id: userId })
-      trustings.value.delete(userId)
+      await IDBS.idbs.db.trustings.where({id}).delete()
+      trustings.value.delete(id)
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
+  const trigOfS = (s: TSession) : string => {
+    const x = trustings.value.get(s.userId)
+    return x ? (x.pseudo || '?') : '?'
+  }
+
+  const dbNameOfS = (s: TSession) : string => {
+    return s.app + '_' + Crypt.shaS(s.userId + '/' + s.profId)
+  }
+
+  const idOfS = (obj: TSession) : string => {
+    return obj.app + '/' + obj.userId + '/' + obj.profId
+  }
+
   const getTSessions = async () => {
+    const app = stores.config.appname
     try {
-      IDBS.idbs.db.tsessions.each(async (r) => {
+      await IDBS.idbs.db.tsessions.each(async (r) => {
         const obj = decode(r.bin) as TSession
-        const x = obj.app + '/' + obj.userId + '/' + obj.profId
         const obj2 : TSession = { ...obj } as TSession
         obj2.profAbout = await Crypt.decrypt(keyK.value, obj.profAbout as Uint8Array)
-        tsessions.value.set(x, obj2)
+        tsessions.value.set(idOfS(obj), obj2)
       })
-      /*
-      for(let i = 1; i < 10; i++)
-        tsessions.value.set(i, { app: 'app' + i,
-        profAbout: 'bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla '  + i})
-      */
+
+      // simulation
+      for(const [userId, t] of trustings.value) {
+        const profId = '!!' + userId
+        const s : TSession = {
+          app,
+          userId,
+          profId,
+          profAbout: 'bla bla ' + profId,
+          size: [1500, 12000000],
+          time: Date.now() - (Math.floor(Math.random() * 50) * 60000)
+        }
+        await setTSession(s)
+      }
+
     } catch (e) {
       throw EX(e, 2)
     }
@@ -245,33 +282,76 @@ export const useSafeStore = defineStore('safe', () => {
   const getMySessions = () : TSession[] => {
     const t: TSession[] = []
     for(const [,x] of tsessions.value)
-      // if (x.userId === userId.value) t.push(x)
-      t.push(x)
+      if (x.userId === userId.value) t.push(x)
     return t
+  }
+
+  /* Retourne la taille estimée de LA session citée 
+  ou de toutes celles de l'utilisateur,
+  ou de toutes
+  */
+  const getSessionSize = (userId?: string, profId?: string) : number => {
+    let t = 0
+    for(const [,x] of tsessions.value) {
+      if (userId && x.userId !== userId) continue
+      if (profId && x.profId !== profId) continue
+      for(let i = 0; i < coeffs.length; i++) t += coeffs[i] + (x.size[i] || 0)
+    }
+    return t
+  }
+
+  const volOfS = (s: TSession) : number => {
+    return getSessionSize(s.userId, s.profId)
   }
 
   const setTSession = async (obj: TSession) => {
     try {
-      const x = obj.app + '/' + obj.userId + '/' + obj.profId
-      const id = Crypt.shaS(encoder.encode(x))
+      const id = Crypt.shaS(idOfS(obj))
+      // console.log("tsession: ", id)
       const obj2 : TSession = { ...obj }
       obj2.profAbout = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
-      IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
-      tsessions.value.set(x, obj)
+      await IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
+      tsessions.value.set(id, obj)
+      recordIDB(dbNameOfS(obj))
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  const delTSession = async (app: string, userId: string, profId: string) => {
-    try {
-      const x = app + '/' + userId + '/' + profId
-      const id = Crypt.shaS(encoder.encode(x))
-      IDBS.idbs.db.trustings.delete({ id })
-      trustings.value.delete(x)
-    } catch (e) {
-      throw EX(e, 2)
+  const purgeIDBS = async (l: string[]) => {
+    const x = localStorage.getItem('$DBLIST') || ''
+    const dbl = x.split(' ')
+    for (const ids of l) {
+      const s = tsessions.value.get(ids) as TSession
+      const dbName = dbNameOfS(s)
+      try {
+        await Dexie.delete(dbName)
+        await sleep(300)
+        const n = dbl.indexOf(dbName)
+        if (n !== -1) dbl.splice(n, 1)
+        console.log(dbName + ' deleted')
+      } catch (e) {
+        console.log(dbName + ' deletion FAILED: ', e.message())
+      }
+      localStorage.setItem('$DBLIST', dbl.join(' '))
+      await delTSession(s)
     }
+  }
+
+  const recordIDB = (dbName: string) => {
+    const x = localStorage.getItem('$DBLIST') || ''
+    const dbl = x.split(' ')
+    const n = dbl.indexOf(dbName)
+    if (n === -1) dbl.push(dbName)
+    localStorage.setItem('$DBLIST', dbl.join(' '))
+  }
+
+  const delTSession = async (obj: TSession) => {
+    const id = Crypt.shaS(idOfS(obj))
+    // console.log("tsession: ", id)
+    try { await IDBS.idbs.db.trustings.where({ id }).delete()
+    } catch (e) { } 
+    trustings.value.delete(id)
   }
 
   // Charge depuis IDB currentPref avec la préférence du user pour l'application en cours
@@ -295,9 +375,9 @@ export const useSafeStore = defineStore('safe', () => {
       const id = Crypt.shaS(app + '/' + userId.value)
       if (currentPref.value) {
         const bin = await Crypt.crypt(keyK.value, encode(currentPref.value))
-        IDBS.idbs.db.prefs.put({ id, bin })
+        await IDBS.idbs.db.prefs.put({ id, bin })
       } else {
-        await IDBS.idbs.db.prefs.delete(id)
+        await IDBS.idbs.db.prefs.where({id}).delete()
       }
     } catch (e) {
       throw EX(e, 2)
@@ -556,9 +636,11 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
+    recordIDB, resetAllLocal,
     open, devId, devName, getHeader, setHeader,
     trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, getTSessions, setTSession, delTSession, getMySessions,
+    getSessionSize, trigOfS, volOfS, idOfS, dbNameOfS, purgeIDBS,
     currentPref, getCurrentPref, saveCurrentPref,
     userId, keyK, openMode, auth, devices,
     createSafe, openSafe, openSafeByPin, setTrust, setUntrust

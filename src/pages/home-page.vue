@@ -10,11 +10,14 @@
           <q-icon size="48px" class="q-ma-none q-pa-none" color="warning" name="push_pin" />
         </div-->
         <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
-        <q-toggle v-model="session.hasNet"
-          :class="'q-pa-xs bord1 ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
-          dense color="positive"
-          checked-icon="cloud" unchecked-icon="cloud_off"
-          :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
+        <div class="full-width row justify-between">
+          <q-toggle v-model="session.hasNet"
+            :class="'q-pa-xs bord1 ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
+            dense color="positive"
+            checked-icon="cloud" unchecked-icon="cloud_off"
+            :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
+          <btn-cond round icon="local_police" size="sm" color="negative" @ok="opCfReset"/>
+        </div>
 
         <div v-if="options && options.length === 0 && !session.hasNet"
           class="q-mt-sm titre-md text-italic text-center">{{$t('HPnoplane')}}</div>
@@ -46,7 +49,7 @@
       <div class="column q-pa-sm items-center">
         <div class="full-width row justify-between items-start">
           <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
-            color="warning" @ok="step = 1"/>
+            color="warning" @ok="backToAuth"/>
           <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
         </div>
 
@@ -77,13 +80,80 @@
           <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" class="full-width q-mb-xs"/>
         </div>
 
-        <div v-if="diag2 !== ''" class="q-mt-sm diag">{{diag2}}</div>
-
-        <div class="titre-lg text-italic q-my-lg">TODO !</div>
-
+        <div class="row titre-md text-italic q-my-sm q-gutter-sm items-center">
+          <div>{{$t('HPvol_1', sf.trustings.size, { count: sf.trustings.size })}}</div>
+          <div v-if="sf.trustings.size !== 0">{{$t('HPvol_2', [edvol(totalVol)])}}</div>
+          <btn-cond v-if="sf.trustings.size !== 0" icon="open_in_new" 
+            :label="$t('HPvol_3')" @ok="freeVol"/>
+        </div>
+        
       </div>
     </q-step>
   </q-stepper>
+
+  <!-- Confirmation du resetAll -->
+  <q-dialog v-model="ui.dModels[idc].resetAll" persistent>
+    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
+      <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
+      <div class="q-my-md titre-lg text-bold text-italic text-center">{{$t('HPskull')}}</div>
+      <div class="row full-width justify-between items-center">
+        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
+        <btn-confirm actif :confirm="resetAllLocal"/>
+      </div>
+    </q-card>
+  </q-dialog>
+
+  <!-- Suppression des IDB des sessions épinglées -->
+  <q-dialog v-model="ui.dModels[idc].delIDBS" persistent>
+    <q-card :class="sty('md')">
+      <q-toolbar class="tbp">
+        <btn-cond icon="close" :label="$t('giveup')" color="warning" @ok="ui.fD"/>
+        <q-toolbar-title class="titre-smd">{{$t('HPunpin_1')}}</q-toolbar-title>
+        <help-button page="HPdelIDBS"/>
+      </q-toolbar>
+      <div class="q-pa-sm">
+        <div class="titre-md">{{ $t('HPunpin_2') }}</div>
+        <div class="titre-md q-ml-md">{{ $t('HPunpin_3') }}</div>
+        <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
+        <q-separator class="q-mt-xs q-mb-sm"/>
+
+        <div class="row q-mb-sm titre-md text-italic">
+          <div class="col-1"/>
+          <div class="col-2">{{$t('HPupc_1')}}</div>
+          <div class="col-2">{{$t('HPupc_2')}}</div>
+          <div class="col-2">{{$t('HPupc_3')}}</div>
+          <div class="col-5">{{$t('HPupc_4')}}</div>
+        </div>
+        <q-separator class="q-mt-xs q-mb-sm"/>
+
+        <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle">
+          <div :class="dkli(idx)" v-for="([id, s], idx) of sf.tsessions" :key="id">
+            <div class="row font-mono fs-md items-center">
+              <q-checkbox class="col-1" dense size="sm" 
+                v-model="selS.get(id).c"
+                @update:model-value="onSelS"/>
+              <div class="col-2">{{sf.trigOfS(s)}}</div>
+              <div class="col-2">{{s.app}}</div>
+              <div class="col-2">{{edvol(sf.volOfS(s))}}</div>
+              <div class="col-5">{{dhcool(s.time)}}</div>
+            </div>
+            <div class="row q-mb-sm fs-md">
+              <div class="col-3"></div>
+              <div class="col-9">{{s.profAbout}}</div>
+            </div>
+          </div>
+        </q-scroll-area>
+
+        <q-separator class="q-mt-xs"/>
+        <div class="row items-center justify-end">
+          <div class="titre-md text-bold q-ma-none q-pa-none q-mr-md">
+            {{ $t('HPfreev', [edvol(vsel), edvol(vlib)]) }}</div>
+          <btn-confirm class="q-ma-none q-pa-none"
+            :actif="vsel !== 0" :confirm="purgeIDBS"/>
+        </div>
+      </div>
+    </q-card>
+  </q-dialog>
 
   <!-- Création d'un safe / Changement des codes -->
   <q-dialog v-model="ui.dModels[idc].createSafe" persistent>
@@ -192,7 +262,7 @@
         <div class="col-9 titre-md text-italic">{{$t('HPutc2')}}</div>
       </div>
       <div v-if="mySessions.length" class="q-my-sm q-mx-md slist q-pa-xs">
-        <q-scroll-area style="height: 150px">
+        <q-scroll-area style="height: 150px" :barStyle="barStyle" :thumbStyle="thumbStyle">
           <div v-for="(s, idx) in mySessions" :key="idx" class="q-my-xs row">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
             <div class="col-9 fs-md">{{s.profAbout}}</div>
@@ -216,13 +286,15 @@ import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
+import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
-import { $t, sty, equ8 } from '../src-fw/util'
+import { $t, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
 
 // const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
-
+const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
+const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 const minTr = 3
 const maxTr = 8
 const minDev = 8
@@ -239,18 +311,32 @@ const session = stores.session
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-onMounted(async () => {
+const loadIDBSafe = async () => {
   await sf.open()
   await sf.getHeader()
   await sf.getTrustings()
   await sf.getTSessions()
   await sf.getCurrentPref()
+}
+
+onMounted(async () => { 
+  await loadIDBSafe()
 })
+
+const opCfReset = () => {
+  ui.oD(idc, 'resetAll')
+}
+
+const resetAllLocal = async () => {
+  await sf.resetAllLocal()
+  coolBye()
+}
 
 const step = ref(1)
 const p0p1 = ref(null)
 const pin = ref(null)
 const selectedSafe = ref(null)
+const totalVol = ref(0)
 
 const options = computed(() => {
   const r = []
@@ -259,18 +345,13 @@ const options = computed(() => {
 })
 
 watch(options, (ap) => {
-  // selectedSafe.value = ap.length ? ap[0] : null
+  selectedSafe.value = ap.length ? ap[0] : null
 })
 
 const backToAuth = () => {
   step.value = 1
   p0p1.value = null
   pin.value = null
-}
-
-const openSession = () => {
-  myTrusting.value = sf.getMyTrusting()
-  step.value = 2
 }
 
 const auth = async (args) => {
@@ -285,7 +366,13 @@ const authPin = async (p) => {
   const userId = selectedSafe.value['value']['userId']
   const status = await sf.openSafeByPin(pin.value, userId)
   if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
-  else step.value = 2
+  else openSession()
+}
+
+const openSession = () => {
+  myTrusting.value = sf.getMyTrusting()
+  totalVol.value = sf.getSessionSize()
+  step.value = 2
 }
 
 const createMode = ref()
@@ -361,7 +448,6 @@ const createSafe = async () => {
   }
 }
 
-const diag2 = ref('')
 const myTrusting = ref(null)
 const newDev = ref(false)
 const devName = ref('')
@@ -417,6 +503,40 @@ const setUntrust = async () => {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }
+
+const vlib = ref(0)
+const vsel = ref(0)
+const selS = ref() // Map<string, { c, v }>
+
+const freeVol = () => {
+  vlib.value = sf.getSessionSize()
+  vsel.value = 0
+  const x = new Map<string, Object>()
+  for (const [id, s] of sf.tsessions) 
+    x.set(id, { c: false, v: sf.volOfS(s)})
+  selS.value = x
+  ui.oD(idc, 'delIDBS')
+}
+
+const onSelS = () => {
+  let t = 0
+  for(const [id, s] of sf.tsessions) {
+    const e = selS.value.get(id) 
+    if (e.c) t += e.v
+  }
+  vsel.value = t
+}
+
+const purgeIDBS = async () => {
+  const l = []
+  for(const [id,] of sf.tsessions) {
+    const e = selS.value.get(id) 
+    if (e.c) l.push(id)
+  }
+  await sf.purgeIDBS(l)
+  ui.fD()
+}
+
 </script>
 
 <style lang="scss" scoped>

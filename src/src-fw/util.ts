@@ -29,6 +29,75 @@ export async function beep (son: string) {
   source.start() // play the source now
 }
 
+export function edvol (vol: number) : string {
+  const v = vol || 0
+  if (v === 0) return '0B'
+  if (v < 1000) return v + 'B'
+  if (v < 1000000) return (v / 1000).toPrecision(3) + 'KB'
+  if (v < 1000000000) return (v / 1000000).toPrecision(3) + 'MB'
+  if (v < 1000000000000) return (v / 1000000000).toPrecision(3) + 'GB'
+  if (v < 1000000000000000) return (v / 1000000000000).toPrecision(3) + 'TB'
+  return (v / 1000000000000000).toPrecision(3) + 'PB'
+}
+
+type Date3 = [number, number, number] // full year, mont, date
+let auj: Date3 = [0, 0, 0], hier: Date3 = [0, 0, 0]
+
+function zp (n: number) { return n > 9 ? '' + n: '0' + n }
+
+export function aujhier () {
+  const now = new Date()
+  const n = [now.getFullYear(), now.getMonth(), now.getDate()] as Date3
+  if (n[0] === auj[0] && n[1] === auj[1] && n[2] === auj[2]) return
+  auj = n
+  const h = new Date(now.getTime() - 86400000)
+  hier = [h.getFullYear(), h.getMonth(), h.getDate()]
+}
+
+export function dhcool (timems, sec, pash) {
+  if (!timems) return $t('DHCnondate')
+  aujhier()
+  const dx = new Date(timems)
+  const d = [dx.getFullYear(), dx.getMonth(), dx.getDate()]
+  const mm = auj[0] === d[0] && auj[1] === d[1]
+  if (mm && auj[2] === d[2]) {
+    return pash ? $t('DHCauja') : $t('DHCaujah', [hms(dx, sec)])
+  }
+  if (hier[0] === d[0] && hier[1] === d[1] && hier[2] === d[2]) {
+    return pash ? $t('DHChiera') : $t('DHChierah', [hms(dx, sec)])
+  }
+  if (mm) {
+    return pash ? $t('DHClea', [d[2]]) : $t('DHCleah', [d[2], hms(dx, sec)])
+  }
+  return pash ? $t('DHCja', [aaaammjj(dx)]) : $t('DHCjah', [aaaammjj(dx), hms(dx, sec)])
+}
+
+// Retourne hh-mm-ss d'une date
+export function hms (t: Date | number, sec?: boolean) : string {
+  if (!t) return '?'
+  const d = t instanceof Date ? t : new Date(t)
+  const hh = zp(d.getHours())
+  const mm = ':' + zp(d.getMinutes())
+  const ss = sec ? ':' + zp(d.getSeconds()) : ''
+  return hh + mm + ss
+}
+
+// Retourne aaaa-mm-jj d'une date
+export function aaaammjj (t: Date | number) : string {
+  if (!t) return '?'
+  const d = t instanceof Date ? t : new Date(t)
+  const aa = d.getFullYear()
+  const mm = '-' + zp(d.getMonth() + 1)
+  const jj = '-' + zp(d.getDate())
+  return aa + mm + jj
+}
+
+export function dhstring (t: Date | number) {
+  const d = t instanceof Date ? t : new Date(t)
+  return d.toISOString()
+  // return aaaammjj(d) + ' ' + hms(d, sec)
+}
+
 export class AppExc {
   /* 
   codes: serveur
@@ -103,6 +172,11 @@ export class AppExc {
 }
 
 const encoder = new TextEncoder()
+
+export function dkli (idx) {
+  const d = stores.ui.isDark
+  return (d ? (idx ? 'dark' + (idx % 2) : 'dark0') : (idx ? 'clear' + (idx % 2) : 'clear0')) + ' '
+}
 
 export function sty (sz?: string) {
   const d = stores.ui.isDark

@@ -86,3 +86,11 @@
 .q-item__section--side { padding-right: 5px !important; }
 .q-item { padding: 2px !important; }
 .q-stepper__step-inner { padding:5px !important; }
+
+/* Barre de scroll */
+/* Works on Firefox */
+* { scrollbar-width: thin; scrollbar-color: blue orange }
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar { width: 6px }
+*::-webkit-scrollbar-track { background: orange }
+*::-webkit-scrollbar-thumb { background-color: blue; border-radius: 20px; border: 1px solid orange; }

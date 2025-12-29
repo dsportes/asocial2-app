@@ -29,6 +29,8 @@ export default {
   url: 'URL du serveur pour cette organisation: {0}',
   pressret: '"Entrée" pour valider',
   validate: 'Valider',
+  nothing2confirm: 'Rien à confirmer', // BtnConfirm
+  confirm: 'Pour confirmer taper {0}', // BtnConfirm
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -165,7 +167,33 @@ export default {
   HPutnbs: 'Aucune session initiée sur ce terminal. | Une session est initiée sur ce terminal. | {count} sessions sont initiées sur ce terminal.',
   HPutc1: 'Application',
   HPutc2: 'A propos de la session ...',
+  HPvol_1: 'Aucune session n\'est épinglée, pas de volume à libérer. ' +
+    '| Une session est épinglée. | {count} sessions sont épinglées.',
+  HPvol_2: 'Volume libérable: {0}.',
+  HPvol_3: 'Libérer {0}',
+  HPunpin_1: 'Désépingler des sessions',
+  HPunpin_2: 'Désépingler une session économise de la place sur le terminal en supprimant ses données stockées localement avec pour conséquences:',
+  HPunpin_3: '- de ralentir sa réouverture ultérieure sur ce terminal,',
+  HPunpin_4: '- d\'interdire son ouverture en mode AVION sur ce terminal.',
+  HPupc_1: 'Utilisateur',
+  HPupc_2: 'App.',
+  HPupc_3: 'Volume',
+  HPupc_4: 'Dernière connexion ici',
+  HPfreev: 'Volume à libérer {0} sur {1}',
+  HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
+    'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
 
+  // util dhcool
+  DHCaujah: 'aujourd\'hui à {0}',
+  DHCauja: 'aujourd\'hui',
+  DHChierah: 'hier à {0}',
+  DHChiera: 'hier',
+  DHCleah: 'le {0} à {1}',
+  DHClea: 'le {0}',
+  DHCjah: '{0} à {1}',
+  DHCja: '{0}',
+  DHCnondate: '(non daté)',
+  DHCdansjours: 'aujourd\'hui | demain | dans {count} jours',
 
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
