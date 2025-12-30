@@ -11,7 +11,8 @@
             dense color="positive"
             checked-icon="cloud" unchecked-icon="cloud_off"
             :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
-          <btn-cond round icon="local_police" size="sm" color="negative" @ok="opCfReset"/>
+          <btn-cond v-if="!sf.incognito" round icon="local_police" 
+            size="sm" color="negative" @ok="opCfReset"/>
         </div>
 
         <div class="full-width row">
@@ -26,20 +27,17 @@
           {{ $t('HPnosession') }}
         </div>
 
+        <div v-if="!sf.incognito" class="row q-mt-sm items-start">
+          <q-icon class="col-1" name="info" size="1.2rem" />
+          <div class="col-11 titre-md text-italic">{{$t('HPnbUt', nbUt, { count: nbUt })}}</div>
+        </div>
+
         <div v-if="session.hasNet" class="q-mt-md row items-start">
-          <div class="col-auto titre-md text-italic">{{$t('HPnoreg')}}</div>
-          <btn-cond class="q-ml-sm" size="md" icon="send" @ok="regme"/>
+          <div class="col-11 titre-md text-italic text-right">{{$t('HPnoreg')}}</div>
+          <btn-cond class="col-1 text-right" size="md" icon="send" @ok="regme"/>
         </div>
 
-        <div v-if="!sf.incognito && options.length === 0 && !session.hasNet"
-          class="q-mt-sm titre-md text-italic">{{$t('HPnoplane')}}</div>
-
-        <div v-if="options.length === 0 && session.hasNet"
-          class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
-        </div>
-
-        <p0-p1 v-if="!sf.incognito || session.hasNet"
-          class="q-mt-md"  @ok="authPhrase"
+        <p0-p1 v-if="mayPS" class="q-mt-md" @ok="authPS"
           :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
 
         <div v-if="mayPIN">
@@ -49,54 +47,64 @@
             <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
               transition-show="flip-up" transition-hide="flip-down"
               v-model="selectedSafe" :options="options" />
-            <pin-code class="col-6" :disable="selectedSafe === null" @ok="authPin"/>
+            <pin-code class="col-6" :disable="selectedSafe === null" @ok="authPIN"/>
           </div>
         </div>
-
+      </div>
     </q-step>
 
     <q-step :name="2" :title="$t('HPsession')" icon="send">
-      <div class="column q-pa-sm items-center">
+      <div class="q-pa-sm">
         <div class="full-width row justify-between items-start">
           <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
             color="warning" @ok="backToAuth"/>
           <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
         </div>
+        <q-separator class="full-width q-mt-xs q-mb-sm"/>
 
-        <div class="column full-width">
-          <div v-if="sf.openMode !== 3"
-            class="self-end q-mt-sm row justify-center items-start">
-            <div class="col titre-md text-italic text-right">{{$t('HPupdcodes')}}</div>
-            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="updCodes"/>
-          </div>
-          <div v-if="sf.openMode !== 3 && myTrusting === null"
-            class="self-end q-mt-sm row justify-center items-start">
-            <div class="col titre-md text-italic text-right">{{$t('HPtrust')}}</div>
-            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
-          </div>
-          <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" class="full-width q-mt-xs"/>
-          <div v-if="sf.openMode !== 3 && myTrusting !== null"
-            class="self-center titre-md">{{$t('HPuntrust')}}</div>
-          <div v-if="sf.openMode !== 3 && myTrusting !== null"
-            class="self-end q-mt-sm row justify-center items-start">
-            <div class="col titre-md text-italic text-right">{{$t('HPuntrust_p')}}</div>
-            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openTrust"/>
-          </div>
-          <div v-if="sf.openMode !== 3 && myTrusting !== null"
-            class="self-end q-mt-sm row justify-center items-start">
-            <div class="col titre-md text-italic text-right">{{$t('HPuntrust_r')}}</div>
-            <btn-cond class="q-ml-sm" size="md" icon="send" @ok="openUntrust"/>
-          </div>
-          <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" class="full-width q-mb-xs"/>
+        <div v-if="sf.openMode !== 3" class="row">
+          <div class="col-11 titre-md text-italic text-right">{{$t('HPupdcodes')}}</div>
+          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="updCodes"/>
         </div>
 
-        <div class="row titre-md text-italic q-my-sm q-gutter-sm items-center">
-          <div>{{$t('HPvol_1', sf.trustings.size, { count: sf.trustings.size })}}</div>
-          <div v-if="sf.trustings.size !== 0">{{$t('HPvol_2', [edvol(totalVol)])}}</div>
-          <btn-cond v-if="sf.trustings.size !== 0" icon="open_in_new" 
+        <div v-if="sf.openMode !== 3 && myTrusting === null" class="row">
+          <div class="col-11 titre-md text-italic text-right">{{$t('HPtrust')}}</div>
+          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openTrust"/>
+        </div>
+
+        <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" 
+          class="full-width q-mt-xs"/>
+        
+        <div v-if="sf.openMode !== 3 && myTrusting !== null"
+          class="titre-md">{{$t('HPuntrust')}}</div>
+
+        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="row">
+          <div class="col-1"/>
+          <div class="col-10 titre-md text-italic text-right">{{$t('HPuntrust_r')}}</div>
+          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openUntrust"/>
+        </div>
+
+        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="row">
+          <div class="col-1"/>
+          <div class="col-10 titre-md text-italic text-right">{{$t('HPuntrust_p')}}</div>
+          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openTrust"/>
+        </div>
+
+        <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" 
+          class="full-width q-my-xs"/>
+
+        <div class="row full-width q-my-sm items-start">
+          <div class="col titre-md text-italic">
+            <span>
+              {{$t('HPvol_1', sf.trustings.size, { count: sf.trustings.size })}}</span>
+            <span class="q-ml-sm" v-if="sf.trustings.size !== 0">
+              {{$t('HPvol_2', [edvol(totalVol)])}}</span>
+          </div>
+          <btn-cond class="col-auto q-pl-sm" v-if="sf.trustings.size !== 0" icon="open_in_new" 
             :label="$t('HPvol_3')" @ok="freeVol"/>
         </div>
-        
+
+        <div class="text-center titre-lg q-my-md">TODO !</div>
       </div>
     </q-step>
   </q-stepper>
@@ -138,12 +146,12 @@
 
         <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle">
           <div :class="dkli(idx)" v-for="([id, s], idx) of sf.tsessions" :key="id">
-            <div class="row font-mono fs-md items-center">
+            <div class="row font-mono fs-md items-start">
               <q-checkbox class="col-1" dense size="sm" 
                 v-model="selS.get(id).c"
                 @update:model-value="onSelS"/>
-              <div class="col-2">{{sf.trigOfS(s)}}</div>
-              <div class="col-2">{{s.app}}</div>
+              <div class="col-2 ellipsis q-pr-xs">{{sf.trigOfS(s)}}</div>
+              <div class="col-2 ellipsis q-pr-xs">{{s.app}}</div>
               <div class="col-2">{{edvol(sf.volOfS(s))}}</div>
               <div class="col-5">{{dhcool(s.time)}}</div>
             </div>
@@ -324,7 +332,7 @@ onUnmounted(() => ui.closeVue(idc))
 const hasIDB = ref(false)
 
 onMounted(async () => { 
-  await sf.init0()
+  hasIDB.value = await sf.init0()
 })
 
 const opCfReset = () => {
@@ -348,8 +356,11 @@ const options = computed(() => {
   return r
 })
 
-const mayPIN = computed(() => 
-  sf.hasIDB && !sf.incognito && options.value.length > 0 && session.hasNet)
+const nbUt = computed(() => sf.trustings.size )
+
+const mayPIN = computed(() => !sf.incognito && nbUt.value > 0 && session.hasNet)
+
+const mayPS = computed(() => session.hasNet || (!sf.incognito && nbUt.value > 0))
 
 watch(options, (ap) => {
   selectedSafe.value = ap.length ? ap[0] : null
@@ -361,14 +372,14 @@ const backToAuth = () => {
   pin.value = null
 }
 
-const authPhrase = async (args) => {
+const authPS = async (args) => {
   p0p1.value = args
   const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
   if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
   else await openSession()
 }
 
-const authPin = async (p) => {
+const authPIN = async (p) => {
   pin.value = p
   const userId = selectedSafe.value['value']['userId']
   const status = await sf.openSafeByPin(pin.value, userId)
@@ -377,7 +388,10 @@ const authPin = async (p) => {
 }
 
 const openSession = async () => {
-  await sf.getCurrentPref()
+  if (!sf.incognito) {
+    if (!hasIDB.value) await sf.init1()
+    await sf.getCurrentPref()
+  }
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   step.value = 2

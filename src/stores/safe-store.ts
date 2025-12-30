@@ -158,20 +158,27 @@ export const useSafeStore = defineStore('safe', () => {
   // préférences du user COURANT pour l'application COURANTE
   const currentPref : Ref<Pref> = ref(null)  // Depuis prefs (partiel)
 
-  const init0 = async () => {
+  const init0 = async () : Promise<boolean> => {
     try {
-      db.value = new Dexie('safe', { autoOpen: false })
-      if (db.value) {
+      const exists = await Dexie.exists('safe')
+      if (exists) {
+        db.value = new Dexie('safe')
         db.value.version(1).stores(STORES)
-        await db.value.open()
         const r = await db.value.header.get('1')
         devId.value = r && r.devId ? r.devId : ''
         devName.value = r && r.devName ? r.devName : ''
         await getTrustings()
         await getTSessions()
         console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
+        return true
       } else {
+        db.value = null
+        devId.value = ''
+        devName.value = ''
+        trustings.value.clear()
+        tsessions.value.clear()
         console.log('Init0 IDBS failed.')
+        return false
       }
     } catch (e) {
       if (db.value) { 
@@ -179,21 +186,17 @@ export const useSafeStore = defineStore('safe', () => {
         db.value = null
       }
       console.log('Init0 IDBS failed: ' + e.message)
+      return false
     }
   }
 
+  // Appel UNIQUEMENT quand IDB Safe n'existe pas (encore) - La créé vide
   const init1 = async () => {
     try {
-      db.value = new Dexie('safe', { autoOpen: true })
-      if (db.value) {
-        db.value.version(1).stores(STORES)
-        await db.value.header.put({ id: '1', devId: '', devName: '' })
-        devId.value = ''
-        devName.value = ''
-        console.log('Init1 IDBS OK.')
-      } else {
-        Error('Init1 IDBS failed.')
-      }
+      db.value = new Dexie('safe')
+      db.value.version(1).stores(STORES)
+      await db.value.header.put({ id: '1', devId: '', devName: '' })
+      console.log('Init1 IDBS OK.')
     } catch (e) {
       console.log('Init1 IDBS failed: ' + e.message)
       throw EX(e, 1)
