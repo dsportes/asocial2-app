@@ -144,24 +144,12 @@ async function resetAllLocal () {
   localStorage.removeItem('$DBLIST')
 }
 
-class IDBS {
-  static idbs: IDBS
-
-  db : any
-
-  constructor () {
-    IDBS.idbs = this
-    if (stores.config.mondebug) console.log('Open IDBS')
-    try {
-      this.db = new Dexie('safe', { autoOpen: true })
-      this.db.version(1).stores(STORES)
-    } catch (e) {
-      throw EX(e, 1)
-    }
-  }
-}
-
 export const useSafeStore = defineStore('safe', () => {
+  const db = ref(null) // IDB safe locale
+  const incognito = ref(false)
+
+  const hasIDBS = computed(() => db.value !== null)
+
   // Safe IDB : image en mémoire
   const devId = ref('') // Depuis IDB Header
   const devName = ref('') // Depuis IDB Header
@@ -170,20 +158,91 @@ export const useSafeStore = defineStore('safe', () => {
   // préférences du user COURANT pour l'application COURANTE
   const currentPref : Ref<Pref> = ref(null)  // Depuis prefs (partiel)
 
-  const open = async () => {
+  const init0 = async () => {
     try {
-      const idbs = new IDBS()
-      await idbs.db.open()
+      db.value = new Dexie('safe', { autoOpen: false })
+      if (db.value) {
+        db.value.version(1).stores(STORES)
+        await db.value.open()
+        const r = await db.value.header.get('1')
+        devId.value = r && r.devId ? r.devId : ''
+        devName.value = r && r.devName ? r.devName : ''
+        await getTrustings()
+        await getTSessions()
+        console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
+      } else {
+        console.log('Init0 IDBS failed.')
+      }
     } catch (e) {
+      if (db.value) { 
+        await db.value.close()
+        db.value = null
+      }
+      console.log('Init0 IDBS failed: ' + e.message)
+    }
+  }
+
+  const init1 = async () => {
+    try {
+      db.value = new Dexie('safe', { autoOpen: true })
+      if (db.value) {
+        db.value.version(1).stores(STORES)
+        await db.value.header.put({ id: '1', devId: '', devName: '' })
+        devId.value = ''
+        devName.value = ''
+        console.log('Init1 IDBS OK.')
+      } else {
+        Error('Init1 IDBS failed.')
+      }
+    } catch (e) {
+      console.log('Init1 IDBS failed: ' + e.message)
+      throw EX(e, 1)
+    }
+  }
+
+  const getTrustings = async () => {
+    try {
+      trustings.value.clear()
+      await db.value.trustings.each(async (r) => {
+        const obj = decode(r.bin) as Trusting
+        trustings.value.set(obj.userId, obj)
+      })
+     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  const getHeader = async () => {
+  const getTSessions = async () => {
+    const app = stores.config.appname
     try {
-      const r = await IDBS.idbs.db.header.get('1')
-      devId.value = r && r.devId ? r.devId : ''
-      devName.value = r && r.devName ? r.devName : ''
+      tsessions.value.clear()
+      await db.value.tsessions.each(async (r) => {
+        const obj = decode(r.bin) as TSession
+        const obj2 : TSession = { ...obj } as TSession
+        obj2.profAbout = await Crypt.decrypt(keyK.value, obj.profAbout as Uint8Array)
+        tsessions.value.set(idOfS(obj), obj2)
+      })
+
+      /* simulation */
+      if (tsessions.value.size === 0)
+        for(const [userId, t] of trustings.value) {
+          const profId = '!!' + userId
+          const obj : TSession = {
+            app,
+            userId,
+            profId,
+            profAbout: 'bla bla ' + profId,
+            size: [1500, 12000000],
+            time: Date.now() - (Math.floor(Math.random() * 50) * 60000)
+          }
+          const id = Crypt.shaS(idOfS(obj))
+          tsessions.value.set(id, obj)
+          const obj2 : TSession = { ...obj }
+          obj2.profAbout = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
+          await db.value.tsessions.put({ id, bin: encode(obj2)})
+        }
+      /* */
+
     } catch (e) {
       throw EX(e, 2)
     }
@@ -191,23 +250,12 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setHeader = async () => {
     try {
-      await IDBS.idbs.db.header.put({
+      await db.value.header.put({
         id: '1',
         devId: devId.value || '',
         devName: devName.value || ''
       })
     } catch (e) {
-      throw EX(e, 2)
-    }
-  }
-
-  const getTrustings = async () => {
-    try {
-      await IDBS.idbs.db.trustings.each(async (r) => {
-        const obj = decode(r.bin) as Trusting
-        trustings.value.set(obj.userId, obj)
-      })
-     } catch (e) {
       throw EX(e, 2)
     }
   }
@@ -221,7 +269,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setTrusting = async (obj: Trusting) => {
     try {
-      await IDBS.idbs.db.trustings.put({ id: obj.userId, bin: encode(obj)})
+      await db.value.trustings.put({ id: obj.userId, bin: encode(obj)})
       trustings.value.set(obj.userId, obj)
     } catch (e) {
       throw EX(e, 2)
@@ -230,7 +278,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const delTrusting = async (id: string) => {
     try {
-      await IDBS.idbs.db.trustings.where({id}).delete()
+      await db.value.trustings.where({id}).delete()
       trustings.value.delete(id)
     } catch (e) {
       throw EX(e, 2)
@@ -248,35 +296,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   const idOfS = (obj: TSession) : string => {
     return obj.app + '/' + obj.userId + '/' + obj.profId
-  }
-
-  const getTSessions = async () => {
-    const app = stores.config.appname
-    try {
-      await IDBS.idbs.db.tsessions.each(async (r) => {
-        const obj = decode(r.bin) as TSession
-        const obj2 : TSession = { ...obj } as TSession
-        obj2.profAbout = await Crypt.decrypt(keyK.value, obj.profAbout as Uint8Array)
-        tsessions.value.set(idOfS(obj), obj2)
-      })
-
-      // simulation
-      for(const [userId, t] of trustings.value) {
-        const profId = '!!' + userId
-        const s : TSession = {
-          app,
-          userId,
-          profId,
-          profAbout: 'bla bla ' + profId,
-          size: [1500, 12000000],
-          time: Date.now() - (Math.floor(Math.random() * 50) * 60000)
-        }
-        await setTSession(s)
-      }
-
-    } catch (e) {
-      throw EX(e, 2)
-    }
   }
 
   const getMySessions = () : TSession[] => {
@@ -310,7 +329,7 @@ export const useSafeStore = defineStore('safe', () => {
       // console.log("tsession: ", id)
       const obj2 : TSession = { ...obj }
       obj2.profAbout = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
-      await IDBS.idbs.db.tsessions.put({ id, bin: encode(obj2)})
+      await db.value.tsessions.put({ id, bin: encode(obj2)})
       tsessions.value.set(id, obj)
       recordIDB(dbNameOfS(obj))
     } catch (e) {
@@ -349,7 +368,7 @@ export const useSafeStore = defineStore('safe', () => {
   const delTSession = async (obj: TSession) => {
     const id = Crypt.shaS(idOfS(obj))
     // console.log("tsession: ", id)
-    try { await IDBS.idbs.db.trustings.where({ id }).delete()
+    try { await db.value.trustings.where({ id }).delete()
     } catch (e) { } 
     trustings.value.delete(id)
   }
@@ -359,7 +378,7 @@ export const useSafeStore = defineStore('safe', () => {
     const app = stores.config.appname
     const id = Crypt.shaS(app + '/' + userId.value)
     try {
-      const x = await IDBS.idbs.db.prefs.get(id)
+      const x = await db.value.prefs.get(id)
       currentPref.value = !x ? null : decode(await Crypt.decrypt(keyK.value, x.bin)) as Pref
     } catch (e) {
       throw EX(e, 2)
@@ -375,9 +394,9 @@ export const useSafeStore = defineStore('safe', () => {
       const id = Crypt.shaS(app + '/' + userId.value)
       if (currentPref.value) {
         const bin = await Crypt.crypt(keyK.value, encode(currentPref.value))
-        await IDBS.idbs.db.prefs.put({ id, bin })
+        await db.value.prefs.put({ id, bin })
       } else {
-        await IDBS.idbs.db.prefs.where({id}).delete()
+        await db.value.prefs.where({id}).delete()
       }
     } catch (e) {
       throw EX(e, 2)
@@ -637,7 +656,8 @@ export const useSafeStore = defineStore('safe', () => {
 
   return {
     recordIDB, resetAllLocal,
-    open, devId, devName, getHeader, setHeader,
+    incognito, hasIDBS, init0, init1, devId, devName, 
+    setHeader,
     trustings, getTrustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, getTSessions, setTSession, delTSession, getMySessions,
     getSessionSize, trigOfS, volOfS, idOfS, dbNameOfS, purgeIDBS,

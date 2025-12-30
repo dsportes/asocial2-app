@@ -6,7 +6,7 @@
         color="none" @ok="isPwd = !isPwd"/>
       <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
     </q-toolbar>
-    <q-input class="q-mx-sm q-mb-sm" v-model="p0" counter dense
+    <q-input class="q-ml-md q-mb-sm" v-model="p0" counter dense
       input-class="font-mono"
       :type="type"
       :label="$t('PSpseudo')"
@@ -20,7 +20,7 @@
       </template>
       <template v-slot:error>{{$t(p0err)}}</template>
     </q-input>
-    <q-input class="q-mx-sm q-mb-sm" v-model="p1" counter dense
+    <q-input class="q-ml-md q-mb-sm" v-model="p1" counter dense
       input-class="font-mono"
       :type="type"
       :label="$t('PSphrase')"

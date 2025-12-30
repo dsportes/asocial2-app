@@ -3,12 +3,7 @@
   <q-stepper v-model="step" color="primary" animated class="pwmd"
     header-class="titre-lg">
     <q-step :name="1" :title="$t('HPauthentif')" icon="passkey">
-      <div class="column q-pa-sm items-center">
-        <!--div class="q-ma-md row items-center">
-          <span style="font-size:36px; margin: 0;">{{pincode}}</span>
-          <q-btn :label="pincode" padding="none" size="36px"/>
-          <q-icon size="48px" class="q-ma-none q-pa-none" color="warning" name="push_pin" />
-        </div-->
+      <div class="column q-pa-sm">
         <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
         <div class="full-width row justify-between">
           <q-toggle v-model="session.hasNet"
@@ -19,20 +14,38 @@
           <btn-cond round icon="local_police" size="sm" color="negative" @ok="opCfReset"/>
         </div>
 
-        <div v-if="options && options.length === 0 && !session.hasNet"
-          class="q-mt-sm titre-md text-italic text-center">{{$t('HPnoplane')}}</div>
+        <div class="full-width row">
+          <q-toggle v-model="sf.incognito"
+            :class="'col-auto q-mt-xs q-pa-xs bord1 ' + (sf.incognito ? 'text-bold bg-warning' : '')"
+            dense color="negative"
+            :label="$t('HPincognito')" />
+        </div>
 
-        <div v-if="session.hasNet" class="q-mt-md row justify-center items-start">
-          <div class="col titre-md text-italic text-right">{{$t('HPnoreg')}}</div>
+        <div v-if="sf.incognito && !session.hasNet"
+          class="titre-lg q-my-md text-italic text-warning text-bold">
+          {{ $t('HPnosession') }}
+        </div>
+
+        <div v-if="session.hasNet" class="q-mt-md row items-start">
+          <div class="col-auto titre-md text-italic">{{$t('HPnoreg')}}</div>
           <btn-cond class="q-ml-sm" size="md" icon="send" @ok="regme"/>
         </div>
 
-        <p0-p1 v-if="session.hasNet || (options && options.length !== 0 && !session.hasNet)"
-          class="q-mt-md" :title="$t('HPauth')" @ok="auth"/>
+        <div v-if="!sf.incognito && options.length === 0 && !session.hasNet"
+          class="q-mt-sm titre-md text-italic">{{$t('HPnoplane')}}</div>
 
-        <div v-if="options.length > 0 && session.hasNet">
-          <div class="tbs q-px-xs titre-md text-italic">{{$t('HPseluser')}}</div>
-          <div class="q-mb-sm row items-center">
+        <div v-if="options.length === 0 && session.hasNet"
+          class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
+        </div>
+
+        <p0-p1 v-if="!sf.incognito || session.hasNet"
+          class="q-mt-md"  @ok="authPhrase"
+          :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
+
+        <div v-if="mayPIN">
+          <div class="tbs q-mt-md q-px-xs titre-md text-italic">{{$t('HPseluser_1')}}</div>
+          <div class="q-ml-md q-px-xs titre-sm text-italic">{{$t('HPseluser_2')}}</div>
+          <div class="q-ml-md q-mb-sm row items-center">
             <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
               transition-show="flip-up" transition-hide="flip-down"
               v-model="selectedSafe" :options="options" />
@@ -40,9 +53,6 @@
           </div>
         </div>
 
-        <div v-if="options && options.length === 0 && session.hasNet"
-          class="q-mb-sm wsm titre-md text-italic text-center">{{$t('HPnotrust')}}</div>
-      </div>
     </q-step>
 
     <q-step :name="2" :title="$t('HPsession')" icon="send">
@@ -311,16 +321,10 @@ const session = stores.session
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const loadIDBSafe = async () => {
-  await sf.open()
-  await sf.getHeader()
-  await sf.getTrustings()
-  await sf.getTSessions()
-  await sf.getCurrentPref()
-}
+const hasIDB = ref(false)
 
 onMounted(async () => { 
-  await loadIDBSafe()
+  await sf.init0()
 })
 
 const opCfReset = () => {
@@ -344,6 +348,9 @@ const options = computed(() => {
   return r
 })
 
+const mayPIN = computed(() => 
+  sf.hasIDB && !sf.incognito && options.value.length > 0 && session.hasNet)
+
 watch(options, (ap) => {
   selectedSafe.value = ap.length ? ap[0] : null
 })
@@ -354,11 +361,11 @@ const backToAuth = () => {
   pin.value = null
 }
 
-const auth = async (args) => {
+const authPhrase = async (args) => {
   p0p1.value = args
   const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
   if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
-  else openSession()
+  else await openSession()
 }
 
 const authPin = async (p) => {
@@ -366,10 +373,11 @@ const authPin = async (p) => {
   const userId = selectedSafe.value['value']['userId']
   const status = await sf.openSafeByPin(pin.value, userId)
   if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
-  else openSession()
+  else await openSession()
 }
 
-const openSession = () => {
+const openSession = async () => {
+  await sf.getCurrentPref()
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   step.value = 2
@@ -444,7 +452,7 @@ const createSafe = async () => {
   await ui.diagDisplay($t('HPcsret_' + (createMode.value ? '0' : '1') + status))
   if (status === 0) {
     ui.fD()
-    openSession()
+    await openSession()
   }
 }
 
