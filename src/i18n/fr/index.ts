@@ -90,12 +90,15 @@ export default {
   PSphraseh: 'les 1 sanglots 2 longs 3 etc',
   PSminmax: 'De {0} à {1} signes. ',
   PScourt: 'Texte trop court',
+  PSdup: 'Nom déjà utilisé',
   PSlong: 'Texte trop long',
   PSpin: 'Code PIN',
   PSpinh: 'PIN35-zx',
 
   HPauthentif: 'Authentification',
-  HPsession: 'Choix de la session à ouvrir',
+  HPsession: 'Session à ouvrir',
+  HPenregistre: 'Enregistré',
+  HPanonyme: 'Anonyme',
   HPincognito: 'Refuser de lire / stocker des données sur ce terminal',
   HPnosession: 'Aucune session ne peut être ouverte, ni connectée (pas de réseau), ni en mode AVION (pas d\'accès aux données stockées localement)',
   HPauth_1: 'Je m\'authentifie par ma phrase secrète ...',
@@ -107,9 +110,9 @@ export default {
   HPupdcodes: 'Je veux changer mes codes d\'accès.',
   HPnet: 'Accès à Internet',
   HPplane: 'Je suis en mode AVION (pas de réseau)',
-  HPnbUt: 'Aucun utilisateur n\'a déclaré avoir confiance dans ce terminal. | '
-    + 'Un utilisateur a déclaré avoir confiance dans ce terminal. | '
-    + '{count} utilisateurs ont déclaré avoir confiance dans ce terminal.',
+  HPnbUt: 'Aucun utilisateur n\'a déclaré avoir confiance dans ce terminal | '
+    + 'Un utilisateur a déclaré avoir confiance dans ce terminal | '
+    + '{count} utilisateurs ont déclaré avoir confiance dans ce terminal',
   HPenreg_1: 'Enregistrement',
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',
@@ -154,6 +157,7 @@ export default {
   HPsetdev: 'Donner un nom court à ce terminal',
   HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',
   HPsetPIN: 'Saisir un code PIN d\'accès',
+  HPsetPseudo: 'Saisir un pseudo local pas déjà utilisé',
   HPsttrust_0: 'Terminal déclaré de confiance.',
   HPsttrust_1: 'Echec de la déclaration de confiance: utilisateur non enregistré.',
   HPsttrust_2: 'Echec de la déclaration de confiance: codes de l\'utilisateur incorrects.',
@@ -179,9 +183,9 @@ export default {
   HPunpin_2: 'Désépingler une session économise de la place sur le terminal en supprimant ses données stockées localement avec pour conséquences:',
   HPunpin_3: '- de ralentir sa réouverture ultérieure sur ce terminal,',
   HPunpin_4: '- d\'interdire son ouverture en mode AVION sur ce terminal.',
-  HPupc_1: 'Qui',
-  HPupc_2: 'App.',
-  HPupc_3: 'Vol.',
+  HPupc_1: 'Utilisateur',
+  HPupc_2: 'Application',
+  HPupc_3: 'Volume',
   HPupc_4: 'Dernière connexion ici',
   HPfreev: 'Volume à libérer {0} sur {1}',
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +

@@ -26,10 +26,31 @@
           class="titre-lg q-my-md text-italic text-warning text-bold">
           {{ $t('HPnosession') }}
         </div>
+      </div>
 
+      <q-tabs v-model="tab" dense align="justify" class="q-mt-sm">
+        <q-tab no-caps name="e" class="bg-primary">
+          <div class="column items-center">
+            <q-icon name="person" size="32px"/>
+            <div class='titre-lg text-bold text-white'>{{$t('HPenregistre')}}</div>
+          </div>
+        </q-tab>
+        <q-tab no-caps name="a" class="bg-grey-7">
+          <div class="column items-center">
+            <q-img :src="anonymousB" style="height: 32px; max-width: 32px;"/>
+            <div class='titre-lg text-bold text-black'>{{$t('HPanonyme')}}</div>
+          </div>
+        </q-tab>
+      </q-tabs>
+
+      <div v-if="tab === 'e'" class="enr q-pa-sm">
         <div v-if="!sf.incognito" class="row q-mt-sm items-start">
           <q-icon class="col-1" name="info" size="1.2rem" />
-          <div class="col-11 titre-md text-italic">{{$t('HPnbUt', nbUt, { count: nbUt })}}</div>
+          <div class="col-11">
+            <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
+            <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
+              {{'[' + sf.devName + ']'}}</span>
+          </div>
         </div>
 
         <div v-if="session.hasNet" class="q-mt-md row items-start">
@@ -50,6 +71,10 @@
             <pin-code class="col-6" :disable="selectedSafe === null" @ok="authPIN"/>
           </div>
         </div>
+      </div>
+
+      <div v-if="tab === 'a'" class="ano q-pa-sm">
+        <div class="titre-lg text-center">To Do !</div>
       </div>
     </q-step>
 
@@ -135,12 +160,15 @@
         <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
         <q-separator class="q-mt-xs q-mb-sm"/>
 
+        <div class="row titre-md text-italic">
+          <div class="col-1"/>
+          <div class="col-4">{{$t('HPupc_1')}}</div>
+          <div class="col-4">{{$t('HPupc_2')}}</div>
+          <div class="col-3">{{$t('HPupc_3')}}</div>
+        </div>
         <div class="row q-mb-sm titre-md text-italic">
           <div class="col-1"/>
-          <div class="col-2">{{$t('HPupc_1')}}</div>
-          <div class="col-2">{{$t('HPupc_2')}}</div>
-          <div class="col-2">{{$t('HPupc_3')}}</div>
-          <div class="col-5">{{$t('HPupc_4')}}</div>
+          <div class="col-11">{{$t('HPupc_4')}}</div>
         </div>
         <q-separator class="q-mt-xs q-mb-sm"/>
 
@@ -150,14 +178,17 @@
               <q-checkbox class="col-1" dense size="sm" 
                 v-model="selS.get(id).c"
                 @update:model-value="onSelS"/>
-              <div class="col-2 ellipsis q-pr-xs">{{sf.trigOfS(s)}}</div>
-              <div class="col-2 ellipsis q-pr-xs">{{s.app}}</div>
-              <div class="col-2">{{edvol(sf.volOfS(s))}}</div>
-              <div class="col-5">{{dhcool(s.time)}}</div>
+              <div class="col-4 ellipsis q-pr-xs">{{sf.trigOfS(s)}}</div>
+              <div class="col-4 ellipsis q-pr-xs">{{s.app}}</div>
+              <div class="col-3">{{edvol(sf.volOfS(s))}}</div>
+            </div>
+            <div class="row font-mono fs-md items-start">
+              <div class="col-1"></div>
+              <div class="col-11">{{dhcool(s.time)}}</div>
             </div>
             <div class="row q-mb-sm fs-md">
-              <div class="col-3"></div>
-              <div class="col-9">{{s.profAbout}}</div>
+              <div class="col-1"></div>
+              <div class="col-11">{{s.profAbout}}</div>
             </div>
           </div>
         </q-scroll-area>
@@ -222,7 +253,7 @@
   <q-dialog v-model="ui.dModels[idc].trustit" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-lg row items-start">
-        <div class="col-6 q-pr-sm text-right text-italic">
+        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
           {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
         </div>
         <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
@@ -239,7 +270,7 @@
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
-        <div class="col-6 q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
+        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
         <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
           v-model="newPIN"
           input-class="font-mono"
@@ -252,6 +283,22 @@
               color="none" @ok="pinPwd = !pinPwd"/>
           </template>
           <template v-slot:error>{{$t(pinerr)}}</template>
+        </q-input>
+      </div>
+
+      <div class="q-mb-lg q-mt-md row items-start">
+        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
+        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
+          v-model="newPseudo"
+          input-class="font-mono"
+          bottom-slots
+          :error="pseudoerr !== ''"
+          :hint="$t('PSminmax', [minTr, maxTr])">
+          <template v-slot:append>
+            <btn-cond size="sm" class="q-mx-xs" icon="close" round
+              color="none" @ok="newPseudo = ''"/>
+          </template>
+          <template v-slot:error>{{$t(pseudoerr)}}</template>
         </q-input>
       </div>
 
@@ -308,7 +355,9 @@ import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
-import { $t, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
+import { $t, $q, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
+import anonymousW from '../assets/anonymous_white.png'
+import anonymousB from '../assets/anonymous_black.png'
 
 // const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
@@ -330,6 +379,7 @@ const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
 const hasIDB = ref(false)
+const tab = ref('e')
 
 onMounted(async () => { 
   hasIDB.value = await sf.init0()
@@ -352,11 +402,12 @@ const totalVol = ref(0)
 
 const options = computed(() => {
   const r = []
-  sf.trustings.forEach(e => { r.push({ label: e.pseudo, value: e }) })
+  if (sf.trustings)
+    sf.trustings.forEach(e => { r.push({ label: e.pseudo, value: e }) })
   return r
 })
 
-const nbUt = computed(() => sf.trustings.size )
+const nbUt = computed(() => sf.trustings ? sf.trustings.size : 0)
 
 const mayPIN = computed(() => !sf.incognito && nbUt.value > 0 && session.hasNet)
 
@@ -474,17 +525,28 @@ const myTrusting = ref(null)
 const newDev = ref(false)
 const devName = ref('')
 const newPIN = ref('')
+const newPseudo = ref('')
 const pinPwd = ref(false)
 
 const deverr = computed(() => devName.value.length < minDev ? 'PScourt' : (devName.value.length > maxDev ? 'PSlong' : ''))
 const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN.value.length > maxpin ? 'PSlong' : ''))
-const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '')
+const pseudoerr = computed(() => {
+  if (newPseudo.value.length < minTr) return 'PScourt'
+  if (newPseudo.value.length > maxTr) return 'PSlong'
+  let dup = false
+  sf.trustings.forEach(e => { 
+    if (e.myId !== sf.userId && e.pseudo === newPseudo.value) dup = true
+  })
+  return dup ? 'PSdup' : ''
+})
+const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '' || pseudoerr.value !== '')
 
 const openTrust = async () => {
   myTrusting.value = sf.getMyTrusting()
   newDev.value = sf.devId === ''
   newPIN.value = ''
   devName.value = newDev.value ? '' : sf.devName
+  newPseudo.value = sf.auth.pseudo
   ui.oD(idc, 'trustit')
 }
 
@@ -506,7 +568,7 @@ const openUntrust = async () => {
 
 const setTrust = async () => {
   try {
-    const status = await sf.setTrust(devName.value, newPIN.value)
+    const status = await sf.setTrust(devName.value, newPIN.value, newPseudo.value)
     ui.fD()
     myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPsttrust_' + status))
@@ -569,5 +631,9 @@ const purgeIDBS = async () => {
   border: 2px solid $negative; border-radius: 7px; width:100%; }
 .bbot, .slist { border-bottom: 1px solid $grey-5 !important; }
 .btop, .slist { border-top: 1px solid $grey-5 !important; }
-</style>
 
+.ano, .enr { border-bottom-right-radius: 7px; border-bottom-left-radius: 7px;
+  border-left: 2px solid; border-right: 2px solid; border-bottom: 2px solid; }
+.enr { border-color: $primary !important; }
+.ano { border-color: $grey-7 !important; }
+</style>
