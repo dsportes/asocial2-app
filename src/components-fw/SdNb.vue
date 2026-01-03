@@ -14,6 +14,7 @@ const props = defineProps({
   texte: String, 
   idx: Number // ???
 })
+console.log(props.texte)
 </script>
 
 <style lang="scss" scoped>

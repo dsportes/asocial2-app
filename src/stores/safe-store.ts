@@ -44,43 +44,64 @@ pour chaque type de volume (documents / fichiers)
 */
 const coeffs = [2, 1.3]
 
-export type Trusting = {
+export class Trusting {
   userId: string
   pseudo: string
+
+  get isLocal () { return this.userId.startsWith('$')}
+
+  get toObj () : Object {
+    const obj = {}
+    for(const f of Object.keys(this)) obj[f] = this[f]
+    return obj
+  }
+}
+
+export class TrustingS extends Trusting {
   cx: string
   Ka: Uint8Array
   Kr: Uint8Array
   Kp: Uint8Array
+
+  constructor (obj: Object) { 
+    super() 
+    if (obj) for(const f of Object.keys(obj)) this[f] = obj[f]
+  }
+}
+
+export class TrustingL extends Trusting {
+  hsh: Uint8Array // sha du SH(PS) (PS: phrase secrète de l'utilisateur)
+  creds: string[] // liste des ids des credentials
+  prefs: Uint8Array // objet de préférences crypté par SH(PS)
+
+  constructor (obj: Object) { 
+    super() 
+    if (obj) for(const f of Object.keys(obj)) this[f] = obj[f]
+  }
 }
 
 export class TSession {
   app: string // code de l'application
   userId: string // id de l'utilisateur ou '' pour un local
   profId: string // id du profil
-  profAbout: string | Uint8Array // commentaire de l'utilisateutr sur ce profil
+  profAbout: Uint8Array // commentaire de l'utilisateur sur ce profil
+  profAboutStr: string
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
 
   constructor (obj: Object) {
-    for(const f in obj) this[f] = obj[f]
+    for(const f of Object.keys(obj)) this[f] = obj[f]
   }
 
-  toObj () : Object {
+  get toObj () : Object {
     const obj = {}
-    for(const f in Object.keys(this)) obj[f] = this[f]
+    for(const f of Object.keys(this)) obj[f] = this[f]
     return obj
   }
 
   get dbName () : string { return this.app + '_' + Crypt.shaS(this.userId + '/' + this.profId)}
-  get idOfS () : string { return this.app + '/' + this.userId + '/' + this.profId }
-}
-
-export class TSessionA extends TSession {
-  constructor (obj: Object) { super(obj); this.userId = ''}
-  // profId: id aléatoire d'un profil local
-  rights: string[] // liste des ids des droits enregistrés localement
-  Kl: Uint8Array // sha(SH(profId + phrase secrète)) : hash de la clé de cryptage locale
-  prefs: Uint8Array // objet de préférences cryptés par la clé de cryptage Kl
+  get idOfS () : string { 
+    return Crypt.shaS(this.app + '/' + this.userId + '/' + this.profId) }
 }
 
 export type Pref = [code: string, obj: Object]
@@ -197,15 +218,16 @@ export const useSafeStore = defineStore('safe', () => {
         devName.value = r && r.devName ? r.devName : ''
 
         await db.value.trustings.each(async (r) => {
-          const obj = decode(r.bin) as Trusting
-          trustings.value.set(obj.userId, obj)
+          const obj = decode(r.bin)
+          const t : Trusting = obj.userId.startsWith('$') ? 
+            new TrustingL(obj) : new TrustingS(obj)
+          trustings.value.set(t.userId, obj)
         })
 
         await db.value.tsessions.each(async (r) => {
-          const obj = decode(r.bin) as TSession
-          const obj2 : TSession = { ...obj } as TSession
-          obj2.profAbout = await Crypt.decrypt(keyK.value, obj.profAbout as Uint8Array)
-          tsessions.value.set(obj.idOfS, obj2)
+          const obj = decode(r.bin)
+          const s : TSession = new TSession(obj)
+          tsessions.value.set(s.idOfS, s)
         })
         await simulation()
 
@@ -242,21 +264,21 @@ export const useSafeStore = defineStore('safe', () => {
   const simulation = async () => {
     const app = stores.config.appname
     if (tsessions.value.size === 0)
-      for(const [userId, t] of trustings.value) {
+      for(const [userId, ] of trustings.value) {
         const profId = '!!' + userId
-        const obj : TSession = new TSession({
+        const obj = {
           app,
           userId,
           profId,
-          profAbout: 'bla bla ' + profId,
+          profAbout: encoder.encode('bla bla ' + profId),
+          profAboutStr: '',
           size: [1500, 12000000],
           time: Date.now() - (Math.floor(Math.random() * 50) * 60000)
-        })
-        const id = Crypt.shaS(obj.idOfS)
-        tsessions.value.set(id, obj)
-        const obj2 = new TSession(obj.toObj())
-        obj2.profAbout = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
-        await db.value.tsessions.put({ id, bin: encode(obj2)})
+        }
+        const s : TSession = new TSession(obj)
+        const id = s.idOfS
+        tsessions.value.set(id, s)
+        await db.value.tsessions.put({ id, bin: encode(obj)})
       }
   }
 
@@ -280,11 +302,12 @@ export const useSafeStore = defineStore('safe', () => {
     return null
   }
 
-  const setTrusting = async (obj: Trusting) => {
+  const setTrusting = async (t: Trusting) => {
     if (incognito.value) return
     try {
-      await db.value.trustings.put({ id: obj.userId, bin: encode(obj)})
-      trustings.value.set(obj.userId, obj)
+      const obj = t.toObj
+      await db.value.trustings.put({ id: t.userId, bin: encode(obj)})
+      trustings.value.set(t.userId, t)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -300,9 +323,18 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const trigOfS = (s: TSession) : string => {
-    const x = trustings.value.get(s.userId)
-    return x ? (x.pseudo || '?') : '?'
+  const decryptSessions = async () : Promise<void> => {
+    for (const [, s] of tsessions.value) {
+      if (s.userId === userId.value) {
+        const x = await Crypt.decrypt(keyK.value, s.profAbout)
+        s.profAboutStr = x ? decoder.decode(x) : decoder.decode(s.profAbout)
+      } else s.profAboutStr = ''
+    }
+  }
+
+  const pseudoOfS = (s: TSession) : string => {
+    const t = trustings.value.get(s.userId)
+    return t ? t.pseudo : '?'
   }
 
   const getMySessions = () : TSession[] => {
@@ -330,15 +362,17 @@ export const useSafeStore = defineStore('safe', () => {
     return getSessionSize(s.userId, s.profId)
   }
 
-  const setTSession = async (obj: TSession) => {
+  const setTSession = async (s: TSession) => {
     if (incognito.value) return
     try {
-      const id = Crypt.shaS(obj.idOfS)
-      const obj2 = obj.toObj()
-      obj2['profAbout'] = await Crypt.crypt(keyK.value, encoder.encode(obj.profAbout as string))
-      await db.value.tsessions.put({ id, bin: encode(obj2)})
-      tsessions.value.set(id, obj)
-      recordIDB(obj.dbName)
+      const ab = s.profAboutStr
+      const id = s.idOfS
+      s.profAbout = await Crypt.crypt(keyK.value, encoder.encode(ab))
+      s.profAboutStr = ''
+      await db.value.tsessions.put({ id, bin: encode(s.toObj)})
+      s.profAboutStr = ab
+      tsessions.value.set(id, s.toObj)
+      recordIDB(s.dbName)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -374,13 +408,13 @@ export const useSafeStore = defineStore('safe', () => {
     localStorage.setItem('$DBLIST', dbl.join(' '))
   }
 
-  const delTSession = async (obj: TSession) => {
+  const delTSession = async (s: TSession) => {
     if (incognito.value) return
-    const id = Crypt.shaS(obj.idOfS)
+    const id = s.idOfS
     // console.log("tsession: ", id)
-    try { await db.value.trustings.where({ id }).delete()
+    try { await db.value.tsessions.where({ id }).delete()
     } catch (e) { } 
-    trustings.value.delete(id)
+    tsessions.value.delete(id)
   }
 
   // Charge depuis IDB currentPref avec la préférence du user pour l'application en cours
@@ -474,7 +508,7 @@ export const useSafeStore = defineStore('safe', () => {
       m.set(devId, d)
     }
     devices.value = m
-    const tr = getMyTrusting()
+    const tr = getMyTrusting() as TrustingS
     if (tr && (!equ8(tr.Ka, auth.value.Ka) || !equ8(tr.Kr, auth.value.Kr))) {
       tr.Ka = auth.value.Ka
       tr.Kr = auth.value.Kr
@@ -564,6 +598,7 @@ export const useSafeStore = defineStore('safe', () => {
       openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
       keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
+      shK.value = await Crypt.strongHash(keyK.value, false, true)
       D.value = await Crypt.decrypt(keyK.value, ret.DK)
       if (ret.byP) { sh1p.value = sh1; sh1r.value =  null }
       else { sh1p.value = sh1; sh1r.value = sh1 }
@@ -586,16 +621,17 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = await Crypt.crypt(pincxcy, keyK.value)
 
-    let t: Trusting = getMyTrusting()
-    if (!t) t = {
+    let t: TrustingS = getMyTrusting() as TrustingS
+    if (!t) {
+      t = new TrustingS({
         userId: userId.value,
         pseudo: pseudo,
         cx: cx,
         Ka: auth.value.Ka,
         Kr: auth.value.Kr,
         Kp: Kp
-      }
-    else {
+      }) 
+    } else {
       t.pseudo = pseudo
       t.cx = cx
       t.Ka = auth.value.Ka
@@ -627,17 +663,17 @@ export const useSafeStore = defineStore('safe', () => {
 
   const openSafeByPin = async ( pin: string, id: string) => {
     userId.value = id
-    const tr = getMyTrusting()
-    if (!tr) return 1
-    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + tr.cx, false, true) as Uint8Array
+    const t : TrustingS = getMyTrusting() as TrustingS
+    if (!t) return 1
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx, false, true) as Uint8Array
 
     const ret = await new Operation('$OpenSafeByPin')
       .post({userId: userId.value, devId: devId.value, pincx})
     if (ret.status !== 0) return ret.status
     const cy = ret.cy
-    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + tr.cx + '/' + cy, false, true) as Uint8Array
+    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
     try {
-      keyK.value = await Crypt.decrypt(pincxcy, tr.Kp)
+      keyK.value = await Crypt.decrypt(pincxcy, t.Kp)
     } catch (e) {
       return 4
     }
@@ -651,9 +687,9 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setUntrust = async () => {
-    const tr = getMyTrusting()
-    if (!tr) return 0 // était déjà untrusted
-    await delTrusting(tr.userId)
+    const t = getMyTrusting() as TrustingS
+    if (!t) return 0 // était déjà untrusted
+    await delTrusting(t.userId)
     const untrustDev: UntrustDev = {
       userId: userId.value,
       devId: devId.value,
@@ -672,7 +708,7 @@ export const useSafeStore = defineStore('safe', () => {
     setHeader,
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions,
-    getSessionSize, trigOfS, volOfS, purgeIDBS,
+    getSessionSize, pseudoOfS, decryptSessions, volOfS, purgeIDBS,
     currentPref, getCurrentPref, saveCurrentPref,
     userId, keyK, openMode, auth, devices,
     createSafe, openSafe, openSafeByPin, setTrust, setUntrust

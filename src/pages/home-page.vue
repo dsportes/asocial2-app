@@ -29,34 +29,38 @@
       </div>
 
       <q-tabs v-model="tab" dense align="justify" class="q-mt-sm">
-        <q-tab no-caps name="e" class="bg-primary">
+        <q-tab no-caps name="1" class="bg-primary">
           <div class="column items-center">
             <q-icon name="person" size="32px"/>
-            <div class='titre-lg text-bold text-white'>{{$t('HPenregistre')}}</div>
+            <div class='titre-md text-bold text-white'>{{$t('HPtab_1')}}</div>
           </div>
         </q-tab>
-        <q-tab no-caps name="a" class="bg-grey-7">
+        <q-tab v-if="!sf.incognito && session.hasNet" 
+          no-caps name="2" class="bg-secondary">
+          <div class="column items-center">
+            <q-icon name="person_add" size="32px"/>
+            <div class='titre-md text-bold text-white'>{{$t('HPtab_2')}}</div>
+          </div>
+        </q-tab>
+        <q-tab no-caps name="3" class="bg-grey-7">
           <div class="column items-center">
             <q-img :src="anonymousB" style="height: 32px; max-width: 32px;"/>
-            <div class='titre-lg text-bold text-black'>{{$t('HPanonyme')}}</div>
+            <div class='titre-md text-bold text-black'>{{$t('HPtab_3')}}</div>
           </div>
         </q-tab>
       </q-tabs>
 
-      <div v-if="tab === 'e'" class="enr q-pa-sm">
-        <div v-if="!sf.incognito" class="row q-mt-sm items-start">
-          <q-icon class="col-1" name="info" size="1.2rem" />
-          <div class="col-11">
-            <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
-            <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
-              {{'[' + sf.devName + ']'}}</span>
-          </div>
+      <div v-if="!sf.incognito" 
+        :class="'tab' + tab + ' tablr q-px-sm row q-py-sm items-start'">
+        <q-icon class="col-1" name="info" size="1.2rem" />
+        <div class="col-11">
+          <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
+          <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
+            {{'[' + sf.devName + ']'}}</span>
         </div>
+      </div>
 
-        <div v-if="session.hasNet" class="q-mt-md row items-start">
-          <div class="col-11 titre-md text-italic text-right">{{$t('HPnoreg')}}</div>
-          <btn-cond class="col-1 text-right" size="md" icon="send" @ok="regme"/>
-        </div>
+      <div v-if="tab === '1'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
 
         <p0-p1 v-if="mayPS" class="q-mt-md" @ok="authPS"
           :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
@@ -73,7 +77,11 @@
         </div>
       </div>
 
-      <div v-if="tab === 'a'" class="ano q-pa-sm">
+      <div v-if="tab === '2'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
+        <safe-cr create-mode :onValidate="openSession"/>
+      </div>
+
+      <div v-if="tab === '3'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
         <div class="titre-lg text-center">To Do !</div>
       </div>
     </q-step>
@@ -87,14 +95,14 @@
         </div>
         <q-separator class="full-width q-mt-xs q-mb-sm"/>
 
-        <div v-if="sf.openMode !== 3" class="row">
-          <div class="col-11 titre-md text-italic text-right">{{$t('HPupdcodes')}}</div>
-          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="updCodes"/>
+        <div v-if="tab !== '3' && sf.openMode !== 3" class="row q-my-sm">
+          <span class="col-11 titre-md text-italic text-right">{{$t('HPchgcodes')}}</span>
+          <btn-cond class="col-1 text-right" icon="send" @ok="ui.oD(idc, 'chgCodes')"/>
         </div>
 
         <div v-if="sf.openMode !== 3 && myTrusting === null" class="row">
           <div class="col-11 titre-md text-italic text-right">{{$t('HPtrust')}}</div>
-          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openTrust"/>
+          <btn-cond class="col-1 text-right" icon="send" @ok="openTrust"/>
         </div>
 
         <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" 
@@ -121,11 +129,11 @@
         <div class="row full-width q-my-sm items-start">
           <div class="col titre-md text-italic">
             <span>
-              {{$t('HPvol_1', sf.trustings.size, { count: sf.trustings.size })}}</span>
-            <span class="q-ml-sm" v-if="sf.trustings.size !== 0">
+              {{$t('HPvol_1', sf.tsessions.size, { count: sf.tsessions.size })}}</span>
+            <span class="q-ml-sm" v-if="sf.tsessions.size !== 0">
               {{$t('HPvol_2', [edvol(totalVol)])}}</span>
           </div>
-          <btn-cond class="col-auto q-pl-sm" v-if="sf.trustings.size !== 0" icon="open_in_new" 
+          <btn-cond class="col-auto q-pl-sm" v-if="sf.tsessions.size !== 0" icon="open_in_new" 
             :label="$t('HPvol_3')" @ok="freeVol"/>
         </div>
 
@@ -133,6 +141,13 @@
       </div>
     </q-step>
   </q-stepper>
+
+  <!-- Changement des codes -->
+  <q-dialog v-model="ui.dModels[idc].chgCodes" persistent>
+    <q-card :class="sty('md')">
+      <safe-cr :onValidate="openSession"/>
+    </q-card>
+  </q-dialog>
 
   <!-- Confirmation du resetAll -->
   <q-dialog v-model="ui.dModels[idc].resetAll" persistent>
@@ -178,7 +193,7 @@
               <q-checkbox class="col-1" dense size="sm" 
                 v-model="selS.get(id).c"
                 @update:model-value="onSelS"/>
-              <div class="col-4 ellipsis q-pr-xs">{{sf.trigOfS(s)}}</div>
+              <div class="col-4 ellipsis q-pr-xs">{{sf.pseudoOfS(s)}}</div>
               <div class="col-4 ellipsis q-pr-xs">{{s.app}}</div>
               <div class="col-3">{{edvol(sf.volOfS(s))}}</div>
             </div>
@@ -186,9 +201,9 @@
               <div class="col-1"></div>
               <div class="col-11">{{dhcool(s.time)}}</div>
             </div>
-            <div class="row q-mb-sm fs-md">
+            <div v-if="s.profAboutStr !== ''" class="row q-mb-sm fs-md">
               <div class="col-1"></div>
-              <div class="col-11">{{s.profAbout}}</div>
+              <div class="col-11">{{s.profAboutStr}}</div>
             </div>
           </div>
         </q-scroll-area>
@@ -200,51 +215,6 @@
           <btn-confirm class="q-ma-none q-pa-none"
             :actif="vsel !== 0" :confirm="purgeIDBS"/>
         </div>
-      </div>
-    </q-card>
-  </q-dialog>
-
-  <!-- Création d'un safe / Changement des codes -->
-  <q-dialog v-model="ui.dModels[idc].createSafe" persistent>
-    <q-card :class="sty('md')">
-      <q-toolbar class="tbp">
-        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title class="titre-smd">{{$t('HPenreg_' + (createMode ? '1' : '2'))}}</q-toolbar-title>
-        <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
-          :disable="diag !== ''" @ok="createSafe"/>
-        <help-button :page="sf.createMode ? 'createSafe' : 'updSafeCodes'"/>
-      </q-toolbar>
-      <div class="q-pa-sm">
-        <div v-if="diag !== ''" class="diag">{{diag}}</div>
-        <div class="row items-center q-my-sm">
-          <div class="titre-md">{{$t('HPtrig')}}</div>
-          <q-input class="q-ml-sm" v-model="trig" counter dense
-            input-class="font-mono"
-            :label="$t('HPtrig')"
-            :placeholder="$t('HPtrigh')"
-            bottom-slots
-            :error="trerr !== ''"
-            :hint="$t('PSminmax', [minTr, maxTr]) + (!trerr ? $t('pressret') : '')">
-            <template v-slot:append>
-              <q-icon size="sm" name="close" @click="trig = ''" class="cursor-pointer" />
-            </template>
-            <template v-slot:error>{{$t(trerr)}}</template>
-          </q-input>
-        </div>
-        <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
-          class='q-mb-xs'
-          header-class="tbs"
-          switch-toggle-side>
-          <template v-slot:header>
-            <div class="column">
-              <div class="row q-gutter-sm">
-                <q-icon size="md" :name="icons[errors[x - 1]]"/>
-                <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
-              </div>
-            </div>
-          </template>
-          <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
-        </q-expansion-item>
       </div>
     </q-card>
   </q-dialog>
@@ -330,7 +300,7 @@
         <q-scroll-area style="height: 150px" :barStyle="barStyle" :thumbStyle="thumbStyle">
           <div v-for="(s, idx) in mySessions" :key="idx" class="q-my-xs row">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
-            <div class="col-9 fs-md">{{s.profAbout}}</div>
+            <div class="col-9 fs-md">{{s.profAboutStr}}</div>
           </div>
         </q-scroll-area>
       </div>
@@ -353,6 +323,8 @@ import P0P1 from '../components-fw/P0P1.vue'
 import PinCode from '../components-fw/PinCode.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
+import ChooseIt from '../components-fw/ChooseIt.vue'
+import SafeCr from '../components-fw/SafeCr.vue'
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
 import { $t, $q, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
@@ -369,8 +341,6 @@ const maxDev = 16
 const minpin = 8
 const maxpin = 16
 
-const icons = ['check', 'question_mark', 'warning']
-
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
@@ -379,7 +349,7 @@ const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
 const hasIDB = ref(false)
-const tab = ref('e')
+const tab = ref('1')
 
 onMounted(async () => { 
   hasIDB.value = await sf.init0()
@@ -443,82 +413,10 @@ const openSession = async () => {
     if (!hasIDB.value) await sf.init1()
     await sf.getCurrentPref()
   }
+  await sf.decryptSessions()
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   step.value = 2
-}
-
-const createMode = ref()
-const trig = ref('')
-const trerr = computed(() => trig.value.length < minTr ? 'PScourt' : (trig.value.length > maxTr ? 'PSlong' : ''))
-const exp = reactive([false, false, false, false])
-const codes = reactive([null, null, null, null])
-const errors = reactive([0, 0, 0, 0])
-
-const initCodes = () => {
-  for(let i = 0; i < 4; i++) {
-    codes[i] = { sh0: null, sh1: null, sh: null}
-    errors[i] = 0
-    exp[i] = false
-  }
-  exp[0] = true
-}
-
-const regme = () => {
-  createMode.value = true
-  initCodes()
-  checkCodes()
-  ui.oD(idc, 'createSafe')
-}
-
-const updCodes = () => {
-  createMode.value = false
-  initCodes()
-  checkCodes()
-  ui.oD(idc, 'createSafe')
-}
-
-const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
-
-const diag = computed(() => {
-  if (trerr.value) return $t('HPerr_1')
-  if (codes[0].sh0 === null) return $t('HPerr_2')
-  if (!eq(0, 1)) return $t('HPerr_3')
-  if (codes[2].sh0 === null) return $t('HPerr_4')
-  if (!eq(2, 3)) return $t('HPerr_5')
-  return ''
-})
-
-const setCode = (x) => {
-  codes[x.ctx.s - 1] = x
-  checkCodes()
-}
-
-const checkCodes = () => {
-  let e = false
-  for (let i = 0; i < 4; i++) {
-    exp[i] = false
-    errors[i] = 0
-    if (codes[i].sh0 === null) errors[i] = 1
-    else if ((i === 1 || i === 3) && !eq(i - 1, i)) errors[i] = 2
-    if (errors[i] !== 0 && !e) { exp[i] = true; e = true }
-  }
-}
-
-const createSafe = async () => {
-  const ca = codes[0]
-  const cr = codes[2]
-  const status = await sf.createSafe(
-    createMode.value,
-    trig.value,
-    ca.sh0, ca.sh1, ca.sh,
-    cr.sh0, cr.sh1, cr.sh
-  )
-  await ui.diagDisplay($t('HPcsret_' + (createMode.value ? '0' : '1') + status))
-  if (status === 0) {
-    ui.fD()
-    await openSession()
-  }
 }
 
 const myTrusting = ref(null)
@@ -550,17 +448,8 @@ const openTrust = async () => {
   ui.oD(idc, 'trustit')
 }
 
-/*
-export type TSession = {
-  app: string
-  userId: string
-  profId: string
-  profAbout: string | Uint8Array
-  size: number
-  prefs: Object | Uint8Array
-}
-*/
 const mySessions = ref<TSession>(null)
+
 const openUntrust = async () => {
   mySessions.value = sf.getMySessions()
   ui.oD(idc, 'untrustit')
@@ -619,6 +508,7 @@ const purgeIDBS = async () => {
   }
   await sf.purgeIDBS(l)
   ui.fD()
+  await openSession()
 }
 
 </script>
@@ -632,8 +522,9 @@ const purgeIDBS = async () => {
 .bbot, .slist { border-bottom: 1px solid $grey-5 !important; }
 .btop, .slist { border-top: 1px solid $grey-5 !important; }
 
-.ano, .enr { border-bottom-right-radius: 7px; border-bottom-left-radius: 7px;
-  border-left: 2px solid; border-right: 2px solid; border-bottom: 2px solid; }
-.enr { border-color: $primary !important; }
-.ano { border-color: $grey-7 !important; }
+.tablr { border-left: 2px solid; border-right: 2px solid; }
+.tabb { border-bottom-right-radius: 7px; border-bottom-left-radius: 7px; border-bottom: 2px solid; }
+.tab1 { border-color: $primary !important; }
+.tab2 { border-color: $secondary !important; }
+.tab3 { border-color: $grey-7 !important; }
 </style>
