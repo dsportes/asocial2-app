@@ -2,50 +2,27 @@
   <div class="column full-width">
     <q-toolbar class="full-width tbs" dense>
       <q-toolbar-title class="titre-md text-italic">{{title}}</q-toolbar-title>
-      <btn-cond size="sm" class="q-mx-xs" :icon="isPwd ? 'visibility_off' : 'visibility'" round
-        color="none" @ok="isPwd = !isPwd"/>
       <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
     </q-toolbar>
-    <q-input class="q-ml-md q-mb-sm" v-model="p0" counter dense
-      input-class="font-mono"
-      :type="type"
-      :label="$t('PSpseudo')"
-      :placeholder="$t('PSpseudoh')"
-      bottom-slots
-      :error="p0err !== ''"
-      :hint="$t('PSminmax', [minp0, maxp0]) + (!err ? $t('pressret') : '')"
-      @keydown.enter.prevent="validate">
-      <template v-slot:append>
-        <q-icon size="sm" name="close" @click="p0 = ''" class="cursor-pointer" />
-      </template>
-      <template v-slot:error>{{$t(p0err)}}</template>
-    </q-input>
-    <q-input class="q-ml-md q-mb-sm" v-model="p1" counter dense
-      input-class="font-mono"
-      :type="type"
-      :label="$t('PSphrase')"
-      :placeholder="$t('PSphraseh')"
-      bottom-slots
-      :error="p1err !== ''"
-      :hint="$t('PSminmax', [minp1, maxp1]) + (!err ? $t('pressret') : '')"
-      @keydown.enter.prevent="validate">
-      <template v-slot:append>
-        <q-icon size="sm" name="close" @click="p1 = ''" class="cursor-pointer" />
-      </template>
-      <template v-slot:error>{{$t(p1err)}}</template>
-    </q-input>
+
+    <input-ps class="q-ml-md q-mb-sm" v-model="p0" :validate="validate"
+      :sz="cfg.K.sizeP0" :label="$t('PSpseudo')" :ph="$t('PSpseudoh')"/>
+
+    <input-ps class="q-ml-md q-mb-sm" v-model="p1" :validate="validate"
+      :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, watch } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch, reactive } from 'vue'
+import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
+import InputPs from '../components-fw/InputPs.vue'
 import { Crypt } from '../src-fw/crypt'
 
-const minp0 = 12
-const maxp0 = 30
-const minp1 = 24
-const maxp1 = 40
+const cfg = stores.config
+
+const ui = stores.ui
 
 const props = defineProps({
   title: String,
@@ -54,29 +31,17 @@ const props = defineProps({
 
 const emit = defineEmits(['ok'])
 
-const isPwd = ref(false)
-const type = computed(() => isPwd.value ? 'password' : 'text')
-const p0 = ref('')
-const p1 = ref('')
-const p0err = computed(() => p0.value.length < minp0 ? 'PScourt' : (p0.value.length > maxp0 ? 'PSlong' : ''))
+const p0 = reactive( { inp: '', err: '' } )
+const p1 = reactive( { inp: '', err: '' } )
 const p1err = computed(() => p1.value.length < minp1 ? 'PScourt' : (p1.value.length > maxp1 ? 'PSlong' : ''))
-const err = computed(() => p0err.value !== '' || p1err.value !== '')
-
-watch(p1, (v) => {
-  if (v.length > 2 && v.endsWith('*')) {
-    const x = v.substring(0, v.length - 1)
-    let s = ''
-    while (s.length < 24) s += x
-    p1.value = s
-  }
-})
+const err = computed(() => p0.err !== '' || p1.err !== '')
 
 const validate = async () => {
   if (err.value) return
   emit('ok', { 
-    sh0: await Crypt.strongHash(p0.value, true, true),
-    sh1: await Crypt.strongHash(p1.value, true, true),
-    sh: await Crypt.strongHash(p0.value + p1.value, false, true),
+    sh0: await Crypt.strongHash(p0.inp, true, true),
+    sh1: await Crypt.strongHash(p1.inp, true, true),
+    sh: await Crypt.strongHash(p0.inp + p1.inp, false, true),
     ctx: props.ctx || null 
   })
 }

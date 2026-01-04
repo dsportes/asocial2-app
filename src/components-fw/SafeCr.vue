@@ -19,7 +19,9 @@
     <div v-if="diag !== ''" class="diag">{{diag}}</div>
     <div class="row items-center q-my-sm">
       <div class="titre-md">{{$t('HPtrig')}}</div>
-      <q-input class="q-ml-sm" v-model="trig" counter dense
+      <input-ps class="q-ml-sm" v-model="trig"
+        :sz="cfg.K.sizeTr" :label="$t('HPtrig')" :ph="$t('HPtrigh')"/>
+      <!--q-input class="q-ml-sm" v-model="trig" counter dense
         input-class="font-mono"
         :label="$t('HPtrig')"
         :placeholder="$t('HPtrigh')"
@@ -30,7 +32,7 @@
           <q-icon size="sm" name="close" @click="trig = ''" class="cursor-pointer" />
         </template>
         <template v-slot:error>{{$t(trerr)}}</template>
-      </q-input>
+      </q-input-->
     </div>
     <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
       class='q-mb-xs'
@@ -55,12 +57,11 @@
 import { ref, computed, reactive } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
+import InputPs from '../components-fw/InputPs.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import { $t, sty, equ8 } from '../src-fw/util'
 import stores from '../stores/all'
 
-const minTr = 3
-const maxTr = 8
 const icons = ['check', 'question_mark', 'warning']
 
 const props = defineProps ({
@@ -70,10 +71,10 @@ const props = defineProps ({
 
 const sf = stores.safe
 const ui = stores.ui
+const cfg = stores.config
 
-const trig = ref('')
-const trerr = computed(() => trig.value.length < minTr ? 'PScourt' 
-  : (trig.value.length > maxTr ? 'PSlong' : ''))
+const trig = reactive( { inp: '', err: '' } )
+
 const exp = reactive([false, false, false, false])
 const codes = reactive([null, null, null, null])
 const errors = reactive([0, 0, 0, 0])
@@ -90,7 +91,7 @@ const initCodes = () => {
 const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
 
 const diag = computed(() => {
-  if (trerr.value) return $t('HPerr_1')
+  if (trig.err) return $t('HPerr_1')
   if (codes[0].sh0 === null) return $t('HPerr_2')
   if (!eq(0, 1)) return $t('HPerr_3')
   if (codes[2].sh0 === null) return $t('HPerr_4')
@@ -119,7 +120,7 @@ const createSafe = async () => {
   const cr = codes[2]
   const status = await sf.createSafe(
     props.createMode,
-    trig.value,
+    trig.inp,
     ca.sh0, ca.sh1, ca.sh,
     cr.sh0, cr.sh1, cr.sh
   )

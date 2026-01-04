@@ -48,6 +48,8 @@ export const useUiStore = defineStore('ui', () => {
     // console.log(screenWidth.value, screenHeight.value)
   }
 
+  const visibility = ref(true)
+
   // Gestion du stack des dialogues ouverts *************************************
   const dStack = ref([]) // [[idc, name] ...]
   const dModels = ref({ '0': {} }) // liste des noms de dialogue par idc
@@ -160,7 +162,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   return {
-    set$t$q, setDark, isDark, $q,
+    set$t$q, setDark, isDark, $q, visibility,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,

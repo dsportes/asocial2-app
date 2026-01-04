@@ -15,6 +15,10 @@ export const K = {
 
   docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 
+  sizeP0: [8, 20],
+  sizeP1: [24, 40],
+  sizeTr: [3, 8],
+
   theme: {
     primary: ['#0D47A1', '#0D47A1'],
     secondary: ['#33691E', '#33691E'],
