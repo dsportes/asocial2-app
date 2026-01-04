@@ -18,6 +18,8 @@ export const K = {
   sizeP0: [8, 20],
   sizeP1: [24, 40],
   sizeTr: [3, 8],
+  sizeDev: [6, 16],
+  sizePin: [8, 16],
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

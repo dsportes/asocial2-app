@@ -72,7 +72,9 @@
             <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
               transition-show="flip-up" transition-hide="flip-down"
               v-model="selectedSafe" :options="options" />
-            <pin-code class="col-6" :disable="selectedSafe === null" @ok="authPIN"/>
+            <input-ps class="col-6" style="max-width:16rem" v-model="pin"
+              :validate="authPIN" iconcheck :disable="selectedSafe === null"
+              :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>              
           </div>
         </div>
       </div>
@@ -88,54 +90,55 @@
 
     <q-step :name="2" :title="$t('HPsession')" icon="send">
       <div class="q-pa-sm">
-        <div class="full-width row justify-between items-start">
+        <div class="full-width row justify-between items-center">
           <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
             color="warning" @ok="backToAuth"/>
           <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
+          <q-btn icon="more_vert" size="md">
+            <q-menu>
+              <q-list style="min-width: 350px">
+                <q-item v-if="tab !== '3' && sf.openMode !== 3" clickable v-close-popup
+                    @click="ui.oD(idc, 'chgCodes')">
+                  <q-item-section class="titre-md text-right">{{$t('HPchgcodes')}}</q-item-section>
+                </q-item>
+                <q-separator/>
+
+                <div v-if="sf.openMode !== 3 && myTrusting === null"
+                  class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPtrust')}}</div>
+                <q-item v-if="sf.openMode !== 3 && myTrusting === null" clickable v-close-popup
+                    @click="openTrust">
+                  <q-item-section class="titre-md text-right">{{$t('HPtrust_a')}}</q-item-section>
+                </q-item>
+                <q-separator v-if="sf.openMode !== 3 && myTrusting === null"/>
+
+                <div v-if="sf.openMode !== 3 && myTrusting !== null"
+                  class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPuntrust')}}</div>
+                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                    @click="openUntrust">
+                  <q-item-section class="titre-md text-right">{{$t('HPuntrust_r')}}</q-item-section>
+                </q-item>
+                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                    @click="openTrust">
+                  <q-item-section class="titre-md text-right">{{$t('HPuntrust_p')}}</q-item-section>
+                </q-item>
+                <q-separator v-if="sf.openMode !== 3 && myTrusting !== null"/>
+
+                <div class="titre-sm text-italic q-mr-lg">
+                  <span>
+                    {{$t('HPvol_1', sf.tsessions.size, { count: sf.tsessions.size })}}</span>
+                  <span class="q-ml-sm" v-if="sf.tsessions.size !== 0">
+                    {{$t('HPvol_2', [edvol(totalVol)])}}</span>
+                </div>
+                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                    @click="freeVol">
+                  <q-item-section class="titre-md text-right">{{$t('HPvol_3')}}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </div>
+
         <q-separator class="full-width q-mt-xs q-mb-sm"/>
-
-        <div v-if="tab !== '3' && sf.openMode !== 3" class="row q-my-sm">
-          <span class="col-11 titre-md text-italic text-right">{{$t('HPchgcodes')}}</span>
-          <btn-cond class="col-1 text-right" icon="send" @ok="ui.oD(idc, 'chgCodes')"/>
-        </div>
-
-        <div v-if="sf.openMode !== 3 && myTrusting === null" class="row">
-          <div class="col-11 titre-md text-italic text-right">{{$t('HPtrust')}}</div>
-          <btn-cond class="col-1 text-right" icon="send" @ok="openTrust"/>
-        </div>
-
-        <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" 
-          class="full-width q-mt-xs"/>
-        
-        <div v-if="sf.openMode !== 3 && myTrusting !== null"
-          class="titre-md">{{$t('HPuntrust')}}</div>
-
-        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="row">
-          <div class="col-1"/>
-          <div class="col-10 titre-md text-italic text-right">{{$t('HPuntrust_r')}}</div>
-          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openUntrust"/>
-        </div>
-
-        <div v-if="sf.openMode !== 3 && myTrusting !== null" class="row">
-          <div class="col-1"/>
-          <div class="col-10 titre-md text-italic text-right">{{$t('HPuntrust_p')}}</div>
-          <btn-cond class="col-1 text-right" size="sm" icon="send" @ok="openTrust"/>
-        </div>
-
-        <q-separator v-if="sf.openMode !== 3 && myTrusting !== null" 
-          class="full-width q-my-xs"/>
-
-        <div class="row full-width q-my-sm items-start">
-          <div class="col titre-md text-italic">
-            <span>
-              {{$t('HPvol_1', sf.tsessions.size, { count: sf.tsessions.size })}}</span>
-            <span class="q-ml-sm" v-if="sf.tsessions.size !== 0">
-              {{$t('HPvol_2', [edvol(totalVol)])}}</span>
-          </div>
-          <btn-cond class="col-auto q-pl-sm" v-if="sf.tsessions.size !== 0" icon="open_in_new" 
-            :label="$t('HPvol_3')" @ok="freeVol"/>
-        </div>
 
         <div class="text-center titre-lg q-my-md">TODO !</div>
       </div>
@@ -226,56 +229,25 @@
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
           {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
         </div>
-        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
-          v-model="devName"
-          input-class="font-mono"
-          bottom-slots
-          :error="deverr !== ''"
-          :hint="$t('PSminmax', [minDev, maxDev])">
-          <template v-slot:append>
-            <q-icon size="sm" name="close" @click="devName = ''" class="cursor-pointer" />
-          </template>
-          <template v-slot:error>{{$t(deverr)}}</template>
-        </q-input>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="devName"
+          :sz="cfg.K.sizeDev" :label="$t('PSdevname')" :ph="$t('PSdevnameh')"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
-        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
-          v-model="newPIN"
-          input-class="font-mono"
-          :type="pinPwd ? 'password' : 'text'"
-          bottom-slots
-          :error="pinerr !== ''"
-          :hint="$t('PSminmax', [minpin, maxpin])">
-          <template v-slot:append>
-            <btn-cond size="sm" class="q-mx-xs" :icon="pinPwd ? 'visibility_off' : 'visibility'" round
-              color="none" @ok="pinPwd = !pinPwd"/>
-          </template>
-          <template v-slot:error>{{$t(pinerr)}}</template>
-        </q-input>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="newPIN"
+          :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
-        <q-input class="col-6 q-pl-sm" style="max-width:16rem" counter dense filled
-          v-model="newPseudo"
-          input-class="font-mono"
-          bottom-slots
-          :error="pseudoerr !== ''"
-          :hint="$t('PSminmax', [minTr, maxTr])">
-          <template v-slot:append>
-            <btn-cond size="sm" class="q-mx-xs" icon="close" round
-              color="none" @ok="newPseudo = ''"/>
-          </template>
-          <template v-slot:error>{{$t(pseudoerr)}}</template>
-        </q-input>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="newPseudo"
+          :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
       </div>
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrust_1')" color="warning"
-        :disable="trusterr" @ok="setTrust"/>
+        <btn-cond flat :label="$t('HPtrust_1')" color="warning" :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -307,8 +279,7 @@
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPuntrust_1')" color="warning"
-          @ok="setUntrust"/>
+        <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -320,11 +291,12 @@
 import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
-import PinCode from '../components-fw/PinCode.vue'
+import InputPs from '../components-fw/InputPs.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import ChooseIt from '../components-fw/ChooseIt.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
+
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
 import { $t, $q, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
@@ -334,16 +306,11 @@ import anonymousB from '../assets/anonymous_black.png'
 // const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-const minTr = 3
-const maxTr = 8
-const minDev = 8
-const maxDev = 16
-const minpin = 8
-const maxpin = 16
 
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
+const cfg = stores.config
 
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
@@ -366,7 +333,7 @@ const resetAllLocal = async () => {
 
 const step = ref(1)
 const p0p1 = ref(null)
-const pin = ref(null)
+const pin = reactive({ inp: '', err: '' })
 const selectedSafe = ref(null)
 const totalVol = ref(0)
 
@@ -383,27 +350,22 @@ const mayPIN = computed(() => !sf.incognito && nbUt.value > 0 && session.hasNet)
 
 const mayPS = computed(() => session.hasNet || (!sf.incognito && nbUt.value > 0))
 
-watch(options, (ap) => {
-  selectedSafe.value = ap.length ? ap[0] : null
-})
+watch(options, (ap) => { selectedSafe.value = ap.length ? ap[0] : null })
 
 const backToAuth = () => {
   step.value = 1
-  p0p1.value = null
-  pin.value = null
+  pin.inp = ''
 }
 
 const authPS = async (args) => {
-  p0p1.value = args
   const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
   if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
   else await openSession()
 }
 
-const authPIN = async (p) => {
-  pin.value = p
+const authPIN = async () => {
   const userId = selectedSafe.value['value']['userId']
-  const status = await sf.openSafeByPin(pin.value, userId)
+  const status = await sf.openSafeByPin(pin.inp, userId)
   if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
   else await openSession()
 }
@@ -421,30 +383,28 @@ const openSession = async () => {
 
 const myTrusting = ref(null)
 const newDev = ref(false)
-const devName = ref('')
-const newPIN = ref('')
-const newPseudo = ref('')
-const pinPwd = ref(false)
+const devName = reactive({ inp: '', err: '' })
+const newPIN = reactive({ inp: '', err: '' })
+const newPseudo = reactive({ inp: '', err: '' })
 
-const deverr = computed(() => devName.value.length < minDev ? 'PScourt' : (devName.value.length > maxDev ? 'PSlong' : ''))
-const pinerr = computed(() => newPIN.value.length < minpin ? 'PScourt' : (newPIN.value.length > maxpin ? 'PSlong' : ''))
-const pseudoerr = computed(() => {
-  if (newPseudo.value.length < minTr) return 'PScourt'
-  if (newPseudo.value.length > maxTr) return 'PSlong'
-  let dup = false
+const dup = computed(() => {
+  let b = false
   sf.trustings.forEach(e => { 
-    if (e.myId !== sf.userId && e.pseudo === newPseudo.value) dup = true
+    if (e.userId !== sf.userId && e.pseudo === newPseudo.inp) b = true 
   })
-  return dup ? 'PSdup' : ''
+  return b
 })
-const trusterr = computed(() => deverr.value !== '' || pinerr.value !== '' || pseudoerr.value !== '')
+
+watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
+
+const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
 
 const openTrust = async () => {
   myTrusting.value = sf.getMyTrusting()
   newDev.value = sf.devId === ''
-  newPIN.value = ''
-  devName.value = newDev.value ? '' : sf.devName
-  newPseudo.value = sf.auth.pseudo
+  newPIN.inp = ''
+  devName.inp = newDev.value ? '' : sf.devName
+  newPseudo.inp = sf.auth.pseudo
   ui.oD(idc, 'trustit')
 }
 
@@ -457,7 +417,7 @@ const openUntrust = async () => {
 
 const setTrust = async () => {
   try {
-    const status = await sf.setTrust(devName.value, newPIN.value, newPseudo.value)
+    const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
     ui.fD()
     myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPsttrust_' + status))

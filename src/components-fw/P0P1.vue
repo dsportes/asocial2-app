@@ -5,10 +5,12 @@
       <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
     </q-toolbar>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p0" :validate="validate"
+    <input-ps class="q-ml-md q-mb-sm" v-model="p0" iconcheck
+      :validate="p0.err === '' && p1.err === '' ? validate : null"
       :sz="cfg.K.sizeP0" :label="$t('PSpseudo')" :ph="$t('PSpseudoh')"/>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p1" :validate="validate"
+    <input-ps class="q-ml-md q-mb-sm" v-model="p1" iconcheck
+      :validate="p0.err === '' && p1.err === '' ? validate : null"
       :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
   </div>
 </template>

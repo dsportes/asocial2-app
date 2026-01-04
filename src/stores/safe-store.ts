@@ -218,16 +218,24 @@ export const useSafeStore = defineStore('safe', () => {
         devName.value = r && r.devName ? r.devName : ''
 
         await db.value.trustings.each(async (r) => {
-          const obj = decode(r.bin)
-          const t : Trusting = obj.userId.startsWith('$') ? 
-            new TrustingL(obj) : new TrustingS(obj)
-          trustings.value.set(t.userId, obj)
+          try {
+            const obj = decode(r.bin)
+            const t : Trusting = obj.userId.startsWith('$') ? 
+              new TrustingL(obj) : new TrustingS(obj)
+            trustings.value.set(t.userId, t)
+          } catch (e) {
+            console.log(e)
+          }
         })
 
         await db.value.tsessions.each(async (r) => {
-          const obj = decode(r.bin)
-          const s : TSession = new TSession(obj)
-          tsessions.value.set(s.idOfS, s)
+          try {
+            const obj = decode(r.bin)
+            const s : TSession = new TSession(obj)
+            tsessions.value.set(s.idOfS, s)
+          } catch (e) {
+            console.log(e)
+          }
         })
         await simulation()
 

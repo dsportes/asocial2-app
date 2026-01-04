@@ -20,7 +20,7 @@
     <div class="row items-center q-my-sm">
       <div class="titre-md">{{$t('HPtrig')}}</div>
       <input-ps class="q-ml-sm" v-model="trig"
-        :sz="cfg.K.sizeTr" :label="$t('HPtrig')" :ph="$t('HPtrigh')"/>
+        :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
       <!--q-input class="q-ml-sm" v-model="trig" counter dense
         input-class="font-mono"
         :label="$t('HPtrig')"
