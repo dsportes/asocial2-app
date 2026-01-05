@@ -20,6 +20,7 @@ export const K = {
   sizeTr: [3, 8],
   sizeDev: [6, 16],
   sizePin: [8, 16],
+  sizeSn: [3, 40], // Nom des sessions
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

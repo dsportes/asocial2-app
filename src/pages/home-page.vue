@@ -7,7 +7,7 @@
         <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
         <div class="full-width row justify-between">
           <q-toggle v-model="session.hasNet"
-            :class="'q-pa-xs bord1 ' + (!session.hasNet ? 'text-bold bg-warning' : '')"
+            :class="'q-pa-xs' + (!session.hasNet ? 'text-bold bg-warning' : '')"
             dense color="positive"
             checked-icon="cloud" unchecked-icon="cloud_off"
             :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
@@ -17,7 +17,7 @@
 
         <div class="full-width row">
           <q-toggle v-model="sf.incognito"
-            :class="'col-auto q-mt-xs q-pa-xs bord1 ' + (sf.incognito ? 'text-bold bg-warning' : '')"
+            :class="'col-auto q-mt-xs q-pa-xs' + (sf.incognito ? 'text-bold bg-warning' : '')"
             dense color="negative"
             :label="$t('HPincognito')" />
         </div>
@@ -160,7 +160,36 @@
 
         <q-separator class="full-width q-mt-xs q-mb-sm"/>
 
-        <div class="text-center titre-lg q-my-md">TODO !</div>
+        <div v-if="tab === '3'">
+          <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
+          <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+            class='bord1 q-pa-xs'>
+            <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+              @click="nvSession()">
+              <div class="col-7 ellipsis q-pr-xs">{{$t('HPnvs')}}</div>
+              <div class="col-5 ellipsis"></div>
+            </div>
+            <div :class="dkli(idx + 1)" v-for="(s, idx) of MySessions" :key="s.profId">
+              <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+                @click="selSession(s)">
+                <div class="col-7 ellipsis q-pr-xs">{{s.profAboutStr}}</div>
+                <div class="col-5 ellipsis">{{dhcool(s.time)}}</div>
+              </div>
+            </div>
+          </q-scroll-area>
+          <q-checkbox v-if="selectedSession && !sf.incognito" 
+            v-model="razdb" :label="$t('HPresetdb')" 
+            style="margin-left: -12px"/>
+          <div class="titre-md text-italic q-mt-md">
+            {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+          </div>
+          <input-ps v-model="newSessionName" iconcheck
+            :validate="validateSession"
+            :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+        </div>
+        <div v-else>
+          <div class="text-center titre-lg q-my-md">TODO !</div>
+        </div>
       </div>
     </q-step>
   </q-stepper>
@@ -361,13 +390,15 @@ const totalVol = ref(0)
 const options = computed(() => {
   const r = []
   if (sf.trustings)
-    sf.trustings.forEach(e => { r.push({ label: e.pseudo, value: e }) })
+    sf.trustings.forEach(e => { 
+      if (!e.isLocal) r.push({ label: e.pseudo, value: e }) 
+    })
   return r
 })
 
 const nbUt = computed(() => sf.trustings ? sf.trustings.size : 0)
 
-const mayPIN = computed(() => !sf.incognito && nbUt.value > 0 && session.hasNet)
+const mayPIN = computed(() => !sf.incognito && options.length > 0 && session.hasNet)
 
 const mayPS = computed(() => session.hasNet || (!sf.incognito && nbUt.value > 0))
 
@@ -398,12 +429,16 @@ const openSession = async () => {
     if (!hasIDB.value) await sf.init1()
     await sf.getCurrentPref()
   }
+  const x = tab.value
   await sf.decryptSessions()
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
+  MySessions.value = sf.getMySessions(true)
+  selectedSession.value = null
   step.value = 2
 }
 
+const MySessions = ref()
 const myTrusting = ref(null)
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
@@ -501,7 +536,7 @@ const newLocUt = ref(false)
 
 const validateLocPS = async () => {
   if (locPS.err !== '') return
-  locK.value = await Crypt.strongHash(locPS.inp, true, false)
+  locK.value = await Crypt.strongHash(locPS.inp, true, true)
   sf.userId = '$' + Crypt.shaS(locK.value)
   myTrusting.value = sf.getMyTrusting()
   newLocUt.value = myTrusting.value === null
@@ -527,6 +562,51 @@ const validateLocTr = async () => {
   openSession()
 }
 
+const selectedSession = ref(null)
+const razdb = ref(false)
+const newSessionName = reactive({ inp: '', err: '' })
+
+watch(razdb, async (ap) => {
+  if (ap === true) await ui.diagDisplay($t('HPrazbl'))
+})
+
+const selSession = (s) => {
+  razdb.value = false
+  selectedSession.value = s
+  newSessionName.inp = s.profAboutStr
+}
+
+const nvSession = () => {
+  razdb.value = false
+  selectedSession.value = null
+  newSessionName.inp = ''
+}
+
+const validateSession = async () => {
+  if (newSessionName.err !== '') return
+  if (selectedSession.value === null) {
+    selectedSession.value = sf.newTSession({
+      app: cfg.appname,
+      userId: sf.userId,
+      profId: Crypt.shaS(Crypt.random(32)),
+      profAboutStr: '',
+      size: 0,
+      time: 0
+    })
+  }
+  selectedSession.value.profAboutStr = newSessionName.inp
+  await sf.setTSession(selectedSession.value, razdb.value)
+  await goToApp()
+}
+
+const goToApp = async () => {
+  session.hasIDB = !sf.incognito
+  session.setStartContext({
+    // TODO
+  })
+  console.log('Go to app')
+  ui.setPage('appHome')
+}
 </script>
 
 <style lang="scss" scoped>
@@ -543,4 +623,6 @@ const validateLocTr = async () => {
 .tab1 { border-color: $primary !important; }
 .tab2 { border-color: $secondary !important; }
 .tab3 { border-color: $grey-7 !important; }
+
+.select:hover { background-color: $yellow-2; color: black; }
 </style>

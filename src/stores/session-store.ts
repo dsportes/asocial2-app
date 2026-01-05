@@ -8,6 +8,16 @@ import { toByteArray } from '../src-fw/base64'
 import { Crypt } from '../src-fw/crypt'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
+type StartContext = {
+  userId: string
+  pseudo: string
+  profId: string
+  profAboutStr: string
+  incognito: boolean
+  prefs: Uint8Array,
+  creds: Map<string, Object>
+}
+
 export const useSessionStore = defineStore('session', () => {
 
   // Gestion des opérations ************************************************
@@ -133,12 +143,18 @@ export const useSessionStore = defineStore('session', () => {
   // 1 : session running (initialisée)
   const setPhase = (p: number) => { phase.value = p}
 
+  const startContext: Ref<StartContext> = ref(null)
+  const setStartContext = (ctx) => {
+    startContext.value = ctx as StartContext
+  }
+
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    dbName, setDbName, phase, setPhase, hasIDB, hasNet
+    dbName, setDbName, phase, setPhase, 
+    hasIDB, hasNet, startContext, setStartContext
     // focus, getFocus, lostFocus, closingApp
   }
 })

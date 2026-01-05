@@ -239,7 +239,7 @@ export const useSafeStore = defineStore('safe', () => {
             console.log(e)
           }
         })
-        await simulation()
+        // await simulation()
 
         console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
         return true
@@ -347,10 +347,11 @@ export const useSafeStore = defineStore('safe', () => {
     return t ? t.pseudo : '?'
   }
 
-  const getMySessions = () : TSession[] => {
+  const getMySessions = (appOnly?: boolean) : TSession[] => {
+    const app = stores.config.appname
     const t: TSession[] = []
     for(const [,x] of tsessions.value)
-      if (x.userId === userId.value) t.push(x)
+      if (x.userId === userId.value && (!appOnly || x.app ===  app)) t.push(x)
     return t
   }
 
@@ -372,17 +373,28 @@ export const useSafeStore = defineStore('safe', () => {
     return getSessionSize(s.userId, s.profId)
   }
 
-  const setTSession = async (s: TSession) => {
+  const setTSession = async (s: TSession, razdb?: boolean) => {
     if (incognito.value) return
     try {
       const ab = s.profAboutStr
       const id = s.idOfS
+      s.time = Date.now()
       s.profAbout = await Crypt.crypt(keyK.value, encoder.encode(ab))
       s.profAboutStr = ''
       await db.value.tsessions.put({ id, bin: encode(s.toObj)})
       s.profAboutStr = ab
       tsessions.value.set(id, s.toObj)
       recordIDB(s.dbName)
+      
+      if (razdb)
+        try {
+          await Dexie.delete(s.dbName)
+          await sleep(300)
+          console.log(s.dbName + ' deleted')
+        } catch (e) {
+          console.log(s.dbName + ' deletion FAILED: ', e.message())
+        }
+
     } catch (e) {
       throw EX(e, 2)
     }

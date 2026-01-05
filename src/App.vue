@@ -41,7 +41,7 @@
       <q-page v-if="ui.page === 'home'"><home-page/></q-page>
     </transition>
     <transition name="anim1">
-      <q-page v-if="ui.page === 'test1'">
+      <q-page v-if="ui.page === 'appHome'">
         <div class="font-mono q-pa-sm">{{echo}}</div>
         <q-file class="full-width q-ma-xs" filled v-model="fileList"
           :label="$t('pickfile')" max-file-size="50000000" max-file="1">

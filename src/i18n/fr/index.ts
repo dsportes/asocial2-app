@@ -98,6 +98,8 @@ export default {
   PSdevnameh: 'MonPC/bob/ff',
   PStrig: 'Initiales, trigramme ... :',
   PStrigh: 'Bob',
+  PSsn: 'A propos de la session ... :',
+  PSsnh: 'Accès à mon compte ...',
 
   HPauthentif: 'Authentification',
   HPsession: 'Session à ouvrir',
@@ -149,6 +151,7 @@ export default {
   HPopsret_2: 'Authentification en échec: code d\'accès secondaire invalide.',
   HPopens_1: 'Ouverture d\'une session',
   HPopens_2: 'ouvrir',
+  HPauthby_0: 'Utilisateur anonyme',
   HPauthby_1: 'Authentifié par l\'accès principal',
   HPauthby_2: 'Authentifié par l\'accès de secours',
   HPauthby_3: 'Authentifié par code PIN',
@@ -200,7 +203,18 @@ export default {
   HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
   HP3v2_1: '- Si c\'est vous, valider vos "initiales / trigramme", les corriger si souhaité.',
   HP3v2_2: '- Si ce n\'est PAS vous, cooriger votre phrase secrète.',
-
+  HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
+  HPrensession: 'Ajuster si nécessaire le "à propos" de la session et valider pour l\'ouvrir:',
+  HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session et valider pour l\'ouvrir:',
+  HPnvs: '(nouvelle session)',
+  HPresetdb: 'Effacer les données gardées localement de l\'exécution précénte',
+  HPrazbl: `### Attention ! 
+  La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
+  
+  - Ceci peut alonger **significativement** la durée d'initialisation de la session.
+  - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
+  
+  `,
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
