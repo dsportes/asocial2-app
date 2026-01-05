@@ -195,6 +195,12 @@ export default {
   HPfreev: 'Volume à libérer {0} sur {1}',
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
+  HP3ps: 'Votre phrase secrète sur ce terminal',
+  HP3v1: 'C\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.',
+  HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
+  HP3v2_1: '- Si c\'est vous, valider vos "initiales / trigramme", les corriger si souhaité.',
+  HP3v2_2: '- Si ce n\'est PAS vous, cooriger votre phrase secrète.',
+
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

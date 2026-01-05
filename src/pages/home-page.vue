@@ -84,7 +84,27 @@
       </div>
 
       <div v-if="tab === '3'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
-        <div class="titre-lg text-center">To Do !</div>
+        <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
+        <input-ps v-model="locPS" iconcheck
+          :validate="validateLocPS"
+          :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
+
+        <div v-if="locK !== null">
+          <div v-if="newLocUt" class="q-my-sm">
+            <div class="titre-md">{{$t('HP3v1')}}</div>
+            <input-ps v-model="locTr" iconcheck
+              :validate="validateLocTr"
+              :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+          </div>
+          <div v-else class="q-my-sm">
+            <div class="titre-md">{{$t('HP3v2_0')}}</div>
+            <div class="titre-md q-ml-md">{{$t('HP3v2_1')}}</div>
+            <div class="titre-md q-ml-md">{{$t('HP3v2_2')}}</div>
+            <input-ps v-model="locTr" iconcheck
+              :validate="validateLocTr"
+              :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+          </div>
+        </div>
       </div>
     </q-step>
 
@@ -103,25 +123,25 @@
                 </q-item>
                 <q-separator/>
 
-                <div v-if="sf.openMode !== 3 && myTrusting === null"
+                <div v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null"
                   class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPtrust')}}</div>
-                <q-item v-if="sf.openMode !== 3 && myTrusting === null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null" clickable v-close-popup
                     @click="openTrust">
                   <q-item-section class="titre-md text-right">{{$t('HPtrust_a')}}</q-item-section>
                 </q-item>
-                <q-separator v-if="sf.openMode !== 3 && myTrusting === null"/>
+                <q-separator v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null"/>
 
-                <div v-if="sf.openMode !== 3 && myTrusting !== null"
+                <div v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null"
                   class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPuntrust')}}</div>
-                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
                     @click="openUntrust">
                   <q-item-section class="titre-md text-right">{{$t('HPuntrust_r')}}</q-item-section>
                 </q-item>
-                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
                     @click="openTrust">
                   <q-item-section class="titre-md text-right">{{$t('HPuntrust_p')}}</q-item-section>
                 </q-item>
-                <q-separator v-if="sf.openMode !== 3 && myTrusting !== null"/>
+                <q-separator v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null"/>
 
                 <div class="titre-sm text-italic q-mr-lg">
                   <span>
@@ -129,7 +149,7 @@
                   <span class="q-ml-sm" v-if="sf.tsessions.size !== 0">
                     {{$t('HPvol_2', [edvol(totalVol)])}}</span>
                 </div>
-                <q-item v-if="sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                <q-item v-if="sf.tsessions.size !== 0 && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
                     @click="freeVol">
                   <q-item-section class="titre-md text-right">{{$t('HPvol_3')}}</q-item-section>
                 </q-item>
@@ -300,6 +320,7 @@ import SafeCr from '../components-fw/SafeCr.vue'
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
 import { $t, $q, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
+import { Crypt } from '../src-fw/crypt'
 import anonymousW from '../assets/anonymous_white.png'
 import anonymousB from '../assets/anonymous_black.png'
 
@@ -355,6 +376,8 @@ watch(options, (ap) => { selectedSafe.value = ap.length ? ap[0] : null })
 const backToAuth = () => {
   step.value = 1
   pin.inp = ''
+  locPS.inp = ''
+  locK.value = null
 }
 
 const authPS = async (args) => {
@@ -469,6 +492,39 @@ const purgeIDBS = async () => {
   await sf.purgeIDBS(l)
   ui.fD()
   await openSession()
+}
+
+const locPS = reactive({ inp: '', err: ''})
+const locTr = reactive({ inp: '', err: ''})
+const locK = ref(null)
+const newLocUt = ref(false)
+
+const validateLocPS = async () => {
+  if (locPS.err !== '') return
+  locK.value = await Crypt.strongHash(locPS.inp, true, false)
+  sf.userId = '$' + Crypt.shaS(locK.value)
+  myTrusting.value = sf.getMyTrusting()
+  newLocUt.value = myTrusting.value === null
+  locTr.inp = newLocUt.value ? '' : myTrusting.value.pseudo
+}
+
+const validateLocTr = async () => {
+  if (locTr.err !== '') return
+  if (newLocUt.value) {
+    myTrusting.value = sf.newTrustingL({
+      userId: sf.userId,
+      pseudo: locTr.inp,
+      hsh: Crypt.sha(locK.value, true),
+      creds: [],
+      prefs: null
+    })
+  } else {
+    myTrusting.value.pseudo = locTr.inp
+  }
+  if (!hasIDB.value) await sf.init1()
+  await sf.setTrusting(myTrusting.value)
+  sf.keyK = locK.value
+  openSession()
 }
 
 </script>

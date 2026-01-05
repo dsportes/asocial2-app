@@ -44,7 +44,7 @@ pour chaque type de volume (documents / fichiers)
 */
 const coeffs = [2, 1.3]
 
-export class Trusting {
+class Trusting {
   userId: string
   pseudo: string
 
@@ -57,7 +57,7 @@ export class Trusting {
   }
 }
 
-export class TrustingS extends Trusting {
+class TrustingS extends Trusting {
   cx: string
   Ka: Uint8Array
   Kr: Uint8Array
@@ -69,7 +69,7 @@ export class TrustingS extends Trusting {
   }
 }
 
-export class TrustingL extends Trusting {
+class TrustingL extends Trusting {
   hsh: Uint8Array // sha du SH(PS) (PS: phrase secrète de l'utilisateur)
   creds: string[] // liste des ids des credentials
   prefs: Uint8Array // objet de préférences crypté par SH(PS)
@@ -80,7 +80,7 @@ export class TrustingL extends Trusting {
   }
 }
 
-export class TSession {
+class TSession {
   app: string // code de l'application
   userId: string // id de l'utilisateur ou '' pour un local
   profId: string // id du profil
@@ -104,18 +104,20 @@ export class TSession {
     return Crypt.shaS(this.app + '/' + this.userId + '/' + this.profId) }
 }
 
-export type Pref = [code: string, obj: Object]
+type Pref = [code: string, obj: Object]
 
-export type Safe = {
-  id: string // identifiant.
+type Safe = {
+  id: string // identifiant aléatoire.
   pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
   hp0: string // index unique, `SH(p0)`.
   hr0: string // index unique, `SH(r0)`.
   hhp1: string // SHA de `SH(p1)`.
   hhr1: string // SHA de `SH(r1)`.
   hhk: string // SHA de `SH(K)`.
-  C: Uint8Array // clé publique de cryptage. id = shaS(C)
+  C: Uint8Array // clé publique de cryptage.
   DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
+  S: Uint8Array // clé publique de signature.
+  VK: Uint8Array // clé privée de vérification, cryptée par la clé K
   Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
   Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
   devices: Object
@@ -124,7 +126,7 @@ export type Safe = {
   prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
 }
 
-export type Auth = {
+type Auth = {
   pseudo: string
   hp0: string // index unique, `SH(p0)`.
   hr0: string // index unique, `SH(r0)`.
@@ -137,7 +139,7 @@ export type Auth = {
   Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
 }
 
-export type TrustDev = {
+type TrustDev = {
   userId: string
   devId: string
   sh1p: Uint8Array
@@ -148,14 +150,14 @@ export type TrustDev = {
   sign: Uint8Array
 }
 
-export type UntrustDev = {
+type UntrustDev = {
   userId: string
   devId: string
   sh1p: Uint8Array
   sh1r: Uint8Array
 }
 
-export type Device = {
+type Device = {
   devName: string | Uint8Array
   Va: Uint8Array
   cy: string
@@ -467,6 +469,9 @@ export const useSafeStore = defineStore('safe', () => {
   const C : Ref<Uint8Array> = ref(null)
   const D : Ref<Uint8Array> = ref(null)
   const DK : Ref<Uint8Array> = ref(null)
+  const S : Ref<Uint8Array> = ref(null)
+  const V : Ref<Uint8Array> = ref(null)
+  const VK : Ref<Uint8Array> = ref(null)
   const sh1p = ref(null)
   const sh1r = ref(null)
   const shK = ref(null)
@@ -505,7 +510,9 @@ export const useSafeStore = defineStore('safe', () => {
       Ka: safe.Ka,
       Kr: safe.Kr,
       C: safe.C,
-      DK: safe.DK
+      DK: safe.DK,
+      S: safe.S,
+      VK: safe.VK
     }
 
     // devices
@@ -562,12 +569,16 @@ export const useSafeStore = defineStore('safe', () => {
 
     if (createMode) {
       if (openMode.value !== 0) return 9
+      userId.value = Crypt.shaS(Crypt.random(32))
       keyK.value = Crypt.random(32)
       const [Cy, Dy] = await Crypt.getKeyPair()
       C.value = Cy
       D.value = Dy
       DK.value = await Crypt.crypt(keyK.value, Dy)
-      userId.value = Crypt.shaS(C.value)
+      const [Sy, Vy] = await Crypt.getKeyPair()
+      S.value = Sy
+      V.value = Vy
+      VK.value = await Crypt.crypt(keyK.value, Vy)
       sh1p.value = psh1
       sh1r.value = rsh1
       shK.value = await Crypt.strongHash(keyK.value, false, true)
@@ -579,6 +590,8 @@ export const useSafeStore = defineStore('safe', () => {
       id: userId.value,
       C: C.value,
       DK: DK.value,
+      S: S.value,
+      VK: VK.value,
       pseudo: await Crypt.crypt(keyK.value, encoder.encode(trig)),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
@@ -608,6 +621,7 @@ export const useSafeStore = defineStore('safe', () => {
       keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
       shK.value = await Crypt.strongHash(keyK.value, false, true)
       D.value = await Crypt.decrypt(keyK.value, ret.DK)
+      V.value = await Crypt.decrypt(keyK.value, ret.VK)
       if (ret.byP) { sh1p.value = sh1; sh1r.value =  null }
       else { sh1p.value = sh1; sh1r.value = sh1 }
       await compileSafe(ret.safe)
@@ -690,6 +704,7 @@ export const useSafeStore = defineStore('safe', () => {
     if (ret2.status) return 2
     openMode.value = 3
     D.value = await Crypt.decrypt(keyK.value, ret.DK)
+    V.value = await Crypt.decrypt(keyK.value, ret.VK)
     await compileSafe(ret2.safe)
     return 0
   }
@@ -710,10 +725,15 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  const newTrustingL = (obj) => new TrustingL(obj)
+  const newTrustingS = (obj) => new TrustingS(obj)
+  const newTSession = (obj) => new TSession(obj)
+
   return {
     recordIDB, resetAllLocal,
     incognito, hasIDBS, init0, init1, devId, devName, 
     setHeader,
+    newTrustingS, newTrustingL, newTSession,
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions,
     getSessionSize, pseudoOfS, decryptSessions, volOfS, purgeIDBS,
