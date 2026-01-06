@@ -207,7 +207,8 @@ export default {
   HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
   HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session',
   HPnvs: '(nouvelle session "vierge" de droits d\'accès)',
-  HPresetdb: 'Effacer les données gardées localement de l\'exécution précénte',
+  HPresetdb: 'Effacer les données gardées localement de l\'exécution précédente',
+  HPsetpinned: 'Epingler cette nouvelle session pour garder ses données localement et accélérer ses exécutions suivantes et y accéder en mode "avion".',
   HPrazbl: `### Attention ! 
   La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
   
@@ -218,6 +219,7 @@ export default {
   HPwprfs: 'Ouvrir la session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPpref_2: '... dernières utilisées sur ce terminal',
+  HPnotpinned: '(session non épinglée)',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

@@ -106,6 +106,11 @@ class TSession {
 
 type Pref = [code: string, obj: Object]
 
+type Profile = {
+  about: string
+  creds: string[]
+}
+
 type Safe = {
   id: string // identifiant aléatoire.
   pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
@@ -239,8 +244,6 @@ export const useSafeStore = defineStore('safe', () => {
             console.log(e)
           }
         })
-        // await simulation()
-
         console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
         return true
       } else {
@@ -271,6 +274,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  /*
   const simulation = async () => {
     const app = stores.config.appname
     if (tsessions.value.size === 0)
@@ -291,6 +295,7 @@ export const useSafeStore = defineStore('safe', () => {
         await db.value.tsessions.put({ id, bin: encode(obj)})
       }
   }
+  */
 
   const setHeader = async () => {
     if (incognito.value) return
@@ -347,12 +352,18 @@ export const useSafeStore = defineStore('safe', () => {
     return t ? t.pseudo : '?'
   }
 
-  const getMySessions = (appOnly?: boolean) : TSession[] => {
+  const getMySessions = () : TSession[] => {
     const app = stores.config.appname
     const t: TSession[] = []
     for(const [,x] of tsessions.value)
-      if (x.userId === userId.value && (!appOnly || x.app ===  app)) t.push(x)
+      if (x.userId === userId.value && x.app ===  app) t.push(x)
     return t
+  }
+
+  const getMyProfiles = () : Map<string, Profile> => {
+    const app = stores.config.appname
+    const mpf = profiles.value.get(app)
+    return mpf || new Map<string, Profile>()
   }
 
   /* Retourne la taille estimée de LA session citée 
@@ -524,7 +535,7 @@ export const useSafeStore = defineStore('safe', () => {
   const devices = ref(Map<string, Device>) // cle devid
 
   /* Section "préférences" **************************************************************
-  Une entrée par application** donnant une liste de couples `code, obj` 
+  Une entrée par application donnant une liste de couples `code, obj` 
   ( **cryptés par la clé K**) ordonnée par dernière utilisation:
   - `code` : texte court parlant pour l'utilisateur correspondant à un de ses usages 
     habituels de l'application comme `mobile, large, simple, expert ...`.
@@ -532,9 +543,15 @@ export const useSafeStore = defineStore('safe', () => {
   **************************************************************************************/
   const prefs = ref(Map<String, Pref[]>) // clé app
 
+  /* Section "profiles"
+  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
+  - `about`: texte significatif pour l'utilisateur **crypté par la clé K** décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
+  - `creds`: la liste des id des _credentials_ qui sont attachés à une session de ce profil lors de son ouverture.
+  */
+ const profiles = ref(Map<String, Map<string, Profile>>) // clé app
+
   /* K et D ont été décryptés dans keyK.value et D.value */
   const compileSafe = async (safe: Safe) => {
-    const appname = stores.config.appname
     auth.value = {
       pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
       hp0: safe.hp0,
@@ -549,8 +566,12 @@ export const useSafeStore = defineStore('safe', () => {
       S: safe.S,
       VK: safe.VK
     }
+    await loadDevices(safe) // devices
+    await loadPrefs(safe) // prefs
+    await loadProfiles(safe) // profiles
+  }
 
-    // devices
+  const loadDevices = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Device>()
     for (const devId in safe.devices) {
       const d: Device = safe.devices[devId]
@@ -564,8 +585,10 @@ export const useSafeStore = defineStore('safe', () => {
       tr.Kr = auth.value.Kr
       setTrusting(tr)
     }
-    
-    // prefs
+  }
+
+  const loadPrefs = async (safe: Safe) : Promise<void> => {
+    const appname = stores.config.appname
     const p = new Map<string, Pref[]>() // clé: app, value: liste de prefs
     for (const app in safe.prefs) {
       const lx = safe.prefs[app] as Uint8Array
@@ -584,7 +607,22 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     prefs.value = p
+  }
 
+  const loadProfiles = async (safe: Safe) : Promise<void> => {
+    const m = new Map<string, Map<string, Profile>>()
+    for (const app in safe.profiles) {
+      const mp = new Map<string, Profile>()
+      m.set(app, mp)
+      const mpf = safe.profiles[app]
+      for (const profId in mpf) {
+        const x = mpf[profId]
+        const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about as Uint8Array))
+        const p: Profile = { about, creds: x.creds }
+        mp.set(profId, p)
+      }
+    }
+    profiles.value = m
   }
 
   /* Retourne depuis le Safe central actuellement en mémoire
@@ -771,8 +809,9 @@ export const useSafeStore = defineStore('safe', () => {
     newTrustingS, newTrustingL, newTSession,
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions,
+    profiles, getMyProfiles,
     getSessionSize, pseudoOfS, decryptSessions, volOfS, purgeIDBS,
-    currentPref, getCurrentPref, saveCurrentPref,
+    currentPref, getCurrentPref, saveCurrentPref, getMySafePrefs,
     getCreds,
     userId, keyK, openMode, auth, devices,
     createSafe, openSafe, openSafeByPin, setTrust, setUntrust
