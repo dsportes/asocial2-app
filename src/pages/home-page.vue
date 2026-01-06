@@ -183,10 +183,18 @@
           <div class="titre-md text-italic q-mt-md">
             {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
           </div>
-          <input-ps v-model="newSessionName" iconcheck
-            :validate="validateSession"
+          <input-ps v-model="newSessionName"
             :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+          <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
+            <div class="titre-md text-italic text-bold text-right">
+              {{$t('HPwprfs')}}</div>
+            <q-card-actions vertical align="right">
+              <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession(1)"/>
+              <btn-cond flat :label="$t('HPpref_2')" @ok="validateSession(2)"/>
+            </q-card-actions>
+          </div>
         </div>
+
         <div v-else>
           <div class="text-center titre-lg q-my-md">TODO !</div>
         </div>
@@ -582,7 +590,7 @@ const nvSession = () => {
   newSessionName.inp = ''
 }
 
-const validateSession = async () => {
+const validateSession = async (ipref) => {
   if (newSessionName.err !== '') return
   if (selectedSession.value === null) {
     selectedSession.value = sf.newTSession({
@@ -596,12 +604,29 @@ const validateSession = async () => {
   }
   selectedSession.value.profAboutStr = newSessionName.inp
   await sf.setTSession(selectedSession.value, razdb.value)
-  await goToApp()
+  session.setDbName(selectedSession.value.dbName)
+
+  const cids = selectedSession.value.creds
+  const creds: Map<string, Object> = cids && cids.length ? 
+    sf.getCreds(locK.value, cids) : new Map<string, Object>()
+
+  let prefs = null
+  if (ipref === 2) {
+    const p = myTrusting.value.prefs
+    const x = p ? await Crypt.decrypt(locK.value, p) : null
+    try {
+      prefs = x ? decode(x) : null
+    } catch (e) {
+      prefs = null
+    }
+  }
+  await goToApp(creds, prefs)
 }
 
-const goToApp = async () => {
-  session.hasIDB = !sf.incognito
+const goToApp = async (creds: Map<string, Object>, prefs: Object) => {
   session.setStartContext({
+    creds,
+    prefs,
     // TODO
   })
   console.log('Go to app')

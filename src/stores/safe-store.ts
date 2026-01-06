@@ -451,6 +451,29 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  // Charge les creds listés ou tous si absence de liste d'ids
+  const getCreds = async (locK: Uint8Array, lids?: string[]) 
+    : Promise<Map<string, Object>> => {
+    const sids = lids && lids.length ? new Set(lids) : null
+    const creds = new Map<string, Object>()
+    await db.value.creds.each(async (r) => {
+      try {
+        if (!sids || sids.has(r.id)) {
+          const x = await Crypt.decrypt(locK, r.bin)
+          let obj 
+          try {
+            obj = decode(x)
+            creds.set(r.id, obj)
+          } catch (e) {}
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    })
+    return creds
+  }
+
+
   /* Enregistre ou supprime en IDB la préférence courante
   de l'utilisateur courant pour l'application courante
   */
@@ -750,6 +773,7 @@ export const useSafeStore = defineStore('safe', () => {
     tsessions, setTSession, delTSession, getMySessions,
     getSessionSize, pseudoOfS, decryptSessions, volOfS, purgeIDBS,
     currentPref, getCurrentPref, saveCurrentPref,
+    getCreds,
     userId, keyK, openMode, auth, devices,
     createSafe, openSafe, openSafeByPin, setTrust, setUntrust
   }

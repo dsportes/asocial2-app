@@ -204,9 +204,9 @@ export default {
   HP3v2_1: '- Si c\'est vous, valider vos "initiales / trigramme", les corriger si souhaité.',
   HP3v2_2: '- Si ce n\'est PAS vous, cooriger votre phrase secrète.',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
-  HPrensession: 'Ajuster si nécessaire le "à propos" de la session et valider pour l\'ouvrir:',
-  HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session et valider pour l\'ouvrir:',
-  HPnvs: '(nouvelle session)',
+  HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
+  HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session',
+  HPnvs: '(nouvelle session "vierge" de droits d\'accès)',
   HPresetdb: 'Effacer les données gardées localement de l\'exécution précénte',
   HPrazbl: `### Attention ! 
   La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
@@ -215,6 +215,9 @@ export default {
   - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
   
   `,
+  HPwprfs: 'Ouvrir la session avec les préférences de présentation ...',
+  HPpref_1: '... par défaut',
+  HPpref_2: '... dernières utilisées sur ce terminal',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
