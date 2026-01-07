@@ -21,18 +21,6 @@
       <div class="titre-md">{{$t('HPtrig')}}</div>
       <input-ps class="q-ml-sm" v-model="trig"
         :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
-      <!--q-input class="q-ml-sm" v-model="trig" counter dense
-        input-class="font-mono"
-        :label="$t('HPtrig')"
-        :placeholder="$t('HPtrigh')"
-        bottom-slots
-        :error="trerr !== ''"
-        :hint="$t('PSminmax', [minTr, maxTr]) + (!trerr ? $t('pressret') : '')">
-        <template v-slot:append>
-          <q-icon size="sm" name="close" @click="trig = ''" class="cursor-pointer" />
-        </template>
-        <template v-slot:error>{{$t(trerr)}}</template>
-      </q-input-->
     </div>
     <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
       class='q-mb-xs'
@@ -118,12 +106,9 @@ const checkCodes = () => {
 const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
-  const status = await sf.createSafe(
-    props.createMode,
-    trig.inp,
-    ca.sh0, ca.sh1, ca.sh,
-    cr.sh0, cr.sh1, cr.sh
-  )
+  const status = props.createMode ?
+    await sf.createSafe(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
+    await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
   await ui.diagDisplay($t('HPcsret_' + (props.createMode ? '0' : '1') + status))
   if (status === 0) {
     if (!props.createMode) ui.fD()

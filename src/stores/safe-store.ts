@@ -72,7 +72,7 @@ class TrustingS extends Trusting {
 class TrustingL extends Trusting {
   hsh: Uint8Array // sha du SH(PS) (PS: phrase secrète de l'utilisateur)
   creds: string[] // liste des ids des credentials
-  prefs: Uint8Array // objet de préférences crypté par SH(PS)
+  prefs: Uint8Array // objet de préférences utilisé la dernière fois crypté par SH(PS)
 
   constructor (obj: Object) { 
     super() 
@@ -82,12 +82,17 @@ class TrustingL extends Trusting {
 
 class TSession {
   app: string // code de l'application
-  userId: string // id de l'utilisateur ou '' pour un local
+  userId: string // id de l'utilisateur
   profId: string // id du profil
-  profAbout: Uint8Array // commentaire de l'utilisateur sur ce profil
-  profAboutStr: string
+  about: Uint8Array // commentaire de l'utilisateur sur cette session
+  aboutStr: string
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
+  creds: string[] // liste des codes des credentials
+  /* about, aboutStr, creds
+  - pour un utilisateur enregistré sont tirés de son profile
+  - pour un utilisateur sont directement enregistré ici
+  */
 
   constructor (obj: Object) {
     for(const f of Object.keys(obj)) this[f] = obj[f]
@@ -109,57 +114,6 @@ type Pref = [code: string, obj: Object]
 type Profile = {
   about: string
   creds: string[]
-}
-
-type Safe = {
-  id: string // identifiant aléatoire.
-  pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
-  hp0: string // index unique, `SH(p0)`.
-  hr0: string // index unique, `SH(r0)`.
-  hhp1: string // SHA de `SH(p1)`.
-  hhr1: string // SHA de `SH(r1)`.
-  hhk: string // SHA de `SH(K)`.
-  C: Uint8Array // clé publique de cryptage.
-  DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
-  S: Uint8Array // clé publique de signature.
-  VK: Uint8Array // clé privée de vérification, cryptée par la clé K
-  Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
-  Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
-  devices: Object
-  creds: Object
-  profiles: Object
-  prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
-}
-
-type Auth = {
-  pseudo: string
-  hp0: string // index unique, `SH(p0)`.
-  hr0: string // index unique, `SH(r0)`.
-  hhp1: string // SHA de `SH(p1)`.
-  hhr1: string // SHA de `SH(r1)`.
-  hhk: string // SHA de `SH(K)`.
-  C: Uint8Array // clé publique de cryptage. id = shaS(C)
-  DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
-  Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
-  Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
-}
-
-type TrustDev = {
-  userId: string
-  devId: string
-  sh1p: Uint8Array
-  sh1r: Uint8Array
-  devName: Uint8Array
-  Va: Uint8Array
-  cy: string
-  sign: Uint8Array
-}
-
-type UntrustDev = {
-  userId: string
-  devId: string
-  sh1p: Uint8Array
-  sh1r: Uint8Array
 }
 
 type Device = {
@@ -338,26 +292,35 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const decryptSessions = async () : Promise<void> => {
-    for (const [, s] of tsessions.value) {
-      if (s.userId === userId.value) {
-        const x = await Crypt.decrypt(keyK.value, s.profAbout)
-        s.profAboutStr = x ? decoder.decode(x) : decoder.decode(s.profAbout)
-      } else s.profAboutStr = ''
-    }
-  }
-
   const pseudoOfS = (s: TSession) : string => {
     const t = trustings.value.get(s.userId)
     return t ? t.pseudo : '?'
   }
 
-  const getMySessions = () : TSession[] => {
+  const getMySessions = async (locK: Uint8Array) : Promise<[TSession[], TSession[]]> => {
     const app = stores.config.appname
-    const t: TSession[] = []
+    const mpf = profiles.value.get(app)
+    const tok: TSession[] = []
+    const tko: TSession[] = []
     for(const [,x] of tsessions.value)
-      if (x.userId === userId.value && x.app ===  app) t.push(x)
-    return t
+      if (x.userId === userId.value && x.app ===  app) {
+        if (userId.value.startsWith('$')) {
+          // Utilisateur local - l'about et creds de sa session est dans TSession
+          const y = await Crypt.decrypt(locK, x.about)
+          x.aboutStr = y ? decoder.decode(y) : ''
+          tok.push(x)
+        } else {
+          // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
+          const profile = mpf.get(x.profId)
+          if (profile) {
+            x.about = profile.about
+            const y = await Crypt.decrypt(keyK.value, x.about)
+            x.aboutStr = y ? decoder.decode(y) : ''
+            tok.push(x) 
+          } else tko.push(x)
+        }
+      }
+    return [tok, tko]
   }
 
   const getMyProfiles = () : Map<string, Profile> => {
@@ -387,13 +350,13 @@ export const useSafeStore = defineStore('safe', () => {
   const setTSession = async (s: TSession, razdb?: boolean) => {
     if (incognito.value) return
     try {
-      const ab = s.profAboutStr
+      const ab = s.aboutStr
       const id = s.idOfS
       s.time = Date.now()
-      s.profAbout = await Crypt.crypt(keyK.value, encoder.encode(ab))
-      s.profAboutStr = ''
+      s.about = await Crypt.crypt(keyK.value, encoder.encode(ab))
+      s.aboutStr = ''
       await db.value.tsessions.put({ id, bin: encode(s.toObj)})
-      s.profAboutStr = ab
+      s.aboutStr = ab
       tsessions.value.set(id, s.toObj)
       recordIDB(s.dbName)
       
@@ -450,7 +413,9 @@ export const useSafeStore = defineStore('safe', () => {
     tsessions.value.delete(id)
   }
 
-  // Charge depuis IDB currentPref avec la préférence du user pour l'application en cours
+  /* Charge depuis IDB currentPref avec la préférence du user 
+  pour l'application en cours
+  */
   const getCurrentPref = async () => {
     const app = stores.config.appname
     const id = Crypt.shaS(app + '/' + userId.value)
@@ -511,18 +476,34 @@ export const useSafeStore = defineStore('safe', () => {
   **********************************************************************/
   const userId = ref(null)
   const keyK = ref(null)
-  const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
-  const C : Ref<Uint8Array> = ref(null)
-  const D : Ref<Uint8Array> = ref(null)
-  const DK : Ref<Uint8Array> = ref(null)
-  const S : Ref<Uint8Array> = ref(null)
-  const V : Ref<Uint8Array> = ref(null)
-  const VK : Ref<Uint8Array> = ref(null)
+  /* sh1p sh1r ont été donnés:
+  - soit sur $createSafe $UpdSafeCodes (auth longue)
+  - soit sur $openSafebyPR (par auth longue, pas par PIN)
+  Sont transmises sur les opérations $SetTrust $SetUntrust pour vérification 
+  de leur hash (hhp1 hhr1) stockés par $CreateSafe $UpdSafeCodes
+  */
   const sh1p = ref(null)
   const sh1r = ref(null)
-  const shK = ref(null)
+
+  const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
+
+  const shK = computed(async () => await Crypt.strongHash(keyK.value, false, true))
 
   /* Section "auth" */
+  type Auth = {
+    pseudo: string
+    hp0: string // index unique, `SH(p0)`.
+    hr0: string // index unique, `SH(r0)`.
+    hhp1: string // SHA de `SH(p1)`.
+    hhr1: string // SHA de `SH(r1)`.
+    hhk: string // SHA de `SH(K)`.
+    C: Uint8Array // clé publique de cryptage.
+    D: Uint8Array // clé privée de décryptage.
+    S: Uint8Array // clé publique de signature.
+    V: Uint8Array // clé privée de vérification.
+    Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
+    Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
+  }
   const auth: Ref<Auth> = ref(null)
 
   /* Section "devices de confiance" *****************************************************
@@ -550,7 +531,13 @@ export const useSafeStore = defineStore('safe', () => {
   */
  const profiles = ref(Map<String, Map<string, Profile>>) // clé app
 
-  /* K et D ont été décryptés dans keyK.value et D.value */
+  /* "Compilation" d'un objet Safe retour des opérations sur Safe
+  Stocke en mémoire le dernier état du Safe revenu du serveur: 
+    - auth, devices, prefs, profiles
+  K :
+    - soit vient d'être généré dans $createSafe
+    - soit a été décrypté au retour des opérations $openSafeByPR $openSafeByPin
+  */
   const compileSafe = async (safe: Safe) => {
     auth.value = {
       pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
@@ -559,13 +546,14 @@ export const useSafeStore = defineStore('safe', () => {
       hhp1: safe.hhp1,
       hhr1: safe.hhr1,
       hhk: safe.hhk,
+      C: safe.C,
+      D: await Crypt.decrypt(keyK.value, safe.DK),
+      S: safe.S,
+      V: await Crypt.decrypt(keyK.value, safe.VK),
       Ka: safe.Ka,
       Kr: safe.Kr,
-      C: safe.C,
-      DK: safe.DK,
-      S: safe.S,
-      VK: safe.VK
-    }
+    } as Auth
+
     await loadDevices(safe) // devices
     await loadPrefs(safe) // prefs
     await loadProfiles(safe) // profiles
@@ -589,16 +577,17 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const appname = stores.config.appname
-    const p = new Map<string, Pref[]>() // clé: app, value: liste de prefs
+    const p = new Map<string, Map<string, Object>>() // clé: app, value: liste de prefs
     for (const app in safe.prefs) {
-      const lx = safe.prefs[app] as Uint8Array
-      const lp: Pref[] = decode(await Crypt.decrypt(keyK.value, lx)) as Pref[]
-      p.set(app, lp)
+      const x = safe.prefs[app] as Uint8Array
+      const y = x ? decode(await Crypt.decrypt(keyK.value, x)) : {}
+      const mx = new Map<string, Object>()
+      for (const code in y) mx.set(code, y[code])
+      p.set(app, mx)
       if (app === appname && currentPref.value) {
         const c = currentPref.value.code as string
         let f = false
-        for (const p of lp) {
-          const [code, obj] = p
+        for (const [code, obj] of mx) {
           if (code === c) { // Rafraichissement de l'objet de préférence courante
             currentPref.value.obj = obj
             await saveCurrentPref()
@@ -625,76 +614,128 @@ export const useSafeStore = defineStore('safe', () => {
     profiles.value = m
   }
 
+  const getMySafeProfile = (profId: string) : Profile => {
+    if (!profiles.value) return null
+    const app = stores.config.appname
+    const x = profiles.value.get(app)
+    if (!x) return null
+    return x.get(profId)
+  }
+
   /* Retourne depuis le Safe central actuellement en mémoire
   la liste (éventuellement vide) des prefs relative à l'application (et au user)
   */
   const getMySafePrefs = () : Pref[] => {
+    if (!prefs.value) return []
     const app = stores.config.appname
     const x = prefs.value.get(app)
     return x ? x : []
   }
 
-  const createSafe = async (
-    createMode: boolean,
-    trig: string,
+  type SafeCodes = { // paramétres de l'opération $UpdCodesSafe
+    id: string // identifiant aléatoire.
+    pseudo: Uint8Array // pseudo / trigramme crypté par la clé K du _safe_.
+    hp0: string // index unique, `SH(p0)`.
+    hr0: string // index unique, `SH(r0)`.
+    hhp1: string // SHA de `SH(p1)`.
+    hhr1: string // SHA de `SH(r1)`.
+    Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
+    Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
+  }
+
+  interface Safe extends SafeCodes { // paramétres de l'opération $CreateSafe
+    hhk: string // SHA de `SH(K)`.
+    C: Uint8Array // clé publique de cryptage.
+    DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
+    S: Uint8Array // clé publique de signature.
+    VK: Uint8Array // clé privée de vérification, cryptée par la clé K
+
+    devices: Object
+    creds: Object
+    profiles: Object
+    prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+  }
+
+  const updSafeCodes = async (
+    pseudo: string,
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
-    if (createMode) {
-      if (openMode.value !== 0) return 9
-      userId.value = Crypt.shaS(Crypt.random(32))
-      keyK.value = Crypt.random(32)
-      const [Cy, Dy] = await Crypt.getKeyPair()
-      C.value = Cy
-      D.value = Dy
-      DK.value = await Crypt.crypt(keyK.value, Dy)
-      const [Sy, Vy] = await Crypt.getKeyPair()
-      S.value = Sy
-      V.value = Vy
-      VK.value = await Crypt.crypt(keyK.value, Vy)
-      sh1p.value = psh1
-      sh1r.value = rsh1
-      shK.value = await Crypt.strongHash(keyK.value, false, true)
-    } else {
-      if (openMode.value === 0) return 9
-    }
+    if (openMode.value === 0) return 9
+    
+    sh1p.value = psh1
+    sh1r.value = rsh1
 
-    const safe: Safe = {
+    const safeCodes: SafeCodes = {
       id: userId.value,
-      C: C.value,
-      DK: DK.value,
-      S: S.value,
-      VK: VK.value,
-      pseudo: await Crypt.crypt(keyK.value, encoder.encode(trig)),
+      pseudo: await Crypt.crypt(keyK.value, encoder.encode(pseudo)),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
       hhr1: Crypt.shaS(rsh1),
-      hhk: Crypt.shaS(shK.value),
+      Ka: await Crypt.crypt(psh, keyK.value),
+      Kr: await Crypt.crypt(rsh, keyK.value)
+    }
+
+    const ret = await new Operation('$UpdCodesSafe').post({ safeCodes })
+    if (ret.status === 0) {
+      openMode.value = 1
+      await compileSafe(ret.safe)
+    }
+    return ret.status
+  }
+
+  const createSafe = async (
+    pseudo: string,
+    psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
+    rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
+    
+    if (openMode.value !== 0) return 9
+
+    userId.value = Crypt.shaS(Crypt.random(32))
+    keyK.value = Crypt.random(32)
+    sh1p.value = psh1
+    sh1r.value = rsh1
+
+    const [C, D] = await Crypt.getKeyPair()
+    const [S, V] = await Crypt.getKeyPair()
+
+    const safe: Safe = {
+      id: userId.value,
+      pseudo: await Crypt.crypt(keyK.value, encoder.encode(pseudo)),
+      hp0: u8ToB64(psh0, true),
+      hr0: u8ToB64(rsh0, true),
+      hhp1: Crypt.shaS(psh1),
+      hhr1: Crypt.shaS(rsh1),
       Ka: await Crypt.crypt(psh, keyK.value),
       Kr: await Crypt.crypt(rsh, keyK.value),
+
+      hhk: Crypt.shaS(shK.value),
+      C,
+      DK: await Crypt.crypt(keyK.value, D),
+      S,
+      VK: await Crypt.crypt(keyK.value, V),
+
       devices: {},
       creds: {},
       profiles: {},
       prefs: {}
     }
-    const ret = await new Operation(createMode ? '$CreateSafe' : '$UpdCodesSafe').post({ safe })
+
+    const ret = await new Operation('$CreateSafe').post({ safe })
     if (ret.status === 0) {
       openMode.value = 1
-      await compileSafe(createMode ? safe : ret.safe)
+      await compileSafe(safe)
     }
     return ret.status
   }
 
-  const openSafe = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
+  const openSafeByPR = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
     const ret = await new Operation('$OpenSafeByPR').post({sh0, sh1})
     if (ret.status === 0) {
       openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
       keyK.value = await Crypt.decrypt(sh, ret.byP ? ret.safe.Ka : ret.safe.Kr)
-      shK.value = await Crypt.strongHash(keyK.value, false, true)
-      D.value = await Crypt.decrypt(keyK.value, ret.DK)
-      V.value = await Crypt.decrypt(keyK.value, ret.VK)
       if (ret.byP) { sh1p.value = sh1; sh1r.value =  null }
       else { sh1p.value = sh1; sh1r.value = sh1 }
       await compileSafe(ret.safe)
@@ -702,6 +743,53 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  const openSafeByPin = async ( pin: string, id: string) => {
+    userId.value = id
+    const t : TrustingS = getMyTrusting() as TrustingS
+    if (!t) return 1
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx, false, true) as Uint8Array
+
+    const ret = await new Operation('$OpenSafeByPin')
+      .post({userId: userId.value, devId: devId.value, pincx})
+    if (ret.status !== 0) return ret.status
+    const cy = ret.cy
+    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
+    try {
+      keyK.value = await Crypt.decrypt(pincxcy, t.Kp)
+    } catch (e) {
+      return 4
+    }
+    const ret2 = await new Operation('$OpenSafeById')
+      .post({userId: userId.value, shK: shK.value})
+    if (ret2.status) return 2
+    openMode.value = 3
+    await compileSafe(ret2.safe)
+    return 0
+  }
+
+  type TrustDev = {
+    userId: string
+    devId: string
+    sh1p: Uint8Array
+    sh1r: Uint8Array
+    devName: Uint8Array
+    Va: Uint8Array
+    cy: string
+    sign: Uint8Array
+  }
+
+  type UntrustDev = {
+    userId: string
+    devId: string
+    sh1p: Uint8Array
+    sh1r: Uint8Array
+  }
+
+  /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
+  en mode LONG (pas par PIN). 
+  Pour s'en assurer elle transmet au serveur sh1p / sh1r qui n'ont pu être initialisés
+  QUE par une auth longue ($CreateSafe / $UpdSafeCodes / $OpenSafeByPR)
+  */
   const setTrust = async (name: string, pin: string, pseudo: string) => {
     if (!devId.value || name !== devName.value) { // put Header
       if (!devId.value) devId.value = Crypt.rnd(12)
@@ -756,32 +844,6 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const openSafeByPin = async ( pin: string, id: string) => {
-    userId.value = id
-    const t : TrustingS = getMyTrusting() as TrustingS
-    if (!t) return 1
-    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx, false, true) as Uint8Array
-
-    const ret = await new Operation('$OpenSafeByPin')
-      .post({userId: userId.value, devId: devId.value, pincx})
-    if (ret.status !== 0) return ret.status
-    const cy = ret.cy
-    const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
-    try {
-      keyK.value = await Crypt.decrypt(pincxcy, t.Kp)
-    } catch (e) {
-      return 4
-    }
-    const shk = await Crypt.strongHash(keyK.value, false, true)
-    const ret2 = await new Operation('$OpenSafeById').post({userId: userId.value, shk})
-    if (ret2.status) return 2
-    openMode.value = 3
-    D.value = await Crypt.decrypt(keyK.value, ret.DK)
-    V.value = await Crypt.decrypt(keyK.value, ret.VK)
-    await compileSafe(ret2.safe)
-    return 0
-  }
-
   const setUntrust = async () => {
     const t = getMyTrusting() as TrustingS
     if (!t) return 0 // était déjà untrusted
@@ -810,11 +872,11 @@ export const useSafeStore = defineStore('safe', () => {
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions,
     profiles, getMyProfiles,
-    getSessionSize, pseudoOfS, decryptSessions, volOfS, purgeIDBS,
+    getSessionSize, pseudoOfS, volOfS, purgeIDBS,
     currentPref, getCurrentPref, saveCurrentPref, getMySafePrefs,
     getCreds,
     userId, keyK, openMode, auth, devices,
-    createSafe, openSafe, openSafeByPin, setTrust, setUntrust
+    createSafe, updSafeCodes, openSafeByPR, openSafeByPin, setTrust, setUntrust
   }
 })
 

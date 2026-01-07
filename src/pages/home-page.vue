@@ -89,20 +89,19 @@
           :validate="validateLocPS"
           :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
 
-        <div v-if="locK !== null">
-          <div v-if="newLocUt" class="q-my-sm">
-            <div class="titre-md">{{$t('HP3v1')}}</div>
-            <input-ps v-model="locTr" iconcheck
-              :validate="validateLocTr"
-              :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
-          </div>
-          <div v-else class="q-my-sm">
+        <div v-if="locK !== null" class="q-my-md">
+          <div v-if="newLocUt" class="titre-md">{{$t('HP3v1')}}</div>
+          <div v-else>
             <div class="titre-md">{{$t('HP3v2_0')}}</div>
             <div class="titre-md q-ml-md">{{$t('HP3v2_1')}}</div>
             <div class="titre-md q-ml-md">{{$t('HP3v2_2')}}</div>
-            <input-ps v-model="locTr" iconcheck
-              :validate="validateLocTr"
+          </div>
+          <div class="row justify-between q-gutter-sm items-center">
+            <input-ps class="col" v-model="locTr"
               :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+            <btn-cond class="col-auto" :label="$t('HPitsme')"
+              :disable="locTr.err !== ''"
+              @ok="validateLocTr"/>
           </div>
         </div>
       </div>
@@ -166,14 +165,14 @@
             class='bord1 q-pa-xs'>
             <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
               @click="nvSession()">
-              <div class="col-7 ellipsis q-pr-xs">{{$t('HPnvs')}}</div>
-              <div class="col-5 ellipsis"></div>
+              <div class="col-7 q-pr-xs">{{$t('HPnvs')}}</div>
+              <div class="col-5"></div>
             </div>
             <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
               <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
                 @click="selSession(s)">
-                <div class="col-7 ellipsis q-pr-xs">{{s.profAboutStr}}</div>
-                <div class="col-5 ellipsis">{{dhcool(s.time)}}</div>
+                <div class="col-7 q-pr-xs">{{s.profAboutStr}}</div>
+                <div class="col-5 ">{{dhcool(s.time)}}</div>
               </div>
             </div>
           </q-scroll-area>
@@ -213,7 +212,7 @@
               </div>
             </div>
             <div :class="dkli(idx + 1 + mySessions.length)" 
-              v-for="([profId, p], idx) of myProfiles2" :key="profId">
+              v-for="([profId, p], idx) of myProfiles" :key="profId">
               <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
                 @click="selProfileS(profId, p)">
                 <div class="col-7 ellipsis q-pr-xs q-pl-xs">{{p.about}}</div>
@@ -466,7 +465,7 @@ const backToAuth = () => {
 }
 
 const authPS = async (args) => {
-  const status = await sf.openSafe(args.sh0, args.sh1, args.sh)
+  const status = await sf.openSafeByPR(args.sh0, args.sh1, args.sh)
   if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
   else await openSession()
 }
@@ -483,38 +482,48 @@ type Profile = {
   creds: string[]
 }
 
+const newDev = ref(false)
+const devName = reactive({ inp: '', err: '' })
+const newPIN = reactive({ inp: '', err: '' })
+const newPseudo = reactive({ inp: '', err: '' })
+
+const mySessions = ref<TSession>()
+const myTrusting = ref()
+
+/* Seulement pour un utilisateur enregistré :
+- myProfiles: Map des profiles NON cités dans une session épinglée
+- myPrefs: prefs enregistrées dans le Safe
+*/
+const myProfiles = ref()
+const myPrefs = ref()
+
 const openSession = async () => {
   if (!sf.incognito) {
     if (!hasIDB.value) await sf.init1()
     await sf.getCurrentPref()
   }
-  const x = tab.value
-  await sf.decryptSessions()
+  const [tok, tko] = await sf.getMySessions(locK.value)
+  mySessions.value = tok
+
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
-  mySessions.value = sf.getMySessions()
-  myPrefs.value = tab !== '3' ? sf.getMySafePrefs() : []
-  const profIds = new Set<string>()
-  for (const [,s] of mySessions.value) profIds.set(s.profId)
-  if (tab !== '3') {
+  
+  if (tab.value !== '3') {
+    const profIds = new Set<string>()
+    for (const s of mySessions.value) profIds.add(s.profId)
     const mpf = sf.getMyProfiles()
     myProfiles.value = new Map<string, Profile>()
-    for ([profId, p] of mpf)
+    for (const [profId, p] of mpf)
       if (!profIds.has(profId)) myProfiles.value.set(profId, p)
+    myPrefs.value = sf.getMySafePrefs()
+  } else {
+    myPrefs.value = []
   }
+
   selectedSession.value = null
   selectedProfile.value = null
   step.value = 2
 }
-
-const mySessions = ref()
-const myProfiles = ref()
-const myTrusting = ref()
-const myPrefs = ref()
-const newDev = ref(false)
-const devName = reactive({ inp: '', err: '' })
-const newPIN = reactive({ inp: '', err: '' })
-const newPseudo = reactive({ inp: '', err: '' })
 
 const dup = computed(() => {
   let b = false
@@ -536,8 +545,6 @@ const openTrust = async () => {
   newPseudo.inp = sf.auth.pseudo
   ui.oD(idc, 'trustit')
 }
-
-const mySessions = ref<TSession>(null)
 
 const openUntrust = async () => {
   mySessions.value = sf.getMySessions()
@@ -664,6 +671,7 @@ const selProfile = (profId: string, p: Profile) => {
 }
 
 const validateSession = async (ipref) => {
+  // TODO
   if (newSessionName.err !== '') return
   if (selectedSession.value === null) {
     selectedSession.value = sf.newTSession({
@@ -679,7 +687,7 @@ const validateSession = async (ipref) => {
   await sf.setTSession(selectedSession.value, razdb.value)
   session.setDbName(selectedSession.value.dbName)
 
-  const cids = selectedSession.value.creds
+  const cids = myTrusting.value.creds // liste des ids des credentials
   const creds: Map<string, Object> = cids && cids.length ? 
     sf.getCreds(locK.value, cids) : new Map<string, Object>()
 
@@ -697,12 +705,24 @@ const validateSession = async (ipref) => {
 }
 
 const validateSessionS = async (ipref: number | string ) => {
+  // TODO
   if (newSessionName.err !== '') return
-  let cids = []
+  let cids = [] // liste des ids des credentials
   if (selectedSession.value !== null) {
+    // reprise d'une session épinglée
     selectedSession.value.profAboutStr = newSessionName.inp
-    cids = selectedSession.value.creds
+    const profId = selectedSession.value.profId
+    const p = sf.getMySafeProfile(profId)
+    if (p) cids = p.creds
+    else {
+      cids = []
+      /* Bizarre si p n'existe pas:
+      une session est épinglée mais son profile n'existe plus.
+      "vieille" session dont l'utilisateur a depuis supprimer le profile ?
+      */
+    }
   } else if (selectedProfile.value !== null) {
+    // nouvelle session initialisée depuis un profile
     const { profId, p } = selectedProfile.value
     selectedSession.value = sf.newTSession({
       app: cfg.appname,
@@ -714,6 +734,7 @@ const validateSessionS = async (ipref: number | string ) => {
     })
     cids = p.creds
   } else /*if (selectedSession.value === null)*/ {
+    // nouvelle session vierge de droits
     selectedSession.value = sf.newTSession({
       app: cfg.appname,
       userId: sf.userId,

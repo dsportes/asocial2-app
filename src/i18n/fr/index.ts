@@ -201,8 +201,8 @@ export default {
   HP3ps: 'Votre phrase secrète sur ce terminal',
   HP3v1: 'C\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.',
   HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
-  HP3v2_1: '- Si c\'est vous, valider vos "initiales / trigramme", les corriger si souhaité.',
-  HP3v2_2: '- Si ce n\'est PAS vous, cooriger votre phrase secrète.',
+  HP3v2_1: '- Si c\'est vous, corriger vos "initiales / trigramme" si souhaité.',
+  HP3v2_2: '- Si ce n\'est PAS vous, corriger votre phrase secrète.',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
   HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
   HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session',
@@ -220,6 +220,7 @@ export default {
   HPpref_1: '... par défaut',
   HPpref_2: '... dernières utilisées sur ce terminal',
   HPnotpinned: '(session non épinglée)',
+  HPitsme: 'C\'est bien moi',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
