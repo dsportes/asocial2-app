@@ -113,7 +113,7 @@
             :validate="validateLocPS"
             :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
 
-          <div v-if="locK !== null" class="q-my-md">
+          <div v-if="keyK !== null" class="q-my-md">
             <div v-if="newLocUt" class="titre-md">{{$t('HP3v1')}}</div>
             <div v-else>
               <div class="titre-md">{{$t('HP3v2_0')}}</div>
@@ -497,7 +497,7 @@ const backToAuth = () => {
   step.value = 1
   pin.inp = ''
   locPS.inp = ''
-  locK.value = null
+  sf.keyK = null
 }
 
 const authPS = async (args) => {
@@ -530,30 +530,33 @@ const myTrusting = ref()
 - myProfiles: Map des profiles NON cités dans une session épinglée
 - myPrefs: prefs enregistrées dans le Safe
 */
-const myProfiles = ref()
+const myProfiles: Ref<Map<string, Profile> = ref()
 const myPrefs = ref()
 
 const openSession = async () => {
-  if (!sf.incognito) {
-    if (!hasIDB.value) await sf.init1()
-    await sf.getCurrentPref()
-  }
-  const [tok, tko] = await sf.getMySessions(locK.value)
+  if (!sf.incognito && !hasIDB.value) await sf.init1()
+
+  const [tok, tko] = await sf.getMySessions()
   mySessions.value = tok
 
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   
+  if (!sf.incognito) {
+    await sf.loadMyLocalPrefs()
+    await sf.refreshLocalPrefs()
+    await sf.loadMyLocalCreds()
+    await sf.refreshLocalCreds()
+  }
+
   if (tab.value !== '3') {
     const profIds = new Set<string>()
-    for (const s of mySessions.value) profIds.add(s.profId)
-    const mpf = sf.getMyProfiles()
-    myProfiles.value = new Map<string, Profile>()
-    for (const [profId, p] of mpf)
-      if (!profIds.has(profId)) myProfiles.value.set(profId, p)
+    for (const s of mySessions.value) 
+      if (s.profId) profIds.add(s.profId)
+    myProfiles.value = sf.getMySafeProfiles(profIds)
     myPrefs.value = sf.getMySafePrefs()
   } else {
-    myPrefs.value = []
+    myPrefs.value = sf.tcreds
   }
 
   selectedSession.value = null
@@ -645,13 +648,12 @@ const purgeIDBS = async () => {
 
 const locPS = reactive({ inp: '', err: ''})
 const locTr = reactive({ inp: '', err: ''})
-const locK = ref(null)
 const newLocUt = ref(false)
 
 const validateLocPS = async () => {
   if (locPS.err !== '') return
-  locK.value = await Crypt.strongHash(locPS.inp, true, true)
-  sf.userId = '$' + Crypt.shaS(locK.value)
+  sf.keyK = await Crypt.strongHash(locPS.inp, true, true)
+  sf.userId = '$' + Crypt.shaS(sf.keyK)
   myTrusting.value = sf.getMyTrusting()
   newLocUt.value = myTrusting.value === null
   locTr.inp = newLocUt.value ? '' : myTrusting.value.pseudo
@@ -663,7 +665,7 @@ const validateLocTr = async () => {
     myTrusting.value = sf.newTrustingL({
       userId: sf.userId,
       pseudo: locTr.inp,
-      hsh: Crypt.sha(locK.value, true),
+      hsh: Crypt.sha(sf.keyK, true),
       creds: [],
       prefs: null
     })
@@ -672,11 +674,33 @@ const validateLocTr = async () => {
   }
   if (!hasIDB.value) await sf.init1()
   await sf.setTrusting(myTrusting.value)
-  sf.keyK = locK.value
   openSession()
 }
 
-const selectedSession = ref(null)
+type TSession = { 
+  app: string // code de l'application
+  userId: string // id de l'utilisateur
+  profId: string // id du profil
+  about: Uint8Array // commentaire de l'utilisateur sur cette session
+  aboutStr: string
+  size: number[] // tailles des données / fichiers stockés en local dans IDB
+  time: number // date-heure de dernière ouverture sur ce terminal
+  credIds?: string[] // liste des codes des credentials
+  prefCode: string // préférences utilisées la dernière fois
+  prefObj: Uint8Array
+  /* 
+  about, aboutStr
+  - pour un utilisateur enregistré: tirée de son profile
+  - pour un utilisateur local: directement enregistrée ici
+  credIds : pas pour un utilisateur enregistré
+  prefCode prefObj pour un utilisateur enregistré:
+  - utilisé la fois précédente, pour utilisation en AVION
+  prefObj pour un utilisateur local: (prefCode est vide)
+  - utilisé la fois précédente, pour rouverture quelque soit le mode
+  */
+}
+
+const selectedSession : Ref<TSession> = ref(null)
 const selectedProfile = ref(null)
 const razdb = ref(false)
 const newSessionName = reactive({ inp: '', err: '' })
@@ -706,59 +730,70 @@ const selProfile = (profId: string, p: Profile) => {
   newSessionName.inp = p.about
 }
 
+type Credential = {
+  about: string
+  cred: Object
+}
+
 const validateSession = async (ipref) => {
-  // TODO
   if (newSessionName.err !== '') return
-  if (selectedSession.value === null) {
-    selectedSession.value = sf.newTSession({
+  let sv = selectedSession.value
+
+  if (!sv) {
+    sv = sf.newTSession({
       app: cfg.appname,
       userId: sf.userId,
       profId: Crypt.shaS(Crypt.random(32)),
-      profAboutStr: '',
+      about: null,
+      aboutStr: '',
       size: 0,
-      time: 0
+      time: 0,
+      credIds: [],
+      prefCode: '',
+      prefObj: null // null si défaut ou première ouverture de l'application
     })
   }
-  selectedSession.value.profAboutStr = newSessionName.inp
-  await sf.setTSession(selectedSession.value, razdb.value)
-  session.setDbName(selectedSession.value.dbName)
+  sv.aboutStr = newSessionName.inp
+  sv.about = await Crypt.crypt(sf.keyK, encoder.encode(sv.aboutStr))
+  if (ipref === 2) sv.prefObj = myTrusting.value.prefObj || null
 
-  const cids = myTrusting.value.creds // liste des ids des credentials
-  const creds: Map<string, Object> = cids && cids.length ? 
-    sf.getCreds(locK.value, cids) : new Map<string, Object>()
+  await sf.setTSession(sv, razdb.value)
+  session.setDbName(sf.incognito ? '' : sv.dbName)
 
-  let prefs = null
-  if (ipref === 2) {
-    const p = myTrusting.value.prefs
-    const x = p ? await Crypt.decrypt(locK.value, p) : null
-    try {
-      prefs = x ? decode(x) : null
-    } catch (e) {
-      prefs = null
+  const creds: Map<string, Credential>() = new Map<string, Credential>()
+  if (session.hasNet && l && l.length) sf.fillLocalCreds(creds, sv.credIds)
+
+  let prefObj = {}
+  try {
+    if (sv.prefObj) {
+      const x = await Crypt.decrypt(sf.keyK, sv.prefObj)
+      prefObj = x ? decode(x) : {}
     }
-  }
-  await goToApp(creds, prefs)
+  } catch (e) { }
+
+  await goToApp(creds, prefObj)
 }
 
 const validateSessionS = async (ipref: number | string ) => {
-  // TODO
   if (newSessionName.err !== '') return
-  let cids = [] // liste des ids des credentials
-  if (selectedSession.value !== null) {
-    // reprise d'une session épinglée
-    selectedSession.value.profAboutStr = newSessionName.inp
-    const profId = selectedSession.value.profId
-    const p = sf.getMySafeProfile(profId)
-    if (p) cids = p.creds
-    else {
-      cids = []
-      /* Bizarre si p n'existe pas:
-      une session est épinglée mais son profile n'existe plus.
-      "vieille" session dont l'utilisateur a depuis supprimer le profile ?
-      */
+  let l = [] // liste des ids des credentials
+  const sv = selectedSession.value
+  const sp = selectedProfile.value
+
+  let profToUpd = {}}
+
+  if (sv) { // reprise d'une session épinglée
+    const profile = sf.getMySafeProfile(sv.profId)
+
+    if (sv.aboutStr !== newSessionName.inp) {
+        sv.aboutStr = newSessionName.inp
+        sv.about = await Crypt.crypt(keyK.value, encoder.encode(sv.aboutStr))
+        profToUpd.about = sv.about
     }
-  } else if (selectedProfile.value !== null) {
-    // nouvelle session initialisée depuis un profile
+    l = profile.creds
+    sv.credIds = l
+
+  } else if (sp) { // nouvelle session initialisée depuis un profile
     const { profId, p } = selectedProfile.value
     selectedSession.value = sf.newTSession({
       app: cfg.appname,
@@ -782,11 +817,11 @@ const validateSessionS = async (ipref: number | string ) => {
     cids = []
   }
 
-  await sf.setTSession(selectedSession.value, razdb.value)
-  session.setDbName(selectedSession.value.dbName)
+  await sf.setTSession(sv.value, razdb.value)
+  session.setDbName(sf.incognito ? '' : sv.value.dbName)
 
-  const creds: Map<string, Object> = cids && cids.length ? 
-    sf.getCreds(locK.value, cids) : new Map<string, Object>()
+  const creds: Map<string, Credential>() = new Map<string, Credential>()
+  if (session.hasNet && l && l.length) sf.fillSafeCreds(creds, sv.credIds)
 
   let prefs = null
   let code = ''
