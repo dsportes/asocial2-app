@@ -299,7 +299,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const getMySessions = async (locK: Uint8Array) : Promise<[TSession[], TSession[]]> => {
     const app = stores.config.appname
-    const mpf = profiles.value.get(app)
+    const mpf = profiles.value ? profiles.value.get(app) : null
     const tok: TSession[] = []
     const tko: TSession[] = []
     for(const [,x] of tsessions.value)
@@ -311,7 +311,7 @@ export const useSafeStore = defineStore('safe', () => {
           tok.push(x)
         } else {
           // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
-          const profile = mpf.get(x.profId)
+          const profile = mpf ? mpf.get(x.profId) : null
           if (profile) {
             x.about = profile.about
             const y = await Crypt.decrypt(keyK.value, x.about)
@@ -513,7 +513,7 @@ export const useSafeStore = defineStore('safe', () => {
   - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider 
     que ce _device_ est de confiance.
   ****************************************************************************************/
-  const devices = ref(Map<string, Device>) // cle devid
+  const devices: Ref<Map<string, Device>> = ref() // cle devid
 
   /* Section "préférences" **************************************************************
   Une entrée par application donnant une liste de couples `code, obj` 
@@ -522,14 +522,14 @@ export const useSafeStore = defineStore('safe', () => {
     habituels de l'application comme `mobile, large, simple, expert ...`.
   - `obj`: objet donnant les valeurs des _préférences_ à utiliser à l'ouverture d'une session.
   **************************************************************************************/
-  const prefs = ref(Map<String, Pref[]>) // clé app
+  const prefs: Ref<Map<String, Pref[]>> = ref()// clé app
 
   /* Section "profiles"
   Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
   - `about`: texte significatif pour l'utilisateur **crypté par la clé K** décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
   - `creds`: la liste des id des _credentials_ qui sont attachés à une session de ce profil lors de son ouverture.
   */
- const profiles = ref(Map<String, Map<string, Profile>>) // clé app
+ const profiles: Ref<Map<String, Map<string, Profile>>> = ref() // clé app
 
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur: 

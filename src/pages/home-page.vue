@@ -2,112 +2,138 @@
 <div class="column items-center">
   <q-stepper v-model="step" color="primary" animated class="pwmd"
     header-class="titre-lg">
-    <q-step :name="1" :title="$t('HPauthentif')" icon="passkey">
-      <div class="column q-pa-sm">
-        <!--btn-cond label="Go Test1" @ok="ui.setPage('test1')"/-->
-        <div class="full-width row justify-between">
-          <q-toggle v-model="session.hasNet"
-            :class="'q-pa-xs' + (!session.hasNet ? 'text-bold bg-warning' : '')"
-            dense color="positive"
-            checked-icon="cloud" unchecked-icon="cloud_off"
-            :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
-          <btn-cond v-if="!sf.incognito" round icon="local_police" 
-            size="sm" color="negative" @ok="opCfReset"/>
-        </div>
+    <q-step :name="1" :title="$t('HPauthentif')" icon="passkey" class="q-pa-sm">
 
-        <div class="full-width row">
-          <q-toggle v-model="sf.incognito"
-            :class="'col-auto q-mt-xs q-pa-xs' + (sf.incognito ? 'text-bold bg-warning' : '')"
-            dense color="negative"
-            :label="$t('HPincognito')" />
-        </div>
-
-        <div v-if="sf.incognito && !session.hasNet"
-          class="titre-lg q-my-md text-italic text-warning text-bold">
-          {{ $t('HPnosession') }}
-        </div>
+      <div class="full-width row justify-between q-px-xs" style="min-height:2rem">
+        <q-toggle v-model="session.hasNet"
+          :class="'q-pa-xs' + (!session.hasNet ? 'text-bold bg-warning' : '')"
+          dense color="positive"
+          checked-icon="cloud" unchecked-icon="cloud_off"
+          :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
+        <btn-cond v-if="!sf.incognito" round icon="local_police" 
+          size="sm" color="negative" @ok="opCfReset"/>
       </div>
 
-      <q-tabs v-model="tab" dense align="justify" class="q-mt-sm">
-        <q-tab no-caps name="1" class="bg-primary">
-          <div class="column items-center">
-            <q-icon name="person" size="32px"/>
-            <div class='titre-md text-bold text-white'>{{$t('HPtab_1')}}</div>
-          </div>
-        </q-tab>
-        <q-tab v-if="!sf.incognito && session.hasNet" 
-          no-caps name="2" class="bg-secondary">
-          <div class="column items-center">
-            <q-icon name="person_add" size="32px"/>
-            <div class='titre-md text-bold text-white'>{{$t('HPtab_2')}}</div>
-          </div>
-        </q-tab>
-        <q-tab no-caps name="3" class="bg-grey-7">
-          <div class="column items-center">
-            <q-img :src="anonymousB" style="height: 32px; max-width: 32px;"/>
-            <div class='titre-md text-bold text-black'>{{$t('HPtab_3')}}</div>
-          </div>
-        </q-tab>
-      </q-tabs>
+      <div class="full-width row q-px-xs" style="min-height:2rem">
+        <q-toggle v-model="sf.incognito"
+          :class="'col-auto q-mt-xs q-pa-xs' + (sf.incognito ? 'text-bold bg-warning' : '')"
+          dense color="negative"
+          :label="$t('HPincognito_' + (sf.incognito ? '1' : '2'))" />
+      </div>
 
-      <div v-if="!sf.incognito" 
-        :class="'tab' + tab + ' tablr q-px-sm row q-py-sm items-start'">
-        <q-icon class="col-1" name="info" size="1.2rem" />
-        <div class="col-11">
-          <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
-          <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
-            {{'[' + sf.devName + ']'}}</span>
+      <div v-if="sf.incognito && !session.hasNet" class="q-ma-md row justify-between items-center">
+        <div class="col q-mr-sm titre-md q-my-md text-italic text-warning text-bold">
+          {{ $t('HPnosession') }}</div>
+        <btn-cond class="col-auto" :label="$t('open')" icon="send" @ok="goToApp()"/>
+      </div>
+
+      <div v-else>
+        <q-tabs v-model="tab" dense align="justify" class="q-mt-sm">
+          <q-tab no-caps name="1" class="bg-primary">
+            <div class="column items-center">
+              <q-icon name="person" size="32px"/>
+              <div class='titre-md text-bold text-white'>{{$t('HPtab_1')}}</div>
+            </div>
+          </q-tab>
+          <q-tab :disable="!session.hasNet" no-caps name="2" class="bg-secondary">
+            <div class="column items-center">
+              <q-icon name="person_add" size="32px"/>
+              <div class='titre-md text-bold text-white'>{{$t('HPtab_2')}}</div>
+            </div>
+          </q-tab>
+          <q-tab :disable="sf.incognito" no-caps name="3" class="bg-grey-7">
+            <div class="column items-center">
+              <q-img :src="anonymousB" style="height: 32px; max-width: 32px;"/>
+              <div class='titre-md text-bold text-black'>{{$t('HPtab_3')}}</div>
+            </div>
+          </q-tab>
+        </q-tabs>
+
+        <div v-if="tab === '1'" :class="'tab' + tab + ' tablr tabb q-pa-sm'">
+
+          <div class="row q-mb-md items-start q-gutter-xs">
+            <q-icon class="col-auto" name="info" size="1.2rem" />
+            <div class="col">
+              <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
+              <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
+                {{'[' + sf.devName + ']'}}</span>
+              <div v-if="!nbUt && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
+            </div>
+          </div>
+
+          <p0-p1 v-if="mayPS" class="q-mt-md" @ok="authPS"
+            :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
+
+          <div v-if="mayPIN">
+            <div class="tbs q-mt-md q-px-xs titre-md text-italic">{{$t('HPseluser_1')}}</div>
+            <div class="q-ml-md q-px-xs titre-sm text-italic">{{$t('HPseluser_2')}}</div>
+            <div class="q-ml-md q-mb-sm row items-center">
+              <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
+                transition-show="flip-up" transition-hide="flip-down"
+                v-model="selectedSafe" :options="options" />
+              <input-ps class="col-6" style="max-width:16rem" v-model="pin"
+                :validate="authPIN" iconcheck :disable="selectedSafe === null"
+                :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>              
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div v-if="tab === '1'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
+        <div v-if="tab === '2'" 
+          :class="'tab' + tab + ' tablr tabb q-pa-sm' + (!session.hasNet ? ' disabled' : '')">
 
-        <p0-p1 v-if="mayPS" class="q-mt-md" @ok="authPS"
-          :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
-
-        <div v-if="mayPIN">
-          <div class="tbs q-mt-md q-px-xs titre-md text-italic">{{$t('HPseluser_1')}}</div>
-          <div class="q-ml-md q-px-xs titre-sm text-italic">{{$t('HPseluser_2')}}</div>
-          <div class="q-ml-md q-mb-sm row items-center">
-            <q-select class="col-6 q-pr-sm" dense filled :label="$t('HPiam')"
-              transition-show="flip-up" transition-hide="flip-down"
-              v-model="selectedSafe" :options="options" />
-            <input-ps class="col-6" style="max-width:16rem" v-model="pin"
-              :validate="authPIN" iconcheck :disable="selectedSafe === null"
-              :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>              
+          <div class="row q-mb-md items-start q-gutter-xs">
+            <q-icon class="col-auto" name="info" size="1.2rem" />
+            <div class="col">
+              <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
+              <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
+                {{'[' + sf.devName + ']'}}</span>
+              <div v-if="!nbUt && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
+            </div>
           </div>
+
+          <safe-cr create-mode :onValidate="openSession"/>
         </div>
-      </div>
 
-      <div v-if="tab === '2'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
-        <safe-cr create-mode :onValidate="openSession"/>
-      </div>
+        <div v-if="tab === '3'" 
+          :class="'tab' + tab + ' tablr tabb q-pa-sm' + (sf.incognito ? ' disabled' : '')">
 
-      <div v-if="tab === '3'" :class="'tab' + tab + ' tablr tabb q-px-sm q-py-sm'">
-        <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="locPS" iconcheck
-          :validate="validateLocPS"
-          :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
-
-        <div v-if="locK !== null" class="q-my-md">
-          <div v-if="newLocUt" class="titre-md">{{$t('HP3v1')}}</div>
-          <div v-else>
-            <div class="titre-md">{{$t('HP3v2_0')}}</div>
-            <div class="titre-md q-ml-md">{{$t('HP3v2_1')}}</div>
-            <div class="titre-md q-ml-md">{{$t('HP3v2_2')}}</div>
+          <div class="row q-mb-md items-start q-gutter-xs">
+            <q-icon class="col-auto" name="info" size="1.2rem" />
+            <div class="col">
+              <span class="titre-md text-italic">{{$t('HPnban', nbAn)}}</span>
+              <div v-if="!nbAn && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
+            </div>
           </div>
-          <div class="row justify-between q-gutter-sm items-center">
-            <input-ps class="col" v-model="locTr"
-              :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
-            <btn-cond class="col-auto" :label="$t('HPitsme')"
-              :disable="locTr.err !== ''"
-              @ok="validateLocTr"/>
+
+          <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
+          <input-ps v-model="locPS" iconcheck
+            :validate="validateLocPS"
+            :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
+
+          <div v-if="locK !== null" class="q-my-md">
+            <div v-if="newLocUt" class="titre-md">{{$t('HP3v1')}}</div>
+            <div v-else>
+              <div class="titre-md">{{$t('HP3v2_0')}}</div>
+              <div class="titre-md q-ml-md">{{$t('HP3v2_1')}}</div>
+              <div class="titre-md q-ml-md">{{$t('HP3v2_2')}}</div>
+            </div>
+            <div class="row justify-between q-gutter-sm items-center">
+              <input-ps class="col" v-model="locTr"
+                :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+              <btn-cond class="col-auto" :label="$t('HPitsme')"
+                :disable="locTr.err !== ''"
+                @ok="validateLocTr"/>
+            </div>
           </div>
         </div>
       </div>
     </q-step>
 
-    <q-step :name="2" :title="$t('HPsession')" icon="send">
+    <q-step v-if="!sf.incognito || session.hasNet"
+     :name="2" :title="$t('HPsession')" icon="send">
       <div class="q-pa-sm">
         <div class="full-width row justify-between items-center">
           <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
@@ -449,7 +475,17 @@ const options = computed(() => {
   return r
 })
 
-const nbUt = computed(() => sf.trustings ? sf.trustings.size : 0)
+const nbUt = computed(() => {
+  if (!sf.trustings || !sf.trustings.size) return 0
+  let n = 0; for (const t of sf.trustings) if (!t.isLocal) n++
+  return n
+})
+
+const nbAn = computed(() => {
+  if (!sf.trustings || !sf.trustings.size) return 0
+  let n = 0; for (const t of sf.trustings) if (t.isLocal) n++
+  return n
+})
 
 const mayPIN = computed(() => !sf.incognito && options.length > 0 && session.hasNet)
 
@@ -769,15 +805,18 @@ const validateSessionS = async (ipref: number | string ) => {
   await goToApp(creds, prefs)
 }
 
-const goToApp = async (creds: Map<string, Object>, prefs: Object) => {
+const goToApp = async (about?: string, creds?: Map<string, Object>, prefs?: Object) => {
   session.setStartContext({
+    userId: sf.userId || '',
+    about: about || '',
     creds,
-    prefs,
+    prefs
     // TODO
   })
   console.log('Go to app')
   ui.setPage('appHome')
 }
+
 </script>
 
 <style lang="scss" scoped>

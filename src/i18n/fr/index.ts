@@ -31,6 +31,7 @@ export default {
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
   confirm: 'Pour confirmer taper {0}', // BtnConfirm
+  open: 'Ouvrir',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -106,8 +107,7 @@ export default {
   HPtab_1: 'Je SUIS enregistré',
   HPtab_2: 'Je M\'ENREGISTRE',
   HPtab_3: 'Je reste ANONYME',
-  HPincognito: 'Refuser de lire / stocker des données sur ce terminal',
-  HPnosession: 'Aucune session ne peut être ouverte, ni connectée (pas de réseau), ni en mode AVION (pas d\'accès aux données stockées localement)',
+  HPnosession: 'Une nouvelle session (sans nom) peut être ouverte EN MODE AVION et sans accès à aucune données (comme une "calculette").',
   HPauth_1: 'Je m\'authentifie par ma phrase secrète ...',
   HPauth_2: 'Soit, je m\'authentifie par ma phrase secrète ...',
   HPauth_3: 'Je m\'enregistre par ma phrase secrète ...',
@@ -117,10 +117,16 @@ export default {
   HPnoreg: 'Je ne suis pas encore enregistré, je le fais maintenant.',
   HPchgcodes: 'Je veux changer mes codes d\'accès',
   HPnet: 'Accès à Internet',
-  HPplane: 'Je suis en mode AVION (pas de réseau)',
+  HPplane: 'Mode AVION: pas d\'accès à Internet)',
+  HPincognito_1: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
+  HPincognito_2: 'Accès sécurisé aux données stockées sur ce terminal',
   HPnbUt: 'Aucun utilisateur n\'a déclaré avoir confiance dans ce terminal | '
     + 'Un utilisateur a déclaré avoir confiance dans ce terminal | '
     + '{count} utilisateurs ont déclaré avoir confiance dans ce terminal',
+  HPnban: 'Aucun utilisateur anonyme n\'a de session déclarée dans ce terminal | '
+    + 'Un utilisateur anonyme a une session déclarée dans ce terminal | '
+    + '{count} utilisateurs ont une session déclarée dans ce terminal',
+  HPnoplane: 'Aucune session ne peut rouverte en mode AVION.',
   HPenreg_1: 'Enregistrement',
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',
@@ -201,7 +207,7 @@ export default {
   HP3ps: 'Votre phrase secrète sur ce terminal',
   HP3v1: 'C\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.',
   HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
-  HP3v2_1: '- Si c\'est vous, corriger vos "initiales / trigramme" si souhaité.',
+  HP3v2_1: '- Si c\'est vous, ajuster éventuellemnt vos "initiales / trigramme".',
   HP3v2_2: '- Si ce n\'est PAS vous, corriger votre phrase secrète.',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
   HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
