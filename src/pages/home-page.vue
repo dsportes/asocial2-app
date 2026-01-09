@@ -24,7 +24,8 @@
       <div v-if="sf.incognito && !session.hasNet" class="q-ma-md row justify-between items-center">
         <div class="col q-mr-sm titre-md q-my-md text-italic text-warning text-bold">
           {{ $t('HPnosession') }}</div>
-        <btn-cond class="col-auto" :label="$t('open')" icon="send" @ok="goToApp()"/>
+        <btn-cond class="col-auto" :label="$t('open')" icon="send" 
+          @ok="validateSessionV()"/>
       </div>
 
       <div v-else>
@@ -202,22 +203,24 @@
               </div>
             </div>
           </q-scroll-area>
-          <q-checkbox v-if="selectedSession && !sf.incognito" 
-            v-model="razdb" :label="$t('HPresetdb')" 
-            style="margin-left: -12px"/>
-          <div class="titre-md text-italic q-mt-md">
-            {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
-          </div>
-          <input-ps v-model="newSessionName"
-            :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
-          <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
-            <div class="titre-md text-italic text-bold text-right">
-              {{$t('HPwprfs')}}</div>
-            <q-card-actions vertical align="right">
-              <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
-              <btn-cond v-for="[code, data] in sf.tprefs" :key="code"
-                flat :label="'... ' + code" @ok="validateSession(code, data)"/>
-            </q-card-actions>
+          <div v-if="nvSP" class="q-mt-md">
+            <q-checkbox v-if="selectedSession && !sf.incognito" 
+              v-model="razdb" :label="$t('HPresetdb')" 
+              style="margin-left: -12px"/>
+            <div class="titre-md text-italic q-mt-md">
+              {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+            </div>
+            <input-ps v-model="newSessionName"
+              :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+            <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
+              <div class="titre-md text-italic text-bold text-right">
+                {{$t('HPwprfs')}}</div>
+              <q-card-actions vertical align="right">
+                <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
+                <btn-cond v-for="[code, data] in sf.tprefs" :key="code"
+                  flat :label="'... ' + code" @ok="validateSession(code, data)"/>
+              </q-card-actions>
+            </div>
           </div>
         </div>
 
@@ -227,46 +230,46 @@
             class='bord1 q-pa-xs'>
             <div :class="(nvClicked ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
               @click="nvSession()">
-              <div class="col-7 ellipsis q-pr-xs">{{$t('HPnvs')}}</div>
-              <div class="col-5 ellipsis"></div>
+              <div class="col-7 q-pr-xs">{{$t('HPnvs')}}</div>
+              <div class="col-5"></div>
             </div>
             <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
               <div :class="(selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selSession(s)">
-                <div class="col-7 ellipsis q-pr-xs">{{pincode + ' ' + s.about}}</div>
-                <div class="col-5 ellipsis">{{dhcool(s.time)}}</div>
+                <div class="col-7 q-pr-xs">{{pincode + ' ' + s.about}}</div>
+                <div class="col-5 ">{{dhcool(s.time)}}</div>
               </div>
             </div>
             <div :class="dkli(idx + 1 + mySessions.length)" 
               v-for="([profId, p], idx) of myProfiles" :key="profId">
               <div :class="(selectedProfile === p ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selProfileS(profId, p)">
-                <div class="col-7 ellipsis q-pr-xs q-pl-xs">{{p.about}}</div>
-                <div class="col-5 text-italic ellipsis">{{$t('HPnotpinned')}}</div>
+                <div class="col-7 q-pr-xs q-pl-xs">{{p.about}}</div>
+                <div class="col-5">{{$t('HPnotpinned')}}</div>
               </div>
             </div>
           </q-scroll-area>
-          <q-checkbox v-if="selectedSession && !sf.incognito" 
-            v-model="razdb" :label="$t('HPresetdb')" 
-            style="margin-left: -12px"/>
-          <q-checkbox v-if="!selectedSession && !sf.incognito" 
-            v-model="setPinned" :label="$t('HPsetpinned')" 
-            style="margin-left: -12px"/>
-          <div class="titre-md text-italic q-mt-md">
-            {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
-          </div>
-          <input-ps v-model="newSessionName"
-            :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
-          <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
-            <div class="titre-md text-italic text-bold text-right">
-              {{$t('HPwprfs')}}</div>
-            <q-card-actions vertical align="right">
-              <btn-cond flat :label="$t('HPpref_1')" @ok="validateSessionS(1)"/>
-              <btn-cond v-if="myTrusting.prefs"
-                flat :label="$t('HPpref_2')" @ok="validateSessionS(2)"/>
-              <btn-cond v-for="(p, i) in myPrefs" :key="i"
-                flat :label="'... ' + p[0]" @ok="validateSessionS(p[1])"/>
-            </q-card-actions>
+          <div v-if="nvSP" class="q-mt-md">
+            <q-checkbox v-if="selectedSession && !sf.incognito" 
+              v-model="razdb" :label="$t('HPresetdb')" 
+              style="margin-left: -12px"/>
+            <q-checkbox v-if="!selectedSession && !sf.incognito" 
+              v-model="pinned" :label="$t('HPsetpinned')" 
+              style="margin-left: -12px"/>
+            <div class="titre-md text-italic q-mt-md">
+              {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+            </div>
+            <input-ps v-model="newSessionName"
+              :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+            <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
+              <div class="titre-md text-italic text-bold text-right">
+                {{$t('HPwprfs')}}</div>
+              <q-card-actions vertical align="right">
+                <btn-cond flat :label="$t('HPpref_1')" @ok="validateSessionS('', null)"/>
+                <btn-cond v-for="[code, data] in myPrefs" :key="code"
+                  flat :label="'... ' + code" @ok="validateSessionS(code, data)"/>
+              </q-card-actions>
+            </div>
           </div>
         </div>
       </div>
@@ -537,11 +540,7 @@ const openSession = async () => {
   nvClicked.value = false
   if (!sf.incognito && !sf.hasIDBS) await sf.init1()
 
-  const [tok, tko] = await sf.getMySessions()
-  mySessions.value = tok
-
-  // TODO : gérer tko
-
+  mySessions.value = await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   
@@ -693,14 +692,17 @@ type TSession = {
   prefCode: string // préférences utilisées la dernière fois
 }
 
-const selectedSession : Ref<TSession> = ref(null)
-const selectedProfile = ref(null)
+const selectedSession: Ref<TSession> = ref(null)
+const selectedProfile: Ref<{string, Profile}> = ref(null)
 const razdb = ref(false)
+const pinned = ref(false)
 const newSessionName = reactive({ inp: '', err: '' })
 
 watch(razdb, async (ap) => {
   if (ap === true) await ui.diagDisplay($t('HPrazbl'))
 })
+
+const nvSP = computed(() => nvClicked.value || selectedSession.value || selectedProfile.value)
 
 const nvSession = () => {
   nvClicked.value = true
@@ -718,11 +720,11 @@ const selSession = (s) => {
   newSessionName.inp = s.about
 }
 
-const selProfile = (profId: string, p: Profile) => {
+const selProfile = (profId: string, profile: Profile) => {
   nvClicked.value = false
   razdb.value = false
   selectedSession.value = null
-  selectedProfile.value = { profId, p }
+  selectedProfile.value = { profId, profile }
   newSessionName.inp = p.about
 }
 
@@ -766,60 +768,82 @@ const validateSession = async (code, data) => {
 const validateSessionS = async (code, data) => {
   if (newSessionName.err !== '') return
 
-  const sv = selectedSession.value
+  let sv = selectedSession.value
   const sp = selectedProfile.value
+  let credIds: string[]
+  let about: string = newSessionName.inp
 
   if (sv) { // reprise d'une session épinglée
     const profile: Profile = myProfiles.value.get(sv.profId)
 
-    if (sv.about !== newSessionName.inp) {
-        sv.about = newSessionName.inp
-        await sf.setAboutProfile(sv.profId, sv.about)
+    if (sv.about !== about) {
+      sv.about = about
+      if (profile) await sf.setAboutProfile(sv.profId, about)
     }
-    sv.credIds = profile.creds
+    if (profile) sv.credIds = profile.creds
+    sv.prefCode = code
+    credIds = sv.credIds
+    await sf.setTSession(sv, razdb.value)
+    session.setDbName(sf.incognito ? '' : sv.dbName)
 
-  } else if (sp) { // nouvelle session initialisée depuis un profile
-    const { profId, p } = selectedProfile.value
-    selectedSession.value = sf.newTSession({
-      app: cfg.appname,
-      userId: sf.userId,
-      profId,
-      about: newSessionName.inp,
-      credIds: p.creds,
-      size: 0,
-      time: 0
-    })
+  } else if (sp) { // nouvelle session ouverte depuis un profile
+    const { profId: string, profile: Profile } = selectedProfile.value
 
-  } else /*if (selectedSession.value === null)*/ {
+    if (pinned.value) { // session épinglée
+      sv = sf.newTSession({
+        app: cfg.appname,
+        userId: sf.userId,
+        profId,
+        about,
+        credIds,
+        size: 0,
+        time: 0,
+        prefCode: code
+      })
+      await sf.setTSession(sv, true)
+      session.setDbName(sf.incognito ? '' : sv.dbName)
+    }
+    if (profile.about !== about)
+      await sf.setAboutProfile(profId, about)
+    credIds = profile.creds
+
+  } else {
     // nouvelle session vierge de droits
-    selectedSession.value = sf.newTSession({
-      app: cfg.appname,
-      userId: sf.userId,
-      profId: Crypt.shaS(Crypt.random(32)),
-      about: newSessionName.inp,
-      credIds: [],
-      size: 0,
-      time: 0
-    })
+    if (pinned.value) { // session épinglée
+      sv = sf.newTSession({
+        app: cfg.appname,
+        userId: sf.userId,
+        profId: '',
+        about,
+        credIds: [],
+        size: 0,
+        time: 0,
+        prefCode: code
+      })
+      await sf.setTSession(sv, true)
+      session.setDbName(sf.incognito ? '' : sv.dbName)
+    }
+    credIds = []
   }
-  sv.prefCode = code
-
-  await sf.setTSession(sv.value, razdb.value)
-  session.setDbName(sf.incognito ? '' : sv.value.dbName)
 
   const creds: Map<string, TCred> = new Map<string, TCred>()
-  if (session.hasNet) for(const id of sv.credIds) {
+  if (session.hasNet) for(const id of credIds) {
     const tc = sf.creds.get(id)
     if (tc) creds.put(id, tc)
   }
 
-  await goToApp(sv.about, creds, code, data)
+  await goToApp(about, creds, code, data)
+}
+
+const validateSessionV = async () => {
+  await goToApp('', new Map<string, TCred>(), '', null)
 }
 
 const goToApp = async (about: string, creds: Map<string, TCred>, code: string, data: Uint8Array) => {
-  let prefObj, prefCode: string = ''
+  let prefObj: Object = null
+  let prefCode: string = ''
   try {
-    prefObj = data ? decode(data) : {}
+    prefObj = data ? decode(data) : null
     prefCode = code
   } catch (e) {
     console.log(e)

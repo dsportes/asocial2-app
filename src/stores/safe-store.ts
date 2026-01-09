@@ -148,7 +148,7 @@ class TSession {
 
 class TCred {
   credId: string // id du credential
-  about: Uint8Array // commentaire crypté de l'utilisateur sur cette session
+  about: string | Uint8Array // commentaire crypté de l'utilisateur sur cette session
   data: Uint8Array // objet serialisé
 
   constructor (obj: Object) {
@@ -185,11 +185,6 @@ class TPref {
 type Profile = {
   about: string
   creds: string[]
-}
-
-type Credential = {
-  about: string
-  data: Uint8Array
 }
 
 type Device = {
@@ -522,7 +517,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const loadPrefs = async (safe: Safe) : Promise<void> => {
-    const appname = stores.config.appname
     const p = new Map<string, Map<string, Uint8Array>>() // clé: app
     for (const app in safe.prefs) {
       const x = safe.prefs[app] as Uint8Array
@@ -560,7 +554,7 @@ export const useSafeStore = defineStore('safe', () => {
         const x = mcf[credId] as TCred
         try {
           const data = await Crypt.decrypt(keyK.value, x.data)
-          const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about))
+          const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about as Uint8Array))
           const tc: TCred = new TCred({credId: x.credId, about, data})
           mc.set(x.credId, tc)
         } catch (e) { 
@@ -571,45 +565,47 @@ export const useSafeStore = defineStore('safe', () => {
     creds.value = m
   }
 
-  const getMySessions = async () : Promise<[TSession[], TSession[]]> => {
+  const getMySessions = async () : Promise<TSession[]> => {
     const app = stores.config.appname
-    const mpf = profiles.value ? profiles.value.get(app) : null
+    const mpf: Map<string, Profile> = profiles.value ? profiles.value.get(app) : null
     const tok: TSession[] = []
-    const tko: TSession[] = []
     for(const [,x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
-        if (userId.value.startsWith('$')) {
-          // Utilisateur local - l'about et creds de sa session est dans TSession
-          try {
-            const y = await Crypt.decrypt(keyK.value, x.about)
-            x.about = y ? decoder.decode(y) : '?'
-          } catch(e) {
-            console.log(e)
-            x.about = '?'
-          }
-          tok.push(x)
-        } else {
+        let toSave = false
+        if (!userId.value.startsWith('$')) {
           // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
-          const profile = mpf ? mpf.get(x.profId) : null
+          const profile: Profile = mpf ? mpf.get(x.profId) : null
           if (profile) {
             x.about = profile.about
-            try {
-              const y = await Crypt.decrypt(keyK.value, x.about)
-              x.about = y ? decoder.decode(y) : '?'
-            } catch(e) {
-              console.log(e)
-              x.about = '?'
-            }
-            tok.push(x) 
-          } else tko.push(x)
+            x.credIds = profile.creds
+          } else {
+            x.profId = ''
+            toSave = true
+          }
         }
+        try {
+          const y = await Crypt.decrypt(keyK.value, x.about)
+          if (!y) {
+            x.about = '?'
+            toSave = true
+          } else {
+            x.about = decoder.decode(y)
+            console.log(x.about)
+          }
+        } catch(e) {
+          console.log(e)
+          x.about = '?'
+          toSave = true
+        }
+        tok.push(x) 
+        if (toSave) await saveTSession(x)
       }
-    return [tok, tko]
+    return tok
   }
 
   const loadMyLocalPrefs = async () => {
     const app = stores.config.appname
-    const m = new Map<string, Uint8Array>()
+    const m: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     await db.value.tprefs.each(async (r) => {
       try {
         const x = decode(r.bin)
@@ -623,17 +619,18 @@ export const useSafeStore = defineStore('safe', () => {
       } catch (e) {
         console.log(e)
       }
-      tprefs.value = m
     })
+    tprefs.value = m
   }
 
   const refreshLocalPrefs = async () => {
     const app = stores.config.appname
     const m: Map<string, Uint8Array> = prefs.value.get(app)
     // toutes les préférences de l'utilisateur pour cette application
+
     const tp = tprefs.value
     // rafraîchir dans IDB safe celles ayant changé ou étant absente
-    for(const [code, data] of tp) {
+    if (m) for(const [code, data] of m) {
       const locp = tp.get(code)
       if (!locp || !equ8(locp, data)) {
         await savePref(new TPref({
@@ -646,8 +643,8 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     // supprimer de IDB safe celles obsolètes
-    for(const [code, ] of tp) {
-      if (!m.has(code)) {
+    if (tp) for(const [code, ] of tp) {
+      if (!m || !m.has(code)) {
         await deletePref(new TPref({
           app: app,
           userId: userId,
@@ -679,7 +676,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadMyLocalCreds = async () => {
     const app = stores.config.appname
-    const m = new Map<string, TCred>()
+    const m: Map<string, TCred> = new Map<string, TCred>()
     await db.value.tcreds.each(async (r) => {
       try {
         const x = decode(r.bin)
@@ -695,30 +692,30 @@ export const useSafeStore = defineStore('safe', () => {
       } catch (e) { 
         console.log(e)
       }
-      tcreds.value = m
     })
+    tcreds.value = m
   }
 
   const refreshLocalCreds = async () => {
     const app = stores.config.appname
-    const m: Map<string, Credential> = creds.value.get(app)
+    const m: Map<string, TCred> = creds.value.get(app)
     // tous les credentials de l'utilisateur pour cette application
     const tc = tcreds.value
     // rafraîchir dans IDB safe les creds ayant changé d'about ou étant absents
-    for(const [credId, cred] of m) {
-      const locc = tc.get(credId) as Credential
+    if (m) for(const [credId, cred] of m) {
+      const locc = tc.get(credId) as TCred
       if (!locc || (locc.about !== cred.about) ) {
         await saveCred(new TCred({
           credId: credId,
-          about: Crypt.crypt(keyK.value, encoder.encode(cred.about)), 
+          about: Crypt.crypt(keyK.value, encoder.encode(cred.about as string)), 
           data: Crypt.crypt(keyK.value, cred.data)
         }))
         tc.set(credId, cred)
       }
     }
     // supprimer de IDB safe ceux obsolètes
-    for(const [credId, ] of tc) {
-      if (!m.has(credId)) {
+    if (tc) for(const [credId, ] of tc) {
+      if (!m || !m.has(credId)) {
         await deleteCred(credId)
       }
       tc.delete(credId)
@@ -749,9 +746,16 @@ export const useSafeStore = defineStore('safe', () => {
       const ab = s.about
       const id = s.idOf
       s.about = await Crypt.crypt(keyK.value, encoder.encode(s.about as string))
-      await db.value.tsessions.put({ id, bin: encode(s.toObj)})
+      const bin = encode(s.toObj)
+      await db.value.tsessions.put({ id, bin })
       s.about = ab
-      tsessions.value.set(id, s.toObj)
+      tsessions.value.set(id, s)
+      const xx = await db.value.tsessions.get({ id })
+      const xx2 = decode(xx.bin)
+      const xx3 = await Crypt.decrypt(keyK.value, xx2.about)
+      const xx4 = decoder.decode(xx3)
+      if (xx4 !== ab)
+        console.log(xx4, ab)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -860,6 +864,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     userId.value = Crypt.shaS(Crypt.random(32))
     keyK.value = Crypt.random(32)
+    const shK = await Crypt.strongHash(keyK.value, false, true)
     sh1p.value = psh1
     sh1r.value = rsh1
 
@@ -876,7 +881,7 @@ export const useSafeStore = defineStore('safe', () => {
       Ka: await Crypt.crypt(psh, keyK.value),
       Kr: await Crypt.crypt(rsh, keyK.value),
 
-      hhk: Crypt.shaS(shK.value),
+      hhk: Crypt.shaS(shK),
       C,
       DK: await Crypt.crypt(keyK.value, D),
       S,

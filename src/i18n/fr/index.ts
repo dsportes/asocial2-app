@@ -138,7 +138,7 @@ export default {
   HPerr_3: 'Code d\'accès principal: vérification échouée',
   HPerr_4: 'Code d\'accès de secours absent ou invalide',
   HPerr_5: 'Code d\'accès de secours: vérification échouée',
-  HPpseudo: 'Pseudo, nom ... : {0}',
+  HPtrig: 'Pseudo, nom ... : {0}',
   HPps: 'Phrase secrète : {0}',
   HPca: 'Code d\'accès principal',
   HPcr: 'Code d\'accès de secours',
