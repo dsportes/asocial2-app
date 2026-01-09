@@ -113,7 +113,7 @@
             :validate="validateLocPS"
             :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
 
-          <div v-if="keyK !== null" class="q-my-md">
+          <div v-if="sf.keyK !== null" class="q-my-md">
             <div v-if="newLocUt" class="titre-md">{{$t('HP3v1')}}</div>
             <div v-else>
               <div class="titre-md">{{$t('HP3v2_0')}}</div>
@@ -189,15 +189,15 @@
           <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
           <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+            <div :class="(nvClicked ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
               @click="nvSession()">
               <div class="col-7 q-pr-xs">{{$t('HPnvs')}}</div>
               <div class="col-5"></div>
             </div>
             <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
-              <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+              <div :class="(selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selSession(s)">
-                <div class="col-7 q-pr-xs">{{s.profAboutStr}}</div>
+                <div class="col-7 q-pr-xs">{{s.about}}</div>
                 <div class="col-5 ">{{dhcool(s.time)}}</div>
               </div>
             </div>
@@ -214,9 +214,9 @@
             <div class="titre-md text-italic text-bold text-right">
               {{$t('HPwprfs')}}</div>
             <q-card-actions vertical align="right">
-              <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession(1)"/>
-              <btn-cond v-if="myTrusting.prefs"
-                flat :label="$t('HPpref_2')" @ok="validateSession(2)"/>
+              <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
+              <btn-cond v-for="[code, data] in sf.tprefs" :key="code"
+                flat :label="'... ' + code" @ok="validateSession(code, data)"/>
             </q-card-actions>
           </div>
         </div>
@@ -225,21 +225,21 @@
           <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
           <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+            <div :class="(nvClicked ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
               @click="nvSession()">
               <div class="col-7 ellipsis q-pr-xs">{{$t('HPnvs')}}</div>
               <div class="col-5 ellipsis"></div>
             </div>
             <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
-              <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+              <div :class="(selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selSession(s)">
-                <div class="col-7 ellipsis q-pr-xs">{{pincode + ' ' + s.profAboutStr}}</div>
+                <div class="col-7 ellipsis q-pr-xs">{{pincode + ' ' + s.about}}</div>
                 <div class="col-5 ellipsis">{{dhcool(s.time)}}</div>
               </div>
             </div>
             <div :class="dkli(idx + 1 + mySessions.length)" 
               v-for="([profId, p], idx) of myProfiles" :key="profId">
-              <div class="row q-my-xs font-mono fs-md items-start cursor-pointer select"
+              <div :class="(selectedProfile === p ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selProfileS(profId, p)">
                 <div class="col-7 ellipsis q-pr-xs q-pl-xs">{{p.about}}</div>
                 <div class="col-5 text-italic ellipsis">{{$t('HPnotpinned')}}</div>
@@ -332,9 +332,9 @@
               <div class="col-1"></div>
               <div class="col-11">{{dhcool(s.time)}}</div>
             </div>
-            <div v-if="s.profAboutStr !== ''" class="row q-mb-sm fs-md">
+            <div v-if="s.about !== ''" class="row q-mb-sm fs-md">
               <div class="col-1"></div>
-              <div class="col-11">{{s.profAboutStr}}</div>
+              <div class="col-11">{{s.about}}</div>
             </div>
           </div>
         </q-scroll-area>
@@ -400,7 +400,7 @@
         <q-scroll-area style="height: 150px" :barStyle="barStyle" :thumbStyle="thumbStyle">
           <div v-for="(s, idx) in mySessions" :key="idx" class="q-my-xs row">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
-            <div class="col-9 fs-md">{{s.profAboutStr}}</div>
+            <div class="col-9 fs-md">{{s.about}}</div>
           </div>
         </q-scroll-area>
       </div>
@@ -444,11 +444,10 @@ const cfg = stores.config
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const hasIDB = ref(false)
 const tab = ref('1')
 
 onMounted(async () => { 
-  hasIDB.value = await sf.init0()
+  await sf.init0()
 })
 
 const opCfReset = () => {
@@ -530,23 +529,25 @@ const myTrusting = ref()
 - myProfiles: Map des profiles NON cités dans une session épinglée
 - myPrefs: prefs enregistrées dans le Safe
 */
-const myProfiles: Ref<Map<string, Profile> = ref()
-const myPrefs = ref()
+const myProfiles: Ref<Map<string, Profile>> = ref()
+const myPrefs: Ref<Map<string, Uint8Array>> = ref()
+const nvClicked = ref()
 
 const openSession = async () => {
-  if (!sf.incognito && !hasIDB.value) await sf.init1()
+  nvClicked.value = false
+  if (!sf.incognito && !sf.hasIDBS) await sf.init1()
 
   const [tok, tko] = await sf.getMySessions()
   mySessions.value = tok
+
+  // TODO : gérer tko
 
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   
   if (!sf.incognito) {
     await sf.loadMyLocalPrefs()
-    await sf.refreshLocalPrefs()
     await sf.loadMyLocalCreds()
-    await sf.refreshLocalCreds()
   }
 
   if (tab.value !== '3') {
@@ -555,8 +556,12 @@ const openSession = async () => {
       if (s.profId) profIds.add(s.profId)
     myProfiles.value = sf.getMySafeProfiles(profIds)
     myPrefs.value = sf.getMySafePrefs()
+    if (!sf.incognito) {
+      await sf.refreshLocalPrefs()
+      await sf.refreshLocalCreds()
+    }
   } else {
-    myPrefs.value = sf.tcreds
+    myPrefs.value = sf.tprefs
   }
 
   selectedSession.value = null
@@ -672,7 +677,7 @@ const validateLocTr = async () => {
   } else {
     myTrusting.value.pseudo = locTr.inp
   }
-  if (!hasIDB.value) await sf.init1()
+  if (!sf.hasIDBS) await sf.init1()
   await sf.setTrusting(myTrusting.value)
   openSession()
 }
@@ -681,23 +686,11 @@ type TSession = {
   app: string // code de l'application
   userId: string // id de l'utilisateur
   profId: string // id du profil
-  about: Uint8Array // commentaire de l'utilisateur sur cette session
-  aboutStr: string
+  about: string | Uint8Array // commentaire de l'utilisateur sur cette session
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   credIds?: string[] // liste des codes des credentials
   prefCode: string // préférences utilisées la dernière fois
-  prefObj: Uint8Array
-  /* 
-  about, aboutStr
-  - pour un utilisateur enregistré: tirée de son profile
-  - pour un utilisateur local: directement enregistrée ici
-  credIds : pas pour un utilisateur enregistré
-  prefCode prefObj pour un utilisateur enregistré:
-  - utilisé la fois précédente, pour utilisation en AVION
-  prefObj pour un utilisateur local: (prefCode est vide)
-  - utilisé la fois précédente, pour rouverture quelque soit le mode
-  */
 }
 
 const selectedSession : Ref<TSession> = ref(null)
@@ -710,6 +703,7 @@ watch(razdb, async (ap) => {
 })
 
 const nvSession = () => {
+  nvClicked.value = true
   razdb.value = false
   selectedSession.value = null
   selectedProfile.value = null
@@ -717,25 +711,28 @@ const nvSession = () => {
 }
 
 const selSession = (s) => {
+  nvClicked.value = false
   razdb.value = false
   selectedSession.value = s
   selectedProfile.value = null
-  newSessionName.inp = s.profAboutStr
+  newSessionName.inp = s.about
 }
 
 const selProfile = (profId: string, p: Profile) => {
+  nvClicked.value = false
   razdb.value = false
   selectedSession.value = null
   selectedProfile.value = { profId, p }
   newSessionName.inp = p.about
 }
 
-type Credential = {
-  about: string
-  cred: Object
+type TCred = {
+  credId: string // id du credential
+  about: Uint8Array // commentaire crypté de l'utilisateur sur cette session
+  data: Uint8Array // objet serialisé
 }
 
-const validateSession = async (ipref) => {
+const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
   let sv = selectedSession.value
 
@@ -744,54 +741,42 @@ const validateSession = async (ipref) => {
       app: cfg.appname,
       userId: sf.userId,
       profId: Crypt.shaS(Crypt.random(32)),
-      about: null,
-      aboutStr: '',
+      about: '',
       size: 0,
       time: 0,
       credIds: [],
-      prefCode: '',
-      prefObj: null // null si défaut ou première ouverture de l'application
+      prefCode: ''
     })
   }
-  sv.aboutStr = newSessionName.inp
-  sv.about = await Crypt.crypt(sf.keyK, encoder.encode(sv.aboutStr))
-  if (ipref === 2) sv.prefObj = myTrusting.value.prefObj || null
+  sv.about = newSessionName.inp
+  sv.prefCode = code
 
   await sf.setTSession(sv, razdb.value)
   session.setDbName(sf.incognito ? '' : sv.dbName)
 
-  const creds: Map<string, Credential>() = new Map<string, Credential>()
-  if (session.hasNet && l && l.length) sf.fillLocalCreds(creds, sv.credIds)
+  const creds: Map<string, TCred> = new Map<string, TCred>()
+  if (session.hasNet) for(const id of sv.credIds) {
+    const tc = sf.tcreds.get(id)
+    if (tc) creds.put(id, tc)
+  }
 
-  let prefObj = {}
-  try {
-    if (sv.prefObj) {
-      const x = await Crypt.decrypt(sf.keyK, sv.prefObj)
-      prefObj = x ? decode(x) : {}
-    }
-  } catch (e) { }
-
-  await goToApp(creds, prefObj)
+  await goToApp(sv.about, creds, code, data)
 }
 
-const validateSessionS = async (ipref: number | string ) => {
+const validateSessionS = async (code, data) => {
   if (newSessionName.err !== '') return
-  let l = [] // liste des ids des credentials
+
   const sv = selectedSession.value
   const sp = selectedProfile.value
 
-  let profToUpd = {}}
-
   if (sv) { // reprise d'une session épinglée
-    const profile = sf.getMySafeProfile(sv.profId)
+    const profile: Profile = myProfiles.value.get(sv.profId)
 
-    if (sv.aboutStr !== newSessionName.inp) {
-        sv.aboutStr = newSessionName.inp
-        sv.about = await Crypt.crypt(keyK.value, encoder.encode(sv.aboutStr))
-        profToUpd.about = sv.about
+    if (sv.about !== newSessionName.inp) {
+        sv.about = newSessionName.inp
+        await sf.setAboutProfile(sv.profId, sv.about)
     }
-    l = profile.creds
-    sv.credIds = l
+    sv.credIds = profile.creds
 
   } else if (sp) { // nouvelle session initialisée depuis un profile
     const { profId, p } = selectedProfile.value
@@ -799,54 +784,53 @@ const validateSessionS = async (ipref: number | string ) => {
       app: cfg.appname,
       userId: sf.userId,
       profId,
-      profAboutStr: newSessionName.inp,
+      about: newSessionName.inp,
+      credIds: p.creds,
       size: 0,
       time: 0
     })
-    cids = p.creds
+
   } else /*if (selectedSession.value === null)*/ {
     // nouvelle session vierge de droits
     selectedSession.value = sf.newTSession({
       app: cfg.appname,
       userId: sf.userId,
       profId: Crypt.shaS(Crypt.random(32)),
-      profAboutStr: newSessionName.inp,
+      about: newSessionName.inp,
+      credIds: [],
       size: 0,
       time: 0
     })
-    cids = []
   }
+  sv.prefCode = code
 
   await sf.setTSession(sv.value, razdb.value)
   session.setDbName(sf.incognito ? '' : sv.value.dbName)
 
-  const creds: Map<string, Credential>() = new Map<string, Credential>()
-  if (session.hasNet && l && l.length) sf.fillSafeCreds(creds, sv.credIds)
-
-  let prefs = null
-  let code = ''
-  if (ipref === 1) prefs = null
-  else if (ipref === 2) {
-    prefs = sf.currentPref
-  } else {
-    for(const prf of myPrefs.value)
-      if (prf[0] === ipref) { 
-        prefs = prf[1]
-        code = ipref
-        break 
-      }
+  const creds: Map<string, TCred> = new Map<string, TCred>()
+  if (session.hasNet) for(const id of sv.credIds) {
+    const tc = sf.creds.get(id)
+    if (tc) creds.put(id, tc)
   }
-  // TODO save dans le safe la dernière prefs utilisée
-  await goToApp(creds, prefs)
+
+  await goToApp(sv.about, creds, code, data)
 }
 
-const goToApp = async (about?: string, creds?: Map<string, Object>, prefs?: Object) => {
+const goToApp = async (about: string, creds: Map<string, TCred>, code: string, data: Uint8Array) => {
+  let prefObj, prefCode: string = ''
+  try {
+    prefObj = data ? decode(data) : {}
+    prefCode = code
+  } catch (e) {
+    console.log(e)
+  }
+
   session.setStartContext({
     userId: sf.userId || '',
     about: about || '',
     creds,
-    prefs
-    // TODO
+    prefObj,
+    prefCode
   })
   console.log('Go to app')
   ui.setPage('appHome')
@@ -858,6 +842,7 @@ const goToApp = async (about?: string, creds?: Map<string, Object>, prefs?: Obje
 @import '../css/app.scss';
 .q-toolbar__title { font-size: medium !important;}
 .bord1 { border: 1px solid $grey-5; border-radius: 5px; }
+.bord2 { border: 1px solid $warning; }
 .diag { background: yellow; font-weight: bold; color: black; padding: 2px;
   border: 2px solid $negative; border-radius: 7px; width:100%; }
 .bbot, .slist { border-bottom: 1px solid $grey-5 !important; }

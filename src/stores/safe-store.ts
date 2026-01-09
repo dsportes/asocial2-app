@@ -14,6 +14,11 @@ import { AppExc, sleep, u8ToB64, equ8 } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
+/* TODO
+Suppression de sessions "locales" épinglées:
+- GC des profils / credentials associés dans IDBS
+*/
+
 /*
 ### Micro base locale IDB `safe`
 Un device qui a été déclaré _de confiance_ par au moins un utilisateur ou qui a eu un _utilisateur local_ a une micro base de données IDB nommée `safe` ayant les tables suivantes.
@@ -44,8 +49,8 @@ Chaque row décrit une _session épinglée_. Les sessions des utilisateurs locau
 - `app`: code l'application correspondante.
 - `userId`: identifiant de l'utilisateur.
 - `profId`: id du profil de la session pour un utilisateur enregistré.
-- `about aboutStr`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** décrivant l'usage de sa session (par exemple `Revue des notes d'Alice et Jules`).
-  - `aboutStr`: seulement en mémoire de travail.
+- `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** décrivant l'usage de sa session 
+  (par exemple `Revue des notes d'Alice et Jules`).
   - pour un _utilisateur enregistré_ c'est la copie de `about` de son profil lors de la dernière ouverture.
 - `size`: volume _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
 - `time`: dernière date-heure d'ouverture de cette session sur ce terminal.
@@ -120,8 +125,7 @@ class TSession {
   app: string // code de l'application
   userId: string // id de l'utilisateur
   profId: string // id du profil
-  about: Uint8Array // commentaire crypté de l'utilisateur sur cette session
-  aboutStr: string // en clair
+  about: string | Uint8Array // commentaire crypté de l'utilisateur sur cette session
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   credIds: string[] // liste des codes des credentials
@@ -231,7 +235,7 @@ export const useSafeStore = defineStore('safe', () => {
   const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
   const tsessions : Ref<Map<string, TSession>> = ref() // Depuis IDB tsessions
 
-  const init0 = async () : Promise<boolean> => {
+  const init0 = async () : Promise<void> => {
     try {
       trustings.value = new Map<string, Trusting>()
       tsessions.value = new Map<string, TSession>()
@@ -266,11 +270,9 @@ export const useSafeStore = defineStore('safe', () => {
           }
         })
         console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
-        return true
       } else {
         db.value = null
         console.log('Init0 IDBS failed.')
-        return false
       }
     } catch (e) {
       if (db.value) { 
@@ -278,7 +280,6 @@ export const useSafeStore = defineStore('safe', () => {
         db.value = null
       }
       console.log('Init0 IDBS failed: ' + e.message)
-      return false
     }
   }
 
@@ -290,6 +291,7 @@ export const useSafeStore = defineStore('safe', () => {
       await db.value.header.put({ id: '1', devId: '', devName: '' })
       console.log('Init1 IDBS OK.')
     } catch (e) {
+      db.value = null
       console.log('Init1 IDBS failed: ' + e.message)
       throw EX(e, 1)
     }
@@ -359,42 +361,6 @@ export const useSafeStore = defineStore('safe', () => {
     return getSessionSize(s.userId, s.profId)
   }
 
-  const saveTSession = async (s: TSession) => {
-    if (incognito.value) return
-    try {
-      const ab = s.aboutStr
-      const id = s.idOf
-      s.aboutStr = ''
-      await db.value.tsessions.put({ id, bin: encode(s.toObj)})
-      s.aboutStr = ab
-      tsessions.value.set(id, s.toObj)
-    } catch (e) {
-      throw EX(e, 2)
-    }
-  }
-
-  const setTSession = async (s: TSession, razdb?: boolean) => {
-    if (incognito.value) return
-    try {
-      s.time = Date.now()
-      await saveTSession(s)
-
-      if (!incognito.value) {
-        recordIDB(s.dbName)
-        if (razdb) try {
-            await Dexie.delete(s.dbName)
-            await sleep(300)
-            console.log(s.dbName + ' deleted')
-          } catch (e) {
-            console.log(s.dbName + ' deletion FAILED: ', e.message())
-          }
-      }
-
-    } catch (e) {
-      throw EX(e, 2)
-    }
-  }
-
   const purgeIDBS = async (l: string[]) => {
     if (incognito.value) return
     const x = localStorage.getItem('$DBLIST') || ''
@@ -432,26 +398,6 @@ export const useSafeStore = defineStore('safe', () => {
     try { await db.value.tsessions.where({ id }).delete()
     } catch (e) { } 
     tsessions.value.delete(id)
-  }
-
-  // Charge dans mycreds les credentials listés dans lids
-  const fillLocalCreds = async (mycreds: Map<string, Credential>, locK: Uint8Array, lids?: string[]) 
-    : Promise<void> => {
-    const sids = lids && lids.length ? new Set(lids) : null
-    await db.value.creds.each(async (r) => {
-      try {
-        if (!sids || sids.has(r.id)) {
-          try {
-            const c = decode(await Crypt.decrypt(locK, r.bin)) as Credential
-            mycreds.set(r.id, c)
-          } catch (e) {
-            console.log(e)
-          }
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    })
   }
   
   /**********************************************************************
@@ -522,10 +468,10 @@ export const useSafeStore = defineStore('safe', () => {
   - `about` : code / texte court donné par l'utilisateur pour qualifier le _credential_. Par exemple `Compte Bob sur circuits courts`.
   - `data`: sérialisation du détail du _credential_:
   */
-  const creds: Ref<Map<String, Map<string, Credential>>> = ref() // clé app
+  const creds: Ref<Map<String, Map<string, TCred>>> = ref() // clé app
 
   // credentials par "credId" tirées de IDB safe pour l'application / user courant
-  const tcreds : Ref<Map<string, Uint8Array>> = ref() // par credId
+  const tcreds : Ref<Map<string, TCred>> = ref() // par credId
 
   // préférences par "code" tirées de IDB safe pour l'application / user courant
   const tprefs : Ref<Map<string, Uint8Array>> = ref() // par code
@@ -605,16 +551,18 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const loadCreds = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Map<string, Credential>>()
+    const m = new Map<string, Map<string, TCred>>()
     for (const app in safe.creds) {
-      const mc = new Map<string, Credential>()
+      const mc = new Map<string, TCred>()
       m.set(app, mc)
       const mcf = safe.creds[app]
       for (const credId in mcf) {
-        const x = mcf[credId] as Uint8Array
+        const x = mcf[credId] as TCred
         try {
-          const c = decode(await Crypt.decrypt(keyK.value, x)) as Credential
-          mc.set(credId, c)
+          const data = await Crypt.decrypt(keyK.value, x.data)
+          const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about))
+          const tc: TCred = new TCred({credId: x.credId, about, data})
+          mc.set(x.credId, tc)
         } catch (e) { 
           console.log(e)
         }
@@ -685,7 +633,7 @@ export const useSafeStore = defineStore('safe', () => {
     // toutes les préférences de l'utilisateur pour cette application
     const tp = tprefs.value
     // rafraîchir dans IDB safe celles ayant changé ou étant absente
-    for(const [code, data] of m) {
+    for(const [code, data] of tp) {
       const locp = tp.get(code)
       if (!locp || !equ8(locp, data)) {
         await savePref(new TPref({
@@ -731,7 +679,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadMyLocalCreds = async () => {
     const app = stores.config.appname
-    const m = new Map<string, Credential>()
+    const m = new Map<string, TCred>()
     await db.value.tcreds.each(async (r) => {
       try {
         const x = decode(r.bin)
@@ -739,7 +687,8 @@ export const useSafeStore = defineStore('safe', () => {
           try {
             const data = await Crypt.decrypt(keyK.value, x.data)
             const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about))
-            m.set(x.code, { about, data })
+            const tc: TCred = new TCred({credId: x.credId, about, data})
+            m.set(x.code, tc)
           } catch (e) { 
             console.log(e)
           }
@@ -788,21 +737,45 @@ export const useSafeStore = defineStore('safe', () => {
   const deleteCred = async (credId: string) => {
     if (incognito.value) return
     try {
-      await db.value.tcredss.where({ id: credId }).delete()
+      await db.value.tcreds.where({ id: credId }).delete()
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  // Charge dans creds les credentials listés dans lids
-  const fillSafeCreds = async (mycreds: Map<string, Object>, lids: string[]) 
-    : Promise<void> => {
-    const app = stores.config.appname
-    const x = creds.value.get(app)
-    if (!x) return
-    for (const credId of lids) {
-      const c = x.get(credId)
-      if (c) mycreds.set(credId, c)
+  const saveTSession = async (s: TSession) => {
+    if (incognito.value) return
+    try {
+      const ab = s.about
+      const id = s.idOf
+      s.about = await Crypt.crypt(keyK.value, encoder.encode(s.about as string))
+      await db.value.tsessions.put({ id, bin: encode(s.toObj)})
+      s.about = ab
+      tsessions.value.set(id, s.toObj)
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  const setTSession = async (s: TSession, razdb?: boolean) => {
+    if (incognito.value) return
+    try {
+      s.time = Date.now()
+      await saveTSession(s)
+
+      if (!incognito.value) {
+        recordIDB(s.dbName)
+        if (razdb) try {
+            await Dexie.delete(s.dbName)
+            await sleep(300)
+            console.log(s.dbName + ' deleted')
+          } catch (e) {
+            console.log(s.dbName + ' deletion FAILED: ', e.message())
+          }
+      }
+
+    } catch (e) {
+      throw EX(e, 2)
     }
   }
 
@@ -978,6 +951,14 @@ export const useSafeStore = defineStore('safe', () => {
     sh1r: Uint8Array
   }
 
+  type SetAboutProfile = {
+    userId: string
+    sh1p: Uint8Array
+    sh1r: Uint8Array
+    profId: string
+    about: Uint8Array
+  }
+
   /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
   en mode LONG (pas par PIN). 
   Pour s'en assurer elle transmet au serveur sh1p / sh1r qui n'ont pu être initialisés
@@ -1053,6 +1034,23 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  /* Faire sauvegarder par le serveur dans le safe 
+  la maj de l'about du profil */
+  const setAboutProfile = async (profId: string, aboutStr: string) => {
+    const about = await Crypt.crypt(keyK.value, encoder.encode(aboutStr))
+    const aboutProfile: SetAboutProfile = {
+      userId: userId.value,
+      sh1p: sh1p.value,
+      sh1r: sh1r.value,
+      profId,
+      about
+    }
+    const ret = await new Operation('$SetAboutProfile').post(aboutProfile)
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    else console.log('$SetAboutProfile', ret.status)
+  }
+
   const newTrustingL = (obj) => new TrustingL(obj)
   const newTrustingS = (obj) => new TrustingS(obj)
   const newTSession = (obj) => new TSession(obj)
@@ -1066,10 +1064,9 @@ export const useSafeStore = defineStore('safe', () => {
     tsessions, setTSession, delTSession, getMySessions,
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
-    profiles, getMySafeProfiles,
+    profiles, getMySafeProfiles, setAboutProfile,
     getSessionSize, pseudoOfS, volOfS, purgeIDBS,
     getMySafePrefs,
-    fillLocalCreds, fillSafeCreds,
     userId, keyK, openMode, auth, devices,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, setTrust, setUntrust
   }
