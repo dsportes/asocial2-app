@@ -265,9 +265,9 @@
               <div class="titre-md text-italic text-bold text-right">
                 {{$t('HPwprfs')}}</div>
               <q-card-actions vertical align="right">
-                <btn-cond flat :label="$t('HPpref_1')" @ok="validateSessionS('', null)"/>
+                <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
                 <btn-cond v-for="[code, data] in myPrefs" :key="code"
-                  flat :label="'... ' + code" @ok="validateSessionS(code, data)"/>
+                  flat :label="'... ' + code" @ok="validateSession(code, data)"/>
               </q-card-actions>
             </div>
           </div>
@@ -734,6 +734,25 @@ type TCred = {
   data: Uint8Array // objet serialisé
 }
 
+const getCreds = (credIds: string[]) : Map<string, TCred> => {
+  const creds: Map<string, TCred> = new Map<string, TCred>()
+  if (credIds && credIds.length) {
+    if (session.hasNet) {
+      for(const id of credIds) {
+        const tc = sf.creds.get(id)
+        if (tc) creds.put(id, tc)
+      }
+    } else {
+      for(const id of credIds) {
+        const tc = sf.tcreds.get(id)
+        if (tc) creds.put(id, tc)
+      }
+    }
+  }
+  return creds
+}
+
+/*
 const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
   let sv = selectedSession.value
@@ -742,7 +761,7 @@ const validateSession = async (code, data) => {
     sv = sf.newTSession({
       app: cfg.appname,
       userId: sf.userId,
-      profId: Crypt.shaS(Crypt.random(32)),
+      profId: '',
       about: '',
       size: 0,
       time: 0,
@@ -756,16 +775,11 @@ const validateSession = async (code, data) => {
   await sf.setTSession(sv, razdb.value)
   session.setDbName(sf.incognito ? '' : sv.dbName)
 
-  const creds: Map<string, TCred> = new Map<string, TCred>()
-  if (session.hasNet) for(const id of sv.credIds) {
-    const tc = sf.tcreds.get(id)
-    if (tc) creds.put(id, tc)
-  }
-
-  await goToApp(sv.about, creds, code, data)
+  await goToApp(sv.about, getCreds(sv.credIds), code, data)
 }
+*/
 
-const validateSessionS = async (code, data) => {
+const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
 
   let sv = selectedSession.value
@@ -773,24 +787,65 @@ const validateSessionS = async (code, data) => {
   let credIds: string[]
   let about: string = newSessionName.inp
 
-  if (sv) { // reprise d'une session épinglée
+  if (sv) { 
+    // reprise d'une session épinglée
     const profile: Profile = myProfiles.value.get(sv.profId)
 
-    if (sv.about !== about) {
-      sv.about = about
-      if (profile) await sf.setAboutProfile(sv.profId, about)
-    }
-    if (profile) sv.credIds = profile.creds
+    if (profile) {
+      if (profile.about !== about && session.hasNet) 
+        // Maj du profile dans Safe
+        await sf.setAboutProfile(sv.profId, about)
+      // Récupération des credIds du profile Safe
+      sv.credIds = profile.creds
+    } // Sinon on laisse ses credIds tel quel
+    sv.about = about
     sv.prefCode = code
-    credIds = sv.credIds
+    // save tsession avec time, raz db si requis
     await sf.setTSession(sv, razdb.value)
     session.setDbName(sf.incognito ? '' : sv.dbName)
+    credIds = sv.credIds
 
-  } else if (sp) { // nouvelle session ouverte depuis un profile
+  } else if (sp) { 
+    // nouvelle session ouverte depuis un profile (QUI EXISTE)
+    // Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
     const { profId: string, profile: Profile } = selectedProfile.value
 
-    if (pinned.value) { // session épinglée
-      sv = sf.newTSession({
+    if (profile.about !== about)
+      // Maj du profile dans Safe
+      await sf.setAboutProfile(profId, about)
+
+    if (pinned.value) { 
+      // session épinglée
+      const nvs = sf.newTSession({
+        app: cfg.appname,
+        userId: sf.userId,
+        profId: profId,
+        about: about,
+        credIds: profile.creds,
+        size: 0,
+        time: 0,
+        prefCode: code
+      } as TSession)
+      await sf.setTSession(nvs, true)
+    }
+
+    credIds = profile.creds
+
+  } else {
+    // nouvelle session vierge de droits
+    // Il y a OU NON du réseau
+    let profId = ''
+    const credIds = []
+
+    // Création du profile dans Safe - S'il y a du réseau
+    if (session.hasNet) {
+      profId = Crypt.shaS(Crypt.random(16))
+      await sf.setAboutProfile(profId, about)
+    }
+
+    if (pinned.value) { 
+      // Session épinglée : AVEC profil si réseau et sinon SANS profil
+      const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
         profId,
@@ -800,39 +855,20 @@ const validateSessionS = async (code, data) => {
         time: 0,
         prefCode: code
       })
-      await sf.setTSession(sv, true)
-      session.setDbName(sf.incognito ? '' : sv.dbName)
+      await sf.setTSession(nvs, true)
+      session.setDbName(sf.incognito ? '' : nvs.dbName)
+    } else {
+      /* Ouverture d'une session "fugitive":
+      - ne laissant aucune trace en local dans IDBS
+      - sans profil
+      - sans droits
+      - sans IDB
+      L'exécution n'aura laissée aucune trace (sans dans les DBs de l'appli)
+      */
     }
-    if (profile.about !== about)
-      await sf.setAboutProfile(profId, about)
-    credIds = profile.creds
-
-  } else {
-    // nouvelle session vierge de droits
-    if (pinned.value) { // session épinglée
-      sv = sf.newTSession({
-        app: cfg.appname,
-        userId: sf.userId,
-        profId: '',
-        about,
-        credIds: [],
-        size: 0,
-        time: 0,
-        prefCode: code
-      })
-      await sf.setTSession(sv, true)
-      session.setDbName(sf.incognito ? '' : sv.dbName)
-    }
-    credIds = []
   }
 
-  const creds: Map<string, TCred> = new Map<string, TCred>()
-  if (session.hasNet) for(const id of credIds) {
-    const tc = sf.creds.get(id)
-    if (tc) creds.put(id, tc)
-  }
-
-  await goToApp(about, creds, code, data)
+  await goToApp(about, getCreds(credIds), code, data)
 }
 
 const validateSessionV = async () => {

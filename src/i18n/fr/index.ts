@@ -57,6 +57,7 @@ export default {
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
   op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
+  op_$SetAboutProfile: 'mise à jour / création d\'un profil',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',

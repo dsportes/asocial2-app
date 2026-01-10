@@ -471,6 +471,23 @@ export const useSafeStore = defineStore('safe', () => {
   // préférences par "code" tirées de IDB safe pour l'application / user courant
   const tprefs : Ref<Map<string, Uint8Array>> = ref() // par code
 
+  const dcX = async (b: Uint8Array) : Promise<string> => {
+    if (!b || b.length === 0) return ''
+    let y
+    try { y = await Crypt.decrypt(keyK.value, b) } catch (e) { return '' }
+    if (!y || y.length === 0) return ''
+    return decoder.decode(y)
+  }
+
+  const u8Empty = new Uint8Array([])
+  const ecX = async (s: string) : Promise<Uint8Array> => {
+    if (!s || s.length === 0) return u8Empty
+    const b = encoder.encode(s)
+    let y
+    try { y = await Crypt.crypt(keyK.value, b) } catch (e) { return u8Empty }
+    return !y || y.length === 0 ? u8Empty : y
+  }
+
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur: 
     - auth, devices, prefs, profiles
@@ -480,7 +497,7 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const compileSafe = async (safe: Safe) => {
     auth.value = {
-      pseudo: decoder.decode(await Crypt.decrypt(keyK.value, safe.pseudo)),
+      pseudo: await dcX(safe.pseudo),
       hp0: safe.hp0,
       hr0: safe.hr0,
       hhp1: safe.hhp1,
@@ -504,7 +521,7 @@ export const useSafeStore = defineStore('safe', () => {
     const m = new Map<string, Device>()
     for (const devId in safe.devices) {
       const d: Device = safe.devices[devId]
-      d.devName = decoder.decode(await Crypt.decrypt(keyK.value, d.devName as Uint8Array))
+      d.devName = await dcX(d.devName as Uint8Array)
       m.set(devId, d)
     }
     devices.value = m
@@ -536,7 +553,7 @@ export const useSafeStore = defineStore('safe', () => {
       const mpf = safe.profiles[app]
       for (const profId in mpf) {
         const x = mpf[profId]
-        const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about as Uint8Array))
+        const about = await dcX(x.about as Uint8Array)
         const p: Profile = { about, creds: x.creds }
         mp.set(profId, p)
       }
@@ -554,7 +571,7 @@ export const useSafeStore = defineStore('safe', () => {
         const x = mcf[credId] as TCred
         try {
           const data = await Crypt.decrypt(keyK.value, x.data)
-          const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about as Uint8Array))
+          const about = await dcX(x.about as Uint8Array)
           const tc: TCred = new TCred({credId: x.credId, about, data})
           mc.set(x.credId, tc)
         } catch (e) { 
@@ -582,20 +599,6 @@ export const useSafeStore = defineStore('safe', () => {
             x.profId = ''
             toSave = true
           }
-        }
-        try {
-          const y = await Crypt.decrypt(keyK.value, x.about)
-          if (!y) {
-            x.about = '?'
-            toSave = true
-          } else {
-            x.about = decoder.decode(y)
-            console.log(x.about)
-          }
-        } catch(e) {
-          console.log(e)
-          x.about = '?'
-          toSave = true
         }
         tok.push(x) 
         if (toSave) await saveTSession(x)
@@ -637,7 +640,7 @@ export const useSafeStore = defineStore('safe', () => {
           app: app,
           userId: userId,
           code: code,
-          data: Crypt.crypt(keyK.value, data)
+          data: await Crypt.crypt(keyK.value, data)
         }))
         tp.set(code, data)
       }
@@ -683,7 +686,7 @@ export const useSafeStore = defineStore('safe', () => {
         if (x.app === app && x.userId === userId.value)
           try {
             const data = await Crypt.decrypt(keyK.value, x.data)
-            const about = decoder.decode(await Crypt.decrypt(keyK.value, x.about))
+            const about = await dcX(x.about)
             const tc: TCred = new TCred({credId: x.credId, about, data})
             m.set(x.code, tc)
           } catch (e) { 
@@ -707,8 +710,8 @@ export const useSafeStore = defineStore('safe', () => {
       if (!locc || (locc.about !== cred.about) ) {
         await saveCred(new TCred({
           credId: credId,
-          about: Crypt.crypt(keyK.value, encoder.encode(cred.about as string)), 
-          data: Crypt.crypt(keyK.value, cred.data)
+          about: await ecX(cred.about as string), 
+          data: await Crypt.crypt(keyK.value, cred.data)
         }))
         tc.set(credId, cred)
       }
@@ -745,17 +748,11 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       const ab = s.about
       const id = s.idOf
-      s.about = await Crypt.crypt(keyK.value, encoder.encode(s.about as string))
+      s.about = await ecX(s.about as string)
       const bin = encode(s.toObj)
       await db.value.tsessions.put({ id, bin })
       s.about = ab
       tsessions.value.set(id, s)
-      const xx = await db.value.tsessions.get({ id })
-      const xx2 = decode(xx.bin)
-      const xx3 = await Crypt.decrypt(keyK.value, xx2.about)
-      const xx4 = decoder.decode(xx3)
-      if (xx4 !== ab)
-        console.log(xx4, ab)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -838,7 +835,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     const safeCodes: SafeCodes = {
       id: userId.value,
-      pseudo: await Crypt.crypt(keyK.value, encoder.encode(pseudo)),
+      pseudo: await ecX(pseudo),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
@@ -873,7 +870,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     const safe: Safe = {
       id: userId.value,
-      pseudo: await Crypt.crypt(keyK.value, encoder.encode(pseudo)),
+      pseudo: await ecX(pseudo),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
@@ -957,6 +954,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   type SetAboutProfile = {
+    app: string,
     userId: string
     sh1p: Uint8Array
     sh1r: Uint8Array
@@ -1042,15 +1040,15 @@ export const useSafeStore = defineStore('safe', () => {
   /* Faire sauvegarder par le serveur dans le safe 
   la maj de l'about du profil */
   const setAboutProfile = async (profId: string, aboutStr: string) => {
-    const about = await Crypt.crypt(keyK.value, encoder.encode(aboutStr))
     const aboutProfile: SetAboutProfile = {
+      app: stores.config.appname,
       userId: userId.value,
       sh1p: sh1p.value,
       sh1r: sh1r.value,
       profId,
-      about
+      about: await ecX(aboutStr)
     }
-    const ret = await new Operation('$SetAboutProfile').post(aboutProfile)
+    const ret = await new Operation('$SetAboutProfile').post({aboutProfile})
     if (!ret.status)
       await compileSafe(ret.safe)
     else console.log('$SetAboutProfile', ret.status)
