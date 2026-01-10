@@ -234,16 +234,16 @@
               <div class="col-5"></div>
             </div>
             <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
-              <div :class="(selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
+              <div :class="clSel(s) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
                 @click="selSession(s)">
                 <div class="col-7 q-pr-xs">{{pincode + ' ' + s.about}}</div>
                 <div class="col-5 ">{{dhcool(s.time)}}</div>
               </div>
             </div>
             <div :class="dkli(idx + 1 + mySessions.length)" 
-              v-for="([profId, p], idx) of myProfiles" :key="profId">
-              <div :class="(selectedProfile === p ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-                @click="selProfileS(profId, p)">
+              v-for="([profId, p], idx) of myProfiles2" :key="profId">
+              <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
+                @click="selProfile(profId, p)">
                 <div class="col-7 q-pr-xs q-pl-xs">{{p.about}}</div>
                 <div class="col-5">{{$t('HPnotpinned')}}</div>
               </div>
@@ -251,6 +251,9 @@
           </q-scroll-area>
           <div v-if="nvSP" class="q-mt-md">
             <q-checkbox v-if="selectedSession && !sf.incognito" 
+              v-model="unpinme" :label="$t('HPunpinme')" 
+              style="margin-left: -12px"/>
+            <q-checkbox v-if="selectedSession && !sf.incognito && !unpinme" 
               v-model="razdb" :label="$t('HPresetdb')" 
               style="margin-left: -12px"/>
             <q-checkbox v-if="!selectedSession && !sf.incognito" 
@@ -468,6 +471,14 @@ const pin = reactive({ inp: '', err: '' })
 const selectedSafe = ref(null)
 const totalVol = ref(0)
 
+watch(() => ui.reopenSession, async (v) => {
+  if (v) {
+    await sf.init0()
+    if (session.hasNet) await sf.reloadSafe()
+    await openSession()
+  }
+}) 
+
 const options = computed(() => {
   const r = []
   if (sf.trustings)
@@ -533,6 +544,7 @@ const myTrusting = ref()
 - myPrefs: prefs enregistrées dans le Safe
 */
 const myProfiles: Ref<Map<string, Profile>> = ref()
+const myProfiles2: Ref<Map<string, Profile>> = ref()
 const myPrefs: Ref<Map<string, Uint8Array>> = ref()
 const nvClicked = ref()
 
@@ -553,7 +565,11 @@ const openSession = async () => {
     const profIds = new Set<string>()
     for (const s of mySessions.value) 
       if (s.profId) profIds.add(s.profId)
-    myProfiles.value = sf.getMySafeProfiles(profIds)
+    myProfiles.value = sf.getMySafeProfiles()
+    myProfiles2.value = new Map<string, Profile>()
+    for (const [profId, p] of myProfiles.value) {
+      if (!profIds.has(profId)) myProfiles2.value.set(profId, p)
+    }
     myPrefs.value = sf.getMySafePrefs()
     if (!sf.incognito) {
       await sf.refreshLocalPrefs()
@@ -695,6 +711,7 @@ type TSession = {
 const selectedSession: Ref<TSession> = ref(null)
 const selectedProfile: Ref<{string, Profile}> = ref(null)
 const razdb = ref(false)
+const unpinme = ref(false)
 const pinned = ref(false)
 const newSessionName = reactive({ inp: '', err: '' })
 
@@ -720,12 +737,18 @@ const selSession = (s) => {
   newSessionName.inp = s.about
 }
 
+const clSel = (x) => {
+  if (selectedSession.value === x) return 'bord2 '
+  if (selectedProfile.value && selectedProfile.value.profile === x) return 'bord2 '
+  return ''
+}
+
 const selProfile = (profId: string, profile: Profile) => {
   nvClicked.value = false
   razdb.value = false
   selectedSession.value = null
   selectedProfile.value = { profId, profile }
-  newSessionName.inp = p.about
+  newSessionName.inp = profile.about
 }
 
 type TCred = {
@@ -800,15 +823,21 @@ const validateSession = async (code, data) => {
     } // Sinon on laisse ses credIds tel quel
     sv.about = about
     sv.prefCode = code
-    // save tsession avec time, raz db si requis
-    await sf.setTSession(sv, razdb.value)
-    session.setDbName(sf.incognito ? '' : sv.dbName)
+
     credIds = sv.credIds
+    if (!unpinme.value) {
+      // save tsession avec time, raz db si requis
+      await sf.setTSession(sv, razdb.value)
+      session.setDbName(sf.incognito ? '' : sv.dbName)
+    } else {
+      await sf.delTSession(sv)
+    }
 
   } else if (sp) { 
     // nouvelle session ouverte depuis un profile (QUI EXISTE)
     // Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
-    const { profId: string, profile: Profile } = selectedProfile.value
+    const profId = sp.profId
+    const profile = sp.profile
 
     if (profile.about !== about)
       // Maj du profile dans Safe

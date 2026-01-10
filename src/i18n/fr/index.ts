@@ -58,6 +58,7 @@ export default {
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
   op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
+  op_ReloadSafe: 'Rechargement du "Coffre fort" de l\'utilisateur',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -228,6 +229,7 @@ export default {
   HPpref_2: '... dernières utilisées sur ce terminal',
   HPnotpinned: '(session non épinglée)',
   HPitsme: 'C\'est bien moi',
+  HPunpinme: 'Désépingler cette session',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

@@ -42,6 +42,7 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'appHome'">
+        <btn-cond label="Open session" @ok="ui.backToOpenSession"/>
         <div class="font-mono q-pa-sm">{{echo}}</div>
         <q-file class="full-width q-ma-xs" filled v-model="fileList"
           :label="$t('pickfile')" max-file-size="50000000" max-file="1">

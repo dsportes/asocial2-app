@@ -15,6 +15,8 @@ import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
 /* TODO
+User anonyme
+Purge des IDB
 Suppression de sessions "locales" épinglées:
 - GC des profils / credentials associés dans IDBS
 */
@@ -385,16 +387,16 @@ export const useSafeStore = defineStore('safe', () => {
     if (n === -1) dbl.push(dbName)
     localStorage.setItem('$DBLIST', dbl.join(' '))
   }
-
-  const delTSession = async (s: TSession) => {
-    if (incognito.value) return
-    const id = s.idOf
-    // console.log("tsession: ", id)
-    try { await db.value.tsessions.where({ id }).delete()
-    } catch (e) { } 
-    tsessions.value.delete(id)
-  }
   
+  const delIDB = (dbName: string) => {
+    if (incognito.value) return
+    const x = localStorage.getItem('$DBLIST') || ''
+    const dbl = x.split(' ')
+    const n = dbl.indexOf(dbName)
+    if (n === -1) dbl.splice(n, 1)
+    localStorage.setItem('$DBLIST', dbl.join(' '))
+  }
+
   /**********************************************************************
   Safe central : copie locale du safe de l'utilisateur courant
   - permet un affichage complet, y compris pour les données relatives
@@ -589,6 +591,7 @@ export const useSafeStore = defineStore('safe', () => {
     for(const [,x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
         let toSave = false
+        x.about = await dcX(x.about)
         if (!userId.value.startsWith('$')) {
           // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
           const profile: Profile = mpf ? mpf.get(x.profId) : null
@@ -758,35 +761,48 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const delTSession = async (s: TSession) => {
+    if (incognito.value) return
+    try {
+      const id = s.idOf
+      await db.value.tsessions.where({ id }).delete()
+      tsessions.value.delete(id)
+      delIDB(s.dbName)
+      try {
+        await Dexie.delete(s.dbName)
+        await sleep(300)
+        console.log(s.dbName + ' deleted')
+      } catch (e) {
+        console.log(s.dbName + ' deletion FAILED: ', e.message())
+      }
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
   const setTSession = async (s: TSession, razdb?: boolean) => {
     if (incognito.value) return
     try {
       s.time = Date.now()
       await saveTSession(s)
 
-      if (!incognito.value) {
-        recordIDB(s.dbName)
-        if (razdb) try {
-            await Dexie.delete(s.dbName)
-            await sleep(300)
-            console.log(s.dbName + ' deleted')
-          } catch (e) {
-            console.log(s.dbName + ' deletion FAILED: ', e.message())
-          }
-      }
-
+      recordIDB(s.dbName)
+      if (razdb) try {
+          await Dexie.delete(s.dbName)
+          await sleep(300)
+          console.log(s.dbName + ' deleted')
+        } catch (e) {
+          console.log(s.dbName + ' deletion FAILED: ', e.message())
+        }
     } catch (e) {
       throw EX(e, 2)
     }
   }
 
-  const getMySafeProfiles = (profIds: Set<string>) : Map<string, Profile> => {
+  const getMySafeProfiles = () : Map<string, Profile> => {
     const app = stores.config.appname
     const mpf = profiles.value.get(app)
-    const r = new Map<string, Profile>()
-    if (mpf) for (const [profId, p] of mpf)
-      if (!profIds.has(profId)) r.set(profId, p)
-    return r
+    return mpf || new Map<string, Profile>()
   }
 
   /* Retourne depuis le Safe central actuellement en mémoire
@@ -953,11 +969,15 @@ export const useSafeStore = defineStore('safe', () => {
     sh1r: Uint8Array
   }
 
+  type ReloadSafe = {
+    userId: string
+    shk: Uint8Array
+  }
+
   type SetAboutProfile = {
     app: string,
     userId: string
-    sh1p: Uint8Array
-    sh1r: Uint8Array
+    shk: Uint8Array
     profId: string
     about: Uint8Array
   }
@@ -1037,16 +1057,26 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  const reloadSafe = async () => {
+    const reloadSafe: ReloadSafe = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
+    }
+    const ret = await new Operation('$ReloadSafe').post({reloadSafe})
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
   /* Faire sauvegarder par le serveur dans le safe 
   la maj de l'about du profil */
-  const setAboutProfile = async (profId: string, aboutStr: string) => {
+  const setAboutProfile = async (profId: string, about: string) => {
     const aboutProfile: SetAboutProfile = {
       app: stores.config.appname,
       userId: userId.value,
-      sh1p: sh1p.value,
-      sh1r: sh1r.value,
+      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array,
       profId,
-      about: await ecX(aboutStr)
+      about: await ecX(about)
     }
     const ret = await new Operation('$SetAboutProfile').post({aboutProfile})
     if (!ret.status)
@@ -1067,11 +1097,12 @@ export const useSafeStore = defineStore('safe', () => {
     tsessions, setTSession, delTSession, getMySessions,
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
-    profiles, getMySafeProfiles, setAboutProfile,
+    profiles, getMySafeProfiles,
     getSessionSize, pseudoOfS, volOfS, purgeIDBS,
     getMySafePrefs,
     userId, keyK, openMode, auth, devices,
-    createSafe, updSafeCodes, openSafeByPR, openSafeByPin, setTrust, setUntrust
+    createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
+    setTrust, setUntrust, setAboutProfile
   }
 })
 

@@ -161,6 +161,18 @@ export const useUiStore = defineStore('ui', () => {
     setTimeout(() => { page.value = p }, 350)
   }
 
+  const reopenSession = ref(0)
+
+  const backToOpenSession = () => {
+    page.value = ''
+    setTimeout(() => { 
+      page.value = 'home' 
+      setTimeout( () => {
+        reopenSession.value++
+      }, 100)
+    }, 350)
+  }
+
   return {
     set$t$q, setDark, isDark, $q, visibility,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
@@ -168,7 +180,7 @@ export const useUiStore = defineStore('ui', () => {
     exc, displayExc, hideExc,
     diag, diagResolve, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage
+    page, setPage, backToOpenSession, reopenSession
   }
 })
 
