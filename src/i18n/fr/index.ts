@@ -58,7 +58,7 @@ export default {
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
   op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
-  op_ReloadSafe: 'Rechargement du "Coffre fort" de l\'utilisateur',
+  op_OpenSafeById: '(Re)Chargement du "Coffre fort" de l\'utilisateur',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -106,10 +106,20 @@ export default {
 
   HPauthentif: 'Authentification',
   HPsession: 'Session à ouvrir',
-  HPtab_1: 'Je SUIS enregistré',
-  HPtab_2: 'Je M\'ENREGISTRE',
-  HPtab_3: 'Je reste ANONYME',
-  HPnosession: 'Une nouvelle session (sans nom) peut être ouverte EN MODE AVION et sans accès à aucune données (comme une "calculette").',
+  HPtab_0: 'Je SUIS enregistré',
+  HPtab_0c: 'J\'ai un "coffre fort" à mon nom, crypté et sécurisé en central',
+  HPtab_1: 'Je M\'ENREGISTRE',
+  HPtab_1c: 'Je créé un "coffre fort" à mon nom, crypté et sécurisé en central',
+  HPtab_2: 'PAS enregistré, mais CONNU sur ce terminal',
+  HPtab_2c: 'J\'y ai un espace de données à mon nom, crypté et sécurisé',
+  HPtab_3: 'NI enregistré, NI CONNU sur ce terminal',
+  HPtab_3c: 'Je ne lis ni n\'écris AUCUNE donnée sur ce terminal',
+  HPsvoid_1: 'Une nouvelle session peut être ouverte: elle n\'aura aucun "droits d\'accès" initialisés ' +
+    ' et une préférence d\'affichage par défaut. Aucune trace de son exécution ne sera détenue sur ce terminal.',
+  HPsvoid_2: 'Elle sera EN MODE AVION, sans accès à des données externes (comme une "calculette").',
+  // HPnosession: 'Une nouvelle session (sans nom) peut être ouverte EN MODE AVION et sans accès à aucune données (comme une "calculette").',
+  
+  
   HPauth_1: 'Je m\'authentifie par ma phrase secrète ...',
   HPauth_2: 'Soit, je m\'authentifie par ma phrase secrète ...',
   HPauth_3: 'Je m\'enregistre par ma phrase secrète ...',
@@ -122,13 +132,13 @@ export default {
   HPplane: 'Mode AVION: pas d\'accès à Internet)',
   HPincognito_1: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   HPincognito_2: 'Accès sécurisé aux données stockées sur ce terminal',
-  HPnbUt: 'Aucun utilisateur n\'a déclaré avoir confiance dans ce terminal | '
-    + 'Un utilisateur a déclaré avoir confiance dans ce terminal | '
-    + '{count} utilisateurs ont déclaré avoir confiance dans ce terminal',
+  HPnbUt: 'Personne n\'a déclaré avoir confiance dans ce terminal | '
+    + 'a déclaré avoir confiance dans ce terminal | '
+    + 'ont déclaré avoir confiance dans ce terminal',
   HPnban: 'Aucun utilisateur anonyme n\'a de session déclarée dans ce terminal | '
     + 'Un utilisateur anonyme a une session déclarée dans ce terminal | '
     + '{count} utilisateurs ont une session déclarée dans ce terminal',
-  HPnoplane: 'Aucune session ne peut rouverte en mode AVION.',
+  // HPnoplane: 'Aucune session ne peut rouverte en mode AVION.',
   HPenreg_1: 'Enregistrement',
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',

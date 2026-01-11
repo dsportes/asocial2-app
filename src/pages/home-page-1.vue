@@ -10,33 +10,60 @@
           dense color="positive"
           checked-icon="cloud" unchecked-icon="cloud_off"
           :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
-        <btn-cond v-if="!incognito" round icon="local_police" 
+        <btn-cond v-if="!sf.incognito" round icon="local_police" 
           size="sm" color="negative" @ok="opCfReset"/>
       </div>
 
-      <q-expansion-item v-model="exp[0]" group="gr1" dense switch-toggle-side
-        header-class="bg-primary" class="q-mb-xs">
-        <template v-slot:header>
-          <div class="q-ma-xs full-width column">
-            <div class="row items-center">
-              <q-icon name="person" size="32px" class="q-mr-sm"/>
-              <div class='titre-lg text-bold text-white'>{{$t('HPtab_0')}}</div>
+      <div class="full-width row q-px-xs" style="min-height:2rem">
+        <q-toggle v-model="sf.incognito"
+          :class="'col-auto q-mt-xs q-pa-xs' + (sf.incognito ? 'text-bold bg-warning' : '')"
+          dense color="negative"
+          :label="$t('HPincognito_' + (sf.incognito ? '1' : '2'))" />
+      </div>
+
+      <div v-if="sf.incognito && !session.hasNet" class="q-ma-md row justify-between items-center">
+        <div class="col q-mr-sm titre-md q-my-md text-italic text-warning text-bold">
+          {{ $t('HPnosession') }}</div>
+        <btn-cond class="col-auto" :label="$t('open')" icon="send" 
+          @ok="validateSessionV()"/>
+      </div>
+
+      <div v-else>
+        <q-tabs v-model="tab" dense align="justify" class="q-mt-sm">
+          <q-tab no-caps name="1" class="bg-primary">
+            <div class="column items-center">
+              <q-icon name="person" size="32px"/>
+              <div class='titre-md text-bold text-white'>{{$t('HPtab_1')}}</div>
             </div>
-            <div class="q-mx-xs self-end titre-sm text-italic">{{$t('HPtab_0c')}}</div>
-          </div>
-        </template>
-        <div class="exp0 q-pa-xs">
+          </q-tab>
+          <q-tab :disable="!session.hasNet" no-caps name="2" class="bg-secondary">
+            <div class="column items-center">
+              <q-icon name="person_add" size="32px"/>
+              <div class='titre-md text-bold text-white'>{{$t('HPtab_2')}}</div>
+            </div>
+          </q-tab>
+          <q-tab :disable="sf.incognito" no-caps name="3" class="bg-grey-7">
+            <div class="column items-center">
+              <q-img :src="anonymousB" style="height: 32px; max-width: 32px;"/>
+              <div class='titre-md text-bold text-black'>{{$t('HPtab_3')}}</div>
+            </div>
+          </q-tab>
+        </q-tabs>
+
+        <div v-if="tab === '1'" :class="'tab' + tab + ' tablr tabb q-pa-sm'">
+
           <div class="row q-mb-md items-start q-gutter-xs">
             <q-icon class="col-auto" name="info" size="1.2rem" />
-            <div class="col row q-gutter-xs">
-              <span v-for="u in trUsers" :key="u" class="font-mono text-bold">{{u}}</span>
-              <span class="titre-md text-italic">{{$t('HPnbUt', trUsers.length)}}</span>
+            <div class="col">
+              <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
               <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
                 {{'[' + sf.devName + ']'}}</span>
+              <div v-if="!nbUt && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
             </div>
           </div>
 
-          <p0-p1 class="q-mt-md" @ok="authPS"
+          <p0-p1 v-if="mayPS" class="q-mt-md" @ok="authPS"
             :title="$t('HPauth_' + (mayPIN ? '2' : '1'))"/>
 
           <div v-if="mayPIN">
@@ -52,50 +79,33 @@
             </div>
           </div>
         </div>
-      </q-expansion-item>
 
-      <q-expansion-item v-model="exp[1]" group="gr1" dense switch-toggle-side
-        header-class="bg-secondary" class="q-mb-xs">
-        <template v-slot:header>
-          <div class="q-ma-xs full-width column">
-            <div class="row items-center">
-              <q-icon name="person_add" size="32px" class="q-mr-sm"/>
-              <div class='titre-lg text-bold text-white'>{{$t('HPtab_1')}}</div>
-            </div>
-            <div class="q-mx-xs self-end titre-sm text-italic">{{$t('HPtab_1c')}}</div>
-          </div>
-        </template>
-        <div class="exp1 q-pa-xs">
+        <div v-if="tab === '2'" 
+          :class="'tab' + tab + ' tablr tabb q-pa-sm' + (!session.hasNet ? ' disabled' : '')">
+
           <div class="row q-mb-md items-start q-gutter-xs">
             <q-icon class="col-auto" name="info" size="1.2rem" />
             <div class="col">
-              <span class="titre-md text-italic">{{$t('HPnbUt', trUsers.length)}}</span>
+              <span class="titre-md text-italic">{{$t('HPnbUt', nbUt)}}</span>
               <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
                 {{'[' + sf.devName + ']'}}</span>
+              <div v-if="!nbUt && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
             </div>
           </div>
+
           <safe-cr create-mode :onValidate="openSession"/>
         </div>
-      </q-expansion-item>
 
-      <q-expansion-item v-model="exp[2]" group="gr1" dense switch-toggle-side
-        header-class="bg-purple" class="q-mb-xs">
-        <template v-slot:header>
-          <div class="q-ma-xs full-width column">
-            <div class="row items-center">
-              <q-icon name="account_box" size="32px" class="q-mr-sm"/>
-              <div class='titre-lg text-bold text-white'>{{$t('HPtab_2')}}</div>
-            </div>
-            <div class="q-mx-xs self-end titre-sm text-italic">{{$t('HPtab_2c')}}</div>
-          </div>
-        </template>
-        <div class="exp2 q-pa-xs">
+        <div v-if="tab === '3'" 
+          :class="'tab' + tab + ' tablr tabb q-pa-sm' + (sf.incognito ? ' disabled' : '')">
+
           <div class="row q-mb-md items-start q-gutter-xs">
             <q-icon class="col-auto" name="info" size="1.2rem" />
             <div class="col">
-              <span class="titre-md text-italic">{{$t('HPnbUt', trUsers.length)}}</span>
-              <span v-if="sf.devName" class="font-mono text-bold q-ml-sm">
-                {{'[' + sf.devName + ']'}}</span>
+              <span class="titre-md text-italic">{{$t('HPnban', nbAn)}}</span>
+              <div v-if="!nbAn && !session.hasNet"
+                class="titre-md text-italic">{{$t('HPnoplane')}}</div>
             </div>
           </div>
 
@@ -120,30 +130,10 @@
             </div>
           </div>
         </div>
-      </q-expansion-item>
-
-      <q-expansion-item v-model="exp[3]" group="gr1" dense switch-toggle-side
-        header-class="bg-grey-9" class="q-mb-xs">
-        <template v-slot:header>
-          <div class="q-ma-xs full-width column">
-            <div class="row items-center">
-              <q-img :src="anonymousW" style="height:28px; max-width:28px;"/>
-              <div class='titre-lg text-bold text-white'>{{$t('HPtab_3')}}</div>
-            </div>
-            <div class="q-mx-xs self-end titre-sm text-italic">{{$t('HPtab_3c')}}</div>
-          </div>
-        </template>
-        <div class="exp3 q-pa-xs column">
-          <div class="titre-md text-italic">{{$t('HPsvoid_1')}}</div>
-          <div v-if="!session.hasNet" class="titre-md text-italic">{{$t('HPsvoid_2')}}</div>
-          <btn-cond class="self-end" :label="$t('open')" icon="send" 
-            @ok="validateSessionV()"/>
-        </div>
-      </q-expansion-item>
-
+      </div>
     </q-step>
 
-    <q-step v-if="!incognito"
+    <q-step v-if="!sf.incognito || session.hasNet"
      :name="2" :title="$t('HPsession')" icon="send">
       <div class="q-pa-sm">
         <div class="full-width row justify-between items-center">
@@ -153,33 +143,31 @@
           <q-btn icon="more_vert" size="md">
             <q-menu>
               <q-list style="min-width: 350px">
-                <q-item v-if="hassafe && sf.openMode !== 3" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3" clickable v-close-popup
                     @click="ui.oD(idc, 'chgCodes')">
                   <q-item-section class="titre-md text-right">{{$t('HPchgcodes')}}</q-item-section>
                 </q-item>
                 <q-separator/>
 
-                <div v-if="hassafe && sf.openMode !== 3 && myTrusting === null"
+                <div v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null"
                   class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPtrust')}}</div>
-                <q-item v-if="hassafe && sf.openMode !== 3 && myTrusting === null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null" clickable v-close-popup
                     @click="openTrust">
                   <q-item-section class="titre-md text-right">{{$t('HPtrust_a')}}</q-item-section>
                 </q-item>
-                <q-separator v-if="hassafe && sf.openMode !== 3 && myTrusting === null"/>
+                <q-separator v-if="tab !== '3' && sf.openMode !== 3 && myTrusting === null"/>
 
-                <div v-if="hassafe && sf.openMode !== 3 && myTrusting !== null"
+                <div v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null"
                   class="titre-sm text-italic q-mr-lg q-mt-xs">{{$t('HPuntrust')}}</div>
-                <q-item v-if="hassafe && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
                     @click="openUntrust">
                   <q-item-section class="titre-md text-right">{{$t('HPuntrust_r')}}</q-item-section>
                 </q-item>
-
-                <q-item v-if="hassafe && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
+                <q-item v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
                     @click="openTrust">
                   <q-item-section class="titre-md text-right">{{$t('HPuntrust_p')}}</q-item-section>
                 </q-item>
-
-                <q-separator v-if="hassafe && sf.openMode !== 3 && myTrusting !== null"/>
+                <q-separator v-if="tab !== '3' && sf.openMode !== 3 && myTrusting !== null"/>
 
                 <div class="titre-sm text-italic q-mr-lg">
                   <span>
@@ -198,7 +186,7 @@
 
         <q-separator class="full-width q-mt-xs q-mb-sm"/>
 
-        <div v-if="!hassafe">
+        <div v-if="tab === '3'">
           <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
           <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
@@ -216,7 +204,7 @@
             </div>
           </q-scroll-area>
           <div v-if="nvSP" class="q-mt-md">
-            <q-checkbox v-if="selectedSession && !incognito" 
+            <q-checkbox v-if="selectedSession && !sf.incognito" 
               v-model="razdb" :label="$t('HPresetdb')" 
               style="margin-left: -12px"/>
             <div class="titre-md text-italic q-mt-md">
@@ -236,28 +224,7 @@
           </div>
         </div>
 
-        <div v-if="hassafe">
-
-          <div v-if="sf.openMode !== 3 && myTrusting === null" class="column q-mt-xs">
-            <div class="titre-sm text-italic">{{$t('HPtrust')}}</div>
-            <div class="row q-gutter-sm justify-end">
-              <span class="titre-md">{{$t('HPtrust_a')}}</span>
-              <btn-cond icon="send" @click="openTrust"/>
-            </div>
-          </div>
-
-          <div v-if="sf.openMode !== 3 && myTrusting !== null" class="column q-mt-xs">
-            <div class="titre-sm text-italic">{{$t('HPuntrust')}}</div>
-            <div class="row q-gutter-sm justify-end q-mb-xs">
-              <span class="titre-md">{{$t('HPuntrust_r')}}</span>
-              <btn-cond icon="send" @click="openUntrust"/>
-            </div>
-            <div class="row q-gutter-sm justify-end">
-              <span class="titre-md">{{$t('HPuntrust_p')}}</span>
-              <btn-cond icon="send" @click="openTrust"/>
-            </div>
-          </div>
-
+        <div v-else>
           <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
           <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
@@ -283,13 +250,13 @@
             </div>
           </q-scroll-area>
           <div v-if="nvSP" class="q-mt-md">
-            <q-checkbox v-if="selectedSession && !incognito" 
+            <q-checkbox v-if="selectedSession && !sf.incognito" 
               v-model="unpinme" :label="$t('HPunpinme')" 
               style="margin-left: -12px"/>
-            <q-checkbox v-if="selectedSession && !incognito && !unpinme" 
+            <q-checkbox v-if="selectedSession && !sf.incognito && !unpinme" 
               v-model="razdb" :label="$t('HPresetdb')" 
               style="margin-left: -12px"/>
-            <q-checkbox v-if="!selectedSession && !incognito" 
+            <q-checkbox v-if="!selectedSession && !sf.incognito" 
               v-model="pinned" :label="$t('HPsetpinned')" 
               style="margin-left: -12px"/>
             <div class="titre-md text-italic q-mt-md">
@@ -483,10 +450,7 @@ const cfg = stores.config
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const exp: Ref<boolean[]> = ref([true, false, false, false])
-const currentExp = computed(() => { for(let i = 0; i < exp.value.length; i++) if (i) return i}) 
-const incognito = computed(() => currentExp.value === 3)
-const hassafe = computed(() => currentExp.value < 2)
+const tab = ref('1')
 
 onMounted(async () => { 
   await sf.init0()
@@ -515,35 +479,30 @@ watch(() => ui.reopenSession, async (v) => {
   }
 }) 
 
-const trUsers = computed(() => {
-  const l = []; 
-  if (sf.trustings) sf.trustings.forEach(e => { 
-    if (!e.isLocal) l.push(e.pseudo)})
-  return l
-})
-
-const trUsersS = computed(() => {
-  const l = []; 
-  if (sf.trustings) sf.trustings.forEach(e => { 
-    if (!e.isLocal) l.push(e.pseudo)})
-  return l
-})
-
-const trUsersL = computed(() => {
-  const l = []; 
-  if (sf.trustings) sf.trustings.forEach(e => { 
-    if (e.isLocal) l.push(e.pseudo)})
-  return l
-})
-
 const options = computed(() => {
-  const l = []
-  if (sf.trustings) sf.trustings.forEach(e => { 
-    if (!e.isLocal) l.push({ label: e.pseudo, value: e }) })
-  return l
+  const r = []
+  if (sf.trustings)
+    sf.trustings.forEach(e => { 
+      if (!e.isLocal) r.push({ label: e.pseudo, value: e }) 
+    })
+  return r
 })
 
-const mayPIN = computed(() => trUsersS.value.length > 0 && session.hasNet)
+const nbUt = computed(() => {
+  if (!sf.trustings || !sf.trustings.size) return 0
+  let n = 0; for (const t of sf.trustings) if (!t.isLocal) n++
+  return n
+})
+
+const nbAn = computed(() => {
+  if (!sf.trustings || !sf.trustings.size) return 0
+  let n = 0; for (const t of sf.trustings) if (t.isLocal) n++
+  return n
+})
+
+const mayPIN = computed(() => !sf.incognito && options.length > 0 && session.hasNet)
+
+const mayPS = computed(() => session.hasNet || (!sf.incognito && nbUt.value > 0))
 
 watch(options, (ap) => { selectedSafe.value = ap.length ? ap[0] : null })
 
@@ -590,20 +549,19 @@ const myPrefs: Ref<Map<string, Uint8Array>> = ref()
 const nvClicked = ref()
 
 const openSession = async () => {
-  sf.incognito = incognito.value
   nvClicked.value = false
-  if (!incognito.value && !sf.hasIDBS) await sf.init1()
+  if (!sf.incognito && !sf.hasIDBS) await sf.init1()
 
   mySessions.value = await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
   totalVol.value = sf.getSessionSize()
   
-  if (!incognito.value) {
+  if (!sf.incognito) {
     await sf.loadMyLocalPrefs()
     await sf.loadMyLocalCreds()
   }
 
-  if (currentExp.value !== 2) {
+  if (tab.value !== '3') {
     const profIds = new Set<string>()
     for (const s of mySessions.value) 
       if (s.profId) profIds.add(s.profId)
@@ -613,7 +571,7 @@ const openSession = async () => {
       if (!profIds.has(profId)) myProfiles2.value.set(profId, p)
     }
     myPrefs.value = sf.getMySafePrefs()
-    if (!incognito.value) {
+    if (!sf.incognito) {
       await sf.refreshLocalPrefs()
       await sf.refreshLocalCreds()
     }
@@ -817,6 +775,33 @@ const getCreds = (credIds: string[]) : Map<string, TCred> => {
   return creds
 }
 
+/*
+const validateSession = async (code, data) => {
+  if (newSessionName.err !== '') return
+  let sv = selectedSession.value
+
+  if (!sv) {
+    sv = sf.newTSession({
+      app: cfg.appname,
+      userId: sf.userId,
+      profId: '',
+      about: '',
+      size: 0,
+      time: 0,
+      credIds: [],
+      prefCode: ''
+    })
+  }
+  sv.about = newSessionName.inp
+  sv.prefCode = code
+
+  await sf.setTSession(sv, razdb.value)
+  session.setDbName(sf.incognito ? '' : sv.dbName)
+
+  await goToApp(sv.about, getCreds(sv.credIds), code, data)
+}
+*/
+
 const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
 
@@ -843,7 +828,7 @@ const validateSession = async (code, data) => {
     if (!unpinme.value) {
       // save tsession avec time, raz db si requis
       await sf.setTSession(sv, razdb.value)
-      session.setDbName(incognito.value ? '' : sv.dbName)
+      session.setDbName(sf.incognito ? '' : sv.dbName)
     } else {
       await sf.delTSession(sv)
     }
@@ -900,7 +885,7 @@ const validateSession = async (code, data) => {
         prefCode: code
       })
       await sf.setTSession(nvs, true)
-      session.setDbName(incognito.value ? '' : nvs.dbName)
+      session.setDbName(sf.incognito ? '' : nvs.dbName)
     } else {
       /* Ouverture d'une session "fugitive":
       - ne laissant aucune trace en local dans IDBS
@@ -957,11 +942,6 @@ const goToApp = async (about: string, creds: Map<string, TCred>, code: string, d
 .tab1 { border-color: $primary !important; }
 .tab2 { border-color: $secondary !important; }
 .tab3 { border-color: $grey-7 !important; }
-
-.exp0 { margin: 0 1px; border: 1px solid $primary; }
-.exp1 { margin: 0 1px; border: 1px solid $secondary; }
-.exp2 { margin: 0 1px; border: 1px solid $purple; }
-.exp3 { margin: 0 1px; border: 1px solid $grey-9; }
 
 .select:hover { background-color: $yellow-2; color: black; }
 </style>

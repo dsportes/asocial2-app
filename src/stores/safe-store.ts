@@ -943,8 +943,9 @@ export const useSafeStore = defineStore('safe', () => {
     } catch (e) {
       return 4
     }
+    const shk = await Crypt.strongHash(keyK.value, false, true)
     const ret2 = await new Operation('$OpenSafeById')
-      .post({userId: userId.value, shK: shK.value})
+      .post({userId: userId.value, shk})
     if (ret2.status) return 2
     openMode.value = 3
     await compileSafe(ret2.safe)
@@ -969,7 +970,7 @@ export const useSafeStore = defineStore('safe', () => {
     sh1r: Uint8Array
   }
 
-  type ReloadSafe = {
+  type LoadSafe = {
     userId: string
     shk: Uint8Array
   }
@@ -1058,11 +1059,11 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const reloadSafe = async () => {
-    const reloadSafe: ReloadSafe = {
+    const args = {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
     }
-    const ret = await new Operation('$ReloadSafe').post({reloadSafe})
+    const ret = await new Operation('$OpenSafeById').post(args)
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
