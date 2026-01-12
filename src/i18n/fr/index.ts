@@ -127,7 +127,7 @@ export default {
   HPseluser_1: 'Soit, je m\'authentifie par MON code PIN ...',
   HPseluser_2: 'Utilisateurs ayant accordé leur confiance dans ce terminal',
   HPnoreg: 'Je ne suis pas encore enregistré, je le fais maintenant.',
-  HPchgcodes: 'Je veux changer mes codes d\'accès',
+  HPchgcodes_1: 'Je veux changer mes codes d\'accès',
   HPnet: 'Accès à Internet',
   HPplane: 'Mode AVION: pas d\'accès à Internet)',
   HPincognito_1: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
@@ -203,11 +203,8 @@ export default {
   HPutnbs: 'Aucune session initiée sur ce terminal. | Une session est initiée sur ce terminal. | {count} sessions sont initiées sur ce terminal.',
   HPutc1: 'Application',
   HPutc2: 'A propos de la session ...',
-  HPvol_1: 'Aucune session n\'est épinglée, pas de volume à libérer. ' +
-    '| Une session est épinglée. | {count} sessions sont épinglées.',
-  HPvol_2: 'Volume libérable: {0}.',
-  HPvol_3: 'Libérer {0}',
-  HPunpin_1: 'Désépingler des sessions',
+  HPsize_1: 'Volumes libérables',
+  HPsize_2: 'A supprimer',
   HPunpin_2: 'Désépingler une session économise de la place sur le terminal en supprimant ses données stockées localement avec pour conséquences:',
   HPunpin_3: '- de ralentir sa réouverture ultérieure sur ce terminal,',
   HPunpin_4: '- d\'interdire son ouverture en mode AVION sur ce terminal.',
@@ -215,7 +212,10 @@ export default {
   HPupc_2: 'Application',
   HPupc_3: 'Volume',
   HPupc_4: 'Dernière connexion ici',
-  HPfreev: 'Volume à libérer {0} sur {1}',
+  HPskull_0: '{0} sessions(s) et {1} utilisteur(s) seront supprimé(s)',
+  HPskull_1: 'Leurs données enregistrées localement seront supprimées. Les sessions "épinglées" ' +
+    'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour les utilisateurs supprimés.',
+
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
   HP3ps: 'Votre phrase secrète sur ce terminal',
@@ -245,6 +245,9 @@ export default {
   HPnotpinned: '(non épinglée)',
   HPitsme: 'C\'est bien moi',
   HPunpinme: 'Désépingler cette session',
+  HPmanusers: 'Gérer les utilisateurs et leurs sessions',
+  HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
+   ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

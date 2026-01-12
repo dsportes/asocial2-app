@@ -10,8 +10,11 @@
           dense color="positive"
           checked-icon="cloud" unchecked-icon="cloud_off"
           :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
-        <btn-cond v-if="!ui.incognito" round icon="local_police" 
-          size="sm" color="negative" @ok="opCfReset"/>
+      </div>
+
+      <div class="q-my-sm row justify-end q-gutter-xs">
+        <div class="titre-md text-italic">{{$t('HPmanusers')}}</div>
+        <btn-cond icon="chevron_right" @ok="manUsers"/>
       </div>
 
       <q-expansion-item v-model="ui.exp[0]" group="gr1" dense switch-toggle-side
@@ -150,28 +153,17 @@
           <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
             color="warning" @ok="backToAuth"/>
           <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
-          <q-btn icon="more_vert" size="md">
+          <!--q-btn icon="more_vert" size="md">
             <q-menu>
               <q-list style="min-width: 300px; min-height: 60px">
-                <q-item v-if="ui.hassafe && sf.openMode !== 3" clickable v-close-popup
-                    @click="ui.oD(idc, 'chgCodes')">
-                  <q-item-section class="titre-md text-right">{{$t('HPchgcodes')}}</q-item-section>
-                </q-item>
-                <q-separator/>
-
-                <div class="titre-sm text-italic q-mr-lg">
-                  <span>
-                    {{$t('HPvol_1', sf.tsessions.size, { count: sf.tsessions.size })}}</span>
-                  <span class="q-ml-sm" v-if="sf.tsessions.size !== 0">
-                    {{$t('HPvol_2', [edvol(totalVol)])}}</span>
-                </div>
-                <q-item v-if="sf.tsessions.size !== 0 && sf.openMode !== 3 && myTrusting !== null" clickable v-close-popup
-                    @click="freeVol">
-                  <q-item-section class="titre-md text-right">{{$t('HPvol_3')}}</q-item-section>
-                </q-item>
               </q-list>
             </q-menu>
-          </q-btn>
+          </q-btn-->
+        </div>
+
+        <div class="q-my-sm row justify-end q-gutter-xs">
+          <div class="titre-md">{{$t('HPmanusers')}}</div>
+          <btn-cond icon="chevron_right" @ok="manUsers"/>
         </div>
 
         <q-separator class="full-width q-mt-xs q-mb-sm"/>
@@ -233,6 +225,10 @@
         </div>
 
         <div v-if="ui.hassafe">
+          <div v-if="ui.hassafe && sf.openMode < 3" class="q-my-sm row justify-end q-gutter-xs">
+            <div class="titre-md">{{$t('HPchgcodes_1')}}</div>
+            <btn-cond icon="chevron_right" @ok="ui.oD(idc, 'chgCodes')"/>
+          </div>
           <div v-if="sf.openMode === 3" class="titre-sm text-italic q-mt-xs">
             {{$t('HPmantrust')}}</div>
 
@@ -303,6 +299,9 @@
                 <q-checkbox v-if="selHasCache && !unpinme && !unwantdb" 
                   v-model="razdb" :label="$t('HPresetdb')" 
                   style="margin-left: -12px"/>
+                <q-checkbox v-if="!selHasCache && !unpinme"
+                  v-model="wantdb" :label="$t('HPwantdb')" 
+                  style="margin-left: -12px"/>
               </div>
               <div v-else>
                 <q-checkbox v-model="pinned" :label="$t('HPsetpinned')" 
@@ -339,74 +338,9 @@
     </q-card>
   </q-dialog>
 
-  <!-- Confirmation du resetAll -->
-  <q-dialog v-model="ui.dModels[idc].resetAll" persistent>
-    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-      <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
-      <div class="q-my-md titre-lg text-bold text-italic text-center">{{$t('HPskull')}}</div>
-      <div class="row full-width justify-between items-center">
-        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
-        <btn-confirm actif :confirm="resetAllLocal"/>
-      </div>
-    </q-card>
-  </q-dialog>
-
-  <!-- Suppression des IDB des sessions épinglées -->
-  <q-dialog v-model="ui.dModels[idc].delIDBS" persistent>
-    <q-card :class="sty('md')">
-      <q-toolbar class="tbp">
-        <btn-cond icon="close" :label="$t('giveup')" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title class="titre-smd">{{$t('HPunpin_1')}}</q-toolbar-title>
-        <help-button page="HPdelIDBS"/>
-      </q-toolbar>
-      <div class="q-pa-sm">
-        <div class="titre-md">{{ $t('HPunpin_2') }}</div>
-        <div class="titre-md q-ml-md">{{ $t('HPunpin_3') }}</div>
-        <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
-        <q-separator class="q-mt-xs q-mb-sm"/>
-
-        <div class="row titre-md text-italic">
-          <div class="col-1"/>
-          <div class="col-4">{{$t('HPupc_1')}}</div>
-          <div class="col-4">{{$t('HPupc_2')}}</div>
-          <div class="col-3">{{$t('HPupc_3')}}</div>
-        </div>
-        <div class="row q-mb-sm titre-md text-italic">
-          <div class="col-1"/>
-          <div class="col-11">{{$t('HPupc_4')}}</div>
-        </div>
-        <q-separator class="q-mt-xs q-mb-sm"/>
-
-        <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle">
-          <div :class="dkli(idx)" v-for="([id, s], idx) of sf.tsessions" :key="id">
-            <div class="row font-mono fs-md items-start">
-              <q-checkbox class="col-1" dense size="sm" 
-                v-model="selS.get(id).c"
-                @update:model-value="onSelS"/>
-              <div class="col-4 ellipsis q-pr-xs">{{sf.pseudoOfS(s)}}</div>
-              <div class="col-4 ellipsis q-pr-xs">{{s.app}}</div>
-              <div class="col-3">{{edvol(sf.volOfS(s))}}</div>
-            </div>
-            <div class="row font-mono fs-md items-start">
-              <div class="col-1"></div>
-              <div class="col-11">{{dhcool(s.time)}}</div>
-            </div>
-            <div v-if="s.about !== ''" class="row q-mb-sm fs-md">
-              <div class="col-1"></div>
-              <div class="col-11">{{s.about}}</div>
-            </div>
-          </div>
-        </q-scroll-area>
-
-        <q-separator class="q-mt-xs"/>
-        <div class="row items-center justify-end">
-          <div class="titre-md text-bold q-ma-none q-pa-none q-mr-md">
-            {{ $t('HPfreev', [edvol(vsel), edvol(vlib)]) }}</div>
-          <btn-confirm class="q-ma-none q-pa-none"
-            :actif="vsel !== 0" :confirm="purgeIDBS"/>
-        </div>
-      </div>
-    </q-card>
+  <!-- Gestion des users / sessions -->
+  <q-dialog v-model="ui.dModels[idc].manusers" position="left" persistent>
+    <manage-users @close="closeManusers"/>
   </q-dialog>
 
   <!-- Accorder ma confiance à ce terminal -->
@@ -483,6 +417,7 @@ import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import ChooseIt from '../components-fw/ChooseIt.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
+import ManageUsers from '../components-fw/ManageUsers.vue'
 
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
@@ -511,20 +446,10 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const opCfReset = () => {
-  ui.oD(idc, 'resetAll')
-}
-
-const resetAllLocal = async () => {
-  await sf.resetAllLocal()
-  coolBye()
-}
-
 const step = ref(1)
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedSafe = ref(null)
-const totalVol = ref(0)
 
 watch(() => ui.reopenSession, async (v) => {
   if (v) {
@@ -615,7 +540,6 @@ const openSession = async () => {
 
   mySessions.value = await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
-  totalVol.value = sf.getSessionSize()
   
   if (!ui.incognito.value) {
     await sf.loadMyLocalPrefs()
@@ -693,38 +617,17 @@ const setUntrust = async () => {
   }
 }
 
-const vlib = ref(0)
-const vsel = ref(0)
-const selS = ref() // Map<string, { c, v }>
-
-const freeVol = () => {
-  vlib.value = sf.getSessionSize()
-  vsel.value = 0
-  const x = new Map<string, Object>()
-  for (const [id, s] of sf.tsessions) 
-    x.set(id, { c: false, v: sf.volOfS(s)})
-  selS.value = x
-  ui.oD(idc, 'delIDBS')
+const manUsers = () => {
+  ui.oD(idc, 'manusers')
 }
 
-const onSelS = () => {
-  let t = 0
-  for(const [id, s] of sf.tsessions) {
-    const e = selS.value.get(id) 
-    if (e.c) t += e.v
-  }
-  vsel.value = t
-}
-
-const purgeIDBS = async () => {
-  const l = []
-  for(const [id,] of sf.tsessions) {
-    const e = selS.value.get(id) 
-    if (e.c) l.push(id)
-  }
-  await sf.purgeIDBS(l)
+const closeManusers = () => {
   ui.fD()
-  await openSession()
+  setTimeout(async () => {
+    await sf.init0()
+    if (step.value === 2)
+      await openSession()
+  }, 100)
 }
 
 const locPS = reactive({ inp: '', err: ''})

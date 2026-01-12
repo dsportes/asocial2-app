@@ -15,8 +15,6 @@ import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 
 /* TODO
-User anonyme
-Purge des IDB
 Suppression de sessions "locales" épinglées:
 - GC des profils / credentials associés dans IDBS
 */
@@ -336,44 +334,23 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const pseudoOfS = (s: TSession) : string => {
-    const t = trustings.value.get(s.userId)
-    return t ? t.pseudo : '?'
-  }
-
-  /* Retourne la taille estimée de LA session citée 
-  ou de toutes celles de l'utilisateur,
-  ou de toutes
-  */
-  const getSessionSize = (userId?: string, profId?: string) : number => {
-    let t = 0
-    for(const [,x] of tsessions.value) {
-      if (userId && x.userId !== userId) continue
-      if (profId && x.profId !== profId) continue
-      for(let i = 0; i < coeffs.length; i++) t += coeffs[i] + (x.size[i] || 0)
-    }
-    return t
-  }
-
-  const volOfS = (s: TSession) : number => {
-    return getSessionSize(s.userId, s.profId)
-  }
-
   const purgeIDBS = async (l: string[]) => {
     if (incognito.value) return
     const x = localStorage.getItem('$DBLIST') || ''
     const dbl = x.split(' ')
     for (const ids of l) {
       const s = tsessions.value.get(ids) as TSession
-      const dbName = s.dbName
-      try {
-        await Dexie.delete(dbName)
-        await sleep(300)
-        const n = dbl.indexOf(dbName)
-        if (n !== -1) dbl.splice(n, 1)
-        console.log(dbName + ' deleted')
-      } catch (e) {
-        console.log(dbName + ' deletion FAILED: ', e.message())
+      if (s) {
+        const dbName = s.dbName
+        if (dbName) try {
+          await Dexie.delete(dbName)
+          await sleep(300)
+          const n = dbl.indexOf(dbName)
+          if (n !== -1) dbl.splice(n, 1)
+          console.log(dbName + ' deleted')
+        } catch (e) {
+          console.log(dbName + ' deletion FAILED: ', e.message())
+        }
       }
       localStorage.setItem('$DBLIST', dbl.join(' '))
       await delTSession(s)
@@ -762,19 +739,25 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const delTSession = async (s: TSession) => {
+  /* Quand idx est donné au lieu de s
+  c'est une purge depuis ManageUsers, la base a déjà été supprimée
+  par purgeIDBS
+  */
+  const delTSession = async (s: TSession, idx?: string) => {
     // if (incognito.value) return
     try {
-      const id = s.idOf
+      const id = idx || s.idOf
       await db.value.tsessions.where({ id }).delete()
       tsessions.value.delete(id)
-      delIDB(s.dbName)
-      try {
-        await Dexie.delete(s.dbName)
-        await sleep(300)
-        console.log(s.dbName + ' deleted')
-      } catch (e) {
-        console.log(s.dbName + ' deletion FAILED: ', e.message())
+      if (!idx) {
+        delIDB(s.dbName)
+        try {
+          await Dexie.delete(s.dbName)
+          await sleep(300)
+          console.log(s.dbName + ' deleted')
+        } catch (e) {
+          console.log(s.dbName + ' deletion FAILED: ', e.message())
+        }
       }
     } catch (e) {
       throw EX(e, 2)
@@ -1090,6 +1073,99 @@ export const useSafeStore = defineStore('safe', () => {
   const newTrustingS = (obj) => new TrustingS(obj)
   const newTSession = (obj) => new TSession(obj)
 
+  const nbCoeffs = ref(coeffs.length)
+
+  
+  type Suas = {
+    n: number
+    ck: boolean
+    userId: string
+    app: string
+    id: string
+    about: string
+    hasCache: boolean
+    size: number[]
+    time: number
+  }
+
+  type Sua = {
+    n: number
+    ck: boolean
+    userId: string
+    app: string
+    size: number[]
+    ms: Map<string, Suas>
+  }
+
+  type Su = {
+    n: number
+    ck: boolean
+    userId: string
+    pseudo: string
+    size: number[]
+    ma: Map<string, Sua>
+  }
+
+  const synthUsers = () : [Map<string, Su>, number[]] => {
+    const nbc = coeffs.length
+    let n = 0
+    const synthU: Map<string, Su> = new Map<string, Su>()
+    const size = new Array(nbc).fill(0)
+
+    for(const [id, s] of tsessions.value) {
+      let su = synthU.get(s.userId)
+      if (!su) {
+        const t = trustings.value.get(s.userId)
+        const pseudo = t ? t.pseudo : '???'
+        n++
+        su = {
+          n,
+          userId: s.userId,
+          ck: false,
+          pseudo: t ? t.pseudo : s.userId,
+          size: new Array(nbc).fill(0),
+          ma: new Map<string, Sua>()
+        }
+        synthU.set(s.userId, su)
+      }
+      let sua = su.ma.get(s.app)
+      if (!sua) {
+        n++
+        sua = {
+          n,
+          userId: s.userId,
+          app: s.app,
+          ck: false,
+          size: new Array(nbc).fill(0),
+          ms: new Map<string, Suas>()
+        }
+        su.ma.set(s.app, sua)
+      }
+      const ms = sua.ms
+      n++
+      const suas: Suas = {
+        n,
+        userId: s.userId,
+        app: s.app,
+        id: s.idOf,
+        ck: false,
+        about: typeof s.about === 'string' ? s.about : s.idOf,
+        hasCache: s.hasCache || false,
+        // size: s.size || new Array(nbc).fill(0),
+        size: [20000, 500000],
+        time: s.time
+      }
+      sua.ms.set(s.idOf, suas)
+
+      for(let i = 0; i < nbc; i++) {
+        sua.size[i] += suas.size[i]
+        su.size[i] += suas.size[i]
+        size[i] += suas.size[i]
+      }
+    }
+    return [synthU, size]
+  }
+
   return {
     recordIDB, resetAllLocal,
     incognito, hasIDBS, init0, init1, devId, devName, 
@@ -1100,11 +1176,12 @@ export const useSafeStore = defineStore('safe', () => {
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
     profiles, getMySafeProfiles,
-    getSessionSize, pseudoOfS, volOfS, purgeIDBS,
+    purgeIDBS,
     getMySafePrefs,
     userId, keyK, openMode, auth, devices,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
-    setTrust, setUntrust, setAboutProfile
+    setTrust, setUntrust, setAboutProfile,
+    synthUsers
   }
 })
 
