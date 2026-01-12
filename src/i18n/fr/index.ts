@@ -173,6 +173,8 @@ export default {
   HPauthby_1: 'Authentifié par l\'accès principal',
   HPauthby_2: 'Authentifié par l\'accès de secours',
   HPauthby_3: 'Authentifié par code PIN',
+  HPmantrust: 'Pour gérer la "confiance" au terminal ou changer les codes d\'accès, ' +
+    ' par sécurité il faut s\'être authentifié par sa phrase secète (pas son code PIN)',
   HPtrust: 'Ce terminal N\'A PAS ma confiance...',
   HPtrust_a: 'Je veux la lui accorder',
   HPuntrust: 'Ce terminal A ma confiance...',
@@ -225,8 +227,11 @@ export default {
   HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
   HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session',
   HPnvs: '(nouvelle session "vierge" de droits d\'accès)',
-  HPresetdb: 'Effacer les données gardées localement de l\'exécution précédente',
-  HPsetpinned: 'Epingler cette nouvelle session pour garder ses données localement et accélérer ses exécutions suivantes et y accéder en mode "avion".',
+  HPresetdb: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
+  HPwantdb: 'ACTIVER le cache local des documents et fichiers de la session pour '
+  + 'accélérer ses exécutions suivantes et y accéder en mode AVION',
+  HPunwantdb: 'DESACTIVER le cache local des documents et fichiers de la session',
+  HPsetpinned: 'Epingler cette nouvelle session pour la relancer ultérieuerement dans les mêmes conditions',
   HPrazbl: `### Attention ! 
   La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
   
@@ -237,7 +242,7 @@ export default {
   HPwprfs: 'Ouvrir la session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPpref_2: '... dernières utilisées sur ce terminal',
-  HPnotpinned: '(session non épinglée)',
+  HPnotpinned: '(non épinglée)',
   HPitsme: 'C\'est bien moi',
   HPunpinme: 'Désépingler cette session',
 

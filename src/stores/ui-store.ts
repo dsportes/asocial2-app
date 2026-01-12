@@ -161,6 +161,10 @@ export const useUiStore = defineStore('ui', () => {
     setTimeout(() => { page.value = p }, 350)
   }
 
+  const exp: Ref<boolean[]> = ref([true, false, false, false])
+  const currentExp = computed(() => { for(let i = 0; i < exp.value.length; i++) if (exp.value[i]) return i}) 
+  const incognito = computed(() => currentExp.value === 3)
+  const hassafe = computed(() =>   currentExp.value < 2)
   const reopenSession = ref(0)
 
   const backToOpenSession = () => {
@@ -180,7 +184,8 @@ export const useUiStore = defineStore('ui', () => {
     exc, displayExc, hideExc,
     diag, diagResolve, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage, backToOpenSession, reopenSession
+    page, setPage, backToOpenSession, 
+    reopenSession, exp, currentExp, hassafe, incognito
   }
 })
 

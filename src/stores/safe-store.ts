@@ -128,6 +128,7 @@ class TSession {
   userId: string // id de l'utilisateur
   profId: string // id du profil
   about: string | Uint8Array // commentaire crypté de l'utilisateur sur cette session
+  hasCache?: boolean // true si a une base IDB cache de documents
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   credIds: string[] // liste des codes des credentials
@@ -747,7 +748,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const saveTSession = async (s: TSession) => {
-    if (incognito.value) return
+    // if (incognito.value) return
     try {
       const ab = s.about
       const id = s.idOf
@@ -762,7 +763,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delTSession = async (s: TSession) => {
-    if (incognito.value) return
+    // if (incognito.value) return
     try {
       const id = s.idOf
       await db.value.tsessions.where({ id }).delete()
@@ -781,7 +782,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setTSession = async (s: TSession, razdb?: boolean) => {
-    if (incognito.value) return
+    // if (incognito.value) return
     try {
       s.time = Date.now()
       await saveTSession(s)
