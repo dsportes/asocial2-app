@@ -44,7 +44,7 @@
     <div :class="ui.portrait ? 'column' : 'row justify-between'">
       <q-scroll-area :class="!ui.portrait ? 'col-6' : ''"
         :style="ui.portrait ? 'height: 50vh;padding-bottom:10px;border-bottom:5px solid grey' : 'height: 80vh;'">
-        <show-html v-if="intro" class="q-mx-sm q-my-md" :texte="intro"/>
+        <show-html v-if="intro" class="q-mx-sm q-my-md" :text="intro"/>
         <q-expansion-item v-for="c in chaps" :key="c.t" class="q-my-sm"
           group="somegroup">
           <template v-slot:header>
@@ -58,7 +58,7 @@
               </div>
             </div>
           </template>
-          <show-html class="q-mx-sm q-my-md" :texte="c.tx"/>
+          <show-html class="q-mx-sm q-my-md" :text="c.tx"/>
         </q-expansion-item>
       </q-scroll-area>
 
@@ -95,7 +95,7 @@
     <q-card :class="sty('md') + 'q-pa-sm'">
       <q-card-section>
         <div class="titre-md">{{$t('HLPrm1')}}</div>
-        <sd-nb :texte="Help.readme" class="q-my-sm rd"/>
+        <sd-nb :text="Help.readme" class="q-my-sm rd"/>
       </q-card-section>
       <q-card-actions align="center" class="q-my-sm">
         <btn-cond flat :label="$t('gotit')" size="lg" @ok="ui.fD"/>

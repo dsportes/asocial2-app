@@ -12,16 +12,14 @@
           :label="$t(session.hasNet ? 'HPnet' : 'HPplane')" />
       </div>
 
-      <div class="q-my-sm row justify-end q-gutter-xs">
-        <div class="titre-md text-italic">{{$t('HPmanusers')}}</div>
-        <btn-cond icon="chevron_right" @ok="manUsers"/>
-      </div>
+      <bar-open :bubble="$t('HPmanuinfo')" :title="$t('HPmanusers')" :fnopen="manUsers"/>
 
       <q-expansion-item v-model="ui.exp[0]" group="gr1" dense switch-toggle-side
         header-class="bg-primary" class="q-mb-xs">
         <template v-slot:header>
           <div class="q-ma-xs full-width column">
             <div class="row items-center">
+              <btn-bubble :text="$t('HPinfo_1')"/>
               <q-icon name="person" size="32px" class="q-mr-sm"/>
               <div class='titre-lg text-bold text-white'>{{$t('HPtab_0')}}</div>
             </div>
@@ -332,16 +330,21 @@
   </q-stepper>
 
   <!-- Changement des codes -->
-  <q-dialog v-model="ui.dModels[idc].chgCodes" persistent>
-    <q-card :class="sty('md')">
-      <safe-cr :onValidate="openSession"/>
+  <q-dialog v-model="ui.dModels[idc].chgCodes" maximized persistent
+      transition-show="slide-right"
+      transition-hide="slide-left">
+    <q-card class="full-width">
+      <safe-cr :class="sty('md')" :onValidate="openSession"/>
     </q-card>
   </q-dialog>
 
-  <!-- Gestion des users / sessions -->
+  <!-- Gestion des users / sessions 
   <q-dialog v-model="ui.dModels[idc].manusers" position="left" persistent>
     <manage-users @close="closeManusers"/>
   </q-dialog>
+  -->
+
+  <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
   <!-- Accorder ma confiance à ce terminal -->
   <q-dialog v-model="ui.dModels[idc].trustit" persistent>
@@ -408,6 +411,7 @@
 </template>
 
 <script setup lang="ts">
+
 // @ts-ignore
 import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -418,6 +422,8 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import ChooseIt from '../components-fw/ChooseIt.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
 import ManageUsers from '../components-fw/ManageUsers.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
+import BarOpen from '../components-fw/BarOpen.vue'
 
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
@@ -439,6 +445,8 @@ const cfg = stores.config
 
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
+
+const mu = computed(() => ui.dModels[idc].manusers)
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 

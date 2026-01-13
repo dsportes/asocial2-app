@@ -1,20 +1,22 @@
 <template>
 <div>
-  <sd-noir v-if="!stores.ui.isDark" :texte="texte"/>
-  <sd-blanc v-else :texte="texte"/>
+  <sd-noir v-if="$q.dark.isActive" :text="text"/>
+  <sd-blanc v-else :text="text"/>
 </div>
 </template>
 
 <script setup>
 import SdNoir from './SdNoir.vue'
 import SdBlanc from './SdBlanc.vue'
-import stores from '../stores/all'
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
 
 const props = defineProps({ 
-  texte: String, 
-  idx: Number // ???
+  text: String
 })
-console.log(props.texte)
+
+console.log(props.text)
 </script>
 
 <style lang="scss" scoped>

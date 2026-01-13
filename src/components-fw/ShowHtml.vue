@@ -11,7 +11,7 @@
         <q-tooltip class="bg-white text-primary">{{$t('SHed')}}</q-tooltip>
       </btn-cond>
     </div>
-    <sd-nb :style="styx" :texte="texte || ''" :idx="idx"/>
+    <sd-nb :style="styx" :text="text || ''" :idx="idx"/>
   </div>
 
   <q-dialog v-model="ui.dModels[idc].SHfs" persistent maximized
@@ -29,7 +29,7 @@
         </q-toolbar>
       </q-header>
       <q-page-container>
-        <sd-nb :texte="texte" class="q-pa-xs"/>
+        <sd-nb :text="text" class="q-pa-xs"/>
       </q-page-container>
     </q-layout>
   </q-dialog>
@@ -48,7 +48,7 @@ const ui = stores.ui
 const idc = ui.getIdc(); onUnmounted(() => ui.closeVue(idc))
 
 const props = defineProps({
-  texte: String,
+  text: String,
   idx: Number,
   maxh: String,
   zoom: Boolean,

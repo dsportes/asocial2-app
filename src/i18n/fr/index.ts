@@ -248,6 +248,33 @@ export default {
   HPmanusers: 'Gérer les utilisateurs et leurs sessions',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
+  HPinfo_1: `# Être enregistré...
+C'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
+
+### Une liste de _droits d'accès_
+Chacun est consitué d'éléments cryptographiques complexes permettant d'exécuter certaines opérations et d'accéder à certaines données.
+
+### Une liste de _sessions favorites nommées_
+Chacune reprend quelques uns des droits d'accès ci-dessus et pertinents pour la rouvrir dans les mêmes conditions.
+
+### Des jeux de **préférences d'adffichage**
+On peut choisir par confort d'appliquer un jeu ou un autre selon la session à ouvrir et le terminal sur lequel on l'ouvre.
+
+### Une liste de _terminaux de confiance_
+On peut y rouvrir une session avec un code PIN simple, sachant qu'au second essai infructeurx le terminal perd sa qualité _de confiance_. 
+Ouvrir une session en **mode AVION** (sans accès à Internet) n'est possible que depuis un terminal déclaré _de confiance_.
+
+On ouvre son **coffre fort** personnel fournissant,
+- au choix un des deux _couples identifiants_ (un _normal_, un _de secours_) formés,
+  - d'un _identidfiant_ (pseudo, etc.) de son choix,
+  - d'une _phrase secrète_ assez longue. 
+  - ces couples peuvent être changés.
+- sur un terminal **de confiance** par un **code PIN** (assez court) après avoir pointé le _pseudo_ sous lequel on est connu localement sur ce terminal.
+`,
+
+  HPmanuinfo: `# Gérer les utilisateurs ...
+Suppression sélective des utilisateurs et de leurs sessions.
+`,
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

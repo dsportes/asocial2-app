@@ -6,7 +6,7 @@
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('important')}}</q-toolbar-title>
       </q-toolbar>
       <!--div class="fs-md q-ma-sm text-center q-mt-md" v-html="ui.diag"></div-->
-      <sd-nb class="q-ma-sm q-mt-md" :texte="ui.diag"/>
+      <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag"/>
       <div class="row q-my-md q-mx-sm justify-end"> 
         <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit"/>
       </div>

@@ -184,6 +184,14 @@ export function sty (sz?: string) {
   return (d ? 'dark bsfdark pw' : 'clear bsclear pw') + sz
 }
 
+/*
+export function styp (sz?: string) {
+  const d = stores.ui.isDark
+  // if (!$q) $q = useQuasar()
+  return (d ? 'sombre bsf pw' : 'clair bsc pw') + (sz || 'md') + ' '
+}
+*/
+
 export function sleep (delai: number) {
   if (delai <= 0) return
   return new Promise((resolve: Function) => { setTimeout(() => resolve(), delai) })

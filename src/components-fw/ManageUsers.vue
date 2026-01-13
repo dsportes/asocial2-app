@@ -1,4 +1,5 @@
 <template>
+  <!--
 <q-layout container view="hHh lpR fFf" :class="sty('md')">
   <q-header elevated>
     <q-toolbar class="tbp">
@@ -13,73 +14,79 @@
   </q-header>
 
   <q-page-container>
+  -->
+<dialog-std2 v-model="mu" :title="$t('HPmanusers')">
+<template #hdr>
+  <div class="row justify-end q-px-xs q-mb-md">
+    <btn-cond flat size="lg" :label="$t('validate') + ' (' + nbdel + ')'" 
+      :disable="nbdel === 0" @ok="valcf"/>
+  </div>
+</template>
 
-  <div class="q-pa-sm">
-    <div class="titre-md">{{ $t('HPmanu_1') }}</div>
-    <div class="titre-md">{{ $t('HPunpin_2') }}</div>
-    <div class="titre-md q-ml-md">{{ $t('HPunpin_3') }}</div>
-    <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
+<template #default>
+<div class="column items-center">
+<div class="wmd">
+  <div class="titre-md">{{ $t('HPmanu_1') }}</div>
+  <div class="titre-md">{{ $t('HPunpin_2') }}</div>
+  <div class="titre-md q-ml-md">{{ $t('HPunpin_3') }}</div>
+  <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
 
-    <q-separator class="q-mt-xs q-mb-sm"/>
+  <q-separator class="q-mt-xs q-mb-sm"/>
 
-    <div class="colum wsm justify-center">
-      <div class="row titre-md text-italic q-my-sm">
-        <div class="col-6 text-center">{{$t('HPsize_1')}}</div>
-        <div class="col-6 text-center">{{$t('HPsize_2')}}</div>
-      </div>
-      <div v-for="i in nbc" :key="i" class="row font-mono">
-        <div class="col-6 text-center">{{edvol(size[i-1])}}</div>
-        <div class="col-6 text-center">{{edvol(delSize[i-1])}}</div>
-      </div>
+  <div class="colum wsm justify-center">
+    <div class="row titre-md text-italic q-my-sm">
+      <div class="col-6 text-center">{{$t('HPsize_1')}}</div>
+      <div class="col-6 text-center">{{$t('HPsize_2')}}</div>
     </div>
-    <q-separator class="q-mt-xs q-mb-sm"/>
+    <div v-for="i in nbc" :key="i" class="row font-mono">
+      <div class="col-6 text-center">{{edvol(size[i-1])}}</div>
+      <div class="col-6 text-center">{{edvol(delSize[i-1])}}</div>
+    </div>
+  </div>
 
-    <!--q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"-->
-    <div v-for="[id, u] of synthU" :key="u.id">
-      <div class="row font-mono fs-md items-start bg-primary q-mt-md">
-        <div class="col-9 q-pr-xs">{{u.pseudo}}</div>
-        <div class="col-2 column justify-center">
-          <div v-for="i in nbc">{{edvol(u.size[i-1])}}</div>
-        </div>
-        <q-checkbox class="col-1" dense size="md" v-model="u.ck"
-          @click="cku(u)"/>
+  <q-separator class="q-mt-xs q-mb-sm"/>
+
+  <div v-for="[id, u] of synthU" :key="u.id">
+    <div class="row font-mono fs-md items-start bg-primary q-mt-md">
+      <div class="col-9 q-pr-xs">{{u.pseudo}}</div>
+      <div class="col-2 column justify-center">
+        <div v-for="i in nbc">{{edvol(u.size[i-1])}}</div>
       </div>
-      <div v-for="[id, a] of u.ma" :key="a.app">
-        <div class="row font-mono fs-md items-start bg-secondary q-mt-sm">
-          <div class="col-1"></div>
-          <div class="col-8 q-pr-xs">{{a.app}}</div>
+      <q-checkbox class="col-1" dense size="md" v-model="u.ck"
+        @click="cku(u)"/>
+    </div>
+    <div v-for="[id, a] of u.ma" :key="a.app">
+      <div class="row font-mono fs-md items-start bg-secondary q-mt-sm">
+        <div class="col-1"></div>
+        <div class="col-8 q-pr-xs">{{a.app}}</div>
+        <div class="col-2 column justify-center">
+          <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
+        </div>
+        <q-checkbox class="col-1" dense size="md" v-model="a.ck"
+          @click="cka(a)"/>
+      </div>
+      <div v-for="[id, s] of a.ms" :key="s.id">
+        <div class="row font-mono fs-md items-start q-my-xs">
+          <div class="col-2"></div>
+          <div class="col-7 q-pr-xs column">
+            <div>{{s.about}}</div>
+            <div class="q-ml-lg text-italic">{{dhcool(s.time)}}</div>
+          </div>
           <div class="col-2 column justify-center">
             <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
           </div>
-          <q-checkbox class="col-1" dense size="md" v-model="a.ck"
-            @click="cka(a)"/>
-        </div>
-        <div v-for="[id, s] of a.ms" :key="s.id">
-          <div class="row font-mono fs-md items-start q-my-xs">
-            <div class="col-2"></div>
-            <div class="col-7 q-pr-xs column">
-              <div>{{s.about}}</div>
-              <div class="q-ml-lg text-italic">{{dhcool(s.time)}}</div>
-            </div>
-            <div class="col-2 column justify-center">
-              <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
-            </div>
-            <q-checkbox class="col-1" dense size="md" v-model="s.ck"
-              @click="cks(s)"/>
-          </div>
+          <q-checkbox class="col-1" dense size="md" v-model="s.ck"
+            @click="cks(s)"/>
         </div>
       </div>
     </div>
-    <!--/q-scroll-area -->
   </div>
-</q-page-container>
 
   <!-- Confirmation de validation -->
   <q-dialog v-model="ui.dModels[idc].valcf" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-
-      <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
-      <div class="q-my-sm titre-lg text-bold text-center">
+    <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
+    <div class="q-my-sm titre-lg text-bold text-center">
         {{$t('HPskull_0', [sDel.size, tDel.size])}}
       </div>
       <div class="q-my-sm titre-md text-bold text-italic text-center">
@@ -104,12 +111,16 @@
     </q-card>
   </q-dialog>
 
-</q-layout>
+</div>
+</div>
+</template>
+</dialog-std2>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
@@ -123,6 +134,12 @@ const sf = stores.safe
 
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
+
+const props = defineProps({
+  idc: String
+})
+
+const mu = computed(() => ui.dModels[props.idc].manusers)
 
 const emit = defineEmits(['close'])
 
