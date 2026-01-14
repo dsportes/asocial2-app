@@ -1,48 +1,46 @@
-<template>
-<!-- Création d'un safe / Changement des codes -->
-<div>
-  <q-toolbar v-if="!createMode" class="tbp">
-    <btn-cond v-if="!createMode" icon="close" color="warning" @ok="ui.fD"/>
-    <q-toolbar-title class="titre-smd">{{$t('HPenreg_' + (createMode ? '1' : '2'))}}</q-toolbar-title>
-    <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
+<template> <!-- Création d'un safe / Changement des codes -->
+<dialog-std2 v-model="sc" :title="$t('HPenreg_' + (createMode ? '1' : '2'))">
+<template #hdr>
+  <div class="row justify-end q-px-xs q-mb-md">
+    <btn-cond flat size="lg" icon="check" :label="$t('validate')" 
       :disable="diag !== ''" @ok="createSafe"/>
-    <help-button :page="createMode ? 'createSafe' : 'updSafeCodes'"/>
-  </q-toolbar>
-
-  <div v-else class="row q-my-sm justify-end items-center">
-    <btn-cond class="q-mr-xs" icon="check" :label="$t('validate')"
-      :disable="diag !== ''" @ok="createSafe"/>
-    <help-button :page="createMode ? 'createSafe' : 'updSafeCodes'"/>
   </div>
+</template>
 
-  <div class="q-pa-sm">
-    <div v-if="diag !== ''" class="diag">{{diag}}</div>
-    <div class="row items-center q-my-sm">
-      <div class="titre-md">{{$t('HPtrig')}}</div>
-      <input-ps class="q-ml-sm" v-model="trig"
-        :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
-    </div>
-    <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
-      class='q-mb-xs'
-      header-class="tbs"
-      switch-toggle-side>
-      <template v-slot:header>
-        <div class="column">
-          <div class="row q-gutter-sm">
-            <q-icon size="md" :name="icons[errors[x - 1]]"/>
-            <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
-          </div>
+<template #default>
+<div class="column items-center">
+<div class="wmd">
+
+  <div v-if="diag !== ''" class="diag">{{diag}}</div>
+  <div class="row items-center q-my-sm">
+    <div class="titre-md">{{$t('HPtrig')}}</div>
+    <input-ps class="q-ml-sm" v-model="trig"
+      :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+  </div>
+  <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
+    class='q-mb-xs'
+    header-class="tbs"
+    switch-toggle-side>
+    <template v-slot:header>
+      <div class="column">
+        <div class="row q-gutter-sm">
+          <q-icon size="md" :name="icons[errors[x - 1]]"/>
+          <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
         </div>
-      </template>
-      <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
-    </q-expansion-item>
-  </div>
+      </div>
+    </template>
+    <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
+  </q-expansion-item>
 </div>
+</div>
+</template>
+</dialog-std2>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, reactive } from 'vue'
+import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
@@ -54,8 +52,11 @@ const icons = ['check', 'question_mark', 'warning']
 
 const props = defineProps ({
   createMode: Boolean,
-  onValidate: Function
+  onValidate: Function,
+  idc: String
 })
+
+const sc = computed(() => ui.dModels[props.idc].createsafe)
 
 const sf = stores.safe
 const ui = stores.ui
@@ -111,7 +112,7 @@ const createSafe = async () => {
     await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
   await ui.diagDisplay($t('HPcsret_' + (props.createMode ? '0' : '1') + status))
   if (status === 0) {
-    if (!props.createMode) ui.fD()
+    ui.fD()
     await props.onValidate()
   }
 }

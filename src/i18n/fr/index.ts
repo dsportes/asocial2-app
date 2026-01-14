@@ -106,39 +106,38 @@ export default {
 
   HPauthentif: 'Authentification',
   HPsession: 'Session à ouvrir',
-  HPtab_0: 'Je SUIS enregistré',
-  HPtab_0c: 'J\'ai un "coffre fort" à mon nom, crypté et sécurisé en central',
-  HPtab_1: 'Je M\'ENREGISTRE',
-  HPtab_1c: 'Je créé un "coffre fort" à mon nom, crypté et sécurisé en central',
-  HPtab_2: 'PAS enregistré, mais CONNU sur ce terminal',
-  HPtab_2c: 'J\'y ai un espace de données à mon nom, crypté et sécurisé',
-  HPtab_3: 'NI enregistré, NI CONNU sur ce terminal',
-  HPtab_3c: 'Je ne lis ni n\'écris AUCUNE donnée sur ce terminal',
+
+  HPnini_1: 'NI enregistré, NI CONNU LOCALEMENT',
+  HPnini_2: `# NI enregistré, NI CONNU LOCALEMENT
+bla bla
+`,
+  HPnini_1c: 'Ouverture en mode CALCULETTE',
+  HPnini_2c: `# Ouverture en mode CALCULETTE
+bla bla
+`,
+  HPnini_1v: 'Ouverture d\'une session sans droits d\'accès',
+  HPnini_2v: `# Ouverture d'une session sans droits d'accès
+bla bla
+`,
+
   HPsvoid_1: 'Une nouvelle session peut être ouverte: elle n\'aura aucun "droits d\'accès" initialisés ' +
     ' et une préférence d\'affichage par défaut. Aucune trace de son exécution ne sera détenue sur ce terminal.',
   HPsvoid_2: 'Elle sera EN MODE AVION, sans accès à des données externes (comme une "calculette").',
-  // HPnosession: 'Une nouvelle session (sans nom) peut être ouverte EN MODE AVION et sans accès à aucune données (comme une "calculette").',
   
   
   HPauth_1: 'Je m\'authentifie par ma phrase secrète ...',
   HPauth_2: 'Soit, je m\'authentifie par ma phrase secrète ...',
   HPauth_3: 'Je m\'enregistre par ma phrase secrète ...',
-  HPiam: 'Je suis ...',
-  HPseluser_1: 'Soit, je m\'authentifie par MON code PIN ...',
-  HPseluser_2: 'Utilisateurs ayant accordé leur confiance dans ce terminal',
-  HPnoreg: 'Je ne suis pas encore enregistré, je le fais maintenant.',
+  HPauthbypin_1: 'Authentification par code PIN de:',
+  HPauthstrong_1: 'Authentification "forte"',
+  HPsaisirpin: 'Saisir votre code PIN',
   HPchgcodes_1: 'Je veux changer mes codes d\'accès',
-  HPnet: 'Accès à Internet',
-  HPplane: 'Mode AVION: pas d\'accès à Internet)',
-  HPincognito_1: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
-  HPincognito_2: 'Accès sécurisé aux données stockées sur ce terminal',
-  HPnbUt: 'Personne n\'a déclaré avoir confiance dans ce terminal | '
-    + 'a déclaré avoir confiance dans ce terminal | '
-    + 'ont déclaré avoir confiance dans ce terminal',
-  HPnban: 'Aucun utilisateur anonyme n\'a de session déclarée dans ce terminal | '
-    + 'Un utilisateur anonyme a une session déclarée dans ce terminal | '
-    + '{count} utilisateurs ont une session déclarée dans ce terminal',
-  // HPnoplane: 'Aucune session ne peut rouverte en mode AVION.',
+  HPnet_1: 'Accès à Internet',
+  HPnet_2: 'Mode AVION: pas d\'accès à Internet',
+  HPincognito_1: 'Accès sécurisé aux données stockées sur ce terminal',
+  HPincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
+  HPterminal: 'Ce terminal a été nommé ',
+
   HPenreg_1: 'Enregistrement',
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',
@@ -218,8 +217,10 @@ export default {
 
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
-  HP3ps: 'Votre phrase secrète sur ce terminal',
-  HP3v1: 'C\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.',
+  HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
+  HP3v1: 'Si c\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.' +
+    'Sinon corriger votre phrase secrète.',
+  HPcorrectps: 'Correction',
   HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
   HP3v2_1: '- Si c\'est vous, ajuster éventuellemnt vos "initiales / trigramme".',
   HP3v2_2: '- Si ce n\'est PAS vous, corriger votre phrase secrète.',
@@ -248,11 +249,19 @@ export default {
   HPmanusers: 'Gérer les utilisateurs et leurs sessions',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
-  HPinfo_1: `# Être enregistré...
-C'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
+
+  HPregist_0: 'PAS (encore) ENREGISTRÉ ...',
+  HPregist_3: 'Je le fais maintenant',
+  HPregist_5: `# Je ne peux pas m'enregistrer ...
+- soit il n'y a pas de réseau,
+- soit je suis en mode INCOGNITO (pas d'accès aux données du terminal).
+`,
+  HPregist_1: 'Je suis ENREGISTRÉ ...',
+  HPregist_2: `# Être ENREGISTRÉ ...
+c'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
 
 ### Une liste de _droits d'accès_
-Chacun est consitué d'éléments cryptographiques complexes permettant d'exécuter certaines opérations et d'accéder à certaines données.
+Chacun est consitué d'éléments cryptographiques complexes autorisant l'exécution de certaines opérations et d'accès à certaines données.
 
 ### Une liste de _sessions favorites nommées_
 Chacune reprend quelques uns des droits d'accès ci-dessus et pertinents pour la rouvrir dans les mêmes conditions.
@@ -261,20 +270,86 @@ Chacune reprend quelques uns des droits d'accès ci-dessus et pertinents pour la
 On peut choisir par confort d'appliquer un jeu ou un autre selon la session à ouvrir et le terminal sur lequel on l'ouvre.
 
 ### Une liste de _terminaux de confiance_
-On peut y rouvrir une session avec un code PIN simple, sachant qu'au second essai infructeurx le terminal perd sa qualité _de confiance_. 
+On peut y rouvrir une session avec un code PIN simple.
 Ouvrir une session en **mode AVION** (sans accès à Internet) n'est possible que depuis un terminal déclaré _de confiance_.
+`,
+  HPlocal_1: 'PAS enregistré MAIS CONNU LOCALEMENT',
+  HPauthlocal_0: 'Première visite ?',
+  HPauthlocal_1: 'Validation: est-ce moi ?',
+  HPlocal_2: `# Utilisateur CONNU LOCALEMENT
+bla bla
+`,
 
+/*
 On ouvre son **coffre fort** personnel fournissant,
 - au choix un des deux _couples identifiants_ (un _normal_, un _de secours_) formés,
   - d'un _identidfiant_ (pseudo, etc.) de son choix,
   - d'une _phrase secrète_ assez longue. 
   - ces couples peuvent être changés.
 - sur un terminal **de confiance** par un **code PIN** (assez court) après avoir pointé le _pseudo_ sous lequel on est connu localement sur ce terminal.
-`,
+*/
 
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
 `,
+
+  HPmode_1: `# Ouvrir une session AVEC Internet ...
+C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
+
+# Ouvrir une session SANS Internet ...
+Deux possibilités:
+
+### (1) Rouvrir en **mode AVION** une session précédemment _ÉPINGLÉE_
+Cette session ayant déjà été ouverte sur ce terminal et ayant été _épinglée_ dispose d'un **cache** local de documents et de fichiers.
+La rouvrir en mode _AVION_ lui donne accès en lecture à ceux-ci, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
+
+### (2) Mode _CALCULETTE_
+Une session qui n'a pas été _épinglée_ précédemment peut être ouverte sans accès Internet mais sans connaissance d'aucun document ni fichier de la base centrale. 
+Elle travaille en mode _calculette_: les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
+`,
+
+  HPmode_2: `# Ouvrir une session en accédant aux données stockées localement ...
+C'est le mode _normal et optimal_:
+- **les utilisateurs _enregistrés_** ayant déclaré le terminal **de CONFIANCE**,
+  - _peuvent_ s'authentifier par un simple code PIN,
+  - _peuvent_ **ÉPINGLER** leurs sessions ce qui accélère leur rouverture et permet d'y accéder en **mode AVION**.
+- **les utilisateurs _NON enregistrés_** peuvent **S'IDENTIFIER LOCALEMENT**: 
+  - ils peuvent alors **ÉPINGLER** des sessions afin de les rouvrir ultérieurement dans les mêmes conditions (_droits d'accès_ et _préférences d'affichage_).
+
+# Ouvrir une session INCOGNITO ...
+En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
+
+### (1) Si l'utilisateur est ENREGISTRÉ ...
+- s'il a des sessions _favorites_ il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'accès_ attachés à cette session.
+- il peut ouvrir aussi des sessions _vierges de tous droits_ et les acquérir en cours de session en fonction de ses besoins.
+
+### (2) Sinon ...
+L'application est ouverte en **Mode _CALCULETTE_**, sans avoir connaissance d'aucun document ni fichier de l'application: les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
+Toutefois l'utilisateur peut acquérir des droits d'accès au cours de sa session (par exemple en les _important_ depuis un fichier personnel) et accéder aux données correspondantes de la base centrale.
+`,
+
+  HPmode_3: `# Ouvrir une session SANS Internet et INCOGNITO ...
+En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
+
+Les sessions sont ouvertes en **Mode _CALCULETTE_**, sans avoir connaissance d'aucun document ni fichier de l'application.
+Les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
+`,
+
+  HPauthbypin_2: `# Authentification par code PIN
+Si vous avez déclaré ce terminal **de confiance**, vous _pouvez_ vous authentifier en donnant simplement votre code PIN.
+
+Cliquer sur le psedo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance. 
+S'il n'y est pas, c'est que la confiance a été retiré à ce terminal.
+
+> La seconde saisie consécutive erronnée d'un code PIN retire la confiance dans ce terminal.
+
+> Vous _pouvez_ aussi vous authentifier **fortement**. Si vous avez l'intention de gérer ensuite la confiance dans ce terminal ou changer vos codes d'authentification forte, c'est même requis.
+`,
+
+  HPauthstrong_2: `# Authentification "forte"
+bla bla
+`,
+
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

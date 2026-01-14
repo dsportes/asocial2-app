@@ -1,6 +1,6 @@
 <template>
   <div class="column full-width">
-    <q-toolbar class="full-width tbs" dense>
+    <q-toolbar v-if="title" class="full-width tbs" dense>
       <q-toolbar-title class="titre-md text-italic">{{title}}</q-toolbar-title>
       <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
     </q-toolbar>

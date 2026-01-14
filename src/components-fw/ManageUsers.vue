@@ -1,20 +1,4 @@
 <template>
-  <!--
-<q-layout container view="hHh lpR fFf" :class="sty('md')">
-  <q-header elevated>
-    <q-toolbar class="tbp">
-      <btn-cond icon="close" :label="$t('giveup')" color="warning" @ok="ui.fD"/>
-      <q-toolbar-title class="titre-smd">{{$t('HPmanusers')}}</q-toolbar-title>
-      <btn-cond :label="$t('validate') + ' (' + nbdel + ')'" 
-        :disable="nbdel === 0" @ok="valcf"/>
-      <btn-cond class="q-ml-xs round" icon="local_police" 
-        size="md" color="negative" @ok="opCfReset"/>
-      <help-button page="HPdelIDBS"/>
-    </q-toolbar>
-  </q-header>
-
-  <q-page-container>
-  -->
 <dialog-std2 v-model="mu" :title="$t('HPmanusers')">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">

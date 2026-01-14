@@ -294,7 +294,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setHeader = async () => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.header.put({
         id: '1',
@@ -314,7 +314,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setTrusting = async (t: Trusting) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       const obj = t.toObj
       await db.value.trustings.put({ id: t.userId, bin: encode(obj)})
@@ -325,7 +325,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delTrusting = async (id: string) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.trustings.where({id}).delete()
       trustings.value.delete(id)
@@ -335,7 +335,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const purgeIDBS = async (l: string[]) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
     const dbl = x.split(' ')
     for (const ids of l) {
@@ -358,7 +358,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const recordIDB = (dbName: string) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
     const dbl = x.split(' ')
     const n = dbl.indexOf(dbName)
@@ -367,7 +367,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
   
   const delIDB = (dbName: string) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
     const dbl = x.split(' ')
     const n = dbl.indexOf(dbName)
@@ -381,6 +381,7 @@ export const useSafeStore = defineStore('safe', () => {
     aux autres applications que celle qui s'exécute.
   **********************************************************************/
   const userId = ref(null)
+  const isRegistered = (() => userId.value && userId.value.startsWith('$'))
   const keyK = ref(null)
   /* sh1p sh1r ont été donnés:
   - soit sur $createSafe $UpdSafeCodes (auth longue)
@@ -392,8 +393,6 @@ export const useSafeStore = defineStore('safe', () => {
   const sh1r = ref(null)
 
   const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
-
-  const shK = computed(async () => await Crypt.strongHash(keyK.value, false, true))
 
   /* Section "auth" */
   type Auth = {
@@ -641,7 +640,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const savePref = async (tpref: TPref) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.tprefs.put({ id: tpref.idOf, bin: encode(tpref)})
     } catch (e) {
@@ -650,7 +649,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const deletePref = async (tpref: TPref) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.tprefs.where({ id: tpref.idOf }).delete()
     } catch (e) {
@@ -707,7 +706,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const saveCred = async (tcred: TCred) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.tprefs.put({ id: tcred.credId, bin: encode(tcred)})
     } catch (e) {
@@ -716,7 +715,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const deleteCred = async (credId: string) => {
-    if (incognito.value) return
+    if (stores.session.incognito) return
     try {
       await db.value.tcreds.where({ id: credId }).delete()
     } catch (e) {
@@ -725,7 +724,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const saveTSession = async (s: TSession) => {
-    // if (incognito.value) return
     try {
       const ab = s.about
       const id = s.idOf
@@ -744,7 +742,6 @@ export const useSafeStore = defineStore('safe', () => {
   par purgeIDBS
   */
   const delTSession = async (s: TSession, idx?: string) => {
-    // if (incognito.value) return
     try {
       const id = idx || s.idOf
       await db.value.tsessions.where({ id }).delete()
@@ -765,7 +762,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setTSession = async (s: TSession, razdb?: boolean) => {
-    // if (incognito.value) return
     try {
       s.time = Date.now()
       await saveTSession(s)
@@ -1178,7 +1174,7 @@ export const useSafeStore = defineStore('safe', () => {
     profiles, getMySafeProfiles,
     purgeIDBS,
     getMySafePrefs,
-    userId, keyK, openMode, auth, devices,
+    userId, isRegistered, keyK, openMode, auth, devices,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile,
     synthUsers

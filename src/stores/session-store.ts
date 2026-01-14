@@ -133,7 +133,9 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const hasNet = ref(true)
+  const incognito = ref(false)
+  const noNet = ref(false)
+  const hasNet = computed(() => !noNet.value)
   const dbName = ref('')
   const setDbName = (name: string) => { dbName.value = name }
   const hasIDB = computed(() => dbName.value !== '')
@@ -154,7 +156,7 @@ export const useSessionStore = defineStore('session', () => {
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase, 
-    hasIDB, hasNet, startContext, setStartContext
+    hasIDB, hasNet, noNet, incognito, startContext, setStartContext
     // focus, getFocus, lostFocus, closingApp
   }
 })
