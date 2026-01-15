@@ -2,23 +2,30 @@
 <q-layout view="hHh lpR fFf">
   <q-header>
     <q-toolbar v-if="ui.page==='home'" class="full-width tbp">
+      <btn-cond class="q-ml-xs" :label="config.K.APPNAME" 
+        no-caps flat color="none"/>
+      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
+        <q-tooltip>{{sessionInfo}}</q-tooltip>
+      </btn-cond>
+      <btn-cond v-if="sf.step === 2" icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
+        color="warning" @ok="sf.backToAuth"/>
+
+      <q-toolbar-title class="titre-md q-mx-md">
+        {{sf.step === 1 ? $t('HPauthby_9') : $t('HPauthby_' + sf.openMode, [sf.userName])}}
+      </q-toolbar-title>
+
+      <settings-button class="q-ml-sm"/>
+      <help-button class="q-ml-xs" page="DOCpg"/>
+    </q-toolbar>
+
+    <q-toolbar v-else class="full-width tbp">
       <q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
         style="height: 30px; max-width: 30px;"/>
       <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{sessionInfo}}</q-tooltip>
       </btn-cond>
-  
-      <q-toolbar-title class="titre-md q-mx-md">{{$t('home', [config.K.APPNAME])}}</q-toolbar-title>
+      <btn-cond class="q-ml-xs" icon="home" color="warning" @ok="backToOpenSession"/>
 
-      <settings-button class="q-ml-sm"/>
-
-      <help-button class="q-ml-xs" page="DOCpg"/>
-    </q-toolbar>
-    <q-toolbar v-else class="full-width tbp">
-      <q-img :src="incognito" class="bg-primary" style="height: 30px; max-width: 30px;"/>
-      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
-        <q-tooltip>{{sessionInfo}}</q-tooltip>
-      </btn-cond>
 
       <btn-cond label="Home" class="q-ml-xs" @ok="ui.setPage('home')"/>
 
@@ -42,7 +49,7 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'appHome'">
-        <btn-cond label="Open session" @ok="ui.backToOpenSession"/>
+
         <div class="font-mono q-pa-sm">{{echo}}</div>
         <q-file class="full-width q-ma-xs" filled v-model="fileList"
           :label="$t('pickfile')" max-file-size="50000000" max-file="1">
@@ -103,6 +110,7 @@ const config = stores.config
 const session = stores.session
 const dataSt = stores.data
 const ui = stores.ui
+const sf = stores.safe
 
 const $t = useI18n().t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
@@ -119,6 +127,12 @@ ui.setScreenWH($q.screen.width, $q.screen.height)
 watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
+
+const backToOpenSession = async () => {
+  const ok = await ui.diagDisplay($t('HPbackopen'), true)
+  if (ok) 
+    ui.backToOpenSession()
+}
 
 const wpReady = computed(() => 
   session.permState === 'granted' && session.registration && session.sessionId)

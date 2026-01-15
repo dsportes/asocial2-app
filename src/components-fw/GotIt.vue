@@ -7,14 +7,20 @@
       </q-toolbar>
       <!--div class="fs-md q-ma-sm text-center q-mt-md" v-html="ui.diag"></div-->
       <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag"/>
-      <div class="row q-my-md q-mx-sm justify-end"> 
-        <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit"/>
+      <div v-if="ui.diagConfirm" class="row q-my-md q-mx-sm justify-between">
+        <btn-cond flat icon="close" color="warning"
+          :label="$t('ireject')" @ok="gotit(false)"/>
+        <btn-cond flat icon="check" :label="$t('iconfirm')"
+          @ok="gotit(true)"/>
+      </div>
+      <div v-else class="row q-my-md q-mx-sm justify-end"> 
+        <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit(true)"/>
       </div>
     </q-card>
   </q-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // import { ref, computed } from 'vue'
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
@@ -22,7 +28,12 @@ import BtnCond from './BtnCond.vue'
 import SdNb from './SdNb.vue'
 
 const ui = stores.ui
-const gotit = () => { ui.fD(); const f = ui.diagResolve; if (f) f()} 
+
+const gotit = (b: boolean) => { 
+  ui.fD()
+  const f = ui.diagResolve
+  if (f) f(b)
+} 
 
 </script>
 

@@ -111,9 +111,11 @@ export const useUiStore = defineStore('ui', () => {
 
   // Gestion d'un dialogue avec confirmation
   const diag = ref(null)
+  const diagConfirm = ref()
   const diagResolve = ref(null)
-  async function diagDisplay (text: string) {
+  async function diagDisplay (text: string, confirm?: boolean) {
     return new Promise((resolve) => {
+      diagConfirm.value = confirm || false
       diag.value = text
       diagResolve.value = resolve
       oD('0', 'diag')
@@ -178,7 +180,7 @@ export const useUiStore = defineStore('ui', () => {
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,
-    diag, diagResolve, diagDisplay,
+    diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession, 
     reopenSession

@@ -2,7 +2,7 @@
 <div class="column items-center">
 <div :class="sty('md')">
 
-  <div v-if="step == 1" class="q-pa-sm">
+  <div v-if="sf.step == 1" class="q-pa-sm">
     <!-- Entête : accès Internet, incognito, nom du terminal -->
     <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
       <div class="row">
@@ -100,15 +100,7 @@
       :fnopen="validateSessionV" size="sm"/>
   </div>
 
-  <div v-if="step === 2" class="q-pa-sm">
-    <div class="full-width row justify-between items-center">
-      <btn-cond icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
-        color="warning" @ok="backToAuth"/>
-      <div class="titre-sm text-italic">{{$t('HPauthby_' + sf.openMode)}}</div>
-    </div>
-
-    <q-separator class="full-width q-mt-xs q-mb-sm"/>
-
+  <div v-if="sf.step === 2" class="q-pa-sm">
     <div v-if="!sf.isRegistered">
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
       <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
@@ -451,7 +443,6 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const step = ref(1)
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedUser = ref(null)
@@ -462,6 +453,13 @@ watch(() => ui.reopenSession, async (v) => {
     if (session.hasNet && sf.isRegistered) 
       await sf.reloadSafe()
     if (!session.incognito) await openSession()
+  }
+})
+
+watch(() => sf.step, (s) =>{
+  if (s === 1) {
+    pin.inp = ''
+    locPS.inp = ''
   }
 })
 
@@ -480,13 +478,6 @@ const selectUser = (u) => {
 
 const openStrongAuth = () => {
   ui.oD(idc, 'strongauthdial')
-}
-
-const backToAuth = () => {
-  step.value = 1
-  pin.inp = ''
-  locPS.inp = ''
-  sf.keyK = null
 }
 
 const authPS = async (args) => {
@@ -557,7 +548,7 @@ const openSession = async () => {
 
   selectedSession.value = null
   selectedProfile.value = null
-  step.value = 2
+  sf.step = 2
 }
 
 const dup = computed(() => {
@@ -628,7 +619,7 @@ const closeManusers = () => {
   ui.fD()
   setTimeout(async () => {
     await sf.init0()
-    if (step.value === 2)
+    if (sf.step === 2)
       await openSession()
   }, 100)
 }

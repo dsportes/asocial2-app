@@ -10,6 +10,8 @@ export default {
   later: 'Plus tard',
   important: 'Information importante',
   gotit: 'J\'ai lu',
+  iconfirm: 'Je confirme',
+  ireject: 'Je refuse',
   giveup: 'Je renonce',
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
@@ -104,9 +106,12 @@ export default {
   PSsn: 'A propos de la session ... :',
   PSsnh: 'Accès à mon compte ...',
 
-  HPauthentif: 'Authentification',
-  HPsession: 'Session à ouvrir',
+  HPbackopen: `**Voulez-vous terminer cette session et retourner au choix d'une autre à ouvrir ?**
 
+  OUI: _Je confirme_
+  NON: _Je refuse_
+`,
+  HPauthentif: 'Authentification',
   HPnini_1: 'NI enregistré, NI CONNU LOCALEMENT',
   HPnini_2: `# NI enregistré, NI CONNU LOCALEMENT
 bla bla
@@ -169,9 +174,10 @@ bla bla
   HPopens_1: 'Ouverture d\'une session',
   HPopens_2: 'ouvrir',
   HPauthby_0: 'Utilisateur anonyme',
-  HPauthby_1: 'Authentifié par l\'accès principal',
-  HPauthby_2: 'Authentifié par l\'accès de secours',
-  HPauthby_3: 'Authentifié par code PIN',
+  HPauthby_1: '{0} [code principal]',
+  HPauthby_2: '{0} [code de secours]',
+  HPauthby_3: '{0} [code PIN]',
+  HPauthby_9: 'Phase d\'authentification',
   HPmantrust: 'Pour gérer la "confiance" au terminal ou changer les codes d\'accès, ' +
     ' par sécurité il faut s\'être authentifié par sa phrase secète (pas son code PIN)',
   HPtrust: 'Ce terminal N\'A PAS ma confiance...',

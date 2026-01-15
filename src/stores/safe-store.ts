@@ -83,10 +83,18 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 /* Coefficients donnant le volume réel depuis le volume utile
-pour chaque type de volume (documents / fichiers)
-*/
+pour chaque type de volume (documents / fichiers) */
 const coeffs = [2, 1.3]
 
+const STORES = {
+  header: 'id', // singleton: id = '1'
+  trustings: 'id', 
+  tsessions: 'id',
+  tprefs: 'id', // id: prefId - bin: cryptage par K du user de son pref ([code, obj])
+  tcreds: 'id' // id: credId - bin: contenu de l'objet _droit_ crypté par la cléK locale.
+}
+
+/* Classes et types */
 class Trusting {
   userId: string
   pseudo: string
@@ -196,34 +204,16 @@ type Device = {
   nbe: number
 }
 
-const STORES = {
-  header: 'id', // singleton: id = '1'
-  trustings: 'id', 
-  tsessions: 'id',
-  tprefs: 'id', // id: prefId - bin: cryptage par K du user de son pref ([code, obj])
-  tcreds: 'id' // id: credId - bin: contenu de l'objet _droit_ crypté par la cléK locale.
-}
-
 function EX (e: Error, n: number) {
   const ex = new AppExc({code: 1200 + n, label: 'IDBS error', args: [e.message] })
   if (e && e.stack) ex.stack = e.stack
   return ex
 }
 
-async function resetAllLocal () {
-  await Dexie.delete('safe')
-  const x = localStorage.getItem('$DBLIST') || ''
-  const dbl = x.split(' ')
-  for (const dbName of dbl)
-    if (dbName) await Dexie.delete(dbName)
-  localStorage.removeItem('$DBLIST')
-}
-
 export const useSafeStore = defineStore('safe', () => {
   const db = ref(null) // IDB safe locale
-  const incognito = ref(false)
-
   const hasIDBS = computed(() => db.value !== null)
+  const incognito = ref(false)
 
   // Safe IDB : image en mémoire
   const devId = ref('') // Depuis IDB Header
@@ -380,6 +370,14 @@ export const useSafeStore = defineStore('safe', () => {
   - permet un affichage complet, y compris pour les données relatives
     aux autres applications que celle qui s'exécute.
   **********************************************************************/
+  const step = ref(1)
+
+  const backToAuth = () => {
+    step.value = 1
+    userId.value = null
+    keyK.value = null
+  }
+
   const userId = ref(null)
   const isRegistered = (() => userId.value && userId.value.startsWith('$'))
   const keyK = ref(null)
@@ -393,6 +391,12 @@ export const useSafeStore = defineStore('safe', () => {
   const sh1r = ref(null)
 
   const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
+
+  const userName = computed(() => {
+    if (!userId.value) return '?'
+    const t = trustings.value.get(userId.value)
+    return t ? t.pseudo : '?'
+  })
 
   /* Section "auth" */
   type Auth = {
@@ -1066,12 +1070,10 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const newTrustingL = (obj) => new TrustingL(obj)
-  const newTrustingS = (obj) => new TrustingS(obj)
   const newTSession = (obj) => new TSession(obj)
 
   const nbCoeffs = ref(coeffs.length)
 
-  
   type Suas = {
     n: number
     ck: boolean
@@ -1162,19 +1164,31 @@ export const useSafeStore = defineStore('safe', () => {
     return [synthU, size]
   }
 
+  const resetAllLocal = async () => {
+    await Dexie.delete('safe')
+    const x = localStorage.getItem('$DBLIST') || ''
+    const dbl = x.split(' ')
+    for (const dbName of dbl)
+      if (dbName) await Dexie.delete(dbName)
+    localStorage.removeItem('$DBLIST')
+  }
+
   return {
-    recordIDB, resetAllLocal,
-    incognito, hasIDBS, init0, init1, devId, devName, 
-    setHeader,
-    newTrustingS, newTrustingL, newTSession,
+    step, backToAuth, userId, userName, isRegistered, keyK, 
+    openMode, incognito,
+    devId, devName,
+    hasIDBS, init0, init1,
+    resetAllLocal,
+    newTrustingL, newTSession,
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions,
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
     profiles, getMySafeProfiles,
+    auth, 
+    devices,
     purgeIDBS,
     getMySafePrefs,
-    userId, isRegistered, keyK, openMode, auth, devices,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile,
     synthUsers
