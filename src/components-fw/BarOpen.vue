@@ -1,6 +1,7 @@
 <template>
 <div class="row full-width items-center">
-  <btn-bubble class="col-auto" :size="size || 'md'" :text="bubble"/>
+  <btn-bubble class="col-auto" :size="size || 'md'" 
+    :text="disable && disbubble ? disbubble : bubble"/>
   <div :class="'col text-right titre-md' + (disable ? ' disabled' : '')">{{title}}</div>
   <q-btn class="col-auto" flat icon="chevron_right" size="20px" padding="none"
     :disable="disable" @click="fnopen()"/>
@@ -17,7 +18,8 @@ const props = defineProps({
   disable: Boolean,
   fnopen: Function,
   title: String, // titre de la bar
-  bubble: String,  // 
+  bubble: String,  // texte de la bulle d'aide
+  disbubble: String, // texte de la bulle d'aide QUAND disable
   size: String
 })
 

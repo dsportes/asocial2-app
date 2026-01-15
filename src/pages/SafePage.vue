@@ -101,7 +101,7 @@
   </div>
 
   <div v-if="sf.step === 2" class="q-pa-sm">
-    <div v-if="!sf.isRegistered">
+    <div v-if="!sf.isRegistered()">
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
       <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
@@ -157,34 +157,7 @@
       </div>
     </div>
 
-    <div v-if="sf.isRegistered">
-      <div v-if="sf.isRegistered && sf.openMode < 3" class="q-my-sm row justify-end q-gutter-xs">
-        <div class="titre-md">{{$t('HPchgcodes_1')}}</div>
-        <btn-cond icon="chevron_right" @ok="openChgCodes"/>
-      </div>
-      <div v-if="sf.openMode === 3" class="titre-sm text-italic q-mt-xs">
-        {{$t('HPmantrust')}}</div>
-
-      <div v-if="sf.openMode !== 3 && myTrusting === null" class="column q-mt-xs">
-        <div class="titre-sm text-italic">{{$t('HPtrust')}}</div>
-        <div class="row q-gutter-sm justify-end">
-          <span class="titre-md">{{$t('HPtrust_a')}}</span>
-          <btn-cond icon="chevron_right" @click="openTrust"/>
-        </div>
-      </div>
-
-      <div v-if="sf.openMode !== 3 && myTrusting !== null" class="column q-mt-xs">
-        <div class="titre-sm text-italic">{{$t('HPuntrust')}}</div>
-        <div class="row q-gutter-sm justify-end q-mb-xs">
-          <span class="titre-md">{{$t('HPuntrust_r')}}</span>
-          <btn-cond icon="chevron_right" @click="openUntrust"/>
-        </div>
-        <div class="row q-gutter-sm justify-end">
-          <span class="titre-md">{{$t('HPuntrust_p')}}</span>
-          <btn-cond icon="chevron_right" @click="openTrust"/>
-        </div>
-      </div>
-
+    <div v-if="sf.isRegistered()">
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
       <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
@@ -259,12 +232,31 @@
           </q-card-actions>
         </div>
       </div>
+
+      <q-separator class="q-my-md" color="orange"/>
+
+      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')" 
+        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
+        :fnopen="openChgCodes" size="sm"/>
+
+      <bar-open v-if="myTrusting === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')" 
+        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
+        :fnopen="openTrust" size="sm"/>
+
+      <bar-open v-if="myTrusting !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')" 
+        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
+        :fnopen="openUntrust" size="sm"/>
+      
+      <bar-open v-if="myTrusting !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')" 
+        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
+        :fnopen="openTrust" size="sm"/>
+
     </div>
   </div>
 
-  <q-separator class="q-mt-sm q-mb-xl" color="orange"/>
+  <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
-  <bar-open class="q-pa-sm q-mb-lg":bubble="$t('HPmanuinfo')"
+  <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
     :disable="session.incognito"
     :title="$t('HPmanusers')" :fnopen="manUsers"/>
 </div>
@@ -450,7 +442,7 @@ const selectedUser = ref(null)
 watch(() => ui.reopenSession, async (v) => {
   if (v) {
     await sf.init0()
-    if (session.hasNet && sf.isRegistered) 
+    if (session.hasNet && sf.isRegistered()) 
       await sf.reloadSafe()
     if (!session.incognito) await openSession()
   }
@@ -528,7 +520,7 @@ const openSession = async () => {
     await sf.loadMyLocalCreds()
   }
 
-  if (sf.isRegistered) {
+  if (sf.isRegistered()) {
     const profIds = new Set<string>()
     for (const s of mySessions.value) 
       if (s.profId) profIds.add(s.profId)
@@ -568,7 +560,7 @@ const openTrust = async () => {
   newDev.value = sf.devId === ''
   newPIN.inp = ''
   devName.inp = newDev.value ? '' : sf.devName
-  newPseudo.inp = sf.auth.pseudo
+  newPseudo.inp = myTrusting.value ? myTrusting.value.pseudo : sf.auth.pseudo
   ui.oD(idc, 'trustit')
 }
 
@@ -756,7 +748,7 @@ const validateSession = async (code, data) => {
 
   if (sv) { 
     // reprise d'une session épinglée
-    const profile: Profile = sf.isRegistered ? myProfiles.value.get(sv.profId) : null
+    const profile: Profile = sf.isRegistered() ? myProfiles.value.get(sv.profId) : null
 
     if (profile) {
       if (profile.about !== about && session.hasNet) 
@@ -814,7 +806,7 @@ const validateSession = async (code, data) => {
     const credIds = []
 
     // Création du profile dans Safe - S'il y a du réseau
-    if (sf.isRegistered && session.hasNet) {
+    if (sf.isRegistered() && session.hasNet) {
       profId = Crypt.shaS(Crypt.random(16))
       await sf.setAboutProfile(profId, about)
     }

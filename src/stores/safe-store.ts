@@ -379,7 +379,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const userId = ref(null)
-  const isRegistered = (() => userId.value && userId.value.startsWith('$'))
+  const isRegistered = (() => userId.value && !userId.value.startsWith('$'))
   const keyK = ref(null)
   /* sh1p sh1r ont été donnés:
   - soit sur $createSafe $UpdSafeCodes (auth longue)

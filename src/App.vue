@@ -1,28 +1,13 @@
 <template>
 <q-layout view="hHh lpR fFf">
   <q-header>
-    <q-toolbar v-if="ui.page==='home'" class="full-width tbp">
-      <btn-cond class="q-ml-xs" :label="config.K.APPNAME" 
-        no-caps flat color="none"/>
-      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
-        <q-tooltip>{{sessionInfo}}</q-tooltip>
-      </btn-cond>
-      <btn-cond v-if="sf.step === 2" icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
-        color="warning" @ok="sf.backToAuth"/>
-
-      <q-toolbar-title class="titre-md q-mx-md">
-        {{sf.step === 1 ? $t('HPauthby_9') : $t('HPauthby_' + sf.openMode, [sf.userName])}}
-      </q-toolbar-title>
-
-      <settings-button class="q-ml-sm"/>
-      <help-button class="q-ml-xs" page="DOCpg"/>
-    </q-toolbar>
+    <safe-header v-if="ui.page==='home'"/>
 
     <q-toolbar v-else class="full-width tbp">
       <q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
         style="height: 30px; max-width: 30px;"/>
-      <btn-cond label="WP" class="q-ml-xs" :color="wpReady ? 'green' : 'red'" disable>
-        <q-tooltip>{{sessionInfo}}</q-tooltip>
+      <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
+        <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
       <btn-cond class="q-ml-xs" icon="home" color="warning" @ok="backToOpenSession"/>
 
@@ -45,7 +30,7 @@
   
   <q-page-container class="font-def">
     <transition name="anim1">
-      <q-page v-if="ui.page === 'home'"><home-page/></q-page>
+      <q-page v-if="ui.page === 'home'"><safe-page/></q-page>
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'appHome'">
@@ -92,7 +77,8 @@ import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
 
-import HomePage from './pages/home-page.vue'
+import SafePage from './pages/SafePage.vue'
+import SafeHeader from './pages/SafeHeader.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
@@ -133,11 +119,6 @@ const backToOpenSession = async () => {
   if (ok) 
     ui.backToOpenSession()
 }
-
-const wpReady = computed(() => 
-  session.permState === 'granted' && session.registration && session.sessionId)
-
-const sessionInfo = computed(() => session.subJSON.startsWith('???') ? session.subJSON : session.sessionId)
 
 /* scripts de test *************************************************/
 

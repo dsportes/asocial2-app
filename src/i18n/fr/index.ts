@@ -136,7 +136,30 @@ bla bla
   HPauthbypin_1: 'Authentification par code PIN de:',
   HPauthstrong_1: 'Authentification "forte"',
   HPsaisirpin: 'Saisir votre code PIN',
-  HPchgcodes_1: 'Je veux changer mes codes d\'accès',
+
+  HPchgcodes_1: 'Changement des codes d\'authentification',
+  HPchgcodes_2: `### Changement des codes d'authentification
+  bla bla
+`,
+  HPchgcodes_2d: `### Changement des codes d'authentification
+Pour changer les codes d'authentification, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
+`,
+  HPtrust_1: 'Ce terminal N\'A PAS ma confiance, je veux la lui accorder',
+  HPtrust_2: `### Accorder sa confiance au terminal
+bla bla
+`,
+  HPtrust_2d: `### Accorder / retirer sa confiance à un terminal, changer son code PIN
+Pour ces opérations, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
+`,
+  HPuntrust_1: 'Ce terminal a ma confiance, je veux la lui retirer',
+  HPuntrust_2: `### Retirer sa confiance au terminal
+bla bla
+`,
+  HPchgpin_1: 'Ce terminal a ma confiance, je veux changer son code PIN',
+  HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
+bla bla
+`,
+
   HPnet_1: 'Accès à Internet',
   HPnet_2: 'Mode AVION: pas d\'accès à Internet',
   HPincognito_1: 'Accès sécurisé aux données stockées sur ce terminal',
@@ -178,15 +201,7 @@ bla bla
   HPauthby_2: '{0} [code de secours]',
   HPauthby_3: '{0} [code PIN]',
   HPauthby_9: 'Phase d\'authentification',
-  HPmantrust: 'Pour gérer la "confiance" au terminal ou changer les codes d\'accès, ' +
-    ' par sécurité il faut s\'être authentifié par sa phrase secète (pas son code PIN)',
-  HPtrust: 'Ce terminal N\'A PAS ma confiance...',
-  HPtrust_a: 'Je veux la lui accorder',
-  HPuntrust: 'Ce terminal A ma confiance...',
-  HPuntrust_r: 'Je veux la lui retirer',
-  HPuntrust_p: 'Je veux changer son code PIN',
-  HPtrust_1: 'Accorder ma confiance à ce terminal',
-  HPuntrust_1: 'Retirer ma confiance à ce terminal',
+
   HPsetdev: 'Donner un nom court à ce terminal',
   HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',
   HPsetPIN: 'Saisir un code PIN d\'accès',
@@ -202,7 +217,7 @@ bla bla
   HPbypin_3: 'Ouverture par code PIN en échec: le terminal n\'est pas enregistré "de confiance".',
   HPbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
   HPbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, désormais le TERMINAL N\'EST PLUS RECONNU "DE CONFIANCE".',
-  HPutd_1: 'Pour information: quand ce terminal n\'est pas déclaré "de confiance", la ou les sessions qui y avaient été "punaisées" ne le sont plus (elles n\'ont plus de données sauvegardées localement):',
+  HPutd_1: 'Pour information: quand ce terminal n\'est pas déclaré "de confiance", la ou les sessions qui y avaient été "épinglées" ne le sont plus (elles n\'ont plus de données sauvegardées localement):',
   HPutd_2: '- leurs réouverture sont PLUS LONGUES,',
   HPutd_3: '- elles NE SONT PLUS ACCESSIBLES EN MODE AVION.',
   HPutnbs: 'Aucune session initiée sur ce terminal. | Une session est initiée sur ce terminal. | {count} sessions sont initiées sur ce terminal.',

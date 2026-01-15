@@ -59,6 +59,8 @@ export const useSessionStore = defineStore('session', () => {
   const newVersionDialog = ref(false)
   const subJSON = ref('')
   const sessionId = ref('')
+  const wpReady = computed(() => permState.value === 'granted' && registration.value && sessionId.value)
+  const sessionInfo = computed(() => subJSON.value.startsWith('???') ? subJSON.value : sessionId.value)
 
   async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
     registration.value = myRegistration
@@ -152,7 +154,7 @@ export const useSessionStore = defineStore('session', () => {
 
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
-    registration, setRegistration, setAppUpdated, subJSON, sessionId,
+    registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase, 
