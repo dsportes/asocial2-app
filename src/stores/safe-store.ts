@@ -393,9 +393,9 @@ export const useSafeStore = defineStore('safe', () => {
   const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
 
   const userName = computed(() => {
-    if (!userId.value) return '?'
+    if (!userId.value) return ''
     const t = trustings.value.get(userId.value)
-    return t ? t.pseudo : '?'
+    return t ? t.pseudo : ''
   })
 
   /* Section "auth" */
@@ -844,7 +844,14 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: await Crypt.crypt(rsh, keyK.value)
     }
 
-    const ret = await new Operation('$UpdCodesSafe').post({ safeCodes })
+    const op = new Operation('$UpdCodesSafe')
+    let ret
+    try {
+      ret = await op.post({ safeCodes })
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
     if (ret.status === 0) {
       openMode.value = 1
       await compileSafe(ret.safe)
@@ -890,7 +897,14 @@ export const useSafeStore = defineStore('safe', () => {
       prefs: {}
     }
 
-    const ret = await new Operation('$CreateSafe').post({ safe })
+    const op = new Operation('$CreateSafe')
+    let ret
+    try {
+      ret = await op.post({ safe })
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
     if (ret.status === 0) {
       openMode.value = 1
       await compileSafe(safe)
@@ -899,7 +913,14 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const openSafeByPR = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
-    const ret = await new Operation('$OpenSafeByPR').post({sh0, sh1})
+    const op = new Operation('$OpenSafeByPR')
+    let ret
+    try {
+      ret = await op.post({sh0, sh1})
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
     if (ret.status === 0) {
       openMode.value = ret.byP ? 1 : 2
       userId.value = ret.safe.id
@@ -917,8 +938,14 @@ export const useSafeStore = defineStore('safe', () => {
     if (!t) return 1
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx, false, true) as Uint8Array
 
-    const ret = await new Operation('$OpenSafeByPin')
-      .post({userId: userId.value, devId: devId.value, pincx})
+    let ret
+    const op1 = new Operation('$OpenSafeByPin')
+    try {
+      ret = await op1.post({userId: userId.value, devId: devId.value, pincx})
+    } catch (e) {
+      op1.ko(e)
+      return -1
+    }
     if (ret.status !== 0) return ret.status
     const cy = ret.cy
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
@@ -928,8 +955,15 @@ export const useSafeStore = defineStore('safe', () => {
       return 4
     }
     const shk = await Crypt.strongHash(keyK.value, false, true)
-    const ret2 = await new Operation('$OpenSafeById')
-      .post({userId: userId.value, shk})
+
+    let ret2
+    const op2 = new Operation('$OpenSafeById')
+    try {
+      ret2 = await op2.post({userId: userId.value, shk})
+    } catch (e) {
+      op2.ko(e)
+      return -1
+    }
     if (ret2.status) return 2
     openMode.value = 3
     await compileSafe(ret2.safe)
@@ -1021,7 +1055,14 @@ export const useSafeStore = defineStore('safe', () => {
       devName: await Crypt.crypt(keyK.value, encoder.encode(devName.value)),
       Va, cy, sign
     }
-    const ret = await new Operation('$TrustDevice').post({trustDev})
+    const op = new Operation('$TrustDevice')
+    let ret
+    try {
+      ret = await op.post({trustDev})
+    } catch(e) { 
+      op.ko(e)
+      return -1
+    }
     await compileSafe(ret.safe)
     return ret.status
   }
@@ -1036,7 +1077,14 @@ export const useSafeStore = defineStore('safe', () => {
       sh1p: sh1p.value,
       sh1r: sh1r.value
     }
-    const ret = await new Operation('$UntrustDevice').post({untrustDev})
+    const op = new Operation('$UntrustDevice')
+    let ret
+    try {
+      ret = await op.post({untrustDev})
+    } catch(e) { 
+      op.ko(e)
+      return -1
+    }
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
@@ -1047,7 +1095,11 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
     }
-    const ret = await new Operation('$OpenSafeById').post(args)
+    const op = new Operation('$$OpenSafeById')
+    let ret
+    try {
+      ret = await op.post({args})
+    } catch(e) { op.ko(e); return -1}
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
@@ -1063,16 +1115,18 @@ export const useSafeStore = defineStore('safe', () => {
       profId,
       about: await ecX(about)
     }
-    const ret = await new Operation('$SetAboutProfile').post({aboutProfile})
-    if (!ret.status)
+    const op = new Operation('$SetAboutProfile')
+    let ret
+    try {
+      ret = await op.post({aboutProfile})
+    } catch(e) { op.ko(e); return -1}
+    if (ret.status === 0)
       await compileSafe(ret.safe)
-    else console.log('$SetAboutProfile', ret.status)
+    return ret.status
   }
 
   const newTrustingL = (obj) => new TrustingL(obj)
   const newTSession = (obj) => new TSession(obj)
-
-  const nbCoeffs = ref(coeffs.length)
 
   type Suas = {
     n: number

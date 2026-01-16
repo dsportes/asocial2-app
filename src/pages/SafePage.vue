@@ -475,15 +475,15 @@ const openStrongAuth = () => {
 const authPS = async (args) => {
   ui.fD()
   const status = await sf.openSafeByPR(args.sh0, args.sh1, args.sh)
-  if (status !== 0) await ui.diagDisplay($t('HPopsret_' + status))
-  else await openSession()
+  if (status === 0) await openSession()
+  else if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
 }
 
 const authPIN = async () => {
   ui.fD()
   const status = await sf.openSafeByPin(pin.inp, selectedUser.value.userId)
-  if (status !== 0) await ui.diagDisplay($t('HPbypin_' + status))
-  else await openSession()
+  if (status === 0) await openSession()
+  else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))
 }
 
 type Profile = {
@@ -572,6 +572,7 @@ const openUntrust = async () => {
 const setTrust = async () => {
   try {
     const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
+    if (status < 0) return
     ui.fD()
     myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPsttrust_' + status))
@@ -583,6 +584,7 @@ const setTrust = async () => {
 const setUntrust = async () => {
   try {
     const status = await sf.setUntrust()
+    if (status < 0) return
     ui.fD()
     myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPstuntrust_' + status))
@@ -751,9 +753,12 @@ const validateSession = async (code, data) => {
     const profile: Profile = sf.isRegistered() ? myProfiles.value.get(sv.profId) : null
 
     if (profile) {
-      if (profile.about !== about && session.hasNet) 
+      if (profile.about !== about && session.hasNet) {
         // Maj du profile dans Safe
-        await sf.setAboutProfile(sv.profId, about)
+        const status = await sf.setAboutProfile(sv.profId, about)
+        if (status < 0) return
+        if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
+      }
       // Récupération des credIds du profile Safe
       sv.credIds = profile.creds
     } // Sinon on laisse ses credIds tel quel
@@ -847,6 +852,7 @@ const validateSessionV = async () => {
 }
 
 const goToApp = async (about: string, creds: Map<string, TCred>, code: string, data: Uint8Array) => {
+  sf.step = 0
   let prefObj: Object = null
   let prefCode: string = ''
   try {

@@ -16,7 +16,6 @@ const props = defineProps({
   text: String
 })
 
-console.log(props.text)
 </script>
 
 <style lang="scss" scoped>

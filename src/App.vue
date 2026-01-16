@@ -4,13 +4,13 @@
     <safe-header v-if="ui.page==='home'"/>
 
     <q-toolbar v-else class="full-width tbp">
-      <q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
-        style="height: 30px; max-width: 30px;"/>
+      <about-session/>
+      <!--q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
+        style="height: 30px; max-width: 30px;"/-->
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
       <btn-cond class="q-ml-xs" icon="home" color="warning" @ok="backToOpenSession"/>
-
 
       <btn-cond label="Home" class="q-ml-xs" @ok="ui.setPage('home')"/>
 
@@ -80,6 +80,7 @@ import { Crypt, testECDH, testSH } from './src-fw/crypt'
 import SafePage from './pages/SafePage.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 
+import AboutSession from './components-fw/AboutSession.vue'
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import BtnCond from './components-fw/BtnCond.vue'

@@ -110,10 +110,12 @@ const createSafe = async () => {
   const status = props.createMode ?
     await sf.createSafe(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
     await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
-  await ui.diagDisplay($t('HPcsret_' + (props.createMode ? '0' : '1') + status))
-  if (status === 0) {
-    ui.fD()
-    await props.onValidate()
+  if (status >= 0) {
+    await ui.diagDisplay($t('HPcsret_' + (props.createMode ? '0' : '1') + status))
+    if (status === 0) {
+      ui.fD()
+      await props.onValidate()
+    }
   }
 }
 

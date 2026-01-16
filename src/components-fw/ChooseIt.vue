@@ -1,5 +1,5 @@
 <template>
-<!-- Affiche un message MD -->
+<!-- Affiche un message MD : liste de choix d'actions dans le slot -->
   <q-card :class="sty('sm')">
     <q-toolbar class="tbs">
       <btn-cond icon="close" size="md" flat color="warning" @ok="stores.ui.fD"/>

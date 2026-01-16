@@ -18,6 +18,21 @@ export default {
   theme: 'Théme graphique',
   pings: 'Server "pings"',
   buildapi: 'Build: {0} - API: {1}',
+  app: 'Application:',
+  build: 'Build / API:',
+  sessionid: 'Session ID:',
+  userid: 'Utilisateur ID:',
+  unknown: '(inconnu)',
+  username: 'Pseudo local:',
+  authby: 'Authentifié par:',
+  authby_0: '(pas encore authentifié)',
+  authby_1: 'phrase secrète principale',
+  authby_2: 'phrase secrète de secours',
+  authby_3: 'code PIN',
+  step: 'Étape:',
+  step_0: 'Application en cours',
+  step_1: 'Authentification de l\'utilisateur',
+  step_2: 'Choix de la session à ouvrir',
   closeApp: 'Fermer l\'application',
   restartApp: 'Redémmarrer l\'application',
   srvStatus_0: 'Statut du service inconnu',
@@ -55,12 +70,14 @@ export default {
   op_TestAuth: 'Test d\'authentification',
   op_GetSrvStatus: 'Status du service',
   op_SetSrvStatus: 'Fixe le status du service',
+  
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
   op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
-  op_OpenSafeById: '(Re)Chargement du "Coffre fort" de l\'utilisateur',
+  op_$UntrustDevice: 'Retrait de confiance au terminal',
+  op_$TrustDevice: 'Ajout de confiance au terminal',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -300,15 +317,6 @@ Ouvrir une session en **mode AVION** (sans accès à Internet) n'est possible qu
   HPlocal_2: `# Utilisateur CONNU LOCALEMENT
 bla bla
 `,
-
-/*
-On ouvre son **coffre fort** personnel fournissant,
-- au choix un des deux _couples identifiants_ (un _normal_, un _de secours_) formés,
-  - d'un _identidfiant_ (pseudo, etc.) de son choix,
-  - d'une _phrase secrète_ assez longue. 
-  - ces couples peuvent être changés.
-- sur un terminal **de confiance** par un **code PIN** (assez court) après avoir pointé le _pseudo_ sous lequel on est connu localement sur ce terminal.
-*/
 
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
