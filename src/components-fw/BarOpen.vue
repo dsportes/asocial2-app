@@ -1,10 +1,10 @@
 <template>
 <div class="row full-width items-center">
-  <btn-bubble class="col-auto" :size="size || 'md'" 
-    :text="disable && disbubble ? disbubble : bubble"/>
   <div :class="'col text-right titre-md' + (disable ? ' disabled' : '')">{{title}}</div>
   <q-btn class="col-auto" flat icon="chevron_right" size="20px" padding="none"
     :disable="disable" @click="fnopen()"/>
+  <btn-bubble class="q-ml-md col-auto" :size="size || 'md'" 
+    :text="disable && disbubble ? disbubble : bubble"/>
 </div>
 </template>
 

@@ -76,6 +76,7 @@ import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
+import { testCred } from './src-fw/credential'
 
 import SafePage from './pages/SafePage.vue'
 import SafeHeader from './pages/SafeHeader.vue'
@@ -90,8 +91,9 @@ import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
 import mybeep from './assets/beep.mp3?inline'
-
 // import { initWP } from './src-fw/wputil'
+
+// testCred()
 
 const config = stores.config
 const session = stores.session

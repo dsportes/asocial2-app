@@ -6,15 +6,17 @@
     <!-- Entête : accès Internet, incognito, nom du terminal -->
     <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
       <div class="row">
-        <btn-bubble class="self-start q-mr-md" :text="$t('HPmode_' + (session.incognito ? '3' : '1'))"/>
         <q-toggle v-model="session.noNet" dense color="negative"
           :label="$t('HPnet_' + (session.noNet ? '2' : '1'))" />
+        <btn-bubble class="self-start q-ml-md" size="sm"
+          :text="$t('HPmode_' + (session.incognito ? '3' : '1'))"/>
       </div>
 
       <div class="row">
-        <btn-bubble class="self-start q-mr-md" :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
         <q-toggle v-model="session.incognito" dense color="negative"
           :label="$t('HPincognito_' + (session.incognito ? '2' : '1'))"/>
+        <btn-bubble class="self-start q-ml-md" size="sm"
+          :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
       </div>
     </div>
 
@@ -35,7 +37,6 @@
     <div v-if="session.hasNet || !session.incognito" class="q-pl-xl">
       <!-- Authentification par code PIN -->
       <div v-if="session.hasNet && users.length" class="row items-center">
-        <btn-bubble size="sm" class="col-auto self-start q-mr-sm" :text="$t('HPauthbypin_2')"/>
         <div class="col text-right">
           <div class="column">
             <div class='titre-md q-mr-xs'>{{$t('HPauthbypin_1')}}</div>
@@ -48,6 +49,7 @@
             </div>
           </div>
         </div>
+        <btn-bubble size="sm" class="col-auto self-start q-ml-md" :text="$t('HPauthbypin_2')"/>        
       </div>
 
       <!-- Authentification FORTE -->
@@ -79,7 +81,7 @@
           {{$t('HPlocal_1')}}</div>
       </div>
 
-      <div v-if="!session.incognito" class="q-ml-xl">
+      <div v-if="!session.incognito" class="q-mr-xl q-ml-lg">
         <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
         <input-ps v-model="locPS" iconcheck
           :validate="validateLocPS"
@@ -220,6 +222,10 @@
         <div class="titre-md text-italic q-mt-md">
           {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
         </div>
+        <bar-open :bubble="$t('HPcredsmgr_2')" class="q-my-sm"
+          :title="$t('HPcredsmgr_1')"
+          :fnopen="openCM" size="sm"/>
+
         <input-ps v-model="newSessionName"
           :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
         <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
@@ -257,7 +263,7 @@
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
   <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
-    :disable="session.incognito"
+    :disable="session.incognito" size="sm"
     :title="$t('HPmanusers')" :fnopen="manUsers"/>
 </div>
 
@@ -322,6 +328,9 @@
 
   <!-- Gestion des users / sessions --> 
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
+
+  <!-- Gestion des credentials --> 
+  <creds-mgr v-if="cm" :idc="idc" :creds="creds"/>
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :createMode="createMode"/>
@@ -402,6 +411,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import ChooseIt from '../components-fw/ChooseIt.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
 import ManageUsers from '../components-fw/ManageUsers.vue'
+import CredsMgr from '../components-fw/CredsMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 
@@ -428,6 +438,7 @@ onUnmounted(() => ui.closeVue(idc))
 
 const mu = computed(() => ui.dModels[idc].manusers)
 const sc = computed(() => ui.dModels[idc].createsafe)
+const cm = computed(() => ui.dModels[idc].credsmgr)
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -597,6 +608,12 @@ const manUsers = () => {
   ui.oD(idc, 'manusers')
 }
 
+const creds = ref()
+const openCM = () => {
+  creds.value = getCreds(getCredIds())
+  ui.oD(idc, 'credsmgr')
+}
+
 const createMode = ref()
 
 const createSafe = () => {
@@ -740,12 +757,23 @@ const getCreds = (credIds: string[]) : Map<string, TCred> => {
   return creds
 }
 
+const getCredIds = () => {
+  let sv = selectedSession.value
+  const sp = selectedProfile.value
+  let credIds: string[]
+
+  if (sv) { // reprise d'une session épinglée
+    const profile: Profile = sf.isRegistered() ? myProfiles.value.get(sv.profId) : null
+    credIds = profile ? profile.creds : sv.credIds
+  } else if (sp && pinned.value) credIds = sp.profile.creds
+  return credIds
+}
+
 const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
 
   let sv = selectedSession.value
   const sp = selectedProfile.value
-  let credIds: string[]
   let about: string = newSessionName.inp
 
   if (sv) { 
@@ -759,15 +787,12 @@ const validateSession = async (code, data) => {
         if (status < 0) return
         if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
       }
-      // Récupération des credIds du profile Safe
-      sv.credIds = profile.creds
-    } // Sinon on laisse ses credIds tel quel
+    }
     sv.about = about
     sv.prefCode = code
     if (unwantdb.value) sv.hasCache = false
     else if (wantdb.value) sv.hasCache = true
 
-    credIds = sv.credIds
     if (!unpinme.value) {
       // save tsession avec time, raz db si requis
       await sf.setTSession(sv, razdb.value)
@@ -803,12 +828,9 @@ const validateSession = async (code, data) => {
       session.setDbName(nvs.hasCache ? nvs.dbName : '')
     }
 
-    credIds = profile.creds
-
   } else {
     // nouvelle session vierge de droits. Il y a OU NON du réseau
     let profId = ''
-    const credIds = []
 
     // Création du profile dans Safe - S'il y a du réseau
     if (sf.isRegistered() && session.hasNet) {
@@ -823,7 +845,7 @@ const validateSession = async (code, data) => {
         userId: sf.userId,
         profId,
         about,
-        credIds,
+        credIds: [],
         hasCache: wantdb.value,
         size: 0,
         time: 0,
@@ -842,7 +864,7 @@ const validateSession = async (code, data) => {
     }
   }
 
-  await goToApp(about, getCreds(credIds), code, data)
+  await goToApp(about, getCreds(getCredIds()), code, data)
 }
 
 const validateSessionV = async () => {

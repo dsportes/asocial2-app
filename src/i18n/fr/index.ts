@@ -70,7 +70,7 @@ export default {
   op_TestAuth: 'Test d\'authentification',
   op_GetSrvStatus: 'Status du service',
   op_SetSrvStatus: 'Fixe le status du service',
-  
+
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
@@ -374,8 +374,11 @@ S'il n'y est pas, c'est que la confiance a été retiré à ce terminal.
 
 > Vous _pouvez_ aussi vous authentifier **fortement**. Si vous avez l'intention de gérer ensuite la confiance dans ce terminal ou changer vos codes d'authentification forte, c'est même requis.
 `,
-
   HPauthstrong_2: `# Authentification "forte"
+bla bla
+`,
+  HPcredsmgr_1: 'Voir / gérer les droits d\'accès',
+  HPcredsmgr_2: `# Gérer les droits d'accès
 bla bla
 `,
 
