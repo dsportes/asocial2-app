@@ -103,7 +103,7 @@
   </div>
 
   <div v-if="sf.step === 2" class="q-pa-sm">
-    <div v-if="!sf.isRegistered()">
+    <div v-if="!sf.isRegistered">
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
       <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
@@ -113,7 +113,7 @@
           <div class="col-1"/>
         </div>
         <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
-          <div :class="(selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
+          <div :class="(sf.selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(s)">
             <div class="col-7 q-pr-xs">{{s.about}}</div>
             <div class="col-4 ">{{dhcool(s.time)}}</div>
@@ -143,7 +143,7 @@
         </div>
 
         <div class="titre-md text-italic q-mt-md">
-          {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+          {{$t(sf.selectedSession ? 'HPrensession' : 'HPnouvsession')}}
         </div>
         <input-ps v-model="newSessionName"
           :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
@@ -159,7 +159,7 @@
       </div>
     </div>
 
-    <div v-if="sf.isRegistered()">
+    <div v-if="sf.isRegistered">
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
       <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
@@ -180,9 +180,9 @@
           </div>
         </div>
         <div :class="dkli(idx + 1 + mySessions.length)" 
-          v-for="([profId, p], idx) of myProfiles2" :key="profId">
+          v-for="([, p], idx) of myProfiles" :key="p.profId">
           <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selProfile(profId, p)">
+            @click="selProfile(p)">
             <div class="col-7 q-pr-xs q-pl-xs">{{p.about}}</div>
             <div class="col-4">{{$t('HPnotpinned')}}</div>
             <div class="col-1"/>
@@ -198,7 +198,7 @@
             style="margin-left: -12px"/>
         </div>
         <div v-else>
-          <div v-if="selectedSession">
+          <div v-if="sf.selectedSession">
             <q-checkbox v-model="unpinme" :label="$t('HPunpinme')" 
               style="margin-left: -12px"/>
             <q-checkbox v-if="selHasCache && !unpinme" 
@@ -220,7 +220,7 @@
         </diV>
 
         <div class="titre-md text-italic q-mt-md">
-          {{$t(selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+          {{$t(sf.selectedSession ? 'HPrensession' : 'HPnouvsession')}}
         </div>
         <bar-open :bubble="$t('HPcredsmgr_2')" class="q-my-sm"
           :title="$t('HPcredsmgr_1')"
@@ -414,6 +414,7 @@ import ManageUsers from '../components-fw/ManageUsers.vue'
 import CredsMgr from '../components-fw/CredsMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
+import { Credential } from '../src-fw/credential'
 
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
@@ -453,7 +454,7 @@ const selectedUser = ref(null)
 watch(() => ui.reopenSession, async (v) => {
   if (v) {
     await sf.init0()
-    if (session.hasNet && sf.isRegistered()) 
+    if (session.hasNet && sf.isRegistered) 
       await sf.reloadSafe()
     if (!session.incognito) await openSession()
   }
@@ -515,7 +516,6 @@ const myTrusting = ref()
 - myPrefs: prefs enregistrées dans le Safe
 */
 const myProfiles: Ref<Map<string, Profile>> = ref()
-const myProfiles2: Ref<Map<string, Profile>> = ref()
 const myPrefs: Ref<Map<string, Uint8Array>> = ref()
 const nvClicked = ref()
 
@@ -531,16 +531,15 @@ const openSession = async () => {
     await sf.loadMyLocalCreds()
   }
 
-  if (sf.isRegistered()) {
+  if (sf.isRegistered) {
     const profIds = new Set<string>()
     for (const s of mySessions.value) 
       if (s.profId) profIds.add(s.profId)
-    myProfiles.value = sf.getMySafeProfiles()
-    myProfiles2.value = new Map<string, Profile>()
-    for (const [profId, p] of myProfiles.value) {
-      if (!profIds.has(profId)) myProfiles2.value.set(profId, p)
+    myProfiles.value = new Map<string, Profile>()
+    for (const [profId, p] of sf.mySafeProfiles) {
+      if (!profIds.has(profId)) myProfiles.value.set(profId, p)
     }
-    myPrefs.value = sf.getMySafePrefs()
+    myPrefs.value = sf.mySafePrefs
     if (!session.incognito.value) {
       await sf.refreshLocalPrefs()
       await sf.refreshLocalCreds()
@@ -549,8 +548,8 @@ const openSession = async () => {
     myPrefs.value = sf.tprefs
   }
 
-  selectedSession.value = null
-  selectedProfile.value = null
+  sf.selectedSession = null
+  sf.selectedProfile = null
   sf.step = 2
 }
 
@@ -610,7 +609,7 @@ const manUsers = () => {
 
 const creds = ref()
 const openCM = () => {
-  creds.value = getCreds(getCredIds())
+  creds.value = sf.getCreds(sf.getCredIds())
   ui.oD(idc, 'credsmgr')
 }
 
@@ -680,8 +679,6 @@ type TSession = {
   prefCode: string // préférences utilisées la dernière fois
 }
 
-const selectedSession: Ref<TSession> = ref(null)
-const selectedProfile: Ref<{string, Profile}> = ref(null)
 const razdb = ref(false)
 const wantdb = ref(false)
 const unwantdb = ref(false)
@@ -693,8 +690,8 @@ watch(unwantdb, async (ap) => {
   if (ap === true) await ui.diagDisplay($t('HPrazbl'))
 })
 
-const nvSP = computed(() => nvClicked.value || selectedSession.value || selectedProfile.value)
-const selHasCache = computed(() => selectedSession.value && selectedSession.value.hasCache)
+const nvSP = computed(() => nvClicked.value || sf.selectedSession || sf.selectedProfile)
+const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
 
 const reset = () => {
   nvClicked.value = false
@@ -703,8 +700,8 @@ const reset = () => {
   pinned.value = false
   wantdb.value = false
   unwantdb.value = false
-  selectedSession.value = null
-  selectedProfile.value = null
+  sf.selectedSession = null
+  sf.selectedProfile = null
   newSessionName.inp = ''
 }
 
@@ -715,70 +712,34 @@ const nvSession = () => {
 
 const selSession = (s) => {
   reset()
-  selectedSession.value = s
+  sf.selectedSession = s
   newSessionName.inp = s.about
 }
 
 const clSel = (x) => {
-  if (selectedSession.value === x) return 'bord2 '
-  if (selectedProfile.value && selectedProfile.value.profile === x) return 'bord2 '
+  if (sf.selectedSession === x) return 'bord2 '
+  if (sf.selectedProfile && sf.selectedProfile.profId === x.profId) return 'bord2 '
   return ''
 }
 
-const selProfile = (profId: string, profile: Profile) => {
+const selProfile = (profile: Profile) => {
   nvClicked.value = false
   razdb.value = false
-  selectedSession.value = null
-  selectedProfile.value = { profId, profile }
+  sf.selectedSession = null
+  sf.selectedProfile = profile
   newSessionName.inp = profile.about
-}
-
-type TCred = {
-  credId: string // id du credential
-  about: Uint8Array // commentaire crypté de l'utilisateur sur cette session
-  data: Uint8Array // objet serialisé
-}
-
-const getCreds = (credIds: string[]) : Map<string, TCred> => {
-  const creds: Map<string, TCred> = new Map<string, TCred>()
-  if (credIds && credIds.length) {
-    if (session.hasNet) {
-      for(const id of credIds) {
-        const tc = sf.creds.get(id)
-        if (tc) creds.put(id, tc)
-      }
-    } else {
-      for(const id of credIds) {
-        const tc = sf.tcreds.get(id)
-        if (tc) creds.put(id, tc)
-      }
-    }
-  }
-  return creds
-}
-
-const getCredIds = () => {
-  let sv = selectedSession.value
-  const sp = selectedProfile.value
-  let credIds: string[]
-
-  if (sv) { // reprise d'une session épinglée
-    const profile: Profile = sf.isRegistered() ? myProfiles.value.get(sv.profId) : null
-    credIds = profile ? profile.creds : sv.credIds
-  } else if (sp && pinned.value) credIds = sp.profile.creds
-  return credIds
 }
 
 const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
 
-  let sv = selectedSession.value
-  const sp = selectedProfile.value
+  let sv = sf.selectedSession.value
+  const sp = sf.selectedProfile
   let about: string = newSessionName.inp
 
   if (sv) { 
     // reprise d'une session épinglée
-    const profile: Profile = sf.isRegistered() ? myProfiles.value.get(sv.profId) : null
+    const profile: Profile = sf.isRegistered ? sf.mySafeProfiles.get(sv.profId) : null
 
     if (profile) {
       if (profile.about !== about && session.hasNet) {
@@ -804,21 +765,17 @@ const validateSession = async (code, data) => {
   } else if (sp) { 
     // nouvelle session ouverte depuis un profile (QUI EXISTE)
     // Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
-    const profId = sp.profId
-    const profile = sp.profile
 
-    if (profile.about !== about)
-      // Maj du profile dans Safe
-      await sf.setAboutProfile(profId, about)
+    if (sp.about !== about) // Maj du profile dans Safe
+      await sf.setAboutProfile(sp.profId, about)
 
-    if (pinned.value) { 
-      // session épinglée
+    if (pinned.value) { // épingler la session
       const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
-        profId: profId,
+        profId: sp.profId,
         about: about,
-        credIds: profile.creds,
+        credIds: sp.creds,
         hasCache: wantdb.value,
         size: 0,
         time: 0,
@@ -833,7 +790,7 @@ const validateSession = async (code, data) => {
     let profId = ''
 
     // Création du profile dans Safe - S'il y a du réseau
-    if (sf.isRegistered() && session.hasNet) {
+    if (sf.isRegistered && session.hasNet) {
       profId = Crypt.shaS(Crypt.random(16))
       await sf.setAboutProfile(profId, about)
     }
@@ -864,16 +821,16 @@ const validateSession = async (code, data) => {
     }
   }
 
-  await goToApp(about, getCreds(getCredIds()), code, data)
+  await goToApp(about, sf.getCreds(sf.getCredIds()), code, data)
 }
 
 const validateSessionV = async () => {
   sf.userId = null
   sf.keyK = null
-  await goToApp('', new Map<string, TCred>(), '', null)
+  await goToApp('', new Map<string, Credential>(), '', null)
 }
 
-const goToApp = async (about: string, creds: Map<string, TCred>, code: string, data: Uint8Array) => {
+const goToApp = async (about: string, creds: Map<string, Credential>, code: string, data: Uint8Array) => {
   sf.step = 0
   let prefObj: Object = null
   let prefCode: string = ''

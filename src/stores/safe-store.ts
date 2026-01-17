@@ -13,6 +13,7 @@ import stores from './all'
 import { AppExc, sleep, u8ToB64, equ8 } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
+import { Credential } from '../src-fw/credential'
 
 /* TODO
 Suppression de sessions "locales" épinglées:
@@ -71,7 +72,6 @@ Chaque row décrit un _credential_ d'un utilisateur _local_:
 - `app`: code de l'application
 - `userId`: id de l'utilisateur
 - `credId`: identifiant du _credential_
-- `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** décrivant la portée du _credential_.
 - `data`: objet credential sérialisé **crypté par la clé de l'utilisateur**.
 
 > Les utilisateurs _enregistrés_ les ont dans leur `Safe` central: en mode _avion_ ils n'y ont pas accès, mais les credentials n'y sont pas utilisés / pertinents.
@@ -91,7 +91,7 @@ const STORES = {
   trustings: 'id', 
   tsessions: 'id',
   tprefs: 'id', // id: prefId - bin: cryptage par K du user de son pref ([code, obj])
-  tcreds: 'id' // id: credId - bin: contenu de l'objet _droit_ crypté par la cléK locale.
+  tcreds: 'id' // id: credId - bin: contenu de l'objet _credential_ crypté par la cléK locale.
 }
 
 /* Classes et types */
@@ -155,22 +155,6 @@ class TSession {
     return Crypt.shaS(this.app + '/' + this.userId + '/' + this.profId) }
 }
 
-class TCred {
-  credId: string // id du credential
-  about: string | Uint8Array // commentaire crypté de l'utilisateur sur cette session
-  data: Uint8Array // objet serialisé
-
-  constructor (obj: Object) {
-    for(const f of Object.keys(obj)) this[f] = obj[f]
-  }
-
-  get toObj () : Object {
-    const obj = {}
-    for(const f of Object.keys(this)) obj[f] = this[f]
-    return obj
-  }
-}
-
 class TPref {
   app: string // code de l'application
   userId: string // id de l'utilisateur
@@ -192,6 +176,7 @@ class TPref {
 }
 
 type Profile = {
+  profId: string
   about: string
   creds: string[]
 }
@@ -379,7 +364,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const userId = ref(null)
-  const isRegistered = (() => userId.value && !userId.value.startsWith('$'))
+  const isRegistered = computed(() => userId.value && !userId.value.startsWith('$'))
   const keyK = ref(null)
   /* sh1p sh1r ont été donnés:
   - soit sur $createSafe $UpdSafeCodes (auth longue)
@@ -389,6 +374,9 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const sh1p = ref(null)
   const sh1r = ref(null)
+
+const selectedSession: Ref<TSession> = ref(null)
+const selectedProfile: Ref<Profile> = ref(null)
 
   const openMode : Ref<number> = ref(0) // 0: pas ouvert, 1: par P0, 2: par R0, 3: par PIN
 
@@ -432,27 +420,27 @@ export const useSafeStore = defineStore('safe', () => {
   - `data`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser 
     à l'ouverture d'une session.  
   **************************************************************************************/
-  const prefs: Ref<Map<String, Map<string, Uint8Array>>> = ref()// clé app
+  const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
+
+  // préférences par "code" tirées de IDB safe pour l'application / user courant
+  const tprefs : Ref<Map<string, Uint8Array>> = ref() // par code
 
   /* Section "profiles"
   Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
   - `about`: texte significatif pour l'utilisateur **crypté par la clé K** décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
   - `creds`: la liste des id des _credentials_ qui sont attachés à une session de ce profil lors de son ouverture.
   */
-  const profiles: Ref<Map<String, Map<string, Profile>>> = ref() // clé app
+  const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds"
   Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
   - `about` : code / texte court donné par l'utilisateur pour qualifier le _credential_. Par exemple `Compte Bob sur circuits courts`.
   - `data`: sérialisation du détail du _credential_:
   */
-  const creds: Ref<Map<String, Map<string, TCred>>> = ref() // clé app
+  const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
 
   // credentials par "credId" tirées de IDB safe pour l'application / user courant
-  const tcreds : Ref<Map<string, TCred>> = ref() // par credId
-
-  // préférences par "code" tirées de IDB safe pour l'application / user courant
-  const tprefs : Ref<Map<string, Uint8Array>> = ref() // par code
+  const tcreds : Ref<Map<string, Credential>> = ref() // par credId
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -517,57 +505,84 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const loadPrefs = async (safe: Safe) : Promise<void> => {
-    const p = new Map<string, Map<string, Uint8Array>>() // clé: app
-    for (const app in safe.prefs) {
-      const x = safe.prefs[app] as Uint8Array
-      const y = x ? decode(await Crypt.decrypt(keyK.value, x)) : {}
-      const mx = new Map<string, Uint8Array>()
-      for (const code in y) mx.set(code, y[code])
-      p.set(app, mx)
+    const app = stores.config.appname
+    const p = new Map<string, Uint8Array>() // clé: app
+    const x = safe.prefs[app] as Uint8Array
+    if (x) {
+      const y = decode(await Crypt.decrypt(keyK.value, x))
+      for (const code in y) p.set(code, y[code])
     }
-    prefs.value = p
+    mySafePrefs.value = p
   }
 
   const loadProfiles = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Map<string, Profile>>()
-    for (const app in safe.profiles) {
-      const mp = new Map<string, Profile>()
-      m.set(app, mp)
-      const mpf = safe.profiles[app]
+    const app = stores.config.appname
+    const m = new Map<string, Profile>()
+    const mpf = safe.profiles[app]
+    if (mpf) {
       for (const profId in mpf) {
         const x = mpf[profId]
         const about = await dcX(x.about as Uint8Array)
-        const p: Profile = { about, creds: x.creds }
-        mp.set(profId, p)
+        const p: Profile = { profId, about, creds: x.creds }
+        m.set(profId, p)
       }
     }
-    profiles.value = m
+    mySafeProfiles.value = m
   }
 
   const loadCreds = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Map<string, TCred>>()
-    for (const app in safe.creds) {
-      const mc = new Map<string, TCred>()
-      m.set(app, mc)
-      const mcf = safe.creds[app]
+    const app = stores.config.appname
+    const m = new Map<string, Credential>()
+    const mcf = safe.creds[app]
+    if (mcf) {
       for (const credId in mcf) {
-        const x = mcf[credId] as TCred
+        const x = mcf[credId]
         try {
-          const data = await Crypt.decrypt(keyK.value, x.data)
-          const about = await dcX(x.about as Uint8Array)
-          const tc: TCred = new TCred({credId: x.credId, about, data})
-          mc.set(x.credId, tc)
+          const obj = await Crypt.decrypt(keyK.value, x.data)
+          const c: Credential = Credential.newCredential(obj)
+          if (c) m.set(c.id, c)
         } catch (e) { 
           console.log(e)
         }
       }
     }
-    creds.value = m
+    mySafeCreds.value = m
+  }
+
+  // Liste des id des credentials de la session ou du profile "courant"
+  const getCredIds = () => {
+    let sv = selectedSession.value
+    const sp = selectedProfile.valeurs
+    let credIds: string[]
+
+    if (sv) { // reprise d'une session épinglée
+      const profile: Profile = isRegistered.value ? mySafeProfiles.value.get(sv.profId) : null
+      credIds = profile ? profile.creds : sv.credIds
+    } else if (sp) credIds = sp.creds
+    return credIds
+  }
+
+  const getCreds = (credIds: string[]) : Map<string, Credential> => {
+    const x: Map<string, Credential> = new Map<string, Credential>()
+    if (credIds && credIds.length) {
+      if (stores.session.hasNet) {
+        for(const id of credIds) {
+          const c = mySafeCreds.value.get(id)
+          if (c) x.set(id, c)
+        }
+      } else {
+        for(const id of credIds) {
+          const tc = tcreds.value.get(id)
+          if (tc) x.set(id, tc)
+        }
+      }
+    }
+    return x
   }
 
   const getMySessions = async () : Promise<TSession[]> => {
     const app = stores.config.appname
-    const mpf: Map<string, Profile> = profiles.value ? profiles.value.get(app) : null
+    const mpf: Map<string, Profile> = mySafeProfiles.value
     const tok: TSession[] = []
     for(const [,x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
@@ -575,7 +590,7 @@ export const useSafeStore = defineStore('safe', () => {
         x.about = await dcX(x.about)
         if (!userId.value.startsWith('$')) {
           // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
-          const profile: Profile = mpf ? mpf.get(x.profId) : null
+          const profile: Profile = mpf.get(x.profId)
           if (profile) {
             x.about = profile.about
             x.credIds = profile.creds
@@ -612,7 +627,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const refreshLocalPrefs = async () => {
     const app = stores.config.appname
-    const m: Map<string, Uint8Array> = prefs.value.get(app)
+    const m: Map<string, Uint8Array> = mySafePrefs.value
     // toutes les préférences de l'utilisateur pour cette application
 
     const tp = tprefs.value
@@ -663,16 +678,15 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadMyLocalCreds = async () => {
     const app = stores.config.appname
-    const m: Map<string, TCred> = new Map<string, TCred>()
+    const m: Map<string, Credential> = new Map<string, Credential>()
     await db.value.tcreds.each(async (r) => {
       try {
         const x = decode(r.bin)
         if (x.app === app && x.userId === userId.value)
           try {
-            const data = await Crypt.decrypt(keyK.value, x.data)
-            const about = await dcX(x.about)
-            const tc: TCred = new TCred({credId: x.credId, about, data})
-            m.set(x.code, tc)
+            const obj = await Crypt.decrypt(keyK.value, x.data)
+            const c: Credential = Credential.newCredential(obj)
+            if (c) m.set(c.id, c)
           } catch (e) { 
             console.log(e)
           }
@@ -685,19 +699,15 @@ export const useSafeStore = defineStore('safe', () => {
 
   const refreshLocalCreds = async () => {
     const app = stores.config.appname
-    const m: Map<string, TCred> = creds.value.get(app)
+    const m: Map<string, Credential> = mySafeCreds.value
     // tous les credentials de l'utilisateur pour cette application
     const tc = tcreds.value
     // rafraîchir dans IDB safe les creds ayant changé d'about ou étant absents
-    if (m) for(const [credId, cred] of m) {
-      const locc = tc.get(credId) as TCred
-      if (!locc || (locc.about !== cred.about) ) {
-        await saveCred(new TCred({
-          credId: credId,
-          about: await ecX(cred.about as string), 
-          data: await Crypt.crypt(keyK.value, cred.data)
-        }))
-        tc.set(credId, cred)
+    if (m) for(const [,c] of m) {
+      const locc = tc.get(c.id) as Credential
+      if (!locc || (locc.about !== c.about) ) {
+        await saveCred(c)
+        tc.set(c.id, c)
       }
     }
     // supprimer de IDB safe ceux obsolètes
@@ -709,10 +719,11 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const saveCred = async (tcred: TCred) => {
+  const saveCred = async (c: Credential) => {
     if (stores.session.incognito) return
     try {
-      await db.value.tprefs.put({ id: tcred.credId, bin: encode(tcred)})
+      const bin = await Crypt.crypt(keyK.value, encode(c))
+      await db.value.tcreds.put({ id: c.id, bin})
     } catch (e) {
       throw EX(e, 2)
     }
@@ -781,22 +792,6 @@ export const useSafeStore = defineStore('safe', () => {
     } catch (e) {
       throw EX(e, 2)
     }
-  }
-
-  const getMySafeProfiles = () : Map<string, Profile> => {
-    const app = stores.config.appname
-    const mpf = profiles.value.get(app)
-    return mpf || new Map<string, Profile>()
-  }
-
-  /* Retourne depuis le Safe central actuellement en mémoire
-  la liste (éventuellement vide) des prefs relative à l'application (et au user)
-  */
-  const getMySafePrefs = () => {
-    if (!prefs.value) return []
-    const app = stores.config.appname
-    const x = prefs.value.get(app)
-    return x ? x : []
   }
 
   type SafeCodes = { // paramétres de l'opération $UpdCodesSafe
@@ -1228,7 +1223,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    step, backToAuth, userId, userName, isRegistered, keyK, 
+    step, backToAuth, userId, userName, isRegistered, keyK,
+    selectedProfile, selectedSession,
     openMode, incognito,
     devId, devName,
     hasIDBS, init0, init1,
@@ -1238,11 +1234,12 @@ export const useSafeStore = defineStore('safe', () => {
     tsessions, setTSession, delTSession, getMySessions,
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
-    profiles, getMySafeProfiles,
+    mySafeCreds, getCredIds, getCreds,
+    mySafeProfiles,
+    mySafePrefs,
     auth, 
     devices,
     purgeIDBS,
-    getMySafePrefs,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile,
     synthUsers

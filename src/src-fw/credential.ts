@@ -11,16 +11,20 @@ export class Credential {
     const m = new Map<string, Credential>()
     const objs: Object[] = JSON.parse(inp)
     for (const obj of objs) {
-      let c: Credential
-      switch (obj['clazz']) {
-        case 'base' : { c = new Credential(obj); break }
-        case 'phrase' : { c = new CredPhrase(obj); break }
-        case 'rich' : { c = new CredRich(obj); break }
-      }
-      m.set(c.id, c)
+      const c: Credential = Credential.newCredential(obj)
+      if (c) m.set(c.id, c)
     }
     return m
    }
+
+  static newCredential (obj: Object) :  Credential {
+    switch (obj['clazz']) {
+      case 'base' : return new Credential(obj)
+      case 'phrase' : return new CredPhrase(obj)
+      case 'rich' : return new CredRich(obj)
+    }
+    return null
+  }
 
   static toJson (creds: Credential[]) {
     const t = []
@@ -35,13 +39,13 @@ export class Credential {
 
   clazz: string // classe du credential
   id: string // id: déduite des propriétés identifiantes idProps
+  st?: number // pour le CredsMgr: 1:ajouté 2:maj about 3:retiré
   about: string // A propos du credential
-  app: string // application (ou '*' exceptionellement)
   org: string // organisation (ou '*' exceptionellement)
   type: string // code du type de credential
 
-  static props = ['id', 'about', 'type', 'app', 'org']
-  static idProps = ['app', 'org', 'type']
+  static props = ['id', 'about', 'type', 'org']
+  static idProps = ['org', 'type']
 
   constructor (obj: Object) {
     this.clazz = 'Credential'
@@ -75,7 +79,7 @@ Credential constitué d'un password / passphrase:
 export class CredPhrase extends Credential {
   pp: string // hash d'une phrase secrète ou passphrase elle-même
 
-  static idProps = ['app', 'org', 'type']
+  static idProps = ['org', 'type']
 
   constructor (obj: Object) {
     super(obj)
@@ -111,7 +115,7 @@ export class CredRich extends Credential {
   pp?: string // (fac) hash d'une phrase secrète ou passphrase elle-même
   sign?: Uint8Array // (fac) clé de signature
 
-  static idProps = ['app', 'org', 'type', 'flags', 'source', 'target']
+  static idProps = ['org', 'type', 'flags', 'source', 'target']
 
   constructor (obj: Object) {
     super(obj)
@@ -152,20 +156,34 @@ export class CredRich extends Credential {
 export function testCred () : Map<string, Credential> {
   const c1 = new CredPhrase({
     about: 'cred #1',
-    app: 'asocial2', org: 'doda', type:'LOGIN', pp: 'totoestbeau'
+    org: 'doda', type:'LOGIN', pp: 'totoestbeau'
   })
   c1.id = c1.computedId
 
   const c2 = new CredRich({
     about: 'cred #2',
-    app: 'asocial2', org: 'doda', type:'LOGIN', 
+    org: 'doda', type:'LOGIN', 
     flags: 'rw', source: 'toto', target: 'titi',
-    limit: '20260116', aes: 'abcd', sign: '1234AZERTY',
+    limit: '20260116', aes: 'abcd',
     pp: 'totoestbeau'
   })
   c2.id = c2.computedId
+  
+  const c3 = new CredRich({
+    about: 'cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3',
+    org: 'doda', type:'ZARBI', 
+    source: 'ducon',
+    sign: '1234AZERTY'
+  })
+  c3.id = c3.computedId
 
-  const s = Credential.toJson([c1, c2])
+  const c4 = new CredPhrase({
+    about: 'cred #1',
+    org: '*', type:'BOF', pp: 'totoestmoche'
+  })
+  c4.id = c4.computedId
+
+  const s = Credential.toJson([c1, c2, c4, c3])
   console.log(s)
   const cred = Credential.parse(s)
 

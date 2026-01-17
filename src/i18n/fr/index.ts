@@ -381,7 +381,20 @@ bla bla
   HPcredsmgr_2: `# Gérer les droits d'accès
 bla bla
 `,
-
+  HPcredslst_1: 'Liste des droits d\'accès enregistrés',
+  HPcredslst_2: `# Liste des droits d'accès enregistrés
+A propos du status ...
+`,
+  HPcredsdet_1: 'Détail du droit d\'accès',
+  HPcredsdet_2: `# Détail d'un droit d'accès enregistré
+A propos du status ...
+`,
+  HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
+  HPcreddet_0: 'Organisation:[{0}] - Type:[{1}] - Classe:[{2}]',
+  HPcredac_1: 'Retirer de la liste',
+  HPcredac_2: 'Remettre dans la liste',
+  HPcredac_3: 'Rétablir le texte d\'à propos',
+  HPcreddis: 'Contenu technique',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
