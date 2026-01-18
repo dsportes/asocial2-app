@@ -298,6 +298,14 @@ export function concat (views: ArrayBufferView[]) {
   return buf
 }
 
+export const eqNumberA = (a: any[], b: any[]) : boolean => {
+  if (!a && !b) return true
+  if (!a && b) return false
+  if (a && !b) return false
+  if (a.length !== b.length) return false
+  return isSameSet(new Set(a), new Set(b))
+}
+
 export const isSameSet = (s1, s2) => {
   if (s1.size !== s2.size) return false
   return [...s1].every(i => s2.has(i))

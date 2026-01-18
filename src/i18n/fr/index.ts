@@ -395,7 +395,11 @@ A propos du status ...
   HPcredac_2: 'Remettre dans la liste',
   HPcredac_3: 'Rétablir le texte d\'à propos',
   HPcreddis: 'Contenu technique',
-
+  HPlisted_P: 'Cité dans les profils',
+  HPlisted_S: 'Cité dans les sessions',
+  HPnotlisted_P: 'NON cité dans les profils',
+  HPnotlisted_S: 'NON cité dans les sessions',
+  
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
   DHCauja: 'aujourd\'hui',

@@ -10,7 +10,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { AppExc, sleep, u8ToB64, equ8 } from '../src-fw/util'
+import { AppExc, sleep, u8ToB64, equ8, eqNumberA } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { Credential } from '../src-fw/credential'
@@ -587,21 +587,25 @@ const selectedProfile: Ref<Profile> = ref(null)
     const m: Map<string, TSession> = new Map<string, TSession>()
     for(const [id, x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
-        let toSave = false
         x.about = await dcX(x.about)
-        if (!userId.value.startsWith('$')) {
+        if (isRegistered.value) {
           // Utilisateur enregistré - l'about et creds de la session sont tirés du profile
           const profile: Profile = mpf.get(x.profId)
           if (profile) {
-            x.about = profile.about
-            x.credIds = profile.creds
-          } else {
-            x.profId = ''
-            toSave = true
+            let toSave = false
+            if (x.about !== profile.about) {
+              x.about = profile.about
+              toSave = true
+            }
+            if (!eqNumberA(x.credIds, profile.creds)) {
+              x.credIds = profile.creds
+              toSave = true
+            }
+            if (toSave)
+              await saveTSession(x)
           }
         }
         m.set(id, x)
-        if (toSave) await saveTSession(x)
       }
     mySessions.value = m
   }
@@ -746,7 +750,6 @@ const selectedProfile: Ref<Profile> = ref(null)
       s.about = await ecX(s.about as string)
       const bin = encode(s.toObj)
       await db.value.tsessions.put({ id, bin })
-      s.about = ab
       tsessions.value.set(id, s)
     } catch (e) {
       throw EX(e, 2)
@@ -780,7 +783,8 @@ const selectedProfile: Ref<Profile> = ref(null)
   const setTSession = async (s: TSession, razdb?: boolean) => {
     try {
       s.time = Date.now()
-      await saveTSession(s)
+      if (!stores.session.incognito)
+        await saveTSession(s)
 
       recordIDB(s.dbName)
       if (razdb) try {

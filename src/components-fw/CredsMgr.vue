@@ -40,6 +40,26 @@
       <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
       <btn-cond class="self-end" v-if="localCred.st" flat :icon="icons[localCred.st]" 
         :label="$t('HPcredac_' + localCred.st)" @ok="doAction" color="warning"/>
+      <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_' + PS)}}</div>
+      <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+        class='bord1 q-pa-xs'>
+        <div v-for="[psid, ps] in mlocPS" :key="psid">
+          <div v-if="ps.mst.has(localCred.id)" class="row items-center q-my-xs">
+            <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(psid)"/>
+            <div class="col-11 font-mono ellipsis">{{ps.about}}</div>
+          </div>
+        </div>
+      </q-scroll-area>
+      <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_' + PS)}}</div>
+      <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+        class='bord1 q-pa-xs'>
+        <div v-for="[psid, ps] in mlocPS" :key="psid">
+          <div v-if="!ps.mst.has(localCred.id)" class="row items-center q-my-xs">
+            <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(psid)"/>
+            <div class="col-11 font-mono ellipsis">{{ps.about}}</div>
+          </div>
+        </div>
+      </q-scroll-area>
     </div>
   </div>
 </div>
@@ -73,7 +93,6 @@ type LocalCred = {
   st: number
   psIds: Set<string> // Set des ids des sessions/profiles le référençant
 }
-
 
 const icons = ['', 'close', 'redo', 'redo']
 /* 
@@ -114,10 +133,10 @@ const mlocPS: Ref<Map<string, LocalPS>>= ref(new Map<string, LocalPS>())
 }
 
 {
-  const x = testCred()
+  const tc = testCred()
   let i = 0
-  if (x) for(const [, c] of x) 
-    mlocCreds.value.set(x.id, { cred: c, st: i++, psIds: new Set() })
+  if (tc) for(const [id, c] of tc) 
+    mlocCreds.value.set(id, { cred: c, st: i++, psIds: new Set() })
 }
 
 /* Chargement des profiles / sessions */
@@ -153,6 +172,13 @@ const doAction = () => {
 
 }
 
+const onArrowD = (psid) => {
+  console.log(psid)
+}
+
+const onArrowU = (psid) => {
+  console.log(psid)
+}
 </script>
 
 <style lang="scss" scoped>

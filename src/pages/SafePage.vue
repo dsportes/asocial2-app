@@ -112,7 +112,7 @@
           <div class="col-11 q-pr-xs">{{$t('HPnvs')}}</div>
           <div class="col-1"/>
         </div>
-        <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
+        <div :class="dkli(idx + 1)" v-for="([id,s], idx) of sf.mySessions" :key="id">
           <div :class="(sf.selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(s)">
             <div class="col-7 q-pr-xs">{{s.about}}</div>
@@ -168,7 +168,7 @@
           <div class="col-11 q-pr-xs">{{$t('HPnvs')}}</div>
           <div class="col-1"></div>
         </div>
-        <div :class="dkli(idx + 1)" v-for="(s, idx) of mySessions" :key="s.profId">
+        <div :class="dkli(idx + 1)" v-for="([id,s], idx) of sf.mySessions" :key="id">
           <div :class="clSel(s) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(s)">
             <div class="col-7 q-pr-xs">{{pincode + ' ' + s.about}}</div>
@@ -179,7 +179,7 @@
             <div v-else class="col-1"/>
           </div>
         </div>
-        <div :class="dkli(idx + 1 + mySessions.size)" 
+        <div :class="dkli(idx + 1 + sf.mySessions.size)" 
           v-for="([, p], idx) of myProfiles" :key="p.profId">
           <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selProfile(p)">
@@ -259,7 +259,7 @@
 
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
-  <bar-open :bubble="$t('HPcredsmgr_2')" class="q-my-sm"
+  <bar-open :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
     :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
 
   <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
@@ -369,7 +369,7 @@
   <q-dialog v-model="ui.dModels[idc].untrustit" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-md q-mb-sm titre-lg text-italic">
-        {{$t('HPutnbs', mySessions.length, {count: mySessions.length})}}
+        {{$t('HPutnbs', sf.mySessions.size, {count: sf.mySessions.size})}}
       </div>
       <div class="column q-mb-md">
         <div class="titre-md">{{$t('HPutd_1')}}</div>
@@ -377,13 +377,13 @@
         <div class="q-ml-md titre-md">{{$t('HPutd_3')}}</div>
       </div>
 
-      <div v-if="mySessions.length" class="q-mb-sm q-pa-xs row">
+      <div v-if="sf.mySessions.size" class="q-mb-sm q-pa-xs row">
         <div class="col-3 q-pr-md text-right titre-md text-italic">{{$t('HPutc1')}}</div>
         <div class="col-9 titre-md text-italic">{{$t('HPutc2')}}</div>
       </div>
-      <div v-if="mySessions.length" class="q-my-sm q-mx-md slist q-pa-xs">
+      <div v-if="sf.mySessions.size" class="q-my-sm q-mx-md slist q-pa-xs">
         <q-scroll-area style="height: 150px" :barStyle="barStyle" :thumbStyle="thumbStyle">
-          <div v-for="(s, idx) in mySessions" :key="idx" class="q-my-xs row">
+          <div v-for="[id,s] in sf.mySessions" :key="id" class="q-my-xs row">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
             <div class="col-9 fs-md">{{s.about}}</div>
           </div>
@@ -508,7 +508,7 @@ const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
 
-const mySessions = ref<TSession>()
+const mySessions = ref<TSession>(new Map())
 const myTrusting = ref()
 
 /* Seulement pour un utilisateur enregistré :
@@ -730,7 +730,7 @@ const selProfile = (profile: Profile) => {
 const validateSession = async (code, data) => {
   if (newSessionName.err !== '') return
 
-  let sv = sf.selectedSession.value
+  let sv = sf.selectedSession
   const sp = sf.selectedProfile
   let about: string = newSessionName.inp
 
@@ -784,16 +784,14 @@ const validateSession = async (code, data) => {
 
   } else {
     // nouvelle session vierge de droits. Il y a OU NON du réseau
-    let profId = ''
+    const profId = Crypt.shaS(Crypt.random(16))
 
     // Création du profile dans Safe - S'il y a du réseau
-    if (sf.isRegistered && session.hasNet) {
-      profId = Crypt.shaS(Crypt.random(16))
+    if (sf.isRegistered && pinned.value && session.hasNet)
       await sf.setAboutProfile(profId, about)
-    }
 
-    if (pinned.value) { 
-      // Session épinglée : AVEC profil si réseau et sinon SANS profil
+    if (!session.incognito && ((sf.isRegistered && pinned.value) || !sf.isRegistered)) { 
+      // Session épinglée
       const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
