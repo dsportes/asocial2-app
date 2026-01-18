@@ -745,7 +745,6 @@ const selectedProfile: Ref<Profile> = ref(null)
 
   const saveTSession = async (s: TSession) => {
     try {
-      const ab = s.about
       const id = s.idOf
       s.about = await ecX(s.about as string)
       const bin = encode(s.toObj)
@@ -1095,11 +1094,14 @@ const selectedProfile: Ref<Profile> = ref(null)
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
     }
-    const op = new Operation('$$OpenSafeById')
+    const op = new Operation('$OpenSafeById')
     let ret
     try {
-      ret = await op.post({args})
-    } catch(e) { op.ko(e); return -1}
+      ret = await op.post(args)
+    } catch(e) { 
+      op.ko(e)
+      return -1
+    }
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status

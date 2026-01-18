@@ -116,7 +116,7 @@
           <div :class="(sf.selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(s)">
             <div class="col-7 q-pr-xs">{{s.about}}</div>
-            <div class="col-4 ">{{dhcool(s.time)}}</div>
+            <div class="col-4 text-italic">{{dhcool(s.time)}}</div>
             <div v-if="s.hasCache" class="col-1 row justify-end">
               <q-img :src="database" style="height: 24px; max-width: 24px"/>
             </div>
@@ -172,7 +172,7 @@
           <div :class="clSel(s) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(s)">
             <div class="col-7 q-pr-xs">{{pincode + ' ' + s.about}}</div>
-            <div class="col-4 ">{{dhcool(s.time)}}</div>
+            <div class="col-4 text-italic">{{dhcool(s.time)}}</div>
             <div v-if="s.hasCache" class="col-1 row justify-end">
               <q-img :src="database" style="height: 24px; max-width: 24px"/>
             </div>
@@ -521,7 +521,8 @@ const nvClicked = ref()
 
 const openSession = async () => {
   nvClicked.value = false
-  if (!session.incognito.value && !sf.hasIDBS) await sf.init1()
+  if (!session.incognito && !sf.hasIDBS) 
+    await sf.init1()
 
   await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
@@ -659,7 +660,8 @@ const validateLocTr = async () => {
   } else {
     myTrusting.value.pseudo = locTr.inp
   }
-  if (!sf.hasIDBS) await sf.init1()
+  if (!sf.hasIDBS) 
+    await sf.init1()
   await sf.setTrusting(myTrusting.value)
 
   openSession()

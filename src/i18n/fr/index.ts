@@ -426,6 +426,7 @@ A propos du status ...
   EX_14: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
 
   EX_1001: 'Erreur "fake" pour test\n{0}',
+  EX_1002: 'Opération inconnue [{0}]',
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_10000: 'Interruption volontaire',
 
