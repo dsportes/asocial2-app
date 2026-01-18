@@ -205,6 +205,7 @@ export const useSafeStore = defineStore('safe', () => {
   const devName = ref('') // Depuis IDB Header
   const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
   const tsessions : Ref<Map<string, TSession>> = ref() // Depuis IDB tsessions
+  const mySessions : Ref<Map<string, TSession>> = ref()
 
   const init0 = async () : Promise<void> => {
     try {
@@ -580,11 +581,11 @@ const selectedProfile: Ref<Profile> = ref(null)
     return x
   }
 
-  const getMySessions = async () : Promise<TSession[]> => {
+  const getMySessions = async () => {
     const app = stores.config.appname
     const mpf: Map<string, Profile> = mySafeProfiles.value
-    const tok: TSession[] = []
-    for(const [,x] of tsessions.value)
+    const m: Map<string, TSession> = new Map<string, TSession>()
+    for(const [id, x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
         let toSave = false
         x.about = await dcX(x.about)
@@ -599,10 +600,10 @@ const selectedProfile: Ref<Profile> = ref(null)
             toSave = true
           }
         }
-        tok.push(x) 
+        m.set(id, x)
         if (toSave) await saveTSession(x)
       }
-    return tok
+    mySessions.value = m
   }
 
   const loadMyLocalPrefs = async () => {
@@ -1231,7 +1232,7 @@ const selectedProfile: Ref<Profile> = ref(null)
     resetAllLocal,
     newTrustingL, newTSession,
     trustings, setTrusting, delTrusting, getMyTrusting,
-    tsessions, setTSession, delTSession, getMySessions,
+    tsessions, setTSession, delTSession, getMySessions, mySessions,
     tprefs, loadMyLocalPrefs, refreshLocalPrefs,
     tcreds, loadMyLocalCreds, refreshLocalCreds,
     mySafeCreds, getCredIds, getCreds,

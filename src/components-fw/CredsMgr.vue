@@ -14,32 +14,32 @@
   <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
     class='bord1 q-pa-xs'>
     <div :class="dkli(idx)" 
-      v-for="([id, c], idx) of creds" :key="id">
-      <div :class="crSel(c) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-        @click="selCred(c)">
+      v-for="([id, lc], idx) of mlocCreds" :key="id">
+      <div :class="crSel(lc) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
+        @click="selCred(lc)">
         <div class="col-2 row">
-          <q-icon v-if="c.st === 1" name="add_circle" size="18px"/>
-          <q-icon v-if="c.st === 2" name="delete" size="18px"/>
-          <div :class="!c.st || c.st === 3 ? 'q-ml-md' : ''">
-            {{c.id.substring(0, 5)}}
+          <q-icon v-if="lc.st === 1" name="add_circle" size="18px"/>
+          <q-icon v-if="lc.st === 2" name="delete" size="18px"/>
+          <div :class="!lc.st || lc.st === 3 ? 'q-ml-md' : ''">
+            {{lc.cred.id.substring(0, 5)}}
           </div>
         </div>
-        <div class="col-2 ellipsis q-px-xs">{{c.org}}</div>
-        <div class="col-1 ellipsis q-pr-xs">{{c.type}}</div>
-        <div :class="'col-7' + (c.st === 3 ? ' text-warning text-italic' : '')">{{c.about}}</div>
+        <div class="col-2 ellipsis q-px-xs">{{lc.cred.org}}</div>
+        <div class="col-1 ellipsis q-pr-xs">{{lc.cred.type}}</div>
+        <div :class="'col-7' + (lc.st === 3 ? ' text-warning text-italic' : '')">{{lc.cred.about}}</div>
       </div>
     </div>
   </q-scroll-area>
 
   <bar-open class="q-mt-md" :title="$t('HPcredsdet_1')" :bubble="$t('HPcredsdet_2')"/>
   <div class='bord1 q-pa-xs'>
-    <div v-if="cred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
+    <div v-if="localCred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
     <div v-else class="column">
-      <div class="q-my-xs">{{$t('HPcreddet_0', [cred.org, cred.type, cred.clazz])}}</div>
-      <div class="q-my-xs">{{cred.about}}</div>
-      <text-zoom :label="$t('HPcreddis')" :text="cred.toJson"/>
-      <btn-cond class="self-end" v-if="cred.st" flat :icon="icons[creds.st]" 
-        :label="$t('HPcredac_' + cred.st)" @ok="doAction" color="warning"/>
+      <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
+      <div class="q-my-xs">{{localCred.cred.about}}</div>
+      <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
+      <btn-cond class="self-end" v-if="localCred.st" flat :icon="icons[localCred.st]" 
+        :label="$t('HPcredac_' + localCred.st)" @ok="doAction" color="warning"/>
     </div>
   </div>
 </div>
@@ -62,6 +62,19 @@ import { $t, sty, equ8, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential, testCred } from '../src-fw/credential'
 
+type LocalPS = { // profile ou session
+  id: string
+  about: string
+  mst: Map<string, number> // Map des statuts des credIds
+}
+
+type LocalCred = {
+  cred: Credential
+  st: number
+  psIds: Set<string> // Set des ids des sessions/profiles le référençant
+}
+
+
 const icons = ['', 'close', 'redo', 'redo']
 /* 
 Status d'un credential dans la liste
@@ -79,7 +92,6 @@ const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5p
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 
 const props = defineProps ({
-  creds: Object,
   idc: String
 })
 
@@ -89,29 +101,52 @@ const sf = stores.safe
 const ui = stores.ui
 const cfg = stores.config
 
-const creds: Ref<Map<string, Credential>>= ref(new Map<string, Credential>())
-if (props.creds) for(const [id, c] of props.creds) {
-  c.st = 0
-  creds.value.set(id, c)
+const PS = ref(sf.isRegistered ? 'P' : 'S')
+
+const mlocCreds: Ref<Map<string, LocalCred>>= ref(new Map<string, LocalCred>())
+const mlocPS: Ref<Map<string, LocalPS>>= ref(new Map<string, LocalPS>())
+
+/* Chargement des credentials */
+{
+  const x = sf.isRegistered ? sf.mySafeCreds : sf.tcreds
+  if (x) for(const [, c] of x)
+    mlocCreds.value.set(x.id, { cred: c, st: 0, psIds: new Set() })
 }
 
-const testCreds = ref(testCred())
-let i = 0
-if (testCreds.value) for(const [id, c] of testCreds.value) {
-  c.st = i++
-  creds.value.set(id, c)
+{
+  const x = testCred()
+  let i = 0
+  if (x) for(const [, c] of x) 
+    mlocCreds.value.set(x.id, { cred: c, st: i++, psIds: new Set() })
 }
 
-const cred = ref(null)
-const crSel = (c) => {
-  let x = cred.value && cred.value.id === c.id ? 'bord2w ' : 'bord2c '
-  if (c.st === 1) x += 'text-bold text-warning '
-  else if (c.st === 2) x += 'text-italic text-grey-7 '
+/* Chargement des profiles / sessions */
+{
+  const isR = sf.isRegisterd
+  const mx = isR ? sf.mySafeProfiles : sf.mySessions
+  if (mx) for (const [id, x] of mx) {
+    const mst: Map<string, number> = new Map()
+    const prf = { id, about: x.about, mst }
+    mlocPS.value.set(id, prf)
+    for(const credId of (isR ? x.creds : x.credIds)) {
+      mst.set(credId, 0)
+      const tc = mlocCreds.get(credId)
+      if (tc) tc.psIds.add(id)
+    }
+  }
+}
+
+const localCred = ref(null)
+const crSel = (lc) => {
+  if (!lc) return ''
+  let x = localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c '
+  if (lc.st === 1) x += 'text-bold text-warning '
+  else if (lc.st === 2) x += 'text-italic text-grey-7 '
   return x
 }
 
-const selCred = (c) => {
-  cred.value = c
+const selCred = (lc) => {
+  localCred.value = lc
 }
 
 const doAction = () => {

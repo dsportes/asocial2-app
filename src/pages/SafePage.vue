@@ -179,7 +179,7 @@
             <div v-else class="col-1"/>
           </div>
         </div>
-        <div :class="dkli(idx + 1 + mySessions.length)" 
+        <div :class="dkli(idx + 1 + mySessions.size)" 
           v-for="([, p], idx) of myProfiles" :key="p.profId">
           <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selProfile(p)">
@@ -222,9 +222,6 @@
         <div class="titre-md text-italic q-mt-md">
           {{$t(sf.selectedSession ? 'HPrensession' : 'HPnouvsession')}}
         </div>
-        <bar-open :bubble="$t('HPcredsmgr_2')" class="q-my-sm"
-          :title="$t('HPcredsmgr_1')"
-          :fnopen="openCM" size="sm"/>
 
         <input-ps v-model="newSessionName"
           :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
@@ -261,6 +258,9 @@
   </div>
 
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
+
+  <bar-open :bubble="$t('HPcredsmgr_2')" class="q-my-sm"
+    :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
 
   <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
     :disable="session.incognito" size="sm"
@@ -330,7 +330,7 @@
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
   <!-- Gestion des credentials --> 
-  <creds-mgr v-if="cm" :idc="idc" :creds="creds"/>
+  <creds-mgr v-if="cm" :idc="idc"/>
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :createMode="createMode"/>
@@ -523,7 +523,7 @@ const openSession = async () => {
   nvClicked.value = false
   if (!session.incognito.value && !sf.hasIDBS) await sf.init1()
 
-  mySessions.value = await sf.getMySessions()
+  await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
   
   if (!session.incognito) {
@@ -533,8 +533,7 @@ const openSession = async () => {
 
   if (sf.isRegistered) {
     const profIds = new Set<string>()
-    for (const s of mySessions.value) 
-      if (s.profId) profIds.add(s.profId)
+    for (const [,s] of sf.mySessions) if (s.profId) profIds.add(s.profId)
     myProfiles.value = new Map<string, Profile>()
     for (const [profId, p] of sf.mySafeProfiles) {
       if (!profIds.has(profId)) myProfiles.value.set(profId, p)
@@ -575,7 +574,7 @@ const openTrust = async () => {
 }
 
 const openUntrust = async () => {
-  mySessions.value = sf.getMySessions()
+  await sf.getMySessions()
   ui.oD(idc, 'untrustit')
 }
 
@@ -607,9 +606,7 @@ const manUsers = () => {
   ui.oD(idc, 'manusers')
 }
 
-const creds = ref()
 const openCM = () => {
-  creds.value = sf.getCreds(sf.getCredIds())
   ui.oD(idc, 'credsmgr')
 }
 
