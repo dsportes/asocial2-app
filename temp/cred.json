@@ -1,0 +1,40 @@
+[
+{
+	"clazz": "phrase",
+	"id": "ftRYc2-4qIR0-qEjNgJz",
+	"about": "cred #1",
+	"type": "LOGIN",
+	"org": "doda",
+	"pp": "totoestbeau"
+},
+{
+	"clazz": "rich",
+	"id": "AFyE8BFTZk9-Z3iWiGCt",
+	"about": "cred #2",
+	"type": "LOGIN",
+	"org": "doda",
+	"flags": "rw",
+	"source": "toto",
+	"target": "titi",
+	"limit": "20260116",
+	"aes": "abcd",
+	"pp": "totoestbeau"
+},
+{
+	"clazz": "phrase",
+	"id": "32YAtadNf0cVB9sb3-ut",
+	"about": "cred #1",
+	"type": "BOF",
+	"org": "*",
+	"pp": "totoestmoche"
+},
+{
+	"clazz": "rich",
+	"id": "Hr3u7ah7VGxZTHWAUHqd",
+	"about": "cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3",
+	"type": "ZARBI",
+	"org": "doda",
+	"source": "ducon",
+	"sign": "1234AZERTQ=="
+}
+]

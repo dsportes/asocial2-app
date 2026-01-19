@@ -5,7 +5,6 @@
     <q-card :class="sty('sm')">
       <q-toolbar>
         <btn-cond icon="close" color="none"  flat @ok="ui.fD()"/>
-
         <q-toolbar-title class="titre-md full-width text-center q-pr-xs">{{label}}</q-toolbar-title>
         <btn-cond icon="zoom_in" flat @ok="zoom"/>
         <btn-cond class="q-ml-xs" icon="zoom_out" flat @ok="unzoom" :disable="rx < 5"/>

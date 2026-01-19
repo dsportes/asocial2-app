@@ -80,6 +80,11 @@
 .text-btnbg { color: $btnbg !important }
 .bg-btnbg { background: var(--q-btnbg) !important }
 
+.msg { font-size: 0.9rem }
+.msg, .msg2 { font-style: italic; font-weight: bold; padding: 1px }
+.text-msg, .msg, .msg2 { color: var(--q-msgtc) !important }
+.bg-msg, .msg, .msg2 { background: var(--q-msgbg) !important }
+
 /* surcharges de quasar */
 .q-toolbar { padding: 0 !important; min-height: 0 !important }
 .q-item__section--avatar { min-width: 0 !important; }
