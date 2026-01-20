@@ -74,8 +74,8 @@
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_' + PS)}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div v-for="[psid, ps] in mlocPS" :key="psid">
-              <div v-if="ps.crids.has(localCred.id)" class="row items-center q-my-xs">
+            <div v-for="[psid, ps] in mlocPS1" :key="psid">
+              <div class="row items-center q-my-xs">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
                 <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
@@ -84,8 +84,8 @@
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_' + PS)}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div v-for="[psid, ps] in mlocPS" :key="psid">
-              <div v-if="!ps.crids.has(localCred.id)" class="row items-center q-my-xs">
+            <div v-for="[psid, ps] in mlocPS2" :key="psid">
+              <div class="row items-center q-my-xs">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(ps)"/>
                 <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
@@ -99,13 +99,39 @@
       <bar-open :title="$t('HPpslst_1')" :bubble="$t('HPpslst_2')"/>
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
-        <div :class="dkli(idx)" v-for="([id, ps], idx) of mlocPS" :key="id">
+        <div :class="dkli(idx)" v-for="([psid, ps], idx) of mlocPS" :key="psid">
           <div :class="psSel(ps) + 'row q-my-xs cursor-pointer select'" @click="selPS(ps)">
-            <div class="row-11">{{ps.about}}</div>
-            <div class="row-1 font-mono">{{ps.mst.size}}</div>
+            <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
+            <div class="row-1 font-mono">{{ps.crIds.size}}</div>
           </div>
         </div>
       </q-scroll-area>
+
+      <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
+      <div v-else class="column">
+        <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
+        <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+          class='bord1 q-pa-xs'>
+          <div v-for="[crid, lc] in mlocCreds1" :key="crid">
+            <div class="row items-center q-my-xs">
+              <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowDC(lc)"/>
+              <cred-row :class="crSel(lc) + 'col-11 q-my-xs'"
+                :cred="lc.cred" :st="lc.st"/>
+            </div>
+          </div>
+        </q-scroll-area>
+        <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_C')}}</div>
+        <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+          class='bord1 q-pa-xs'>
+          <div v-for="[crid, lc] in mlocCreds2" :key="crid">
+            <div class="row items-center q-my-xs">
+              <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowUC(lc)"/>
+              <cred-row :class="crSel(lc) + 'col-11 q-my-xs'"
+                :cred="lc.cred" :st="lc.st"/>
+            </div>
+          </div>
+        </q-scroll-area>
+      </div>
     </div>
   </div>
 </template>
@@ -211,7 +237,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, reactive, onUnmounted, watch, onMounted } from 'vue'
+import { ref, computed, reactive, onUnmounted, watch } from 'vue'
 import { saveAs } from 'file-saver'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
@@ -230,7 +256,7 @@ import { Crypt } from '../src-fw/crypt'
 type LocalPS = { // profile ou session
   id: string
   about: string
-  crids: Set<string> // Set des ids des credentials
+  crIds: Set<string> // Set des ids des credentials
 }
 
 type LocalCred = {
@@ -286,6 +312,11 @@ const cm = computed(() => ui.dModels[props.idc].credsmgr)
 const tab = ref('bycreds')
 const PS = ref(sf.isRegistered ? 'P' : 'S')
 
+watch(tab, (t) => {
+  if (t === 'bycreds' && localCred.value)
+    selCred(localCred.value)
+})
+
 const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
 const origCreds: Ref<Map<string, Credential>> = ref()
 const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
@@ -310,15 +341,15 @@ const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
   const isR = sf.isRegisterd
   const mx = isR ? sf.mySafeProfiles : sf.mySessions
   if (mx) for (const [id, x] of mx) {
-    const crids: Set<string> = new Set()
-    const ocrids: Set<string> = new Set()
-    const prf = { id, about: x.about, crids }
-    const oprf = { id, about: x.about, crids: ocrids }
+    const crIds: Set<string> = new Set()
+    const ocrIds: Set<string> = new Set()
+    const prf = { id, about: x.about, crIds }
+    const oprf = { id, about: x.about, crIds: ocrIds }
     mlocPS.value.set(id, prf)
     morigPS.value.set(id, oprf)
     for(const credId of (isR ? x.creds : x.credIds)) {
-      crids.add(credId)
-      ocrids.add(credId)
+      crIds.add(credId)
+      ocrIds.add(credId)
       const tc = mlocCreds.get(credId)
       if (tc) tc.psIds.add(id)
     }
@@ -327,6 +358,8 @@ const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 
 const localCred = ref(null)
 const origCred = ref(null)
+const mlocPS1 = ref(null)
+const mlocPS2 = ref(null)
 const locabout = ref('')
 const chgAb = computed(() => localCred.value.cred.about !== locabout.value )
 const locabouterr = computed(() => locabout.value.length < aboutSize[0] ? 'PScourt' : 
@@ -340,6 +373,11 @@ const selCred = (lc) => {
   locabout.value = lc.cred.about || ''
   const c = origCreds.value.get(lc.cred.id)
   origCred.value = c ? Credential.clone(c) : null
+  mlocPS1.value = new Map()
+  mlocPS2.value = new Map()
+  for (const [psid, e] of mlocPS.value)
+    if (e.crIds.has(localCred.value.cred.id)) mlocPS1.value.set(psid, e)
+    else mlocPS2.value.set(psid, e)
 }
 
 const undoAb = () => {
@@ -380,37 +418,70 @@ const doAction4 = () => { // credential existait (pas importé): RETIRER
 const onArrowD = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crids.delete(localCred.value.cred.id)
+    e.crIds.delete(localCred.value.cred.id)
+    localCred.value.psIds.delete(ps.id)
+    mlocPS1.value.delete(ps.id)
+    mlocPS2.value.set(ps.id, e)
   }
 }
 
 const onArrowU = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crids.add(localCred.value.cred.id)
+    e.crIds.add(localCred.value.cred.id)
+    localCred.value.psIds.add(ps.id)
+    mlocPS2.value.delete(ps.id)
+    mlocPS1.value.set(ps.id, e)
   }
 }
 
-const cridsPSChg = (psid) => {
+const crIdsPSChg = (psid) => {
   const ps1 = mlocPS.value.get(psid)
   const ps2 = morigPS.value.get(psid)
-  return ps1 && ps2 && isSameSet(ps1.crids, ps2.crids)
+  return ps1 && ps2 && isSameSet(ps1.crIds, ps2.crIds)
 }
 
 const clPSid = (psid) => {
-  const b = cridsPSChg(psid)
+  const b = crIdsPSChg(psid)
   return !b ? ' text-bold text-warning' : ''
 }
 
 const localPS = ref(null)
 const origPS = ref(null)
+const mlocCreds1 = ref(null)
+const mlocCreds2 = ref(null)
 
-const psSel = (ps) => !lc ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2w ' : 'bord2c ')
+const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2w ' : 'bord2c ')
 
 const selPS = (ps) => {
   localPS.value = ps
   const x = morigPS.value.get(ps.id)
-  origPS.value = x ? { id: x.id, about: x.about, crids: cloneSet(x.crids) } : null
+  origPS.value = x ? { id: x.id, about: x.about, crIds: cloneSet(x.crIds) } : null
+  mlocCreds1.value = new Map()
+  mlocCreds2.value = new Map()
+  for (const [crid, e] of mlocCreds.value)
+    if (e.psIds.has(localPS.value.id)) mlocCreds1.value.set(crid, e)
+    else mlocCreds2.value.set(crid, e)
+}
+
+const onArrowDC = (lc) => {
+  const e = mlocCreds.value.get(lc.cred.id)
+  if (e) {
+    e.psIds.delete(localPS.value.id)
+    localPS.value.crIds.delete(lc.cred.id)
+    mlocCreds1.value.delete(lc.cred.id)
+    mlocCreds2.value.set(lc.cred.id, e)
+  }
+}
+
+const onArrowUC = (lc) => {
+  const e = mlocCreds.value.get(lc.cred.id)
+  if (e) {
+    e.psIds.delete(localPS.value.id)
+    localPS.value.crIds.add(lc.cred.id)
+    mlocCreds2.value.delete(lc.cred.id)
+    mlocCreds1.value.set(lc.cred.id, e)
+  }
 }
 
 const importCr = ref(1)
