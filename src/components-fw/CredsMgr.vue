@@ -18,21 +18,9 @@
       <bar-open :title="$t('HPcredslst_1')" :bubble="$t('HPcredslst_2')"/>
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
-        <div :class="dkli(idx)" 
-          v-for="([id, lc], idx) of mlocCreds" :key="id">
-          <div :class="crSel(lc) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selCred(lc)">
-            <div class="col-2 row">
-              <q-icon v-if="lc.st === 1" name="add_circle" size="18px"/>
-              <q-icon v-if="lc.st === 2" name="delete" size="18px"/>
-              <div :class="!lc.st || lc.st === 3 ? 'q-ml-md' : ''">
-                {{lc.cred.id.substring(0, 5)}}
-              </div>
-            </div>
-            <div class="col-2 ellipsis q-px-xs">{{lc.cred.org}}</div>
-            <div class="col-1 ellipsis q-pr-xs">{{lc.cred.type}}</div>
-            <div :class="'col-7' + (lc.st === 3 ? ' text-warning text-italic' : '')">{{lc.cred.about}}</div>
-          </div>
+        <div :class="dkli(idx)" v-for="([id, lc], idx) of mlocCreds" :key="id">
+          <cred-row :class="crSel(lc) + 'q-my-xs cursor-pointer select'" @click="selCred(lc)"
+            :cred="lc.cred" :st="lc.st"/>
         </div>
       </q-scroll-area>
 
@@ -40,11 +28,44 @@
       <div class='bord1 q-pa-xs'>
         <div v-if="localCred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
         <div v-else class="column">
-          <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
-          <div class="q-my-xs">{{localCred.cred.about}}</div>
-          <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
-          <btn-cond class="self-end" v-if="localCred.st" flat :icon="icons[localCred.st]" 
-            :label="$t('HPcredac_' + localCred.st)" @ok="doAction" color="warning"/>
+          <div v-if="localCred.st === 2"> <!-- credential retiré de la liste -->
+            <bar-open :title="$t('HPcredac_2')" :fnopen="doAction2" icon="redo" color="primary"/>
+            <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.org, origCred.type, origCred.clazz])}}</div>
+            <div class="q-my-xs">{{origCred.about}}</div>
+          </div>
+
+          <div v-if="localCred.st === 1"> <!-- credential importé (n'existait PAS) -->
+            <bar-open :title="$t('HPcredac_3')" :fnopen="doAction3" icon="delete" color="warning"/>
+            <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
+          </div>
+
+          <div v-if="localCred.st === 0 || localCred.st === 3"> <!-- crédential existait, pas importé pas supprimé: about PEUT-ETRE changé -->
+            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
+            <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
+          </div>
+
+          <!-- existait ou importé, about déjà modifié ou non-->
+          <q-input v-if="localCred.st !== 2"
+            filled v-model="locabout" 
+            :label="$t('HPcrab')"
+            input-class="font-mono"
+            counter
+            :hint="hint"
+            bottom-slots
+            :error="locabouterr !== ''"
+            @keydown.enter.prevent="valAb">
+            <template v-slot:append>
+              <q-btn size="sm" icon="undo" color="primary" round
+                @click="undoAb" :disable="!chgAb || locabouterr !== ''"/>
+              <q-btn size="sm" icon="check" :disable="!chgAb || locabouterr !== ''" 
+                color="primary" round @click="valAb" />
+            </template>
+            <template v-slot:error>{{$t(locabouterr)}}</template>
+          </q-input>
+          
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_' + PS)}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
@@ -75,7 +96,7 @@
 <dialog-std1 v-model="ui.dModels[idc2].import" :title="$t('HPimport_1')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check" :label="$t('validate')" 
+      <btn-cond flat size="lg" icon="check" :label="$t('HPimport_0')" 
       :disable="locImp === null"
       @ok="doImport"/>
     </div>
@@ -116,16 +137,10 @@
     <div v-if="diag === '' && importedText !== null">
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs q-my-md'>
-        <div :class="dkli(idx)" 
-          v-for="([id, lc], idx) of locImp" :key="id">
-          <div class="row q-my-xs font-mono fs-md items-start">
-            <div class="col-2 row">
-              <q-checkbox dense v-model="lc.ck" class="q-mr-xs"/>
-              <div>{{id.substring(0, 5)}}</div>
-            </div>
-            <div class="col-2 ellipsis q-px-xs">{{lc.c.org}}</div>
-            <div class="col-1 ellipsis q-pr-xs">{{lc.c.type}}</div>
-            <div class="col-7">{{lc.c.about}}</div>
+        <div :class="dkli(idx)" v-for="([id, lc], idx) of locImp" :key="id">
+          <div class="row q-my-xs items-start">
+            <q-checkbox class="col-1" dense v-model="lc.ck"/>
+            <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
           </div>
         </div>
       </q-scroll-area>
@@ -139,7 +154,7 @@
     <div class="row justify-end q-px-xs q-mb-md">
       <btn-cond flat size="lg" icon="check" 
       :disable="exportCr === 2 && cryptK.key === null"
-      :label="$t('validate')" 
+      :label="$t('HPexport_0')" 
       @ok="doExport"/>
     </div>
   </template>
@@ -156,16 +171,10 @@
 
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs q-my-md'>
-        <div :class="dkli(idx)" 
-          v-for="([id, lc], idx) of locExp" :key="id">
-          <div class="row q-my-xs font-mono fs-md items-start">
-            <div class="col-2 row">
-              <q-checkbox dense v-model="lc.ck" class="q-mr-xs"/>
-              <div>{{id.substring(0, 5)}}</div>
-            </div>
-            <div class="col-2 ellipsis q-px-xs">{{lc.c.org}}</div>
-            <div class="col-1 ellipsis q-pr-xs">{{lc.c.type}}</div>
-            <div class="col-7">{{lc.c.about}}</div>
+        <div :class="dkli(idx)" v-for="([id, lc], idx) of locExp" :key="id">
+          <div class="row q-my-xs items-start">
+            <q-checkbox class="col-1" dense v-model="lc.ck"/>
+            <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
           </div>
         </div>
       </q-scroll-area>
@@ -188,6 +197,7 @@ import { ref, computed, reactive, onUnmounted, watch, onMounted } from 'vue'
 import { saveAs } from 'file-saver'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
+import CredRow from '../components-fw/CredRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
@@ -214,6 +224,7 @@ type LocalCred = {
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
+const aboutSize = [4, 64]
 const icons = ['', 'close', 'redo', 'redo']
 /* 
 Status d'un credential dans la liste
@@ -256,14 +267,22 @@ const cm = computed(() => ui.dModels[props.idc].credsmgr)
 
 const PS = ref(sf.isRegistered ? 'P' : 'S')
 
-const mlocCreds: Ref<Map<string, LocalCred>>= ref(new Map<string, LocalCred>())
-const mlocPS: Ref<Map<string, LocalPS>>= ref(new Map<string, LocalPS>())
+const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
+const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
+const origCreds: Ref<Map<string, Credential>> = ref()
 
 /* Chargement des credentials */
 {
-  const x = sf.isRegistered ? sf.mySafeCreds : sf.tcreds
-  if (x) for(const [, c] of x)
-    mlocCreds.value.set(x.id, { cred: c, st: 0, psIds: new Set() })
+  origCreds.value = sf.isRegistered ? sf.mySafeCreds : sf.tcreds
+  if (origCreds.value) for(const [, c] of origCreds.value)
+    mlocCreds.value.set(x.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
+}
+
+// simulation pour test
+{
+  origCreds.value = testCred()
+  for(const [, c] of origCreds.value)
+    mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
 }
 
 /* Chargement des profiles / sessions */
@@ -283,20 +302,55 @@ const mlocPS: Ref<Map<string, LocalPS>>= ref(new Map<string, LocalPS>())
 }
 
 const localCred = ref(null)
-const crSel = (lc) => {
-  if (!lc) return ''
-  let x = localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c '
-  if (lc.st === 1) x += 'text-bold text-warning '
-  else if (lc.st === 2) x += 'text-italic text-grey-7 '
-  return x
-}
+const origCred = ref(null)
+const locabout = ref('')
+const chgAb = computed(() => localCred.value.cred.about !== locabout.value )
+const locabouterr = computed(() => locabout.value.length < aboutSize[0] ? 'PScourt' : 
+  (locabout.value.length > aboutSize[1] ? 'PSlong' : ''))
+const hint = computed(() => $t('PSminmax', aboutSize) + (!locabouterr.value ? $t('pressret') : ''))
+
+const crSel = (lc) => !lc ? '' : (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc) => {
   localCred.value = lc
+  locabout.value = lc.cred.about || ''
+  const c = origCreds.value.get(lc.cred.id)
+  origCred.value = c ? Credential.clone(c) : null
 }
 
-const doAction = () => {
+const undoAb = () => {
+  if (locabouterr.value !== '' || !chgAb.value) return
+  const st = localCred.value.st
+  if (st === 1) locabout.value = localCred.value.cred.about || '' // rétablit la valeur importée
+  else locabout.value = origCred.value.about // 0 ou 3 (pas importé): rétablit la valeur origine
+}
 
+const valAb = () => {
+  if (locabouterr.value !== '' || !chgAb.value) return
+  const st = localCred.value.st
+  if (st === 1) localCred.value.cred.about = locabout.value // importé: ne change rien au statut
+  else { // pas importé : statut à 3 si about changé ou remis à 0 si rétabli
+    if (origCred.value.about === locabout.value) {
+      localCred.value.st = 0
+      localCred.value.cred.about = origCred.value.about
+    } else {
+      localCred.value.st = 3
+      localCred.value.cred.about = locabout.value
+    }
+  }
+}
+
+const doAction2 = () => { // REMETTRE dans la liste le cred qui y avait été enlevé
+  localCred.value.st = 0
+}
+
+const doAction3 = () => { // credential importé (n'existait PAS): RETIRER
+  mlocCreds.value.delete(localCred.value.cred.id)
+  localCred.value = null
+}
+
+const doAction4 = () => { // credential existait (pas importé): RETIRER
+  localCred.value.st = 2
 }
 
 const onArrowD = (psid) => {
@@ -362,8 +416,17 @@ const zoom = () => { rx.value += 10 }
 const unzoom = () => { if (rx.value >= 15) rx.value -= 10; else rx.value = 5 }
 
 const doImport = () => {
-  if (locImp.value.size) for(const [id, lc] of locImp.value) 
-    if (lc.ck) mlocCreds.value.set(id, { cred: lc.c, st: 1, psIds: new Set() })
+  if (locImp.value.size) 
+    for(const [id, lc] of locImp.value)
+      if (lc.ck) {
+        const orig = origCreds.value.get(lc.c.id)
+        if (orig) { // existait avant import : seul son about a PEUT-ETRE changé
+          if (orig.about !== lc.c.about)
+            mlocCreds.value.set(id, { cred: lc.c, st: 3, psIds: new Set() })
+        } else { // n'existait PAS. Import d'un nouveau
+          mlocCreds.value.set(id, { cred: lc.c, st: 1, psIds: new Set() })
+        }
+      }
   ui.fD()
 }
 

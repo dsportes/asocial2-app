@@ -26,6 +26,11 @@ export class Credential {
     return null
   }
 
+  static clone (src: Credential) {
+    const obj = src.toObj
+    return Credential.newCredential(obj)
+  }
+
   static toJson (creds: Credential[]) {
     const t = []
     creds.forEach(c => t.push(c.toJson))
@@ -183,7 +188,7 @@ export function testCred () : Map<string, Credential> {
   })
   c4.id = c4.computedId
 
-  const s = Credential.toJson([c1, c2, c4, c3])
+  const s = Credential.toJson([c1, c3])
   console.log(s)
   const cred = Credential.parse(s)
 

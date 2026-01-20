@@ -391,9 +391,10 @@ A propos du status ...
 `,
   HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
   HPcreddet_0: 'Organisation:[{0}] - Type:[{1}] - Classe:[{2}]',
-  HPcredac_1: 'Retirer de la liste',
-  HPcredac_2: 'Remettre dans la liste',
-  HPcredac_3: 'Rétablir le texte d\'à propos',
+  HPcredac_1: 'Le droit d\'accès est dans la liste d\'origine (n\'a pas été importé): l\'en RETIRER',
+  HPcredac_2: 'Le droit d\'accès a été retiré de la liste: l\'y REMETTRE',
+  HPcredac_3: 'Le droit d\'accès n\'était PAS dans la liste et vient d\'être "importé": l\'y SUPPRIMER',
+  HPcredac_4: 'Rétablir le texte d\'à propos',
   HPcreddis: 'Contenu technique',
   HPlisted_P: 'Cité dans les profils',
   HPlisted_S: 'Cité dans les sessions',
@@ -420,6 +421,7 @@ A propos du status ...
   HPexport_unck: 'Décocher les droits d\'accès à ne pas exporter, puis "Valider" pour exporter.',
   HPimport_inp: 'Saisir le texte JSON',
   HPexport_ok: 'Fichier sauvegardé dans le répertoire de _Téléchargements_ sous le nom [`{0}`].',
+  HPcrab: 'A propos du drooit d\'accès ...',
   
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
