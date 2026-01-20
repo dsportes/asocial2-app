@@ -422,6 +422,12 @@ A propos du status ...
   HPimport_inp: 'Saisir le texte JSON',
   HPexport_ok: 'Fichier sauvegardé dans le répertoire de _Téléchargements_ sous le nom [`{0}`].',
   HPcrab: 'A propos du drooit d\'accès ...',
+  HPtab_c: 'Vue "droits d\'accès"',
+  HPtab_s: 'Vue "sessions favorites"',
+  HPpslst_1: 'Liste des "sessions favorites" enregistrées',
+  HPpslst_2: `# Liste des "sessions favorites" enregistrées
+bla bla
+`,
   
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

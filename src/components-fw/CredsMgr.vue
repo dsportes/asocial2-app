@@ -12,8 +12,13 @@
   </template>
 
 <template #default>
+  <q-tabs v-model="tab" no-caps class="tbp">
+    <q-tab name="bycreds" :label="$t('HPtab_c')" />
+    <q-tab name="bysessions" :label="$t('HPtab_s')" />
+  </q-tabs>
+
   <div class="column items-center">
-    <div class="full-width q-pa-sm">
+    <div v-if="tab === 'bycreds'" class="full-width q-pa-sm">
 
       <bar-open :title="$t('HPcredslst_1')" :bubble="$t('HPcredslst_2')"/>
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
@@ -70,9 +75,9 @@
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
             <div v-for="[psid, ps] in mlocPS" :key="psid">
-              <div v-if="ps.mst.has(localCred.id)" class="row items-center q-my-xs">
-                <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(psid)"/>
-                <div class="col-11 font-mono ellipsis">{{ps.about}}</div>
+              <div v-if="ps.crids.has(localCred.id)" class="row items-center q-my-xs">
+                <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
+                <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
             </div>
           </q-scroll-area>
@@ -80,14 +85,27 @@
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
             <div v-for="[psid, ps] in mlocPS" :key="psid">
-              <div v-if="!ps.mst.has(localCred.id)" class="row items-center q-my-xs">
-                <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(psid)"/>
-                <div class="col-11 font-mono ellipsis">{{ps.about}}</div>
+              <div v-if="!ps.crids.has(localCred.id)" class="row items-center q-my-xs">
+                <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(ps)"/>
+                <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
             </div>
           </q-scroll-area>
         </div>
       </div>
+    </div>
+
+    <div v-if="tab === 'bysessions'" class="full-width q-pa-sm">
+      <bar-open :title="$t('HPpslst_1')" :bubble="$t('HPpslst_2')"/>
+      <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+        class='bord1 q-pa-xs'>
+        <div :class="dkli(idx)" v-for="([id, ps], idx) of mlocPS" :key="id">
+          <div :class="psSel(ps) + 'row q-my-xs cursor-pointer select'" @click="selPS(ps)">
+            <div class="row-11">{{ps.about}}</div>
+            <div class="row-1 font-mono">{{ps.mst.size}}</div>
+          </div>
+        </div>
+      </q-scroll-area>
     </div>
   </div>
 </template>
@@ -204,7 +222,7 @@ import InputPs from '../components-fw/InputPs.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, sty, equ8, dkli, readFile, fileDescr } from '../src-fw/util'
+import { $t, sty, equ8, dkli, readFile, fileDescr, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential, testCred } from '../src-fw/credential'
 import { Crypt } from '../src-fw/crypt'
@@ -212,7 +230,7 @@ import { Crypt } from '../src-fw/crypt'
 type LocalPS = { // profile ou session
   id: string
   about: string
-  mst: Map<string, number> // Map des statuts des credIds
+  crids: Set<string> // Set des ids des credentials
 }
 
 type LocalCred = {
@@ -265,11 +283,13 @@ onUnmounted(() => ui.closeVue(idc2))
 
 const cm = computed(() => ui.dModels[props.idc].credsmgr)
 
+const tab = ref('bycreds')
 const PS = ref(sf.isRegistered ? 'P' : 'S')
 
 const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
-const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 const origCreds: Ref<Map<string, Credential>> = ref()
+const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
+const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 
 /* Chargement des credentials */
 {
@@ -290,11 +310,15 @@ const origCreds: Ref<Map<string, Credential>> = ref()
   const isR = sf.isRegisterd
   const mx = isR ? sf.mySafeProfiles : sf.mySessions
   if (mx) for (const [id, x] of mx) {
-    const mst: Map<string, number> = new Map()
-    const prf = { id, about: x.about, mst }
+    const crids: Set<string> = new Set()
+    const ocrids: Set<string> = new Set()
+    const prf = { id, about: x.about, crids }
+    const oprf = { id, about: x.about, crids: ocrids }
     mlocPS.value.set(id, prf)
+    morigPS.value.set(id, oprf)
     for(const credId of (isR ? x.creds : x.credIds)) {
-      mst.set(credId, 0)
+      crids.add(credId)
+      ocrids.add(credId)
       const tc = mlocCreds.get(credId)
       if (tc) tc.psIds.add(id)
     }
@@ -353,12 +377,40 @@ const doAction4 = () => { // credential existait (pas importé): RETIRER
   localCred.value.st = 2
 }
 
-const onArrowD = (psid) => {
-  console.log(psid)
+const onArrowD = (ps) => {
+  const e = mlocPS.value.get(ps.id)
+  if (e) {
+    e.crids.delete(localCred.value.cred.id)
+  }
 }
 
-const onArrowU = (psid) => {
-  console.log(psid)
+const onArrowU = (ps) => {
+  const e = mlocPS.value.get(ps.id)
+  if (e) {
+    e.crids.add(localCred.value.cred.id)
+  }
+}
+
+const cridsPSChg = (psid) => {
+  const ps1 = mlocPS.value.get(psid)
+  const ps2 = morigPS.value.get(psid)
+  return ps1 && ps2 && isSameSet(ps1.crids, ps2.crids)
+}
+
+const clPSid = (psid) => {
+  const b = cridsPSChg(psid)
+  return !b ? ' text-bold text-warning' : ''
+}
+
+const localPS = ref(null)
+const origPS = ref(null)
+
+const psSel = (ps) => !lc ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2w ' : 'bord2c ')
+
+const selPS = (ps) => {
+  localPS.value = ps
+  const x = morigPS.value.get(ps.id)
+  origPS.value = x ? { id: x.id, about: x.about, crids: cloneSet(x.crids) } : null
 }
 
 const importCr = ref(1)

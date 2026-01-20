@@ -285,6 +285,12 @@ export function clone (obj: any) : any {
   return b64ToObj(objToB64(obj))
 }
 
+export function cloneSet (s: any) : any {
+  const s2 = new Set()
+  for (const x of s) s2.add(x)
+  return s2
+}
+
 export function concat (views: ArrayBufferView[]) {
   let length = 0
   for (const v of views) length += v.byteLength
