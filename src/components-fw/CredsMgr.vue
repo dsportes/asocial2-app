@@ -2,12 +2,14 @@
 <div>
 <dialog-std2 v-model="cm" :title="$t('HPcredsmgr_1')">
   <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond class="q-mr-sm" flat size="lg" icon="download" :label="$t('HPimport_0')" 
-        @ok="resetImport(); ui.oD(idc2, 'import')"/>
-      <btn-cond class="q-mr-sm" flat size="lg" icon="upload" :label="$t('HPexport_0')" 
-        @ok="resetExport(); ui.oD(idc2, 'export')"/>
-      <btn-cond flat size="lg" icon="check" :label="$t('validate')"/>
+    <div class="row justify-between q-px-xs q-mb-md">
+      <div class="row">
+        <btn-cond class="q-mr-sm" flat size="md" icon="download" :label="$t('HPimport_0')" 
+          @ok="resetImport(); ui.oD(idc2, 'import')"/>
+        <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')" 
+          @ok="resetExport(); ui.oD(idc2, 'export')"/>
+      </div>
+      <btn-cond flat size="md" icon="check" color="warning" :label="$t('validate')"/>
     </div>
   </template>
 
@@ -30,7 +32,7 @@
       </q-scroll-area>
 
       <bar-open class="q-mt-md" :title="$t('HPcredsdet_1')" :bubble="$t('HPcredsdet_2')"/>
-      <div class='bord1 q-pa-xs'>
+      <div class='q-pa-xs'>
         <div v-if="localCred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
         <div v-else class="column">
           <div v-if="localCred.st === 2"> <!-- credential retiré de la liste -->
@@ -74,8 +76,8 @@
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_' + PS)}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div v-for="[psid, ps] in mlocPS1" :key="psid">
-              <div class="row items-center q-my-xs">
+            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
+              <div :class="psSel(ps) + ' row items-center q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
                 <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
@@ -84,8 +86,8 @@
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_' + PS)}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div v-for="[psid, ps] in mlocPS2" :key="psid">
-              <div class="row items-center q-my-xs">
+            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">
+              <div :class="psSel(ps) + ' row items-center q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(ps)"/>
                 <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
               </div>
@@ -112,22 +114,20 @@
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
         <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
           class='bord1 q-pa-xs'>
-          <div v-for="[crid, lc] in mlocCreds1" :key="crid">
-            <div class="row items-center q-my-xs">
+          <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds1" :key="crid">
+            <div :class="crSel(lc) + 'row q-my-xs items-center'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowDC(lc)"/>
-              <cred-row :class="crSel(lc) + 'col-11 q-my-xs'"
-                :cred="lc.cred" :st="lc.st"/>
+              <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
           </div>
         </q-scroll-area>
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_C')}}</div>
         <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
           class='bord1 q-pa-xs'>
-          <div v-for="[crid, lc] in mlocCreds2" :key="crid">
-            <div class="row items-center q-my-xs">
+          <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds2" :key="crid">
+            <div :class="crSel(lc) + 'row q-my-xs items-center'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowUC(lc)"/>
-              <cred-row :class="crSel(lc) + 'col-11 q-my-xs'"
-                :cred="lc.cred" :st="lc.st"/>
+              <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
           </div>
         </q-scroll-area>
@@ -315,6 +315,8 @@ const PS = ref(sf.isRegistered ? 'P' : 'S')
 watch(tab, (t) => {
   if (t === 'bycreds' && localCred.value)
     selCred(localCred.value)
+  else if (t === 'bysessions' && localPS.value)
+    selPS(localPS.value)
 })
 
 const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
@@ -451,7 +453,7 @@ const origPS = ref(null)
 const mlocCreds1 = ref(null)
 const mlocCreds2 = ref(null)
 
-const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2w ' : 'bord2c ')
+const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
 const selPS = (ps) => {
   localPS.value = ps
@@ -603,5 +605,6 @@ const doExport = async () => {
 .bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 .bord2c { border: 1px solid transparent; }
 .bord2w { border: 1px solid $warning; }
+.bord2g { border: 1px solid $green-5; }
 .select:hover { background-color: $yellow-2; color: black; }
 </style>
