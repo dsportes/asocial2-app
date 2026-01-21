@@ -330,7 +330,7 @@
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
   <!-- Gestion des credentials --> 
-  <creds-mgr v-if="cm" :idc="idc"/>
+  <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :createMode="createMode"/>
@@ -518,6 +518,10 @@ const myTrusting = ref()
 const myProfiles: Ref<Map<string, Profile>> = ref()
 const myPrefs: Ref<Map<string, Uint8Array>> = ref()
 const nvClicked = ref()
+
+const credsUpdated = async () => {
+  await openSession()
+}
 
 const openSession = async () => {
   nvClicked.value = false

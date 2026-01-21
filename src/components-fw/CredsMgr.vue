@@ -9,7 +9,8 @@
         <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')" 
           @ok="resetExport(); ui.oD(idc2, 'export')"/>
       </div>
-      <btn-cond flat size="md" icon="check" color="warning" :label="$t('validate')"/>
+      <btn-cond flat size="md" icon="check" color="warning" 
+        :label="$t('validate')" @ok="validate"/>
     </div>
   </template>
 
@@ -131,6 +132,15 @@
             </div>
           </div>
         </q-scroll-area>
+
+        <div v-if="localPS.orphans.size !== 0">
+          <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_O')}}</div>
+          <div class="q-my-xs q-mx-md row q-gutter-md">
+            <div v-for="crId in localPS.orphans" class="font-mono text-white bg-warning cursor-pointer" 
+              @click="removeOrph(crId)">{{crId}}</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -257,6 +267,7 @@ type LocalPS = { // profile ou session
   id: string
   about: string
   crIds: Set<string> // Set des ids des credentials
+  orphans: Set<string> // Set des ids des credentials N'EXISTANT PAS
 }
 
 type LocalCred = {
@@ -276,10 +287,6 @@ Status d'un credential dans la liste
 1 : ajouté à la liste
 2 : retiré de la liste
 3 : about mis à jour
-Statut d'un credId dans la liste d'une session
-0 : inchangé
-1 : ajouté à la liste
-2 : retiré de la liste
 */
 
 const importOpts = [
@@ -306,6 +313,8 @@ const cfg = stores.config
 
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
+
+const emit = defineEmits(['updated'])
 
 const cm = computed(() => ui.dModels[props.idc].credsmgr)
 
@@ -338,25 +347,36 @@ const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
     mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
 }
 
-/* Chargement des profiles / sessions */
-{
-  const isR = sf.isRegisterd
-  const mx = isR ? sf.mySafeProfiles : sf.mySessions
-  if (mx) for (const [id, x] of mx) {
-    const crIds: Set<string> = new Set()
-    const ocrIds: Set<string> = new Set()
-    const prf = { id, about: x.about, crIds }
-    const oprf = { id, about: x.about, crIds: ocrIds }
-    mlocPS.value.set(id, prf)
-    morigPS.value.set(id, oprf)
-    for(const credId of (isR ? x.creds : x.credIds)) {
-      crIds.add(credId)
-      ocrIds.add(credId)
-      const tc = mlocCreds.get(credId)
-      if (tc) tc.psIds.add(id)
+const buildXref = () => {
+  for(const [,lc] of mlocCreds.value) lc.psIds.clear()
+  for(const [psId, x] of mlocPS.value) {
+    x.orphans.clear()
+    for(const crId of x.crIds) {
+      const lc = mlocCreds.value.get(crId)
+      if (lc && lc.st !== 2) lc.psIds.add(psId)
+      else x.orphans.add(crId)
     }
   }
 }
+
+/* Chargement des profiles / sessions */
+const loading = () => {
+  const isR = sf.isRegistered
+  const mx = isR ? sf.mySafeProfiles : sf.mySessions
+  if (mx) for (const [id, x] of mx) {
+    const z = isR ? x.creds : x.credIds
+    mlocPS.value.set(id, { id, about: x.about, crIds: new Set(z), orphans: new Set() })
+    const ps = { id, about: x.about, crIds: new Set(z), orphans: new Set() }
+    morigPS.value.set(id, ps)
+    for(const crId of ps.crIds) {
+      const lc = origCreds.value.get(crId)
+      if (!lc) ps.orphans.add(crId)
+    }
+  }
+  buildXref()
+}
+
+loading()
 
 const localCred = ref(null)
 const origCred = ref(null)
@@ -406,22 +426,25 @@ const valAb = () => {
 
 const doAction2 = () => { // REMETTRE dans la liste le cred qui y avait été enlevé
   localCred.value.st = 0
+  buildXref()
 }
 
 const doAction3 = () => { // credential importé (n'existait PAS): RETIRER
   mlocCreds.value.delete(localCred.value.cred.id)
   localCred.value = null
+  buildXref()
 }
 
 const doAction4 = () => { // credential existait (pas importé): RETIRER
   localCred.value.st = 2
+  buildXref()
 }
 
 const onArrowD = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
     e.crIds.delete(localCred.value.cred.id)
-    localCred.value.psIds.delete(ps.id)
+    buildXref()
     mlocPS1.value.delete(ps.id)
     mlocPS2.value.set(ps.id, e)
   }
@@ -431,7 +454,7 @@ const onArrowU = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
     e.crIds.add(localCred.value.cred.id)
-    localCred.value.psIds.add(ps.id)
+    buildXref()
     mlocPS2.value.delete(ps.id)
     mlocPS1.value.set(ps.id, e)
   }
@@ -450,8 +473,8 @@ const clPSid = (psid) => {
 
 const localPS = ref(null)
 const origPS = ref(null)
-const mlocCreds1 = ref(null)
-const mlocCreds2 = ref(null)
+const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
+const mlocCreds2 = ref(null) // Map des creds NE référençant PAS le PS courant
 
 const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
@@ -466,11 +489,17 @@ const selPS = (ps) => {
     else mlocCreds2.value.set(crid, e)
 }
 
+const removeOrph = (crid) => {
+  localPS.value.crIds.delete(crid)
+  buildXref()
+  selPS()
+}
+
 const onArrowDC = (lc) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    e.psIds.delete(localPS.value.id)
     localPS.value.crIds.delete(lc.cred.id)
+    buildXref()
     mlocCreds1.value.delete(lc.cred.id)
     mlocCreds2.value.set(lc.cred.id, e)
   }
@@ -479,8 +508,8 @@ const onArrowDC = (lc) => {
 const onArrowUC = (lc) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    e.psIds.delete(localPS.value.id)
     localPS.value.crIds.add(lc.cred.id)
+    buildXref()
     mlocCreds2.value.delete(lc.cred.id)
     mlocCreds1.value.set(lc.cred.id, e)
   }
@@ -549,10 +578,12 @@ const doImport = () => {
           if (orig.about !== lc.c.about)
             mlocCreds.value.set(id, { cred: lc.c, st: 3, psIds: new Set() })
         } else { // n'existait PAS. Import d'un nouveau
+
           mlocCreds.value.set(id, { cred: lc.c, st: 1, psIds: new Set() })
         }
       }
   ui.fD()
+  buildXref()
 }
 
 const resetImport = () => {
@@ -595,6 +626,61 @@ const doExport = async () => {
   saveAs(blob, nf)
   await ui.diagDisplay($t('HPexport_ok', [nf]))
   // ui.fD()
+}
+
+type Report = {
+  mcreds: Map<string, Credential>
+  delcreds: string[]
+  mprofiles: Map<string, Profile>
+  emptyPS: Set<string>
+  xrefsPS: Map<string, Set<string>>
+  stcr: [Set<string>]
+}
+
+const report = reactive({
+  mcreds: null,
+  delcreds: null,
+  mprofiles: null,
+  emptyPS: null,
+  psWithOrphans: null,
+  stcr: null,
+})
+
+const validate = () => {
+  report.mcreds = new Map<string, Credential>() 
+  report.delcreds = [] 
+  report.mprofiles = new Map<string, Profile>()
+  report.emptyPS = new Set()
+  report.psWithOrphans = new Set()
+  report.stcr = [new Set(), new Set(), new Set(), new Set()]
+
+  for(const [credId, lc] of mlocCreds.value) {
+    report.stcr[lc.st].add(lc.cred.about)
+    if (lc.st === 2) report.delcreds.push(lc.cred.about)
+    if (lc.st === 1 || lc.st === 3) report.mcreds.set(crId, lc.cred)
+  }
+
+  for(const [profId, x] of mlocPS.value) {
+    const { id, about, crIds, orphans } = x
+    const y = morigPS.value.get(profId)
+    if (!y || isSameSet(crIds, y.crIds)) continue
+    if (crIds.size === 0 && y.crIds.size !== 0) report.emptyPS.add(about)
+    if (orphans.size) report.psWithOrphans.add(about)
+    report.mprofiles.set(id, { id, about })
+  }
+
+}
+
+const confValidate = async () => {
+  try {
+    const status = await sf.updateCreds(mcreds.value, delcreds.value, mprofiles.value)
+    if (status < 0) return
+    ui.fD()
+    await ui.diagDisplay($t('HPsfop_' + status))
+    emit('updated', null)
+  } catch (e) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  }
 }
 
 </script>

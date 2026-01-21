@@ -177,7 +177,7 @@ class TPref {
 
 type Profile = {
   profId: string
-  about: string
+  about: string | Uint8Array
   creds: string[]
 }
 
@@ -1229,6 +1229,58 @@ const selectedProfile: Ref<Profile> = ref(null)
     localStorage.removeItem('$DBLIST')
   }
 
+  type UpdateCreds = {
+    app: string
+    userId: string
+    shk: Uint8Array    
+    creds: Object // clé: credId, valeur: Objet Credential sérialisé crypté
+    delcreds: string[] // liste des credIds à supprimer
+    profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
+  }
+
+  const updateCreds = async (
+      mcreds: Map<string, Credential>, 
+      delcreds: string[], 
+      mprofiles: Map<string, Profile>) => {
+    const creds = {}
+    const profiles = {}
+
+    for(const [credId, c] of mcreds) {
+      if (isRegistered.value) {
+        const obj = c.toObj
+        creds[credId] = await Crypt.crypt(keyK.value, encode(obj))
+      } else {
+        // TODO maj locale
+      }
+    }
+
+    for(const [profId, p] of mprofiles) {
+      if (isRegistered.value) {
+      p.about = await ecX(p.about as string)
+      profiles[profId] = encode(p)
+      } else {
+        // TODO maj locale
+      }
+    }
+
+    if (!isRegistered.value) return
+    
+    const updateCreds: UpdateCreds = {
+      userId: userId.value,
+      app: stores.config.appname,
+      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array,
+      creds, delcreds, profiles
+     }
+    const op = new Operation('$UpdateCreds')
+    let ret
+    try {
+      ret = await op.post({updateCreds})
+    } catch(e) { op.ko(e); return -1}
+    if (ret.status === 0)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
   return {
     step, backToAuth, userId, userName, isRegistered, keyK,
     selectedProfile, selectedSession,
@@ -1248,7 +1300,7 @@ const selectedProfile: Ref<Profile> = ref(null)
     devices,
     purgeIDBS,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
-    setTrust, setUntrust, setAboutProfile,
+    setTrust, setUntrust, setAboutProfile, updateCreds,
     synthUsers
   }
 })

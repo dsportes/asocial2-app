@@ -219,6 +219,10 @@ bla bla
   HPauthby_3: '{0} [code PIN]',
   HPauthby_9: 'Phase d\'authentification',
 
+  HPsfop_0: 'Succès de l\'opération.',
+  HPsfop_1: 'Echec de l\'opération: utilisateur non enregistré.',
+  HPsfop_2: 'Echec de l\'opération: utilisateur non authentifié.',
+
   HPsetdev: 'Donner un nom court à ce terminal',
   HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',
   HPsetPIN: 'Saisir un code PIN d\'accès',
@@ -400,6 +404,7 @@ A propos du status ...
   HPlisted_P: 'Cité dans les sessions',
   HPlisted_S: 'Cité dans les sessions',
   HPlisted_C: 'Droits d\'accès cités dans la session',
+  HPlisted_O: 'Droits d\'accès cités dans la session MAIS n\'existant pas dans la liste des droits. Cliquer sur ceux à retirer de la session.',
   HPnotlisted_P: 'NON cité dans les sessions',
   HPnotlisted_S: 'NON cité dans les sessions',
   HPnotlisted_C: 'Droits d\'accès NON cités dans la session',
