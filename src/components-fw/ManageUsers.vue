@@ -10,10 +10,7 @@
 <template #default>
 <div class="column items-center">
 <div class="wmd">
-  <div class="titre-md">{{ $t('HPmanu_1') }}</div>
-  <div class="titre-md">{{ $t('HPunpin_2') }}</div>
-  <div class="titre-md q-ml-md">{{ $t('HPunpin_3') }}</div>
-  <div class="titre-md q-ml-md">{{ $t('HPunpin_4') }}</div>
+  <bar-open1 :title="$t('HPmanu_1')" :bubble="$t('HPunpin_1')"/>
 
   <q-separator class="q-mt-xs q-mb-sm"/>
 
@@ -108,6 +105,7 @@ import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
+import BarOpen1 from '../components-fw/BarOpen1.vue'
 
 import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'

@@ -5,17 +5,17 @@
   <div v-if="sf.step == 1" class="q-pa-sm">
     <!-- Entête : accès Internet, incognito, nom du terminal -->
     <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
-      <div class="row">
-        <q-toggle v-model="session.noNet" dense color="negative"
+      <div class="row justify-between items-center">
+        <q-toggle class="col q-pr-md" v-model="session.noNet" dense color="negative"
           :label="$t('HPnet_' + (session.noNet ? '2' : '1'))" />
-        <btn-bubble class="self-start q-ml-md" size="sm"
+        <btn-bubble class="col-auto self-start" size="sm"
           :text="$t('HPmode_' + (session.incognito ? '3' : '1'))"/>
       </div>
 
-      <div class="row">
-        <q-toggle v-model="session.incognito" dense color="negative"
+      <div class="row justify-between items-center">
+        <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
           :label="$t('HPincognito_' + (session.incognito ? '2' : '1'))"/>
-        <btn-bubble class="self-start q-ml-md" size="sm"
+        <btn-bubble class="col-auto self-start" size="sm"
           :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
       </div>
     </div>
@@ -34,236 +34,134 @@
         {{$t('HPregist_1')}}</div>
     </div>
 
-    <div v-if="session.hasNet || !session.incognito" class="q-pl-xl">
-      <!-- Authentification par code PIN -->
-      <div v-if="session.hasNet && users.length" class="row items-center">
-        <div class="col text-right">
-          <div class="column">
-            <div class='titre-md q-mr-xs'>{{$t('HPauthbypin_1')}}</div>
-            <div class="row justify-end">
-              <div v-for="u in users" :key="u.userId"
-                class="q-ml-sm font-mono fs-lg text-bold text-primary cursor-pointer"
-                style="text-decoration-line: underline;"
-                @click="selectUser(u)">
-                {{u.pseudo}}</div>
-            </div>
-          </div>
-        </div>
-        <btn-bubble size="sm" class="col-auto self-start q-ml-md" :text="$t('HPauthbypin_2')"/>        
-      </div>
-
+    <div v-if="session.hasNet || !session.incognito" class="q-pl-md">
       <!-- Authentification FORTE -->
-      <bar-open :bubble="$t('HPauthstrong_2')" size="sm"
+      <bar-open :bubble="$t('HPauthstrong_2')"
         :title="$t('HPauthstrong_1')" :fnopen="openStrongAuth"/>
+
+      <!-- Authentification par code PIN -->
+      <div v-if="session.hasNet && users && users.length">
+        <div v-if="session.hasNet && users.length === 1">
+          <bar-open :bubble="$t('HPauthbypin_2')"
+            :title="$t('HPauthbypin_1a', [users[0].pseudo])" :fnopen="selectUser0"/>
+        </div>
+        <div v-else class="column">
+          <bar-open :bubble="$t('HPauthbypin_2')" :title="$t('HPauthbypin_1b', [users.length])"/>
+          <div class="row self-center q-mx-xl">
+            <div v-for="u in users" :key="u.userId"
+              class="q-ml-sm font-mono fs-lg text-bold text-primary cursor-pointer"
+              style="text-decoration-line: underline;"
+              @click="selectUser(u)">{{u.pseudo}}</div>
+          </div>
+        </div>  
+      </div>
     </div>
 
     <!-- Creation d'un Safe (enregistrement)-->
-    <div class="full-width row q-mt-md items-center">
-      <btn-bubble :text="$t('HPregist_0')"/>
-      <div :class="'q-ml-sm titre-lg text-italic' + (session.noNet ? ' disabled' :'')">
-        {{$t('HPregist_0')}}</div>
+    <div class="full-width q-my-md">
+      <bar-open1 :bubble="$t('HPregist_' + (session.noNet ? '4' : '2'))"
+        :disable="session.noNet" :title="$t('HPregist_3')"
+        :fnopen="createSafe"/>
     </div>
 
-    <div class="full-width row q-pl-xl items-center">
-      <bar-open size="sm"
-        :bubble="$t('HPregist_' + (session.noNet || session.incognito ? '5' : '2'))" 
-        :disable="session.noNet"
-        :title="$t('HPregist_3')" :fnopen="createSafe"/>
+    <!-- Mode calculette -->
+    <div class="full-width q-my-md">
+      <bar-open1 :bubble="$t('HPregist_6')" :title="$t('HPregist_5')"
+        :fnopen="validateSessionV"/>
     </div>
-
-    <q-separator class="q-my-sm"/>
-      
-    <!-- Utilisateur connu localement -->
-    <div>
-      <div class="full-width row q-mt-md items-center">
-        <btn-bubble class="self-start" size="md" :text="$t('HPlocal_2')"/>
-        <div :class="'q-ml-sm titre-lg text-italic' + (session.incognito ? '  disabled' : '')">
-          {{$t('HPlocal_1')}}</div>
-      </div>
-
-      <div v-if="!session.incognito" class="q-mr-xl q-ml-lg">
-        <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="locPS" iconcheck
-          :validate="validateLocPS"
-          :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
-      </div>
-    </div>
-
-    <q-separator class="q-my-sm"/>
-
-    <!-- Utilisateur ni enregistré ni connu localement -->
-    <div class="full-width row q-mt-md items-center">
-      <btn-bubble class="self-start" size="md" :text="$t('HPnini_2')"/>
-      <div class="q-ml-sm titre-lg text-italic">{{$t('HPnini_1')}}</div>
-    </div>
-    <bar-open v-if="session.hasNet" :bubble="$t('HPnini_2v')" :title="$t('HPnini_1v')" 
-      :fnopen="validateSessionV" size="sm"/>
-    <bar-open v-else :bubble="$t('HPnini_2c')" :title="$t('HPnini_1c')" 
-      :fnopen="validateSessionV" size="sm"/>
   </div>
 
   <div v-if="sf.step === 2" class="q-pa-sm">
-    <div v-if="!sf.isRegistered">
-      <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-      <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs'>
-        <div :class="(nvClicked ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-          @click="nvSession()">
-          <div class="col-11 q-pr-xs">{{$t('HPnvs')}}</div>
-          <div class="col-1"/>
-        </div>
-        <div :class="dkli(idx + 1)" v-for="([id,s], idx) of sf.mySessions" :key="id">
-          <div :class="(sf.selectedSession === s ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selSession(s)">
-            <div class="col-7 q-pr-xs">{{s.about}}</div>
-            <div class="col-4 text-italic">{{dhcool(s.time)}}</div>
-            <div v-if="s.hasCache" class="col-1 row justify-end">
+    <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
+    <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+      class='bord1 q-pa-xs'>
+      <div :class="dkli(idx)" v-for="([profId, p], idx) of sf.mySafeProfiles" :key="profId">
+        <div v-if="sOfP(profId)">
+          <div :class="clSel(sOfP(profId)) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
+            @click="selSession(sOfP(profId))">
+            <div class="col-7 q-pr-xs">{{pincode + ' ' + (sOfP(profId).about || $t('HPpstar'))}}</div>
+            <div class="col-4 text-italic">{{dhcool(sOfP(profId).time)}}</div>
+            <div v-if="sOfP(profId).hasCache" class="col-1 row justify-end">
               <q-img :src="database" style="height: 24px; max-width: 24px"/>
             </div>
             <div v-else class="col-1"/>
           </div>
         </div>
-      </q-scroll-area>
-      <div v-if="nvSP" class="q-mt-md">
-        <div v-if="nvClicked">
-          <q-checkbox v-model="wantdb" :label="$t('HPwantdb')" 
-            style="margin-left: -12px"/>
-        </div>
-        <div v-else> <!-- selectedSession -->
-          <div v-if="selHasCache">
-            <q-checkbox v-model="unwantdb" :label="$t('HPunwantdb')" 
-              style="margin-left: -12px"/>
-            <q-checkbox v-if="!unwantdb" v-model="razdb" :label="$t('HPresetdb')" 
-              style="margin-left: -12px"/>
-          </div>
-          <div v-else>
-            <q-checkbox v-model="wantdb" :label="$t('HPwantdb')" 
-              style="margin-left: -12px"/>
-          </div>
-        </div>
-
-        <div class="titre-md text-italic q-mt-md">
-          {{$t(sf.selectedSession ? 'HPrensession' : 'HPnouvsession')}}
-        </div>
-        <input-ps v-model="newSessionName"
-          :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
-        <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
-          <div class="titre-md text-italic text-bold text-right">
-            {{$t('HPwprfs')}}</div>
-          <q-card-actions vertical align="right">
-            <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
-            <btn-cond v-for="[code, data] in sf.tprefs" :key="code"
-              flat :label="'... ' + code" @ok="validateSession(code, data)"/>
-          </q-card-actions>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="sf.isRegistered">
-      <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-      <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs'>
-        <div :class="(nvClicked ? 'bord2 ' : '') + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-          @click="nvSession()">
-          <div class="col-11 q-pr-xs">{{$t('HPnvs')}}</div>
-          <div class="col-1"></div>
-        </div>
-        <div :class="dkli(idx + 1)" v-for="([id,s], idx) of sf.mySessions" :key="id">
-          <div :class="clSel(s) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selSession(s)">
-            <div class="col-7 q-pr-xs">{{pincode + ' ' + s.about}}</div>
-            <div class="col-4 text-italic">{{dhcool(s.time)}}</div>
-            <div v-if="s.hasCache" class="col-1 row justify-end">
-              <q-img :src="database" style="height: 24px; max-width: 24px"/>
-            </div>
-            <div v-else class="col-1"/>
-          </div>
-        </div>
-        <div :class="dkli(idx + 1 + sf.mySessions.size)" 
-          v-for="([, p], idx) of myProfiles" :key="p.profId">
+        <div v-else>
           <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selProfile(p)">
-            <div class="col-7 q-pr-xs q-pl-xs">{{p.about}}</div>
+            <div class="col-7 q-pr-xs q-pl-xs">{{p.about || $t('HPpstar')}}</div>
             <div class="col-4">{{$t('HPnotpinned')}}</div>
             <div class="col-1"/>
           </div>
         </div>
-      </q-scroll-area>
+      </div>
+    </q-scroll-area>
 
-      <div v-if="nvSP" class="q-mt-md">
-        <div v-if="nvClicked">
-          <q-checkbox v-model="pinned" :label="$t('HPsetpinned')" 
-            style="margin-left: -12px"/>
-          <q-checkbox v-model="wantdb" :label="$t('HPwantdb')" 
-            style="margin-left: -12px"/>
+    <div v-if="nvSP" class="q-mt-md">
+      <div v-if="sf.selectedSession">
+        <div class="row justify-between items-center">
+          <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
+          <btn-bubble class="col-auto self-start" size="sm"
+            :text="$t('HPunpin_1')"/>
         </div>
-        <div v-else>
-          <div v-if="sf.selectedSession">
-            <q-checkbox v-model="unpinme" :label="$t('HPunpinme')" 
-              style="margin-left: -12px"/>
-            <q-checkbox v-if="selHasCache && !unpinme" 
-              v-model="unwantdb" :label="$t('HPunwantdb')" 
-              style="margin-left: -12px"/>
-            <q-checkbox v-if="selHasCache && !unpinme && !unwantdb" 
-              v-model="razdb" :label="$t('HPresetdb')" 
-              style="margin-left: -12px"/>
-            <q-checkbox v-if="!selHasCache && !unpinme"
-              v-model="wantdb" :label="$t('HPwantdb')" 
-              style="margin-left: -12px"/>
-          </div>
-          <div v-else>
-            <q-checkbox v-model="pinned" :label="$t('HPsetpinned')" 
-              style="margin-left: -12px"/>
-            <q-checkbox v-if="pinned" v-model="wantdb" :label="$t('HPwantdb')" 
-              style="margin-left: -12px"/>
-          </div>
-        </diV>
-
-        <div class="titre-md text-italic q-mt-md">
-          {{$t(sf.selectedSession ? 'HPrensession' : 'HPnouvsession')}}
+        <div v-if="selHasCache && !unpinme" class="row justify-between items-center">
+          <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
+          <btn-bubble class="col-auto self-start" size="sm"
+            :text="$t('HPresetdb_1')"/>
         </div>
-
-        <input-ps v-model="newSessionName"
-          :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
-        <div :class="(newSessionName.err !== '' ? 'disabled' : '') + ' q-mt-md'">
-          <div class="titre-md text-italic text-bold text-right">
-            {{$t('HPwprfs')}}</div>
-          <q-card-actions vertical align="right">
-            <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
-            <btn-cond v-for="[code, data] in myPrefs" :key="code"
-              flat :label="'... ' + code" @ok="validateSession(code, data)"/>
-          </q-card-actions>
+      </div>
+      <div v-else>
+        <div class="row justify-between items-center">
+          <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
+          <btn-bubble class="col-auto self-start" size="sm"
+            :text="$t('HPpin_1')"/>
         </div>
       </div>
 
-      <q-separator class="q-my-md" color="orange"/>
+      <div v-if="!selStar">
+        <div class="titre-md text-italic q-mt-md">{{$t('HPrensession')}}</div>
+        <input-ps v-model="newProfAbout"
+          :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+      </div>
 
-      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')" 
-        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
-        :fnopen="openChgCodes" size="sm"/>
-
-      <bar-open v-if="myTrusting === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')" 
-        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
-      <bar-open v-if="myTrusting !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')" 
-        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openUntrust" size="sm"/>
-      
-      <bar-open v-if="myTrusting !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')" 
-        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
+      <div :class="(!selStar && newProfAbout.err !== '' ? 'disabled' : '') + ' q-mt-md'">
+        <div class="titre-md text-italic text-bold text-right">
+          {{$t('HPwprfs')}}</div>
+        <q-card-actions vertical align="right">
+          <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
+          <btn-cond v-for="[code, data] in sf.mySafePrefs" :key="code"
+            flat :label="'... ' + code" @ok="validateSession(code, data)"/>
+        </q-card-actions>
+      </div>
     </div>
+
+    <q-separator class="q-my-md" color="orange"/>
+
+    <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')" 
+      :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
+      :fnopen="openChgCodes" size="sm"/>
+
+    <bar-open v-if="!isTrusted" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')" 
+      :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
+      :fnopen="openTrust" size="sm"/>
+
+    <bar-open v-if="isTrusted" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')" 
+      :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
+      :fnopen="openTrust" size="sm"/>
+
+    <bar-open v-if="isTrusted" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')" 
+      :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
+      :fnopen="openUntrust" size="sm"/>
   </div>
 
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
-  <bar-open :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
+  <bar-open :disable="!session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
     :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
 
   <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
-    :disable="session.incognito" size="sm"
+    :disable="session.incognito || !session.hasNet" size="sm"
     :title="$t('HPmanusers')" :fnopen="manUsers"/>
 </div>
 
@@ -293,35 +191,6 @@
       </q-toolbar>
       <div class="full-width q-pa-sm">
         <p0-p1 @ok="authPS"/>
-      </div>
-    </q-card>
-  </q-dialog>
-
-  <!-- Dialogue de validation d'un utilisateur local -->
-  <q-dialog v-model="ui.dModels[idc].authlocaldial" persistent>
-    <q-card :class="sty('sm')">
-      <q-toolbar>
-        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
-        <q-toolbar-title class="titre-lg text-right q-mx-sm">
-          {{$t(newLocUt ? 'HPauthlocal_0' : 'HPauthlocal_1')}}
-        </q-toolbar-title>
-      </q-toolbar>
-      <q-toolbar inset class="row justify-between">
-        <btn-cond flat :label="$t('HPcorrectps')" @ok="ui.fD()"/>
-        <btn-cond flat :label="$t(newLocUt ? 'validate' : 'HPitsme')"
-          :disable="locTr.err !== ''" @ok="validateLocTr"/>
-      </q-toolbar>
-      <div class="q-pa-sm">
-        <div class="titre-md q-my-lg">
-          <div v-if="newLocUt">{{$t('HP3v1')}}</div>
-          <div v-else>
-            <div class="titre-md">{{$t('HP3v2_0')}}</div>
-            <div class="titre-md q-ml-md">{{$t('HP3v2_1')}}</div>
-            <div class="titre-md q-ml-md">{{$t('HP3v2_2')}}</div>
-          </div>
-        </div>
-        <input-ps class="q-mb-lg" v-model="locTr"
-          :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
       </div>
     </q-card>
   </q-dialog>
@@ -414,6 +283,7 @@ import ManageUsers from '../components-fw/ManageUsers.vue'
 import CredsMgr from '../components-fw/CredsMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
+import BarOpen1 from '../components-fw/BarOpen1.vue'
 import { Credential } from '../src-fw/credential'
 
 import stores from '../stores/all'
@@ -454,9 +324,14 @@ const selectedUser = ref(null)
 watch(() => ui.reopenSession, async (v) => {
   if (v) {
     await sf.init0()
-    if (session.hasNet && sf.isRegistered) 
-      await sf.reloadSafe()
-    if (!session.incognito) await openSession()
+    if ((!session.hasNet && session.incognito) || !sf.userId) {
+      sf.step = 1
+    } else {
+      if (session.hasNet) 
+        await sf.reloadSafe()
+      if (!session.incognito) 
+        await openSession()
+    }
   }
 })
 
@@ -467,18 +342,14 @@ watch(() => sf.step, (s) =>{
   }
 })
 
-const users = computed(() => {
-  const l = []
-  if (sf.trustings) sf.trustings.forEach(e => { 
-    if (!e.isLocal) l.push(e) })
-  return l
-})
+const users = computed(() => sf.trustings ? Array.from(sf.trustings.values()) : [])
 
 const selectUser = (u) => {
   selectedUser.value = u
   pin.value = { inp: '', err: '' }
   ui.oD(idc, 'pindial')
 }
+const selectUser0 = (u) => { selectUser(users.value[0]) }
 
 const openStrongAuth = () => {
   ui.oD(idc, 'strongauthdial')
@@ -507,51 +378,21 @@ const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
-
-const mySessions = ref<TSession>(new Map())
-const myTrusting = ref()
-
-/* Seulement pour un utilisateur enregistré :
-- myProfiles: Map des profiles NON cités dans une session épinglée
-- myPrefs: prefs enregistrées dans le Safe
-*/
-const myProfiles: Ref<Map<string, Profile>> = ref()
-const myPrefs: Ref<Map<string, Uint8Array>> = ref()
-const nvClicked = ref()
+const mySessions: Ref<TSession> = ref(new Map())
+const myTrusting = ref<null> 
+const isTrusted = computed(() => myTrusting.value !== null)
 
 const credsUpdated = async () => {
   await openSession()
 }
 
+const sOfP = (profId: string) => { return sf.sessionOfProfId(profId) }
+
 const openSession = async () => {
-  nvClicked.value = false
   if (!session.incognito && !sf.hasIDBS) 
     await sf.init1()
-
   await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
-  
-  if (!session.incognito) {
-    await sf.loadMyLocalPrefs()
-    await sf.loadMyLocalCreds()
-  }
-
-  if (sf.isRegistered) {
-    const profIds = new Set<string>()
-    for (const [,s] of sf.mySessions) if (s.profId) profIds.add(s.profId)
-    myProfiles.value = new Map<string, Profile>()
-    for (const [profId, p] of sf.mySafeProfiles) {
-      if (!profIds.has(profId)) myProfiles.value.set(profId, p)
-    }
-    myPrefs.value = sf.mySafePrefs
-    if (!session.incognito.value) {
-      await sf.refreshLocalPrefs()
-      await sf.refreshLocalCreds()
-    }
-  } else {
-    myPrefs.value = sf.tprefs
-  }
-
   sf.selectedSession = null
   sf.selectedProfile = null
   sf.step = 2
@@ -570,11 +411,11 @@ watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
 const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
 
 const openTrust = async () => {
-  myTrusting.value = sf.getMyTrusting()
+  const t = sf.getMyTrusting()
   newDev.value = sf.devId === ''
   newPIN.inp = ''
   devName.inp = newDev.value ? '' : sf.devName
-  newPseudo.inp = myTrusting.value ? myTrusting.value.pseudo : sf.auth.pseudo
+  newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
   ui.oD(idc, 'trustit')
 }
 
@@ -588,7 +429,6 @@ const setTrust = async () => {
     const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
     if (status < 0) return
     ui.fD()
-    myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPsttrust_' + status))
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
@@ -600,7 +440,6 @@ const setUntrust = async () => {
     const status = await sf.setUntrust()
     if (status < 0) return
     ui.fD()
-    myTrusting.value = sf.getMyTrusting()
     await ui.diagDisplay($t('HPstuntrust_' + status))
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
@@ -644,17 +483,19 @@ const validateLocPS = async () => {
   if (locPS.err !== '') return
   sf.keyK = await Crypt.strongHash(locPS.inp, true, true)
   sf.userId = '$' + Crypt.shaS(sf.keyK)
-  myTrusting.value = sf.getMyTrusting()
-  newLocUt.value = myTrusting.value === null
-  locTr.inp = newLocUt.value ? '' : myTrusting.value.pseudo
+  const t = sf.getMyTrusting()
+  newLocUt.value = t === null
+  locTr.inp = newLocUt.value ? '' : t.pseudo
   ui.oD(idc, 'authlocaldial')
 }
 
 const validateLocTr = async () => {
   if (locTr.err !== '') return
   ui.fD()
-  if (newLocUt.value) {
-    myTrusting.value = sf.newTrustingL({
+  let t = sf.getMyTrusting()
+  newLocUt.value = t === null
+  if (t === null) {
+    t = sf.newTrusting({
       userId: sf.userId,
       pseudo: locTr.inp,
       hsh: Crypt.sha(sf.keyK, true),
@@ -662,11 +503,11 @@ const validateLocTr = async () => {
       prefs: null
     })
   } else {
-    myTrusting.value.pseudo = locTr.inp
+    t.pseudo = locTr.inp
   }
   if (!sf.hasIDBS) 
     await sf.init1()
-  await sf.setTrusting(myTrusting.value)
+  await sf.setTrusting(t)
 
   openSession()
 }
@@ -678,46 +519,43 @@ type TSession = {
   about: string | Uint8Array // commentaire de l'utilisateur sur cette session
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
-  credIds?: string[] // liste des codes des credentials
   prefCode: string // préférences utilisées la dernière fois
 }
 
-const razdb = ref(false)
-const wantdb = ref(false)
-const unwantdb = ref(false)
+const resetdb = ref(false)
 const unpinme = ref(false)
-const pinned = ref(false)
-const newSessionName = reactive({ inp: '', err: '' })
+const pinme= ref(false)
+const newProfAbout = reactive({ inp: '', err: '' })
 
-watch(unwantdb, async (ap) => {
-  if (ap === true) await ui.diagDisplay($t('HPrazbl'))
+watch(unpinme, async (ap) => {
+  if (ap === true) await ui.diagDisplay($t('HPresetdb_1'))
 })
 
-const nvSP = computed(() => nvClicked.value || sf.selectedSession || sf.selectedProfile)
+watch(resetdb, async (ap) => {
+  if (ap === true) await ui.diagDisplay($t('HPresetdb_1'))
+})
+
+const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
 const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
 
-const reset = () => {
-  nvClicked.value = false
-  razdb.value = false
-  unpinme.value = false
-  pinned.value = false
-  wantdb.value = false
-  unwantdb.value = false
-  sf.selectedSession = null
-  sf.selectedProfile = null
-  newSessionName.inp = ''
-}
-
-const nvSession = () => {
-  reset()
-  nvClicked.value = true
-}
-
 const selSession = (s) => {
-  reset()
+  resetdb.value = false
+  unpinme.value = false
   sf.selectedSession = s
-  newSessionName.inp = s.about
+  sf.selectedProfile = null
+  newProfAbout.inp = s.about
 }
+
+const selProfile = (profile: Profile) => {
+  pinme.value = false
+  sf.selectedSession = null
+  sf.selectedProfile = profile
+  newProfAbout.inp = profile.about
+}
+
+const selStar = (() => 
+  (sf.selectedSession && sf.selectedSession.profId === '*') || 
+  (sf.selectedProfile && sf.selectedProfile.profId === '*') )
 
 const clSel = (x) => {
   if (sf.selectedSession === x) return 'bord2 '
@@ -725,104 +563,78 @@ const clSel = (x) => {
   return ''
 }
 
-const selProfile = (profile: Profile) => {
-  nvClicked.value = false
-  razdb.value = false
-  sf.selectedSession = null
-  sf.selectedProfile = profile
-  newSessionName.inp = profile.about
-}
-
-const validateSession = async (code, data) => {
-  if (newSessionName.err !== '') return
+const validateSession = async (prefCode, prefObj) => {
+  if (newProfAbout.err !== '') return
 
   let sv = sf.selectedSession
   const sp = sf.selectedProfile
-  let about: string = newSessionName.inp
+  let about: string = newProfAbout.inp
+  let profile: Profile = null
 
   if (sv) { 
     // reprise d'une session épinglée
-    const profile: Profile = sf.isRegistered ? sf.mySafeProfiles.get(sv.profId) : null
-
-    if (profile) {
-      if (profile.about !== about && session.hasNet) {
-        // Maj du profile dans Safe
-        const status = await sf.setAboutProfile(sv.profId, about)
-        if (status < 0) return
-        if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
+    if (!session.hasNet) {
+      // mode avion : reprise telle quelle (seul son time est mis à jour)
+      await sf.setTSession(sv, false)
+    } else {
+      if (sv.profId !== '*') {
+        profile = sf.mySafeProfiles.get(sv.profId)
+        if (profile) {
+          if (profile.about !== about) {
+            // Renommer le profile dans le Safe
+            const status = await sf.setAboutProfile(sv.profId, about)
+            if (status < 0) return
+            if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
+            sv.about = about
+          }
+        } else {
+          /* PROBLEME 
+          la session est épinglée mais son profile a été détruit depuis
+          on lui redonne le profil universel
+          */
+          profile = { profId: '*', about: '', credIds: [] }
+          sv.profId = '*'
+        }
+      }
+      sv.prefCode = prefCode
+      sv.prefObj = prefObj
+      if (unpinme.value) {
+        sv.hasCache = false
+        await sf.delTSession(sv)
+      } else {
+        // save tsession avec time, raz db si requis
+        await sf.setTSession(sv, resetdb.value)
+        session.setDbName(sv.hasCache ? sv.dbName : '')
       }
     }
-    sv.about = about
-    sv.prefCode = code
-    if (unwantdb.value) sv.hasCache = false
-    else if (wantdb.value) sv.hasCache = true
 
-    if (!unpinme.value) {
-      // save tsession avec time, raz db si requis
-      await sf.setTSession(sv, razdb.value)
-      session.setDbName(sv.hasCache ? sv.dbName : '')
-    } else {
-      await sf.delTSession(sv)
-    }
-
-  } else if (sp) { 
-    // nouvelle session ouverte depuis un profile (QUI EXISTE)
-    // Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
-
-    if (sp.about !== about) // Maj du profile dans Safe
+  } else { // sp : existe
+    /* nouvelle session ouverte depuis un profile 
+    QUI EXISTE puisqu'il a été sélectionné.
+    Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
+    */
+    profile = sp
+    if (sp.profId !== '*' && sp.about !== about) // Maj du profile dans Safe
       await sf.setAboutProfile(sp.profId, about)
 
-    if (pinned.value) { // épingler la session
+    if (pinme.value) { // épingler la session
       const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
         profId: sp.profId,
         about: about,
-        credIds: sp.creds,
-        hasCache: wantdb.value,
+        hasCache: true,
         size: 0,
         time: 0,
-        prefCode: code
+        prefCode: prefCode,
+        prefObj: prefObj
       } as TSession)
       await sf.setTSession(nvs, true) // true: par superstition ! (db ne devrait pas exister)
-      session.setDbName(nvs.hasCache ? nvs.dbName : '')
+      session.setDbName(nvs.dbName)
     }
+  } 
 
-  } else {
-    // nouvelle session vierge de droits. Il y a OU NON du réseau
-    const profId = Crypt.shaS(Crypt.random(16))
-
-    // Création du profile dans Safe - S'il y a du réseau
-    if (sf.isRegistered && pinned.value && session.hasNet)
-      await sf.setAboutProfile(profId, about)
-
-    if (!session.incognito && ((sf.isRegistered && pinned.value) || !sf.isRegistered)) { 
-      // Session épinglée
-      const nvs = sf.newTSession({
-        app: cfg.appname,
-        userId: sf.userId,
-        profId,
-        about,
-        credIds: [],
-        hasCache: wantdb.value,
-        size: 0,
-        time: 0,
-        prefCode: code
-      })
-      await sf.setTSession(nvs, true)
-      session.setDbName(wantdb.value ? nvs.dbName : '')
-    } else {
-      /* Ouverture d'une session "fugitive":
-      - ne laissant aucune trace en local dans IDBS
-      - sans profil
-      - sans droits
-      - sans IDB
-      L'exécution n'aura laissée aucune trace (sans dans les DBs de l'appli)
-      */
-    }
-  }
-
-  await goToApp(about, sf.getCreds(sf.getCredIds()), code, data)
+  await goToApp(about, sf.getCreds(profile), prefCode, prefObj)
 }
 
 const validateSessionV = async () => {

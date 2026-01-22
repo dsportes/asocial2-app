@@ -128,15 +128,6 @@ export default {
   OUI: _Je confirme_
   NON: _Je refuse_
 `,
-  HPauthentif: 'Authentification',
-  HPnini_1: 'NI enregistré, NI CONNU LOCALEMENT',
-  HPnini_2: `# NI enregistré, NI CONNU LOCALEMENT
-bla bla
-`,
-  HPnini_1c: 'Ouverture en mode CALCULETTE',
-  HPnini_2c: `# Ouverture en mode CALCULETTE
-bla bla
-`,
   HPnini_1v: 'Ouverture d\'une session sans droits d\'accès',
   HPnini_2v: `# Ouverture d'une session sans droits d'accès
 bla bla
@@ -145,14 +136,6 @@ bla bla
   HPsvoid_1: 'Une nouvelle session peut être ouverte: elle n\'aura aucun "droits d\'accès" initialisés ' +
     ' et une préférence d\'affichage par défaut. Aucune trace de son exécution ne sera détenue sur ce terminal.',
   HPsvoid_2: 'Elle sera EN MODE AVION, sans accès à des données externes (comme une "calculette").',
-  
-  
-  HPauth_1: 'Je m\'authentifie par ma phrase secrète ...',
-  HPauth_2: 'Soit, je m\'authentifie par ma phrase secrète ...',
-  HPauth_3: 'Je m\'enregistre par ma phrase secrète ...',
-  HPauthbypin_1: 'Authentification par code PIN de:',
-  HPauthstrong_1: 'Authentification "forte"',
-  HPsaisirpin: 'Saisir votre code PIN',
 
   HPchgcodes_1: 'Changement des codes d\'authentification',
   HPchgcodes_2: `### Changement des codes d'authentification
@@ -176,13 +159,14 @@ bla bla
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
 `,
-
+  HPauthentif: 'Authentification',
   HPnet_1: 'Accès à Internet',
   HPnet_2: 'Mode AVION: pas d\'accès à Internet',
-  HPincognito_1: 'Accès sécurisé aux données stockées sur ce terminal',
+  HPincognito_1: 'Accès aux données stockées sur ce terminal',
   HPincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   HPterminal: 'Ce terminal a été nommé ',
 
+  HPpstar: '(Défaut: tous droits d\'accès)',
   HPenreg_1: 'Enregistrement',
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',
@@ -246,9 +230,7 @@ bla bla
   HPutc2: 'A propos de la session ...',
   HPsize_1: 'Volumes libérables',
   HPsize_2: 'A supprimer',
-  HPunpin_2: 'Désépingler une session économise de la place sur le terminal en supprimant ses données stockées localement avec pour conséquences:',
-  HPunpin_3: '- de ralentir sa réouverture ultérieure sur ce terminal,',
-  HPunpin_4: '- d\'interdire son ouverture en mode AVION sur ce terminal.',
+
   HPupc_1: 'Utilisateur',
   HPupc_2: 'Application',
   HPupc_3: 'Volume',
@@ -268,20 +250,29 @@ bla bla
   HP3v2_2: '- Si ce n\'est PAS vous, corriger votre phrase secrète.',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
   HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
-  HPnouvsession: 'Saisir un "à propos" pour cette nouvelle session',
-  HPnvs: '(nouvelle session "vierge" de droits d\'accès)',
-  HPresetdb: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
-  HPwantdb: 'ACTIVER le cache local des documents et fichiers de la session pour '
-  + 'accélérer ses exécutions suivantes et y accéder en mode AVION',
-  HPunwantdb: 'DESACTIVER le cache local des documents et fichiers de la session',
+
+  HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
+  HPresetdb_1: `### Attention ! 
+La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
+
+- Ceci peut alonger **significativement** la durée d'initialisation de la session.
+- Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
+`,
+
+  HPunpin_0: 'DÉSÉPINGLER cette session: supprime son cache local de documents et fichiers',
+  HPunpin_1: `# Désépingler une session 
+- économise de la place sur le terminal en supprimant ses données stockées localement.
+- ralentit sa réouverture ultérieure sur ce terminal.
+- interdt son ouverture en mode AVION sur ce terminal.
+`,
+  HPpin_0: 'ÉPINGLER cette session: active son cache local de documents et fichiers',
+  HPpin_1: `# Épingler une session 
+- occupe de la place sur le terminal en stockant certaines de ses données localement.
+- accélère sa réouverture ultérieure sur ce terminal.
+- autorise son ouverture en mode AVION sur ce terminal.
+`,
   HPsetpinned: 'Epingler cette nouvelle session pour la relancer ultérieuerement dans les mêmes conditions',
-  HPrazbl: `### Attention ! 
-  La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
-  
-  - Ceci peut alonger **significativement** la durée d'initialisation de la session.
-  - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
-  
-  `,
+
   HPwprfs: 'Ouvrir la session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPpref_2: '... dernières utilisées sur ce terminal',
@@ -292,12 +283,6 @@ bla bla
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
 
-  HPregist_0: 'PAS (encore) ENREGISTRÉ ...',
-  HPregist_3: 'Je le fais maintenant',
-  HPregist_5: `# Je ne peux pas m'enregistrer ...
-- soit il n'y a pas de réseau,
-- soit je suis en mode INCOGNITO (pas d'accès aux données du terminal).
-`,
   HPregist_1: 'Je suis ENREGISTRÉ ...',
   HPregist_2: `# Être ENREGISTRÉ ...
 c'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
@@ -305,7 +290,7 @@ c'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiq
 ### Une liste de _droits d'accès_
 Chacun est consitué d'éléments cryptographiques complexes autorisant l'exécution de certaines opérations et d'accès à certaines données.
 
-### Une liste de _sessions favorites nommées_
+### Une liste de _sessions nommées_
 Chacune reprend quelques uns des droits d'accès ci-dessus et pertinents pour la rouvrir dans les mêmes conditions.
 
 ### Des jeux de **préférences d'adffichage**
@@ -315,50 +300,52 @@ On peut choisir par confort d'appliquer un jeu ou un autre selon la session à o
 On peut y rouvrir une session avec un code PIN simple.
 Ouvrir une session en **mode AVION** (sans accès à Internet) n'est possible que depuis un terminal déclaré _de confiance_.
 `,
-  HPlocal_1: 'PAS enregistré MAIS CONNU LOCALEMENT',
-  HPauthlocal_0: 'Première visite ?',
-  HPauthlocal_1: 'Validation: est-ce moi ?',
-  HPlocal_2: `# Utilisateur CONNU LOCALEMENT
+  HPregist_3: 'Je NE suis PAS ENREGISTRÉ mais je le fais',
+  HPregist_4: `# Je ne peux pas m'enregistrer ...
+Il n'y a pas de réseau et l'enregistrement requiert d'accéder au serveur qui gère les _coffres forts_ des utilisateurs.
+`,
+  HPregist_5: 'Ouverture en mode CALCULETTE',
+  HPregist_6: `# Ouverture en mode CALCULETTE
 bla bla
 `,
-
+  HPauthbypin_1a: 'Je suis l\'utilisateur [{0}] confiant dans ce terminal',
+  HPauthbypin_1b: 'Je suis un des {0} utilisateurs confiants dans ce terminal...',
+  HPauthstrong_1: 'Authentification "forte"',
+  HPsaisirpin: 'Saisir votre code PIN',
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
 `,
 
-  HPmode_1: `# Ouvrir une session AVEC Internet ...
+  HPmode_1: `# Ouvrir une session AVEC ou SANS Internet ...
 C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
 
 # Ouvrir une session SANS Internet ...
 Deux possibilités:
 
-### (1) Rouvrir en **mode AVION** une session précédemment _ÉPINGLÉE_
-Cette session ayant déjà été ouverte sur ce terminal et ayant été _épinglée_ dispose d'un **cache** local de documents et de fichiers.
+### (1) Rouvrir en **mode AVION** une session qui a été _ÉPINGLÉE_
+Quand une session a été _épinglée_ sur ce terminal, elle dispose d'un **cache** local crypté de documents et de fichiers.
 La rouvrir en mode _AVION_ lui donne accès en lecture à ceux-ci, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
 
 ### (2) Mode _CALCULETTE_
-Une session qui n'a pas été _épinglée_ précédemment peut être ouverte sans accès Internet mais sans connaissance d'aucun document ni fichier de la base centrale. 
-Elle travaille en mode _calculette_: les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
+Sans accès Internet ni accès à aucun document ni fichier des bases centrales l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 `,
 
   HPmode_2: `# Ouvrir une session en accédant aux données stockées localement ...
-C'est le mode _normal et optimal_:
-- **les utilisateurs _enregistrés_** ayant déclaré le terminal **de CONFIANCE**,
-  - _peuvent_ s'authentifier par un simple code PIN,
-  - _peuvent_ **ÉPINGLER** leurs sessions ce qui accélère leur rouverture et permet d'y accéder en **mode AVION**.
-- **les utilisateurs _NON enregistrés_** peuvent **S'IDENTIFIER LOCALEMENT**: 
-  - ils peuvent alors **ÉPINGLER** des sessions afin de les rouvrir ultérieurement dans les mêmes conditions (_droits d'accès_ et _préférences d'affichage_).
+C'est le mode _normal et optimal_.
+
+Les utilisateurs ayant déclaré ce terminal **de CONFIANCE**,
+- _peuvent_ s'authentifier par un simple code PIN,
+- _peuvent_ **ÉPINGLER** leurs sessions ce qui accélère leur rouverture et permet d'y accéder en **mode AVION**.
 
 # Ouvrir une session INCOGNITO ...
 En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
 
-### (1) Si l'utilisateur est ENREGISTRÉ ...
-- s'il a des sessions _favorites_ il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'accès_ attachés à cette session.
+### (1) Si l'utilisateur a **ÉPINGLÉ** préalablement certaines de ses sessions
+Il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'accès_ attachés à cette session.
 - il peut ouvrir aussi des sessions _vierges de tous droits_ et les acquérir en cours de session en fonction de ses besoins.
 
-### (2) Sinon ...
-L'application est ouverte en **Mode _CALCULETTE_**, sans avoir connaissance d'aucun document ni fichier de l'application: les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
-Toutefois l'utilisateur peut acquérir des droits d'accès au cours de sa session (par exemple en les _important_ depuis un fichier personnel) et accéder aux données correspondantes de la base centrale.
+### (2) Sinon l'application peut être ouverte en **Mode _CALCULETTE_** 
+Sans avoir connaissance d'aucun document ni fichier de l'application, les fonctionnalités proposées sont en général très restreintes (celà dépend de l'application).
 `,
 
   HPmode_3: `# Ouvrir une session SANS Internet et INCOGNITO ...
@@ -371,12 +358,12 @@ Les fonctionnalités proposées peuvent être très restreintes (celà dépend d
   HPauthbypin_2: `# Authentification par code PIN
 Si vous avez déclaré ce terminal **de confiance**, vous _pouvez_ vous authentifier en donnant simplement votre code PIN.
 
-Cliquer sur le psedo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance. 
+Cliquer sur le pseudo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance. 
 S'il n'y est pas, c'est que la confiance a été retiré à ce terminal.
 
 > La seconde saisie consécutive erronnée d'un code PIN retire la confiance dans ce terminal.
 
-> Vous _pouvez_ aussi vous authentifier **fortement**. Si vous avez l'intention de gérer ensuite la confiance dans ce terminal ou changer vos codes d'authentification forte, c'est même requis.
+> Vous _pouvez_ aussi utiliser l'authentification **forte**. Si vous avez l'intention de gérer ensuite la confiance dans ce terminal ou de changer vos codes d'authentification forte, c'est même requis.
 `,
   HPauthstrong_2: `# Authentification "forte"
 bla bla
