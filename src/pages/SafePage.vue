@@ -72,6 +72,9 @@
   </div>
 
   <div v-if="sf.step === 2" class="q-pa-sm">
+    <btn-cond v-if="session.hasNet" class="q-my-sm" :label="$t('HPcfgPS')" icon="settings"
+      @ok="openCM"/>
+
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
     <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
       class='bord1 q-pa-xs'>
@@ -119,21 +122,15 @@
         </div>
       </div>
 
-      <div v-if="!selStar">
-        <div class="titre-md text-italic q-mt-md">{{$t('HPrensession')}}</div>
-        <input-ps v-model="newProfAbout"
-          :sz="cfg.K.sizeSn" :label="$t('PSsn')" :ph="$t('PSsnh')"/>
+      <div class="font-mono text-bold q-mt-sm">
+        {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
-
-      <div :class="(!selStar && newProfAbout.err !== '' ? 'disabled' : '') + ' q-mt-md'">
-        <div class="titre-md text-italic text-bold text-right">
-          {{$t('HPwprfs')}}</div>
-        <q-card-actions vertical align="right">
-          <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
-          <btn-cond v-for="[code, data] in sf.mySafePrefs" :key="code"
-            flat :label="'... ' + code" @ok="validateSession(code, data)"/>
-        </q-card-actions>
-      </div>
+      <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
+      <q-card-actions vertical align="right">
+        <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
+        <btn-cond v-for="[code, data] in sf.mySafePrefs" :key="code"
+          flat :label="'... ' + code" @ok="validateSession(code, data)"/>
+      </q-card-actions>
     </div>
 
     <q-separator class="q-my-md" color="orange"/>
@@ -157,7 +154,7 @@
 
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
-  <bar-open :disable="!session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
+  <bar-open v-if="session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
     :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
 
   <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"

@@ -15,9 +15,9 @@
   </template>
 
 <template #default>
-  <q-tabs v-model="tab" no-caps class="tbp">
-    <q-tab name="bycreds" :label="$t('HPtab_c')" />
+  <q-tabs v-model="tab" dense no-caps class="tbp">
     <q-tab name="bysessions" :label="$t('HPtab_s')" />
+    <q-tab name="bycreds" :label="$t('HPtab_c')" />
   </q-tabs>
 
   <div class="column items-center">
@@ -57,40 +57,44 @@
 
           <!-- existait ou importé, about déjà modifié ou non-->
           <q-input v-if="localCred.st !== 2"
-            filled v-model="locabout" 
+            filled v-model="locaboutCr" 
             :label="$t('HPcrab')"
             input-class="font-mono"
             counter
-            :hint="hint"
+            :hint="hintCr"
             bottom-slots
-            :error="locabouterr !== ''"
-            @keydown.enter.prevent="valAb">
+            :error="locaboutCrerr !== ''"
+            @keydown.enter.prevent="valAbCr">
             <template v-slot:append>
               <q-btn size="sm" icon="undo" color="primary" round
-                @click="undoAb" :disable="!chgAb || locabouterr !== ''"/>
-              <q-btn size="sm" icon="check" :disable="!chgAb || locabouterr !== ''" 
-                color="primary" round @click="valAb" />
+                @click="undoAbCr" :disable="!chgAbCr || locaboutCrerr !== ''"/>
+              <q-btn size="sm" icon="check" :disable="!chgAbCr || locaboutCrerr !== ''" 
+                color="primary" round @click="valAbCr" />
             </template>
-            <template v-slot:error>{{$t(locabouterr)}}</template>
+            <template v-slot:error>{{$t(locaboutCrerr)}}</template>
           </q-input>
           
-          <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_' + PS)}}</div>
+          <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
               <div :class="psSel(ps) + ' row items-center q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
-                <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
+                <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
+                <div class="col-1 font-mono">{{ps.crIds.size}}</div>
+                <div :class="'col-9 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
               </div>
             </div>
           </q-scroll-area>
-          <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_' + PS)}}</div>
+          <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted')}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">
               <div :class="psSel(ps) + ' row items-center q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(ps)"/>
-                <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
+                <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
+                <div class="col-1 font-mono">{{ps.crIds.size}}</div>
+                <div :class="'col-9 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
               </div>
             </div>
           </q-scroll-area>
@@ -99,19 +103,45 @@
     </div>
 
     <div v-if="tab === 'bysessions'" class="full-width q-pa-sm">
+      <div class="column q-my-sm q-gutter-xs">
+        <btn-cond :label="$t('HPnewps_1')" @ok="new1"/>
+        <btn-cond :label="$t('HPnewps_2')" @ok="new2"/>
+        <btn-cond :label="$t('HPnewps_3')" @ok="new3" :disable="localPS === null"/>
+      </div>
+
       <bar-open :title="$t('HPpslst_1')" :bubble="$t('HPpslst_2')"/>
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
         <div :class="dkli(idx)" v-for="([psid, ps], idx) of mlocPS" :key="psid">
-          <div :class="psSel(ps) + 'row q-my-xs cursor-pointer select'" @click="selPS(ps)">
-            <div :class="'col-11 font-mono ellipsis ' + clPSid(psid)">{{ps.about}}</div>
-            <div class="row-1 font-mono">{{ps.crIds.size}}</div>
+          <div :class="psSel(ps) + 'row q-my-xs items-center cursor-pointer select'" @click="selPS(ps)">
+            <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
+            <div class="col-1 font-mono">{{ps.crIds.size}}</div>
+            <div :class="'col-10 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
           </div>
         </div>
       </q-scroll-area>
 
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
+
+        <q-input v-if="localPS.st !== 2"
+          filled v-model="locaboutPs" 
+          :label="$t('HPpsab')"
+          input-class="font-mono"
+          counter
+          :hint="hintPs"
+          bottom-slots
+          :error="locaboutPserr !== ''"
+          @keydown.enter.prevent="valAbPs">
+          <template v-slot:append>
+            <q-btn size="sm" icon="undo" color="primary" round
+              @click="undoAbPs" :disable="!chgAbPs || locaboutPserr !== ''"/>
+            <q-btn size="sm" icon="check" :disable="!chgAbPs || locaboutPserr !== ''" 
+              color="primary" round @click="valAbPs" />
+          </template>
+          <template v-slot:error>{{$t(locaboutPserr)}}</template>
+        </q-input>
+
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
         <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
           class='bord1 q-pa-xs'>
@@ -263,9 +293,10 @@ import stores from '../stores/all'
 import { Credential, testCred } from '../src-fw/credential'
 import { Crypt } from '../src-fw/crypt'
 
-type LocalPS = { // profile ou session
+type LocalPS = { // session
   id: string
   about: string
+  st: number // 0: inchangé 1: modifié 2: supprimé
   crIds: Set<string> // Set des ids des credentials
   orphans: Set<string> // Set des ids des credentials N'EXISTANT PAS
 }
@@ -273,7 +304,7 @@ type LocalPS = { // profile ou session
 type LocalCred = {
   cred: Credential
   st: number
-  psIds: Set<string> // Set des ids des sessions/profiles le référençant
+  psIds: Set<string> // Set des ids des sessions le référençant
 }
 
 const encoder = new TextEncoder()
@@ -318,8 +349,7 @@ const emit = defineEmits(['updated'])
 
 const cm = computed(() => ui.dModels[props.idc].credsmgr)
 
-const tab = ref('bycreds')
-const PS = ref(sf.isRegistered ? 'P' : 'S')
+const tab = ref('bysessions')
 
 watch(tab, (t) => {
   if (t === 'bycreds' && localCred.value)
@@ -329,23 +359,14 @@ watch(tab, (t) => {
 })
 
 const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
-const origCreds: Ref<Map<string, Credential>> = ref()
 const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 
+// const origCreds = computed(() => sf.mySafeCreds)
+const origCreds = ref(testCred()) // simulation pour test
 /* Chargement des credentials */
-{
-  origCreds.value = sf.isRegistered ? sf.mySafeCreds : sf.tcreds
-  if (origCreds.value) for(const [, c] of origCreds.value)
-    mlocCreds.value.set(x.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
-}
-
-// simulation pour test
-{
-  origCreds.value = testCred()
-  for(const [, c] of origCreds.value)
-    mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
-}
+for(const [, c] of origCreds.value)
+  mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
 
 const buildXref = () => {
   for(const [,lc] of mlocCreds.value) lc.psIds.clear()
@@ -359,18 +380,17 @@ const buildXref = () => {
   }
 }
 
-/* Chargement des profiles / sessions */
+/* Chargement des sessions */
 const loading = () => {
-  const isR = sf.isRegistered
-  const mx = isR ? sf.mySafeProfiles : sf.mySessions
-  if (mx) for (const [id, x] of mx) {
-    const z = isR ? x.creds : x.credIds
-    mlocPS.value.set(id, { id, about: x.about, crIds: new Set(z), orphans: new Set() })
-    const ps = { id, about: x.about, crIds: new Set(z), orphans: new Set() }
-    morigPS.value.set(id, ps)
-    for(const crId of ps.crIds) {
-      const lc = origCreds.value.get(crId)
-      if (!lc) ps.orphans.add(crId)
+  for (const [id, x] of sf.mySafeProfiles) {
+    if (x.profId !== '*') {
+      mlocPS.value.set(id, { id, about: x.about, crIds: new Set(x.credIds), orphans: new Set() })
+      const ps = { id, about: x.about, st: 0, crIds: new Set(x.credIds), orphans: new Set() }
+      morigPS.value.set(id, ps)
+      for(const crId of ps.crIds) {
+        const lc = origCreds.value.get(crId)
+        if (!lc) ps.orphans.add(crId)
+      }
     }
   }
   buildXref()
@@ -382,17 +402,17 @@ const localCred = ref(null)
 const origCred = ref(null)
 const mlocPS1 = ref(null)
 const mlocPS2 = ref(null)
-const locabout = ref('')
-const chgAb = computed(() => localCred.value.cred.about !== locabout.value )
-const locabouterr = computed(() => locabout.value.length < aboutSize[0] ? 'PScourt' : 
-  (locabout.value.length > aboutSize[1] ? 'PSlong' : ''))
-const hint = computed(() => $t('PSminmax', aboutSize) + (!locabouterr.value ? $t('pressret') : ''))
+const locaboutCr = ref('')
+const chgAbCr = computed(() => localCred.value.cred.about !== locaboutCr.value )
+const locaboutCrerr = computed(() => locaboutCr.value.length < aboutSize[0] ? 'PScourt' : 
+  (locaboutCr.value.length > aboutSize[1] ? 'PSlong' : ''))
+const hintCr = computed(() => $t('PSminmax', aboutSize) + (!locaboutCrerr.value ? $t('pressret') : ''))
 
 const crSel = (lc) => !lc ? '' : (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc) => {
   localCred.value = lc
-  locabout.value = lc.cred.about || ''
+  locaboutCr.value = lc.cred.about || ''
   const c = origCreds.value.get(lc.cred.id)
   origCred.value = c ? Credential.clone(c) : null
   mlocPS1.value = new Map()
@@ -402,24 +422,24 @@ const selCred = (lc) => {
     else mlocPS2.value.set(psid, e)
 }
 
-const undoAb = () => {
-  if (locabouterr.value !== '' || !chgAb.value) return
+const undoAbCr = () => {
+  if (locaboutCrerr.value !== '' || !chgAbCr.value) return
   const st = localCred.value.st
-  if (st === 1) locabout.value = localCred.value.cred.about || '' // rétablit la valeur importée
-  else locabout.value = origCred.value.about // 0 ou 3 (pas importé): rétablit la valeur origine
+  if (st === 1) locaboutCr.value = localCred.value.cred.about || '' // rétablit la valeur importée
+  else locaboutCr.value = origCred.value.about // 0 ou 3 (pas importé): rétablit la valeur origine
 }
 
-const valAb = () => {
-  if (locabouterr.value !== '' || !chgAb.value) return
+const valAbCr = () => {
+  if (locaboutCrerr.value !== '' || !chgAbCr.value) return
   const st = localCred.value.st
-  if (st === 1) localCred.value.cred.about = locabout.value // importé: ne change rien au statut
+  if (st === 1) localCred.value.cred.about = locaboutCr.value // importé: ne change rien au statut
   else { // pas importé : statut à 3 si about changé ou remis à 0 si rétabli
-    if (origCred.value.about === locabout.value) {
+    if (origCred.value.about === locaboutCr.value) {
       localCred.value.st = 0
       localCred.value.cred.about = origCred.value.about
     } else {
       localCred.value.st = 3
-      localCred.value.cred.about = locabout.value
+      localCred.value.cred.about = locaboutCr.value
     }
   }
 }
@@ -460,21 +480,35 @@ const onArrowU = (ps) => {
   }
 }
 
-const crIdsPSChg = (psid) => {
+const chgPSlc = (psid) => {
   const ps1 = mlocPS.value.get(psid)
   const ps2 = morigPS.value.get(psid)
-  return ps1 && ps2 && isSameSet(ps1.crIds, ps2.crIds)
+  return !(ps1 && ps2 && isSameSet(ps1.crIds, ps2.crIds))
 }
 
-const clPSid = (psid) => {
-  const b = crIdsPSChg(psid)
-  return !b ? ' text-bold text-warning' : ''
+const colorPS = (psid) => {
+  return chgPSlc(psid) ? 'warning' : 'none'
+}
+
+const chgPSab = (psid) => {
+  const ps1 = mlocPS.value.get(psid)
+  const ps2 = morigPS.value.get(psid)
+  return !(ps1 && ps2 && ps1.about === ps2.about)
+}
+
+const clPSab = (psid) => {
+  return chgPSlc(psid) ? ' text-bold text-warning' : ''
 }
 
 const localPS = ref(null)
 const origPS = ref(null)
 const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
 const mlocCreds2 = ref(null) // Map des creds NE référençant PAS le PS courant
+const locaboutPs = ref('')
+const chgAbPs = computed(() => localPS.value.about !== locaboutPs.value )
+const locaboutPserr = computed(() => locaboutPs.value.length < aboutSize[0] ? 'PScourt' : 
+  (locaboutPs.value.length > aboutSize[1] ? 'PSlong' : ''))
+const hintPs = computed(() => $t('PSminmax', aboutSize) + (!locaboutPserr.value ? $t('pressret') : ''))
 
 const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
@@ -489,6 +523,18 @@ const selPS = (ps) => {
     else mlocCreds2.value.set(crid, e)
 }
 
+const undoAbPs = () => {
+  if (locaboutPserr.value !== '' || !chgAbPs.value) return
+  locaboutPs.value = localPS.value.about
+  localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
+}
+
+const valAbPs = () => {
+  if (locaboutPserr.value !== '' || !chgAbPs.value) return
+  localPS.value.about = locaboutPs.value
+  localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
+}
+
 const removeOrph = (crid) => {
   localPS.value.crIds.delete(crid)
   buildXref()
@@ -498,6 +544,7 @@ const removeOrph = (crid) => {
 const onArrowDC = (lc) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
+    localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
     localPS.value.crIds.delete(lc.cred.id)
     buildXref()
     mlocCreds1.value.delete(lc.cred.id)
@@ -508,11 +555,35 @@ const onArrowDC = (lc) => {
 const onArrowUC = (lc) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
+    localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
     localPS.value.crIds.add(lc.cred.id)
     buildXref()
     mlocCreds2.value.delete(lc.cred.id)
     mlocCreds1.value.set(lc.cred.id, e)
   }
+}
+
+const new1 = () => {
+  const id = Crypt.shaS(Crypt.random(32))
+  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
+  for(const [crId,] of mlocCreds.value) ps.crIds.add(crId)
+  mlocPS.value.set(id, ps)
+  buildXref()
+}
+
+const new2 = () => {
+  const id = Crypt.shaS(Crypt.random(32))
+  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
+  mlocPS.value.set(id, ps)
+  buildXref()
+}
+
+const new3 = () => {
+  const id = Crypt.shaS(Crypt.random(32))
+  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
+  for(const [crId,] of localPS.value.crIds) ps.crIds.add(crId)
+  mlocPS.value.set(id, ps)
+  buildXref()
 }
 
 const importCr = ref(1)

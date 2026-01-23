@@ -273,7 +273,7 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
 `,
   HPsetpinned: 'Epingler cette nouvelle session pour la relancer ultérieuerement dans les mêmes conditions',
 
-  HPwprfs: 'Ouvrir la session avec les préférences de présentation ...',
+  HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPpref_2: '... dernières utilisées sur ce terminal',
   HPnotpinned: '(non épinglée)',
@@ -388,12 +388,10 @@ A propos du status ...
   HPcredac_3: 'Le droit d\'accès n\'était PAS dans la liste et vient d\'être "importé": l\'y SUPPRIMER',
   HPcredac_4: 'Rétablir le texte d\'à propos',
   HPcreddis: 'Contenu technique',
-  HPlisted_P: 'Cité dans les sessions',
-  HPlisted_S: 'Cité dans les sessions',
+  HPlisted: 'Cité dans les sessions',
   HPlisted_C: 'Droits d\'accès cités dans la session',
   HPlisted_O: 'Droits d\'accès cités dans la session MAIS n\'existant pas dans la liste des droits. Cliquer sur ceux à retirer de la session.',
-  HPnotlisted_P: 'NON cité dans les sessions',
-  HPnotlisted_S: 'NON cité dans les sessions',
+  HPnotlisted: 'NON cité dans les sessions',
   HPnotlisted_C: 'Droits d\'accès NON cités dans la session',
   HPimport_0: 'Importer',
   HPexport_0: 'Exporter',
@@ -416,13 +414,18 @@ A propos du status ...
   HPexport_unck: 'Décocher les droits d\'accès à ne pas exporter, puis "Valider" pour exporter.',
   HPimport_inp: 'Saisir le texte JSON',
   HPexport_ok: 'Fichier sauvegardé dans le répertoire de _Téléchargements_ sous le nom [`{0}`].',
-  HPcrab: 'A propos du drooit d\'accès ...',
-  HPtab_c: 'Vue "droits d\'accès"',
-  HPtab_s: 'Vue "sessions favorites"',
-  HPpslst_1: 'Liste des "sessions favorites" enregistrées',
-  HPpslst_2: `# Liste des "sessions favorites" enregistrées
+  HPcrab: 'A propos du droit d\'accès ...',
+  HPpsab: 'A propos de la session ...',
+  HPtab_c: 'Droits d\'accès',
+  HPtab_s: 'Sessions',
+  HPpslst_1: 'Liste des sessions',
+  HPpslst_2: `# Liste des sessions
 bla bla
 `,
+  HPnewps_1: 'Nouvelle session AVEC tous les droits d\'accès',
+  HPnewps_2: 'Nouvelle session SANS AUCUN droits d\'accès',
+  HPnewps_3: 'Nouvelle session avec les droits d\'accès de la session courante',
+  HPcfgPS: 'Ajouter / configuer des sessions',
   
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
