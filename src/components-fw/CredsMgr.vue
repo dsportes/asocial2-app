@@ -15,7 +15,7 @@
   </template>
 
 <template #default>
-  <q-tabs v-model="tab" dense no-caps class="tbp">
+  <q-tabs v-model="tab" dense class="tbp">
     <q-tab name="bysessions" :label="$t('HPtab_s')" />
     <q-tab name="bycreds" :label="$t('HPtab_c')" />
   </q-tabs>
@@ -66,6 +66,8 @@
             :error="locaboutCrerr !== ''"
             @keydown.enter.prevent="valAbCr">
             <template v-slot:append>
+              <q-icon size="sm" name="close" @click="locaboutCr = ''" 
+                class="cursor-pointer" :disable="locaboutCr.length === 0"/>
               <q-btn size="sm" icon="undo" color="primary" round
                 @click="undoAbCr" :disable="!chgAbCr || locaboutCrerr !== ''"/>
               <q-btn size="sm" icon="check" :disable="!chgAbCr || locaboutCrerr !== ''" 
@@ -78,23 +80,19 @@
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
-              <div :class="psSel(ps) + ' row items-center q-my-xs'">
+              <div :class="psSel(ps) + ' row items-start q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
-                <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
-                <div class="col-1 font-mono">{{ps.crIds.size}}</div>
-                <div :class="'col-9 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
+                <ps-row class="col-11" :ps="ps"/>
               </div>
             </div>
           </q-scroll-area>
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted')}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
             class='bord1 q-pa-xs'>
-            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">
-              <div :class="psSel(ps) + ' row items-center q-my-xs'">
-                <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowU(ps)"/>
-                <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
-                <div class="col-1 font-mono">{{ps.crIds.size}}</div>
-                <div :class="'col-9 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
+            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">            
+              <div :class="psSel(ps) + ' row items-start q-my-xs'">
+                <btn-cond class="col-1" icon="arrow_upward" @ok="onArrowU(ps)"/>
+                <ps-row class="col-11" :ps="ps"/>  
               </div>
             </div>
           </q-scroll-area>
@@ -104,27 +102,24 @@
 
     <div v-if="tab === 'bysessions'" class="full-width q-pa-sm">
       <div class="column q-my-sm q-gutter-xs">
-        <btn-cond :label="$t('HPnewps_1')" @ok="new1"/>
-        <btn-cond :label="$t('HPnewps_2')" @ok="new2"/>
-        <btn-cond :label="$t('HPnewps_3')" @ok="new3" :disable="localPS === null"/>
+        <div class="titre-md text-bold text-italic">{{ $t('HPnewps_0') }}</div>
+        <btn-cond class="q-ml-xl" flat :label="$t('HPnewps_1')" @ok="new1"/>
+        <btn-cond class="q-ml-xl" flat :label="$t('HPnewps_2')" @ok="new2"/>
+        <btn-cond class="q-ml-xl" flat :label="$t('HPnewps_3')" @ok="new3" :disable="localPS === null"/>
       </div>
 
       <bar-open :title="$t('HPpslst_1')" :bubble="$t('HPpslst_2')"/>
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
         class='bord1 q-pa-xs'>
         <div :class="dkli(idx)" v-for="([psid, ps], idx) of mlocPS" :key="psid">
-          <div :class="psSel(ps) + 'row q-my-xs items-center cursor-pointer select'" @click="selPS(ps)">
-            <q-icon class="col-1" name="list" size="sm" :color="colorPS(psid)"/>
-            <div class="col-1 font-mono">{{ps.crIds.size}}</div>
-            <div :class="'col-10 font-mono ellipsis ' + clPSab(psid)">{{ps.about}}</div>
-          </div>
+          <ps-row :ps="ps" :class="psSel(ps) + 'q-my-xs cursor-pointer select'" @click="selPS(ps)"/>
         </div>
       </q-scroll-area>
 
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
 
-        <q-input v-if="localPS.st !== 2"
+        <q-input
           filled v-model="locaboutPs" 
           :label="$t('HPpsab')"
           input-class="font-mono"
@@ -134,6 +129,8 @@
           :error="locaboutPserr !== ''"
           @keydown.enter.prevent="valAbPs">
           <template v-slot:append>
+            <q-icon size="sm" name="close" @click="locaboutPs = ''" 
+              class="cursor-pointer" :disable="locaboutPs.length === 0"/>
             <q-btn size="sm" icon="undo" color="primary" round
               @click="undoAbPs" :disable="!chgAbPs || locaboutPserr !== ''"/>
             <q-btn size="sm" icon="check" :disable="!chgAbPs || locaboutPserr !== ''" 
@@ -142,11 +139,19 @@
           <template v-slot:error>{{$t(locaboutPserr)}}</template>
         </q-input>
 
+        <div class="row justify-between q-my-sm">
+          <div class="font-mono text-bold">{{ localPS.about }}</div>
+          <div class="row">
+            <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
+            <btn-cond icon="delete" :label="$t('delete')" color="warning" @ok="delPS"/>
+          </div>
+        </div>
+
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
         <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
           class='bord1 q-pa-xs'>
           <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds1" :key="crid">
-            <div :class="crSel(lc) + 'row q-my-xs items-center'">
+            <div :class="crSel(lc) + 'row q-my-xs items-start'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowDC(lc)"/>
               <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
@@ -156,7 +161,7 @@
         <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
           class='bord1 q-pa-xs'>
           <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds2" :key="crid">
-            <div :class="crSel(lc) + 'row q-my-xs items-center'">
+            <div :class="crSel(lc) + 'row q-my-xs items-start'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowUC(lc)"/>
               <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
@@ -272,38 +277,81 @@
   </template>
 </dialog-std1>
 
+<dialog-std1 v-model="ui.dModels[idc2].report" :title="$t('HPcfupd')" hdrclass='wmd'>
+  <template #hdr>
+    <div class="row justify-between q-px-xs q-mb-md">
+      <btn-cond flat size="lg" icon="chevron_left" @ok="ui.fD" :label="$t('giveup')"/>
+      <btn-cond flat size="lg" icon="check" @ok="confValidate" 
+        color="warning" :label="$t('iconfirm')"/>
+    </div>
+  </template>
+  <template #default>
+    <!--
+      HPstcr_1: 'Droits d\'accès ajoutés : {0}',
+      HPstcr_2: 'Droits d\'accès supprimés : {0}',
+      HPstcr_3: 'Droits d\'accès mis à jour (à propos) : {0}',
+      HPps_1: 'Sessions créées: {0}',
+      HPps_2: 'Sessions supprimées: {0}',
+      HPps_3: 'Sessions mises à jour (à propos) : {0}',
+      HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
+      HPps_5: 'Sessions sans droits d\'accès : {0}',
+      HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
+    -->
+    <div class="column q-pa-sm">
+      <div v-for="i in 3">
+        <div :class="'titre-md q-mt-sm ' + clr1(i)">
+          {{ $t('HPstcr_' + i, [report.stcr[i].size]) }}</div>
+        <div v-if="report.stcr[i].size" class="font-mono fs-sm q-px-md q-my-sm">
+          <div v-for="t in report.stcr[i]" :key="t" class="column">{{ t }}</div>
+        </div>
+      </div>
+      <div v-for="i in 6">
+        <div :class="'titre-md q-mt-sm ' + clr2(i)">
+          {{ $t('HPps_' + i, [report.stps[i].size]) }}</div>
+        <div v-if="report.stps[i].size" class="font-mono fs-sm q-px-md q-my-sm">
+          <div v-for="t in report.stps[i]" :key="t" class="column">{{ t }}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+</dialog-std1>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, reactive, onUnmounted, watch } from 'vue'
+import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
+// @ts-ignore
 import { saveAs } from 'file-saver'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import CredRow from '../components-fw/CredRow.vue'
+import PsRow from './PsRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
+// import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, sty, equ8, dkli, readFile, fileDescr, isSameSet, cloneSet } from '../src-fw/util'
+import { $t, dkli, readFile, fileDescr, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential, testCred } from '../src-fw/credential'
 import { Crypt } from '../src-fw/crypt'
+import { Profile } from '../stores/safe-store'
 
 type LocalPS = { // session
   id: string
   about: string
-  st: number // 0: inchangé 1: modifié 2: supprimé
+  exav: boolean, // existait avant
+  exap: boolean, // existe après
+  chgcr: boolean, // a changé de liste de creds
+  chgab: boolean, // a changé d'about
   crIds: Set<string> // Set des ids des credentials
   orphans: Set<string> // Set des ids des credentials N'EXISTANT PAS
 }
 
 type LocalCred = {
   cred: Credential
-  st: number
+  st: number // 0: inchangé 1:importé/créé 2:supprimé 3:about corrigé
   psIds: Set<string> // Set des ids des sessions le référençant
 }
 
@@ -311,14 +359,6 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 const aboutSize = [4, 64]
-const icons = ['', 'close', 'redo', 'redo']
-/* 
-Status d'un credential dans la liste
-0 : inchangé
-1 : ajouté à la liste
-2 : retiré de la liste
-3 : about mis à jour
-*/
 
 const importOpts = [
   { label: $t('HPimport_clear'), value: 1 },
@@ -340,7 +380,6 @@ const props = defineProps ({
 
 const sf = stores.safe
 const ui = stores.ui
-const cfg = stores.config
 
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
@@ -351,7 +390,7 @@ const cm = computed(() => ui.dModels[props.idc].credsmgr)
 
 const tab = ref('bysessions')
 
-watch(tab, (t) => {
+watch(tab, (t: string) => {
   if (t === 'bycreds' && localCred.value)
     selCred(localCred.value)
   else if (t === 'bysessions' && localPS.value)
@@ -362,8 +401,8 @@ const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
 const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 
-// const origCreds = computed(() => sf.mySafeCreds)
-const origCreds = ref(testCred()) // simulation pour test
+const origCreds = computed(() => sf.mySafeCreds)
+// const origCreds = ref(testCred()) // simulation pour test
 /* Chargement des credentials */
 for(const [, c] of origCreds.value)
   mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
@@ -384,12 +423,16 @@ const buildXref = () => {
 const loading = () => {
   for (const [id, x] of sf.mySafeProfiles) {
     if (x.profId !== '*') {
-      mlocPS.value.set(id, { id, about: x.about, crIds: new Set(x.credIds), orphans: new Set() })
-      const ps = { id, about: x.about, st: 0, crIds: new Set(x.credIds), orphans: new Set() }
-      morigPS.value.set(id, ps)
-      for(const crId of ps.crIds) {
+      const ps1: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
+        exav: true, exap: true, chgab: false, chgcr: false }
+      const ps2: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
+        exav: true, exap: true, chgab: false, chgcr: false }
+      mlocPS.value.set(id, ps1)
+      morigPS.value.set(id, ps2)
+      for(const crId of ps1.crIds) {
         const lc = origCreds.value.get(crId)
-        if (!lc) ps.orphans.add(crId)
+        if (!lc) 
+          ps1.orphans.add(crId)
       }
     }
   }
@@ -408,9 +451,10 @@ const locaboutCrerr = computed(() => locaboutCr.value.length < aboutSize[0] ? 'P
   (locaboutCr.value.length > aboutSize[1] ? 'PSlong' : ''))
 const hintCr = computed(() => $t('PSminmax', aboutSize) + (!locaboutCrerr.value ? $t('pressret') : ''))
 
-const crSel = (lc) => !lc ? '' : (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
+const crSel = (lc: LocalCred) => !lc ? '' : 
+  (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
 
-const selCred = (lc) => {
+const selCred = (lc: LocalCred) => {
   localCred.value = lc
   locaboutCr.value = lc.cred.about || ''
   const c = origCreds.value.get(lc.cred.id)
@@ -486,19 +530,13 @@ const chgPSlc = (psid) => {
   return !(ps1 && ps2 && isSameSet(ps1.crIds, ps2.crIds))
 }
 
-const colorPS = (psid) => {
-  return chgPSlc(psid) ? 'warning' : 'none'
-}
-
+/*
 const chgPSab = (psid) => {
   const ps1 = mlocPS.value.get(psid)
   const ps2 = morigPS.value.get(psid)
   return !(ps1 && ps2 && ps1.about === ps2.about)
 }
-
-const clPSab = (psid) => {
-  return chgPSlc(psid) ? ' text-bold text-warning' : ''
-}
+*/
 
 const localPS = ref(null)
 const origPS = ref(null)
@@ -510,10 +548,12 @@ const locaboutPserr = computed(() => locaboutPs.value.length < aboutSize[0] ? 'P
   (locaboutPs.value.length > aboutSize[1] ? 'PSlong' : ''))
 const hintPs = computed(() => $t('PSminmax', aboutSize) + (!locaboutPserr.value ? $t('pressret') : ''))
 
-const psSel = (ps) => !ps ? '' : (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
+const psSel = (ps: LocalPS) => !ps ? '' :
+  (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
-const selPS = (ps) => {
+const selPS = (ps: LocalPS) => {
   localPS.value = ps
+  locaboutPs.value = localPS.value.about
   const x = morigPS.value.get(ps.id)
   origPS.value = x ? { id: x.id, about: x.about, crIds: cloneSet(x.crIds) } : null
   mlocCreds1.value = new Map()
@@ -526,64 +566,101 @@ const selPS = (ps) => {
 const undoAbPs = () => {
   if (locaboutPserr.value !== '' || !chgAbPs.value) return
   locaboutPs.value = localPS.value.about
-  localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
+  localPS.value.chgab = false
+  mlocPS.value.set(localPS.value.id, localPS.value)
 }
 
 const valAbPs = () => {
   if (locaboutPserr.value !== '' || !chgAbPs.value) return
   localPS.value.about = locaboutPs.value
-  localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
+  localPS.value.chgab = true
+  mlocPS.value.set(localPS.value.id, localPS.value)
 }
 
-const removeOrph = (crid) => {
+const delPS = () => {
+  // const av = morigPS.value.get(localPS.value.id)
+  if (localPS.value.exav) {
+    localPS.value.exap = false
+    localPS.value.crIds = new Set()
+    localPS.value.about = ''
+    localPS.value.chgab = false
+    localPS.value.chglc = false
+    mlocPS.value.set(localPS.value.id, localPS.value)
+  } else {
+    mlocPS.value.delete(localPS.value.id)
+  }
+  localPS.value = null
+}
+
+const undoPS = () => {
+  const av = morigPS.value.get(localPS.value.id)
+  if (!av) {
+    mlocPS.value.delete(localPS.value.id)
+    localPS.value = null
+  } else {
+    localPS.value.crIds = cloneSet(av.crIds)
+    localPS.value.about = av.about
+    localPS.value.chgab = false
+    localPS.value.chglc = false
+    mlocPS.value.set(localPS.value.id, localPS.value)
+  }
+}
+
+const removeOrph = (crid: string) => {
   localPS.value.crIds.delete(crid)
+  localPS.value.chglc = true
+  mlocPS.value.set(localPS.value.id, localPS.value)
   buildXref()
-  selPS()
+  selPS(localPS.value)
 }
 
-const onArrowDC = (lc) => {
+const onArrowDC = (lc: LocalCred) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
     localPS.value.crIds.delete(lc.cred.id)
+    localPS.value.chgcr = chgPSlc(localPS.value.id)
+    mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
     mlocCreds1.value.delete(lc.cred.id)
     mlocCreds2.value.set(lc.cred.id, e)
   }
 }
 
-const onArrowUC = (lc) => {
+const onArrowUC = (lc: LocalCred) => {
   const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    localPS.value.st = chgPSab(localPS.value.id) || chgPSlc(localPS.value.id) ? 1 : 0
     localPS.value.crIds.add(lc.cred.id)
+    localPS.value.chgcr = chgPSlc(localPS.value.id)
+    mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
     mlocCreds2.value.delete(lc.cred.id)
     mlocCreds1.value.set(lc.cred.id, e)
   }
 }
 
-const new1 = () => {
+const newps = (crIds?: Set<string>) : LocalPS => {
   const id = Crypt.shaS(Crypt.random(32))
-  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
-  for(const [crId,] of mlocCreds.value) ps.crIds.add(crId)
+  const ps: LocalPS = { id, about: id, crIds: new Set(), orphans: new Set(),
+    exav: false, exap: true, chgab: false, chgcr: false
+  }
+  if (crIds && crIds.size) for(const crId of crIds) ps.crIds.add(crId)
   mlocPS.value.set(id, ps)
   buildXref()
+  return ps
+}
+
+const new1 = () => {
+  const s = new Set<string>()
+  for(const [id, x] of mlocCreds.value) s.add(id)
+  newps(s)
 }
 
 const new2 = () => {
-  const id = Crypt.shaS(Crypt.random(32))
-  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
-  mlocPS.value.set(id, ps)
-  buildXref()
+  newps()
 }
 
 const new3 = () => {
-  const id = Crypt.shaS(Crypt.random(32))
-  const ps = { id, about: id, st: 1, crIds: new Set(), orphans: new Set() }
-  for(const [crId,] of localPS.value.crIds) ps.crIds.add(crId)
-  mlocPS.value.set(id, ps)
-  buildXref()
+  newps(localPS.value.crIds)
 }
 
 const importCr = ref(1)
@@ -681,9 +758,9 @@ const doExport = async () => {
     if (lc.ck) creds.push(lc.c)
   const toJson = Credential.toJson(creds)
   // console.log(toJson)
-  let buf = encoder.encode(toJson)
+  let buf
   if (exportCr.value === 2) try {
-    buf = await Crypt.crypt(cryptK.key, buf)
+    buf = await Crypt.crypt(cryptK.key, encoder.encode(toJson))
     if (!buf) {
       diag.value = $t('HPexport_bf2')
       return
@@ -702,49 +779,83 @@ const doExport = async () => {
 type Report = {
   mcreds: Map<string, Credential>
   delcreds: string[]
-  mprofiles: Map<string, Profile>
+  mprofs: Map<string, Profile>
+  delprofs: string[]
   emptyPS: Set<string>
+  psWithOrphans: Set<string>
   xrefsPS: Map<string, Set<string>>
-  stcr: [Set<string>]
+  stcr: Set<string>[]
+  stps: Set<string>[]
 }
 
-const report = reactive({
+const report: Report = reactive({
   mcreds: null,
   delcreds: null,
-  mprofiles: null,
+  mprofs: null,
+  delprofs: null,
   emptyPS: null,
-  psWithOrphans: null,
   stcr: null,
+  stps: null
 })
 
 const validate = () => {
   report.mcreds = new Map<string, Credential>() 
   report.delcreds = [] 
-  report.mprofiles = new Map<string, Profile>()
+  report.mprofs = new Map<string, Profile>()
+  report.delprofs = []
   report.emptyPS = new Set()
   report.psWithOrphans = new Set()
-  report.stcr = [new Set(), new Set(), new Set(), new Set()]
+  report.stcr = [ new Set(), new Set(), new Set(), new Set()]
+  report.stps = [ null, new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
 
-  for(const [credId, lc] of mlocCreds.value) {
+  for(const [crId, lc] of mlocCreds.value) {
     report.stcr[lc.st].add(lc.cred.about)
-    if (lc.st === 2) report.delcreds.push(lc.cred.about)
+    if (lc.st === 2) report.delcreds.push(crId)
     if (lc.st === 1 || lc.st === 3) report.mcreds.set(crId, lc.cred)
   }
 
   for(const [profId, x] of mlocPS.value) {
-    const { id, about, crIds, orphans } = x
     const y = morigPS.value.get(profId)
-    if (!y || isSameSet(crIds, y.crIds)) continue
-    if (crIds.size === 0 && y.crIds.size !== 0) report.emptyPS.add(about)
-    if (orphans.size) report.psWithOrphans.add(about)
-    report.mprofiles.set(id, { id, about })
+    const maj = (x.exav || x.exap) && (x.chgab || x.chglc)
+    const cre = (!x.exav && x.exap)
+    const del = (x.exav && !x.exap)
+    if (del) report.delprofs.push(profId)
+    if (maj || cre)
+      report.mprofs.set(profId, { profId, about: x.about, 
+          crIds: Array.from(x.crIds) })
+    
+    /*
+    HPps_1: 'Sessions créées: {0}',
+    HPps_2: 'Sessions supprimées: {0}',
+    HPps_3: 'Sessions mises à jour (à propos) : {0}',
+    HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
+    HPps_5: 'Sessions sans droits d\'accès : {0}',
+    HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
+    */
+    if (cre) report.stps[1].add(x.about)
+    if (del) report.stps[2].add(x.about)
+    if (maj && x.chgab) report.stps[3].add(x.about)
+    if (maj && x.chglc) report.stps[4].add(x.about)
+    if (x.exap && x.crIds.size === 0) report.stps[5].add(x.about)
+    if ((x.exap && x.orphans.size)) report.stps[6].add(x.about)
   }
+  ui.oD(idc2, 'report')
+}
 
+const clr1 = (i) => {
+  const n =  report.stcr[i].size
+  return n ? ' bg-yellow-3 text-black text-bold' : ''
+}
+
+const clr2 = (i) => {
+  const n =  report.stps[i].size
+  return n ? ' bg-yellow-3 text-black text-bold' : ''
 }
 
 const confValidate = async () => {
   try {
-    const status = await sf.updateCreds(mcreds.value, delcreds.value, mprofiles.value)
+    const status = await sf.updateCreds(
+      report.mcreds, report.delcreds, report.mprofs, report.delprofs)
     if (status < 0) return
     ui.fD()
     await ui.diagDisplay($t('HPsfop_' + status))

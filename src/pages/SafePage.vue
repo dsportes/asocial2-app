@@ -122,7 +122,7 @@
         </div>
       </div>
 
-      <div class="font-mono text-bold q-mt-sm">
+      <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
         {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
@@ -268,13 +268,15 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+// @ts-ignore
+import { decode } from '@msgpack/msgpack'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
-import ChooseIt from '../components-fw/ChooseIt.vue'
+// import BtnConfirm from '../components-fw/BtnConfirm.vue'
+// import HelpButton from '../components-fw/HelpButton.vue'
+// import ChooseIt from '../components-fw/ChooseIt.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
 import ManageUsers from '../components-fw/ManageUsers.vue'
 import CredsMgr from '../components-fw/CredsMgr.vue'
@@ -284,12 +286,14 @@ import BarOpen1 from '../components-fw/BarOpen1.vue'
 import { Credential } from '../src-fw/credential'
 
 import stores from '../stores/all'
-import type { TSession } from '../stores/safe-store'
-import { $t, $q, sty, dkli, equ8, edvol, dhcool, coolBye } from '../src-fw/util'
+import { TSession, Profile } from '../stores/safe-store'
+import { $t, sty, dkli, dhcool } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
-import anonymousW from '../assets/anonymous_white.png'
-import anonymousB from '../assets/anonymous_black.png'
+// import anonymousW from '../assets/anonymous_white.png'
+// import anonymousB from '../assets/anonymous_black.png'
+// @ts-ignore
 import databaseW from '../assets/database_white.png'
+// @ts-ignore
 import databaseB from '../assets/database_black.png'
 
 const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
@@ -335,7 +339,6 @@ watch(() => ui.reopenSession, async (v) => {
 watch(() => sf.step, (s) =>{
   if (s === 1) {
     pin.inp = ''
-    locPS.inp = ''
   }
 })
 
@@ -366,10 +369,12 @@ const authPIN = async () => {
   else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))
 }
 
+/*
 type Profile = {
   about: string
   creds: string[]
 }
+*/
 
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
@@ -380,6 +385,7 @@ const myTrusting = ref<null>
 const isTrusted = computed(() => myTrusting.value !== null)
 
 const credsUpdated = async () => {
+  ui.fD()
   await openSession()
 }
 
@@ -472,53 +478,6 @@ const closeManusers = () => {
   }, 100)
 }
 
-const locPS = reactive({ inp: '', err: ''})
-const locTr = reactive({ inp: '', err: ''})
-const newLocUt = ref(false)
-
-const validateLocPS = async () => {
-  if (locPS.err !== '') return
-  sf.keyK = await Crypt.strongHash(locPS.inp, true, true)
-  sf.userId = '$' + Crypt.shaS(sf.keyK)
-  const t = sf.getMyTrusting()
-  newLocUt.value = t === null
-  locTr.inp = newLocUt.value ? '' : t.pseudo
-  ui.oD(idc, 'authlocaldial')
-}
-
-const validateLocTr = async () => {
-  if (locTr.err !== '') return
-  ui.fD()
-  let t = sf.getMyTrusting()
-  newLocUt.value = t === null
-  if (t === null) {
-    t = sf.newTrusting({
-      userId: sf.userId,
-      pseudo: locTr.inp,
-      hsh: Crypt.sha(sf.keyK, true),
-      creds: [],
-      prefs: null
-    })
-  } else {
-    t.pseudo = locTr.inp
-  }
-  if (!sf.hasIDBS) 
-    await sf.init1()
-  await sf.setTrusting(t)
-
-  openSession()
-}
-
-type TSession = { 
-  app: string // code de l'application
-  userId: string // id de l'utilisateur
-  profId: string // id du profil
-  about: string | Uint8Array // commentaire de l'utilisateur sur cette session
-  size: number[] // tailles des données / fichiers stockés en local dans IDB
-  time: number // date-heure de dernière ouverture sur ce terminal
-  prefCode: string // préférences utilisées la dernière fois
-}
-
 const resetdb = ref(false)
 const unpinme = ref(false)
 const pinme= ref(false)
@@ -589,7 +548,7 @@ const validateSession = async (prefCode, prefObj) => {
           la session est épinglée mais son profile a été détruit depuis
           on lui redonne le profil universel
           */
-          profile = { profId: '*', about: '', credIds: [] }
+          profile = { profId: '*', about: '', crIds: [] }
           sv.profId = '*'
         }
       }
@@ -625,7 +584,7 @@ const validateSession = async (prefCode, prefObj) => {
         time: 0,
         prefCode: prefCode,
         prefObj: prefObj
-      } as TSession)
+      }) as TSession
       await sf.setTSession(nvs, true) // true: par superstition ! (db ne devrait pas exister)
       session.setDbName(nvs.dbName)
     }

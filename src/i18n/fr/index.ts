@@ -49,6 +49,8 @@ export default {
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
   confirm: 'Pour confirmer taper {0}', // BtnConfirm
   open: 'Ouvrir',
+  restore: 'Rétablir',
+  delete: 'Supprimer',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -422,10 +424,21 @@ A propos du status ...
   HPpslst_2: `# Liste des sessions
 bla bla
 `,
-  HPnewps_1: 'Nouvelle session AVEC tous les droits d\'accès',
-  HPnewps_2: 'Nouvelle session SANS AUCUN droits d\'accès',
-  HPnewps_3: 'Nouvelle session avec les droits d\'accès de la session courante',
+  HPnewps_0: 'Nouvelle session ...',
+  HPnewps_1: 'AVEC tous les droits d\'accès',
+  HPnewps_2: 'SANS AUCUN droit d\'accès',
+  HPnewps_3: 'AVEC les droits d\'accès de la session courante',
   HPcfgPS: 'Ajouter / configuer des sessions',
+  HPcfupd: 'Rapport des mises à jour des droits',
+  HPstcr_1: 'Droits d\'accès ajoutés : {0}',
+  HPstcr_2: 'Droits d\'accès supprimés : {0}',
+  HPstcr_3: 'Droits d\'accès mis à jour (à propos) : {0}',
+  HPps_1: 'Sessions créées: {0}',
+  HPps_2: 'Sessions supprimées: {0}',
+  HPps_3: 'Sessions mises à jour (à propos) : {0}',
+  HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
+  HPps_5: 'Sessions sans droits d\'accès : {0}',
+  HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
   
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

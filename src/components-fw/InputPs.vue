@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'

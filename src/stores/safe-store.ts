@@ -58,6 +58,11 @@ Il existe une base de données IDB de nom `app_x` où `x` est le hash court de (
 
 > Les rows de la base IDB Safe sont cryptés par une clé AES du module _safe terminal_ afin de ne pas être directement lisible en _debug_: cette _sécurité_ est _molle_, la clé étant d'une manière ou d'une autre inscrite dans le code, avec un peu de fatigue un hacker motivé peut la retrouver.
 */
+export type Profile = {
+  profId: string
+  about: string | Uint8Array
+  crIds: string[]
+}
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -92,7 +97,7 @@ class Trusting {
   }
 }
 
-class TSession {
+export class TSession {
   app: string // code de l'application
   userId: string // id de l'utilisateur
   profId: string // id du profil - si '*' "tous les droits"
@@ -121,12 +126,6 @@ class TSession {
   static id (app, userId, profId) : string {
     return Crypt.shaS(app + '/' + userId + '/' + profId)
   }
-}
-
-type Profile = {
-  profId: string
-  about: string | Uint8Array
-  credIds: string[]
 }
 
 type Device = {
@@ -458,13 +457,13 @@ export const useSafeStore = defineStore('safe', () => {
   const loadProfiles = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
     const m = new Map<string, Profile>()
-    m.set('*', { profId: '*', about: '', credIds: [] })
+    m.set('*', { profId: '*', about: '', crIds: [] })
     const mpf = safe.profiles[app]
     if (mpf) {
       for (const profId in mpf) {
-        const x = mpf[profId]
+        const x = decode(mpf[profId])
         const about = await dcX(x.about as Uint8Array)
-        const p: Profile = { profId, about, credIds: x.credIds }
+        const p: Profile = { profId, about, crIds: x.crIds }
         m.set(profId, p)
       }
     }
@@ -479,7 +478,7 @@ export const useSafeStore = defineStore('safe', () => {
       for (const credId in mcf) {
         const x = mcf[credId]
         try {
-          const obj = await Crypt.decrypt(keyK.value, x.data)
+          const obj = decode(await Crypt.decrypt(keyK.value, x))
           const c: Credential = Credential.newCredential(obj)
           if (c) m.set(c.id, c)
         } catch (e) { 
@@ -493,7 +492,7 @@ export const useSafeStore = defineStore('safe', () => {
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
     if (!stores.session.hasNet || !profile) return x
-    for(const id of profile.credIds) {
+    for(const id of profile.crIds) {
       const c = mySafeCreds.value.get(id)
       if (c) x.set(id, c)
     }
@@ -1014,15 +1013,18 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shk: Uint8Array    
-    creds: Object // clé: credId, valeur: Objet Credential sérialisé crypté
-    delcreds: string[] // liste des credIds à supprimer
+    creds: Object // clé: crId, valeur: Objet Credential sérialisé crypté
+    delcreds: string[] // liste des crIds à supprimer
     profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
+    delprofs: string[] // liste des profIds à supprimer
   }
 
   const updateCreds = async (
       mcreds: Map<string, Credential>, 
       delcreds: string[], 
-      mprofiles: Map<string, Profile>) => {
+      mprofiles: Map<string, Profile>,
+      delprofs: string[]
+      ) => {
     const creds = {}
     const profiles = {}
 
@@ -1040,7 +1042,7 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       app: stores.config.appname,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array,
-      creds, delcreds, profiles
+      creds, delcreds, profiles, delprofs
      }
     const op = new Operation('$UpdateCreds')
     let ret

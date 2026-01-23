@@ -189,10 +189,10 @@ export function testCred () : Map<string, Credential> {
   c4.id = c4.computedId
 
   const s = Credential.toJson([c1, c3])
-  console.log(s)
+  // console.log(s)
   const cred = Credential.parse(s)
 
-  console.log(Credential.toJson(Array.from(cred.values())))
+  // console.log(Credential.toJson(Array.from(cred.values())))
 
   return cred
 }
