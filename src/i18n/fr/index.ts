@@ -80,6 +80,7 @@ export default {
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
   op_$UntrustDevice: 'Retrait de confiance au terminal',
   op_$TrustDevice: 'Ajout de confiance au terminal',
+  op_UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -130,15 +131,6 @@ export default {
   OUI: _Je confirme_
   NON: _Je refuse_
 `,
-  HPnini_1v: 'Ouverture d\'une session sans droits d\'accès',
-  HPnini_2v: `# Ouverture d'une session sans droits d'accès
-bla bla
-`,
-
-  HPsvoid_1: 'Une nouvelle session peut être ouverte: elle n\'aura aucun "droits d\'accès" initialisés ' +
-    ' et une préférence d\'affichage par défaut. Aucune trace de son exécution ne sera détenue sur ce terminal.',
-  HPsvoid_2: 'Elle sera EN MODE AVION, sans accès à des données externes (comme une "calculette").',
-
   HPchgcodes_1: 'Changement des codes d\'authentification',
   HPchgcodes_2: `### Changement des codes d'authentification
   bla bla
@@ -173,37 +165,37 @@ bla bla
   HPenreg_2: 'Modification de mes codes d\'accès',
   HPcode_1: 'Déclaration du code d\'accès principal',
   HPcode_2: 'Vérification du code d\'accès principal',
-  HPcode_3: 'Déclaration du code d\'accès de secours',
-  HPcode_4: 'Vérification du code d\'accès de secours',
+  HPcode_3: 'Déclaration du code d\'accès secondaire',
+  HPcode_4: 'Vérification du code d\'accès secondaire',
   HPerr_1: 'Initiales / trigramme absent ou incorrect',
   HPerr_2: 'Code d\'accès principal absent ou invalide',
   HPerr_3: 'Code d\'accès principal: vérification échouée',
-  HPerr_4: 'Code d\'accès de secours absent ou invalide',
-  HPerr_5: 'Code d\'accès de secours: vérification échouée',
+  HPerr_4: 'Code d\'accès secondaire absent ou invalide',
+  HPerr_5: 'Code d\'accès secondaire: vérification échouée',
   HPtrig: 'Pseudo, nom ... : {0}',
   HPps: 'Phrase secrète : {0}',
-  HPca: 'Code d\'accès principal',
-  HPcr: 'Code d\'accès de secours',
+  // HPca: 'Code d\'accès principal',
+  // HPcr: 'Code d\'accès secondaire',
   HPcsret_00: 'Enregistrement effectué avec succès.',
   HPcsret_01: 'Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
   HPcsret_02: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès principal".',
-  HPcsret_03: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès de secours".',
+  HPcsret_03: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès secondaire".',
   HPcsret_09: 'BUG - Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
   HPcsret_10: 'Mise à jour des codes d\'accès effectuée avec succès.',
   HPcsret_11: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
   HPcsret_12: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès principal".',
-  HPcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès de secours".',
+  HPcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès secondaire".',
   HPcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
   HPopsret_0: 'Authentification réussie.',
   HPopsret_1: 'Authentification en échec: code d\'accès principal invalide.',
   HPopsret_2: 'Authentification en échec: code d\'accès secondaire invalide.',
-  HPopens_1: 'Ouverture d\'une session',
-  HPopens_2: 'ouvrir',
+  /*
   HPauthby_0: 'Utilisateur anonyme',
-  HPauthby_1: '{0} [code principal]',
-  HPauthby_2: '{0} [code de secours]',
-  HPauthby_3: '{0} [code PIN]',
+  HPauthby_1: '{0} [principal]',
+  HPauthby_2: '{0} [secondaire]',
+  HPauthby_3: '{0} [PIN]',
   HPauthby_9: 'Phase d\'authentification',
+  */
 
   HPsfop_0: 'Succès de l\'opération.',
   HPsfop_1: 'Echec de l\'opération: utilisateur non enregistré.',
@@ -233,10 +225,12 @@ bla bla
   HPsize_1: 'Volumes libérables',
   HPsize_2: 'A supprimer',
 
+  /*
   HPupc_1: 'Utilisateur',
   HPupc_2: 'Application',
   HPupc_3: 'Volume',
   HPupc_4: 'Dernière connexion ici',
+  */
   HPskull_0: '{0} sessions(s) et {1} utilisteur(s) seront supprimé(s)',
   HPskull_1: 'Leurs données enregistrées localement seront supprimées. Les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour les utilisateurs supprimés.',
@@ -244,14 +238,7 @@ bla bla
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
   HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
-  HP3v1: 'Si c\'est votre première visite sur ce terminal, saisir vos "initiales / trigramme" pour y être reconnu.' +
-    'Sinon corriger votre phrase secrète.',
-  HPcorrectps: 'Correction',
-  HP3v2_0: 'Un utilisateur local a déjà déclaré cette phrase secrète:',
-  HP3v2_1: '- Si c\'est vous, ajuster éventuellemnt vos "initiales / trigramme".',
-  HP3v2_2: '- Si ce n\'est PAS vous, corriger votre phrase secrète.',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
-  HPrensession: 'Ajuster si nécessaire le "à propos" de la session',
 
   HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
   HPresetdb_1: `### Attention ! 
@@ -260,7 +247,6 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
 - Ceci peut alonger **significativement** la durée d'initialisation de la session.
 - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
 `,
-
   HPunpin_0: 'DÉSÉPINGLER cette session: supprime son cache local de documents et fichiers',
   HPunpin_1: `# Désépingler une session 
 - économise de la place sur le terminal en supprimant ses données stockées localement.
@@ -273,18 +259,12 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
 - accélère sa réouverture ultérieure sur ce terminal.
 - autorise son ouverture en mode AVION sur ce terminal.
 `,
-  HPsetpinned: 'Epingler cette nouvelle session pour la relancer ultérieuerement dans les mêmes conditions',
-
   HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
-  HPpref_2: '... dernières utilisées sur ce terminal',
   HPnotpinned: '(non épinglée)',
-  HPitsme: 'C\'est bien moi',
-  HPunpinme: 'Désépingler cette session',
   HPmanusers: 'Gérer les utilisateurs et leurs sessions',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
-
   HPregist_1: 'Je suis ENREGISTRÉ ...',
   HPregist_2: `# Être ENREGISTRÉ ...
 c'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
@@ -317,7 +297,6 @@ bla bla
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
 `,
-
   HPmode_1: `# Ouvrir une session AVEC ou SANS Internet ...
 C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
 
@@ -331,7 +310,6 @@ La rouvrir en mode _AVION_ lui donne accès en lecture à ceux-ci, dans l'état 
 ### (2) Mode _CALCULETTE_
 Sans accès Internet ni accès à aucun document ni fichier des bases centrales l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 `,
-
   HPmode_2: `# Ouvrir une session en accédant aux données stockées localement ...
 C'est le mode _normal et optimal_.
 
@@ -349,14 +327,12 @@ Il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'ac
 ### (2) Sinon l'application peut être ouverte en **Mode _CALCULETTE_** 
 Sans avoir connaissance d'aucun document ni fichier de l'application, les fonctionnalités proposées sont en général très restreintes (celà dépend de l'application).
 `,
-
   HPmode_3: `# Ouvrir une session SANS Internet et INCOGNITO ...
 En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
 
 Les sessions sont ouvertes en **Mode _CALCULETTE_**, sans avoir connaissance d'aucun document ni fichier de l'application.
 Les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
 `,
-
   HPauthbypin_2: `# Authentification par code PIN
 Si vous avez déclaré ce terminal **de confiance**, vous _pouvez_ vous authentifier en donnant simplement votre code PIN.
 
@@ -388,7 +364,6 @@ A propos du status ...
   HPcredac_1: 'Le droit d\'accès est dans la liste d\'origine (n\'a pas été importé): l\'en RETIRER',
   HPcredac_2: 'Le droit d\'accès a été retiré de la liste: l\'y REMETTRE',
   HPcredac_3: 'Le droit d\'accès n\'était PAS dans la liste et vient d\'être "importé": l\'y SUPPRIMER',
-  HPcredac_4: 'Rétablir le texte d\'à propos',
   HPcreddis: 'Contenu technique',
   HPlisted: 'Cité dans les sessions',
   HPlisted_C: 'Droits d\'accès cités dans la session',

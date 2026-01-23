@@ -481,7 +481,6 @@ const closeManusers = () => {
 const resetdb = ref(false)
 const unpinme = ref(false)
 const pinme= ref(false)
-const newProfAbout = reactive({ inp: '', err: '' })
 
 watch(unpinme, async (ap) => {
   if (ap === true) await ui.diagDisplay($t('HPresetdb_1'))
@@ -499,14 +498,12 @@ const selSession = (s) => {
   unpinme.value = false
   sf.selectedSession = s
   sf.selectedProfile = null
-  newProfAbout.inp = s.about
 }
 
 const selProfile = (profile: Profile) => {
   pinme.value = false
   sf.selectedSession = null
   sf.selectedProfile = profile
-  newProfAbout.inp = profile.about
 }
 
 const selStar = (() => 
@@ -520,11 +517,8 @@ const clSel = (x) => {
 }
 
 const validateSession = async (prefCode, prefObj) => {
-  if (newProfAbout.err !== '') return
-
   let sv = sf.selectedSession
   const sp = sf.selectedProfile
-  let about: string = newProfAbout.inp
   let profile: Profile = null
 
   if (sv) { 
@@ -535,19 +529,9 @@ const validateSession = async (prefCode, prefObj) => {
     } else {
       if (sv.profId !== '*') {
         profile = sf.mySafeProfiles.get(sv.profId)
-        if (profile) {
-          if (profile.about !== about) {
-            // Renommer le profile dans le Safe
-            const status = await sf.setAboutProfile(sv.profId, about)
-            if (status < 0) return
-            if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
-            sv.about = about
-          }
-        } else {
-          /* PROBLEME 
-          la session est épinglée mais son profile a été détruit depuis
-          on lui redonne le profil universel
-          */
+        if (!profile) {
+          /* PROBLEME : la session est épinglée mais son profile a été détruit depuis
+          on lui redonne le profil universel */
           profile = { profId: '*', about: '', crIds: [] }
           sv.profId = '*'
         }
@@ -570,15 +554,13 @@ const validateSession = async (prefCode, prefObj) => {
     Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
     */
     profile = sp
-    if (sp.profId !== '*' && sp.about !== about) // Maj du profile dans Safe
-      await sf.setAboutProfile(sp.profId, about)
 
     if (pinme.value) { // épingler la session
       const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
         profId: sp.profId,
-        about: about,
+        about: sp.about,
         hasCache: true,
         size: 0,
         time: 0,
@@ -590,7 +572,7 @@ const validateSession = async (prefCode, prefObj) => {
     }
   } 
 
-  await goToApp(about, sf.getCreds(profile), prefCode, prefObj)
+  await goToApp(profile.about as string, sf.getCreds(profile), prefCode, prefObj)
 }
 
 const validateSessionV = async () => {
