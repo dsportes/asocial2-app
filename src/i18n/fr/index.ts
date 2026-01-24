@@ -239,22 +239,23 @@ bla bla
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
   HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
+  HPnoclick: 'Aucune session sélectionnée',
 
   HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
-  HPresetdb_1: `### Attention ! 
+  HPresetdb_1: `### Attention !
 La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
 
 - Ceci peut alonger **significativement** la durée d'initialisation de la session.
 - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
 `,
   HPunpin_0: 'DÉSÉPINGLER cette session: supprime son cache local de documents et fichiers',
-  HPunpin_1: `# Désépingler une session 
+  HPunpin_1: `# Désépingler une session
 - économise de la place sur le terminal en supprimant ses données stockées localement.
 - ralentit sa réouverture ultérieure sur ce terminal.
 - interdt son ouverture en mode AVION sur ce terminal.
 `,
   HPpin_0: 'ÉPINGLER cette session: active son cache local de documents et fichiers',
-  HPpin_1: `# Épingler une session 
+  HPpin_1: `# Épingler une session
 - occupe de la place sur le terminal en stockant certaines de ses données localement.
 - accélère sa réouverture ultérieure sur ce terminal.
 - autorise son ouverture en mode AVION sur ce terminal.
@@ -324,7 +325,7 @@ En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_,
 Il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'accès_ attachés à cette session.
 - il peut ouvrir aussi des sessions _vierges de tous droits_ et les acquérir en cours de session en fonction de ses besoins.
 
-### (2) Sinon l'application peut être ouverte en **Mode _CALCULETTE_** 
+### (2) Sinon l'application peut être ouverte en **Mode _CALCULETTE_**
 Sans avoir connaissance d'aucun document ni fichier de l'application, les fonctionnalités proposées sont en général très restreintes (celà dépend de l'application).
 `,
   HPmode_3: `# Ouvrir une session SANS Internet et INCOGNITO ...
@@ -336,7 +337,7 @@ Les fonctionnalités proposées peuvent être très restreintes (celà dépend d
   HPauthbypin_2: `# Authentification par code PIN
 Si vous avez déclaré ce terminal **de confiance**, vous _pouvez_ vous authentifier en donnant simplement votre code PIN.
 
-Cliquer sur le pseudo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance. 
+Cliquer sur le pseudo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance.
 S'il n'y est pas, c'est que la confiance a été retiré à ce terminal.
 
 > La seconde saisie consécutive erronnée d'un code PIN retire la confiance dans ce terminal.
@@ -414,7 +415,7 @@ bla bla
   HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
   HPps_5: 'Sessions sans droits d\'accès : {0}',
   HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
-  
+
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
   DHCauja: 'aujourd\'hui',

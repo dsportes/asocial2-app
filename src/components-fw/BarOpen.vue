@@ -1,10 +1,11 @@
 <template>
 <div class="row full-width items-center">
-  <div :class="'col text-right titre-md' + (disable ? ' disabled' : '')">{{title}}</div>
-  <q-btn v-if="fnopen" class="col-auto" flat 
-    :icon="icon || 'chevron_right'" size="20px" padding="none"
+  <div :class="'col text-right cursor-pointer titre-md' + (disable ? ' disabled' : '')"
+    @click="fnopen()">{{title}}</div>
+  <q-btn v-if="fnopen" class="col-auto" flat :size="size || 'md'"
+    :icon="icon || 'chevron_right'" padding="none"
     :disable="disable" @click="fnopen()" :color="color || 'none'"/>
-  <btn-bubble v-if="bubble !== ''" class="q-ml-md col-auto" :size="size || 'md'" 
+  <btn-bubble v-if="bubble !== ''" class="q-ml-md col-auto" :size="size || 'md'"
     :text="disable && disbubble ? disbubble : bubble"/>
 </div>
 </template>

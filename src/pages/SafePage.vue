@@ -2,7 +2,7 @@
 <div class="column items-center">
 <div :class="sty('md')">
 
-  <div v-if="sf.step == 1" class="q-pa-sm">
+  <div v-if="sf.step == 1" class="q-pa-sm q-mb-md">
     <!-- Entête : accès Internet, incognito, nom du terminal -->
     <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
       <div class="row justify-between items-center">
@@ -24,8 +24,6 @@
       <span class="titre-sm text-italic">{{$t('HPterminal')}}</span>
       <span class="font-mono fs-sm text-italic q-ml-sm">{{'[' + sf.devName + ']'}}</span>
     </div>
-
-    <q-separator class="q-my-md"/>
 
     <!-- Je suis enregistré -->
     <div class="full-width row q-mt-md items-center">
@@ -53,7 +51,7 @@
               style="text-decoration-line: underline;"
               @click="selectUser(u)">{{u.pseudo}}</div>
           </div>
-        </div>  
+        </div>
       </div>
     </div>
 
@@ -69,6 +67,12 @@
       <bar-open1 :bubble="$t('HPregist_6')" :title="$t('HPregist_5')"
         :fnopen="validateSessionV"/>
     </div>
+
+    <q-separator class="q-my-sm"/>
+
+    <bar-open class="q-mt-md":bubble="$t('HPmanuinfo')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPmanusers')" :fnopen="manUsers"/>
   </div>
 
   <div v-if="sf.step === 2" class="q-pa-sm">
@@ -122,9 +126,14 @@
         </div>
       </div>
 
+    </div>
+
+    <div :class="!nvSP ? 'disabled' : ''">
       <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
         {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
+      <div v-else class="titre-lg text-warning text-italic q-mt-sm">{{$t('HPnoclick')}}</div>
+
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
@@ -135,31 +144,33 @@
 
     <q-separator class="q-my-md" color="orange"/>
 
-    <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')" 
+    <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
       :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
       :fnopen="openChgCodes" size="sm"/>
 
-    <bar-open v-if="!isTrusted" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')" 
+    <bar-open v-if="!isTrusted" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
       :fnopen="openTrust" size="sm"/>
 
-    <bar-open v-if="isTrusted" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')" 
+    <bar-open v-if="isTrusted" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
       :fnopen="openTrust" size="sm"/>
 
-    <bar-open v-if="isTrusted" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')" 
+    <bar-open v-if="isTrusted" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
       :fnopen="openUntrust" size="sm"/>
+
+    <bar-open :bubble="$t('HPmanuinfo')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPmanusers')" :fnopen="manUsers"/>
   </div>
 
+  <!--
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
 
   <bar-open v-if="session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
     :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
-
-  <bar-open class="q-pa-sm q-mb-md":bubble="$t('HPmanuinfo')"
-    :disable="session.incognito || !session.hasNet" size="sm"
-    :title="$t('HPmanusers')" :fnopen="manUsers"/>
+  -->
 </div>
 
   <!-- Dialogue de saisie d'un code PIN-->
@@ -192,10 +203,10 @@
     </q-card>
   </q-dialog>
 
-  <!-- Gestion des users / sessions --> 
+  <!-- Gestion des users / sessions -->
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
-  <!-- Gestion des credentials --> 
+  <!-- Gestion des credentials -->
   <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
 
   <!-- Enregistrement / Changement des codes -->
@@ -314,7 +325,7 @@ const cm = computed(() => ui.dModels[idc].credsmgr)
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
-onMounted(async () => { 
+onMounted(async () => {
   await sf.init0()
 })
 
@@ -328,9 +339,9 @@ watch(() => ui.reopenSession, async (v) => {
     if ((!session.hasNet && session.incognito) || !sf.userId) {
       sf.step = 1
     } else {
-      if (session.hasNet) 
+      if (session.hasNet)
         await sf.reloadSafe()
-      if (!session.incognito) 
+      if (!session.incognito)
         await openSession()
     }
   }
@@ -381,7 +392,7 @@ const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
 const mySessions: Ref<TSession> = ref(new Map())
-const myTrusting = ref<null> 
+const myTrusting = ref<null>
 const isTrusted = computed(() => myTrusting.value !== null)
 
 const credsUpdated = async () => {
@@ -392,7 +403,7 @@ const credsUpdated = async () => {
 const sOfP = (profId: string) => { return sf.sessionOfProfId(profId) }
 
 const openSession = async () => {
-  if (!session.incognito && !sf.hasIDBS) 
+  if (!session.incognito && !sf.hasIDBS)
     await sf.init1()
   await sf.getMySessions()
   myTrusting.value = sf.getMyTrusting()
@@ -403,8 +414,8 @@ const openSession = async () => {
 
 const dup = computed(() => {
   let b = false
-  sf.trustings.forEach(e => { 
-    if (e.userId !== sf.userId && e.pseudo === newPseudo.inp) b = true 
+  sf.trustings.forEach(e => {
+    if (e.userId !== sf.userId && e.pseudo === newPseudo.inp) b = true
   })
   return b
 })
@@ -506,8 +517,8 @@ const selProfile = (profile: Profile) => {
   sf.selectedProfile = profile
 }
 
-const selStar = (() => 
-  (sf.selectedSession && sf.selectedSession.profId === '*') || 
+const selStar = (() =>
+  (sf.selectedSession && sf.selectedSession.profId === '*') ||
   (sf.selectedProfile && sf.selectedProfile.profId === '*') )
 
 const clSel = (x) => {
@@ -521,7 +532,7 @@ const validateSession = async (prefCode, prefObj) => {
   const sp = sf.selectedProfile
   let profile: Profile = null
 
-  if (sv) { 
+  if (sv) {
     // reprise d'une session épinglée
     if (!session.hasNet) {
       // mode avion : reprise telle quelle (seul son time est mis à jour)
@@ -549,7 +560,7 @@ const validateSession = async (prefCode, prefObj) => {
     }
 
   } else { // sp : existe
-    /* nouvelle session ouverte depuis un profile 
+    /* nouvelle session ouverte depuis un profile
     QUI EXISTE puisqu'il a été sélectionné.
     Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
     */
@@ -570,7 +581,7 @@ const validateSession = async (prefCode, prefObj) => {
       await sf.setTSession(nvs, true) // true: par superstition ! (db ne devrait pas exister)
       session.setDbName(nvs.dbName)
     }
-  } 
+  }
 
   await goToApp(profile.about as string, sf.getCreds(profile), prefCode, prefObj)
 }
