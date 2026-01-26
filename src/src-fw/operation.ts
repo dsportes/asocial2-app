@@ -15,7 +15,7 @@ export class Operation {
 
   get isSafeOp () : boolean { return this.opName.startsWith('$')}
 
-  constructor (opName: string, background?: boolean) { 
+  constructor (opName: string, background?: boolean) {
     this.opName = opName
     this.background = background || false
   }
@@ -27,17 +27,61 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
-  async post (args: any) : Promise<any>{
+  async post2 (args: any, urlx?: string) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    const u = this.isSafeOp ? config.K.DIRECTORY_URL + 'safe/' : await getUrl(args.org) + 'op/'
+    try {
+      session.opStart(this)
+      args.APIVERSION = config.K.APIVERSION
+      this.controller = new AbortController()
+      this.aborted = false
+      const body = JSON.stringify(args)
+
+      const response = await fetch(urlx, {
+        method: 'POST',
+        headers:{'Content-Type': 'application/json' },
+        signal: this.controller.signal,
+        body
+      })
+      this.controller = null
+      const buf = await response.bytes()
+      const obj = decode(buf)
+      if (response.status === 200) {
+        session.opEnd()
+        const ntf = obj['notification']
+        if (ntf) {
+          if (config.mondebug) console.log('Notification received on operation return')
+          await onPushMsg(ntf) // traitement des notifications sur retour d'opération
+        }
+        return obj
+      }
+      if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
+        throw new AppExc(obj)
+      // autres status: 500...
+      const txt = new TextDecoder().decode(buf)
+      throw new AppExc({ code:11001, label: 'Unexpected from server',
+        args:[response.status, (urlx || '?'), txt]})
+    } catch (e) {
+      session.opEnd()
+      this.controller = null
+      if (e instanceof AppExc) throw e
+      if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
+      throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
+        args:[(urlx || '?'), e.toString()]})
+    }
+  }
+
+    async post (args: any, urlx?: string) : Promise<any>{
+    const config = stores.config
+    const session = stores.session
+    const u = urlx ? '' : this.isSafeOp ? config.K.DIRECTORY_URL + 'safe/' : await getUrl(args.org) + 'op/'
     try {
       session.opStart(this)
       args.APIVERSION = config.K.APIVERSION
       this.controller = new AbortController()
       this.aborted = false
 
-      const response = await fetch(u + this.opName, {
+      const response = await fetch(urlx || u + this.opName, {
         method: 'POST',
         headers:{'Content-Type': 'application/octet-stream' },
         signal: this.controller.signal,
@@ -59,14 +103,14 @@ export class Operation {
         throw new AppExc(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc({ code:11001, label: 'Unexpected from server', 
+      throw new AppExc({ code:11001, label: 'Unexpected from server',
         args:[response.status, (u || '?'), txt]})
     } catch (e) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
-      throw new AppExc({ code:11002, label: 'Unexpected network/server/response', 
+      throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
         args:[(u || '?'), e.toString()]})
     }
   }

@@ -27,7 +27,7 @@
       <help-button class="q-ml-xs" page="DOCpg"/>
     </q-toolbar>
   </q-header>
-  
+
   <q-page-container class="font-def">
     <transition name="anim1">
       <q-page v-if="ui.page === 'home'"><safe-page/></q-page>
@@ -74,6 +74,7 @@ import incognito from './assets/incognito_blanc.svg'
 
 import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
+import { Operation } from './src-fw/operation'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
 import { testCred } from './src-fw/credential'
@@ -91,9 +92,13 @@ import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
 import mybeep from './assets/beep.mp3?inline'
+import { encode, decode } from '@msgpack/msgpack'
 // import { initWP } from './src-fw/wputil'
 
 // testCred()
+
+const decoder = new TextDecoder()
+const encoder = new TextEncoder()
 
 const config = stores.config
 const session = stores.session
@@ -119,7 +124,7 @@ watchEffect(() => {
 
 const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
-  if (ok) 
+  if (ok)
     ui.backToOpenSession()
 }
 
@@ -170,10 +175,53 @@ async function uploadFile () : Promise<void> {
   }
 }
 
-const t4 = async () => {
+const t4x = async () => {
   const res = await new TestAuth().run('demo')
   console.log('TestAuth:' + res)
 }
+
+/*
+class EchoPHP extends Operation {
+  constructor () { super('EchoPHP') }
+
+  async run () {
+    try {
+      const urlx = 'http://localhost:38339/safe.php'
+      const res = await this.post2({ p1: 'toto', p2: 'est beau' }, urlx)
+      console.log(JSON.stringify(res))
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+*/
+
+const t4 = async () => {
+  const url = 'http://localhost:36263/op.php'
+  const data = {
+    'key1': 'value1',
+    'key2': 2
+  }
+
+  const resp = await fetch(url,
+    {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      // mode: 'no-cors', // no-cors, *cors, same-origin
+      headers: {
+        'Content-Type': 'application/octet-stream',  // sent request
+        'Accept':       'application/octet-stream'   // expected data sent back
+      },
+      body: encode( data ), // body data type must match "Content-Type" header
+    }
+  )
+  console.log(resp.status, resp.statusText, resp.bodyUsed)
+  const hdr = resp.headers
+  const buf = new Uint8Array(await resp.arrayBuffer())
+  console.log(resp.status, resp.statusText, resp.bodyUsed)
+  const v = buf && buf.length ? decode(buf) : '??????'
+  console.log(JSON.stringify(v)); // parses JSON response into native JavaScript objects
+}
+
 
 </script>
 
