@@ -197,29 +197,34 @@ class EchoPHP extends Operation {
 */
 
 const t4 = async () => {
-  const url = 'http://localhost:36263/op.php'
+  const url = 'http://localhost:8888/safe.php?echo'
   const data = {
     'key1': 'value1',
     'key2': 2
   }
 
-  const resp = await fetch(url,
-    {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      // mode: 'no-cors', // no-cors, *cors, same-origin
-      headers: {
-        'Content-Type': 'application/octet-stream',  // sent request
-        'Accept':       'application/octet-stream'   // expected data sent back
-      },
-      body: encode( data ), // body data type must match "Content-Type" header
-    }
-  )
-  console.log(resp.status, resp.statusText, resp.bodyUsed)
-  const hdr = resp.headers
-  const buf = new Uint8Array(await resp.arrayBuffer())
-  console.log(resp.status, resp.statusText, resp.bodyUsed)
-  const v = buf && buf.length ? decode(buf) : '??????'
-  console.log(JSON.stringify(v)); // parses JSON response into native JavaScript objects
+  try {
+    const resp = await fetch(url,
+      {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        // mode: 'no-cors', // no-cors, *cors, same-origin
+        headers: {
+          'Content-Type': 'application/octet-stream',  // sent request
+          'Accept':       'application/octet-stream'   // expected data sent back
+        },
+        body: encode( data ), // body data type must match "Content-Type" header
+      }
+    )
+    console.log(resp.status, resp.statusText)
+    const buf = new Uint8Array(await resp.arrayBuffer())
+    const v = buf && buf.length ? decode(buf) : '??????'
+    console.log(JSON.stringify(v)) // parses JSON response into native JavaScript objects
+  } catch (e) {
+    console.log(resp.status, resp.statusText)
+    const buf = new Uint8Array(await resp.arrayBuffer())
+    const v = buf && buf.length ? decode(buf) : '??????'
+    console.log(JSON.stringify(v)) // parses JSON response into native JavaScript objects
+  }
 }
 
 
