@@ -74,7 +74,7 @@ import incognito from './assets/incognito_blanc.svg'
 
 import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
-import { Operation } from './src-fw/operation'
+import { Operation, SafeOperation } from './src-fw/operation'
 import { getData, putData } from './src-fw/net'
 import { Crypt, testECDH, testSH } from './src-fw/crypt'
 import { testCred } from './src-fw/credential'
@@ -180,51 +180,27 @@ const t4x = async () => {
   console.log('TestAuth:' + res)
 }
 
-/*
-class EchoPHP extends Operation {
-  constructor () { super('EchoPHP') }
+class EchoPHP extends SafeOperation {
+  constructor () { super('EchoText') }
 
-  async run () {
+  async run (data) {
     try {
-      const urlx = 'http://localhost:38339/safe.php'
-      const res = await this.post2({ p1: 'toto', p2: 'est beau' }, urlx)
+      SafeOperation.setRepositoryUrl('http://localhost:8888')
+      const res = await this.post(data)
       console.log(JSON.stringify(res))
     } catch(e) {
       this.ko(e)
     }
   }
 }
-*/
 
 const t4 = async () => {
-  const url = 'http://localhost:8888/safe.php?echo'
   const data = {
     'key1': 'value1',
     'key2': 2
   }
 
-  try {
-    const resp = await fetch(url,
-      {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-        // mode: 'no-cors', // no-cors, *cors, same-origin
-        headers: {
-          'Content-Type': 'application/octet-stream',  // sent request
-          'Accept':       'application/octet-stream'   // expected data sent back
-        },
-        body: encode( data ), // body data type must match "Content-Type" header
-      }
-    )
-    console.log(resp.status, resp.statusText)
-    const buf = new Uint8Array(await resp.arrayBuffer())
-    const v = buf && buf.length ? decode(buf) : '??????'
-    console.log(JSON.stringify(v)) // parses JSON response into native JavaScript objects
-  } catch (e) {
-    console.log(resp.status, resp.statusText)
-    const buf = new Uint8Array(await resp.arrayBuffer())
-    const v = buf && buf.length ? decode(buf) : '??????'
-    console.log(JSON.stringify(v)) // parses JSON response into native JavaScript objects
-  }
+  await new EchoPHP().run(data)
 }
 
 

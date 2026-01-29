@@ -11,7 +11,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { AppExc, $t, sleep, u8ToB64, equ8 } from '../src-fw/util'
-import { Operation } from '../src-fw/operation'
+import { SafeOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { Credential } from '../src-fw/credential'
 
@@ -623,7 +623,7 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: await Crypt.crypt(rsh, keyK.value)
     }
 
-    const op = new Operation('$UpdCodesSafe')
+    const op = new SafeOperation('$UpdCodesSafe')
     let ret
     try {
       ret = await op.post({ safeCodes })
@@ -676,7 +676,19 @@ export const useSafeStore = defineStore('safe', () => {
       prefs: {}
     }
 
-    const op = new Operation('$CreateSafe')
+    /*{ // Test de $StatusSafe
+      const op = new SafeOperation('$StatusSafe')
+      let ret
+      try {
+        ret = await op.post({ id: safe.id, hp0: safe.hp0, hr0: safe.hr0 })
+        console.log(ret.statusSafe)
+      } catch (e) {
+        op.ko(e)
+        return -1
+      }
+    }
+    */
+    const op = new SafeOperation('$CreateSafe')
     let ret
     try {
       ret = await op.post({ safe })
@@ -692,7 +704,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const openSafeByPR = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
-    const op = new Operation('$OpenSafeByPR')
+    const op = new SafeOperation('$OpenSafeByPR')
     let ret
     try {
       ret = await op.post({sh0, sh1})
@@ -718,7 +730,7 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx, false, true) as Uint8Array
 
     let ret
-    const op1 = new Operation('$OpenSafeByPin')
+    const op1 = new SafeOperation('$OpenSafeByPin')
     try {
       ret = await op1.post({userId: userId.value, devId: devId.value, pincx})
     } catch (e) {
@@ -736,7 +748,7 @@ export const useSafeStore = defineStore('safe', () => {
     const shk = await Crypt.strongHash(keyK.value, false, true)
 
     let ret2
-    const op2 = new Operation('$OpenSafeById')
+    const op2 = new SafeOperation('$OpenSafeById')
     try {
       ret2 = await op2.post({userId: userId.value, shk})
     } catch (e) {
@@ -829,7 +841,7 @@ export const useSafeStore = defineStore('safe', () => {
       devName: await Crypt.crypt(keyK.value, encoder.encode(devName.value)),
       Va, cy, sign
     }
-    const op = new Operation('$TrustDevice')
+    const op = new SafeOperation('$TrustDevice')
     let ret
     try {
       ret = await op.post({trustDev})
@@ -851,7 +863,7 @@ export const useSafeStore = defineStore('safe', () => {
       sh1p: sh1p.value,
       sh1r: sh1r.value
     }
-    const op = new Operation('$UntrustDevice')
+    const op = new SafeOperation('$UntrustDevice')
     let ret
     try {
       ret = await op.post({untrustDev})
@@ -869,7 +881,7 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
     }
-    const op = new Operation('$OpenSafeById')
+    const op = new SafeOperation('$OpenSafeById')
     let ret
     try {
       ret = await op.post(args)
@@ -892,7 +904,7 @@ export const useSafeStore = defineStore('safe', () => {
       profId,
       about: await ecX(about)
     }
-    const op = new Operation('$SetAboutProfile')
+    const op = new SafeOperation('$SetAboutProfile')
     let ret
     try {
       ret = await op.post({aboutProfile})
@@ -1044,7 +1056,7 @@ export const useSafeStore = defineStore('safe', () => {
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array,
       creds, delcreds, profiles, delprofs
      }
-    const op = new Operation('$UpdateCreds')
+    const op = new SafeOperation('$UpdateCreds')
     let ret
     try {
       ret = await op.post({updateCreds})
