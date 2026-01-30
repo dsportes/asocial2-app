@@ -471,6 +471,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const loadCreds = async (safe: Safe) : Promise<void> => {
+    const mcreds: Map<string, Credential> = new Map<string, Credential>()
+    const delcreds = []
     const app = stores.config.appname
     const m = new Map<string, Credential>()
     const mcf = safe.creds[app]
@@ -478,15 +480,30 @@ export const useSafeStore = defineStore('safe', () => {
       for (const credId in mcf) {
         const x = mcf[credId]
         try {
-          const obj = decode(await Crypt.decrypt(keyK.value, x))
-          const c: Credential = Credential.newCredential(obj)
-          if (c) m.set(c.id, c)
+          if (!credId.startsWith('$')) {
+            const obj = decode(await Crypt.decrypt(keyK.value, x))
+            const c: Credential = new Credential(obj)
+            if (c) m.set(c.id, c)
+          } else {
+            /* Credential transmis par un autre user émetteur
+            [obj credential crypté, pub: clé publique C de l'émetteur ] */
+            const [crobj, pubC] = decode(x)
+            const aes = await Crypt.getAESKey(pubC, auth.value.D)
+            const dc = await Crypt.decrypt(aes, crobj)
+            const obj = decode(dc)
+            const c: Credential = new Credential(obj)
+            const id = credId.substring(1)
+            if (c) m.set(id, c)
+            mcreds.set(id, obj)
+            delcreds.push(credId)
+          }
         } catch (e) { 
           console.log(e)
         }
       }
     }
     mySafeCreds.value = m
+    if (mcreds.size) await updateCreds(mcreds, delcreds, null, null, true)
   }
 
   const getCreds = (profile: Profile) : Map<string, Credential> => {
@@ -593,8 +610,8 @@ export const useSafeStore = defineStore('safe', () => {
     hhk: string // SHA de `SH(K)`.
     C: Uint8Array // clé publique de cryptage.
     DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
-    S: Uint8Array // clé publique de signature.
-    VK: Uint8Array // clé privée de vérification, cryptée par la clé K
+    VK: Uint8Array // clé publique de vérification.
+    S: Uint8Array // clé privée de signature, cryptée par la clé K
 
     devices: Object
     creds: Object
@@ -642,8 +659,6 @@ export const useSafeStore = defineStore('safe', () => {
     pseudo: string,
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
-    
-    if (openMode.value !== 0) return 9
 
     userId.value = Crypt.shaS(Crypt.random(32))
     keyK.value = Crypt.random(32)
@@ -1029,23 +1044,25 @@ export const useSafeStore = defineStore('safe', () => {
     delcreds: string[] // liste des crIds à supprimer
     profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
     delprofs: string[] // liste des profIds à supprimer
+    nosafe: boolean // ne pas retourner le safe mis à jour
   }
 
   const updateCreds = async (
       mcreds: Map<string, Credential>, 
       delcreds: string[], 
       mprofiles: Map<string, Profile>,
-      delprofs: string[]
+      delprofs: string[],
+      nocompile?: boolean
       ) => {
     const creds = {}
     const profiles = {}
 
-    for(const [credId, c] of mcreds) {
+    if (mcreds) for(const [credId, c] of mcreds) {
       const obj = c.toObj
       creds[credId] = await Crypt.crypt(keyK.value, encode(obj))
     }
 
-    for(const [profId, p] of mprofiles) {
+    if (mprofiles) for(const [profId, p] of mprofiles) {
       p.about = await ecX(p.about as string)
       profiles[profId] = encode(p)
     }
@@ -1054,16 +1071,60 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       app: stores.config.appname,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array,
-      creds, delcreds, profiles, delprofs
+      creds, 
+      delcreds : delcreds || [], 
+      profiles, 
+      delprofs: delprofs || [],
+      nosafe: nocompile
      }
     const op = new SafeOperation('$UpdateCreds')
     let ret
     try {
       ret = await op.post({updateCreds})
     } catch(e) { op.ko(e); return -1}
-    if (ret.status === 0)
+    if (ret.status === 0 && !nocompile)
       await compileSafe(ret.safe)
     return ret.status
+  }
+
+  type TransmitCred = {
+    app: string
+    targetId: string // id ou p0 ou r0 du destinataire du credential
+    credId: string // id du credential
+    pubC: Uint8Array // clé publique de cryptage de l'émetteur
+    cryptedCred: Uint8Array // Objet Credential sérialisé crypté pour le destinataire
+  }
+
+  const transmitCred = async (cred: Credential, targetId: string) => {
+    const op = new SafeOperation('$GetPublicKeys')
+    let pubC
+    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
+    const hp0 =  u8ToB64(sh0, true)
+    try {
+      const ret = await op.post({id: hp0})
+      pubC = ret.crypt
+      if (!pubC) return -1
+    } catch(e) { 
+      op.ko(e); 
+      return -1
+    }
+    try {
+      const aes = await Crypt.getAESKey(pubC, auth.value.D)
+      const cryptedCred = await Crypt.crypt(aes, encode(cred))
+      const transmitCred : TransmitCred = {
+        app: stores.config.appname,
+        targetId: hp0, 
+        credId: cred.id,
+        pubC: auth.value.C,
+        cryptedCred
+      }
+      const op = new SafeOperation('$TransmitCred')
+      const ret = await op.post({transmitCred})
+      return ret.status
+    } catch(e) { 
+      op.ko(e); 
+      return -1
+    }
   }
 
   return {
@@ -1083,7 +1144,7 @@ export const useSafeStore = defineStore('safe', () => {
     devices,
     purgeIDBS,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
-    setTrust, setUntrust, setAboutProfile, updateCreds,
+    setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
     synthUsers
   }
 })

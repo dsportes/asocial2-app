@@ -75,6 +75,16 @@
             </template>
             <template v-slot:error>{{$t(locaboutCrerr)}}</template>
           </q-input>
+
+          <!-- TEST de transmission d'un credential -->
+          <q-input outlined v-model="targetName" label="Cible de la transmission (TEST)">
+            <template v-slot:append>
+              <q-icon size="sm" name="close" @click="targetName = ''" 
+                class="cursor-pointer" :disable="targetName.length === 0"/>
+              <q-btn size="sm" icon="check" :disable="targetName.length === 0" 
+                color="warning" round @click="transmitTest" />
+            </template>
+          </q-input>
           
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
@@ -865,6 +875,12 @@ const confValidate = async () => {
   }
 }
 
+const targetName = ref('')
+const transmitTest = async () => {
+  const c = localCred.value.cred
+  const status = await sf.transmitCred(c, targetName.value)
+  console.log(status)
+}
 </script>
 
 <style lang="scss" scoped>

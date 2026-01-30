@@ -187,8 +187,7 @@ bla bla
   HPcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès secondaire".',
   HPcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
   HPopsret_0: 'Authentification réussie.',
-  HPopsret_1: 'Authentification en échec: code d\'accès principal invalide.',
-  HPopsret_2: 'Authentification en échec: code d\'accès secondaire invalide.',
+  HPopsret_1: 'Authentification en échec: code d\'accès invalide.',
   /*
   HPauthby_0: 'Utilisateur anonyme',
   HPauthby_1: '{0} [principal]',

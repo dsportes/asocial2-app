@@ -148,15 +148,15 @@
       :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
       :fnopen="openChgCodes" size="sm"/>
 
-    <bar-open v-if="!isTrusted" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
+    <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
       :fnopen="openTrust" size="sm"/>
 
-    <bar-open v-if="isTrusted" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
+    <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
       :fnopen="openTrust" size="sm"/>
 
-    <bar-open v-if="isTrusted" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
+    <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
       :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
       :fnopen="openUntrust" size="sm"/>
 
@@ -392,8 +392,7 @@ const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
 const mySessions: Ref<TSession> = ref(new Map())
-const myTrusting = ref<null>
-const isTrusted = computed(() => myTrusting.value !== null)
+const trustingMe = ref(null)
 
 const credsUpdated = async () => {
   ui.fD()
@@ -406,7 +405,7 @@ const openSession = async () => {
   if (!session.incognito && !sf.hasIDBS)
     await sf.init1()
   await sf.getMySessions()
-  myTrusting.value = sf.getMyTrusting()
+  trustingMe.value = sf.getMyTrusting()
   sf.selectedSession = null
   sf.selectedProfile = null
   sf.step = 2
@@ -444,6 +443,7 @@ const setTrust = async () => {
     if (status < 0) return
     ui.fD()
     await ui.diagDisplay($t('HPsttrust_' + status))
+    await openSession()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
@@ -455,6 +455,7 @@ const setUntrust = async () => {
     if (status < 0) return
     ui.fD()
     await ui.diagDisplay($t('HPstuntrust_' + status))
+    await openSession()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
