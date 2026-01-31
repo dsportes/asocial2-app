@@ -494,7 +494,7 @@ export const useSafeStore = defineStore('safe', () => {
             const c: Credential = new Credential(obj)
             const id = credId.substring(1)
             if (c) m.set(id, c)
-            mcreds.set(id, obj)
+            mcreds.set(id, c)
             delcreds.push(credId)
           }
         } catch (e) { 
