@@ -14,7 +14,9 @@
 
       <btn-cond label="Home" class="q-ml-xs" @ok="ui.setPage('home')"/>
 
-      <btn-cond label="T4" class="q-ml-xs" @ok="t4"/>
+      <btn-cond label="T1" class="q-ml-xs" @ok="t1"/>
+
+      <btn-cond label="T2" class="q-ml-xs" @ok="t2"/>
 
       <q-toolbar-title class="titre-md q-mx-md">{{$t('titre', [dataSt.cpt])}}</q-toolbar-title>
 
@@ -185,7 +187,7 @@ class EchoPHP extends SafeOperation {
 
   async run (data) {
     try {
-      SafeOperation.setRepositoryUrl('http://localhost:8888')
+      SafeOperation.setSafeUrl('http://localhost:8888')
       const res = await this.post(data)
       console.log(JSON.stringify(res))
     } catch(e) {
@@ -194,15 +196,16 @@ class EchoPHP extends SafeOperation {
   }
 }
 
-const t4 = async () => {
+const t2 = async () => {
   const data = {
     'key1': 'value1',
     'key2': 2
   }
-
   await new EchoPHP().run(data)
 }
 
+const t1 = async () => {
+}
 
 </script>
 

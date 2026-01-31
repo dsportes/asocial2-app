@@ -2,7 +2,6 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
-import { getUrl } from './net'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
@@ -28,14 +27,14 @@ export class Operation {
   async post (args: any) : Promise<any> {
     const config = stores.config
     const session = stores.session
-    const u = await getUrl(args.org) + 'op/'
+    const u = config.K.SAFE_URL + 'op/' + (args.org || 'none') + '/' + this.opName
     try {
       session.opStart(this)
       args.APIVERSION = config.K.APIVERSION
       this.controller = new AbortController()
       this.aborted = false
 
-      const response = await fetch(u + this.opName, {
+      const response = await fetch(u, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',  // sent request
@@ -88,14 +87,14 @@ export class SafeOperation extends Operation {
   est un site Web disposant d'un script PHP 'safe.php'
   si url est vide, retour au repository par défaut (standard)
   */
-  static setRepositoryUrl (url: string) {
+  static setSafeUrl (url: string) {
     SafeOperation.urlx = url + '/safe.php?'
   }
 
   async post (args: any) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    const u = SafeOperation.urlx ? SafeOperation.urlx : config.K.DIRECTORY_URL + 'safe/'
+    const u = SafeOperation.urlx ? SafeOperation.urlx : config.K.SAFE_URL + 'safe/'
     try {
       session.opStart(this)
       this.controller = new AbortController()

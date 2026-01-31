@@ -6,7 +6,7 @@ export default {
   darkclear: 'Foncé / clair',
   toecho: 'Texte à recevoir en écho',
   echo: 'Texte reçu en écho : {0}',
-  ping: 'PING base de données',
+  ping: 'Etat de l\'organisation',
   later: 'Plus tard',
   important: 'Information importante',
   gotit: 'J\'ai lu',
@@ -16,8 +16,9 @@ export default {
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
   theme: 'Théme graphique',
-  pings: 'Server "pings"',
+  pings: 'Etat du service / écho',
   buildapi: 'Build: {0} - API: {1}',
+  service_url: 'URL du service: {0}',
   app: 'Application:',
   build: 'Build / API:',
   sessionid: 'Session ID:',
@@ -442,6 +443,7 @@ bla bla
 
   EX_1001: 'Erreur "fake" pour test\n{0}',
   EX_1002: 'Opération inconnue [{0}]',
+  EX_1003: 'Opération [{0}] - organisation inconnue [{1}]',
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_10000: 'Interruption volontaire',
 

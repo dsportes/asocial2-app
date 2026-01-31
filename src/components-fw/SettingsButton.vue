@@ -40,7 +40,7 @@
 
         <q-separator />
 
-        <q-item v-if="ui.page !== 'home'" clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
+        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('pings')}}</q-item-section>
         </q-item>
@@ -57,8 +57,9 @@
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
         </q-item>
 
-        <q-item>
-          <q-item-section class="font-mono text-center text-italic">{{ $t('buildapi', [config.K.BUILD, config.K.APIVERSION]) }}</q-item-section>
+        <q-item class="column">
+          <div class="font-mono text-italic">{{ $t('buildapi', [config.K.BUILD, config.K.APIVERSION]) }}</div>
+          <div class="font-mono text-italic">{{ $t('service_url', [config.K.SERVICE_URL]) }}</div>
         </q-item>
         <!-- Test surcharge traductions
         <q-item>
@@ -265,37 +266,35 @@
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
         <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
-        <btn-cond icon="check" :disable='!url' @ok="opSetSrvStatus(1)"/>
-        <btn-cond icon="check" :disable='!url' color="warning" @ok="opSetSrvStatus(2)"/>
+        <btn-cond icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
+        <btn-cond icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
         <help-button page="reloadApp"/>
       </q-toolbar>
 
-      <div class="column q-pa-sm q-gutter-md">
-        <q-input filled v-model="org" :label="$t('org')">
-          <template v-slot:append>
-            <btn-cond icon="send" :label="$t('getUrl')" :disable="org === ''" @ok="opGetUrl"/>
-          </template>
-        </q-input>
-        <div class="font-mono">{{$t('url', [url || errUrl])}}</div>
-      </div>
+      <q-input class="q-mt-md q-px-sm" outlined v-model="org" :label="$t('org')">
+        <template v-slot:append>
+          <q-icon size="sm" name="close" @click="org = ''" 
+            class="cursor-pointer" :disable="org.length === 0"/>
+        </template>
+      </q-input>
 
       <q-separator color="orange" class="q-my-md"/>
 
-      <div class="column q-pa-sm q-gutter-md">
+      <div class="column q-px-sm">
+        <btn-cond icon-right="send" :label="$t('ping')" :disable="org === ''"
+          @click="opGetSrvStatus"/>
+        <div class="q-mt-sm q-mx-sm font-mono height-4">{{resping}}</div>
+      </div>
+      
+      <q-separator color="orange" class="q-my-md"/>
+
+      <div class="column q-px-sm q-gutter-md q-mb-md">
         <q-input filled v-model="toecho" :label="$t('toecho')">
           <template v-slot:append>
-            <btn-cond icon="send" :disable="toecho === '' || !url" @ok="opEcho"/>
+            <btn-cond icon="send" :disable="toecho === ''" @ok="opEcho"/>
           </template>
         </q-input>
         <div class="font-mono">{{$t('echo', [echo])}}</div>
-      </div>
-
-      <q-separator color="orange" class="q-my-md"/>
-
-      <div class="column items-center">
-        <btn-cond icon-right="send" :label="$t('ping')" :disable='!url'
-          @click="opGetSrvStatus"/>
-        <div class="q-mt-sm q-mx-sm font-mono height-4 text-center">{{resping}}</div>
       </div>
 
     </q-card>
@@ -315,7 +314,6 @@ import PermissionDialog from './PermissionDialog.vue'
 import { $t, $q, sty, reloadPage, sleep, coolBye } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
-import { getUrl } from '../src-fw/net'
 
 const i18n = useI18n()
 const config = stores.config
@@ -332,8 +330,6 @@ const choix = (lg: localeOption) : void => {
 }
 
 const org = ref('')
-const url = ref('')
-const errUrl = ref('')
 const toecho = ref('')
 const echo = ref('')
 
@@ -344,16 +340,6 @@ function darkClear () {
 ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
-
-async function opGetUrl() : Promise<void>  {
-  url.value = ''
-  errUrl.value = ''
-  try {
-    url.value = await getUrl(org.value)
-  } catch (e) {
-    errUrl.value = e.message
-  }
-}
 
 async function opEcho () : Promise<void>  {
   try {
