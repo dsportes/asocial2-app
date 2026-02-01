@@ -11,7 +11,7 @@
         </div>
         <div class="row">
           <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('build')}}</div>
-          <div class="col-7 font-mono">{{config.K.BUILD + ' / ' + config.K.APIVERSION}}</div>
+          <div class="col-7 font-mono">{{config.K.BUILD}}</div>
         </div>
         <div class="row">
           <div class="col-5 titre-md text-italic q-pr-sm text-right">

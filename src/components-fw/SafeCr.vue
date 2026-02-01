@@ -1,5 +1,5 @@
 <template> <!-- Création d'un safe / Changement des codes -->
-<dialog-std2 v-model="sc" :title="$t('HPenreg_' + (createMode ? '1' : '2'))">
+<dialog-std2 v-model="sc" :title="$t('HPenreg_' + mode)">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">
     <btn-cond flat size="lg" icon="check" :label="$t('validate')" 
@@ -12,7 +12,7 @@
 <div class="wmd">
 
   <div v-if="diag !== ''" class="diag">{{diag}}</div>
-  <div class="row items-center q-my-sm">
+  <div v-if="mode !== 2" class="row items-center q-my-sm">
     <div class="titre-md">{{$t('HPtrig')}}</div>
     <input-ps class="q-ml-sm" v-model="trig"
       :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
@@ -51,7 +51,7 @@ import stores from '../stores/all'
 const icons = ['check', 'question_mark', 'warning']
 
 const props = defineProps ({
-  createMode: Boolean,
+  mode: Number, // 0: create 1: chg codes 2: chg codes backup
   onValidate: Function,
   idc: String
 })
@@ -80,7 +80,7 @@ const initCodes = () => {
 const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
 
 const diag = computed(() => {
-  if (trig.err) return $t('HPerr_1')
+  if (trig.err && props.mode !== 2) return $t('HPerr_1')
   if (codes[0].sh0 === null) return $t('HPerr_2')
   if (!eq(0, 1)) return $t('HPerr_3')
   if (codes[2].sh0 === null) return $t('HPerr_4')
@@ -107,14 +107,22 @@ const checkCodes = () => {
 const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
-  const status = props.createMode ?
-    await sf.createSafe(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
-    await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
-  if (status >= 0) {
-    await ui.diagDisplay($t('HPcsret_' + (props.createMode ? '0' : '1') + status))
-    if (status === 0) {
-      ui.fD()
-      await props.onValidate()
+  if (props.mode === 2) {
+    const arg = {
+      cash0: ca.sh0, cash1: ca.sh1, cash: ca.sh, crsh0: cr.sh0, crsh1: cr.sh1, crsh: cr.sh
+    }
+    await props.onValidate(arg)
+    ui.fD()
+  } else {
+    const status = props.mode === 0 ?
+      await sf.createSafe(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
+      await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
+    if (status >= 0) {
+      await ui.diagDisplay($t('HPcsret_' + props.mode + status))
+      if (status === 0) {
+        ui.fD()
+        await props.onValidate()
+      }
     }
   }
 }

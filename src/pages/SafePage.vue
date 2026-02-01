@@ -163,11 +163,14 @@
     <bar-open :bubble="$t('HPmanuinfo')"
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPmanusers')" :fnopen="manUsers"/>
+
+    <bar-open :bubble="$t('HPexpsafe_2')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
   </div>
 
   <!--
   <q-separator class="q-mt-sm q-mb-md" color="orange"/>
-
   <bar-open v-if="session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
     :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
   -->
@@ -203,6 +206,44 @@
     </q-card>
   </q-dialog>
 
+<!-- Dialogue d'export du safe-->
+<dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
+  <template #hdr>
+    <div class="row justify-end q-px-xs q-mb-md">
+      <btn-cond flat size="lg" icon="check" 
+      :disable="cryptK.key === null || !expName"
+      :label="$t('HPbackup_0')" 
+      @ok="doExportSafe"/>
+    </div>
+  </template>
+  <template #default>
+    <div class="column q-mx-lg items-center">
+      <div class="q-my-sm full-width">
+        <div class="titre-md text-italic">{{$t('HPimport_p')}}</div>
+        <input-ps v-model="cryptK" iconcheck :validate="valK"
+          :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')"/>
+      </div>
+      <div v-if="cryptK.key === null" 
+        class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
+
+      <q-input class="q-my-md full-width" v-model="expName" 
+        :label="$t('HPexpname')"
+        input-class="font-mono"
+        counter
+        :hint="hintExp"
+        bottom-slots
+        :error="expName.length < 4">
+        <template v-slot:append>
+          <q-icon size="sm" name="close" @click="expName = ''" 
+            class="cursor-pointer" :disable="expName.length === 0"/>
+        </template>
+        <template v-slot:error>{{$t(expNameErr)}}</template>
+      </q-input>
+
+  </div>
+  </template>
+</dialog-std1>
+
   <!-- Gestion des users / sessions -->
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
@@ -210,7 +251,7 @@
   <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
 
   <!-- Enregistrement / Changement des codes -->
-  <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :createMode="createMode"/>
+  <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
 
   <!-- Accorder ma confiance à ce terminal -->
   <q-dialog v-model="ui.dModels[idc].trustit" persistent>
@@ -282,6 +323,7 @@
 import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
+import DialogStd1 from '../components-fw/DialogStd1.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
@@ -310,6 +352,7 @@ import databaseB from '../assets/database_black.png'
 const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
+const expNameSize = [4, 32]
 
 const ui = stores.ui
 const sf = stores.safe
@@ -380,12 +423,40 @@ const authPIN = async () => {
   else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))
 }
 
-/*
-type Profile = {
-  about: string
-  creds: string[]
+const expName = ref('')
+const expNameErr = computed(() => expName.value.length < expNameSize[0] ? 'PScourt' : 
+  (expName.value.length > expNameSize[1] ? 'PSlong' : ''))
+const hintExp = computed(() => $t('PSminmax', expNameSize))
+
+const cryptK = reactive( { inp: '', err: '', key: null } )
+const bin = ref(null)
+
+const exportSafe = async () => {
+  expName.value = ''
+  cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
+  bin.value = await sf.getBinSafe()
+  if (!bin.value) {
+    await ui.diagDisplay($t('HPexportsafe_ko'))
+    return
+  }
+  ui.oD(idc, 'exportsafe')
 }
-*/
+
+const valK = async () => {
+  if (cryptK.err === '') cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
+  else cryptK.key = null
+}
+
+const doExportSafe = async () => {
+  if (!expName.value) return
+  const buf = await Crypt.crypt(cryptK.key, bin.value)
+  const nf = expName.value + (!expName.value.endsWith('.bin') ? '.bin' : '')
+  const blob = new Blob([buf], { type: 'application/octet-stream'})
+  saveAs(blob, nf)
+  await ui.diagDisplay($t('HPexport_ok', [nf]))
+  bin.value = null
+  ui.fD()
+}
 
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })

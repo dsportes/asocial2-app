@@ -17,10 +17,10 @@ export default {
   genhelp: 'Aide générale',
   theme: 'Théme graphique',
   pings: 'Etat du service / écho',
-  buildapi: 'Build: {0} - API: {1}',
   service_url: 'URL du service: {0}',
   app: 'Application:',
-  build: 'Build / API:',
+  build: 'Build',
+  services: 'Services : URL [API]',
   sessionid: 'Session ID:',
   userid: 'Utilisateur ID:',
   unknown: '(inconnu)',
@@ -82,6 +82,7 @@ export default {
   op_$UntrustDevice: 'Retrait de confiance au terminal',
   op_$TrustDevice: 'Ajout de confiance au terminal',
   op_UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
+  op_$GetBinSafe: 'Backup d\'un coffre-fort',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -162,8 +163,9 @@ bla bla
   HPterminal: 'Ce terminal a été nommé ',
 
   HPpstar: '(Défaut: tous droits d\'accès)',
-  HPenreg_1: 'Enregistrement',
-  HPenreg_2: 'Modification de mes codes d\'accès',
+  HPenreg_0: 'Enregistrement',
+  HPenreg_1: 'Modification de mes codes d\'accès',
+  HPenreg_2: 'Modification des codes d\'accès du "backup"',
   HPcode_1: 'Déclaration du code d\'accès principal',
   HPcode_2: 'Vérification du code d\'accès principal',
   HPcode_3: 'Déclaration du code d\'accès secondaire',
@@ -178,9 +180,8 @@ bla bla
   // HPca: 'Code d\'accès principal',
   // HPcr: 'Code d\'accès secondaire',
   HPcsret_00: 'Enregistrement effectué avec succès.',
-  HPcsret_01: 'Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
-  HPcsret_02: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès principal".',
-  HPcsret_03: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès secondaire".',
+  HPcsret_01: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès principal".',
+  HPcsret_02: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès secondaire".',
   HPcsret_09: 'BUG - Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
   HPcsret_10: 'Mise à jour des codes d\'accès effectuée avec succès.',
   HPcsret_11: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
@@ -189,6 +190,10 @@ bla bla
   HPcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
   HPopsret_0: 'Authentification réussie.',
   HPopsret_1: 'Authentification en échec: code d\'accès invalide.',
+  HPcsret_20: 'Importation effectuée avec succès.',
+  HPcsret_21: 'Echec de l\'importation: changer le "pseudo du code d\'accès principal".',
+  HPcsret_22: 'Echec de l\'importation: changer le "pseudo du code d\'accès secondaire".',
+
   /*
   HPauthby_0: 'Utilisateur anonyme',
   HPauthby_1: '{0} [principal]',
@@ -263,6 +268,38 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
   HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPnotpinned: '(non épinglée)',
+  HPexpname: 'Nom du fichier de backup',
+  HPexpsafe_1: 'Faire un backup de son "coffre-fort"',
+  HPexpsafe_2: `# Faire un backup de son "coffre-fort"
+bla bla
+`,
+  HPmanuser: 'Utilisateurs',
+  HPdanger: 'DANGER',
+  HPimpsafe_1: 'Importer le backup d\'un "coffre-fort"',
+  HPimpsafe_2: `# Importer le backup d\'un "coffre-fort"
+bla bla
+`,
+  HPimpsafe_3: 'Fichier importé et décrypté : vérification du propriétaire',
+  HPimpsafe_4: 'Vous n\'êtes pas authentifié comme propriétaire (pseudo ou phrase incorrecte)',
+
+  HPsafest_1: 'Un "coffre-fort" existe déjà pour cet utilisateur.',
+  HPsafest_r: 'Restaurer le "backup" en remplacement de l\'actuel',
+  HPsafest_i: 'Importer le "backup"',
+  HPsafest_2gt: 'Il est PLUS récent [{0}] que celui du backup [{1}].',
+  HPsafest_2lt: 'Il est MOINS récent [{0}] que celui du backup [{1}].',
+  HPsafest_2eq: 'Il est de la même date [{0}] que celui du backup.',
+  HPsafest_3: 'Aucun "coffre-fort" n\'existe pour cet utilisateur.',
+  HPsafest_4a: 'Le backup PEUT être restauré en remplaçant l\'actuel.',
+  HPsafest_4b: 'Le backup PEUT être importé.',
+  HPsafest_5p: 'Le pseudo "principal" est déjà celui d\'un autre utilisateur.',
+  HPsafest_5r: 'Le pseudo "secondaire" est déjà celui d\'un autre utilisateur.',
+  HPsafest_5a: 'Le backup NE PEUT PAS remplacer l\'actuel.',
+  HPsafest_5b: 'Le backup NE PEUT PAS être importé.',
+  HPsafest_6: 'Je veux changer les codes d\'accès contenus dans le "backup"',
+  HPsafest_7: `# Changer les codes d\'accès contenus dans le "backup"
+  bla bla
+`,
+
   HPmanusers: 'Gérer les utilisateurs et leurs sessions',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
@@ -373,8 +410,10 @@ A propos du status ...
   HPnotlisted_C: 'Droits d\'accès NON cités dans la session',
   HPimport_0: 'Importer',
   HPexport_0: 'Exporter',
+  HPbackup_0: 'Backup',
   HPimport_1: 'Importer des droits d\'accès',
   HPexport_1: 'Exporter des droits d\'accès',
+  HPexportsafe_ko: 'Le coffre-fort n\'a pas être obtenu. Etes-vous bien authentifié et connecté à Internet ?',
   HPimport_clear: 'Depuis un fichier JSON en clair',
   HPimport_crypt: 'Depuis un fichier JSON crypté',
   HPimport_txt: 'Depuis un texte JSON saisi',
@@ -444,6 +483,7 @@ bla bla
   EX_1001: 'Erreur "fake" pour test\n{0}',
   EX_1002: 'Opération inconnue [{0}]',
   EX_1003: 'Opération [{0}] - organisation inconnue [{1}]',
+  EX_1004: 'Opération [{0}] - service inconnu [{1}]',
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_10000: 'Interruption volontaire',
 

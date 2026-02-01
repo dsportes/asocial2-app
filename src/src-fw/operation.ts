@@ -24,13 +24,17 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
-  async post (args: any) : Promise<any> {
+  async post (args: any, service?: string) : Promise<any> {
     const config = stores.config
     const session = stores.session
-    const u = config.K.SAFE_URL + 'op/' + (args.org || 'none') + '/' + this.opName
+    const svc = service || config.K.DEFAULT_SERVICE
+    const urlapi = config.K.SERVICES[svc]
+    if (!urlapi) 
+      throw new AppExc({ code:11002, label: 'Unknown service', args:[this.opName, svc]})
+    const u = urlapi.url + 'op/' + (args.org || 'none') + '/' + this.opName
     try {
       session.opStart(this)
-      args.APIVERSION = config.K.APIVERSION
+      args.APIVERSION = urlapi.api
       this.controller = new AbortController()
       this.aborted = false
 

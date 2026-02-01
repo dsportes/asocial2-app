@@ -690,19 +690,6 @@ export const useSafeStore = defineStore('safe', () => {
       profiles: {},
       prefs: {}
     }
-
-    /*{ // Test de $StatusSafe
-      const op = new SafeOperation('$StatusSafe')
-      let ret
-      try {
-        ret = await op.post({ id: safe.id, hp0: safe.hp0, hr0: safe.hr0 })
-        console.log(ret.statusSafe)
-      } catch (e) {
-        op.ko(e)
-        return -1
-      }
-    }
-    */
     const op = new SafeOperation('$CreateSafe')
     let ret
     try {
@@ -891,7 +878,7 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const reloadSafe = async () => {
+  const reloadSafe = async () : Promise<number>=> {
     const args = {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
@@ -907,6 +894,22 @@ export const useSafeStore = defineStore('safe', () => {
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
+  }
+
+  const getBinSafe = async () : Promise<Uint8Array>=> {
+    const args = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
+    }
+    const op = new SafeOperation('$GetBinSafe')
+    let ret
+    try {
+      ret = await op.post(args)
+    } catch(e) { 
+      op.ko(e)
+      return null
+    }
+    return ret.status ? null : ret.binsafe
   }
 
   /* Faire sauvegarder par le serveur dans le safe 
@@ -1145,7 +1148,7 @@ export const useSafeStore = defineStore('safe', () => {
     purgeIDBS,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
-    synthUsers
+    synthUsers, getBinSafe
   }
 })
 

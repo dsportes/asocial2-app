@@ -1,5 +1,4 @@
 import { AppExc } from './util'
-import stores from '../stores/all'
 
 const urls = new Map<string, string>()
 

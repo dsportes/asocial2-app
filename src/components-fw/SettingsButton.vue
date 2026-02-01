@@ -58,8 +58,15 @@
         </q-item>
 
         <q-item class="column">
-          <div class="font-mono text-italic">{{ $t('buildapi', [config.K.BUILD, config.K.APIVERSION]) }}</div>
-          <div class="font-mono text-italic">{{ $t('service_url', [config.K.SERVICE_URL]) }}</div>
+          <div class="font-mono text-italic">{{ $t('build') + ': ' + config.K.BUILD }}</div>
+          <div class="titre-sm text-italic">{{ $t('services') }}</div>
+          <div v-for="[svc, x] in services" :key="svc" class="q-ml-md column">
+            <div class="font-mono fs-sm">
+              <span :class="svc === defsvc ? 'text-bold' : ''">{{svc}}</span>
+              <span class="q-ml-md">{{x.url}}</span>
+              <span class="q-ml-sm">[{{x.api}}]</span>
+            </div>
+          </div>
         </q-item>
         <!-- Test surcharge traductions
         <q-item>
@@ -321,6 +328,14 @@ const session = stores.session
 const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
+
+const services = ref()
+{
+  const m = new Map<string, Object>()
+  for (const svc in config.K.SERVICES) m.set(svc, config.K.SERVICES[svc])
+  services.value = m
+}
+const defsvc = ref(config.K.DEFAULT_SERVICE)
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
 
