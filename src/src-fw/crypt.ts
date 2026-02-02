@@ -190,6 +190,12 @@ export async function testECDH () {
 
   const appSVPair = await Crypt.getSVKeyPair()
   const appSVPub = appSVPair[0]
+  const begin = '-----BEGIN PUBLIC KEY-----\n'
+  const end = '\n-----END PUBLIC KEY-----'
+  const pem = begin + appSVPub + end
+  console.log(pem)
+  const jwk = decode(appSVPair[1])
+  console.log(JSON.stringify(jwk))
   const sign = await Crypt.sign(appSVPair[1], x)
 
   // Dans srv

@@ -68,6 +68,8 @@ export default {
 
   op_PingDB: 'PING de la base de données',
   op_EchoText: 'Echo du texte envoyé',
+  op_$Hash: 'Test Hash PHP',
+  op_$Verify: 'Test verify PHP',
   op_TestMessage: 'Test de réception de push du serveur',
   op_RegisterSubscription: 'Enregistrement de web-push',
   op_TestAuth: 'Test d\'authentification',
@@ -81,7 +83,7 @@ export default {
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
   op_$UntrustDevice: 'Retrait de confiance au terminal',
   op_$TrustDevice: 'Ajout de confiance au terminal',
-  op_UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
+  op_$UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
   op_$GetBinSafe: 'Backup d\'un coffre-fort',
 
   RLtit1: 'Nouvelle version disponible',

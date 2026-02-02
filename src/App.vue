@@ -66,12 +66,17 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import ext2mime from 'ext2mime'
+// @ts-ignore
 import { ref, computed, watch, watchEffect, onMounted } from 'vue'
+// @ts-ignore
 import { useI18n } from 'vue-i18n'
+// @ts-ignore
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
+// @ts-ignore
 import incognito from './assets/incognito_blanc.svg'
 
 import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
@@ -93,7 +98,9 @@ import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import { Help } from './src-fw/help'
+// @ts-ignore
 import mybeep from './assets/beep.mp3?inline'
+// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 // import { initWP } from './src-fw/wputil'
 
@@ -148,12 +155,14 @@ watch(fileList, async (file: any) : Promise<void> => {
 })
 
 async function getPutUrl (put: boolean) : Promise<void> {
+  /*
   try {
     const res = await postOp('GetPutUrl', { id1: 'toto', id2: 'tata', id3: fd.value.name, put: put })
     echo.value = res['url']
   } catch (e) {
     echo.value = ''
   }
+  */
 }
 
 async function downloadFile () : Promise<void> {
@@ -183,28 +192,101 @@ const t4x = async () => {
 }
 
 class EchoPHP extends SafeOperation {
-  constructor () { super('EchoText') }
+  constructor () { super('$EchoText') }
 
   async run (data) {
     try {
       SafeOperation.setSafeUrl('http://localhost:8888')
       const res = await this.post(data)
-      console.log(JSON.stringify(res))
+      return res
     } catch(e) {
       this.ko(e)
     }
   }
 }
 
-const t2 = async () => {
+class Hash extends SafeOperation {
+  constructor () { super('$Hash') }
+
+  async run (data) {
+    try {
+      SafeOperation.setSafeUrl('http://localhost:8888')
+      const res = await this.post(data)
+      return res
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+class Verify extends SafeOperation {
+  constructor () { super('$Verify') }
+
+  async run (data) {
+    try {
+      SafeOperation.setSafeUrl('http://localhost:8888')
+      const res = await this.post(data)
+      return res
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+const t1 = async () => {
   const data = {
     'key1': 'value1',
     'key2': 2
   }
-  await new EchoPHP().run(data)
+  const ret = await new EchoPHP().run(data)
+  console.log(JSON.stringify(ret['echo']))
 }
 
-const t1 = async () => {
+const t2h = async () => {
+  const args = {
+    bin: Crypt.random(32)
+  }
+  const sha = Crypt.sha(args.bin, false)
+  const shaS = Crypt.shaS(args.bin)
+  const ret = await new Hash().run(args)
+  console.log(shaS + '\n' + ret['shaS'] + '\n' + sha + '\n' + ret['sha'])
+}
+
+const jwk = `{
+    "key_ops": [
+        "sign"
+    ],
+    "ext": true,
+    "kty": "EC",
+    "x": "AMiogCyO2QuZ68f6Kb0noXiuv2V67kGxLMwj7-77TXhgEOZCcDBlOMdhap4Rr4Kda6K45ONxOGrn-1jqTYUB_VlB",
+    "y": "AHc_ztKyX9vmhCekgNtc5s_KoEjx7z_rv_ByYf-blMbn5MGP0vMZgREpjY1CmA0Ehsryqzj4JwuWboPiI5-Z5ZsW",
+    "crv": "P-521",
+    "d": "AQPFFFs0XnNb3KbgHOd5k-NGbu0xjvZw8RLzCMtmt8QBPDVsJoaKIYfNGE0pg1g7y_UYG6hWN-X44spAYp3McMu8"
+}`
+
+const pem = `-----BEGIN PUBLIC KEY-----
+BADIqIAsjtkLmevH+im9J6F4rr9leu5BsSzMI+/u+014YBDmQnAwZTjHYWqeEa+CnWuiuOTjcThq5/tY6k2FAf1ZQQB3P87Ssl/b5oQnpIDbXObPyqBI8e8/67/wcmH/m5TG5+TBj9LzGYERKY2NQpgNBIbK8qs4+CcLlm6D4iOfmeWbFg==
+-----END PUBLIC KEY-----`
+
+const t2 = async () => {
+  const args = {
+    x: encoder.encode('toto est tres tres beau')
+  }
+  // const appSVPair = await Crypt.getSVKeyPair()
+  // const priv = appSVPair[1]
+  const priv = encode(JSON.parse(jwk))
+  // args['appSVPub'] = appSVPair[0]
+  args['appSVPub'] = pem
+  args['sign'] = await Crypt.sign(priv, args['x'])
+
+  let i = pem.indexOf('\n')
+  const x1 = pem.substring(i + 1)
+  i = x1.lastIndexOf('\n')
+  const x2 = x1.substring(0, i)
+  const pubKey = b64ToU8(x2)
+  const v = await Crypt.verify (pubKey, args['sign'], args['x'])
+  const ret = await new Verify().run(args)
+  console.log(ret.status)
 }
 
 </script>
