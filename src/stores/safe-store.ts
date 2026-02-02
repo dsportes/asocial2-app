@@ -429,11 +429,15 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadDevices = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Device>()
-    for (const devId in safe.devices) {
-      const d: Device = safe.devices[devId]
+    let found = false
+    for (const id in safe.devices) {
+      if (id === devId.value) found = true
+      const d: Device = safe.devices[id]
       d.devName = await dcX(d.devName as Uint8Array)
-      m.set(devId, d)
+      m.set(id, d)
     }
+    if (!found) // le device doit être retiré de la liste des trustings
+      await delTrusting(devId.value)
     devices.value = m
     const tr = getMyTrusting() as Trusting
     if (tr && (!equ8(tr.Ka, auth.value.Ka) || !equ8(tr.Kr, auth.value.Kr))) {
@@ -776,7 +780,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   type UntrustDev = {
     userId: string
-    devId: string
+    devIds: string[]
     sh1p: Uint8Array
     sh1r: Uint8Array
   }
@@ -861,11 +865,33 @@ export const useSafeStore = defineStore('safe', () => {
     await delTrusting(t.userId)
     const untrustDev: UntrustDev = {
       userId: userId.value,
-      devId: devId.value,
+      devIds: [devId.value],
       sh1p: sh1p.value,
       sh1r: sh1r.value
     }
-    const op = new SafeOperation('$UntrustDevice')
+    const op = new SafeOperation('$UntrustDevices')
+    let ret
+    try {
+      ret = await op.post({untrustDev})
+    } catch(e) { 
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  const setUntrustAll = async (sId: Set<string>) => {
+    if (sId.has(devId.value))
+      await delTrusting(userId.value)
+    const untrustDev: UntrustDev = {
+      userId: userId.value,
+      devIds: Array.from(sId),
+      sh1p: sh1p.value,
+      sh1r: sh1r.value
+    }
+    const op = new SafeOperation('$UntrustDevices')
     let ret
     try {
       ret = await op.post({untrustDev})
@@ -1148,7 +1174,7 @@ export const useSafeStore = defineStore('safe', () => {
     purgeIDBS,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
-    synthUsers, getBinSafe
+    synthUsers, getBinSafe, setUntrustAll
   }
 })
 

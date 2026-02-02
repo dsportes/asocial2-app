@@ -151,6 +151,14 @@ Pour ces opérations, par sécurité il faut s'être authentifié par sa phrase 
   HPuntrust_2: `### Retirer sa confiance au terminal
 bla bla
 `,
+  HPtrustings_1: 'Afficher / gérer mes terminaux de confiance',
+  HPtrustings_2: `# Afficher / gérer mes terminaux de confiance
+  bla bla
+`,
+  HPtrustings_l: 'Aucun terminal n\'est déclaré de confiance | ' +
+  'Un terminal est déclaré de confiance | ' +
+  '{count} terminaux sont déclarés de confiance',
+  HPtrustings_del: 'Retirer la confiance en ces ({0}) terminaux',
   HPchgpin_1: 'Ce terminal a ma confiance, je veux changer son code PIN',
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
@@ -201,6 +209,10 @@ bla bla
   HPauthby_3: '{0} [PIN]',
   HPauthby_9: 'Phase d\'authentification',
   */
+
+  HPopnotpin_0: 'Succès de l\'opération.',
+  HPopnotpin_1: 'Echecs de l\'opération: utilisateur non authentifié.',
+  HPopnotpin_2: 'Echecs de l\'opération: l\'utilisateur doit être authentifié par phrase secrète (pas par code PIN).',
 
   HPsfop_0: 'Succès de l\'opération.',
   HPsfop_1: 'Echec de l\'opération: utilisateur non enregistré.',

@@ -181,7 +181,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+import { ref, computed, Ref, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
@@ -197,7 +197,7 @@ import stores from '../stores/all'
 import type { TSession } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
 import { SafeOperation } from '../src-fw/operation'
-import { $t, $q, sty, dkli, edvol, dhcool, u8ToB64, readFile, fileDescr } from '../src-fw/util'
+import { $t, sty, edvol, dhcool, u8ToB64, readFile, fileDescr, coolBye } from '../src-fw/util'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -268,7 +268,7 @@ const recalc = () => {
   const setT = new Set()
   delSize.value.fill(0)
   for(const [,u] of synthU.value) {
-    if (u.ck) { nx++; setS.add(s.userId) }
+    if (u.ck) { nx++; setS.add(u.userId) }
     for(const [,a] of u.ma) {
       if (a.ck) nx++
       for(const [,s] of a.ms) {
@@ -299,8 +299,7 @@ const close = async () => {
 }
 
 const fileList = ref(null)
-const defFd: fileDescr = { name: '', size: 0 }
-const fd = ref(defFd)
+const fd = ref({ name: '', size: 0 })
 const cryptK = reactive( { inp: '', err: '', key: null } )
 const diag = ref('')
 const bin = ref(null)
@@ -311,7 +310,7 @@ const keyK = ref(null)
 
 const reset = () => {
   fileList.value = null
-  defFd.value = { name: '', size: 0 }
+  fd.value = { name: '', size: 0 }
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
   diag.value = ''
   bin.value = null

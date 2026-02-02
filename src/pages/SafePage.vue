@@ -22,7 +22,7 @@
 
     <div v-if="session.hasNet && sf.devName" class="row items-center q-mt-sm">
       <span class="titre-sm text-italic">{{$t('HPterminal')}}</span>
-      <span class="font-mono fs-sm text-italic q-ml-sm">{{'[' + sf.devName + ']'}}</span>
+      <span class="font-mono fs-sm text-italic q-ml-sm">{{sf.devId.substring(0,5) + ' [' + sf.devName + ']'}}</span>
     </div>
 
     <!-- Je suis enregistré -->
@@ -160,6 +160,10 @@
       :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
       :fnopen="openUntrust" size="sm"/>
 
+    <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
+      :title="$t('HPtrustings_1')" :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+      :fnopen="openTrustings" size="sm"/>
+
     <bar-open :bubble="$t('HPmanuinfo')"
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPmanusers')" :fnopen="manUsers"/>
@@ -253,6 +257,43 @@
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
 
+  <!-- Gérer les terminaux de confiance -->
+  <q-dialog v-model="ui.dModels[idc].trustings" persistent>
+    <q-card :class="sty('md')">
+      <q-toolbar>
+        <btn-cond color="none" size="lg" icon="chevron_left" flat 
+          @ok="delTrustSet = null; ui.fD()"/>
+        <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
+        <btn-bubble :text="$t('HPtrustings_2')"/>
+      </q-toolbar>
+      <div class="full-width q-pa-sm">
+        <div v-if="sf.devName" class="row items-center q-my-sm">
+          <span class="titre-sm text-italic">{{$t('HPterminal')}}</span>
+          <span class="font-mono fs-sm text-italic q-ml-sm">{{sf.devId.substring(0, 5) + ' [' + sf.devName + ']'}}</span>
+        </div>
+        <div class="titre-md q-my-sm">{{ $t('HPtrustings_l', sf.devices.size) }}</div>
+        <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
+          class='bord1 q-pa-xs'>
+          <div v-for="[id, dev] in sf.devices" :key="id" class="row">
+            <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'" 
+              :color="delTrustSet.has(id) ? 'primary' : 'warning'" 
+              @ok="delTrustIt(id)"/>
+            <div :class="'col-2 font-mono ellipsis' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
+              {{ id.substring(0, 5) }}</div>
+            <div :class="'col-9 font-mono' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
+              {{ dev.devName }}</div>
+          </div>
+        </q-scroll-area>
+      </div>
+
+      <q-card-actions vertical align="right">
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning" 
+          :disable="delTrustSet.size === 0" @ok="delTrustings"/>
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
   <!-- Accorder ma confiance à ce terminal -->
   <q-dialog v-model="ui.dModels[idc].trustit" persistent>
     <q-card :class="sty('md')">
@@ -323,6 +364,8 @@
 import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
+// @ts-ignore
+import { saveAs } from 'file-saver'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
@@ -449,8 +492,9 @@ const valK = async () => {
 
 const doExportSafe = async () => {
   if (!expName.value) return
-  const buf = await Crypt.crypt(cryptK.key, bin.value)
+  const buf: Uint8Array = await Crypt.crypt(cryptK.key, bin.value)
   const nf = expName.value + (!expName.value.endsWith('.bin') ? '.bin' : '')
+  // @ts-ignore
   const blob = new Blob([buf], { type: 'application/octet-stream'})
   saveAs(blob, nf)
   await ui.diagDisplay($t('HPexport_ok', [nf]))
@@ -506,6 +550,26 @@ const openTrust = async () => {
 const openUntrust = async () => {
   await sf.getMySessions()
   ui.oD(idc, 'untrustit')
+}
+
+const delTrustSet = ref()
+const openTrustings = async () => {
+  delTrustSet.value = new Set()
+  ui.oD(idc, 'trustings')
+}
+
+const delTrustIt = (id) => {
+  if (delTrustSet.value.has(id)) delTrustSet.value.delete(id)
+  else delTrustSet.value.add(id)
+}
+
+const delTrustings = async () => {
+  console.log('delTrust')
+  const st = await sf.setUntrustAll(delTrustSet.value)
+  if (st === 0) {
+    delTrustSet.value = null
+    ui.fD()
+  } else await ui.diagDisplay($t('HPopnotpin_' + st))
 }
 
 const setTrust = async () => {
