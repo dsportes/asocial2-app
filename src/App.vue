@@ -79,11 +79,11 @@ import stores from './stores/all'
 // @ts-ignore
 import incognito from './assets/incognito_blanc.svg'
 
-import { set$t, readFile, fileDescr, beep, b64ToU8 } from './src-fw/util'
+import { set$t, readFile, fileDescr, beep, b64ToU8, u8ToB64 } from './src-fw/util'
 import { TestAuth } from './src-fw/operations'
 import { Operation, SafeOperation } from './src-fw/operation'
 import { getData, putData } from './src-fw/net'
-import { Crypt, testECDH, testSH } from './src-fw/crypt'
+import { Crypt, toPem, fromPem, testECDH, testSH } from './src-fw/crypt'
 import { testCred } from './src-fw/credential'
 
 import SafePage from './pages/SafePage.vue'
@@ -252,41 +252,27 @@ const t2h = async () => {
   console.log(shaS + '\n' + ret['shaS'] + '\n' + sha + '\n' + ret['sha'])
 }
 
-const jwk = `{
-    "key_ops": [
-        "sign"
-    ],
-    "ext": true,
-    "kty": "EC",
-    "x": "AMiogCyO2QuZ68f6Kb0noXiuv2V67kGxLMwj7-77TXhgEOZCcDBlOMdhap4Rr4Kda6K45ONxOGrn-1jqTYUB_VlB",
-    "y": "AHc_ztKyX9vmhCekgNtc5s_KoEjx7z_rv_ByYf-blMbn5MGP0vMZgREpjY1CmA0Ehsryqzj4JwuWboPiI5-Z5ZsW",
-    "crv": "P-521",
-    "d": "AQPFFFs0XnNb3KbgHOd5k-NGbu0xjvZw8RLzCMtmt8QBPDVsJoaKIYfNGE0pg1g7y_UYG6hWN-X44spAYp3McMu8"
-}`
-
-const pem = `-----BEGIN PUBLIC KEY-----
-BADIqIAsjtkLmevH+im9J6F4rr9leu5BsSzMI+/u+014YBDmQnAwZTjHYWqeEa+CnWuiuOTjcThq5/tY6k2FAf1ZQQB3P87Ssl/b5oQnpIDbXObPyqBI8e8/67/wcmH/m5TG5+TBj9LzGYERKY2NQpgNBIbK8qs4+CcLlm6D4iOfmeWbFg==
------END PUBLIC KEY-----`
-
 const t2 = async () => {
-  const args = {
-    x: encoder.encode('toto est tres tres beau')
-  }
-  // const appSVPair = await Crypt.getSVKeyPair()
-  // const priv = appSVPair[1]
-  const priv = encode(JSON.parse(jwk))
-  // args['appSVPub'] = appSVPair[0]
-  args['appSVPub'] = pem
-  args['sign'] = await Crypt.sign(priv, args['x'])
+  await testECDH()
+}
 
-  let i = pem.indexOf('\n')
-  const x1 = pem.substring(i + 1)
-  i = x1.lastIndexOf('\n')
-  const x2 = x1.substring(0, i)
-  const pubKey = b64ToU8(x2)
-  const v = await Crypt.verify (pubKey, args['sign'], args['x'])
+const t2sv = async () => {
+  const x = 'toto est tres tres beau'
+  const args = {
+    x: encoder.encode(x)
+  }
+  const appSVPair = await Crypt.getSVKeyPair()
+  const appPubPem = toPem(appSVPair.pub, true)
+  const appPrivPem = toPem(appSVPair.priv)
+
+  const sign = await Crypt.sign(appSVPair.priv, args['x'])
+  args['sign'] = u8ToB64(sign)
+  console.log(args['sign'])
+
+  args['appPubPem'] = appPubPem
+  const v = await Crypt.verify (appSVPair.pub, sign, args['x'])
   const ret = await new Verify().run(args)
-  console.log(ret.status)
+  console.log(v, ret.status)
 }
 
 </script>

@@ -8,6 +8,11 @@ import { fromByteArray } from './base64'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
+export type KeyPair = {
+  pub: any,
+  priv: any
+}
+
 const p2 = [1, 0, 0, 0, 0, 0]; for (let i = 1; i < 6; i++) p2[i] = p2[i - 1] * 256
 
 function u8ToHex (u8) {
@@ -15,12 +20,64 @@ function u8ToHex (u8) {
   return Array.from(u8).map((i) => i.toString(16).padStart(2, '0')).join(' ')
 }
 
-export class Crypt {
-  static defaultSep = '$*%@|{}#'
+function ab2str(buf: ArrayBuffer) : string {
+  return String.fromCharCode.apply(null, new Uint8Array(buf));
+}
 
+function str2ab(str: string) : ArrayBuffer{
+  const buf = new ArrayBuffer(str.length)
+  const bufView = new Uint8Array(buf)
+  for (let i = 0, strLen = str.length; i < strLen; i++) bufView[i] = str.charCodeAt(i)
+  return buf
+}
+/*
+Export the given key and write it into the "exported-key" space.
+*/
+export function toPem(key: ArrayBuffer, pub?: boolean) : string{
+  const exportedAsString = ab2str(key)
+  const exportedAsBase64 = window.btoa(exportedAsString)
+  return !pub ? `-----BEGIN PRIVATE KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`
+  : `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`
+}
+
+export function fromPem(pem: string, pub?: boolean) : ArrayBuffer {
+  // fetch the part of the PEM string between header and footer
+  const pemHeader = pub ? '-----BEGIN PUBLIC KEY-----' : '-----BEGIN PRIVATE KEY-----'
+  const pemFooter = pub ? '-----END PUBLIC KEY-----' : '-----END PRIVATE KEY-----'
+  const pemContents = pem.substring(pemHeader.length, pem.length - pemFooter.length - 1)
+  // base64 decode the string to get the binary data
+  const binaryDerString = window.atob(pemContents)
+  // convert from a binary string to an ArrayBuffer
+  return str2ab(binaryDerString)
+}
+
+export class Crypt {
+  static algs = {
+    ecdh: { name: 'ECDH', namedCurve: 'P-521' },
+    ecdsa: { name: 'ECDSA', namedCurve: 'P-521' },
+    ecdsasv: { name: 'ECDSA', hash: 'SHA-256' },
+    rsa: { name: 'RSASSA-PKCS1-v1_5', // 'RSA-OAEP' PAS pour sign / verify
+      modulusLength: 2048, 
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]), 
+      hash: {name: "SHA-256"} },
+    rsasv: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'},
+  }
+  static alg = 'rsa'
+
+  /*
   static alg = { name: 'ECDH', namedCurve: 'P-521' }
   static ecdsa = { name: 'ECDSA', namedCurve: 'P-521' }
+  // static ecdsa = { name: 'ECDSA', namedCurve: 'P-256' }
   static ecdsaSV = { name: 'ECDSA', hash: 'SHA-256' }
+  // static ecdsaSV = { name: 'ECDSA', hash: 'SHA-1' }
+  static rsa = { 
+    name: 'RSASSA-PKCS1-v1_5',
+    modulusLength: 2048, //can be 1024, 2048, or 4096
+    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+    hash: {name: "SHA-256"}
+  }
+  static rsa2 = { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'}
+  */
 
   static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
@@ -51,40 +108,37 @@ export class Crypt {
     }
   }
 
-  static async getKeyPair () : Promise<Uint8Array[]> {
-    const p = await crypto.subtle.generateKey(Crypt.alg, true, ['deriveKey'])
-    return [
-      new Uint8Array(await crypto.subtle.exportKey('raw', p.publicKey)),
-      new Uint8Array(encode(await crypto.subtle.exportKey('jwk', p.privateKey)))
-    ]
+  static async getKeyPair () : Promise<KeyPair> {
+    const p = await crypto.subtle.generateKey(Crypt.algs.ecdh, true, ['deriveKey'])
+    const spki = await crypto.subtle.exportKey('spki', p.publicKey)
+    const pkcs8 = await crypto.subtle.exportKey('pkcs8', p.privateKey)
+    return { pub: spki, priv: pkcs8 }
   }
     
-  static async getSVKeyPair () : Promise<Uint8Array[]> {
-    const p = await crypto.subtle.generateKey(Crypt.ecdsa, true, ['sign', 'verify'])
-    const jwk = await crypto.subtle.exportKey('jwk', p.privateKey)
-    return [
-      new Uint8Array(await crypto.subtle.exportKey('raw', p.publicKey)),
-      new Uint8Array(encode(jwk))
-    ]
+  static async getSVKeyPair () : Promise<KeyPair> {
+    const p = await crypto.subtle.generateKey(Crypt.algs[Crypt.alg], true, ['sign', 'verify'])
+    const spki = await crypto.subtle.exportKey('spki', p.publicKey)
+    const pkcs8 = await crypto.subtle.exportKey('pkcs8', p.privateKey)
+    return { pub: spki, priv: pkcs8 }
   }
 
-  static async getAESKey (pubKey: Uint8Array, myPrivKey: Uint8Array): Promise<Uint8Array> {
-    const pub = await crypto.subtle.importKey('raw', pubKey  as BufferSource, Crypt.alg, true, [])
-    const priv = await crypto.subtle.importKey('jwk', decode(myPrivKey), Crypt.alg, true, ['deriveKey'])
+  static async getAESKey (pubKey: ArrayBuffer, myPrivKey: ArrayBuffer): Promise<Uint8Array> {
+    const pub = await crypto.subtle.importKey('spki', pubKey, Crypt.algs.ecdh, true, [])
+    const priv = await crypto.subtle.importKey('pkcs8', myPrivKey, Crypt.algs.ecdh, true, ['deriveKey'])
     const k = await crypto.subtle.deriveKey(
       { name: 'ECDH', public: pub }, priv, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
     )
     return new Uint8Array(await crypto.subtle.exportKey('raw', k))
   }
 
-  static async sign (privKey: Uint8Array, data: Uint8Array) : Promise<Uint8Array> {
-    const priv = await crypto.subtle.importKey('jwk', decode(privKey), Crypt.ecdsa, false, ['sign'])
-    return new Uint8Array(await crypto.subtle.sign(Crypt.ecdsaSV, priv, data as BufferSource))
+  static async sign (privKey: ArrayBuffer, data: Uint8Array) : Promise<Uint8Array> {
+    const priv = await crypto.subtle.importKey('pkcs8', privKey, Crypt.algs[Crypt.alg], false, ['sign'])
+    return new Uint8Array(await crypto.subtle.sign(Crypt.algs[Crypt.alg + 'sv'], priv, data as BufferSource))
   }
 
-  static async verify (pubKey: Uint8Array, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
-    const pub = await crypto.subtle.importKey('raw', pubKey as BufferSource, Crypt.ecdsa, true, ['verify'])
-    return await crypto.subtle.verify(Crypt.ecdsaSV, pub, signature as BufferSource, data as BufferSource)
+  static async verify (pubKey: ArrayBuffer, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
+    const pub = await crypto.subtle.importKey('spki', pubKey, Crypt.algs[Crypt.alg], true, ['verify'])
+    return await crypto.subtle.verify(Crypt.algs[Crypt.alg + 'sv'], pub, signature as BufferSource, data as BufferSource)
   }
 
   static async strongHash (s: string | Uint8Array, pad?: boolean, bin?: boolean) 
@@ -185,35 +239,39 @@ export async function testECDH () {
 
   // Dans app
   const appPair = await Crypt.getKeyPair()
-  const appPub = appPair[0]
-  console.log(u8ToB64(appPub), u8ToB64(appPair[1]))
+  const appPub = toPem(appPair.pub, true)
+  const appPriv = toPem(appPair.priv)
+  console.log('ECDH: APP crypt/decrypt')
+  console.log(appPub)
+  console.log(appPriv)
 
   const appSVPair = await Crypt.getSVKeyPair()
-  const appSVPub = appSVPair[0]
-  const begin = '-----BEGIN PUBLIC KEY-----\n'
-  const end = '\n-----END PUBLIC KEY-----'
-  const pem = begin + appSVPub + end
-  console.log(pem)
-  const jwk = decode(appSVPair[1])
-  console.log(JSON.stringify(jwk))
-  const sign = await Crypt.sign(appSVPair[1], x)
+  const appSVPub = toPem(appSVPair.pub, true)
+  const appSVPriv = toPem(appSVPair.priv)
+  console.log('RSA: SRV sign/verify')
+  console.log(appSVPub)
+  console.log(appSVPriv)
+  const sign = await Crypt.sign(appSVPair.priv, x)
 
   // Dans srv
-  const verif1 = await Crypt.verify(appSVPub, sign, x)
+  const verif1 = await Crypt.verify(fromPem(appSVPub, true), sign, x)
   console.log('verif1 = ', verif1)
-  const verif2 = await Crypt.verify(appSVPub, sign, xx)
+  const verif2 = await Crypt.verify(fromPem(appSVPub, true), sign, xx)
   console.log('verif2 = ', verif2)
 
   const srvPair = await Crypt.getKeyPair()
-  const srvPub = srvPair[0]
-  console.log(u8ToB64(srvPub), u8ToB64(srvPair[1]))
+  const srvPub = toPem(srvPair.pub, true)
+  const srvPriv = toPem(srvPair.priv)
+  console.log('ECDH: SRV crypt/decrypt')
+  console.log(srvPub)
+  console.log(srvPriv)
 
-  const aesSrv = await Crypt.getAESKey(appPub, srvPair[1])
+  const aesSrv = await Crypt.getAESKey(fromPem(appPub, true), srvPair.priv)
   console.log('aesSrv: ', u8ToB64(aesSrv))
   const x1 = await Crypt.crypt(aesSrv, x)
 
   // Dans app
-  const aesApp = await Crypt.getAESKey(srvPub, appPair[1])
+  const aesApp = await Crypt.getAESKey(fromPem(srvPub, true), appPair.priv)
   console.log('aesApp: ', u8ToB64(aesApp))
   const x3 = await Crypt.decrypt(aesApp, x1)
   const x2 = decoder.decode(x3)
