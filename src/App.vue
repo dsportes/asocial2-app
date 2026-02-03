@@ -83,7 +83,7 @@ import { set$t, readFile, fileDescr, beep, b64ToU8, u8ToB64 } from './src-fw/uti
 import { TestAuth } from './src-fw/operations'
 import { Operation, SafeOperation } from './src-fw/operation'
 import { getData, putData } from './src-fw/net'
-import { Crypt, toPem, fromPem, testECDH, testSH } from './src-fw/crypt'
+import { Crypt, toPem, fromPem, u8ToHex, arrayBuffertohex, hexToArrayBuffer, testECDH, testSH } from './src-fw/crypt'
 import { testCred } from './src-fw/credential'
 
 import SafePage from './pages/SafePage.vue'
@@ -257,22 +257,39 @@ const t2 = async () => {
 }
 
 const t2sv = async () => {
+  // rsa.KJUR.crypto.ECDSA.concatSigToASN1Sig()
   const x = 'toto est tres tres beau'
   const args = {
     x: encoder.encode(x)
   }
-  const appSVPair = await Crypt.getSVKeyPair()
-  const appPubPem = toPem(appSVPair.pub, true)
-  const appPrivPem = toPem(appSVPair.priv)
+  const privPem = `-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAqJmA2j3axukNE3LT
+7aJB16W6RHWYpMW0RoT3F+Yrb3Yb5JQmApUTVDHkkZFWq+cAcRRoj99OdIQQw1PJ
+txLhplWhgYkDgYYABABmTTVrJdbm3nYdkRA0aMoby0tFd94bxsJadHrAZM7PLDLG
+uCU1QHNV7qMvAmtTQSxhIt6feTpVypgsz/0yP+mrbwF5FBPE/N6vgfL9GKzfMUG7
+mESBKpy98Xt2a9dCacc13uvqaMhvSrlZNQQpllyiysxrpJjC7enPbOlTeatEoKO5
+zA==
+-----END PRIVATE KEY-----`
 
-  const sign = await Crypt.sign(appSVPair.priv, args['x'])
-  args['sign'] = u8ToB64(sign)
-  console.log(args['sign'])
+  const pubPem = `-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAZk01ayXW5t52HZEQNGjKG8tLRXfe
+G8bCWnR6wGTOzywyxrglNUBzVe6jLwJrU0EsYSLen3k6VcqYLM/9Mj/pq28BeRQT
+xPzer4Hy/Ris3zFBu5hEgSqcvfF7dmvXQmnHNd7r6mjIb0q5WTUEKZZcosrMa6SY
+wu3pz2zpU3mrRKCjucw=
+-----END PUBLIC KEY-----`
 
-  args['appPubPem'] = appPubPem
-  const v = await Crypt.verify (appSVPair.pub, sign, args['x'])
+  const sign = await Crypt.sign(fromPem(privPem), args['x'])
+  const signAsn1 = Crypt.signToAsn1(sign) // Pour openSSL
+
+  console.log(u8ToB64(signAsn1))
+  console.log(u8ToB64(sign))
+
+  const v = await Crypt.verify(fromPem(pubPem, true), sign, args['x'])
+
+  args.sign = signAsn1
+  args.pubPem = pubPem
   const ret = await new Verify().run(args)
-  console.log(v, ret.status)
+  console.log(v, ret)
 }
 
 </script>
