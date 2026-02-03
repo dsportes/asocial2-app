@@ -12,7 +12,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import stores from './all'
 import { AppExc, $t, sleep, u8ToB64, equ8 } from '../src-fw/util'
 import { SafeOperation } from '../src-fw/operation'
-import { Crypt } from '../src-fw/crypt'
+import { Crypt, toPem, fromPem } from '../src-fw/crypt'
 import { Credential } from '../src-fw/credential'
 
 /* TODO
@@ -168,15 +168,19 @@ export const useSafeStore = defineStore('safe', () => {
         devId.value = r && r.devId ? r.devId : ''
         devName.value = r && r.devName ? r.devName : ''
 
+        const toDel = []
         await db.value.trustings.each(async (r) => {
           try {
             const obj = decode(r.bin)
             const t : Trusting = new Trusting(obj)
-            trustings.value.set(t.userId, t)
+            if (devId.value) trustings.value.set(t.userId, t)
+            else toDel.push(t.userId)
           } catch (e) {
             console.log(e)
           }
         })
+        if (toDel.length) 
+          for(const userId of toDel) await delTrusting(userId)
 
         await db.value.tsessions.each(async (r) => {
           try {
@@ -249,7 +253,8 @@ export const useSafeStore = defineStore('safe', () => {
     if (stores.session.incognito) return
     try {
       await db.value.trustings.where({id}).delete()
-      trustings.value.delete(id)
+      if (trustings.value)
+        trustings.value.delete(id)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -341,8 +346,8 @@ export const useSafeStore = defineStore('safe', () => {
     hhk: string // SHA de `SH(K)`.
     C: Uint8Array // clé publique de cryptage.
     D: Uint8Array // clé privée de décryptage.
-    S: Uint8Array // clé publique de signature.
-    V: Uint8Array // clé privée de vérification.
+    S: Uint8Array // clé privée de signature.
+    V: Uint8Array // clé publique de vérification.
     Ka: Uint8Array // clé `K` du safe cryptée par `SH(p0, p1)`.
     Kr: Uint8Array //  clé `K` du safe cryptée par `SH(r0, r1)`.
   }
@@ -406,6 +411,8 @@ export const useSafeStore = defineStore('safe', () => {
     - soit a été décrypté au retour des opérations $openSafeByPR $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
+    const pemD = decoder.decode(await Crypt.decrypt(keyK.value, safe.DK))
+    const pemS = decoder.decode(await Crypt.decrypt(keyK.value, safe.SK))
     auth.value = {
       pseudo: await dcX(safe.pseudo),
       hp0: safe.hp0,
@@ -413,14 +420,16 @@ export const useSafeStore = defineStore('safe', () => {
       hhp1: safe.hhp1,
       hhr1: safe.hhr1,
       hhk: safe.hhk,
-      C: safe.C,
-      D: await Crypt.decrypt(keyK.value, safe.DK),
-      S: safe.S,
-      V: await Crypt.decrypt(keyK.value, safe.VK),
+      C: new Uint8Array(fromPem(safe.C, true)),
+      D: new Uint8Array(fromPem(pemD)),
+      S: new Uint8Array(fromPem(pemS)),
+      V: new Uint8Array(fromPem(safe.V, true)),
       Ka: safe.Ka,
       Kr: safe.Kr,
     } as Auth
 
+    if (!stores.session.incognito && !hasIDBS.value) 
+      await init1()
     await loadDevices(safe) // devices
     await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
@@ -492,7 +501,7 @@ export const useSafeStore = defineStore('safe', () => {
             /* Credential transmis par un autre user émetteur
             [obj credential crypté, pub: clé publique C de l'émetteur ] */
             const [crobj, pubC] = decode(x)
-            const aes = await Crypt.getAESKey(pubC, auth.value.D)
+            const aes = await Crypt.getAESKey(fromPem(pubC, true), auth.value.D)
             const dc = await Crypt.decrypt(aes, crobj)
             const obj = decode(dc)
             const c: Credential = new Credential(obj)
@@ -612,10 +621,10 @@ export const useSafeStore = defineStore('safe', () => {
 
   interface Safe extends SafeCodes { // paramétres de l'opération $CreateSafe
     hhk: string // SHA de `SH(K)`.
-    C: Uint8Array // clé publique de cryptage.
+    C: string // clé publique de cryptage.
     DK: Uint8Array // clé privée de décryptage, cryptée par la clé K
-    VK: Uint8Array // clé publique de vérification.
-    S: Uint8Array // clé privée de signature, cryptée par la clé K
+    SK: Uint8Array // clé privée de signature, cryptée par la clé K
+    V: string // clé publique de vérification
 
     devices: Object
     creds: Object
@@ -670,8 +679,8 @@ export const useSafeStore = defineStore('safe', () => {
     sh1p.value = psh1
     sh1r.value = rsh1
 
-    const [C, D] = await Crypt.getKeyPair()
-    const [S, V] = await Crypt.getKeyPair()
+    const kpcd = await Crypt.getKeyPair()
+    const kpsv = await Crypt.getSVKeyPair()
 
     const safe: Safe = {
       id: userId.value,
@@ -684,10 +693,10 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: await Crypt.crypt(rsh, keyK.value),
 
       hhk: Crypt.shaS(shK),
-      C,
-      DK: await Crypt.crypt(keyK.value, D),
-      S,
-      VK: await Crypt.crypt(keyK.value, V),
+      C: toPem(kpcd.pub, true),
+      DK: await Crypt.crypt(keyK.value, encoder.encode(toPem(kpcd.priv))),
+      V: toPem(kpsv.pub, true),
+      SK: await Crypt.crypt(keyK.value, encoder.encode(toPem(kpsv.priv))),
 
       devices: {},
       creds: {},
@@ -773,7 +782,7 @@ export const useSafeStore = defineStore('safe', () => {
     sh1p: Uint8Array
     sh1r: Uint8Array
     devName: Uint8Array
-    Va: Uint8Array
+    Va: string
     cy: string
     sign: Uint8Array
   }
@@ -837,8 +846,9 @@ export const useSafeStore = defineStore('safe', () => {
     - transmet au module _safe terminal_
       `userId, devId, sh1p, sh1r, devName(crypté par K), Va, cy, sign`
     */
-    const [Va, Sa] = await Crypt.getSVKeyPair()
-    const sign = await Crypt.sign(Sa, pincx)
+    const kpsv = await Crypt.getSVKeyPair()
+    const sign = await Crypt.sign(kpsv.priv, pincx)
+    const Va = toPem(kpsv.pub, true)
     const trustDev: TrustDev = {
       userId: userId.value,
       devId: devId.value,
@@ -1120,7 +1130,7 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     targetId: string // id ou p0 ou r0 du destinataire du credential
     credId: string // id du credential
-    pubC: Uint8Array // clé publique de cryptage de l'émetteur
+    pubC: string // clé publique (PEM) de cryptage de l'émetteur
     cryptedCred: Uint8Array // Objet Credential sérialisé crypté pour le destinataire
   }
 
@@ -1138,13 +1148,13 @@ export const useSafeStore = defineStore('safe', () => {
       return -1
     }
     try {
-      const aes = await Crypt.getAESKey(pubC, auth.value.D)
+      const aes = await Crypt.getAESKey(fromPem(pubC, true), auth.value.D)
       const cryptedCred = await Crypt.crypt(aes, encode(cred))
       const transmitCred : TransmitCred = {
         app: stores.config.appname,
         targetId: hp0, 
         credId: cred.id,
-        pubC: auth.value.C,
+        pubC: toPem(auth.value.C, true),
         cryptedCred
       }
       const op = new SafeOperation('$TransmitCred')

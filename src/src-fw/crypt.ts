@@ -9,8 +9,8 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export type KeyPair = {
-  pub: any,
-  priv: any
+  pub: ArrayBuffer,
+  priv: ArrayBuffer
 }
 
 const p2 = [1, 0, 0, 0, 0, 0]; for (let i = 1; i < 6; i++) p2[i] = p2[i - 1] * 256
@@ -33,7 +33,7 @@ function str2ab(str: string) : ArrayBuffer{
 /*
 Export the given key and write it into the "exported-key" space.
 */
-export function toPem(key: ArrayBuffer, pub?: boolean) : string{
+export function toPem(key: ArrayBuffer, pub?: boolean) : string {
   const exportedAsString = ab2str(key)
   const exportedAsBase64 = window.btoa(exportedAsString)
   return !pub ? `-----BEGIN PRIVATE KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`
@@ -63,21 +63,6 @@ export class Crypt {
     rsasv: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'},
   }
   static alg = 'rsa'
-
-  /*
-  static alg = { name: 'ECDH', namedCurve: 'P-521' }
-  static ecdsa = { name: 'ECDSA', namedCurve: 'P-521' }
-  // static ecdsa = { name: 'ECDSA', namedCurve: 'P-256' }
-  static ecdsaSV = { name: 'ECDSA', hash: 'SHA-256' }
-  // static ecdsaSV = { name: 'ECDSA', hash: 'SHA-1' }
-  static rsa = { 
-    name: 'RSASSA-PKCS1-v1_5',
-    modulusLength: 2048, //can be 1024, 2048, or 4096
-    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-    hash: {name: "SHA-256"}
-  }
-  static rsa2 = { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'}
-  */
 
   static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
     try {
