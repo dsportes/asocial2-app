@@ -847,7 +847,10 @@ export const useSafeStore = defineStore('safe', () => {
       `userId, devId, sh1p, sh1r, devName(crypté par K), Va, cy, sign`
     */
     const kpsv = await Crypt.getSVKeyPair()
-    const sign = await Crypt.sign(kpsv.priv, pincx)
+    const signEC = await Crypt.sign(kpsv.priv, pincx)
+    // On enregistre la version AN1 de la signature
+    // Peut être vérifiée par Safe en PHP
+    const sign = Crypt.signToAsn1(signEC)
     const Va = toPem(kpsv.pub, true)
     const trustDev: TrustDev = {
       userId: userId.value,
