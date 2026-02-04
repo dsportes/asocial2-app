@@ -280,6 +280,16 @@ wu3pz2zpU3mrRKCjucw=
 
   const sign = await Crypt.sign(fromPem(privPem), args['x'])
   const signAsn1 = Crypt.signToAsn1(sign) // Pour openSSL
+  const sign2 = Crypt.signFromAsn1(signAsn1) // Pour openSSL
+  const h1 = u8ToHex(sign)
+  const h2 = u8ToHex(signAsn1)
+  console.log('---- EC / ASN1 -------')
+  console.log(h1)
+  console.log(h2)
+  console.log('----------------------')
+  const h3 = u8ToHex(sign2)
+  if (h1 === h3)
+    console.log('trop cool !!!')
 
   console.log(u8ToB64(signAsn1))
   console.log(u8ToB64(sign))

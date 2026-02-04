@@ -3886,7 +3886,6 @@ __metadata:
     github-markdown-css: "npm:^5.6.1"
     globals: "npm:^15.12.0"
     js-sha256: "npm:^0.11.1"
-    jsrsasign: "npm:^11.1.0"
     pinia: "npm:^3.0.1"
     postcss: "npm:^8.4.14"
     quasar: "npm:^2.16.0"
@@ -6814,13 +6813,6 @@ __metadata:
   version: 5.0.1
   resolution: "jsonpointer@npm:5.0.1"
   checksum: 10c0/89929e58b400fcb96928c0504fcf4fc3f919d81e9543ceb055df125538470ee25290bb4984251e172e6ef8fcc55761eb998c118da763a82051ad89d4cb073fe7
-  languageName: node
-  linkType: hard
-
-"jsrsasign@npm:^11.1.0":
-  version: 11.1.0
-  resolution: "jsrsasign@npm:11.1.0"
-  checksum: 10c0/a1c819d5da0eb00e1fdbb3cbbc360e0592f16726bab3f72aba51d3f660c9c486212112b3b4202eb5c233904f69c67821d91ed39ebd64ad4c3500e4dc085ca99c
   languageName: node
   linkType: hard
 
