@@ -49,7 +49,7 @@ export class Operation {
       })
       this.controller = null
       const buf = await response.bytes()
-      const obj = decode(buf)
+      const obj = new decode(buf)
       if (response.status === 200) {
         session.opEnd()
         const ntf = obj['notification']
@@ -98,7 +98,7 @@ export class SafeOperation extends Operation {
   async post (args: any) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    const u = SafeOperation.urlx ? SafeOperation.urlx : config.K.SAFE_URL + 'safe/'
+    const u = SafeOperation.urlx ? SafeOperation.urlx : config.K.SAFE_URL
     try {
       session.opStart(this)
       this.controller = new AbortController()
@@ -127,7 +127,8 @@ export class SafeOperation extends Operation {
       throw new AppExc({ code:11001, label: 'Unexpected from server',
         args:[response.status, (u || '?'), txt]})
     } catch (e) {
-      session.opEnd()
+      session.
+      opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})

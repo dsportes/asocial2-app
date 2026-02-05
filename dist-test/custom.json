@@ -1,7 +1,7 @@
 {
   "APPNAME": "asocial2",
   "ADMIN": "oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg",
-  "SAFE_URL": "http://localhost:8080/",
+  "SAFE_URL": "http://localhost:8088/safe.php",
   "SERVICES": {
     "asocial2SVC": { "url": "http://localhost:8080/", "api": 1 }
   },

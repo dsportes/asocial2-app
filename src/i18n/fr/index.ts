@@ -81,7 +81,7 @@ export default {
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
   op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
   op_$SetAboutProfile: 'mise à jour / création d\'un profil',
-  op_$UntrustDevice: 'Retrait de confiance au terminal',
+  op_$UntrustDevices: 'Retrait de confiance aux terminaux',
   op_$TrustDevice: 'Ajout de confiance au terminal',
   op_$UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
   op_$GetBinSafe: 'Backup d\'un coffre-fort',
