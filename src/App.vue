@@ -191,27 +191,17 @@ const t4x = async () => {
   console.log('TestAuth:' + res)
 }
 
-class EchoPHP extends SafeOperation {
-  constructor () { super('$EchoText') }
+class $Shas extends SafeOperation {
+  constructor () { super('$Shas') }
 
-  async run (data) {
+  async run () {
     try {
-      SafeOperation.setSafeUrl('http://localhost:8888')
-      const res = await this.post(data)
-      return res
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
-
-class Hash extends SafeOperation {
-  constructor () { super('$Hash') }
-
-  async run (data) {
-    try {
-      SafeOperation.setSafeUrl('http://localhost:8888')
-      const res = await this.post(data)
+      const rnd = Crypt.random(16)
+      const input = u8ToB64(rnd)
+      const shas = Crypt.shaS(rnd)
+      const res = await this.post({ input })
+      if (res.shaS === shas)
+        console.log('ok')
       return res
     } catch(e) {
       this.ko(e)
@@ -234,22 +224,8 @@ class Verify extends SafeOperation {
 }
 
 const t1 = async () => {
-  const data = {
-    'key1': 'value1',
-    'key2': 2
-  }
-  const ret = await new EchoPHP().run(data)
-  console.log(JSON.stringify(ret['echo']))
-}
-
-const t2h = async () => {
-  const args = {
-    bin: Crypt.random(32)
-  }
-  const sha = Crypt.sha(args.bin, false)
-  const shaS = Crypt.shaS(args.bin)
-  const ret = await new Hash().run(args)
-  console.log(shaS + '\n' + ret['shaS'] + '\n' + sha + '\n' + ret['sha'])
+  const ret = await new $Shas().run()
+  console.log(ret.shaS)
 }
 
 const t2 = async () => {

@@ -127,8 +127,7 @@ export class SafeOperation extends Operation {
       throw new AppExc({ code:11001, label: 'Unexpected from server',
         args:[response.status, (u || '?'), txt]})
     } catch (e) {
-      session.
-      opEnd()
+      session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})

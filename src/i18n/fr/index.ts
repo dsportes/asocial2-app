@@ -76,6 +76,7 @@ export default {
   op_GetSrvStatus: 'Status du service',
   op_SetSrvStatus: 'Fixe le status du service',
 
+  op_$Shas: 'Test shaS en PHP',
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
@@ -85,6 +86,9 @@ export default {
   op_$TrustDevice: 'Ajout de confiance au terminal',
   op_$UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
   op_$GetBinSafe: 'Backup d\'un coffre-fort',
+  op_$GetPublicKeys: 'Obtention des clés publiques',
+  op_TransmitCred: 'Tramission d\'un droit d\'accès',
+  op_UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
