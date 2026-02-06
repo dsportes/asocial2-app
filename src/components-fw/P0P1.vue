@@ -35,7 +35,7 @@ const emit = defineEmits(['ok'])
 
 const p0 = reactive( { inp: '', err: '' } )
 const p1 = reactive( { inp: '', err: '' } )
-const p1err = computed(() => p1.value.length < minp1 ? 'PScourt' : (p1.value.length > maxp1 ? 'PSlong' : ''))
+const p1err = computed(() => p1.value.length < cfg.K.sizeP1[0] ? 'PScourt' : (p1.value.length > cfg.K.sizeP1[1] ? 'PSlong' : ''))
 const err = computed(() => p0.err !== '' || p1.err !== '')
 
 const validate = async () => {

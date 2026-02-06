@@ -204,6 +204,8 @@ bla bla
   HPcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
   HPopsret_0: 'Authentification réussie.',
   HPopsret_1: 'Authentification en échec: code d\'accès invalide.',
+  HPopsret_2: 'Authentification en échec: code d\'accès invalide.',
+  HPopsret_3: 'Authentification en échec: code d\'accès invalide.',
   HPcsret_20: 'Importation effectuée avec succès.',
   HPcsret_21: 'Echec de l\'importation: changer le "pseudo du code d\'accès principal".',
   HPcsret_22: 'Echec de l\'importation: changer le "pseudo du code d\'accès secondaire".',

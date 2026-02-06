@@ -196,9 +196,10 @@ class $Shas extends SafeOperation {
 
   async run () {
     try {
-      const rnd = Crypt.random(16)
-      const input = u8ToB64(rnd)
-      const shas = Crypt.shaS(rnd)
+      const inp = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+      const sh1 = await Crypt.strongHash(inp, true, true)
+      const input = u8ToB64(sh1, true)
+      const shas = Crypt.shaS(sh1)
       const res = await this.post({ input })
       if (res.shaS === shas)
         console.log('ok')

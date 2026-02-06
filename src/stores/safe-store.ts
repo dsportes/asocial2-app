@@ -732,6 +732,7 @@ export const useSafeStore = defineStore('safe', () => {
   const openSafeByPR = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
     const _sh0 = u8ToB64(sh0, true)
     const _sh1 = u8ToB64(sh1, true)
+    // const hh1 = Crypt.shaS(sh1)
     const op = new SafeOperation('$OpenSafeByPR')
     let ret
     try {
