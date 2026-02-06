@@ -105,7 +105,7 @@ export class TSession {
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   prefCode: string // code de la "préférence" utilisée la dernière fois
-  about: string | Uint8Array // copie de about du profil (utile en mode Avion)
+  about: string // copie de about du profil (utile en mode Avion)
   prefObj:  Uint8Array // objet de préférences utilisé la dernière fois (utile en mode Avion)
 
   constructor (obj: Object) {
@@ -439,7 +439,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadDevices = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Device>()
-    if (safe.devices !== null) {
+    if (safe.devices) {
       let found = false
       for (const id in safe.devices) {
         if (id === devId.value) found = true
@@ -462,7 +462,7 @@ export const useSafeStore = defineStore('safe', () => {
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
     const p = new Map<string, Uint8Array>() // clé: app
-    if (safe.prefs !== null) {
+    if (safe.prefs) {
       const x = b64ToU8(safe.prefs[app])
       if (x) {
         const y = decode(await Crypt.decrypt(keyK.value, x))
@@ -476,12 +476,12 @@ export const useSafeStore = defineStore('safe', () => {
     const app = stores.config.appname
     const m = new Map<string, Profile>()
     m.set('*', { profId: '*', about: '', crIds: [] })
-    if (safe.profiles !== null) {
+    if (safe.profiles) {
       const mpf = safe.profiles[app]
       if (mpf) {
         for (const profId in mpf) {
           const x = decode(b64ToU8(mpf[profId]))
-          const about = await dcX(x.about as Uint8Array)
+          const about = await dcX(b64ToU8(x.about))
           const p: Profile = { profId, about, crIds: x.crIds }
           m.set(profId, p)
         }
@@ -495,7 +495,7 @@ export const useSafeStore = defineStore('safe', () => {
     const delcreds = []
     const app = stores.config.appname
     const m = new Map<string, Credential>()
-    if (safe.creds !== null) {
+    if (safe.creds) {
     const mcf = safe.creds[app]
       if (mcf) {
         for (const credId in mcf) {
@@ -509,7 +509,7 @@ export const useSafeStore = defineStore('safe', () => {
               /* Credential transmis par un autre user émetteur
               [obj credential crypté, pub: clé publique C de l'émetteur ] */
               const [crobj, pubC] = decode(x)
-              const aes = await Crypt.getAESKey(fromPem(pubC, true), auth.value.D)
+              const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
               const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
               const obj = decode(dc)
               const c: Credential = new Credential(obj)
@@ -544,7 +544,7 @@ export const useSafeStore = defineStore('safe', () => {
     const m: Map<string, TSession> = new Map<string, TSession>()
     for(const [id, x] of tsessions.value)
       if (x.userId === userId.value && x.app ===  app) {
-        x.about = await dcX(x.about)
+        x.about = await dcX(b64ToU8(x.about))
         if (stores.session.hasNet) { // l'about est recopié du profile
           const profile: Profile = mpf.get(x.profId)
           if (profile && x.about !== profile.about) {
@@ -565,7 +565,7 @@ export const useSafeStore = defineStore('safe', () => {
   const saveTSession = async (s: TSession) => {
     try {
       const id = s.idOf
-      s.about = await ecX(s.about as string)
+      s.about = u8ToB64(await ecX(s.about))
       const bin = encode(s.toObj)
       await db.value.tsessions.put({ id, bin })
       tsessions.value.set(id, s)
@@ -861,7 +861,7 @@ export const useSafeStore = defineStore('safe', () => {
     */
     const kpsv = await Crypt.getSVKeyPair()
     const signEC = await Crypt.sign(kpsv.priv, pincx)
-    // On enregistre la version AN1 de la signature
+    // On enregistre la version ASN1 de la signature
     // Peut être vérifiée par Safe en PHP
     const asn1 = Crypt.signToAsn1(signEC)
     const sign = u8ToB64(asn1)
@@ -952,7 +952,7 @@ export const useSafeStore = defineStore('safe', () => {
   const getBinSafe = async () : Promise<Uint8Array>=> {
     const args = {
       userId: userId.value,
-      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
+      shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
     const op = new SafeOperation('$GetBinSafe')
     let ret
@@ -1120,7 +1120,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     if (mprofiles) for(const [profId, p] of mprofiles) {
       p.about = u8ToB64(await ecX(p.about), true)
-      profiles[profId] = encode(p)
+      profiles[profId] = u8ToB64(encode(p))
     }
     
     const updateCreds: UpdateCreds = {
@@ -1131,15 +1131,22 @@ export const useSafeStore = defineStore('safe', () => {
       delcreds : delcreds || [], 
       profiles, 
       delprofs: delprofs || [],
-      nosafe: nocompile
+      nosafe: nocompile || false
      }
     const op = new SafeOperation('$UpdateCreds')
     let ret
     try {
       ret = await op.post({updateCreds})
-    } catch(e) { op.ko(e); return -1}
+    } catch(e) { 
+      op.ko(e); 
+      return -1
+    }
     if (ret.status === 0 && !nocompile)
-      await compileSafe(ret.safe)
+      try {
+        await compileSafe(ret.safe)
+      } catch (e) {
+        console.log(e)
+      }
     return ret.status
   }
 
@@ -1147,8 +1154,9 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     targetId: string // id ou p0 ou r0 du destinataire du credential
     credId: string // id du credential
-    pubC: string // clé publique (PEM) de cryptage de l'émetteur
-    cryptedCred: Uint8Array // Objet Credential sérialisé crypté pour le destinataire
+    crpub: string // [cryptedCred, pubc] encodé et en base64
+    // pubC: string // clé publique (PEM) de cryptage de l'émetteur
+    // cryptedCred: string // Objet Credential sérialisé crypté pour le destinataire
   }
 
   const transmitCred = async (cred: Credential, targetId: string) => {
@@ -1165,14 +1173,14 @@ export const useSafeStore = defineStore('safe', () => {
       return -1
     }
     try {
-      const aes = await Crypt.getAESKey(fromPem(pubC, true), auth.value.D)
-      const cryptedCred = await Crypt.crypt(aes, encode(cred))
+      const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
+      const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(cred.toObj)))
+      const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
         app: stores.config.appname,
         targetId: hp0, 
         credId: cred.id,
-        pubC: toPem(auth.value.C, true),
-        cryptedCred
+        crpub
       }
       const op = new SafeOperation('$TransmitCred')
       const ret = await op.post({transmitCred})

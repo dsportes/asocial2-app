@@ -296,8 +296,8 @@ wu3pz2zpU3mrRKCjucw=
 
   const v = await Crypt.verify(fromPem(pubPem, true), sign, args['x'])
 
-  args.sign = signAsn1
-  args.pubPem = pubPem
+  args['sign'] = signAsn1
+  args['pubPem'] = pubPem
   const ret = await new Verify().run(args)
   console.log(v, ret)
 }
