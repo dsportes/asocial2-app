@@ -9,16 +9,16 @@
         <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')" 
           @ok="resetExport(); ui.oD(idc2, 'export')"/>
       </div>
-      <btn-cond flat size="md" icon="check" color="warning" 
+      <btn-cond flat size="lg" icon="check" color="warning" 
         :label="$t('validate')" @ok="validate"/>
     </div>
+    <q-tabs v-model="tab" dense class="tbp">
+      <q-tab name="bysessions" :label="$t('HPtab_s')" />
+      <q-tab name="bycreds" :label="$t('HPtab_c')" />
+    </q-tabs>
   </template>
 
 <template #default>
-  <q-tabs v-model="tab" dense class="tbp">
-    <q-tab name="bysessions" :label="$t('HPtab_s')" />
-    <q-tab name="bycreds" :label="$t('HPtab_c')" />
-  </q-tabs>
 
   <div class="column items-center">
     <div v-if="tab === 'bycreds'" class="full-width q-pa-sm">
@@ -149,12 +149,9 @@
           <template v-slot:error>{{$t(locaboutPserr)}}</template>
         </q-input>
 
-        <div class="row justify-between q-my-sm">
-          <div class="font-mono text-bold">{{ localPS.about }}</div>
-          <div class="row">
-            <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
-            <btn-cond icon="delete" :label="$t('delete')" color="warning" @ok="delPS"/>
-          </div>
+        <div class="row justify-end q-my-sm">
+          <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
+          <btn-cond icon="delete" :label="$t('delete')" color="warning" @ok="delPS"/>
         </div>
 
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
@@ -291,7 +288,7 @@
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
       <btn-cond flat size="lg" icon="chevron_left" @ok="ui.fD" :label="$t('giveup')"/>
-      <btn-cond flat size="lg" icon="check" @ok="confValidate" 
+      <btn-cond v-if="!nothingtodo" flat size="lg" icon="check" @ok="confValidate" 
         color="warning" :label="$t('iconfirm')"/>
     </div>
   </template>
@@ -308,6 +305,10 @@
       HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
     -->
     <div class="column q-pa-sm">
+      <div v-if="nothingtodo" 
+      class="titre-lg q-pa-md self-center text-italic q-my-sm bord1 text-warning">
+        {{$t('HPnothing')}}</div>
+
       <div v-for="i in 3">
         <div :class="'titre-md q-mt-sm ' + clr1(i)">
           {{ $t('HPstcr_' + i, [report.stcr[i].size]) }}</div>
@@ -573,19 +574,33 @@ const selPS = (ps: LocalPS) => {
     else mlocCreds2.value.set(crid, e)
 }
 
-const undoAbPs = () => {
+const undoAbPs = async () => {
   if (locaboutPserr.value !== '' || !chgAbPs.value) return
   locaboutPs.value = localPS.value.about
   localPS.value.chgab = false
   mlocPS.value.set(localPS.value.id, localPS.value)
+  // await setAboutPrf(localPS.value.id, localPS.value.about)
 }
 
-const valAbPs = () => {
+const valAbPs = async () => {
   if (locaboutPserr.value !== '' || !chgAbPs.value) return
   localPS.value.about = locaboutPs.value
   localPS.value.chgab = true
   mlocPS.value.set(localPS.value.id, localPS.value)
+  // await setAboutPrf(localPS.value.id, localPS.value.about)
 }
+
+/*
+const setAboutPrf = async (profId, about) => {
+  try {
+    const status = await sf.setAboutProfile(profId, about)
+    if (status !== 0)
+      await ui.diagDisplay($t('HPsfop_' + status))
+  } catch (e) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  }
+}
+*/
 
 const delPS = () => {
   // const av = morigPS.value.get(localPS.value.id)
@@ -594,7 +609,7 @@ const delPS = () => {
     localPS.value.crIds = new Set()
     localPS.value.about = ''
     localPS.value.chgab = false
-    localPS.value.chglc = false
+    localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
   } else {
     mlocPS.value.delete(localPS.value.id)
@@ -611,14 +626,14 @@ const undoPS = () => {
     localPS.value.crIds = cloneSet(av.crIds)
     localPS.value.about = av.about
     localPS.value.chgab = false
-    localPS.value.chglc = false
+    localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
   }
 }
 
 const removeOrph = (crid: string) => {
   localPS.value.crIds.delete(crid)
-  localPS.value.chglc = true
+  localPS.value.chgcr = true
   mlocPS.value.set(localPS.value.id, localPS.value)
   buildXref()
   selPS(localPS.value)
@@ -808,6 +823,8 @@ const report: Report = reactive({
   stps: null
 })
 
+const nothingtodo = ref(true)
+
 const validate = () => {
   report.mcreds = new Map<string, Credential>() 
   report.delcreds = [] 
@@ -826,7 +843,7 @@ const validate = () => {
 
   for(const [profId, x] of mlocPS.value) {
     const y = morigPS.value.get(profId)
-    const maj = (x.exav || x.exap) && (x.chgab || x.chglc)
+    const maj = (x.exav || x.exap) && (x.chgab || x.chgcr)
     const cre = (!x.exav && x.exap)
     const del = (x.exav && !x.exap)
     if (del) report.delprofs.push(profId)
@@ -845,10 +862,12 @@ const validate = () => {
     if (cre) report.stps[1].add(x.about)
     if (del) report.stps[2].add(x.about)
     if (maj && x.chgab) report.stps[3].add(x.about)
-    if (maj && x.chglc) report.stps[4].add(x.about)
+    if (maj && x.chgcr) report.stps[4].add(x.about)
     if (x.exap && x.crIds.size === 0) report.stps[5].add(x.about)
     if ((x.exap && x.orphans.size)) report.stps[6].add(x.about)
   }
+  nothingtodo.value = !report.mcreds.size && !report.delcreds.length
+    && !report.mprofs.size && !report.delprofs.length
   ui.oD(idc2, 'report')
 }
 

@@ -106,6 +106,27 @@
     </q-scroll-area>
 
     <div v-if="nvSP" class="q-mt-md">
+      <q-input v-if="session.hasNet && !selStar"
+        filled v-model="selSessionAb" 
+        :label="$t('HPpsab')"
+        input-class="font-mono"
+        counter
+        :hint="hintPs"
+        bottom-slots
+        :error="selSessionAbserr !== ''"
+        @keydown.enter.prevent="valAbPs">
+        <template v-slot:append>
+          <q-icon size="sm" name="close" @click="selSessionAb = ''" 
+            class="cursor-pointer" :disable="selSessionAb.length === 0"/>
+          <q-btn size="sm" icon="undo" color="primary" round
+            @click="undoAbPs" :disable="!chgAbPs || selSessionAbserr !== ''"/>
+          <q-btn size="sm" icon="check" :disable="!chgAbPs || selSessionAbserr !== ''" 
+            color="primary" round @click="valAbPs" />
+        </template>
+        <template v-slot:error>{{$t(selSessionAbserr)}}</template>
+      </q-input>
+      <div v-else class="font-mono text-bold">{{selSessionAb}}</div>
+
       <div v-if="sf.selectedSession">
         <div class="row justify-between items-center">
           <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
@@ -125,14 +146,13 @@
             :text="$t('HPpin_1')"/>
         </div>
       </div>
-
     </div>
+    <div v-else class="titre-lg text-warning text-italic q-mt-sm">{{$t('HPnoclick')}}</div>
 
     <div :class="!nvSP ? 'disabled' : ''">
       <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
         {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
-      <div v-else class="titre-lg text-warning text-italic q-mt-sm">{{$t('HPnoclick')}}</div>
 
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
       <q-card-actions vertical align="right">
@@ -171,6 +191,10 @@
     <bar-open :bubble="$t('HPexpsafe_2')"
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
+    
+    <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
   </div>
 
   <!--
@@ -210,43 +234,43 @@
     </q-card>
   </q-dialog>
 
-<!-- Dialogue d'export du safe-->
-<dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
-  <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check" 
-      :disable="cryptK.key === null || !expName"
-      :label="$t('HPbackup_0')" 
-      @ok="doExportSafe"/>
-    </div>
-  </template>
-  <template #default>
-    <div class="column q-mx-lg items-center">
-      <div class="q-my-sm full-width">
-        <div class="titre-md text-italic">{{$t('HPimport_p')}}</div>
-        <input-ps v-model="cryptK" iconcheck :validate="valK"
-          :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')"/>
+  <!-- Dialogue d'export du safe-->
+  <dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
+    <template #hdr>
+      <div class="row justify-end q-px-xs q-mb-md">
+        <btn-cond flat size="lg" icon="check" 
+        :disable="cryptK.key === null || !expName"
+        :label="$t('HPbackup_0')" 
+        @ok="doExportSafe"/>
       </div>
-      <div v-if="cryptK.key === null" 
-        class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
+    </template>
+    <template #default>
+      <div class="column q-mx-lg items-center">
+        <div class="q-my-sm full-width">
+          <div class="titre-md text-italic">{{$t('HPimport_p')}}</div>
+          <input-ps v-model="cryptK" iconcheck :validate="valK"
+            :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')"/>
+        </div>
+        <div v-if="cryptK.key === null" 
+          class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
 
-      <q-input class="q-my-md full-width" v-model="expName" 
-        :label="$t('HPexpname')"
-        input-class="font-mono"
-        counter
-        :hint="hintExp"
-        bottom-slots
-        :error="expName.length < 4">
-        <template v-slot:append>
-          <q-icon size="sm" name="close" @click="expName = ''" 
-            class="cursor-pointer" :disable="expName.length === 0"/>
-        </template>
-        <template v-slot:error>{{$t(expNameErr)}}</template>
-      </q-input>
+        <q-input class="q-my-md full-width" v-model="expName" 
+          :label="$t('HPexpname')"
+          input-class="font-mono"
+          counter
+          :hint="hintExp"
+          bottom-slots
+          :error="expName.length < 4">
+          <template v-slot:append>
+            <q-icon size="sm" name="close" @click="expName = ''" 
+              class="cursor-pointer" :disable="expName.length === 0"/>
+          </template>
+          <template v-slot:error>{{$t(expNameErr)}}</template>
+        </q-input>
 
-  </div>
-  </template>
-</dialog-std1>
+    </div>
+    </template>
+  </dialog-std1>
 
   <!-- Gestion des users / sessions -->
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
@@ -355,6 +379,23 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+
+  <!-- Confirmation de destruction du safe -->
+  <q-dialog v-model="ui.dModels[idc].delsafe" persistent>
+    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
+    <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
+    <div class="q-my-sm titre-lg text-bold text-center">
+        {{$t('HPskull_9')}}
+      </div>
+      <div class="q-my-sm titre-md text-bold text-italic text-center">
+        {{$t('HPskull_8')}}
+      </div>
+      <div class="row full-width justify-between items-center">
+        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
+        <btn-confirm actif :confirm="delSafe"/>
+      </div>
+    </q-card>
+  </q-dialog>
 </div>
 </template>
 
@@ -363,11 +404,12 @@
 // @ts-ignore
 import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
 // import BtnConfirm from '../components-fw/BtnConfirm.vue'
@@ -396,6 +438,7 @@ const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 const expNameSize = [4, 32]
+const aboutSize = [4, 64]
 
 const ui = stores.ui
 const sf = stores.safe
@@ -466,6 +509,25 @@ const authPIN = async () => {
   else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))
 }
 
+const opDelSafe = () => {
+  ui.oD(idc, 'delsafe')
+}
+
+const delSafe = async () => {
+  try {
+    const status = await sf.delSafe()
+    if (status === 0) {
+      await ui.diagDisplay($t('HPcsret_9'))
+      ui.fD()
+      sf.backToAuth()
+    } else {
+      await ui.diagDisplay($t('HPopsret_' + status))
+    }
+  } catch (e) {
+    op.ko(e)
+  }
+}
+
 const expName = ref('')
 const expNameErr = computed(() => expName.value.length < expNameSize[0] ? 'PScourt' : 
   (expName.value.length > expNameSize[1] ? 'PSlong' : ''))
@@ -477,7 +539,7 @@ const bin = ref(null)
 const exportSafe = async () => {
   expName.value = ''
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
-  bin.value = await sf.getBinSafe()
+  bin.value = encode(await sf.getBinSafe())
   if (!bin.value) {
     await ui.diagDisplay($t('HPexportsafe_ko'))
     return
@@ -514,7 +576,10 @@ const credsUpdated = async () => {
   await openSession()
 }
 
-const sOfP = (profId: string) => { return sf.sessionOfProfId(profId) }
+const sOfP = (profId: string) => { 
+  const x = sf.sessionOfProfId(profId) 
+  return x
+}
 
 const openSession = async () => {
   if (!session.incognito && !sf.hasIDBS)
@@ -639,21 +704,58 @@ watch(resetdb, async (ap) => {
 
 const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
 const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
+const selSessionAb = ref('')
+const selSessionAbBefore = ref('')
+const chgAbPs = computed(() => selSessionAbBefore.value !== selSessionAb.value )
+const selSessionAbserr = computed(() => selSessionAb.value.length < aboutSize[0] ? 'PScourt' : 
+  (selSessionAb.value.length > aboutSize[1] ? 'PSlong' : ''))
+const hintPs = computed(() => $t('PSminmax', aboutSize) + (!selSessionAbserr.value ? $t('pressret') : ''))
+
+const undoAbPs = () => {
+  selSessionAb.value = selSessionAbBefore.value
+}
+
+const valAbPs = async () => {
+  const profId = sf.selectedSession ? sf.selectedSession.profId : sf.selectedProfile.profId
+  try {
+    const status = await sf.setAboutProfile(profId, selSessionAb.value)
+    if (status !== 0)
+      await ui.diagDisplay($t('HPsfop_' + status))
+    else selSessionAbBefore.value = selSessionAb.value
+  } catch (e) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  }
+}
 
 const selSession = (s) => {
   resetdb.value = false
   unpinme.value = false
   sf.selectedSession = s
   sf.selectedProfile = null
+  if (!session.hasNet) {
+    selSessionAb.value = s.about
+    selSessionAbBefore.value = s.about
+  } else {
+    const pf = sf.profileOfProfId(s.profId)
+    if (pf) {
+      selSessionAb.value = pf.about
+      selSessionAbBefore.value = pf.about
+    } else {
+      selSessionAb.value = s.about
+      selSessionAbBefore.value = s.about
+    }
+  }
 }
 
 const selProfile = (profile: Profile) => {
   pinme.value = false
   sf.selectedSession = null
   sf.selectedProfile = profile
+  selSessionAb.value = profile.profId === '*' ? $t('HPpstar') : profile.about
+  selSessionAbBefore.value = selSessionAb.value
 }
 
-const selStar = (() =>
+const selStar = computed(() =>
   (sf.selectedSession && sf.selectedSession.profId === '*') ||
   (sf.selectedProfile && sf.selectedProfile.profId === '*') )
 

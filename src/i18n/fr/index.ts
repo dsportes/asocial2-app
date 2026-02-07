@@ -52,6 +52,7 @@ export default {
   open: 'Ouvrir',
   restore: 'Rétablir',
   delete: 'Supprimer',
+  reset: 'Réinitialiser',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -87,8 +88,9 @@ export default {
   op_$UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
   op_$GetBinSafe: 'Backup d\'un coffre-fort',
   op_$GetPublicKeys: 'Obtention des clés publiques',
-  op_TransmitCred: 'Tramission d\'un droit d\'accès',
-  op_UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
+  op_$TransmitCred: 'Tramission d\'un droit d\'accès',
+  op_$UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
+  op_$RestoreSafe: 'Restauration d\'un "coffre fort"',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -209,6 +211,7 @@ bla bla
   HPcsret_20: 'Importation effectuée avec succès.',
   HPcsret_21: 'Echec de l\'importation: changer le "pseudo du code d\'accès principal".',
   HPcsret_22: 'Echec de l\'importation: changer le "pseudo du code d\'accès secondaire".',
+  HPcsret_9: '"Coffre fort définitivement supprimé',
 
   /*
   HPauthby_0: 'Utilisateur anonyme',
@@ -265,6 +268,8 @@ bla bla
   HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
   HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
   HPnoclick: 'Aucune session sélectionnée',
+  HPskull_9: 'Votre "coffre fort" va être irrémédiablement supprimé. Avez-vous effectué un "backup" par précaution ?',
+  HPskull_8: 'Renoncer ou confirmer.',
 
   HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
   HPresetdb_1: `### Attention !
@@ -293,6 +298,14 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
   HPexpsafe_2: `# Faire un backup de son "coffre-fort"
 bla bla
 `,
+  HPdelsafe_1: 'Suppression irrémédiable de mon "coffre fort"',
+  HPdelsafe_2: `# Suppression irrémédiable de mon "coffre fort"
+bla bla 
+`,
+  HPdelsafe_3: `# Suppression irrémédiable de mon "coffre fort"
+Auth forte requise bla bla 
+`,
+
   HPmanuser: 'Utilisateurs',
   HPdanger: 'DANGER',
   HPimpsafe_1: 'Importer le backup d\'un "coffre-fort"',
@@ -302,13 +315,13 @@ bla bla
   HPimpsafe_3: 'Fichier importé et décrypté : vérification du propriétaire',
   HPimpsafe_4: 'Vous n\'êtes pas authentifié comme propriétaire (pseudo ou phrase incorrecte)',
 
-  HPsafest_1: 'Un "coffre-fort" existe déjà pour cet utilisateur.',
+  HPsafest_1: 'Un "coffre-fort" est déjà enregistré pour cet utilisateur. Vous êtes sur le point de le remplacer.',
   HPsafest_r: 'Restaurer le "backup" en remplacement de l\'actuel',
   HPsafest_i: 'Importer le "backup"',
   HPsafest_2gt: 'Il est PLUS récent [{0}] que celui du backup [{1}].',
   HPsafest_2lt: 'Il est MOINS récent [{0}] que celui du backup [{1}].',
   HPsafest_2eq: 'Il est de la même date [{0}] que celui du backup.',
-  HPsafest_3: 'Aucun "coffre-fort" n\'existe pour cet utilisateur.',
+  HPsafest_3: 'Aucun "coffre-fort" n\'est actuellement enregistré pour cet utilisateur.',
   HPsafest_4a: 'Le backup PEUT être restauré en remplaçant l\'actuel.',
   HPsafest_4b: 'Le backup PEUT être importé.',
   HPsafest_5p: 'Le pseudo "principal" est déjà celui d\'un autre utilisateur.',
@@ -474,6 +487,7 @@ bla bla
   HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
   HPps_5: 'Sessions sans droits d\'accès : {0}',
   HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
+  HPnothing: 'Aucun changement à valider',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

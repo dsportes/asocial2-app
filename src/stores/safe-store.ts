@@ -193,6 +193,7 @@ export const useSafeStore = defineStore('safe', () => {
         })
         console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
       } else {
+        alert('IDBS n\'existe pas')
         db.value = null
         console.log('Init0 IDBS failed.')
       }
@@ -210,6 +211,7 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       db.value = new Dexie('safe')
       db.value.version(1).stores(STORES)
+      alert('RAZ de IDBS')
       await db.value.header.put({ id: '1', devId: '', devName: '' })
       console.log('Init1 IDBS OK.')
     } catch (e) {
@@ -270,6 +272,7 @@ export const useSafeStore = defineStore('safe', () => {
         const dbName = s.dbName
         if (dbName) try {
           await Dexie.delete(dbName)
+          alert ('RAZ de IDBS')
           await sleep(300)
           const n = dbl.indexOf(dbName)
           if (n !== -1) dbl.splice(n, 1)
@@ -562,6 +565,10 @@ export const useSafeStore = defineStore('safe', () => {
     return mySessions.value.get(id) || null
   }
 
+  const profileOfProfId = (profId: string) => {
+    return mySafeProfiles.value.get(profId)
+  }
+
   const saveTSession = async (s: TSession) => {
     try {
       const id = s.idOf
@@ -727,6 +734,16 @@ export const useSafeStore = defineStore('safe', () => {
       await compileSafe(safe)
     }
     return ret.status
+  }
+
+  const delSafe = async () => {
+    const op = new SafeOperation('$DelSafe')
+    try {
+      const ret = await op.post({ userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value })
+      return ret.status
+    } catch (e) {
+      op.ko(e)
+    }
   }
 
   const openSafeByPR = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
@@ -963,7 +980,7 @@ export const useSafeStore = defineStore('safe', () => {
       op.ko(e)
       return null
     }
-    return ret.status ? null : ret.binsafe
+    return ret.status ? null : ret.safe
   }
 
   /* Faire sauvegarder par le serveur dans le safe 
@@ -1111,18 +1128,20 @@ export const useSafeStore = defineStore('safe', () => {
       delprofs: string[],
       nocompile?: boolean
       ) => {
-    const creds = {}
-    const profiles = {}
+    let creds = {}
+    let profiles = {}
 
     if (mcreds) for(const [credId, c] of mcreds) {
       const obj = c.toObj
       creds[credId] = u8ToB64(await Crypt.crypt(keyK.value, encode(obj)), true)
     }
+    if (Object.keys(creds).length === 0) creds = null
 
     if (mprofiles) for(const [profId, p] of mprofiles) {
       p.about = u8ToB64(await ecX(p.about), true)
       profiles[profId] = u8ToB64(encode(p))
     }
+    if (Object.keys(profiles).length === 0) profiles = null
     
     const updateCreds: UpdateCreds = {
       userId: userId.value,
@@ -1203,14 +1222,14 @@ export const useSafeStore = defineStore('safe', () => {
     trustings, setTrusting, delTrusting, getMyTrusting,
     tsessions, setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
     mySafeCreds, getCreds,
-    mySafeProfiles,
+    mySafeProfiles, profileOfProfId,
     mySafePrefs,
     auth, 
     devices,
     purgeIDBS,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
-    synthUsers, getBinSafe, setUntrustAll
+    synthUsers, getBinSafe, setUntrustAll, delSafe
   }
 })
 

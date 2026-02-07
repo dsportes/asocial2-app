@@ -94,13 +94,13 @@
         <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
           icon="open_in_new" :fnopen="openChgCodes"/>
         <div v-if="safe.lm < statusSafe.lm" class='q-ml-sm titre-md'>
-          {{$t('HPsafest_2gt', [dhcool(statusSafe.lm), dhcool(safe.lm)])}}
+          {{$t('HPsafest_2gt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
         </div>
         <div v-if="safe.lm > statusSafe.lm" class='q-ml-sm titre-md'>
-          {{$t('HPsafest_2lt', [dhcool(statusSafe.lm), dhcool(safe.lm)])}}
+          {{$t('HPsafest_2lt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
         </div>
         <div v-if="safe.lm === statusSafe.lm" class='q-ml-sm titre-md'>
-          {{$t('HPsafest_2eq', [dhcool(statusSafe.lm)])}}
+          {{$t('HPsafest_2eq', [dhcool(statusSafe.lm*1000)])}}
         </div>
         <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
           {{$t('HPsafest_5p')}}
@@ -139,6 +139,8 @@
         </div>
       </div>
     </div>
+    <btn-cond class="q-my-md" :label="$t('reset')" 
+      icon="undo" @ok="reset"/>
   </div>
 
   <!-- Confirmation de validation -->
@@ -317,6 +319,7 @@ const reset = () => {
   safe.value = null
   cfImp.value = false
   keyK.value = null
+  statusSafe.value = null
 }
 
 const valK = async () => {
@@ -325,20 +328,19 @@ const valK = async () => {
 }
 
 watch(fileList, async (file: any) : Promise<void> => {
-  if (file) fd.value = await readFile(file, true)
-  await downloadFile()
+  if (file) await downloadFile(await readFile(file, true))
 })
 
-const downloadFile = async () => {
-  fileList.value = null
+const downloadFile = async (f) => {
   try {
-    bin.value = await Crypt.decrypt(cryptK.key, fd.value.u8)
+    bin.value = await Crypt.decrypt(cryptK.key, f.u8)
     safe.value = decode(bin.value)
   } catch (e) {
     bin.value = null
     safe.value = null
     diag.value = $t('HPimport_bf2')
   }
+  fileList.value = null
 }
 
 const authPS = async (args) => {
