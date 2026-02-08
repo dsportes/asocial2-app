@@ -228,6 +228,7 @@ bla bla
   HPsfop_0: 'Succès de l\'opération.',
   HPsfop_1: 'Echec de l\'opération: utilisateur non enregistré.',
   HPsfop_2: 'Echec de l\'opération: utilisateur non authentifié.',
+  HPsfop_9: 'Echec de l\'opération: incident technique inattendu.',
 
   HPsetdev: 'Donner un nom court à ce terminal',
   HPchgdev: 'Changer le nom court de ce terminal s\'il ne vous convient pas',

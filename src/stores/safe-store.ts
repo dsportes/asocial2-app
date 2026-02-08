@@ -455,6 +455,9 @@ export const useSafeStore = defineStore('safe', () => {
       if (mpf) {
         for (const profId in mpf) {
           const x = decode(b64ToU8(mpf[profId]))
+          const s = sessionOfProfId(profId)
+          if (s) 
+            s.about = x.about
           const about = await dcX(b64ToU8(x.about))
           const p: Profile = { profId, about, crIds: x.crIds }
           m.set(profId, p)
@@ -542,7 +545,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const sessionOfProfId = (profId: string) => {
     const id = TSession.id(stores.config.appname, userId.value, profId)
-    return mySessions.value.get(id) || null
+    return mySessions.value ? mySessions.value.get(id) || null : null
   }
 
   const profileOfProfId = (profId: string) => {
@@ -751,7 +754,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const openSafeByPin = async ( pin: string, id: string) => {
     userId.value = id
-    const t: Trusting = myTrusting() as Trusting
+    const t: Trusting = myTrusting.value as Trusting
     if (!t) return 1
     const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
 
@@ -832,7 +835,7 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = u8ToB64(await Crypt.crypt(pincxcy, keyK.value), true)
 
-    let t: Trusting = myTrusting()
+    let t: Trusting = myTrusting.value
     if (!t) {
       t = new Trusting({
         userId: userId.value,
@@ -885,7 +888,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setUntrust = async () => {
-    const t: Trusting = myTrusting()
+    const t: Trusting = myTrusting.value
     if (!t) return 0 // était déjà untrusted
     await delTrusting(t.userId)
     const untrustDev: UntrustDev = {
@@ -979,7 +982,7 @@ export const useSafeStore = defineStore('safe', () => {
       ret = await op.post({aboutProfile})
     } catch(e) { 
       op.ko(e)
-      return -1
+      return 9
     }
     if (ret.status === 0)
       await compileSafe(ret.safe)
@@ -1133,13 +1136,13 @@ export const useSafeStore = defineStore('safe', () => {
     let creds = {}
     let profiles = {}
 
-    if (mcreds) for(const [credId, c] of mcreds) {
+    if (mcreds && mcreds.size) for(const [credId, c] of mcreds) {
       const obj = c.toObj
       creds[credId] = u8ToB64(await Crypt.crypt(keyK.value, encode(obj)), true)
     }
     if (Object.keys(creds).length === 0) creds = null
 
-    if (mprofiles) for(const [profId, p] of mprofiles) {
+    if (mprofiles && mprofiles.size) for(const [profId, p] of mprofiles) {
       p.about = u8ToB64(await ecX(p.about), true)
       profiles[profId] = u8ToB64(encode(p))
     }
@@ -1239,7 +1242,7 @@ export const useSafeStore = defineStore('safe', () => {
     hasIDBS, init0,
     resetAllLocal,
     newTrusting, newTSession,
-    setTrusting, delTrusting, myTrusting,
+    trustings, setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
     mySafeCreds, getCreds,
     mySafeProfiles, profileOfProfId,

@@ -82,11 +82,11 @@
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
     <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
       class='bord1 q-pa-xs'>
-      <div :class="dkli(idx)" v-for="([profId, p], idx) of sf.mySafeProfiles" :key="profId">
+      <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
         <div v-if="sOfP(profId)">
           <div :class="clSel(sOfP(profId)) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(sOfP(profId))">
-            <div class="col-7 q-pr-xs">{{pincode + ' ' + (sOfP(profId).about || $t('HPpstar'))}}</div>
+            <div class="col-7 q-pr-xs">{{pincode + ' ' + (p.about || $t('HPpstar'))}}</div>
             <div class="col-4 text-italic">{{dhcool(sOfP(profId).time)}}</div>
             <div v-if="sOfP(profId).hasCache" class="col-1 row justify-end">
               <q-img :src="database" style="height: 24px; max-width: 24px"/>
@@ -581,7 +581,7 @@ watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
 const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
 
 const openTrust = async () => {
-  const t = sf.getMyTrusting()
+  const t = sf.myTrusting
   newDev.value = sf.devId === ''
   newPIN.inp = ''
   devName.inp = newDev.value ? '' : sf.devName
@@ -744,6 +744,12 @@ const clSel = (x) => {
   return ''
 }
 
+const locSafeProfiles = ref(sf.mySafeProfiles)
+
+watch(() => sf.mySafeProfiles, (v) => {
+  locSafeProfiles.value = v
+})
+
 const validateSession = async (prefCode, prefObj) => {
   let sv = sf.selectedSession
   const sp = sf.selectedProfile
@@ -756,7 +762,7 @@ const validateSession = async (prefCode, prefObj) => {
       await sf.setTSession(sv, false)
     } else {
       if (sv.profId !== '*') {
-        profile = sf.mySafeProfiles.get(sv.profId)
+        profile = locSafeProfiles.value.get(sv.profId)
         if (!profile) {
           /* PROBLEME : la session est épinglée mais son profile a été détruit depuis
           on lui redonne le profil universel */
