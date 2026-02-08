@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, onUnmounted, reactive, watch } from 'vue'
+import { ref, computed, Ref, onUnmounted, onMounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
@@ -236,10 +236,15 @@ const valcf = () => {
   ui.oD(idc, 'valcf')
 }
 
-const [sy, sz] = sf.synthUsers()
-const size: Ref<number[]> = ref(sz)
-const nbc = computed(() => size.value.length )
-const synthU = ref(sy)
+const size: Ref<number[]> = ref(0)
+const nbc = computed(() => size.value ? size.value.length : 0 )
+const synthU = ref(0)
+
+onMounted(async () => {
+  const [sy, sz] = await sf.synthUsers()
+  synthU.value = sy
+  size.value = sz
+})
 
 const delSize: Ref<number[]> = ref(new Array(nbc.value).fill(0))
 
@@ -289,9 +294,10 @@ const recalc = () => {
 
 const close = async () => {
   const l = []
+  const allSessions = await sf.getAllSessions()
   for(const id of sDel.value) {
-    const s = sf.tsessions.get(id)
-    if (s && s.hasCache) l.push(id)
+    const s = allSessions.get(id)
+    if (s && s.hasCache) l.push(s)
   }
   if (l.length) await sf.purgeIDBS(l)
   for(const id of sDel.value) await sf.delTSession(null, id)

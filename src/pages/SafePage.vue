@@ -458,6 +458,11 @@ onMounted(async () => {
   await sf.init0()
 })
 
+watch(() => session.incognito, async (v) => {
+  if (!v) await sf.loadTrustings()
+  else await sf.removeTrustings()
+})
+
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedUser = ref(null)
@@ -582,8 +587,6 @@ const sOfP = (profId: string) => {
 }
 
 const openSession = async () => {
-  if (!session.incognito && !sf.hasIDBS)
-    await sf.init1()
   await sf.getMySessions()
   trustingMe.value = sf.getMyTrusting()
   sf.selectedSession = null
