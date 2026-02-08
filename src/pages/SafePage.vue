@@ -2,7 +2,7 @@
 <div class="column items-center">
 <div :class="sty('md')">
 
-  <div v-if="sf.step == 1" class="q-pa-sm q-mb-md">
+  <div v-if="sf.step === 1" class="q-pa-sm q-mb-md">
     <!-- Entête : accès Internet, incognito, nom du terminal -->
     <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
       <div class="row justify-between items-center">
@@ -38,15 +38,15 @@
         :title="$t('HPauthstrong_1')" :fnopen="openStrongAuth"/>
 
       <!-- Authentification par code PIN -->
-      <div v-if="session.hasNet && users && users.length">
-        <div v-if="session.hasNet && users.length === 1">
+      <div v-if="session.hasNet && sf.users.length">
+        <div v-if="session.hasNet && sf.users.length === 1">
           <bar-open :bubble="$t('HPauthbypin_2')"
-            :title="$t('HPauthbypin_1a', [users[0].pseudo])" :fnopen="selectUser0"/>
+            :title="$t('HPauthbypin_1a', [sf.users[0].pseudo])" :fnopen="selectUser0"/>
         </div>
         <div v-else class="column">
           <bar-open :bubble="$t('HPauthbypin_2')" :title="$t('HPauthbypin_1b', [users.length])"/>
           <div class="row self-center q-mx-xl">
-            <div v-for="u in users" :key="u.userId"
+            <div v-for="u in sf.users" :key="u.userId"
               class="q-ml-sm font-mono fs-lg text-bold text-primary cursor-pointer"
               style="text-decoration-line: underline;"
               @click="selectUser(u)">{{u.pseudo}}</div>
@@ -458,43 +458,24 @@ onMounted(async () => {
   await sf.init0()
 })
 
-watch(() => session.incognito, async (v) => {
-  if (!v) await sf.loadTrustings()
-  else await sf.removeTrustings()
-})
-
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedUser = ref(null)
 
-watch(() => ui.reopenSession, async (v) => {
-  if (v) {
-    await sf.init0()
-    if ((!session.hasNet && session.incognito) || !sf.userId) {
-      sf.step = 1
-    } else {
-      if (session.hasNet)
-        await sf.reloadSafe()
-      if (!session.incognito)
-        await openSession()
-    }
-  }
-})
-
-watch(() => sf.step, (s) =>{
+watch(() => sf.step, async (s) => {
   if (s === 1) {
     pin.inp = ''
   }
 })
 
-const users = computed(() => sf.trustings ? Array.from(sf.trustings.values()) : [])
-
 const selectUser = (u) => {
-  selectedUser.value = u
-  pin.value = { inp: '', err: '' }
-  ui.oD(idc, 'pindial')
+  if (u) {
+    selectedUser.value = u
+    pin.value = { inp: '', err: '' }
+    ui.oD(idc, 'pindial')
+  }
 }
-const selectUser0 = (u) => { selectUser(users.value[0]) }
+const selectUser0 = (u) => { selectUser(sf.users[0]) }
 
 const openStrongAuth = () => {
   ui.oD(idc, 'strongauthdial')
@@ -574,24 +555,17 @@ const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
 const mySessions: Ref<TSession> = ref(new Map())
-const trustingMe = ref(null)
+const trustingMe = computed(() => sf.myTrusting )
 
 const credsUpdated = async () => {
   ui.fD()
   await openSession()
 }
 
-const sOfP = (profId: string) => { 
-  const x = sf.sessionOfProfId(profId) 
-  return x
-}
+const sOfP = (profId: string) => sf.sessionOfProfId(profId)
 
 const openSession = async () => {
-  await sf.getMySessions()
-  trustingMe.value = sf.getMyTrusting()
-  sf.selectedSession = null
-  sf.selectedProfile = null
-  sf.step = 2
+  sf.setStep(2)
 }
 
 const dup = computed(() => {
@@ -686,11 +660,13 @@ const openChgCodes = () => {
 
 const closeManusers = () => {
   ui.fD()
+  /*
   setTimeout(async () => {
     await sf.init0()
     if (sf.step === 2)
       await openSession()
   }, 100)
+  */
 }
 
 const resetdb = ref(false)
@@ -834,7 +810,7 @@ const validateSessionV = async () => {
 }
 
 const goToApp = async (about: string, creds: Map<string, Credential>, code: string, data: Uint8Array) => {
-  sf.step = 0
+  sf.setStep(0)
   let prefObj: Object = null
   let prefCode: string = ''
   try {

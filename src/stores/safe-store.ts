@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
@@ -181,6 +181,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadTrustings = async () => {
     trustings.value.clear()
+    if (stores.session.incognito)  return
     const r = await db.value.header.get('1')
     devId.value = r && r.devId ? r.devId : ''
     devName.value = r && r.devName ? r.devName : ''
@@ -196,15 +197,12 @@ export const useSafeStore = defineStore('safe', () => {
       })
   }
 
-  const removeTrustings = () => {
-    trustings.value.clear()
-  }
-
-  const getMyTrusting = () : Trusting => {
+  const myTrusting: Ref<Trusting> = computed(() => {
+    if (!userId.value) return null
     for(const [,item] of trustings.value)
       if (item.userId === userId.value) return item
     return null
-  }
+  })
 
   const setTrusting = async (t: Trusting) => {
     if (stores.session.incognito) return
@@ -212,6 +210,16 @@ export const useSafeStore = defineStore('safe', () => {
       const obj = t.toObj
       await db.value.trustings.put({ id: t.userId, bin: encode(obj)})
       trustings.value.set(t.userId, t)
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  const delTrusting = async (id: string) => {
+    if (stores.session.incognito) return
+    try {
+      await db.value.trustings.where({id}).delete()
+      trustings.value.delete(id)
     } catch (e) {
       throw EX(e, 2)
     }
@@ -259,12 +267,24 @@ export const useSafeStore = defineStore('safe', () => {
   - permet un affichage complet, y compris pour les données relatives
     aux autres applications que celle qui s'exécute.
   **********************************************************************/
-  const step = ref(1)
+  const locstep = ref(1)
+  const step = computed(() => locstep.value)
+
+  const setStep = async (s) => {
+    if (s === 2) {
+      await getMySessions()
+      selectedSession.value = null
+      selectedProfile.value = null
+    }
+    if (s === 1)
+      await loadTrustings()
+    locstep.value = s
+  }
 
   const backToAuth = () => {
-    step.value = 1
     userId.value = null
     keyK.value = null
+    setStep(1)
   }
 
   const userId = ref(null)
@@ -288,6 +308,9 @@ export const useSafeStore = defineStore('safe', () => {
     const t = trustings.value.get(userId.value)
     return t ? t.pseudo : ''
   })
+
+  const users = computed(() => 
+    trustings.value ? Array.from(trustings.value.values()) : [])
 
   /* Section "auth" */
   type Auth = {
@@ -364,8 +387,8 @@ export const useSafeStore = defineStore('safe', () => {
     - soit a été décrypté au retour des opérations $openSafeByPR $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
-    const x1 = await Crypt.decrypt(keyK.value, b64ToU8(safe.DK))
-    const pemD = decoder.decode(x1)
+    await loadTrustings()
+    const pemD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)))
     const pemS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)))
     auth.value = {
       pseudo: await dcX(b64ToU8(safe.pseudo)),
@@ -388,17 +411,6 @@ export const useSafeStore = defineStore('safe', () => {
     await loadProfiles(safe) // profiles
   }
 
-  const delTrusting = async (id: string) => {
-    if (stores.session.incognito) return
-    try {
-      await db.value.trustings.where({id}).delete()
-      if (trustings.value)
-        trustings.value.delete(id)
-    } catch (e) {
-      throw EX(e, 2)
-    }
-  }
-
   const loadDevices = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Device>()
     if (safe.devices) {
@@ -411,7 +423,7 @@ export const useSafeStore = defineStore('safe', () => {
       }
       if (!found) // le device doit être retiré de la liste des trustings
         await delTrusting(devId.value)
-      const tr = getMyTrusting() as Trusting
+      const tr = myTrusting.value as Trusting
       if (tr && ((tr.Ka !== auth.value.Ka) || (tr.Kr !== auth.value.Kr))) {
         tr.Ka = auth.value.Ka
         tr.Kr = auth.value.Kr
@@ -739,7 +751,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const openSafeByPin = async ( pin: string, id: string) => {
     userId.value = id
-    const t : Trusting = getMyTrusting() as Trusting
+    const t: Trusting = myTrusting() as Trusting
     if (!t) return 1
     const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
 
@@ -820,7 +832,7 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = u8ToB64(await Crypt.crypt(pincxcy, keyK.value), true)
 
-    let t: Trusting = getMyTrusting() as Trusting
+    let t: Trusting = myTrusting()
     if (!t) {
       t = new Trusting({
         userId: userId.value,
@@ -873,7 +885,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setUntrust = async () => {
-    const t = getMyTrusting() as Trusting
+    const t: Trusting = myTrusting()
     if (!t) return 0 // était déjà untrusted
     await delTrusting(t.userId)
     const untrustDev: UntrustDev = {
@@ -965,7 +977,10 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({aboutProfile})
-    } catch(e) { op.ko(e); return -1}
+    } catch(e) { 
+      op.ko(e)
+      return -1
+    }
     if (ret.status === 0)
       await compileSafe(ret.safe)
     return ret.status
@@ -1033,13 +1048,13 @@ export const useSafeStore = defineStore('safe', () => {
       let su = synthU.get(s.userId)
       if (!su) {
         const t = trustings.value.get(s.userId)
-        const pseudo = t ? t.pseudo : '???'
+        const pseudo = t ? t.pseudo : s.userId
         n++
         su = {
           n,
           userId: s.userId,
           ck: false,
-          pseudo: t ? t.pseudo : s.userId,
+          pseudo,
           size: new Array(nbc).fill(0),
           ma: new Map<string, Sua>()
         }
@@ -1198,16 +1213,33 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  watch(() => stores.session.incognito, async (v) => {
+    await loadTrustings()
+  })
+
+  watch(() => stores.ui.reopenSession, async (v) => {
+    const session = stores.session
+    if (v) {
+      await loadTrustings()
+      if ((session.hasNet && session.incognito) || !userId.value) {
+        await setStep(1)
+      } else {
+        if (session.hasNet) await reloadSafe()
+        if (!session.incognito) await setStep(2)
+      }
+    }
+  })
+
   return {
-    step, backToAuth, userId, userName, keyK,
+    step, setStep, backToAuth, userId, userName, keyK,
     selectedProfile, selectedSession,
     openMode, incognito,
     devId, devName,
+    users,
     hasIDBS, init0,
-    removeTrustings, loadTrustings,
     resetAllLocal,
     newTrusting, newTSession,
-    trustings, setTrusting, delTrusting, getMyTrusting,
+    setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
     mySafeCreds, getCreds,
     mySafeProfiles, profileOfProfId,
