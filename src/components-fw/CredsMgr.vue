@@ -541,14 +541,6 @@ const chgPSlc = (psid) => {
   return !(ps1 && ps2 && isSameSet(ps1.crIds, ps2.crIds))
 }
 
-/*
-const chgPSab = (psid) => {
-  const ps1 = mlocPS.value.get(psid)
-  const ps2 = morigPS.value.get(psid)
-  return !(ps1 && ps2 && ps1.about === ps2.about)
-}
-*/
-
 const localPS = ref(null)
 const origPS = ref(null)
 const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
@@ -579,7 +571,6 @@ const undoAbPs = async () => {
   locaboutPs.value = localPS.value.about
   localPS.value.chgab = false
   mlocPS.value.set(localPS.value.id, localPS.value)
-  // await setAboutPrf(localPS.value.id, localPS.value.about)
 }
 
 const valAbPs = async () => {
@@ -587,20 +578,7 @@ const valAbPs = async () => {
   localPS.value.about = locaboutPs.value
   localPS.value.chgab = true
   mlocPS.value.set(localPS.value.id, localPS.value)
-  // await setAboutPrf(localPS.value.id, localPS.value.about)
 }
-
-/*
-const setAboutPrf = async (profId, about) => {
-  try {
-    const status = await sf.setAboutProfile(profId, about)
-    if (status !== 0)
-      await ui.diagDisplay($t('HPsfop_' + status))
-  } catch (e) {
-    await ui.diagDisplay($t('exui', [e.label, e.message]))
-  }
-}
-*/
 
 const delPS = () => {
   // const av = morigPS.value.get(localPS.value.id)

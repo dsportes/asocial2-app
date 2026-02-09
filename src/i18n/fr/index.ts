@@ -49,10 +49,18 @@ export default {
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
   confirm: 'Pour confirmer taper {0}', // BtnConfirm
+  edit: 'Editer',
+  create: 'Nouveau',
+  duplicate: 'Dupliquer',
   open: 'Ouvrir',
   restore: 'Rétablir',
   delete: 'Supprimer',
   reset: 'Réinitialiser',
+  undo: 'Rétablir',
+  st_0: 'inchangé',
+  st_1: 'ajouté',
+  st_2: 'modifié',
+  st_3: 'supprimé',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -171,6 +179,16 @@ bla bla
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
 `,
+  HPprefs_1: 'Afficher / gérer mes préférences',
+  HPprefs_2: `# Afficher / gérer mes préférences
+  bla bla
+`,
+  HPprefsnosel: 'Aucune "préférence" sélectionnée.',
+  HPprefssel: 'Préférence [{0}] : dernière édition {1} ({2}).',
+  HPprefslist: 'Liste des "préférences" déclarées',
+  HPprefraw: 'Texte brut (non éditable)',
+  HPprefcode: 'Code de la "préférence"',
+  HPprefdup: 'Ce code est déjà attribué à une "préférence", en saisir un libre.',
   HPauthentif: 'Authentification',
   HPnet_1: 'Accès à Internet',
   HPnet_2: 'Mode AVION: pas d\'accès à Internet',

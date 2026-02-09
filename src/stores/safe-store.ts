@@ -45,6 +45,7 @@ Chaque row décrit une _session épinglée_. Les sessions des utilisateurs locau
 - `size`: volume _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
 - `time`: dernière date-heure d'ouverture de cette session sur ce terminal.
 - `prefCode`: code de la "préférence" utilisée la dernière fois.
+- `prefTime`: date-heure de dernière mise à jour
 - `prefObj`: objet de préférence utilisée la dernière fois.
 
 Il existe une base de données IDB de nom `app_x` où `x` est le hash court de (userId / profId): elle contient les documents en cache de cette session.
@@ -101,6 +102,7 @@ export class TSession {
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   prefCode: string // code de la "préférence" utilisée la dernière fois
+  prefTime: number // date-heure de dernière mise à jour
   prefObj:  Uint8Array // objet de "préférence" utilisé la dernière fois (utile en mode Avion)
 
   constructor (obj: Object) {
@@ -340,10 +342,11 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Section "préférences" **************************************************************
   Elle est organisée avec une **sous-section par application** donnant une 
-  map (**cryptée par la clé K**) de clé `code` et de valeur `data`:
+  map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
   - `code` : texte court parlant pour l'utilisateur correspondant 
     à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
-  - `data`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser 
+  - `time`: date-heure de dernière mise à jour
+  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser 
     à l'ouverture d'une session.  
   **************************************************************************************/
   const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
@@ -435,14 +438,29 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
-    const p = new Map<string, Uint8Array>() // clé: app
+    const inc = stores.session.incognito
+    const ls: TSession[] = []
+    const p = new Map<string, [number, Uint8Array]>() // clé: app
     if (safe.prefs) {
       const x = b64ToU8(safe.prefs[app])
-      if (x) {
+      if (x) { // x encode de { code: [time, obj] }
         const y = decode(await Crypt.decrypt(keyK.value, x))
-        for (const code in y) p.set(code, y[code])
+        for (const code in y) {
+          const [time, obj] = y[code]
+          p.set(code, [time, obj])
+          if (!inc) { // Rafraichissement des prefs des sessions
+            for(const [,s] of mySessions.value) {
+              if (s.prefCode === code && ((s.prefTime || 0) < time)) {
+                s.prefTime = time
+                s.prefObj = obj
+                ls.push(s)
+              }
+            }
+          }
+        }
       }
     }
+    if (ls.length) for (const s of ls) await setTSession(s, false)
     mySafePrefs.value = p
   }
 

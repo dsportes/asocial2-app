@@ -156,9 +156,9 @@
 
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', null)"/>
-        <btn-cond v-for="[code, data] in sf.mySafePrefs" :key="code"
-          flat :label="'... ' + code" @ok="validateSession(code, data)"/>
+        <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', 0, null)"/>
+        <btn-cond v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+          flat :label="'... ' + code" @ok="validateSession(code, time, obj)"/>
       </q-card-actions>
     </div>
 
@@ -181,8 +181,14 @@
       :fnopen="openUntrust" size="sm"/>
 
     <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-      :title="$t('HPtrustings_1')" :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+      :title="$t('HPtrustings_1')" 
+      :disable="!session.hasNet || session.incognito || sf.openMode > 2"
       :fnopen="openTrustings" size="sm"/>
+
+    <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
+      :title="$t('HPprefs_1')" 
+      :disable="!session.hasNet || session.incognito"
+      :fnopen="openPrefsMgr" size="sm"/>
 
     <bar-open :bubble="$t('HPmanuinfo')"
       :disable="session.incognito || !session.hasNet" size="sm"
@@ -197,11 +203,6 @@
       :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
   </div>
 
-  <!--
-  <q-separator class="q-mt-sm q-mb-md" color="orange"/>
-  <bar-open v-if="session.hasNet" :bubble="$t('HPcredsmgr_2')" class="q-pa-sm q-my-sm"
-    :title="$t('HPcredsmgr_1')" :fnopen="openCM" size="sm"/>
-  -->
 </div>
 
   <!-- Dialogue de saisie d'un code PIN-->
@@ -277,6 +278,9 @@
 
   <!-- Gestion des credentials -->
   <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
+
+  <!-- Gestion des préférences -->
+  <prefs-mgr v-if="pm" :idc="idc" @updated="openPM"/>
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
@@ -418,6 +422,7 @@ import InputPs from '../components-fw/InputPs.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
 import ManageUsers from '../components-fw/ManageUsers.vue'
 import CredsMgr from '../components-fw/CredsMgr.vue'
+import PrefsMgr from '../components-fw/PrefsMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarOpen1 from '../components-fw/BarOpen1.vue'
@@ -451,6 +456,7 @@ onUnmounted(() => ui.closeVue(idc))
 const mu = computed(() => ui.dModels[idc].manusers)
 const sc = computed(() => ui.dModels[idc].createsafe)
 const cm = computed(() => ui.dModels[idc].credsmgr)
+const pm = computed(() => ui.dModels[idc].prefsmgr)
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -562,6 +568,11 @@ const credsUpdated = async () => {
   await openSession()
 }
 
+const prefsUpdated = async () => {
+  ui.fD()
+  await openSession()
+}
+
 const sOfP = (profId: string) => sf.sessionOfProfId(profId)
 
 const openSession = async () => {
@@ -595,9 +606,14 @@ const openUntrust = async () => {
 }
 
 const delTrustSet = ref()
-const openTrustings = async () => {
+
+const openTrustings = () => {
   delTrustSet.value = new Set()
   ui.oD(idc, 'trustings')
+}
+
+const openPrefsMgr = () => {
+  ui.oD(idc, 'prefsmgr')
 }
 
 const delTrustIt = (id) => {
@@ -644,6 +660,10 @@ const manUsers = () => {
 
 const openCM = () => {
   ui.oD(idc, 'credsmgr')
+}
+
+const openPM = () => {
+  ui.oD(idc, 'prefsmgr')
 }
 
 const createMode = ref()
@@ -750,7 +770,7 @@ watch(() => sf.mySafeProfiles, (v) => {
   locSafeProfiles.value = v
 })
 
-const validateSession = async (prefCode, prefObj) => {
+const validateSession = async (prefCode, prefTime, prefObj) => {
   let sv = sf.selectedSession
   const sp = sf.selectedProfile
   let profile: Profile = null
@@ -799,6 +819,7 @@ const validateSession = async (prefCode, prefObj) => {
         size: 0,
         time: 0,
         prefCode: prefCode,
+        prefTime: prefTime,
         prefObj: prefObj
       }) as TSession
       await sf.setTSession(nvs, true) // true: par superstition ! (db ne devrait pas exister)
@@ -806,7 +827,7 @@ const validateSession = async (prefCode, prefObj) => {
     }
   }
 
-  await goToApp(profile.about as string, sf.getCreds(profile), prefCode, prefObj)
+  await goToApp(profile.about as string, sf.getCreds(profile), prefCode, prefTime, prefObj)
 }
 
 const validateSessionV = async () => {
@@ -815,16 +836,9 @@ const validateSessionV = async () => {
   await goToApp('', new Map<string, Credential>(), '', null)
 }
 
-const goToApp = async (about: string, creds: Map<string, Credential>, code: string, data: Uint8Array) => {
+const goToApp = async (about: string, creds: Map<string, Credential>, 
+  prefCode: string, prefTime: number, prefObj: Uint8Array) => {
   sf.setStep(0)
-  let prefObj: Object = null
-  let prefCode: string = ''
-  try {
-    prefObj = data ? decode(data) : null
-    prefCode = code
-  } catch (e) {
-    console.log(e)
-  }
 
   session.setStartContext({
     userId: sf.userId || '',
