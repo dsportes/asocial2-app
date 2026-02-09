@@ -4,6 +4,7 @@
 export default {
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
+  ok: 'OK',
   toecho: 'Texte à recevoir en écho',
   echo: 'Texte reçu en écho : {0}',
   ping: 'Etat de l\'organisation',
@@ -183,6 +184,7 @@ bla bla
   HPprefs_2: `# Afficher / gérer mes préférences
   bla bla
 `,
+  HPprefs_ed: 'Edition des options de préférence',
   HPprefsnosel: 'Aucune "préférence" sélectionnée.',
   HPprefssel: 'Préférence [{0}] : dernière édition {1} ({2}).',
   HPprefslist: 'Liste des "préférences" déclarées',

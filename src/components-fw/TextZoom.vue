@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { sty } from '../src-fw/util'
@@ -29,6 +29,8 @@ const props = defineProps({
   rows: Number,
   mw: Number
 })
+
+watch(() => props.text, (v) => { loc.value = v || ''})
 
 const loc = ref(props.text || '')
 const rx = ref(props.rows || 5)

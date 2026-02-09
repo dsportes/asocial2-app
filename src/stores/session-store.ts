@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
@@ -152,13 +152,23 @@ export const useSessionStore = defineStore('session', () => {
     startContext.value = ctx as StartContext
   }
 
+  const pref = reactive({code:'', time: 0, obj: {}})
+  const edPref = reactive({code:'', time: 0, obj: {}})
+  const setEdPref = (code: string, time: number, obj: Object) => {
+    edPref.code = code; edPref.time = time; edPref.obj = obj
+  }
+  const updatePref = async (code: string, time: number, obj: Object) => {
+    pref.code = code; pref.time = time; pref.obj = obj
+  }
+
   return {  
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase, 
-    hasIDB, hasNet, noNet, incognito, startContext, setStartContext
+    hasIDB, hasNet, noNet, incognito, startContext, setStartContext,
+    pref, edPref, setEdPref, updatePref
     // focus, getFocus, lostFocus, closingApp
   }
 })

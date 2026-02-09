@@ -33,10 +33,10 @@
         {{$t('HPprefssel', [selP.code, dhcool(selP.time), $t('st_' + [st])])}}</div>
       <text-zoom :label="$t('HPprefraw')" :text="rawText"/>
       <div class="row q-gutter-sm">
-        <btn-cond v-if="!deletedCodes.has(selP.code)" icon="delete" :label="$t('delete')" @ok="delPref"/>
-        <btn-cond v-if="st !== 0" icon="undo" :label="$t('undo')" @ok="undoPref"/>
-        <btn-cond v-if="st !== 0 && st !== 3" icon="edit" :label="$t('edit')" @ok="editPref"/>
-        <btn-cond v-if="st !== 0" icon="content_copy" :label="$t('duplicate')" @ok="dupPref"/>
+        <btn-cond v-if="st !== 3" icon="delete" :label="$t('delete')" @ok="delPref"/>
+        <btn-cond v-if="st > 1" icon="undo" :label="$t('undo')" @ok="undoPref"/>
+        <btn-cond v-if="st !== 3" icon="edit" :label="$t('edit')" @ok="editPref"/>
+        <btn-cond v-if="st !== 3" icon="content_copy" :label="$t('duplicate')" @ok="dupPref"/>
         <btn-cond icon="add" :label="$t('create')" @ok="newPref"/>
       </div>
     </div>
@@ -64,6 +64,17 @@
   </div>
 </template>
 </dialog-std2>
+
+<dialog-std1 v-model="ui.dModels[idc2].edprf" 
+  :title="$t('HPprefs_ed')" hdrclass='wmd'>
+  <template #hdr>
+    <div class="titre-md text-center text-bold">{{session.edPref.code}}</div>
+  </template>
+  <template #default>
+    <pref-editor class="q-my-md q-pa-xs" @ok="doValPref"/>
+  </template>
+</dialog-std1>
+
 </div>
 </template>
 
@@ -73,6 +84,8 @@ import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
+import DialogStd1 from '../components-fw/DialogStd1.vue'
+import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
@@ -90,6 +103,7 @@ const decoder = new TextDecoder()
 
 const sf = stores.safe
 const ui = stores.ui
+const session = stores.session
 
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
@@ -135,23 +149,32 @@ const pSel = (code: string) => {
   return x + y + z
 }
 
-const selPref = (p) => { selP.value = p; edName.value = 0 }
-const rawText = computed(() => !selP.value ? '???' : (JSON.stringify(decode(selP.value.obj), null, '\t')))
+const selPref = (p) => { 
+  selP.value = p
+  edName.value = 0 
+}
+const rawText = computed(() => !selP.value ? '???' : JSON.stringify(decode(selP.value.obj), null, '\t'))
 
 const st = computed(() => { // 0: inchangé 1: ajouté 2: modifié 3: supprimé
   const code = selP.value.code
   if (deletedCodes.value.has(code)) return 3
-  if (!updatedPrefs.value.has(code) && !deletedCodes.value.has(code)) return 0
-  if (updatedPrefs.value.has(code) && !myPrefsOrig.value.has(code)) return 1
-  return 2
+  if (updatedPrefs.value.has(code))
+    return myPrefsOrig.value.has(code) ? 2 : 1
+  return 0
 })
 
-const delPref = () => { deletedCodes.value.add(selP.value.code) }
+const delPref = () => { 
+  if (st.value !== 1) deletedCodes.value.add(selP.value.code)
+  else {
+    myPrefs.value.delete(selP.value.code)
+    selP.value = null
+  }
+}
 
 const undoPref = () => { 
   const code = selP.value.code
   switch (st.value) {
-    case 0: return; // inchangé
+    case 0: return // inchangé
     case 1: { updatedPrefs.value.delete(code); break } // ajouté
     case 2: { // modifié
       updatedPrefs.value.delete(code)
@@ -160,20 +183,25 @@ const undoPref = () => {
     }
     case 3: { // supprimé
       deletedCodes.value.delete(code)
-      myPrefs.value.set(code, myPrefsOrig.value.get(code))
+      const x = myPrefsOrig.value.get(code)
+      if (x) myPrefs.value.set(code, x)
+      else myPrefs.value.delete(code)
       break
     }
   }
 }
 
-const edName = ref(0)
 const namep = ref('')
 const nameperr = computed(() => namep.value.length < namepSize[0] ? 'PScourt' : 
   (namep.value.length > namepSize[1] ? 'PSlong' : ''))
 const hintnamep = computed(() => $t('PSminmax', namepSize) + (!nameperr.value ? $t('pressret') : ''))
 
-const editPref = () => {
+const edName = ref(0)
+
+const editPref = async () => {
+  edName.value = 0
   namep.value = selP.value.code
+  await valNamep(true)
 }
 
 const dupPref = () => {
@@ -186,19 +214,36 @@ const newPref = () => {
   namep.value = ''
 }
 
-const valNamep = async () => {
+const valNamep = async (edit) => {
   const n = namep.value
-  if (myPrefs.value.has(n) || updatedPrefs.value.has(n)) {
+  if (!edit && (myPrefs.value.has(n) || updatedPrefs.value.has(n))) {
     await ui.diagDisplay($t('HPprefdup'))
     return
   }
-  console.log('edition', edName.value, n)
-  edName.value = 0
+  session.setEdPref(namep.value, 
+    edName.value === 1 ? selP.value.time : 0, 
+    edName.value === 1 ? decode(selP.value.obj) : {})
+  ui.oD(idc2, 'edprf')
 }
 
+const doValPref = (pref, hasChg) => {
+  ui.fD()
+  const chgn = edName.value === 2 || namep.value !== selP.value.code
+  edName.value = 0
+  if (!chgn && !hasChg) return
+  const p: LocPref  = {
+    code: namep.value,
+    time: Date.now(),
+    obj: encode(pref)
+  }
+  updatedPrefs.value.set(p.code, p)
+  myPrefs.value.set(p.code, [p.time, p.obj])
+  selP.value = p
+}
 
 const validate = async () => {
-
+  // TODO
+  console.log('validate')
 }
 
 </script>
