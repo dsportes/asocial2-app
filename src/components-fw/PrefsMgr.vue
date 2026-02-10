@@ -65,13 +65,23 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-model="ui.dModels[idc2].edprf" 
+<dialog-std1 v-if="pe" v-model="pe" 
   :title="$t('HPprefs_ed')" hdrclass='wmd'>
   <template #hdr>
-    <div class="titre-md text-center text-bold">{{session.edPref.code}}</div>
+    <div class="row q-ma-xs items-center justify-between">
+      <div class="row col">
+        <div class="titre-md text-bold q-mr-md">{{session.edPref.code}}</div>
+        <div class="font-mono fs-sm text-italic">[{{dhcool(session.edPref.time)}}]</div>
+      </div>
+      <btn-cond class="q-ml-xs" icon="check" :label="$t('validate')" @ok="edValid"
+        :color="session.edPref.chg ? 'warning' : 'primary'"
+        :disable="diag !== ''"/>
+    </div>
+    <div v-if="diag" class="msg">{{diag}}</div>
   </template>
   <template #default>
-    <pref-editor class="q-my-md q-pa-xs" @ok="doValPref"/>
+    <q-separator class="q-my-xs"/>
+    <pref-editor class="q-pa-xs"/>
   </template>
 </dialog-std1>
 
@@ -105,24 +115,28 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
+const chg = computed(() => session.edPref ? session.edPref.chg : false )
+const diag = computed(() => session.edPref ? session.edPref.diag : '' )
+
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
+const pe = computed(() => ui.dModels[idc2].edprf)
+const pm = computed(() => ui.dModels[props.idc].prefsmgr)
 
 const emit = defineEmits(['updated'])
-
-const pm = computed(() => ui.dModels[props.idc].prefsmgr)
 
 const props = defineProps ({
   idc: String
 })
 
-// const myPrefs: RefMap<string, [number, Uint8Array]> = ref(sf.mySafePrefs)
-const myPrefs: RefMap<string, [number, Uint8Array]> = ref(new Map())
+const myPrefs: RefMap<string, [number, Uint8Array]> = ref(sf.mySafePrefs)
+// const myPrefs: RefMap<string, [number, Uint8Array]> = ref(new Map())
 const myPrefsOrig: RefMap<string, [number, Uint8Array]> = ref(new Map())
 watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
 
+/*
 const test = {
-  'mobile': [ Date.now() - 3600000, encode({ lg: 'FR' })],
+  'mobile': [ Date.now() - 3600000, encode({ lang: 'FR' })],
   'ecran large': [ Date.now() - 7200000, encode({ btn1: false, btn2: true })],
   'mode expert': [ Date.now() - 7200000, encode({ btn1: false, title: 'bla bla' })]
 }
@@ -130,6 +144,7 @@ for (const code in test) {
   const [time, obj] = test[code]
   myPrefs.value.set(code, [time, obj])
 }
+*/
 
 for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
 
@@ -220,21 +235,23 @@ const valNamep = async (edit) => {
     await ui.diagDisplay($t('HPprefdup'))
     return
   }
+  const obj = selP.value && selP.value.obj ? decode(selP.value.obj) : {}
   session.setEdPref(namep.value, 
-    edName.value === 1 ? selP.value.time : 0, 
-    edName.value === 1 ? decode(selP.value.obj) : {})
+    edName.value === 2 ? 0 : selP.value.time, 
+    edName.value === 2 ? {} : obj)
   ui.oD(idc2, 'edprf')
 }
 
-const doValPref = (pref, hasChg) => {
+const edValid = () => {
   ui.fD()
+  const edP = session.edPref
   const chgn = edName.value === 2 || namep.value !== selP.value.code
   edName.value = 0
-  if (!chgn && !hasChg) return
+  if (edP.diag || (!chgn && !edP.chg)) return
   const p: LocPref  = {
     code: namep.value,
     time: Date.now(),
-    obj: encode(pref)
+    obj: encode(edP.obj)
   }
   updatedPrefs.value.set(p.code, p)
   myPrefs.value.set(p.code, [p.time, p.obj])
@@ -242,8 +259,7 @@ const doValPref = (pref, hasChg) => {
 }
 
 const validate = async () => {
-  // TODO
-  console.log('validate')
+  await sf.updatePrefs(updatedPrefs.value, Array.from(deletedCodes.value))
 }
 
 </script>

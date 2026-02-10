@@ -14,7 +14,7 @@
 
       <btn-cond label="Home" class="q-ml-xs" @ok="ui.setPage('home')"/>
 
-      <btn-cond label="T1" class="q-ml-xs" @ok="t1"/>
+      <btn-cond v-if="hasBtn1" label="T1" class="q-ml-xs" @ok="t1"/>
 
       <btn-cond label="T2" class="q-ml-xs" @ok="t2"/>
 
@@ -136,6 +136,8 @@ const backToOpenSession = async () => {
   if (ok)
     ui.backToOpenSession()
 }
+
+const hasBtn1 = computed(() => session.pref.obj.btn1)
 
 /* scripts de test *************************************************/
 

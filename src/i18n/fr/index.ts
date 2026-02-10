@@ -62,6 +62,7 @@ export default {
   st_1: 'ajouté',
   st_2: 'modifié',
   st_3: 'supprimé',
+  settings: 'Préférences',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 

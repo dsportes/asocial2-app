@@ -1,13 +1,16 @@
 <template>
   <div>
-    <div class="q-mb-md column items-center">
-      <btn-cond icon="check" :label="$t('ok')" @ok="ok"/>
-    </div>
-    <div class="bord1 q-pa-sm column full-width">
-      <q-toggle v-model="pref.btn1" label="Bouton 1 visible"/>
-      <q-toggle v-model="pref.btn2" label="Bouton 2 visible"/>
-      <q-input v-model="pref.title" label="Titre" />
-      <q-input v-model="pref.lg" label="Langue" />
+    <div class="column full-width">
+      <q-toggle v-model="obj.btn1" label="Bouton 1 visible" :color="clr('btn1')"/>
+      <q-toggle v-model="obj.btn2" label="Bouton 2 visible" :color="clr('btn2')"/>
+      <q-input v-model="obj.title" label="Titre" :color="clr('title')">
+        <template v-slot:append>
+          <btn-cond size="sm" icon="undo" round color="warning"
+            :disable="obj.title === (orig.title || defaults.title)"
+            @ok="obj.title = orig.title || defaults.title"/>
+        </template>
+      </q-input>
+      <q-input v-model="obj.lang" label="Langue" :color="clr('lang')"/>
     </div>
   </div>
 </template>
@@ -15,35 +18,51 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, Ref, computed, watch } from 'vue'
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-import BtnCond from '../components-fw/BtnCond.vue'
-import { $t, dkli, dhcool, b64ToU8, u8ToB64 } from '../src-fw/util'
+
+import { $t /*, dkli, dhcool */ } from '../src-fw/util'
 import stores from '../stores/all'
+import BtnCond from '../components-fw/BtnCond.vue'
 
 const session = stores.session
-const ui = stores.ui
-const emit = defineEmits(['ok'])
 
-const pref = ref(decode(encode(session.edPref.obj)))
+const obj = ref(session.edPref.obj)
+const orig = ref(session.edPref.orig)
 
-if (!pref.value.btn1) pref.value.btn1 = false
-if (!pref.value.btn2) pref.value.btn2 = false
-if (!pref.value.lg) pref.value.lg = 'FR'
-if (!pref.value.title) pref.value.title = '(aucun)'
-
-const hasChg = ref(false)
-
-for(const p in pref.value)
-  watch(() => pref.value[p], () => { 
-    hasChg.value = false
-    for(const x in pref.value) 
-      if (session.edPref.obj[x] !== pref.value[x]) hasChg.value = true
-  })
-
-const ok = () => {
-  emit('ok', pref.value, hasChg.value)
+const defaults = {
+  btn1: false,
+  btn2: false,
+  lang: 'FR',
+  title: '(aucun)'
 }
+
+for(const p in defaults)
+  if (!obj.value[p]) obj.value[p] = defaults[p]
+
+const clr = (p) => obj.value[p] !== defaults[p] ? 'warning' : 'none'
+
+const check = () => {
+  session.edPref.diag = ''
+  session.edPref.chg = false
+  for(const p in defaults) {
+    const ap = obj.value[p]
+    const av = orig.value[p]
+    const def = defaults[p]
+    if (av !== ap) {
+      if (av) session.edPref.chg = true
+      else if (ap !== def) session.edPref.chg = true
+    }
+    if (p === 'title' && ap.length > 3) 
+      session.edPref.diag = 'titre trop long'
+  }
+}
+
+watch(() => obj.value.btn1, (ap, av) => { check() })
+watch(() => obj.value.btn2, (ap, av) => { check() })
+watch(() => obj.value.title, (ap, av) => { check() })
+watch(() => obj.value.lang, (ap, av) => { check() })
+
+check()
+console.log('init PrefEditor')
 
 </script>
 

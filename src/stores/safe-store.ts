@@ -438,26 +438,14 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
-    const inc = stores.session.incognito
     const ls: TSession[] = []
     const p = new Map<string, [number, Uint8Array]>() // clé: app
     if (safe.prefs) {
-      const x = b64ToU8(safe.prefs[app])
-      if (x) { // x encode de { code: [time, obj] }
-        const y = decode(await Crypt.decrypt(keyK.value, x))
-        for (const code in y) {
-          const [time, obj] = y[code]
-          p.set(code, [time, obj])
-          if (!inc) { // Rafraichissement des prefs des sessions
-            for(const [,s] of mySessions.value) {
-              if (s.prefCode === code && ((s.prefTime || 0) < time)) {
-                s.prefTime = time
-                s.prefObj = obj
-                ls.push(s)
-              }
-            }
-          }
-        }
+      const x = safe.prefs[app]
+      for (const code in x) {
+        const z = b64ToU8(x[code]) // encode de [time, obj]
+        const [time, obj] = decode(z)
+        p.set(code, [time, obj])
       }
     }
     if (ls.length) for (const s of ls) await setTSession(s, false)
@@ -537,7 +525,7 @@ export const useSafeStore = defineStore('safe', () => {
     const app = stores.config.appname
     mySessions.value = new Map<string, TSession>()
     const mpf: Map<string, Profile> = mySafeProfiles.value
-    const toSave: TSession[] = []
+    const toSave: Map<string, TSession> = new Map()
 
     await db.value.tsessions.each(async (r) => {
       try {
@@ -548,7 +536,7 @@ export const useSafeStore = defineStore('safe', () => {
           const profile: Profile = mpf.get(s.profId)
           if (profile && s.about !== profile.about) {
             s.about = profile.about
-            toSave.push(s)
+            toSave.set(s.idOf, s)
           }
         }
         mySessions.value.set(s.idOf, s)
@@ -557,8 +545,18 @@ export const useSafeStore = defineStore('safe', () => {
       }
     })
     
-    if (toSave.length)
-      for(const s of toSave) await saveTSession(s)
+    for(const [,s] of mySessions.value) {
+      if (s.prefCode) {
+        const p = mySafePrefs.value.get(s.prefCode)
+        if (p && (s.prefTime !== p.time)) {
+          s.prefTime = p.time
+          s.prefObj = p.obj
+          toSave.set(s.idOf, s)
+        }
+      }
+    }
+    if (toSave.size)
+      for(const [,s] of toSave) await saveTSession(s)
   }
 
   const sessionOfProfId = (profId: string) => {
@@ -953,7 +951,7 @@ export const useSafeStore = defineStore('safe', () => {
   const reloadSafe = async () : Promise<number>=> {
     const args = {
       userId: userId.value,
-      shk: await Crypt.strongHash(keyK.value, false, true) as Uint8Array
+      shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
     const op = new SafeOperation('$OpenSafeById')
     let ret
@@ -1193,6 +1191,55 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  type LocPref = {
+    code: string
+    time: number
+    obj: Uint8Array
+  }
+
+  type UpdatePrefs = {
+    app: string
+    userId: string
+    shk: string    
+    prefs: Object // clé: crId, valeur: Objet Credential sérialisé crypté
+    delprefs: string[] // liste des crIds à supprimer
+  }
+
+  const updatePrefs = async (
+      mprefs: Map<string, LocPref>, 
+      delprefs: string[]
+      ) => {
+    let prefs = {}
+
+    if (mprefs && mprefs.size) for(const [,p] of mprefs) {
+      prefs[p.code] = u8ToB64(encode([p.time, p.obj]), true)
+    }
+    if (Object.keys(prefs).length === 0) prefs = null
+    
+    const updatePrefs: UpdatePrefs = {
+      userId: userId.value,
+      app: stores.config.appname,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      prefs, 
+      delprefs : delprefs || []
+     }
+    const op = new SafeOperation('$UpdatePrefs')
+    let ret
+    try {
+      ret = await op.post({updatePrefs})
+    } catch(e) { 
+      op.ko(e); 
+      return -1
+    }
+    if (ret.status === 0)
+      try {
+        await compileSafe(ret.safe)
+      } catch (e) {
+        console.log(e)
+      }
+    return ret.status
+  }
+
   type TransmitCred = {
     app: string
     targetId: string // id ou p0 ou r0 du destinataire du credential
@@ -1270,7 +1317,7 @@ export const useSafeStore = defineStore('safe', () => {
     purgeIDBS, getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
-    synthUsers, getBinSafe, setUntrustAll, delSafe
+    synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs
   }
 })
 

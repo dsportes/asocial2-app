@@ -38,6 +38,13 @@
           <q-item-section class="fs-lg">{{$t('theme')}}</q-item-section>
         </q-item>
 
+        <q-separator v-if="stores.safe.step === 0"/>
+
+        <q-item  v-if="stores.safe.step === 0" clickable dense v-close-popup @click="openPrefs">
+          <q-item-section avatar><q-avatar size="xl" icon="settings"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('settings')}}</q-item-section>
+        </q-item>
+
         <q-separator />
 
         <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
@@ -306,19 +313,44 @@
 
     </q-card>
   </q-dialog>
+
+  <!-- Maj préférences -->
+  <dialog-std1 v-model="ui.dModels[idc].edprf" 
+    :title="$t('HPprefs_ed')" hdrclass='wmd'>
+    <template #hdr>
+      <div class="row q-ma-xs items-center justify-between">
+        <div class="row col">
+          <div class="titre-md text-bold q-mr-md">{{session.edPref.code}}</div>
+          <div class="font-mono fs-sm text-italic">[{{dhcool(session.edPref.time)}}]</div>
+        </div>
+        <btn-cond class="q-ml-xs" icon="check" :label="$t('validate')" @ok="edValid"
+          :color="session.edPref.chg ? 'warning' : 'primary'"
+          :disable="edDiag !== ''"/>
+      </div>
+      <div v-if="edDiag" class="msg">{{edDiag}}</div>
+    </template>
+    <template #default>
+      <q-separator class="q-my-xs"/>
+      <pref-editor class="q-pa-xs"/>
+    </template>
+  </dialog-std1>
 </div>
 </template>
 
 <script setup lang="ts">
 
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+// @ts-ignore
+import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import HelpButton from './HelpButton.vue'
 import BtnCond from './BtnCond.vue'
 import PermissionDialog from './PermissionDialog.vue'
-import { $t, $q, sty, reloadPage, sleep, coolBye } from '../src-fw/util'
+import DialogStd1 from './DialogStd1.vue'
+import PrefEditor from '../components/PrefEditor.vue'
+import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 
@@ -395,6 +427,30 @@ async function opSetSrvStatus (stx) : Promise<void> {
 const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }
 const cfCoolBye = () => { ui.oD('0', 'confirmQuit') }
 
+const edDiag = computed(() => session.edPref.diag )
+
+const openPrefs = () => {
+  const ep = session.pref
+  session.setEdPref(ep.code, ep.time, decode(encode(ep.obj)))
+  ui.oD(idc, 'edprf')
+}
+
+const edValid = async () => {
+  ui.fD()
+  const edP = session.edPref
+  if (!edP.chg) return
+  const p: LocPref  = {
+    code: edP.code,
+    time: Date.now(),
+    obj: encode(edP.obj)
+  }
+  session.updatePref(p.code, p.time, edP.obj)
+  if (edP.code) {
+    const m = new Map()
+    m.set(p.code, p)
+    await stores.safe.updatePrefs(m, [])
+  }
+}
 </script>
 
 <style lang="scss" scoped>

@@ -153,7 +153,8 @@
       <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
         {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
-
+    </div>
+    <div v-if="nvSP">
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', 0, null)"/>
@@ -827,27 +828,23 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
     }
   }
 
-  await goToApp(profile.about as string, sf.getCreds(profile), prefCode, prefTime, prefObj)
+  if (prefCode) session.updatePref(prefCode, prefTime, decode(prefObj))
+  else session.updatePref('', 0, {})
+  session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
+  goToApp()
 }
 
 const validateSessionV = async () => {
   sf.userId = null
   sf.keyK = null
-  await goToApp('', new Map<string, Credential>(), '', null)
+  session.updatePref('', 0, {})
+  session.setStartContext('', '', new Map())
+  goToApp()
 }
 
-const goToApp = async (about: string, creds: Map<string, Credential>, 
-  prefCode: string, prefTime: number, prefObj: Uint8Array) => {
-  sf.setStep(0)
-
-  session.setStartContext({
-    userId: sf.userId || '',
-    about: about || '',
-    creds,
-    prefObj,
-    prefCode
-  })
+const goToApp = async () => {
   console.log('Go to app')
+  sf.setStep(0)
   ui.setPage('appHome')
 }
 

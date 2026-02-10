@@ -1,12 +1,13 @@
 // @ts-ignore
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, Ref } from 'vue'
 // @ts-ignore
-import type { Ref } from 'vue'
+import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-import { toByteArray } from '../src-fw/base64'
+
 import { Crypt } from '../src-fw/crypt'
 import { myRegistration } from '../../src-pwa/register-service-worker'
+
 
 type StartContext = {
   userId: string
@@ -147,18 +148,34 @@ export const useSessionStore = defineStore('session', () => {
   // 1 : session running (initialisée)
   const setPhase = (p: number) => { phase.value = p}
 
-  const startContext: Ref<StartContext> = ref(null)
-  const setStartContext = (ctx) => {
-    startContext.value = ctx as StartContext
+  const pref = reactive({code:'', time: 0, obj: {}})
+  const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
+  const setEdPref = (code: string, time: number, obj: Object) => {
+    edPref.code = code
+    edPref.time = time 
+    edPref.obj = obj
+    edPref.orig = decode(encode(obj))
+    edPref.chg = false
+    edPref.diag = ''
+  }
+  const updatePref = (code: string, time: number, obj: Object) => {
+    pref.code = code; pref.time = time; pref.obj = obj
   }
 
-  const pref = reactive({code:'', time: 0, obj: {}})
-  const edPref = reactive({code:'', time: 0, obj: {}})
-  const setEdPref = (code: string, time: number, obj: Object) => {
-    edPref.code = code; edPref.time = time; edPref.obj = obj
-  }
-  const updatePref = async (code: string, time: number, obj: Object) => {
-    pref.code = code; pref.time = time; pref.obj = obj
+  const _userId: Ref<string> = ref('')
+  const userId = computed(() => _userId.value)
+  const _aboutProfile: Ref<string> = ref('')
+  const aboutProfile = computed(() => _aboutProfile.value)
+  const _creds: Ref<Map<string, Credential>> = ref(new Map())
+  const creds = computed(() => creds.value)
+
+  const setStartContext = (
+    userId: string, 
+    aboutProfile: string,
+    creds: Map<string, Credential>) => {
+    _userId.value = userId
+    _aboutProfile.value = aboutProfile
+    _creds.value = creds
   }
 
   return {  
@@ -167,8 +184,9 @@ export const useSessionStore = defineStore('session', () => {
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase, 
-    hasIDB, hasNet, noNet, incognito, startContext, setStartContext,
-    pref, edPref, setEdPref, updatePref
+    hasIDB, hasNet, noNet, incognito,
+    pref, edPref, setEdPref, updatePref,
+    userId, aboutProfile, creds, setStartContext
     // focus, getFocus, lostFocus, closingApp
   }
 })
