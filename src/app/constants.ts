@@ -19,6 +19,16 @@ export const K = {
 
   docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 
+  sizes: {
+    p0: [8, 20],
+    p1: [24, 40],
+    tr: [3, 8],
+    dev: [6, 16],
+    pin: [8, 16],
+    sn: [3, 40], // Nom des sessions
+    about: [4, 64]
+  },
+
   sizeP0: [8, 20],
   sizeP1: [24, 40],
   sizeTr: [3, 8],

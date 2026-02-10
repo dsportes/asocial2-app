@@ -46,7 +46,6 @@ export default {
   replier: 'Replier',
   org: 'Organisation',
   url: 'URL du serveur pour cette organisation: {0}',
-  pressret: '"Entrée" pour valider',
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
   confirm: 'Pour confirmer taper {0}', // BtnConfirm
@@ -63,6 +62,11 @@ export default {
   st_2: 'modifié',
   st_3: 'supprimé',
   settings: 'Préférences',
+
+  minmax: 'De {0} à {1} signes. ',
+  tooshort: 'Texte trop court',
+  toolong: 'Texte trop long',
+  pressret: '"Entrée" pour valider',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -487,7 +491,11 @@ A propos du status ...
   HPimport_inp: 'Saisir le texte JSON',
   HPexport_ok: 'Fichier sauvegardé dans le répertoire de _Téléchargements_ sous le nom [`{0}`].',
   HPcrab: 'A propos du droit d\'accès ...',
+  HPcrab_label: 'A propos du droit d\'accès ...',
+  HPcrab_ph: 'mon droit à ...',
   HPpsab: 'A propos de la session ...',
+  HPpsab_label: 'A propos de la session ...',
+  HPpsab_ph: 'ma session pour ...',
   HPtab_c: 'Droits d\'accès',
   HPtab_s: 'Sessions',
   HPpslst_1: 'Liste des sessions',

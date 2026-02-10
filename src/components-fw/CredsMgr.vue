@@ -55,26 +55,9 @@
             <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
           </div>
 
-          <!-- existait ou importé, about déjà modifié ou non-->
-          <q-input v-if="localCred.st !== 2"
-            filled v-model="locaboutCr" 
-            :label="$t('HPcrab')"
-            input-class="font-mono"
-            counter
-            :hint="hintCr"
-            bottom-slots
-            :error="locaboutCrerr !== ''"
-            @keydown.enter.prevent="valAbCr">
-            <template v-slot:append>
-              <q-icon size="sm" name="close" @click="locaboutCr = ''" 
-                class="cursor-pointer" :disable="locaboutCr.length === 0"/>
-              <q-btn size="sm" icon="undo" color="primary" round
-                @click="undoAbCr" :disable="!chgAbCr || locaboutCrerr !== ''"/>
-              <q-btn size="sm" icon="check" :disable="!chgAbCr || locaboutCrerr !== ''" 
-                color="primary" round @click="valAbCr" />
-            </template>
-            <template v-slot:error>{{$t(locaboutCrerr)}}</template>
-          </q-input>
+          <input-a v-if="localCred.st !== 2"
+            size="about" prefix="HPcrab" :initval="initAbCr"
+            v-model="locaboutCr" :validatefn="valAbCr"/>
 
           <!-- TEST de transmission d'un credential -->
           <q-input outlined v-model="targetName" label="Cible de la transmission (TEST)">
@@ -128,26 +111,8 @@
 
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
-
-        <q-input
-          filled v-model="locaboutPs" 
-          :label="$t('HPpsab')"
-          input-class="font-mono"
-          counter
-          :hint="hintPs"
-          bottom-slots
-          :error="locaboutPserr !== ''"
-          @keydown.enter.prevent="valAbPs">
-          <template v-slot:append>
-            <q-icon size="sm" name="close" @click="locaboutPs = ''" 
-              class="cursor-pointer" :disable="locaboutPs.length === 0"/>
-            <q-btn size="sm" icon="undo" color="primary" round
-              @click="undoAbPs" :disable="!chgAbPs || locaboutPserr !== ''"/>
-            <q-btn size="sm" icon="check" :disable="!chgAbPs || locaboutPserr !== ''" 
-              color="primary" round @click="valAbPs" />
-          </template>
-          <template v-slot:error>{{$t(locaboutPserr)}}</template>
-        </q-input>
+        <input-a size="sn" prefix="HPpsab" :initval="initAbPs"
+          v-model="locaboutPs" :validatefn="valAbPs"/>
 
         <div class="row justify-end q-my-sm">
           <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
@@ -340,6 +305,7 @@ import CredRow from '../components-fw/CredRow.vue'
 import PsRow from './PsRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
+import InputA from '../components-fw/InputA.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
@@ -456,11 +422,8 @@ const localCred = ref(null)
 const origCred = ref(null)
 const mlocPS1 = ref(null)
 const mlocPS2 = ref(null)
+
 const locaboutCr = ref('')
-const chgAbCr = computed(() => localCred.value.cred.about !== locaboutCr.value )
-const locaboutCrerr = computed(() => locaboutCr.value.length < aboutSize[0] ? 'PScourt' : 
-  (locaboutCr.value.length > aboutSize[1] ? 'PSlong' : ''))
-const hintCr = computed(() => $t('PSminmax', aboutSize) + (!locaboutCrerr.value ? $t('pressret') : ''))
 
 const crSel = (lc: LocalCred) => !lc ? '' : 
   (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
@@ -477,15 +440,11 @@ const selCred = (lc: LocalCred) => {
     else mlocPS2.value.set(psid, e)
 }
 
-const undoAbCr = () => {
-  if (locaboutCrerr.value !== '' || !chgAbCr.value) return
-  const st = localCred.value.st
-  if (st === 1) locaboutCr.value = localCred.value.cred.about || '' // rétablit la valeur importée
-  else locaboutCr.value = origCred.value.about // 0 ou 3 (pas importé): rétablit la valeur origine
-}
+const initAbCr = computed(() => 
+  localCred.value.st === 1 ? localCred.value.cred.about || '' 
+  : (origCred.value ? origCred.value.about || '' : ''))
 
 const valAbCr = () => {
-  if (locaboutCrerr.value !== '' || !chgAbCr.value) return
   const st = localCred.value.st
   if (st === 1) localCred.value.cred.about = locaboutCr.value // importé: ne change rien au statut
   else { // pas importé : statut à 3 si about changé ou remis à 0 si rétabli
@@ -546,10 +505,6 @@ const origPS = ref(null)
 const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
 const mlocCreds2 = ref(null) // Map des creds NE référençant PAS le PS courant
 const locaboutPs = ref('')
-const chgAbPs = computed(() => localPS.value.about !== locaboutPs.value )
-const locaboutPserr = computed(() => locaboutPs.value.length < aboutSize[0] ? 'PScourt' : 
-  (locaboutPs.value.length > aboutSize[1] ? 'PSlong' : ''))
-const hintPs = computed(() => $t('PSminmax', aboutSize) + (!locaboutPserr.value ? $t('pressret') : ''))
 
 const psSel = (ps: LocalPS) => !ps ? '' :
   (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
@@ -566,22 +521,15 @@ const selPS = (ps: LocalPS) => {
     else mlocCreds2.value.set(crid, e)
 }
 
-const undoAbPs = async () => {
-  if (locaboutPserr.value !== '' || !chgAbPs.value) return
-  locaboutPs.value = localPS.value.about
-  localPS.value.chgab = false
-  mlocPS.value.set(localPS.value.id, localPS.value)
-}
+const initAbPs = computed(() => localPS.value.about )
 
 const valAbPs = async () => {
-  if (locaboutPserr.value !== '' || !chgAbPs.value) return
   localPS.value.about = locaboutPs.value
   localPS.value.chgab = true
   mlocPS.value.set(localPS.value.id, localPS.value)
 }
 
 const delPS = () => {
-  // const av = morigPS.value.get(localPS.value.id)
   if (localPS.value.exav) {
     localPS.value.exap = false
     localPS.value.crIds = new Set()
