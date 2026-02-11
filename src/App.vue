@@ -115,9 +115,10 @@ const dataSt = stores.data
 const ui = stores.ui
 const sf = stores.safe
 
-const $t = useI18n().t // Pour rendre accessible $t dans le code
+const i18n = useI18n() 
+const $t = i18n.t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
-set$t($t)
+set$t($t, i18n)
 ui.set$t$q($t, $q)
 
 onMounted(async () => { // Sur onMounted parce que async

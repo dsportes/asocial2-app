@@ -12,8 +12,8 @@ export const K = {
 
   BUILD: 'v2.1',
   localeOptions: [
-    { value: 'en', label: 'English',  flag: '🇬🇧' },
-    { value: 'fr', label: 'Français', flag: '🇫🇷' }
+    { value: 'en', label: 'English 🇬🇧',  flag: '🇬🇧', name: 'English' },
+    { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', name: 'Français' }
   ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
 
@@ -26,8 +26,14 @@ export const K = {
     dev: [6, 16],
     pin: [8, 16],
     sn: [3, 40], // Nom des sessions
-    about: [4, 64]
+    about: [4, 64],
+    pref: [4, 32],
+    org: [3, 16],
+    file: [1, 32],
+    ps: [8, 40]
   },
+
+  phrasestar: true,
 
   sizeP0: [8, 20],
   sizeP1: [24, 40],

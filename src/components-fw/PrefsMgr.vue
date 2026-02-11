@@ -41,25 +41,10 @@
       </div>
     </div>
 
-    <q-input v-if="edName !== 0" class="q-my-md full-width"
-      filled v-model="namep" 
-      :label="$t('HPprefcode')"
-      input-class="font-mono"
-      counter
-      :hint="hintnamep"
-      bottom-slots
-      :error="nameperr !== ''"
-      @keydown.enter.prevent="valNamep">
-      <template v-slot:append>
-        <q-icon size="sm" name="undo" @click="edName = 0" 
-          class="cursor-pointer"/>
-        <q-icon size="sm" name="close" @click="namep = ''" 
-          class="cursor-pointer" :disable="namep.length === 0"/>
-        <q-btn size="sm" icon="check" :disable="nameperr !== ''" 
-          color="primary" round @click="valNamep" />
-      </template>
-      <template v-slot:error>{{$t(nameperr)}}</template>
-    </q-input>
+    <input-a v-if="edName !== 0" class="q-my-md full-width"
+      size="pref" prefix="HPprefcode" :initval="selP ? selP.code : ''"
+      v-model="namep" :validatefn="valNamep"/>
+
   </div>
   </div>
 </template>
@@ -95,6 +80,7 @@ import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
+import InputA from '../components-fw/InputA.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
@@ -106,7 +92,6 @@ import { Crypt } from '../src-fw/crypt'
 
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-const namepSize = [4, 32]
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -165,8 +150,12 @@ const pSel = (code: string) => {
 }
 
 const selPref = (p) => { 
-  selP.value = p
-  edName.value = 0 
+  if (selP.value && selP.value.code === p.code) {
+    selP.value = null
+  } else {
+    selP.value = p
+    edName.value = 0 
+  }
 }
 const rawText = computed(() => !selP.value ? '???' : JSON.stringify(decode(selP.value.obj), null, '\t'))
 
@@ -207,10 +196,6 @@ const undoPref = () => {
 }
 
 const namep = ref('')
-const nameperr = computed(() => namep.value.length < namepSize[0] ? 'PScourt' : 
-  (namep.value.length > namepSize[1] ? 'PSlong' : ''))
-const hintnamep = computed(() => $t('PSminmax', namepSize) + (!nameperr.value ? $t('pressret') : ''))
-
 const edName = ref(0)
 
 const editPref = async () => {
@@ -225,6 +210,7 @@ const dupPref = () => {
 }
 
 const newPref = () => {
+  selP.value = null
   edName.value = 2
   namep.value = ''
 }

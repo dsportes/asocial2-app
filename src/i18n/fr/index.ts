@@ -2,10 +2,11 @@
 // so you can safely delete all default props below
 
 export default {
+  lang: 'La langue est le Français',
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
   ok: 'OK',
-  toecho: 'Texte à recevoir en écho',
+  toecho_label: 'Texte à recevoir en écho',
   echo: 'Texte reçu en écho : {0}',
   ping: 'Etat de l\'organisation',
   later: 'Plus tard',
@@ -67,6 +68,8 @@ export default {
   tooshort: 'Texte trop court',
   toolong: 'Texte trop long',
   pressret: '"Entrée" pour valider',
+  orgcode_label: 'Code de l\'organisation',
+  orgcode_ph: 'monorg',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -134,19 +137,23 @@ export default {
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
-  PSpseudoh: 'Duke Ellington',
+  PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
+  PSpseudo_ph: 'Duke Ellington',
   PSphrase: 'Ma phrase secrète',
-  PSphraseh: 'les 1 sanglots 2 longs 3 etc',
+  PSphrase_label: 'Ma phrase secrète',
+  PSphrase_ph: 'les 1 sanglots 2 longs 3 etc',
   PSminmax: 'De {0} à {1} signes. ',
   PScourt: 'Texte trop court',
   PSdup: 'Nom déjà utilisé',
   PSlong: 'Texte trop long',
   PSpin: 'Code PIN',
-  PSpinh: 'PIN35-zx',
-  PSdevname: 'Nom du terminal',
-  PSdevnameh: 'MonPC/bob/ff',
+  PSpin_label: 'Code PIN',
+  PSpin_ph: 'PIN35-zx',
+  PSdevname_label: 'Nom du terminal',
+  PSdevname_ph: 'MonPC/bob/ff',
   PStrig: 'Initiales, trigramme ... :',
-  PStrigh: 'Bob',
+  PStrig_label: 'Initiales, trigramme ... :',
+  PStrig_ph: 'Bob',
   PSsn: 'A propos de la session ... :',
   PSsnh: 'Accès à mon compte ...',
 
@@ -194,7 +201,8 @@ bla bla
   HPprefssel: 'Préférence [{0}] : dernière édition {1} ({2}).',
   HPprefslist: 'Liste des "préférences" déclarées',
   HPprefraw: 'Texte brut (non éditable)',
-  HPprefcode: 'Code de la "préférence"',
+  HPprefcode_label: 'Code de la "préférence"',
+  HPprefcode_ph: 'Ecran large',
   HPprefdup: 'Ce code est déjà attribué à une "préférence", en saisir un libre.',
   HPauthentif: 'Authentification',
   HPnet_1: 'Accès à Internet',
@@ -319,7 +327,7 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
   HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
   HPpref_1: '... par défaut',
   HPnotpinned: '(non épinglée)',
-  HPexpname: 'Nom du fichier de backup',
+  HPexpname_label: 'Nom du fichier de backup',
   HPexpsafe_1: 'Faire un backup de son "coffre-fort"',
   HPexpsafe_2: `# Faire un backup de son "coffre-fort"
 bla bla
@@ -478,7 +486,7 @@ A propos du status ...
   HPimport_txt: 'Depuis un texte JSON saisi',
   HPexport_clear: 'Dans un fichier JSON en clair',
   HPexport_crypt: 'Dans un fichier JSON crypté',
-  HPimport_p: 'Clé de cryptage du fichier',
+  HPimport_label: 'Clé de cryptage du fichier',
   HPimport_ph: 'mon secret',
   HPimport_bf0: 'Clé de cryptage non saisie ou incorrecte',
   HPimport_bf1: 'Fichier illisible.',
@@ -493,7 +501,7 @@ A propos du status ...
   HPcrab: 'A propos du droit d\'accès ...',
   HPcrab_label: 'A propos du droit d\'accès ...',
   HPcrab_ph: 'mon droit à ...',
-  HPpsab: 'A propos de la session ...',
+  // HPpsab: 'A propos de la session ...',
   HPpsab_label: 'A propos de la session ...',
   HPpsab_ph: 'ma session pour ...',
   HPtab_c: 'Droits d\'accès',
@@ -518,6 +526,7 @@ bla bla
   HPps_5: 'Sessions sans droits d\'accès : {0}',
   HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
   HPnothing: 'Aucun changement à valider',
+  HPtransmit_label: 'Cible de la transmission (TEST)',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

@@ -9,17 +9,20 @@
     bottom-slots
     :error="err !== ''"
     :hint="hint"
-    @keydown.enter.prevent="val">
+    @keydown.enter.prevent="diffval">
     <template v-slot:append>
       <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'" 
         @ok="ui.visibility = !ui.visibility" color="none"/>
       <btn-cond round size="md" icon="close" @ok="m = ''" 
-        :disable="_disable || m.length === 0" color="none"/>
-      <btn-cond round v-if="_initval !== null" size="md" icon="undo" 
-        @ok="undo" :disable="_disable || !chg" color="none"/>
+        :disable="_disable || !m || m.length === 0" color="none"/>
+      <btn-cond round v-if="hasInitVal" 
+        size="md" icon="undo" @ok="undo" :disable="_disable || !chg" color="none"/>
       <btn-cond v-if="validatefn" size="md" icon="check" round
-        :disable="_disable || err !== '' || !chg" color="warning"
-        @ok="val" />
+        :disable="!mayVal" color="warning" @ok="val" />
+      <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star" 
+        color="warning"
+        @ok="m = fill(m); diffval()"
+      />
     </template>
     <template v-slot:error>{{$t(err)}}</template>
   </q-input>
@@ -29,7 +32,7 @@
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
-import { $t } from '../src-fw/util'
+import { $t, hasMessage } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 const ui = stores.ui
@@ -42,22 +45,49 @@ const props = defineProps({
   prefix: String,
   initval: String,
   disable: Boolean,
-  validatefn: Function
+  validatefn: Function,
+  objerr: Object,
+  valctrl: Function
 })
 
-const sz = stores.config.K.sizes[props.size] || [0, 80]
+const star = (config.K.phrasestar || false) && (props.size === 'ps' || props.size === 'p1')
+const disval = ref(false)
+const mayStar = computed(() => m.value.length > 2 && m.value.endsWith('*'))
+const mayVal = computed(() => 
+  !_disable.value && err.value === '' && chg.value && !disval.value)
+
+const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
+const valfn = ref(props.validatefn)
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
-  const x = $t(e)
-  return e === x ? '' : x
+  return hasMessage(e) ? $t(e) : ''
 })
+
+const fill = (v) => {
+  const x = v.substring(0, v.length - 1)
+  let s = ''; while (s.length < sz.value[1]) s += x
+  return s
+}
+
+const diffval = () => {
+  setTimeout(() => {
+    if (mayVal.value)
+      val()
+  }, 50)
+}
 
 const _disable = ref()
 const _initval = ref()
+const hasInitVal = computed(() => {
+  if (typeof(_initval.value) === 'undefined') return false
+  if (_initval.value === null) return false
+  return true
+})
 
 const init = () => {
-  _disable.value = props.disable !== 'undefined' ? props.disable : false
-  _initval.value = props.initval !== 'undefined' ? props.initval : null
+  _disable.value = typeof(props.disable) !== 'undefined' ? props.disable : false
+  _initval.value = typeof(props.initval) !== 'undefined' ? 
+    (props.initval ? props.initval : null) : null
 }
 
 init()
@@ -68,23 +98,32 @@ watch(() => props.disable, () => {
   init() 
 })
 
-const chg = computed(() => _initval.value !== null ? _initval.value !== m.value : false)
-const hint = computed(() => $t('minmax', sz) + (!err.value ? $t('pressret') : ''))
-const err = computed(() => {
-  const x = m.value.length < sz[0] ? 'tooshort' : 
-  (m.value.length > sz[1] ? 'toolong' : '')
-  return x
-})
+const chg = computed(() => _initval.value !== null ? _initval.value !== m.value : true)
+const hint = computed(() => $t('minmax', sz.value) + (!err.value ? $t('pressret') : ''))
+
+const xe = () => !m || m.value.length < sz.value[0] ? 'tooshort' : 
+  (m.value.length > sz.value[1] ? 'toolong' : '')
+
+const err = ref()
+const setx = () => {
+  err.value = xe()
+  if (props.objerr) props.objerr.err = err.value
+  disval.value = props.valctrl && !props.valctrl()
+}
+watch(m, (v) => { setx() })
+setx()
 
 const undo = () => {
   if (_initval.value !== null) m.value = _initval.value
 }
+
 const val = () => {
-  if (props.validatefn && !_disable.value) props.validatefn()
+  if (valfn.value && !_disable.value && err.value === '') 
+    valfn.value()
 }
 
 </script>
 
 <style lang="scss" scoped>
-@import '../css/app.scss'
+@import '../css/app.scss';
 </style>

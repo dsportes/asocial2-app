@@ -106,7 +106,11 @@
     </q-scroll-area>
 
     <div v-if="nvSP" class="q-mt-md">
-      <q-input v-if="session.hasNet && !selStar"
+      <input-a v-if="session.hasNet && !selStar"
+        size="about" prefix="HPpsab" :initval="selSessionAbBefore"
+        v-model="selSessionAb" :validatefn="valAbPs"/>
+
+      <!--q-input v-if="session.hasNet && !selStar"
         filled v-model="selSessionAb" 
         :label="$t('HPpsab')"
         input-class="font-mono"
@@ -124,7 +128,7 @@
             color="primary" round @click="valAbPs" />
         </template>
         <template v-slot:error>{{$t(selSessionAbserr)}}</template>
-      </q-input>
+      </q-input-->
       <div v-else class="font-mono text-bold">{{selSessionAb}}</div>
 
       <div v-if="sf.selectedSession">
@@ -215,9 +219,7 @@
         <btn-bubble :text="$t('HPauthbypin_2')"/>
       </q-toolbar>
       <div class="full-width q-pa-sm">
-        <input-ps v-model="pin"
-          :validate="authPIN" iconcheck
-          :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>
+        <input-ps v-model="pin" prefix="PSpin" size="pin" :validatefn="authPIN"/>
       </div>
     </q-card>
   </q-dialog>
@@ -249,28 +251,15 @@
     <template #default>
       <div class="column q-mx-lg items-center">
         <div class="q-my-sm full-width">
-          <div class="titre-md text-italic">{{$t('HPimport_p')}}</div>
-          <input-ps v-model="cryptK" iconcheck :validate="valK"
-            :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')"/>
+          <div class="titre-md text-italic">{{$t('HPimport_label')}}</div>
+          <input-ps v-model="cryptK" :validatefn="valK" size="ps" prefix="HPimport"/>
         </div>
-        <div v-if="cryptK.key === null" 
-          class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
-
-        <q-input class="q-my-md full-width" v-model="expName" 
-          :label="$t('HPexpname')"
-          input-class="font-mono"
-          counter
-          :hint="hintExp"
-          bottom-slots
-          :error="expName.length < 4">
-          <template v-slot:append>
-            <q-icon size="sm" name="close" @click="expName = ''" 
-              class="cursor-pointer" :disable="expName.length === 0"/>
-          </template>
-          <template v-slot:error>{{$t(expNameErr)}}</template>
-        </q-input>
-
-    </div>
+        <div v-if="cryptK.key === null" class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
+        <input-a v-if="session.hasNet && !selStar" class="q-my-sm full-width"
+          size="file" prefix="HPexpname" v-model="expName"
+          :disable="cryptK.key === null"
+          :validatefn="doExportSafe"/>
+      </div>
     </template>
   </dialog-std1>
 
@@ -330,25 +319,26 @@
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
           {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
         </div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="devName"
-          :sz="cfg.K.sizeDev" :label="$t('PSdevname')" :ph="$t('PSdevnameh')"/>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
+          v-model="devName" prefix="PSdevname" size="dev"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="newPIN"
-          :sz="cfg.K.sizePin" :label="$t('PSpin')" :ph="$t('PSpinh')"/>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" 
+          v-model="newPIN" size="pin" prefix="PSpin"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" v-model="newPseudo"
-          :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" 
+          v-model="newPseudo" size="tr" prefix="PStrig"/>
       </div>
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrust_1')" color="warning" :disable="trusterr" @ok="setTrust"/>
+        <btn-cond flat :label="$t('HPtrust_1')" color="warning" 
+          :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -417,6 +407,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
+import InputA from '../components-fw/InputA.vue'
 // import BtnConfirm from '../components-fw/BtnConfirm.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 // import ChooseIt from '../components-fw/ChooseIt.vue'
@@ -443,8 +434,8 @@ import databaseB from '../assets/database_black.png'
 const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-const expNameSize = [4, 32]
-const aboutSize = [4, 64]
+// const expNameSize = [4, 32]
+// const aboutSize = [4, 64]
 
 const ui = stores.ui
 const sf = stores.safe
@@ -522,9 +513,11 @@ const delSafe = async () => {
 }
 
 const expName = ref('')
+/*
 const expNameErr = computed(() => expName.value.length < expNameSize[0] ? 'PScourt' : 
   (expName.value.length > expNameSize[1] ? 'PSlong' : ''))
 const hintExp = computed(() => $t('PSminmax', expNameSize))
+*/
 
 const cryptK = reactive( { inp: '', err: '', key: null } )
 const bin = ref(null)
@@ -541,8 +534,7 @@ const exportSafe = async () => {
 }
 
 const valK = async () => {
-  if (cryptK.err === '') cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
-  else cryptK.key = null
+  cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
 }
 
 const doExportSafe = async () => {
@@ -706,6 +698,7 @@ const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
 const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
 const selSessionAb = ref('')
 const selSessionAbBefore = ref('')
+/*
 const chgAbPs = computed(() => selSessionAbBefore.value !== selSessionAb.value )
 const selSessionAbserr = computed(() => selSessionAb.value.length < aboutSize[0] ? 'PScourt' : 
   (selSessionAb.value.length > aboutSize[1] ? 'PSlong' : ''))
@@ -714,6 +707,7 @@ const hintPs = computed(() => $t('PSminmax', aboutSize) + (!selSessionAbserr.val
 const undoAbPs = () => {
   selSessionAb.value = selSessionAbBefore.value
 }
+*/
 
 const valAbPs = async () => {
   const profId = sf.selectedSession ? sf.selectedSession.profId : sf.selectedProfile.profId

@@ -11,11 +11,21 @@ import { gzip, ungzip } from './pako.mjs'
 // const stores = null
 
 export let $t: any
-export function set$t (_$t) { $t = _$t }
+export let i18n: any
+export function set$t (_$t, _i18n) { $t = _$t; i18n = _i18n }
 
 export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
+
+export function hasMessage (code: string) : boolean {
+  const k = stores.config.K
+  for (const opt of k.localeOptions) {
+    const mx = i18n.messages.value[opt.value]
+    if (mx && mx[code]) return true
+  }
+  return false
+}
 
 let audioContext = null
 export async function beep (son: string) {

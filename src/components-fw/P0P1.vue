@@ -5,14 +5,12 @@
       <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
     </q-toolbar>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p0" iconcheck
-      :validate="p0.err === '' && p1.err === '' ? validate : null"
-      :sz="cfg.K.sizeP0" :label="$t('PSpseudo')" :ph="$t('PSpseudoh')"/>
+    <input-ps class="q-ml-md q-mb-sm" v-model="p0" size="p0" prefix="PSpseudo"
+      :validatefn="validate" :valctrl="valctrl"/>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p1" iconcheck
-      :validate="p0.err === '' && p1.err === '' ? validate : null"
-      :sz="cfg.K.sizeP1" :label="$t('PSphrase')" :ph="$t('PSphraseh')"/>
-  </div>
+    <input-ps class="q-ml-md q-mb-sm" v-model="p1" size="p1" prefix="PSphrase"
+      :validatefn="validate" :valctrl="valctrl"/>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -21,10 +19,6 @@ import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import { Crypt } from '../src-fw/crypt'
-
-const cfg = stores.config
-
-const ui = stores.ui
 
 const props = defineProps({
   title: String,
@@ -35,11 +29,13 @@ const emit = defineEmits(['ok'])
 
 const p0 = reactive( { inp: '', err: '' } )
 const p1 = reactive( { inp: '', err: '' } )
-const p1err = computed(() => p1.value.length < cfg.K.sizeP1[0] ? 'PScourt' : (p1.value.length > cfg.K.sizeP1[1] ? 'PSlong' : ''))
-const err = computed(() => p0.err !== '' || p1.err !== '')
+
+/* retourne true si la fonction validate peut être appelée */
+const valctrl = (() => {
+  return p0.err === '' && p1.err === '' 
+})
 
 const validate = async () => {
-  if (err.value) return
   emit('ok', { 
     sh0: await Crypt.strongHash(p0.inp, true, true),
     sh1: await Crypt.strongHash(p1.inp, true, true),

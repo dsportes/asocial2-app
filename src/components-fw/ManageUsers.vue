@@ -75,9 +75,8 @@
   <div v-if="tab === 'safe'" class="full-width">
     <bar-open1 :title="$t('HPimpsafe_1')" :bubble="$t('HPimpsafe_2')"/>
     <div class="titre-md text-italic q-mt-sm">{{$t('HPimport_p')}}</div>
-    <input-ps v-model="cryptK" iconcheck
-      :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')" 
-      :validate="valK"/>
+    <input-ps v-model="cryptK" prefix="HPimport" size="ps"
+      :validatefn="valK"/>
 
     <q-file v-if="cryptK.key !== null"
       class="q-my-md full-width" dense filled v-model="fileList"

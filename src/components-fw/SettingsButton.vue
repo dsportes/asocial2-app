@@ -22,7 +22,6 @@
 
         <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense :class="cl(lg)"
           @click="choix(lg)" clickable v-close-popup>
-          <q-item-section avatar><q-avatar size="xl">{{lg.flag}}</q-avatar></q-item-section>
           <q-item-section class="fs-lg">{{lg.label}}</q-item-section>
         </q-item>
 
@@ -275,22 +274,16 @@
   </q-dialog>
 
   <!-- Pings du serveur -->
-  <q-dialog v-model="ui.dModels[idc].pings" persistent>
-    <q-card :class="sty('sm')">
-      <q-toolbar class="tbp">
-        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
-        <q-toolbar-title>{{$t('pings')}}</q-toolbar-title>
-        <btn-cond icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
-        <btn-cond icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
-        <help-button page="reloadApp"/>
-      </q-toolbar>
+  <dialog-std0 v-if="ui.dModels[idc].pings" v-model="ui.dModels[idc].pings" vh="80"
+    :title="$t('pings')" hdrclass='wmd' help="pings">
+    <template #hdr>
+      <btn-cond icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
+      <btn-cond icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
+    </template>
+    <template #default>
+      <q-separator color="orange" class="q-my-md"/>
 
-      <q-input class="q-mt-md q-px-sm" outlined v-model="org" :label="$t('org')">
-        <template v-slot:append>
-          <q-icon size="sm" name="close" @click="org = ''" 
-            class="cursor-pointer" :disable="org.length === 0"/>
-        </template>
-      </q-input>
+      <input-a size="org" prefix="orgcode" v-model="org"/>
 
       <q-separator color="orange" class="q-my-md"/>
 
@@ -303,16 +296,11 @@
       <q-separator color="orange" class="q-my-md"/>
 
       <div class="column q-px-sm q-gutter-md q-mb-md">
-        <q-input filled v-model="toecho" :label="$t('toecho')">
-          <template v-slot:append>
-            <btn-cond icon="send" :disable="toecho === ''" @ok="opEcho"/>
-          </template>
-        </q-input>
+        <input-a size="org" prefix="toecho" v-model="toecho" :validatefn="opEcho"/>
         <div class="font-mono">{{$t('echo', [echo])}}</div>
       </div>
-
-    </q-card>
-  </q-dialog>
+    </template>
+  </dialog-std0>
 
   <!-- Maj préférences -->
   <dialog-std1 v-model="ui.dModels[idc].edprf" 
@@ -349,7 +337,9 @@ import HelpButton from './HelpButton.vue'
 import BtnCond from './BtnCond.vue'
 import PermissionDialog from './PermissionDialog.vue'
 import DialogStd1 from './DialogStd1.vue'
+import DialogStd0 from './DialogStd0.vue'
 import PrefEditor from '../components/PrefEditor.vue'
+import InputA from '../components-fw/InputA.vue'
 import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'

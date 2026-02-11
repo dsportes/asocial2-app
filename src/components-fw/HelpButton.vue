@@ -1,5 +1,5 @@
 <template>
-  <btn-cond icon="help" @ok="stores.ui.openHelp(page)"/>
+  <btn-cond icon="help" @ok="stores.ui.openHelp(page)" color="none"/>
 </template>
 
 <script setup lang="ts">

@@ -60,14 +60,8 @@
             v-model="locaboutCr" :validatefn="valAbCr"/>
 
           <!-- TEST de transmission d'un credential -->
-          <q-input outlined v-model="targetName" label="Cible de la transmission (TEST)">
-            <template v-slot:append>
-              <q-icon size="sm" name="close" @click="targetName = ''" 
-                class="cursor-pointer" :disable="targetName.length === 0"/>
-              <q-btn size="sm" icon="check" :disable="targetName.length === 0" 
-                color="warning" round @click="transmitTest" />
-            </template>
-          </q-input>
+          <input-a size="p0" prefix="HPtransmit"
+            v-model="targetName" :validatefn="transmitTest"/>
           
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
@@ -169,9 +163,8 @@
       </div>
       <div v-if="importCr === 2" class="q-my-sm">
         <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="cryptK" iconcheck
-          :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')" 
-          :validate="valK"/>
+        <input-ps v-model="cryptK" prefix="HPimport" size="ps" 
+          :validatefn="valK"/>
       </div>
 
       <q-file v-if="(importCr === 2 && cryptK.key !== null) || importCr === 1"
@@ -226,8 +219,8 @@
       </div>
       <div v-if="exportCr === 2" class="q-my-sm">
         <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="cryptK" iconcheck :validate="valK"
-          :sz="[4, 32]" :label="$t('HPimport_p')" :ph="$t('HPimport_ph')"/>
+        <input-ps v-model="cryptK" iconcheck :validatefn="valK"
+          prefix="HPimport" size="ps"/>
       </div>
 
       <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"

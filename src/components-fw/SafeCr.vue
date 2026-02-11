@@ -14,8 +14,7 @@
   <div v-if="diag !== ''" class="diag">{{diag}}</div>
   <div v-if="mode !== 2" class="row items-center q-my-sm">
     <div class="titre-md">{{$t('HPtrig')}}</div>
-    <input-ps class="q-ml-sm" v-model="trig"
-      :sz="cfg.K.sizeTr" :label="$t('PStrig')" :ph="$t('PStrigh')"/>
+    <input-ps class="q-ml-sm" v-model="trig" size="tr" prefix="PStrig"/>
   </div>
   <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
     class='q-mb-xs'
