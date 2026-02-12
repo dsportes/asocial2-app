@@ -9,38 +9,13 @@
           <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('app')}}</div>
           <div class="col-7 font-mono">{{config.K.APPNAME}}</div>
         </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('build')}}</div>
-          <div class="col-7 font-mono">{{config.K.BUILD}}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">
-            {{$t('userid')}}</div>
-          <div class="col-7 font-mono">{{sf.userId ? sf.userId: $t('unknown')}}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">
-            {{$t('username')}}</div>
-          <div class="col-7 font-mono">{{sf.userName ? sf.userName: $t('unknown')}}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('authby')}}</div>
-          <div class="col-7 font-mono">{{$t('authby_' + sf.openMode)}}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('sessionid')}}</div>
-          <div class="col-7 font-mono">{{session.sessionInfo}}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 titre-md text-italic q-pr-sm text-right">{{$t('step')}}</div>
-          <div class="col-7 font-mono">{{$t('step_' + sf.step)}}</div>
-        </div>
       </q-banner>
     </q-popup-proxy>
   </q-img>
 </template>
 
 <script setup lang="ts">
+/* Gardé à toute fin utile mais pour l'instant non inclus */
 import { ref } from 'vue'
 import stores from '../stores/all'
 import { $t, $q } from '../src-fw/util'

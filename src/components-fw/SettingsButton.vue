@@ -3,7 +3,7 @@
   <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
   <q-btn v-else flat dense icon="settings" :class="session.newVersionReady ? 'bg-negative text-white' : ''">
     <q-menu>
-      <q-list style="min-width: 300px">
+      <q-list style="min-width: 350px">
 
         <q-item v-if="session.newVersionReady" clickable dense v-close-popup
           class="bg-negative text-white"
@@ -20,7 +20,8 @@
 
         <q-separator />
 
-        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense :class="cl(lg)"
+        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense 
+          :class="cl(lg) + ' text-center'"
           @click="choix(lg)" clickable v-close-popup>
           <q-item-section class="fs-lg">{{lg.label}}</q-item-section>
         </q-item>
@@ -63,9 +64,13 @@
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
         </q-item>
 
-        <q-item class="column">
-          <div class="font-mono text-italic">{{ $t('build') + ': ' + config.K.BUILD }}</div>
-          <div class="titre-sm text-italic">{{ $t('services') }}</div>
+        <scroll-area size="sm" class="q-mt-sm full-width"><template #default>
+          <div class="row">
+            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('app')}}</div>
+            <div class="font-mono">{{config.K.APPNAME}}</div>
+            <div class="font-mono">{{ $t('build') + ': ' + config.K.BUILD }}</div>
+          </div>
+          <div class="titre-md text-italic q-mt-sm text-primary">{{ $t('services') }}</div>
           <div v-for="[svc, x] in services" :key="svc" class="q-ml-md column">
             <div class="font-mono fs-sm">
               <span :class="svc === defsvc ? 'text-bold' : ''">{{svc}}</span>
@@ -73,7 +78,28 @@
               <span class="q-ml-sm">[{{x.api}}]</span>
             </div>
           </div>
-        </q-item>
+          <div class="row q-mt-sm">
+            <div class="titre-md text-italic q-pr-sm text-primary">
+              {{$t('userid')}}</div>
+            <div class="font-mono">{{sf.userId ? sf.userId: $t('unknown')}}</div>
+          </div>
+          <div class="row">
+            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('username')}}</div>
+            <div class="font-mono">{{sf.userName ? sf.userName: $t('unknown')}}</div>
+          </div>
+          <div class="row">
+            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('authby')}}</div>
+            <div class="font-mono">{{$t('authby_' + sf.openMode)}}</div>
+          </div>
+          <div class="row">
+            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('sessionid')}}</div>
+            <div class="font-mono">{{session.sessionInfo}}</div>
+          </div>
+          <div v-if="sf.step !== 0" class="row">
+            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('step')}}</div>
+            <div class="font-mono">{{$t('step_' + sf.step)}}</div>
+          </div>
+        </template></scroll-area>
         <!-- Test surcharge traductions
         <q-item>
           <q-item-section class="font-mono text-center text-italic">{{ $t('blabla') + ' - ' + $t('blabla1') }}</q-item-section>
@@ -340,6 +366,7 @@ import DialogStd1 from './DialogStd1.vue'
 import DialogStd0 from './DialogStd0.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import InputA from '../components-fw/InputA.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
@@ -347,6 +374,7 @@ import { localeOption } from '../stores/config-store'
 const i18n = useI18n()
 const config = stores.config
 const session = stores.session
+const sf = stores.safe
 const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))

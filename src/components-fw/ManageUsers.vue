@@ -296,7 +296,7 @@ const close = async () => {
   const allSessions = await sf.getAllSessions()
   for(const id of sDel.value) {
     const s = allSessions.get(id)
-    if (s && s.hasCache) l.push(s)
+    l.push(s)
   }
   if (l.length) await sf.purgeIDBS(l)
   for(const id of sDel.value) await sf.delTSession(null, id)

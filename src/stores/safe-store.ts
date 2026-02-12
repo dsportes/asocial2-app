@@ -148,7 +148,6 @@ export class TSession {
   userId: string // id de l'utilisateur
   profId: string // id du profil - si '*' "tous les droits"
   about: string // copie de about du profil (utile en mode Avion)
-  hasCache?: boolean // true si a une base IDB cache de documents
   size: number[] // tailles des données / fichiers stockés en local dans IDB
   time: number // date-heure de dernière ouverture sur ce terminal
   prefCode: string // code de la "préférence" utilisée la dernière fois
@@ -157,6 +156,10 @@ export class TSession {
 
   constructor (obj: Object) {
     for(const f of Object.keys(obj)) this[f] = obj[f]
+  }
+
+  static initSize () {
+    return new Array(coeffs.length).fill(0)
   }
 
   get toObj () : Object {
@@ -564,10 +567,11 @@ export const useSafeStore = defineStore('safe', () => {
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
     if (!stores.session.hasNet || !profile) return x
-    for(const id of profile.crIds) {
-      const c = mySafeCreds.value.get(id)
-      if (c) x.set(id, c)
-    }
+    if (profile.profId !== '*') for(const id of profile.crIds) {
+        const c = mySafeCreds.value.get(id)
+        if (c) x.set(id, c)
+      }
+    else for (const [id, c] of mySafeCreds.value) x.set(id, c)
     return x
   }
 
@@ -659,6 +663,7 @@ export const useSafeStore = defineStore('safe', () => {
   const setTSession = async (s: TSession, razdb?: boolean) => {
     try {
       s.time = Date.now()
+      if (razdb) s.size = TSession.initSize()
       if (!stores.session.incognito)
         await saveTSession(s)
 
@@ -1067,7 +1072,6 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     id: string
     about: string
-    hasCache: boolean
     size: number[]
     time: number
   }
@@ -1153,9 +1157,8 @@ export const useSafeStore = defineStore('safe', () => {
         id: s.idOf,
         ck: false,
         about: '',
-        hasCache: s.hasCache || false,
-        // size: s.size || new Array(nbc).fill(0),
-        size: [20000, 500000],
+        size: s.size || TSession.initSize(),
+        // size: [20000, 500000], // Pour tester
         time: s.time
       }
       if (s.userId === userId.value && s.app ===  app)

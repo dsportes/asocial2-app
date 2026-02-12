@@ -4,7 +4,7 @@
     <safe-header v-if="ui.page==='home'"/>
 
     <q-toolbar v-else class="full-width tbp">
-      <about-session/>
+      <!--about-session/-->
       <!--q-img :src="incognito" class="bg-primary" @click="beep(mybeep)"
         style="height: 30px; max-width: 30px;"/-->
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
@@ -32,7 +32,9 @@
 
   <q-page-container class="font-def">
     <transition name="anim1">
-      <q-page v-if="ui.page === 'home'"><safe-page/></q-page>
+      <q-page v-if="ui.page === 'home'" class="column">
+        <safe-page class="q-mt-sm"/>
+      </q-page>
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'appHome'">
@@ -89,7 +91,7 @@ import { testCred } from './src-fw/credential'
 import SafePage from './pages/SafePage.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 
-import AboutSession from './components-fw/AboutSession.vue'
+// import AboutSession from './components-fw/AboutSession.vue'
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import BtnCond from './components-fw/BtnCond.vue'

@@ -85,12 +85,11 @@
         <div v-if="sOfP(profId)">
           <div :class="clSel(sOfP(profId)) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
             @click="selSession(sOfP(profId))">
-            <div class="col-7 q-pr-xs">{{pincode + ' ' + (p.about || $t('HPpstar'))}}</div>
+            <div class="col-7 q-pr-xs">{{p.about || $t('HPpstar')}}</div>
             <div class="col-4 text-italic">{{dhcool(sOfP(profId).time)}}</div>
-            <div v-if="sOfP(profId).hasCache" class="col-1 row justify-end">
+            <div class="col-1 row justify-end">
               <q-img :src="database" style="height: 24px; max-width: 24px"/>
             </div>
-            <div v-else class="col-1"/>
           </div>
         </div>
         <div v-else>
@@ -111,19 +110,19 @@
       <div v-else class="font-mono text-bold">{{selSessionAb}}</div>
 
       <div v-if="sf.selectedSession">
-        <div class="row justify-between items-center">
+        <div v-if="session.hasNet" class="row justify-between items-center">
           <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
           <btn-bubble class="col-auto self-start" size="sm"
             :text="$t('HPunpin_1')"/>
         </div>
-        <div v-if="selHasCache && !unpinme" class="row justify-between items-center">
+        <div v-if="!unpinme" class="row justify-between items-center">
           <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
           <btn-bubble class="col-auto self-start" size="sm"
             :text="$t('HPresetdb_1')"/>
         </div>
       </div>
       <div v-else>
-        <div class="row justify-between items-center">
+        <div v-if="session.hasNet" class="row justify-between items-center">
           <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
           <btn-bubble class="col-auto self-start" size="sm"
             :text="$t('HPpin_1')"/>
@@ -657,7 +656,6 @@ watch(resetdb, async (ap) => {
 })
 
 const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
-const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
 const selSessionAb = ref('')
 const selSessionAbBefore = ref('')
 
@@ -728,49 +726,58 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
       // mode avion : reprise telle quelle (seul son time est mis à jour)
       await sf.setTSession(sv, false)
     } else {
-      if (sv.profId !== '*') {
+      if (sv.profId !== '*')
         profile = locSafeProfiles.value.get(sv.profId)
-        if (!profile) {
-          /* PROBLEME : la session est épinglée mais son profile a été détruit depuis
-          on lui redonne le profil universel */
-          profile = { profId: '*', about: '', crIds: [] }
-          sv.profId = '*'
-        }
+      if (!profile) {
+        /* PROBLEME : la session est épinglée mais son profile a été détruit depuis
+        on lui redonne le profil universel
+        SOIT elle n'avait pas de profile */
+        profile = { profId: '*', about: '', crIds: [] }
+        sv.profId = '*'
       }
       sv.prefCode = prefCode
       sv.prefObj = prefObj
       if (unpinme.value) {
-        sv.hasCache = false
+        /* c'est une exécution SANS base (non épinglée), FUGITIVE
+        elle EST effacée en tant que session
+        elle peut avoir un profil (ou '*') et une préférence (ou par défaut)
+        */
         await sf.delTSession(sv)
+        session.setDbName('')
       } else {
         // save tsession avec time, raz db si requis
         await sf.setTSession(sv, resetdb.value)
-        session.setDbName(sv.hasCache ? sv.dbName : '')
+        session.setDbName(sv.dbName)
       }
     }
 
-  } else { // sp : existe
+  } else { 
     /* nouvelle session ouverte depuis un profile
-    QUI EXISTE puisqu'il a été sélectionné.
-    Il y a TOUJOURS du réseau pour avoir pu choisir un "profile"
+    - soit sélectionné,
+    - soit '*'.
     */
     profile = sp
 
-    if (pinme.value) { // épingler la session
+    if (pinme.value) { // épingler la session: il Y A du réseau
       const nvs = sf.newTSession({
         app: cfg.appname,
         userId: sf.userId,
         profId: sp.profId,
         about: sp.about,
-        hasCache: true,
-        size: 0,
+        size: TSession.initSize(),
         time: 0,
         prefCode: prefCode,
         prefTime: prefTime,
         prefObj: prefObj
       }) as TSession
-      await sf.setTSession(nvs, true) // true: par superstition ! (db ne devrait pas exister)
+      await sf.setTSession(nvs, true) // true: force reset du volume
       session.setDbName(nvs.dbName)
+    } else {
+      /* il y a OU NON du réseau
+        c'est une exécution SANS base (non épinglée), FUGITIVE
+        elle N'EST PAS enregistrée en tant que session
+        elle peut avoir un profil (ou '*') et une préférence (ou par défaut)
+      */
     }
   }
 
