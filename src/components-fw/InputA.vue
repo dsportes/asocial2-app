@@ -32,6 +32,56 @@
 </template>
 
 <script setup lang="ts">
+/*
+Ce composant étend la capacité du <q-input> avec:
+- un contrôle syntaxique
+- l'appel d'une fonction de validation.
+
+Le contrôle syntaxique est piloté par la propriété "size" qui désigne
+une entrée déclarée dans "constants.sizes" qui est un array de 2 ou 3 termes:
+- [0] : taille minimale,
+- [1] : taille maximale,
+- [2] : facultativement le nom d'une expression régulière déclarée dans "constants.regexp".
+  En cas de présence le texte est vérifié selon cette expression.
+Il en résulte le texte de l'erreur "err" qui peut être "badform" "tooshort" "toolong" ou "" (pas d'erreur).
+L'existence d'une erreur bloque l'appel de la fonction de validation.
+Le composant parent peut accéder à tout instant:
+- à la valeur courante saisi (puisque c'est le "model"),
+- au code l'erreur courante dans la propriété "err" d'un objet passé sur la propriété "objerr":
+de cette façon le parent peut, s'il le souhaite, gérer à tout instant si le texte saisi est correct syntaxiquement ou non.
+
+Si la propriété optionnelle "disable" est fixée, <input-A> interdit la saisie. 
+Cette propriété est dynamique et réévaluée si sa valeur change, typiquement quand le 
+composant affiche la valeur courante d'une liste qui est balayée.
+
+La propriété optionnelle "initval" donne la valeur initiale avant saisie:
+quand elle est fixée, un bouton "undo" permet de réinitialiser la valeur du model à sa valeur initiale.
+Cette propriété est dynamique et réévaluée si sa valeur change.
+
+La fonction optionnelle "validatefn" permet au bouton "check" ou à l'appui sur la touche "Entrée"
+d'être invoquée.
+La validation n'est invoquée que si,
+- le model n'est "disable",
+- il n'y a pas d'erreur syntaxique,
+- la valeur a changé par rapport à "initval" (si elle a été donnée),
+- enfin si le résultat de l'appel de la fonction "valctrl" (si elle a été donnée) est true.
+
+Quand une fonction "valctrl" est donnée en propriété, elle donne au composant parent le moen de
+contrôler si la valeur en cours de sasie est "validable" ou non en fonction du contexte
+détenu par la parent et non pas seulment sur la seule valeur intrinséque du model.
+Cette fonction n'est invquée que si le model n'est pas disable, a changé de valeur et n'a pas d'eereur syntaxique.
+
+Les libellés sont contrôlés par "prefix". Soit XXpfx ce préfixe,
+- le dictionnaire linguistique peut avoir plusieurs entrées,
+- XXpfx_label donne le label affiché,
+- XXpfx_ph si existant donne la valeur du placeholder affiché quand le model est vide,
+- XXpfx_bub si existant donne le texte de la "bulle d'aide".
+
+En l'absence de XXpfx, le texte de la bulle d'aide est:
+- si size a indiqué un nom d'expression régulière ("b64" par exemple) le texte est REGexp_b64.
+- sinon c'est REGexp_all qui indique accepter toutes les valeurs.
+*/
+
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
@@ -45,8 +95,8 @@ const config = stores.config
 const m = defineModel() // Dans le script accessible par m.value
 
 const props = defineProps({
-  size: String,
-  prefix: String,
+  size: String, // obligatoire
+  prefix: String, // obligatoire
   initval: String,
   disable: Boolean,
   validatefn: Function,

@@ -16,12 +16,59 @@ import { Crypt, toPem, fromPem } from '../src-fw/crypt'
 import { Credential } from '../src-fw/credential'
 
 /*
+### Safes stockés dans un directory
+Dans un directory externe de "safes", chaque "safe" est enregistré et accessible par:
+- clé primaire: soit son "id",
+- index unique: soit la propriété "hp0", pseudo "principal",
+- index unique: soit la propriété "hr0", pseudo "seconaire".
+La proriété "lam" (dernier mois d'accès) est gérée par le serveur et permet de récupérer
+tous les safes qui n'ont pas été accédés depuis longtemps et de les purger.
+
+La "valeur" accédée est la sérialisation par Msgpack d'un objet "Safe", (cryptée ou non par le serveur).
+Cette sérialisation est indépendante des implémentations à condition de respecter les contraintes suivantes:
+- les "map" vides sont null (et non pas des object vides, mal gérés sous PHP).
+- les propriétés sont des "string / number / boolean".
+- les valeurs "binaires" sont passées en textes encodés en base64 (les binaires ne sont pas supportés en PHP).
+
+Les propriétés sont les suivantes:
+- celles cités dans le "type Auth". Les données "binaires" (clés, etc.) sont des string en base 64.
+- les maps "devices" "creds" "profiles" "prefs":
+  - chaque "map" est un object javascript (ou associative array PHP).
+  - la clé est un string:
+    - pour "devices" l'id d'un device,
+    - pour les autres un id d'applicatio: il y a donc une "sous-map" par application.
+- "devices" map les descriptifs de device.
+- "creds" a une sous-map par application dont chaque entrée est l'identifiant d'un credential.
+- "profiles" a une sous-map par application dont chaque entrée est l'identifiant d'un profile.
+- "prefs" a une sous-map par application dont chaque entrée est le code d'une préférence.
+
+Le texte sérialisé d'un Safe est,
+- exportable dans un fichier externe (crypté à l'export),
+- importable depuis un fichier externe (décrypté à l'import),
+- interchangeable entre le repository "central par défaut" et les "repositories spécifiques"
+  hébergés chacun dans une base MySQL d'un site Web externe et accédé par un scrupt générique PHP.
+
+Ce texte est obtenu à la connexion initiale et réobtenu en totalité à chaque mise à jour
+(ou sur demande explicite de rafraîchissement).
+Il est "compilé" à l'arrivée (méthode compile()) afin d'être disponible en mémoire du store
+dans un format faciltant son utilisation locale.
+
+Le texte lui-même n'est jamais renvoyé au serveur:
+- ce sont des requêtes spécifiques qui demandent au serveur des mises à jour.
+- chaque requête du serveur,
+  - lit le safe enrgistré en DB, 
+  - le désérialise en objet, 
+  - met à jour l'objet, 
+  - réécrit en DB une sérialisation de l'objet,
+  - retourne à l'appelant le Safe qu'objet.
+
 ### Micro base locale IDB `safe`
-Un device qui a été déclaré _de confiance_ par au moins un utilisateur ou qui a eu un _utilisateur local_ a une micro base de données IDB nommée `safe` ayant les tables suivantes.
+Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données 
+IDB nommée `safe` ayant les tables suivantes.
 
 #### `header`
 Cette table _singleton_ a deux colonnes:
-- `devId`: un identifiant généré aléatoirement à la création de la base _Safes_ identifiant le _device_.
+- `devId`: un identifiant généré aléatoirement à la création de la base _Safe_ identifiant le _device_.
 - `devName`: le _nom_ du _device_, par exemple `PC d'Alice`, plus parlant que le code technique système pour le propriétaire du _device_ et les quelques personnes pouvant l'utiliser en confiance.
 
 #### `trustings`
@@ -36,24 +83,27 @@ Chaque row est associé à UN _utilisateur_ ayant déclaré le _device_ de confi
   - `cx cy` sont des _challenges_ générés aléatoirement à ce moment.
 
 #### `tsessions`
-Chaque row décrit une _session épinglée_. Les sessions des utilisateurs locaux sont toutes épinglées par nature.
-- `app`: code l'application correspondante.
+Chaque row décrit une _session épinglée_:
+- `app`: id l'application correspondante.
 - `userId`: identifiant de l'utilisateur.
-- `profId`: id du profil de la session pour un utilisateur enregistré.
+- `profId`: id du profil de la session.
 - `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** décrivant l'usage de sa session 
-  (par exemple `Revue des notes d'Alice et Jules`) copie de `about` de son profil lors de la dernière ouverture.
+  (par exemple `Revue des notes d'Alice et Jules`).
+  copie de `about` de son profil lors de la dernière ouverture.
 - `size`: volume _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
 - `time`: dernière date-heure d'ouverture de cette session sur ce terminal.
 - `prefCode`: code de la "préférence" utilisée la dernière fois.
 - `prefTime`: date-heure de dernière mise à jour
 - `prefObj`: objet de préférence utilisée la dernière fois.
 
-Il existe une base de données IDB de nom `app_x` où `x` est le hash court de (userId / profId): elle contient les documents en cache de cette session.
+Il existe une base de données IDB de nom `app_x` où,
+- `x` est le hash court de (userId / profId): elle contient les documents en cache de cette session.
 
-> En mode _avion_ les utilisateurs n'ont pas accès à leurs credentials (ni utilisés, ni pertinents).
+> En mode _avion_ les utilisateurs n'ont accès à leurs credentials que si l'application a décidé de les stocker en cache locale.
 
-> Les rows de la base IDB Safe sont cryptés par une clé AES du module _safe terminal_ afin de ne pas être directement lisible en _debug_: cette _sécurité_ est _molle_, la clé étant d'une manière ou d'une autre inscrite dans le code, avec un peu de fatigue un hacker motivé peut la retrouver.
+> Les rows de la base IDB Safe NE SONT PAS sont cryptés mais les clés privées et textes le sont par la "keyK" de l'utilisateur.
 */
+
 export type Profile = {
   profId: string
   about: string
