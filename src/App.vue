@@ -104,8 +104,6 @@ import mybeep from './assets/beep.mp3?inline'
 import { encode, decode } from '@msgpack/msgpack'
 // import { initWP } from './src-fw/wputil'
 
-// testCred()
-
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 

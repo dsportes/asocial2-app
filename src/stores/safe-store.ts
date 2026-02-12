@@ -461,10 +461,10 @@ export const useSafeStore = defineStore('safe', () => {
       if (mpf) {
         for (const profId in mpf) {
           const x = decode(b64ToU8(mpf[profId]))
+          const about = await dcX(b64ToU8(x.about))
           const s = sessionOfProfId(profId)
           if (s) 
-            s.about = x.about
-          const about = await dcX(b64ToU8(x.about))
+            s.about = about
           const p: Profile = { profId, about, crIds: x.crIds }
           m.set(profId, p)
         }
@@ -571,9 +571,11 @@ export const useSafeStore = defineStore('safe', () => {
   const saveTSession = async (s: TSession) => {
     try {
       const id = s.idOf
+      const ab = s.about
       s.about = u8ToB64(await ecX(s.about))
       const bin = encode(s.toObj)
       await db.value.tsessions.put({ id, bin })
+      s.about = ab
       mySessions.value.set(id, s)
     } catch (e) {
       throw EX(e, 2)

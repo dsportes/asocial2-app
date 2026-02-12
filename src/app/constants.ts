@@ -28,9 +28,15 @@ export const K = {
     sn: [3, 40], // Nom des sessions
     about: [4, 64],
     pref: [4, 32],
-    org: [3, 16],
+    org: [3, 16, 'an1'],
     file: [1, 32],
     ps: [8, 40]
+  },
+
+  regexp: {
+    b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
+    num: new RegExp('^[0-9]*$'),
+    an1: new RegExp('^[0-9a-z]*$')
   },
 
   phrasestar: true,
@@ -103,3 +109,15 @@ export const K = {
 </body></html>`
   }
 }
+
+/*
+const reg = K.regexps
+const b1 = reg.an1.test('94lhay')
+const b2 = reg.an1.test('94Lhay')
+const b3 = reg.num.test('09876')
+const b4 = reg.num.test('098A6')
+const b5 = reg.b64.test('a-_B0')
+const b6 = reg.b64.test('a$r')
+const b7 = reg.b64.test('ab09')
+console.log(b1, b2, b3, b4, b5, b6, b7)
+*/

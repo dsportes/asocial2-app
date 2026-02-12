@@ -24,13 +24,12 @@
     <div v-if="tab === 'bycreds'" class="full-width q-pa-sm">
 
       <bar-open :title="$t('HPcredslst_1')" :bubble="$t('HPcredslst_2')"/>
-      <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs'>
+      <scroll-area><template #default>
         <div :class="dkli(idx)" v-for="([id, lc], idx) of mlocCreds" :key="id">
           <cred-row :class="crSel(lc) + 'q-my-xs cursor-pointer select'" @click="selCred(lc)"
             :cred="lc.cred" :st="lc.st"/>
         </div>
-      </q-scroll-area>
+      </template></scroll-area>
 
       <bar-open class="q-mt-md" :title="$t('HPcredsdet_1')" :bubble="$t('HPcredsdet_2')"/>
       <div class='q-pa-xs'>
@@ -64,25 +63,23 @@
             v-model="targetName" :validatefn="transmitTest"/>
           
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
-          <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-            class='bord1 q-pa-xs'>
+          <scroll-area size="sm"><template #default>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
               <div :class="psSel(ps) + ' row items-start q-my-xs'">
                 <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowD(ps)"/>
                 <ps-row class="col-11" :ps="ps"/>
               </div>
             </div>
-          </q-scroll-area>
+          </template></scroll-area>
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted')}}</div>
-          <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-            class='bord1 q-pa-xs'>
+          <scroll-area size="sm"><template #default>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">            
               <div :class="psSel(ps) + ' row items-start q-my-xs'">
                 <btn-cond class="col-1" icon="arrow_upward" @ok="onArrowU(ps)"/>
                 <ps-row class="col-11" :ps="ps"/>  
               </div>
             </div>
-          </q-scroll-area>
+          </template></scroll-area>
         </div>
       </div>
     </div>
@@ -96,12 +93,11 @@
       </div>
 
       <bar-open :title="$t('HPpslst_1')" :bubble="$t('HPpslst_2')"/>
-      <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs'>
+      <scroll-area><template #default>
         <div :class="dkli(idx)" v-for="([psid, ps], idx) of mlocPS" :key="psid">
           <ps-row :ps="ps" :class="psSel(ps) + 'q-my-xs cursor-pointer select'" @click="selPS(ps)"/>
         </div>
-      </q-scroll-area>
+      </template></scroll-area>
 
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
@@ -114,25 +110,23 @@
         </div>
 
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_C')}}</div>
-        <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-          class='bord1 q-pa-xs'>
+        <scroll-area size="sm"><template #default>
           <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds1" :key="crid">
             <div :class="crSel(lc) + 'row q-my-xs items-start'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_downward" @ok="onArrowDC(lc)"/>
               <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
           </div>
-        </q-scroll-area>
+        </template></scroll-area>
         <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted_C')}}</div>
-        <q-scroll-area style="height: 100px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-          class='bord1 q-pa-xs'>
+        <scroll-area size="sm"><template #default>
           <div :class="dkli(idx)" v-for="([crid, lc], idx) in mlocCreds2" :key="crid">
             <div :class="crSel(lc) + 'row q-my-xs items-start'">
               <btn-cond class="col-1 q-pr-xs" icon="arrow_upward" @ok="onArrowUC(lc)"/>
               <cred-row class="col-11" :cred="lc.cred" :st="lc.st"/>
             </div>
           </div>
-        </q-scroll-area>
+        </template></scroll-area>
 
         <div v-if="localPS.orphans.size !== 0">
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_O')}}</div>
@@ -189,15 +183,14 @@
     </div>
 
     <div v-if="diag === '' && importedText !== null">
-      <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs q-my-md'>
+      <scroll-area class='q-my-md'><template #default>
         <div :class="dkli(idx)" v-for="([id, lc], idx) of locImp" :key="id">
           <div class="row q-my-xs items-start">
             <q-checkbox class="col-1" dense v-model="lc.ck"/>
             <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
           </div>
         </div>
-      </q-scroll-area>
+      </template></scroll-area>
       <div class='titre-md text-italic q-my-sm'>{{$t('HPimport_unck')}}</div>
   </div>
   </template>
@@ -223,15 +216,14 @@
           prefix="HPimport" size="ps"/>
       </div>
 
-      <q-scroll-area style="height: 150px;width: 100%;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-        class='bord1 q-pa-xs q-my-md'>
+      <scroll-area class='q-my-md'><template #default>
         <div :class="dkli(idx)" v-for="([id, lc], idx) of locExp" :key="id">
           <div class="row q-my-xs items-start">
             <q-checkbox class="col-1" dense v-model="lc.ck"/>
             <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
           </div>
         </div>
-      </q-scroll-area>
+      </template></scroll-area>
 
       <div v-if="exportCr === 2 && cryptK.key === null" 
         class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
@@ -299,6 +291,7 @@ import PsRow from './PsRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import InputA from '../components-fw/InputA.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
@@ -340,9 +333,6 @@ const exportOpts = [
   { label: $t('HPexport_clear'), value: 1 },
   { label: $t('HPexport_crypt'), value: 2 }
 ]
-
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 
 const props = defineProps ({
   idc: String

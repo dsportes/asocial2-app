@@ -5,6 +5,7 @@ import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
+import stores from './all'
 import { Crypt } from '../src-fw/crypt'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
@@ -170,12 +171,14 @@ export const useSessionStore = defineStore('session', () => {
   const creds = computed(() => creds.value)
 
   const setStartContext = (
-    userId: string, 
-    aboutProfile: string,
-    creds: Map<string, Credential>) => {
+      userId: string, 
+      aboutProfile: string,
+      creds: Map<string, Credential>) => {
+    setPhase(0)
     _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
+    stores.ui.setPage('appHome')
   }
 
   return {  

@@ -1,5 +1,7 @@
 <template>
-  <q-input v-model="m" counter dense
+<div class="row">
+  <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
+  <q-input class="col" v-model="m" counter dense
     :disable="_disable"
     filled
     input-class="font-mono"
@@ -26,6 +28,7 @@
     </template>
     <template v-slot:error>{{$t(err)}}</template>
   </q-input>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -34,6 +37,7 @@ import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, hasMessage } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const ui = stores.ui
 const config = stores.config
@@ -50,14 +54,23 @@ const props = defineProps({
   valctrl: Function
 })
 
+const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
+const reg = sz.value.length > 2 ? config.K.regexp[sz.value[2]] || null : null
+const bubble = computed(() => {
+  let b = props.prefix + '_bub'
+  if (hasMessage(b)) return b
+  if (sz.value.length > 2) {
+    b = 'REGexp_' + sz.value[2]
+    if (reg && hasMessage(b)) return b
+  }
+  return 'REGexp_all'
+})
 const star = (config.K.phrasestar || false) && (props.size === 'ps' || props.size === 'p1')
 const disval = ref(false)
 const mayStar = computed(() => m.value.length > 2 && m.value.endsWith('*'))
 const mayVal = computed(() => 
   !_disable.value && err.value === '' && chg.value && !disval.value)
 
-const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
-const valfn = ref(props.validatefn)
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
   return hasMessage(e) ? $t(e) : ''
@@ -101,8 +114,12 @@ watch(() => props.disable, () => {
 const chg = computed(() => _initval.value !== null ? _initval.value !== m.value : true)
 const hint = computed(() => $t('minmax', sz.value) + (!err.value ? $t('pressret') : ''))
 
-const xe = () => !m || m.value.length < sz.value[0] ? 'tooshort' : 
-  (m.value.length > sz.value[1] ? 'toolong' : '')
+const xe = () => {
+  if (reg && !reg.test(m.value)) return 'badform'
+  if (m.value.length < sz.value[0]) return 'tooshort'
+  if (m.value.length > sz.value[1]) return 'toolong'
+  return ''
+}
 
 const err = ref()
 const setx = () => {
@@ -118,8 +135,8 @@ const undo = () => {
 }
 
 const val = () => {
-  if (valfn.value && !_disable.value && err.value === '') 
-    valfn.value()
+  if (props.validatefn && !_disable.value && err.value === '') 
+    props.validatefn()
 }
 
 </script>

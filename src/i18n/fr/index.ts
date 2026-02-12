@@ -67,6 +67,7 @@ export default {
   minmax: 'De {0} à {1} signes. ',
   tooshort: 'Texte trop court',
   toolong: 'Texte trop long',
+  badform: 'Format non respecté',
   pressret: '"Entrée" pour valider',
   orgcode_label: 'Code de l\'organisation',
   orgcode_ph: 'monorg',
@@ -78,6 +79,23 @@ export default {
   quitReload: 'Je confirme relancer l\'application',
   quitCont: 'Je continue ma session',
 
+  REGexp_b64: `Caractères autorisés:
+  - lettres non accentuées minuscules \`a...z\` et majuscules \`A...Z\`
+  - chiffres \`0...9\`
+  - les caractères tiret haut \`-\` et tiret bas \`_\`
+  - (ni espace ni 'Entrée'...)
+  `,
+  REGexp_num: `Caractères autorisés: chiffres \`0...9\`
+  (ni espace ni 'Entrée'...)
+  `,
+  REGexp_an1: `Caractères autorisés:
+  - lettres non accentuées minuscules \`a...z\`
+  - chiffres \`0...9\`
+  - les caractères tiret haut \`-\` et tiret bas \`_\`
+  - (ni espace ni 'Entrée'...)
+  `,
+  REGexp_all: `Tous les caractères sont autorisés y compris les espaces
+  `,
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',
   MLAcf: 'Voulez-vous vraiment interrompre l\'opération en cours "{0}"',
@@ -142,10 +160,11 @@ export default {
   PSphrase: 'Ma phrase secrète',
   PSphrase_label: 'Ma phrase secrète',
   PSphrase_ph: 'les 1 sanglots 2 longs 3 etc',
-  PSminmax: 'De {0} à {1} signes. ',
-  PScourt: 'Texte trop court',
+  /*
+  PSphrase_bub: `Une bonne phrase secrète ... bla bla ...
+  `,
+  */
   PSdup: 'Nom déjà utilisé',
-  PSlong: 'Texte trop long',
   PSpin: 'Code PIN',
   PSpin_label: 'Code PIN',
   PSpin_ph: 'PIN35-zx',

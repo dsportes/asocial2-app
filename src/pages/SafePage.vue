@@ -80,8 +80,7 @@
       @ok="openCM"/>
 
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-    <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-      class='bord1 q-pa-xs'>
+    <scroll-area><template #default>
       <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
         <div v-if="sOfP(profId)">
           <div :class="clSel(sOfP(profId)) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
@@ -103,32 +102,12 @@
           </div>
         </div>
       </div>
-    </q-scroll-area>
+    </template></scroll-area>
 
     <div v-if="nvSP" class="q-mt-md">
       <input-a v-if="session.hasNet && !selStar"
         size="about" prefix="HPpsab" :initval="selSessionAbBefore"
         v-model="selSessionAb" :validatefn="valAbPs"/>
-
-      <!--q-input v-if="session.hasNet && !selStar"
-        filled v-model="selSessionAb" 
-        :label="$t('HPpsab')"
-        input-class="font-mono"
-        counter
-        :hint="hintPs"
-        bottom-slots
-        :error="selSessionAbserr !== ''"
-        @keydown.enter.prevent="valAbPs">
-        <template v-slot:append>
-          <q-icon size="sm" name="close" @click="selSessionAb = ''" 
-            class="cursor-pointer" :disable="selSessionAb.length === 0"/>
-          <q-btn size="sm" icon="undo" color="primary" round
-            @click="undoAbPs" :disable="!chgAbPs || selSessionAbserr !== ''"/>
-          <q-btn size="sm" icon="check" :disable="!chgAbPs || selSessionAbserr !== ''" 
-            color="primary" round @click="valAbPs" />
-        </template>
-        <template v-slot:error>{{$t(selSessionAbserr)}}</template>
-      </q-input-->
       <div v-else class="font-mono text-bold">{{selSessionAb}}</div>
 
       <div v-if="sf.selectedSession">
@@ -153,11 +132,11 @@
     </div>
     <div v-else class="titre-lg text-warning text-italic q-mt-sm">{{$t('HPnoclick')}}</div>
 
-    <div :class="!nvSP ? 'disabled' : ''">
+    <!--div :class="!nvSP ? 'disabled' : ''">
       <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
         {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
       </div>
-    </div>
+    </div-->
     <div v-if="nvSP">
       <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
       <q-card-actions vertical align="right">
@@ -290,8 +269,7 @@
           <span class="font-mono fs-sm text-italic q-ml-sm">{{sf.devId.substring(0, 5) + ' [' + sf.devName + ']'}}</span>
         </div>
         <div class="titre-md q-my-sm">{{ $t('HPtrustings_l', sf.devices.size) }}</div>
-        <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-          class='bord1 q-pa-xs'>
+        <scroll-area><template #default>
           <div v-for="[id, dev] in sf.devices" :key="id" class="row">
             <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'" 
               :color="delTrustSet.has(id) ? 'primary' : 'warning'" 
@@ -301,7 +279,7 @@
             <div :class="'col-9 font-mono' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
               {{ dev.devName }}</div>
           </div>
-        </q-scroll-area>
+        </template></scroll-area>
       </div>
 
       <q-card-actions vertical align="right">
@@ -360,12 +338,12 @@
         <div class="col-9 titre-md text-italic">{{$t('HPutc2')}}</div>
       </div>
       <div v-if="sf.mySessions.size" class="q-my-sm q-mx-md slist q-pa-xs">
-        <q-scroll-area style="height: 150px" :barStyle="barStyle" :thumbStyle="thumbStyle">
+        <scroll-area><template #default>
           <div v-for="[id,s] in sf.mySessions" :key="id" class="q-my-xs row">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
             <div class="col-9 fs-md">{{s.about}}</div>
           </div>
-        </q-scroll-area>
+        </template></scroll-area>
       </div>
 
       <q-card-actions vertical align="right">
@@ -408,6 +386,7 @@ import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import InputA from '../components-fw/InputA.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 // import BtnConfirm from '../components-fw/BtnConfirm.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 // import ChooseIt from '../components-fw/ChooseIt.vue'
@@ -432,10 +411,6 @@ import databaseW from '../assets/database_white.png'
 import databaseB from '../assets/database_black.png'
 
 const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-// const expNameSize = [4, 32]
-// const aboutSize = [4, 64]
 
 const ui = stores.ui
 const sf = stores.safe
@@ -513,12 +488,6 @@ const delSafe = async () => {
 }
 
 const expName = ref('')
-/*
-const expNameErr = computed(() => expName.value.length < expNameSize[0] ? 'PScourt' : 
-  (expName.value.length > expNameSize[1] ? 'PSlong' : ''))
-const hintExp = computed(() => $t('PSminmax', expNameSize))
-*/
-
 const cryptK = reactive( { inp: '', err: '', key: null } )
 const bin = ref(null)
 
@@ -673,13 +642,6 @@ const openChgCodes = () => {
 
 const closeManusers = () => {
   ui.fD()
-  /*
-  setTimeout(async () => {
-    await sf.init0()
-    if (sf.step === 2)
-      await openSession()
-  }, 100)
-  */
 }
 
 const resetdb = ref(false)
@@ -698,16 +660,6 @@ const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
 const selHasCache = computed(() => sf.selectedSession && sf.selectedSession.hasCache)
 const selSessionAb = ref('')
 const selSessionAbBefore = ref('')
-/*
-const chgAbPs = computed(() => selSessionAbBefore.value !== selSessionAb.value )
-const selSessionAbserr = computed(() => selSessionAb.value.length < aboutSize[0] ? 'PScourt' : 
-  (selSessionAb.value.length > aboutSize[1] ? 'PSlong' : ''))
-const hintPs = computed(() => $t('PSminmax', aboutSize) + (!selSessionAbserr.value ? $t('pressret') : ''))
-
-const undoAbPs = () => {
-  selSessionAb.value = selSessionAbBefore.value
-}
-*/
 
 const valAbPs = async () => {
   const profId = sf.selectedSession ? sf.selectedSession.profId : sf.selectedProfile.profId
@@ -822,24 +774,18 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
     }
   }
 
+  sf.setStep(0)
   if (prefCode) session.updatePref(prefCode, prefTime, decode(prefObj))
   else session.updatePref('', 0, {})
   session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
-  goToApp()
 }
 
-const validateSessionV = async () => {
+const validateSessionV = () => {
   sf.userId = null
   sf.keyK = null
+  sf.setStep(0)
   session.updatePref('', 0, {})
   session.setStartContext('', '', new Map())
-  goToApp()
-}
-
-const goToApp = async () => {
-  console.log('Go to app')
-  sf.setStep(0)
-  ui.setPage('appHome')
 }
 
 </script>

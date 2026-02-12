@@ -13,8 +13,7 @@
   <div class="column items-center">
     <div class="pwsm q-pa-xs">
     <div class="q-my-md text-center titre-md">{{$t('HPprefslist')}}</div>
-    <q-scroll-area style="height: 150px;" :barStyle="barStyle" :thumbStyle="thumbStyle"
-      class='bord1 q-pa-xs pwsm'>
+    <scroll-area class='pwsm'><template #default>
       <div :class="dkli(idx)" v-for="([code, [time, obj]], idx) of myPrefs" :key="code">
         <div :class="pSel(code) + 'row q-my-xs cursor-pointer select'" 
           @click="selPref({ code, time, obj })">
@@ -22,7 +21,7 @@
           <div class="col-6">{{dhcool(time)}}</div>
         </div>
       </div>
-    </q-scroll-area>
+    </template></scroll-area>
 
     <div v-if="selP === null" class="row justify-between items-center q-gutter-sm">
       <div class="q-my-md text-warning text-italic text-bold titre-md">{{$t('HPprefsnosel')}}</div>
@@ -83,6 +82,7 @@ import DialogStd1 from '../components-fw/DialogStd1.vue'
 import InputA from '../components-fw/InputA.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
