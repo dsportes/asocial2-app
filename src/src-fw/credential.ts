@@ -37,12 +37,10 @@ export class Credential {
   org: string // organisation (ou '*' exceptionellement)
   type: string // code du type de credential
   scope: Object // scope fonctionnel: les propriétés ne sont QUE des strings
-  pp?: string // (fac) hash d'une phrase secrète ou passphrase elle-même
   sign?: Uint8Array // (fac) clé de signature - donné en base64 dans la forme obj
 
   constructor (obj: Object) {
     for (const p of ['id', 'about', 'org', 'type']) this[p] = obj[p] || ''
-    if (obj['pp']) this.pp = obj['pp']
     if (obj['sign']) this.sign = b64ToU8(obj['sign'])
     this.scope = {}
     const x = obj['scope']
@@ -53,7 +51,6 @@ export class Credential {
   get toObj () :Object {
     const obj = { scope: {} }
     for (const p of ['id', 'about', 'org', 'type']) obj[p] = this[p] || ''
-    if (this['pp']) obj['pp'] = this.pp
     if (obj['sign']) obj['sign'] = u8ToB64(this.sign, true)
     for (const p of Object.keys(this.scope)) obj.scope[p] = this.scope[p]
     return obj
@@ -84,7 +81,7 @@ export function testCred () : Map<string, Credential> {
   const c2 = new Credential({
     about: 'cred #2',
     org: 'doda', type:'LOGIN', 
-    pp: 'totoestbeau',
+    sign: 'totoestbeau',
     scope: { troisfoisrien: 'pasgrandchose' }
   })
   c2.id = c2.computedId
@@ -99,7 +96,7 @@ export function testCred () : Map<string, Credential> {
 
   const c4 = new Credential({
     about: 'cred #1',
-    org: '*', type:'BOF', pp: 'totoestmoche'
+    org: '*', type:'BOF', sign: 'totoestmoche'
   })
   c4.id = c4.computedId
 

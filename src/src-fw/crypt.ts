@@ -229,7 +229,7 @@ export class Crypt {
     return u8
   }
 
-  static rnd (nbytes: number) {
+  static rnd (nbytes: number) : string {
     const s = fromByteArray(Crypt.random(nbytes))
     return s.replace(/=/g, '').replace(/\+/g, '0').replace(/\//g, '1')
   }

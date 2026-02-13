@@ -62,46 +62,38 @@ Le texte lui-même n'est jamais renvoyé au serveur:
   - réécrit en DB une sérialisation de l'objet,
   - retourne à l'appelant le Safe qu'objet.
 
-### Micro base locale IDB `safe`
-Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données 
-IDB nommée `safe` ayant les tables suivantes.
+  ### Micro base locale IDB `safe` d'un terminal
+Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données IDB nommée `safe` ayant les tables suivantes.
 
 #### `header`
 Cette table _singleton_ a deux colonnes:
-- `devId`: un identifiant généré aléatoirement à la création de la base _Safe_ identifiant le _device_.
-- `devName`: le _nom_ du _device_, par exemple `PC d'Alice`, plus parlant que le code technique système pour le propriétaire du _device_ et les quelques personnes pouvant l'utiliser en confiance.
+- `devId`: un identifiant généré aléatoirement à la première déclaration de confiance faite sur ce terminal.
+- `devName`: le _nom_ du _device_, par exemple `PC d'Alice`, saisi par le premier déclarant de confiance.
 
 #### `trustings`
-Chaque row est associé à UN _utilisateur_ ayant déclaré le _device_ de confiance, 
+Chaque row est associé à UN _utilisateur_ ayant déclaré le _device_ de confiance:
 - `userId`: identifiant de l'utilisateur (clé primaire).
 - `pseudo`: par exemple `Bob`.
-- `cx`: un challenge aléatoire.
-- `Ka`: clé K du safe de l'utilisateur cryptée par `SH(p0, p1)` où `p0` et `p1` sont les termes d'authentification du safe de l'utilisateur.
-- `Kr`: clé K du safe de l'utilisateur cryptée par `SH(r0, r)`.
-- `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN + cx, cy)` où,
+- `cx`: un challenge aléatoire (random de 24 bytes en base 64).
+- `Ka`: clé K du safe de l'utilisateur cryptée par `SH(p0, p1)` où `p0` et `p1` sont les termes d'authentification du safe de l'utilisateur (en base 64).
+- `Kr`: clé K du safe de l'utilisateur cryptée par `SH(r0, r)` (en base 64).
+- `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN + cx, cy)` en base 64 où,
   - `PIN` est le code PIN fixé par l'utilisateur à la déclaration de confiance,
-  - `cx cy` sont des _challenges_ générés aléatoirement à ce moment.
+  - `cx cy` sont des _challenges_ générés aléatoirement à ce moment (des random de 24 bytes en base 64).
 
 #### `tsessions`
 Chaque row décrit une _session épinglée_:
-- `app`: id l'application correspondante.
+- `app`: code l'application correspondante.
 - `userId`: identifiant de l'utilisateur.
-- `profId`: id du profil de la session.
-- `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** décrivant l'usage de sa session 
-  (par exemple `Revue des notes d'Alice et Jules`).
-  copie de `about` de son profil lors de la dernière ouverture.
-- `size`: volume _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
+- `profId`: id du profil de la session ou * pour le profil par défaut contenant tous les droits.
+- `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** et encodé en base 64 décrivant l'usage de sa session (par exemple `Revue des notes d'Alice et Jules`).
+- `size`: `[s1, s2 ...]` volumes _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
 - `time`: dernière date-heure d'ouverture de cette session sur ce terminal.
 - `prefCode`: code de la "préférence" utilisée la dernière fois.
-- `prefTime`: date-heure de dernière mise à jour
-- `prefObj`: objet de préférence utilisée la dernière fois.
+- `prefTime`: _epoch_ date-heure de la dernière mise à jour de cette préférence.
+- `prefObj`:  sérialisation (en binaire) de cet objet de "préférence" utilisé la dernière fois.
 
-Il existe une base de données IDB de nom `app_x` où,
-- `x` est le hash court de (userId / profId): elle contient les documents en cache de cette session.
-
-> En mode _avion_ les utilisateurs n'ont accès à leurs credentials que si l'application a décidé de les stocker en cache locale.
-
-> Les rows de la base IDB Safe NE SONT PAS sont cryptés mais les clés privées et textes le sont par la "keyK" de l'utilisateur.
+Il existe une base de données IDB de nom `app_x` où `x` est le hash court de `userId + '/' + profId`: elle contient les **documents en cache** de cette session.
 */
 
 export type Profile = {
