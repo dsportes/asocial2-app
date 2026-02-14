@@ -44,7 +44,7 @@
             :title="$t('HPauthbypin_1a', [sf.users[0].pseudo])" :fnopen="selectUser0"/>
         </div>
         <div v-else class="column">
-          <bar-open :bubble="$t('HPauthbypin_2')" :title="$t('HPauthbypin_1b', [users.length])"/>
+          <bar-open :bubble="$t('HPauthbypin_2')" :title="$t('HPauthbypin_1b', [sf.users.length])"/>
           <div class="row self-center q-mx-xl">
             <div v-for="u in sf.users" :key="u.userId"
               class="q-ml-sm font-mono fs-lg text-bold text-primary cursor-pointer"
@@ -164,12 +164,12 @@
       :fnopen="openUntrust" size="sm"/>
 
     <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-      :title="$t('HPtrustings_1')" 
+      :title="$t('HPtrustings_1')"
       :disable="!session.hasNet || session.incognito || sf.openMode > 2"
       :fnopen="openTrustings" size="sm"/>
 
     <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
-      :title="$t('HPprefs_1')" 
+      :title="$t('HPprefs_1')"
       :disable="!session.hasNet || session.incognito"
       :fnopen="openPrefsMgr" size="sm"/>
 
@@ -180,7 +180,7 @@
     <bar-open :bubble="$t('HPexpsafe_2')"
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
-    
+
     <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
@@ -220,9 +220,9 @@
   <dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
     <template #hdr>
       <div class="row justify-end q-px-xs q-mb-md">
-        <btn-cond flat size="lg" icon="check" 
+        <btn-cond flat size="lg" icon="check"
         :disable="cryptK.key === null || !expName"
-        :label="$t('HPbackup_0')" 
+        :label="$t('HPbackup_0')"
         @ok="doExportSafe"/>
       </div>
     </template>
@@ -257,7 +257,7 @@
   <q-dialog v-model="ui.dModels[idc].trustings" persistent>
     <q-card :class="sty('md')">
       <q-toolbar>
-        <btn-cond color="none" size="lg" icon="chevron_left" flat 
+        <btn-cond color="none" size="lg" icon="chevron_left" flat
           @ok="delTrustSet = null; ui.fD()"/>
         <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
         <btn-bubble :text="$t('HPtrustings_2')"/>
@@ -270,8 +270,8 @@
         <div class="titre-md q-my-sm">{{ $t('HPtrustings_l', sf.devices.size) }}</div>
         <scroll-area><template #default>
           <div v-for="[id, dev] in sf.devices" :key="id" class="row">
-            <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'" 
-              :color="delTrustSet.has(id) ? 'primary' : 'warning'" 
+            <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'"
+              :color="delTrustSet.has(id) ? 'primary' : 'warning'"
               @ok="delTrustIt(id)"/>
             <div :class="'col-2 font-mono ellipsis' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
               {{ id.substring(0, 5) }}</div>
@@ -283,7 +283,7 @@
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning" 
+        <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning"
           :disable="delTrustSet.size === 0" @ok="delTrustings"/>
       </q-card-actions>
     </q-card>
@@ -302,19 +302,19 @@
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" 
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
           v-model="newPIN" size="pin" prefix="PSpin"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem" 
+        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
           v-model="newPseudo" size="tr" prefix="PStrig"/>
       </div>
 
       <q-card-actions vertical align="right">
         <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrust_1')" color="warning" 
+        <btn-cond flat :label="$t('HPtrust_1')" color="warning"
           :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
     </q-card>
@@ -751,7 +751,7 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
       }
     }
 
-  } else { 
+  } else {
     /* nouvelle session ouverte depuis un profile
     - soit sélectionné,
     - soit '*'.

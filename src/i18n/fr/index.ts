@@ -18,7 +18,10 @@ export default {
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
   theme: 'Théme graphique',
-  pings: 'Etat du service / écho',
+  tech: 'Outils techniques',
+  crypto: 'Cryptographie',
+  cred: 'Credential',
+  pings: 'Ping, etc.',
   service_url: 'URL du service: {0}',
   app: 'Application:',
   build: 'Build',
@@ -175,6 +178,18 @@ export default {
   PStrig_ph: 'Bob',
   PSsn: 'A propos de la session ... :',
   PSsnh: 'Accès à mon compte ...',
+
+  SBphrase_label: 'Phrase secrète',
+  SBphrase_ph: 'bla bla',
+  SBphrase_sh: 'SH en base64:',
+  SBphrase_sha: 'SHA du SH:',
+  SBphrase_shaS: 'SHA "court" du SH:',
+  SBgensv: 'Générer un couple de clés de signature / vérification',
+  SBgensv2: 'Signature: PEM "private" - Vérification: PEM "public"',
+  SBcred: 'Remplir le JSON du credential (sauf signature)',
+  SBprivpem: 'Coller le PEM (private) de signature',
+  SBgencred: 'Générer le credential',
+  SBcredres: 'Credential normalisé et identifié',
 
   HPbackopen: `**Voulez-vous terminer cette session et retourner au choix d'une autre à ouvrir ?**
 
@@ -353,10 +368,10 @@ bla bla
 `,
   HPdelsafe_1: 'Suppression irrémédiable de mon "coffre fort"',
   HPdelsafe_2: `# Suppression irrémédiable de mon "coffre fort"
-bla bla 
+bla bla
 `,
   HPdelsafe_3: `# Suppression irrémédiable de mon "coffre fort"
-Auth forte requise bla bla 
+Auth forte requise bla bla
 `,
 
   HPmanuser: 'Utilisateurs',

@@ -37,22 +37,37 @@ export class Credential {
   org: string // organisation (ou '*' exceptionellement)
   type: string // code du type de credential
   scope: Object // scope fonctionnel: les propriétés ne sont QUE des strings
-  sign?: Uint8Array // (fac) clé de signature - donné en base64 dans la forme obj
+  sign: string // PEM de la clé de signature
 
   constructor (obj: Object) {
-    for (const p of ['id', 'about', 'org', 'type']) this[p] = obj[p] || ''
-    if (obj['sign']) this.sign = b64ToU8(obj['sign'])
-    this.scope = {}
+    for (const p of ['id', 'about', 'org', 'type', 'sign'])
+      this[p] = obj[p] || ''
     const x = obj['scope']
-    if (x) for (const p of Object.keys(x)) 
-      if (typeof p === 'string') this.scope[p] = x[p]
+    const lp = x ? Object.keys(x) : []
+    if (lp.length) {
+      this.scope = {}
+      for (const p of lp)
+        if (typeof p === 'string') this.scope[p] = x[p]
+      if (Object.keys(this.scope).length === 0)
+        this.scope = null
+    } else this.scope = null
+
   }
 
   get toObj () :Object {
-    const obj = { scope: {} }
-    for (const p of ['id', 'about', 'org', 'type']) obj[p] = this[p] || ''
-    if (obj['sign']) obj['sign'] = u8ToB64(this.sign, true)
-    for (const p of Object.keys(this.scope)) obj.scope[p] = this.scope[p]
+    const obj = {
+      id: this.id,
+      about: this.about,
+      org: this.org,
+      type: this.type,
+      scope: this.scope ? {} : null,
+      sign: this.sign
+    }
+    if (this.scope) {
+      const lp = Object.keys(this.scope)
+      lp.sort()
+      for (const p of lp) obj.scope[p] = this.scope[p]
+    } else delete obj.scope
     return obj
   }
 
@@ -62,9 +77,11 @@ export class Credential {
 
   get computedId () :string {
     const x = [ this.org, this.type ]
-    const l = Object.keys(this.scope)
-    l.sort()
-    for (const p of l) { x.push(p); x.push(this.scope[p] ) }
+    const l = this.scope ? Object.keys(this.scope) : null
+    if (l && l.length) {
+      l.sort()
+      for (const p of l) { x.push(p); x.push(this.scope[p] ) }
+    }
     return Crypt.shaS(encode(x))
   }
 
@@ -74,21 +91,21 @@ export class Credential {
 export function testCred () : Map<string, Credential> {
   const c1 = new Credential({
     about: 'cred #1',
-    org: 'doda', type:'LOGIN', pp: 'totoestbeau', scope: { rien: 'quedalle' }
+    org: 'doda', type:'LOGIN', sign: 'totoestbeau', scope: { rien: 'quedalle' }
   })
   c1.id = c1.computedId
 
   const c2 = new Credential({
     about: 'cred #2',
-    org: 'doda', type:'LOGIN', 
+    org: 'doda', type:'LOGIN',
     sign: 'totoestbeau',
     scope: { troisfoisrien: 'pasgrandchose' }
   })
   c2.id = c2.computedId
-  
+
   const c3 = new Credential({
     about: 'cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3',
-    org: 'doda', type:'ZARBI', 
+    org: 'doda', type:'ZARBI',
     sign: '1234AZERTY',
     scope: { troisfoisrien: 'pasgrandchose' }
   })

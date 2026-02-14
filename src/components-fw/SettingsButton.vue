@@ -20,7 +20,7 @@
 
         <q-separator />
 
-        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense 
+        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense
           :class="cl(lg) + ' text-center'"
           @click="choix(lg)" clickable v-close-popup>
           <q-item-section class="fs-lg">{{lg.label}}</q-item-section>
@@ -49,7 +49,7 @@
 
         <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
-          <q-item-section class="fs-lg">{{$t('pings')}}</q-item-section>
+          <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
         </q-item>
 
         <q-separator v-if="ui.page !== 'home'" />
@@ -299,37 +299,82 @@
     </q-card>
   </q-dialog>
 
-  <!-- Pings du serveur -->
-  <dialog-std0 v-if="ui.dModels[idc].pings" v-model="ui.dModels[idc].pings" vh="80"
-    :title="$t('pings')" hdrclass='wmd' help="pings">
+  <!-- Outils techniques -->
+  <dialog-std1 v-if="ui.dModels[idc].pings" v-model="ui.dModels[idc].pings" vh="80"
+    :title="$t('tech')" hdrclass='wmd' help="pings">
     <template #hdr>
-      <btn-cond icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
-      <btn-cond icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
+      <div class="row items-center wmd full-width">
+        <btn-cond class="col-auto q-mr-xs" icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
+        <btn-cond class="col-auto q-mr-lg" icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
+        <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
+          <q-tab name="pings" :label="$t('pings')"/>
+          <q-tab name="crypto" :label="$t('crypto')" />
+          <q-tab name="cred" :label="$t('cred')" />
+        </q-tabs>
+      </div>
     </template>
     <template #default>
-      <q-separator color="orange" class="q-my-md"/>
+      <div v-if="tab === 'pings'" class="q-pa-xs">
+        <q-separator color="orange" class="q-my-md"/>
 
-      <input-a size="org" prefix="orgcode" v-model="org"/>
+        <input-a size="org" prefix="orgcode" v-model="org"/>
 
-      <q-separator color="orange" class="q-my-md"/>
+        <q-separator color="orange" class="q-my-md"/>
 
-      <div class="column q-px-sm">
-        <btn-cond icon-right="send" :label="$t('ping')" :disable="org === ''"
-          @click="opGetSrvStatus"/>
-        <div class="q-mt-sm q-mx-sm font-mono height-4">{{resping}}</div>
+        <div class="column q-px-sm">
+          <btn-cond icon-right="send" :label="$t('ping')" :disable="org === ''"
+            @click="opGetSrvStatus"/>
+          <div class="q-mt-sm q-mx-sm font-mono height-4">{{resping}}</div>
+        </div>
+
+        <q-separator color="orange" class="q-my-md"/>
+
+        <div class="column q-px-sm q-gutter-md q-mb-md">
+          <input-a size="org" prefix="toecho" v-model="toecho" :validatefn="opEcho"/>
+          <div class="font-mono">{{$t('echo', [echo])}}</div>
+        </div>
       </div>
-      
-      <q-separator color="orange" class="q-my-md"/>
+      <div v-if="tab === 'crypto'" class="q-pa-xs">
+        <input-ps class="q-mt-md q-mb-sm" v-model="ps" size="p1"
+          prefix="SBphrase" :validatefn="validPs"/>
+        <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sh')}}</div>
+        <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.b64" />
+        <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sha')}}</div>
+        <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.shaps" />
+        <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_shaS')}}</div>
+        <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.shaSps" />
 
-      <div class="column q-px-sm q-gutter-md q-mb-md">
-        <input-a size="org" prefix="toecho" v-model="toecho" :validatefn="opEcho"/>
-        <div class="font-mono">{{$t('echo', [echo])}}</div>
+        <q-separator class="q-my-md" color="orange" />
+
+        <btn-cond class="q-mb-md" :label="$t('SBgensv')" @ok="genSV"/>
+        <div class="q-mt-md titre-md text-italic">{{$t('SBgensv2')}}</div>
+        <q-input class="q-pa-xs bord1" v-model="cr.pems" type="textarea"
+         :rows="15"/>
       </div>
+      <div v-if="tab === 'cred'" class="q-pa-xs">
+        <div class="row q-my-sm q-gutter-sm">
+          <btn-cond class="warning" :label="$t('reset')" icon="undo"
+            @ok="resetCred"/>
+          <btn-cond :disable="!cf.templ.length || !cf.pem.length"
+            :label="$t('SBgencred')" icon="check"
+            @ok="genCred"/>
+        </div>
+
+        <div class="q-mt-md titre-md text-italic">{{$t('SBcred')}}</div>
+        <q-input class="q-pa-xs bord1" v-model="cf.templ" type="textarea"
+         :rows="10"/>
+        <div class="q-mt-md titre-md text-italic">{{$t('SBprivpem')}}</div>
+        <q-input class="q-pa-xs bord1" v-model="cf.pem" type="textarea"
+         :rows="7"/>
+        <div class="q-mt-md titre-md text-italic">{{$t('SBcredres')}}</div>
+        <q-input class="q-pa-xs bord1" v-model="cf.res" type="textarea"
+         :rows="10"/>
+      </div>
+
     </template>
-  </dialog-std0>
-
+  </dialog-std1>
   <!-- Maj préférences -->
-  <dialog-std1 v-model="ui.dModels[idc].edprf" 
+  <dialog-std1 v-model="ui.dModels[idc].edprf"
     :title="$t('HPprefs_ed')" hdrclass='wmd'>
     <template #hdr>
       <div class="row q-ma-xs items-center justify-between">
@@ -353,7 +398,7 @@
 
 <script setup lang="ts">
 
-import { ref, onUnmounted, computed } from 'vue'
+import { ref, onUnmounted, computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
@@ -366,10 +411,13 @@ import DialogStd1 from './DialogStd1.vue'
 import DialogStd0 from './DialogStd0.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import InputA from '../components-fw/InputA.vue'
+import InputPs from '../components-fw/InputPs.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool } from '../src-fw/util'
+import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
+import { Crypt, toPem } from '../src-fw/crypt'
+import { Credential } from '../src-fw/credential'
 
 const i18n = useI18n()
 const config = stores.config
@@ -386,6 +434,11 @@ const services = ref()
   services.value = m
 }
 const defsvc = ref(config.K.DEFAULT_SERVICE)
+
+const tab = ref('cred')
+watch(tab, (t) => {
+  if (t === 'cred') resetCred()
+})
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
 
@@ -469,10 +522,58 @@ const edValid = async () => {
     await stores.safe.updatePrefs(m, [])
   }
 }
+
+const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '' })
+const ps = reactive({ inp: '', err: ''})
+
+const validPs = async () => {
+  const sh = await Crypt.strongHash(ps.inp, false, true)
+  cr.b64 = u8ToB64(sh, true)
+  cr.shaps = Crypt.sha(sh, false)
+  cr.shaSps = Crypt.shaS(sh)
+}
+
+const genSV = async () => {
+  const { pub, priv } = await Crypt.getSVKeyPair()
+  cr.pems = toPem(pub, true) + '\n\n' + toPem(priv)
+}
+
+const templ = `{
+"about": "à propos du credential",
+"org": "demo",
+"type": "t1",
+"scope": {
+    "n1": "v1",
+    "n2": "v2"
+  }
+}
+`
+
+const cf = reactive({ templ: '', pem: '', res: '' })
+const resetCred = () => {
+  cf.templ = templ
+  cf.pem = ''
+  cf.res = ''
+}
+
+const genCred = () => {
+  try {
+    const obj = JSON.parse(cf.templ)
+    const c = new Credential(obj)
+    c.id = c.computedId
+    c.sign = cf.pem
+    const o2 = c.toObj
+    cf.res = c.toJson
+  } catch (e) {
+    cf.res = e.toString()
+  }
+}
+resetCred()
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 .tag { border-radius:10px; height: 20px; width: 20px; padding-top: 2px; overflow:hidden; }
 .stop { border-radius : 8px; border: 2px solid $grey-5}
 .stop:hover { border-color: $negative }

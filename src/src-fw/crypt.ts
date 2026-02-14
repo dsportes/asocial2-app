@@ -18,6 +18,17 @@ export type KeyPair = {
 
 const p2 = [1, 0, 0, 0, 0, 0]; for (let i = 1; i < 6; i++) p2[i] = p2[i - 1] * 256
 
+const SALTS = new Array(256)
+{
+  const s = new Uint8Array([5, 255, 10, 250, 15, 245, 20, 240, 25, 235, 30, 230, 35, 225, 40, 220])
+  SALTS[0] = s
+  for (let i = 1; i < 256; i++) {
+    const x = new Uint8Array(16)
+    for (let j = 0; j < 16; j++) x[j] = (s[j] + i) % 256
+    SALTS[i] = x
+  }
+}
+
 const byteToHex = [];
 
 for (let n = 0; n <= 0xff; ++n) {
@@ -81,8 +92,8 @@ export class Crypt {
     ecdsa: { name: 'ECDSA', namedCurve: 'P-521' },
     ecdsasv: { name: 'ECDSA', hash: 'SHA-256' },
     rsa: { name: 'RSASSA-PKCS1-v1_5', // 'RSA-OAEP' PAS pour sign / verify
-      modulusLength: 2048, 
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01]), 
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
       hash: {name: "SHA-256"} },
     rsasv: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'},
   }
@@ -124,7 +135,7 @@ export class Crypt {
     const pkcs8 = await crypto.subtle.exportKey('pkcs8', p.privateKey)
     return { pub: spki, priv: pkcs8 }
   }
-    
+
   static async getSVKeyPair () : Promise<KeyPair> {
     const p = await crypto.subtle.generateKey(Crypt.algs[Crypt.alg], true, ['sign', 'verify'])
     const spki = await crypto.subtle.exportKey('spki', p.publicKey)
@@ -166,7 +177,7 @@ export class Crypt {
     return await crypto.subtle.verify(Crypt.algs[Crypt.alg + 'sv'], pub, signature as BufferSource, data as BufferSource)
   }
 
-  static async strongHash (s: string | Uint8Array, pad?: boolean, bin?: boolean) 
+  static async strongHash (s: string | Uint8Array, pad?: boolean, bin?: boolean)
   : Promise<string | Uint8Array> {
     let x: Uint8Array = typeof s === 'string' ? encoder.encode(s) : s as Uint8Array
     const l = 32 - x.length
@@ -179,7 +190,8 @@ export class Crypt {
     }
     const h1 = new Uint8Array(sha256.arrayBuffer(ex))
     // const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", ex as BufferSource))
-    const salt = h1.subarray(0, 16)
+    const salt = h1.subarray(0, 16) // SALTS[0] // h1.subarray(0, 16)
+    console.log(arrayBuffertohex(salt.buffer))
     const p = await crypto.subtle.importKey('raw', ex as BufferSource, 'PBKDF2', false, ['deriveKey'])
     const key = await crypto.subtle.deriveKey(
       { name: 'PBKDF2', salt : salt, iterations: 20000, hash: 'SHA-256' },
@@ -289,7 +301,7 @@ export async function testECDH () {
   if (h1 === h3)
     console.log('trop cool !!!')
   else console.log('TOO BAD !!!')
-  
+
   // Dans srv
   const verif1 = await Crypt.verify(fromPem(appSVPub, true), sign, x)
   console.log('verif1 = ', verif1)
