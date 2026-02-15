@@ -5,20 +5,30 @@ import { encode } from '@msgpack/msgpack'
 
 const encoder = new TextEncoder()
 
+/* Quand destiné à la construction d'un credential,
+- id et hpems ne sont pas utilisé mais reconstruit
+*/
+export type CredObj = {
+  id: string // hash court de `[role, org, entid]`.
+  about: string // un texte court _à propos_ du `entid`.
+  role: string // un des codes de rôle connu du service.
+  org: string // le code de l'organisation.
+  entid: string // identifiant d'une entité interprétable pour le service.
+  entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
+  pems: string // clé PRIVEE de signature, le texte de 400c.
+  hpems: string // hash court de `pems`.
+}
+
 export class Credential {
 
   static parse (inp: string) : Map<string, Credential> {
     const m = new Map<string, Credential>()
-    const objs: Object[] = JSON.parse(inp)
+    const objs: CredObj[] = JSON.parse(inp)
     for (const obj of objs) {
       const c: Credential = new Credential(obj)
       if (c && c.id) m.set(c.id, c)
     }
     return m
-  }
-
-  static clone (src: Credential) : Credential{
-    return new Credential(src.toObj)
   }
 
   static toJson (creds: Credential[]) : string{
@@ -32,96 +42,72 @@ export class Credential {
     return u8ToB64(u8).replaceAll('+', '1').replaceAll('/', '2')
   }
 
-  id: string // id: déduite des propriétés identifiantes idProps
-  about: string // A propos du credential
-  org: string // organisation (ou '*' exceptionellement)
-  type: string // code du type de credential
-  scope: Object // scope fonctionnel: les propriétés ne sont QUE des strings
-  sign: string // PEM de la clé de signature
+  /* Construit un credential depuis un object de type CredObj
+  reçu par transmission d'un transmetteur T:
+  - keyK : clé du destinatoire D
+  - aes: clé obtenue depuis pubT / privD
+  La donnée entkey est décryptée / ré-encryptée
+  */
+  static async fromTObj (obj: CredObj, keyK: Uint8Array, aes: Uint8Array )
+    : Promise<Credential> {
 
-  constructor (obj: Object) {
-    for (const p of ['id', 'about', 'org', 'type', 'sign'])
-      this[p] = obj[p] || ''
-    const x = obj['scope']
-    const lp = x ? Object.keys(x) : []
-    if (lp.length) {
-      this.scope = {}
-      for (const p of lp)
-        if (typeof p === 'string') this.scope[p] = x[p]
-      if (Object.keys(this.scope).length === 0)
-        this.scope = null
-    } else this.scope = null
-
+    const c = new Credential(obj)
+    if (obj.entkey) {
+      const dc = await Crypt.decrypt(aes, b64ToU8(obj.entkey))
+      c.entkey = u8ToB64(await Crypt.crypt(keyK, dc))
+    }
+    return c
   }
 
-  get toObj () :Object {
-    const obj = {
+  constructor (obj: CredObj) {
+    this.id = Crypt.shaS(encode([obj.role, obj.org, obj.entid]))
+    this.about = obj.about
+    this.role = obj.role
+    this.org = obj.org
+    this.entid = obj.entid
+    this.entkey = obj.entkey
+    this.pems = obj.pems
+    this.hpems = Crypt.shaS(encoder.encode(obj.pems))
+  }
+
+  get toObj () : CredObj {
+    return {
       id: this.id,
       about: this.about,
       org: this.org,
-      type: this.type,
-      scope: this.scope ? {} : null,
-      sign: this.sign
+      role: this.role,
+      entid: this.entid,
+      entkey: this.entkey,
+      pems: this.pems,
+      hpems: this.hpems
     }
-    if (this.scope) {
-      const lp = Object.keys(this.scope)
-      lp.sort()
-      for (const p of lp) obj.scope[p] = this.scope[p]
-    } else delete obj.scope
+  }
+
+  async toTObj (keyK: Uint8Array, aes: Uint8Array) : Promise<CredObj> {
+    const obj = this.toObj
+    if (obj.entkey) {
+      const dc = await Crypt.decrypt(keyK, b64ToU8(obj.entkey))
+      this.entkey = u8ToB64(await Crypt.crypt(aes, dc))
+    }
     return obj
   }
+
+  clone () : Credential {
+    return new Credential(this.toObj)
+  }
+
+  id: string // hash court de `[role, org, entid]`.
+  about: string // un texte court _à propos_ du `entid`.
+  role: string // un des codes de rôle connu du service.
+  org: string // le code de l'organisation.
+  entid: string // identifiant d'une entité interprétable pour le service.
+  entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
+  pems: string // clé PRIVEE de signature, le texte de 400c.
+  hpems: string // hash court de `pems`.
 
   get toJson () :string {
     return JSON.stringify(this.toObj, null, '\t')
   }
 
-  get computedId () :string {
-    const x = [ this.org, this.type ]
-    const l = this.scope ? Object.keys(this.scope) : null
-    if (l && l.length) {
-      l.sort()
-      for (const p of l) { x.push(p); x.push(this.scope[p] ) }
-    }
-    return Crypt.shaS(encode(x))
-  }
-
   setAbout (s: string) { this.about = s }
-}
-
-export function testCred () : Map<string, Credential> {
-  const c1 = new Credential({
-    about: 'cred #1',
-    org: 'doda', type:'LOGIN', sign: 'totoestbeau', scope: { rien: 'quedalle' }
-  })
-  c1.id = c1.computedId
-
-  const c2 = new Credential({
-    about: 'cred #2',
-    org: 'doda', type:'LOGIN',
-    sign: 'totoestbeau',
-    scope: { troisfoisrien: 'pasgrandchose' }
-  })
-  c2.id = c2.computedId
-
-  const c3 = new Credential({
-    about: 'cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3',
-    org: 'doda', type:'ZARBI',
-    sign: '1234AZERTY',
-    scope: { troisfoisrien: 'pasgrandchose' }
-  })
-  c3.id = c3.computedId
-
-  const c4 = new Credential({
-    about: 'cred #1',
-    org: '*', type:'BOF', sign: 'totoestmoche'
-  })
-  c4.id = c4.computedId
-
-  const s = Credential.toJson([c1, c2, c3, c4])
-  // console.log(s)
-  const cred = Credential.parse(s)
-
-  console.log(Credential.toJson(Array.from(cred.values())))
-
-  return cred
 }

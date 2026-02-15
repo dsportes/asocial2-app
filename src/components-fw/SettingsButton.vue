@@ -1,3 +1,6 @@
+<!-- TODO
+Gérer la saisie d'un credential
+-->
 <template>
 <div>
   <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
@@ -537,6 +540,8 @@ const genSV = async () => {
   const { pub, priv } = await Crypt.getSVKeyPair()
   cr.pems = toPem(pub, true) + '\n\n' + toPem(priv)
 }
+
+// TODO Gérer la saisie d'un credential
 
 const templ = `{
 "about": "à propos du credential",

@@ -99,6 +99,13 @@ export default {
   `,
   REGexp_all: `Tous les caractères sont autorisés y compris les espaces
   `,
+
+
+  ROLEauteur: 'Auteur d\'articles',
+  ROLElecteur: 'Relecteur d\'articles',
+  ROLEmanager: 'Manager général',
+  ROLEgroupe: 'Groupe de relecteurs',
+
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',
   MLAcf: 'Voulez-vous vraiment interrompre l\'opération en cours "{0}"',
@@ -499,7 +506,7 @@ A propos du status ...
 `,
   HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
   HPpsno: 'Aucune session sélectionnée dans la liste',
-  HPcreddet_0: 'Organisation:[{0}] - Type:[{1}] - Classe:[{2}]',
+  HPcreddet_0: 'Organisation:[{0}] - Rôle: {1}',
   HPcredac_1: 'Le droit d\'accès est dans la liste d\'origine (n\'a pas été importé): l\'en RETIRER',
   HPcredac_2: 'Le droit d\'accès a été retiré de la liste: l\'y REMETTRE',
   HPcredac_3: 'Le droit d\'accès n\'était PAS dans la liste et vient d\'être "importé": l\'y SUPPRIMER',

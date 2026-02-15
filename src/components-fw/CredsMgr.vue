@@ -4,12 +4,12 @@
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
       <div class="row">
-        <btn-cond class="q-mr-sm" flat size="md" icon="download" :label="$t('HPimport_0')" 
+        <btn-cond class="q-mr-sm" flat size="md" icon="download" :label="$t('HPimport_0')"
           @ok="resetImport(); ui.oD(idc2, 'import')"/>
-        <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')" 
+        <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')"
           @ok="resetExport(); ui.oD(idc2, 'export')"/>
       </div>
-      <btn-cond flat size="lg" icon="check" color="warning" 
+      <btn-cond flat size="lg" icon="check" color="warning"
         :label="$t('validate')" @ok="validate"/>
     </div>
     <q-tabs v-model="tab" dense class="tbp">
@@ -35,23 +35,25 @@
       <div class='q-pa-xs'>
         <div v-if="localCred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
         <div v-else class="column">
-          <div v-if="localCred.st === 2"> <!-- credential retiré de la liste -->
+          <!-- credential retiré de la liste -->
+          <div v-if="localCred.st === 2">
             <bar-open :title="$t('HPcredac_2')" :fnopen="doAction2" icon="redo" color="primary"/>
-            <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.org, origCred.type, origCred.clazz])}}</div>
-            <div class="q-my-xs">{{origCred.about}}</div>
           </div>
-
-          <div v-if="localCred.st === 1"> <!-- credential importé (n'existait PAS) -->
+          <!-- credential importé (n'existait PAS) -->
+          <div v-if="localCred.st === 1">
             <bar-open :title="$t('HPcredac_3')" :fnopen="doAction3" icon="delete" color="warning"/>
-            <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
+          </div>
+          <!-- crédential existait, pas importé pas supprimé: about PEUT-ETRE changé -->
+          <div v-if="localCred.st === 0 || localCred.st === 3">
+            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
           </div>
 
-          <div v-if="localCred.st === 0 || localCred.st === 3"> <!-- crédential existait, pas importé pas supprimé: about PEUT-ETRE changé -->
-            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
-            <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.org, localCred.cred.type, localCred.cred.clazz])}}</div>
+          <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
+          <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.org, $t('ROLE' + origCred.role)])}}</div>
+
+          <div v-if="origCred.entid && localCred.st === 2" class="q-my-xs row">
+            <span class="fs-md">{{origCred.about}}</span>
+            <span class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</span>
           </div>
 
           <input-a v-if="localCred.st !== 2"
@@ -61,7 +63,7 @@
           <!-- TEST de transmission d'un credential -->
           <input-a size="p0" prefix="HPtransmit"
             v-model="targetName" :validatefn="transmitTest"/>
-          
+
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <scroll-area size="sm"><template #default>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
@@ -73,10 +75,10 @@
           </template></scroll-area>
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPnotlisted')}}</div>
           <scroll-area size="sm"><template #default>
-            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">            
+            <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS2" :key="psid">
               <div :class="psSel(ps) + ' row items-start q-my-xs'">
                 <btn-cond class="col-1" icon="arrow_upward" @ok="onArrowU(ps)"/>
-                <ps-row class="col-11" :ps="ps"/>  
+                <ps-row class="col-11" :ps="ps"/>
               </div>
             </div>
           </template></scroll-area>
@@ -131,7 +133,7 @@
         <div v-if="localPS.orphans.size !== 0">
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted_O')}}</div>
           <div class="q-my-xs q-mx-md row q-gutter-md">
-            <div v-for="crId in localPS.orphans" class="font-mono text-white bg-warning cursor-pointer" 
+            <div v-for="crId in localPS.orphans" class="font-mono text-white bg-warning cursor-pointer"
               @click="removeOrph(crId)">{{crId}}</div>
           </div>
         </div>
@@ -145,7 +147,7 @@
 <dialog-std1 v-model="ui.dModels[idc2].import" :title="$t('HPimport_1')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check" :label="$t('HPimport_0')" 
+      <btn-cond flat size="lg" icon="check" :label="$t('HPimport_0')"
       :disable="locImp === null"
       @ok="doImport"/>
     </div>
@@ -157,7 +159,7 @@
       </div>
       <div v-if="importCr === 2" class="q-my-sm">
         <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="cryptK" prefix="HPimport" size="ps" 
+        <input-ps v-model="cryptK" prefix="HPimport" size="ps"
           :validatefn="valK"/>
       </div>
 
@@ -166,7 +168,7 @@
         :label="$t('pickfile')" max-file-size="50000000" max-file="1"/>
 
       <div v-if="diag !== ''" class="q-my-xs msg2">{{diag}}</div>
-      <text-zoom v-if="importedText !== null && importCr !== 3" 
+      <text-zoom v-if="importedText !== null && importCr !== 3"
         :label="$t('HPimport_disp')" :text="importedText"/>
     </div>
 
@@ -175,10 +177,10 @@
         <q-toolbar-title class="titre-md full-width text-center q-pr-xs">{{$t('HPimport_inp')}}</q-toolbar-title>
         <btn-cond icon="zoom_in" flat @ok="zoom"/>
         <btn-cond class="q-ml-xs" icon="zoom_out" flat @ok="unzoom" :disable="rx < 5"/>
-        <btn-cond class="q-ml-xs" icon="check" color="warning" round 
+        <btn-cond class="q-ml-xs" icon="check" color="warning" round
           :disable="!importedText" @ok="processText"/>
       </q-toolbar>
-      <q-input class="q-pa-xs full-width bord-top" v-model="importedText" 
+      <q-input class="q-pa-xs full-width bord-top" v-model="importedText"
         type="textarea" :rows="rx"/>
     </div>
 
@@ -199,9 +201,9 @@
 <dialog-std1 v-model="ui.dModels[idc2].export" :title="$t('HPexport_1')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check" 
+      <btn-cond flat size="lg" icon="check"
       :disable="exportCr === 2 && cryptK.key === null"
-      :label="$t('HPexport_0')" 
+      :label="$t('HPexport_0')"
       @ok="doExport"/>
     </div>
   </template>
@@ -225,7 +227,7 @@
         </div>
       </template></scroll-area>
 
-      <div v-if="exportCr === 2 && cryptK.key === null" 
+      <div v-if="exportCr === 2 && cryptK.key === null"
         class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
       <div v-if="exportCr === 1 || (exportCr === 2 && cryptK.key !== null)"
         class='titre-md text-italic q-my-sm'>{{$t('HPexport_unck')}}</div>
@@ -238,7 +240,7 @@
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
       <btn-cond flat size="lg" icon="chevron_left" @ok="ui.fD" :label="$t('giveup')"/>
-      <btn-cond v-if="!nothingtodo" flat size="lg" icon="check" @ok="confValidate" 
+      <btn-cond v-if="!nothingtodo" flat size="lg" icon="check" @ok="confValidate"
         color="warning" :label="$t('iconfirm')"/>
     </div>
   </template>
@@ -255,7 +257,7 @@
       HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
     -->
     <div class="column q-pa-sm">
-      <div v-if="nothingtodo" 
+      <div v-if="nothingtodo"
       class="titre-lg q-pa-md self-center text-italic q-my-sm bord1 text-warning">
         {{$t('HPnothing')}}</div>
 
@@ -365,7 +367,7 @@ const origCreds = computed(() => sf.mySafeCreds)
 // const origCreds = ref(testCred()) // simulation pour test
 /* Chargement des credentials */
 for(const [, c] of origCreds.value)
-  mlocCreds.value.set(c.id, { cred: Credential.clone(c), st: 0, psIds: new Set() })
+  mlocCreds.value.set(c.id, { cred: c.clone(), st: 0, psIds: new Set() })
 
 const buildXref = () => {
   for(const [,lc] of mlocCreds.value) lc.psIds.clear()
@@ -391,7 +393,7 @@ const loading = () => {
       morigPS.value.set(id, ps2)
       for(const crId of ps1.crIds) {
         const lc = origCreds.value.get(crId)
-        if (!lc) 
+        if (!lc)
           ps1.orphans.add(crId)
       }
     }
@@ -408,14 +410,14 @@ const mlocPS2 = ref(null)
 
 const locaboutCr = ref('')
 
-const crSel = (lc: LocalCred) => !lc ? '' : 
+const crSel = (lc: LocalCred) => !lc ? '' :
   (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc: LocalCred) => {
   localCred.value = lc
   locaboutCr.value = lc.cred.about || ''
   const c = origCreds.value.get(lc.cred.id)
-  origCred.value = c ? Credential.clone(c) : null
+  origCred.value = c ? c.clone() : null
   mlocPS1.value = new Map()
   mlocPS2.value = new Map()
   for (const [psid, e] of mlocPS.value)
@@ -423,8 +425,8 @@ const selCred = (lc: LocalCred) => {
     else mlocPS2.value.set(psid, e)
 }
 
-const initAbCr = computed(() => 
-  localCred.value.st === 1 ? localCred.value.cred.about || '' 
+const initAbCr = computed(() =>
+  localCred.value.st === 1 ? localCred.value.cred.about || ''
   : (origCred.value ? origCred.value.about || '' : ''))
 
 const valAbCr = () => {
@@ -624,7 +626,7 @@ const processText = () => {
   try {
     const creds = Credential.parse(importedText.value)
     locImp.value = new Map()
-    for(const [id, c] of creds) 
+    for(const [id, c] of creds)
       locImp.value.set(id, { c: c, ck: true })
     diag.value = ''
   } catch (e) {
@@ -637,7 +639,7 @@ const processText = () => {
 const downloadFile = async () => {
   fileList.value = null
   try {
-    importedText.value = decoder.decode(importCr.value === 2 ? 
+    importedText.value = decoder.decode(importCr.value === 2 ?
       await Crypt.decrypt(cryptK.key, fd.value.u8) : fd.value.u8)
     processText()
   } catch (e) {
@@ -652,7 +654,7 @@ const zoom = () => { rx.value += 10 }
 const unzoom = () => { if (rx.value >= 15) rx.value -= 10; else rx.value = 5 }
 
 const doImport = () => {
-  if (locImp.value.size) 
+  if (locImp.value.size)
     for(const [id, lc] of locImp.value)
       if (lc.ck) {
         const orig = origCreds.value.get(lc.c.id)
@@ -682,13 +684,13 @@ const resetExport = () => {
   exportCr.value = 1
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
   locExp.value = new Map()
-  if (mlocCreds.value.size) for(const [id, lc] of mlocCreds.value) 
+  if (mlocCreds.value.size) for(const [id, lc] of mlocCreds.value)
     if (lc.st !== 2) locExp.value.set(id, { c: lc.cred, ck: true })
 }
 
 const doExport = async () => {
   const creds = []
-  if (locExp.value.size) for(const [id, lc] of locExp.value) 
+  if (locExp.value.size) for(const [id, lc] of locExp.value)
     if (lc.ck) creds.push(lc.c)
   const toJson = Credential.toJson(creds)
   // console.log(toJson)
@@ -735,8 +737,8 @@ const report: Report = reactive({
 const nothingtodo = ref(true)
 
 const validate = () => {
-  report.mcreds = new Map<string, Credential>() 
-  report.delcreds = [] 
+  report.mcreds = new Map<string, Credential>()
+  report.delcreds = []
   report.mprofs = new Map<string, Profile>()
   report.delprofs = []
   report.emptyPS = new Set()
@@ -757,9 +759,9 @@ const validate = () => {
     const del = (x.exav && !x.exap)
     if (del) report.delprofs.push(profId)
     if (maj || cre)
-      report.mprofs.set(profId, { profId, about: x.about, 
+      report.mprofs.set(profId, { profId, about: x.about,
           crIds: Array.from(x.crIds) })
-    
+
     /*
     HPps_1: 'Sessions créées: {0}',
     HPps_2: 'Sessions supprimées: {0}',

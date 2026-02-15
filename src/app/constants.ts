@@ -41,12 +41,7 @@ export const K = {
 
   phrasestar: true,
 
-  sizeP0: [8, 20],
-  sizeP1: [24, 40],
-  sizeTr: [3, 8],
-  sizeDev: [6, 16],
-  sizePin: [8, 16],
-  sizeSn: [3, 40], // Nom des sessions
+  roles: new Set(['auteur', 'lecteur', 'manager', 'groupe']),
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

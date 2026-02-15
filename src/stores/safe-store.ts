@@ -56,9 +56,9 @@ dans un format faciltant son utilisation locale.
 Le texte lui-même n'est jamais renvoyé au serveur:
 - ce sont des requêtes spécifiques qui demandent au serveur des mises à jour.
 - chaque requête du serveur,
-  - lit le safe enrgistré en DB, 
-  - le désérialise en objet, 
-  - met à jour l'objet, 
+  - lit le safe enrgistré en DB,
+  - le désérialise en objet,
+  - met à jour l'objet,
   - réécrit en DB une sérialisation de l'objet,
   - retourne à l'appelant le Safe qu'objet.
 
@@ -111,7 +111,7 @@ const coeffs = [2, 1.3]
 
 const STORES = {
   header: 'id', // singleton: id = '1'
-  trustings: 'id', 
+  trustings: 'id',
   tsessions: 'id'
 }
 
@@ -161,8 +161,8 @@ export class TSession {
   }
 
   get dbName () : string { return this.app + '_' + Crypt.shaS(this.userId + '/' + this.profId)}
-  get idOf () : string { 
-    return TSession.id(this.app, this.userId, this.profId) 
+  get idOf () : string {
+    return TSession.id(this.app, this.userId, this.profId)
   }
 
   static id (app, userId, profId) : string {
@@ -205,7 +205,7 @@ export const useSafeStore = defineStore('safe', () => {
       await loadTrustings()
       console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
     } catch (e) {
-      if (db.value) { 
+      if (db.value) {
         await db.value.close()
         db.value = null
       }
@@ -299,7 +299,7 @@ export const useSafeStore = defineStore('safe', () => {
     if (n === -1) dbl.push(dbName)
     localStorage.setItem('$DBLIST', dbl.join(' '))
   }
-  
+
   const delIDB = (dbName: string) => {
     if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
@@ -339,7 +339,7 @@ export const useSafeStore = defineStore('safe', () => {
   /* sh1p sh1r ont été donnés:
   - soit sur $createSafe $UpdSafeCodes (auth longue)
   - soit sur $openSafebyPR (par auth longue, pas par PIN)
-  Sont transmises sur les opérations $SetTrust $SetUntrust pour vérification 
+  Sont transmises sur les opérations $SetTrust $SetUntrust pour vérification
   de leur hash (hhp1 hhr1) stockés par $CreateSafe $UpdSafeCodes
   */
   const sh1p = ref(null)
@@ -356,7 +356,7 @@ export const useSafeStore = defineStore('safe', () => {
     return t ? t.pseudo : ''
   })
 
-  const users = computed(() => 
+  const users = computed(() =>
     trustings.value ? Array.from(trustings.value.values()) : [])
 
   /* Section "auth" */
@@ -378,33 +378,33 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Section "devices de confiance" *****************************************************
   Une entrée par device identifiée par `devid`:
-  - `about` : code / texte court **crypté par la clé K du _safe_** 
+  - `about` : code / texte court **crypté par la clé K du _safe_**
     donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
-  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider 
+  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider
     que ce _device_ est de confiance.
   ****************************************************************************************/
   const devices: Ref<Map<string, Device>> = ref() // cle devid
 
   /* Section "préférences" **************************************************************
-  Elle est organisée avec une **sous-section par application** donnant une 
+  Elle est organisée avec une **sous-section par application** donnant une
   map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
-  - `code` : texte court parlant pour l'utilisateur correspondant 
+  - `code` : texte court parlant pour l'utilisateur correspondant
     à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
   - `time`: date-heure de dernière mise à jour
-  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser 
-    à l'ouverture d'une session.  
+  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
+    à l'ouverture d'une session.
   **************************************************************************************/
   const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
 
   /* Section "profiles"
-  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
+  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes:
   - `about`: texte significatif pour l'utilisateur **crypté par la clé K** décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
   - `creds`: la liste des id des _credentials_ qui sont attachés à une session de ce profil lors de son ouverture.
   */
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds"
-  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes: 
+  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes:
   - `about` : code / texte court donné par l'utilisateur pour qualifier le _credential_. Par exemple `Compte Bob sur circuits courts`.
   - `data`: sérialisation du détail du _credential_:
   */
@@ -428,7 +428,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
-  Stocke en mémoire le dernier état du Safe revenu du serveur: 
+  Stocke en mémoire le dernier état du Safe revenu du serveur:
     - auth, devices, prefs, profiles
   K :
     - soit vient d'être généré dans $createSafe
@@ -508,7 +508,7 @@ export const useSafeStore = defineStore('safe', () => {
           const x = decode(b64ToU8(mpf[profId]))
           const about = await dcX(b64ToU8(x.about))
           const s = sessionOfProfId(profId)
-          if (s) 
+          if (s)
             s.about = about
           const p: Profile = { profId, about, crIds: x.crIds }
           m.set(profId, p)
@@ -540,13 +540,12 @@ export const useSafeStore = defineStore('safe', () => {
               const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
               const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
               const obj = decode(dc)
-              const c: Credential = new Credential(obj)
-              const id = credId.substring(1)
-              if (c) m.set(id, c)
-              mcreds.set(id, c)
+              const c: Credential = await Credential.fromTObj(obj, keyK.value, aes)
+              if (c) m.set(c.id, c)
+              mcreds.set(c.id, c)
               delcreds.push(credId)
             }
-          } catch (e) { 
+          } catch (e) {
             console.log(e)
           }
         }
@@ -590,7 +589,7 @@ export const useSafeStore = defineStore('safe', () => {
         console.log(e)
       }
     })
-    
+
     for(const [,s] of mySessions.value) {
       if (s.prefCode) {
         const p = mySafePrefs.value.get(s.prefCode)
@@ -628,7 +627,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  /* Quand nodel est donné 
+  /* Quand nodel est donné
   c'est une purge depuis ManageUsers, la base a déjà été supprimée
   par purgeIDBS
   */
@@ -702,7 +701,7 @@ export const useSafeStore = defineStore('safe', () => {
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
     if (openMode.value === 0) return 9
-    
+
     sh1p.value = psh1
     sh1r.value = rsh1
 
@@ -882,7 +881,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
-  en mode LONG (pas par PIN). 
+  en mode LONG (pas par PIN).
   Pour s'en assurer elle transmet au serveur sh1p / sh1r qui n'ont pu être initialisés
   QUE par une auth longue ($CreateSafe / $UpdSafeCodes / $OpenSafeByPR)
   */
@@ -909,7 +908,7 @@ export const useSafeStore = defineStore('safe', () => {
         Ka: auth.value.Ka,
         Kr: auth.value.Kr,
         Kp: Kp
-      }) 
+      })
     } else {
       t.pseudo = pseudo
       t.cx = cx
@@ -944,7 +943,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({trustDev})
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return -1
     }
@@ -966,7 +965,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({untrustDev})
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return -1
     }
@@ -988,7 +987,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({untrustDev})
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return -1
     }
@@ -1006,7 +1005,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post(args)
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return -1
     }
@@ -1024,14 +1023,14 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post(args)
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return null
     }
     return ret.status ? null : ret.safe
   }
 
-  /* Faire sauvegarder par le serveur dans le safe 
+  /* Faire sauvegarder par le serveur dans le safe
   la maj de l'about du profil */
   const setAboutProfile = async (profId: string, about: string) => {
     const aboutProfile: SetAboutProfile = {
@@ -1045,7 +1044,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({aboutProfile})
-    } catch(e) { 
+    } catch(e) {
       op.ko(e)
       return 9
     }
@@ -1181,7 +1180,7 @@ export const useSafeStore = defineStore('safe', () => {
   type UpdateCreds = {
     app: string
     userId: string
-    shk: string    
+    shk: string
     creds: Object // clé: crId, valeur: Objet Credential sérialisé crypté
     delcreds: string[] // liste des crIds à supprimer
     profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
@@ -1190,8 +1189,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const updateCreds = async (
-      mcreds: Map<string, Credential>, 
-      delcreds: string[], 
+      mcreds: Map<string, Credential>,
+      delcreds: string[],
       mprofiles: Map<string, Profile>,
       delprofs: string[],
       nocompile?: boolean
@@ -1210,14 +1209,14 @@ export const useSafeStore = defineStore('safe', () => {
       profiles[profId] = u8ToB64(encode(p))
     }
     if (Object.keys(profiles).length === 0) profiles = null
-    
+
     const updateCreds: UpdateCreds = {
       userId: userId.value,
       app: stores.config.appname,
       shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      creds, 
-      delcreds : delcreds || [], 
-      profiles, 
+      creds,
+      delcreds : delcreds || [],
+      profiles,
       delprofs: delprofs || [],
       nosafe: nocompile || false
      }
@@ -1225,8 +1224,8 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({updateCreds})
-    } catch(e) { 
-      op.ko(e); 
+    } catch(e) {
+      op.ko(e);
       return -1
     }
     if (ret.status === 0 && !nocompile)
@@ -1247,13 +1246,13 @@ export const useSafeStore = defineStore('safe', () => {
   type UpdatePrefs = {
     app: string
     userId: string
-    shk: string    
+    shk: string
     prefs: Object // clé: crId, valeur: Objet Credential sérialisé crypté
     delprefs: string[] // liste des crIds à supprimer
   }
 
   const updatePrefs = async (
-      mprefs: Map<string, LocPref>, 
+      mprefs: Map<string, LocPref>,
       delprefs: string[]
       ) => {
     let prefs = {}
@@ -1262,20 +1261,20 @@ export const useSafeStore = defineStore('safe', () => {
       prefs[p.code] = u8ToB64(encode([p.time, p.obj]), true)
     }
     if (Object.keys(prefs).length === 0) prefs = null
-    
+
     const updatePrefs: UpdatePrefs = {
       userId: userId.value,
       app: stores.config.appname,
       shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      prefs, 
+      prefs,
       delprefs : delprefs || []
      }
     const op = new SafeOperation('$UpdatePrefs')
     let ret
     try {
       ret = await op.post({updatePrefs})
-    } catch(e) { 
-      op.ko(e); 
+    } catch(e) {
+      op.ko(e);
       return -1
     }
     if (ret.status === 0)
@@ -1305,25 +1304,27 @@ export const useSafeStore = defineStore('safe', () => {
       const ret = await op.post({id: hp0})
       pubC = ret.crypt
       if (!pubC) return -1
-    } catch(e) { 
-      op.ko(e); 
+    } catch(e) {
+      op.ko(e);
       return -1
     }
     try {
       const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-      const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(cred.toObj)))
+      const objt = await cred.toTObj(keyK.value, aes)
+      const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(objt)))
+
       const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
         app: stores.config.appname,
-        targetId: hp0, 
+        targetId: hp0,
         credId: cred.id,
         crpub
       }
       const op = new SafeOperation('$TransmitCred')
       const ret = await op.post({transmitCred})
       return ret.status
-    } catch(e) { 
-      op.ko(e); 
+    } catch(e) {
+      op.ko(e);
       return -1
     }
   }
@@ -1359,7 +1360,7 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds, getCreds,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
-    auth, 
+    auth,
     devices,
     purgeIDBS, getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
