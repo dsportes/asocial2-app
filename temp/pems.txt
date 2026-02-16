@@ -9,14 +9,17 @@ MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMe
 
 Credential:
 {
-	"id": "Q_2XjaZNtYIyROYaMKJ2",
-	"about": "Administrateur technique",
-	"org": "demo",
-	"type": "admin",
-	"sign": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMev4GC4XDZDJPEU9IGjcE/WCeVv3yKY3pbERzKCQXmsMA9m5QElxKTrE6hgYkDgYYABABa8jj+/cxfUTI8z/uM2y2vdOVFDNZtes7kJfETlDLyqP+5gULCVyoD6KeRlknCbfJTdEqc3543zzVo3raBtzhxKAGo0PFM4OhlgTGoM2PGe5z1AgXct2feiEy9C1QTKiV3g4eCmoj4MSBS/nZmHeS0vQkJzmctes458XJP776YvwjHOA==\n-----END PRIVATE KEY-----"
+	"id": "GXbMsWjNBmmuZ_BwWJMG",
+	"about": "Superman",
+	"org": "*",
+	"role": "admin",
+	"entid": "",
+	"entkey": "",
+	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMev4GC4XDZDJPEU9IGjcE/WCeVv3yKY3pbERzKCQXmsMA9m5QElxKTrE6hgYkDgYYABABa8jj+/cxfUTI8z/uM2y2vdOVFDNZtes7kJfETlDLyqP+5gULCVyoD6KeRlknCbfJTdEqc3543zzVo3raBtzhxKAGo0PFM4OhlgTGoM2PGe5z1AgXct2feiEy9C1QTKiV3g4eCmoj4MSBS/nZmHeS0vQkJzmctes458XJP776YvwjHOA==\n-----END PRIVATE KEY-----",
+	"hpems": "7sqySnoV0fZSHCGZ2ifM"
 }
 
-p1 
+manager 
 -----BEGIN PUBLIC KEY-----
 MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAJvTl4mrOvMllV9pRVg5ZdBT5z0XEOKJz6iF7E3gF14+szcp98Jl19VhcfsQbvRz5WtYdt7MZvHCa0ERzA1FutBMAp7rc85xgocFhSuIb7oTnDKerTwqZeB1RPTL9don2DJWDdCLjSxEpHAa2xOeBCwUpTBn3Lms4JIloSLcT3cgz3Dw=
 -----END PUBLIC KEY-----

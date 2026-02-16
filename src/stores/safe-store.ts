@@ -532,7 +532,9 @@ export const useSafeStore = defineStore('safe', () => {
             if (!credId.startsWith('$')) {
               const obj = decode(await Crypt.decrypt(keyK.value, x))
               const c: Credential = new Credential(obj)
-              if (c) m.set(c.id, c)
+              // Elimination des droits ayant changé de format (debug surtout)
+              if (credId !== c.id) delcreds.push(credId)
+              else if (c) m.set(c.id, c)
             } else {
               /* Credential transmis par un autre user émetteur
               [obj credential crypté, pub: clé publique C de l'émetteur ] */
@@ -552,7 +554,8 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     mySafeCreds.value = m
-    if (mcreds.size) await updateCreds(mcreds, delcreds, null, null, true)
+    if (mcreds.size || delcreds.length) 
+      await updateCreds(mcreds, delcreds, null, null, true)
   }
 
   const getCreds = (profile: Profile) : Map<string, Credential> => {

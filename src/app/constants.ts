@@ -30,7 +30,8 @@ export const K = {
     pref: [4, 32],
     org: [3, 16, 'an1'],
     file: [1, 32],
-    ps: [8, 40]
+    ps: [8, 40],
+    entid: [0, 60]
   },
 
   regexp: {
@@ -41,7 +42,7 @@ export const K = {
 
   phrasestar: true,
 
-  roles: new Set(['auteur', 'lecteur', 'manager', 'groupe']),
+  roles: new Set(['admin', 'manager', 'auteur', 'lecteur', 'manager', 'groupe']),
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

@@ -51,9 +51,9 @@
           <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
           <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.org, $t('ROLE' + origCred.role)])}}</div>
 
-          <div v-if="origCred.entid && localCred.st === 2" class="q-my-xs row">
+          <div v-if="localCred.st === 2" class="q-my-xs row">
             <span class="fs-md">{{origCred.about}}</span>
-            <span class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</span>
+            <span v-if="origCred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</span>
           </div>
 
           <input-a v-if="localCred.st !== 2"

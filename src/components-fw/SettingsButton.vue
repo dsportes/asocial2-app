@@ -358,19 +358,24 @@ Gérer la saisie d'un credential
         <div class="row q-my-sm q-gutter-sm">
           <btn-cond class="warning" :label="$t('reset')" icon="undo"
             @ok="resetCred"/>
-          <btn-cond :disable="!cf.templ.length || !cf.pem.length"
-            :label="$t('SBgencred')" icon="check"
+          <btn-cond :label="$t('SBgencred')" icon="check"
             @ok="genCred"/>
         </div>
-
-        <div class="q-mt-md titre-md text-italic">{{$t('SBcred')}}</div>
-        <q-input class="q-pa-xs bord1" v-model="cf.templ" type="textarea"
-         :rows="10"/>
-        <div class="q-mt-md titre-md text-italic">{{$t('SBprivpem')}}</div>
-        <q-input class="q-pa-xs bord1" v-model="cf.pem" type="textarea"
+        <input-a class="q-my-xs" size="org" prefix="aboutcred"
+          v-model="cred.about"/>
+        <input-a class="q-my-xs" size="org" prefix="orgcode"
+          v-model="cred.org"/>
+        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role" 
+          :options="optsRoles" emit-value :label="$t('ROLE')"/>
+        <input-a class="q-my-xs" size="entid" prefix="SBentid"
+          v-model="cred.entid"/>
+        <input-a class="q-my-xs" size="entkey" prefix="SBentkey"
+          v-model="cred.entkey"/>
+        <div class="q-my-xs titre-md text-italic">{{$t('SBprivpem')}}</div>
+        <q-input dense class="q-pa-xs bord1" v-model="cred.pems" type="textarea"
          :rows="7"/>
-        <div class="q-mt-md titre-md text-italic">{{$t('SBcredres')}}</div>
-        <q-input class="q-pa-xs bord1" v-model="cf.res" type="textarea"
+        <div class="q-my-sm titre-md text-italic">{{$t('SBcredres')}}</div>
+        <q-input dense class="q-pa-xs bord1" v-model="credRes" type="textarea"
          :rows="10"/>
       </div>
 
@@ -541,36 +546,23 @@ const genSV = async () => {
   cr.pems = toPem(pub, true) + '\n\n' + toPem(priv)
 }
 
-// TODO Gérer la saisie d'un credential
+const optsRoles = ref([])
+for (const r of config.K.roles) optsRoles.value.push({ value: r, label : $t('ROLE' + r)})
 
-const templ = `{
-"about": "à propos du credential",
-"org": "demo",
-"type": "t1",
-"scope": {
-    "n1": "v1",
-    "n2": "v2"
-  }
-}
-`
-
-const cf = reactive({ templ: '', pem: '', res: '' })
+const cred0 = { id: '', about:'', role: '', org: '', entid: '', entkey: '', pems: '', hpems: '' }
+const cred : Ref<CredObj> = ref({ ...cred0})
+const credRes = ref('')
 const resetCred = () => {
-  cf.templ = templ
-  cf.pem = ''
-  cf.res = ''
+  credRes.value = ''
+  cred.value = { ...cred0 }
 }
 
 const genCred = () => {
   try {
-    const obj = JSON.parse(cf.templ)
-    const c = new Credential(obj)
-    c.id = c.computedId
-    c.sign = cf.pem
-    const o2 = c.toObj
-    cf.res = c.toJson
+    const c = new Credential(cred.value)
+    credRes.value = c.toJson
   } catch (e) {
-    cf.res = e.toString()
+    credRes.value = e.toString()
   }
 }
 resetCred()

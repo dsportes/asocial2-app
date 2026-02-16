@@ -1,39 +1,12 @@
 [
 {
-	"scope": {
-		"rien": "quedalle"
-	},
-	"id": "MRalHj6HDmwR_J20g25X",
-	"about": "cred #1",
-	"org": "doda",
-	"type": "LOGIN",
-	"pp": "totoestbeau"
-},
-{
-	"scope": {
-		"troisfoisrien": "pasgrandchose"
-	},
-	"id": "bkUwClCKRNtmwOX0Mt57",
-	"about": "cred #2",
-	"org": "doda",
-	"type": "LOGIN",
-	"pp": "totoestbeau"
-},
-{
-	"scope": {
-		"troisfoisrien": "pasgrandchose"
-	},
-	"id": "NNjIyVnZBZn31hnfVdrF",
-	"about": "cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3 cred #3",
-	"org": "doda",
-	"type": "ZARBI"
-},
-{
-	"scope": {},
-	"id": "32YAtadNf0cVB9sb3-ut",
-	"about": "cred #1",
+	"id": "GXbMsWjNBmmuZ_BwWJMG",
+	"about": "Superman",
 	"org": "*",
-	"type": "BOF",
-	"pp": "totoestmoche"
+	"role": "admin",
+	"entid": "",
+	"entkey": "",
+	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMev4GC4XDZDJPEU9IGjcE/WCeVv3yKY3pbERzKCQXmsMA9m5QElxKTrE6hgYkDgYYABABa8jj+/cxfUTI8z/uM2y2vdOVFDNZtes7kJfETlDLyqP+5gULCVyoD6KeRlknCbfJTdEqc3543zzVo3raBtzhxKAGo0PFM4OhlgTGoM2PGe5z1AgXct2feiEy9C1QTKiV3g4eCmoj4MSBS/nZmHeS0vQkJzmctes458XJP776YvwjHOA==\n-----END PRIVATE KEY-----",
+	"hpems": "7sqySnoV0fZSHCGZ2ifM"
 }
 ]

@@ -9,10 +9,10 @@
       <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.org}}</div>
       <div :class="'col-6 ellipsis q-pr-xs' + cl">{{$t('ROLE' + cred.role)}}</div>
     </div>
-    <div v-if="cred.entid" class="row font-mono fs-md">
+    <div class="row font-mono fs-md">
       <div class="col-2"></div>
       <div :class="'col-10 mh' + (st === 3 ? ' text-warning text-italic' : ' text-italic') + cl">
-        {{cred.about + ' [' + cred.entid.substring(0, 8) + ']'}}</div>
+        {{cred.about + (cred.entid ? ' [' + cred.entid.substring(0, 8) + ']' : '')}}</div>
     </div>
   </div>
 </div>

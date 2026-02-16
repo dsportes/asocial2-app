@@ -74,6 +74,7 @@ export default {
   pressret: '"Entrée" pour valider',
   orgcode_label: 'Code de l\'organisation',
   orgcode_ph: 'monorg',
+  aboutcred_label: 'A propos de ce droit d\'accès',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -100,10 +101,11 @@ export default {
   REGexp_all: `Tous les caractères sont autorisés y compris les espaces
   `,
 
-
+  ROLE: 'Rôle',
+  ROLEadmin: 'Administrateur technique du service',
+  ROLEmanager: 'Manager général de l\'organisation',
   ROLEauteur: 'Auteur d\'articles',
   ROLElecteur: 'Relecteur d\'articles',
-  ROLEmanager: 'Manager général',
   ROLEgroupe: 'Groupe de relecteurs',
 
   MLAopc: 'Opération en cours',
@@ -193,10 +195,12 @@ export default {
   SBphrase_shaS: 'SHA "court" du SH:',
   SBgensv: 'Générer un couple de clés de signature / vérification',
   SBgensv2: 'Signature: PEM "private" - Vérification: PEM "public"',
-  SBcred: 'Remplir le JSON du credential (sauf signature)',
+ 
   SBprivpem: 'Coller le PEM (private) de signature',
   SBgencred: 'Générer le credential',
   SBcredres: 'Credential normalisé et identifié',
+  SBentid_label: 'ID de l\'entité (fac)',
+  SBentkey_label: 'Clé AES (base 64) de l\'entité (fac)',
 
   HPbackopen: `**Voulez-vous terminer cette session et retourner au choix d'une autre à ouvrir ?**
 
