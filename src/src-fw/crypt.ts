@@ -191,7 +191,7 @@ export class Crypt {
     const h1 = new Uint8Array(sha256.arrayBuffer(ex))
     // const h1 = new Uint8Array(await crypto.subtle.digest("SHA-256", ex as BufferSource))
     const salt = h1.subarray(0, 16) // SALTS[0] // h1.subarray(0, 16)
-    console.log(arrayBuffertohex(salt.buffer))
+    // console.log(arrayBuffertohex(salt.buffer))
     const p = await crypto.subtle.importKey('raw', ex as BufferSource, 'PBKDF2', false, ['deriveKey'])
     const key = await crypto.subtle.deriveKey(
       { name: 'PBKDF2', salt : salt, iterations: 20000, hash: 'SHA-256' },

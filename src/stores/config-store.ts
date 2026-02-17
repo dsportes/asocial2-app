@@ -12,6 +12,11 @@ type typeK ={
   vapidPublicKey: string
 }
 
+type service = {
+  url: string
+  api: number
+}
+
 export const useConfigStore = defineStore('config', () => {
   const location = ref(null) // le href
 
@@ -22,6 +27,7 @@ export const useConfigStore = defineStore('config', () => {
   const optionLocale = computed(() => localeMap.get(locale.value))
 
   const appname = ref('')
+  const services: Ref<Map<string, service>> = ref(new Map()) 
 
   const K = ref()
   const initK = (k: any, _location: Object, custom: Object) => {
@@ -31,10 +37,11 @@ export const useConfigStore = defineStore('config', () => {
     k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = k.localeOptions[0].value
     appname.value = K.value.APPNAME
+    for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
   }
 
   return {
-    location, K, initK, locale, optionLocale, setLocale, appname
+    location, K, initK, locale, optionLocale, setLocale, appname, services
   }
 
 })

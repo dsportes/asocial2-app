@@ -9,6 +9,7 @@ const encoder = new TextEncoder()
 - id et hpems ne sont pas utilisé mais reconstruit
 */
 export type CredObj = {
+  svc: string // code du service
   id: string // hash court de `[role, org, entid]`.
   about: string // un texte court _à propos_ du `entid`.
   role: string // un des codes de rôle connu du service.
@@ -26,7 +27,7 @@ export class Credential {
     const objs: CredObj[] = JSON.parse(inp)
     for (const obj of objs) {
       const c: Credential = new Credential(obj)
-      if (c && c.id) m.set(c.id, c)
+      if (c) m.set(c.xid, c)
     }
     return m
   }
@@ -60,6 +61,7 @@ export class Credential {
   }
 
   constructor (obj: CredObj) {
+    this.svc = obj.svc
     this.id = Crypt.shaS(encode([obj.role, obj.org, obj.entid]))
     this.about = obj.about
     this.role = obj.role
@@ -72,6 +74,7 @@ export class Credential {
 
   get toObj () : CredObj {
     return {
+      svc: this.svc,
       id: this.id,
       about: this.about,
       org: this.org,
@@ -96,6 +99,7 @@ export class Credential {
     return new Credential(this.toObj)
   }
 
+  svc: string // code du service
   id: string // hash court de `[role, org, entid]`.
   about: string // un texte court _à propos_ du `entid`.
   role: string // un des codes de rôle connu du service.
@@ -104,6 +108,8 @@ export class Credential {
   entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
   pems: string // clé PRIVEE de signature, le texte de 400c.
   hpems: string // hash court de `pems`.
+
+  get xid () :string { return this.svc + '.' + this.id }
 
   get toJson () :string {
     return JSON.stringify(this.toObj, null, '\t')

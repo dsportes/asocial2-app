@@ -30,11 +30,15 @@ MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFh
 
 Credential:
 {
-	"id": "bAExQ87nCwGiI9SInRrl",
-	"about": "Création d'avatar",
+	"svc": "as2svc",
+	"id": "191XPnCQ3ZyY6jTdxCW7",
+	"about": "THE manager de demo",
 	"org": "demo",
-	"type": "p1",
-	"sign": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFhQFhAXbttBwQLCNjD+3N77UpX38QwK2P9/xrEh6bxQeZ8sZLZjjMrjMOhgYkDgYYABAAm9OXias68yWVX2lFWDll0FPnPRcQ4onPqIXsTeAXXj6zNyn3wmXX1WFx+xBu9HPla1h23sxm8cJrQRHMDUW60EwCnutzznGChwWFK4hvuhOcMp6tPCpl4HVE9Mv12ifYMlYN0IuNLESkcBrbE54ELBSlMGfcuazgkiWhItxPdyDPcPA==\n-----END PRIVATE KEY-----"
+	"role": "manager",
+	"entid": "",
+	"entkey": "",
+	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFhQFhAXbttBwQLCNjD+3N77UpX38QwK2P9/xrEh6bxQeZ8sZLZjjMrjMOhgYkDgYYABAAm9OXias68yWVX2lFWDll0FPnPRcQ4onPqIXsTeAXXj6zNyn3wmXX1WFx+xBu9HPla1h23sxm8cJrQRHMDUW60EwCnutzznGChwWFK4hvuhOcMp6tPCpl4HVE9Mv12ifYMlYN0IuNLESkcBrbE54ELBSlMGfcuazgkiWhItxPdyDPcPA==\n-----END PRIVATE KEY-----",
+	"hpems": "w1K0cNcrSCny5E3hGvJG"
 }
 
 p2 

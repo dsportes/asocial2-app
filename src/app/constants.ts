@@ -2,7 +2,7 @@ export const K = {
   APPNAME: 'asocial2',
   ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
   SERVICES: {
-    asocial2SVC: { url: 'http://localhost:8080/', api: 1 },
+    as2svc: { url: 'http://localhost:8080/', api: 1 },
   },
   DEFAULT_SERVICE: 'asocial2SVC',
   SAFE_URL1: 'http://localhost:8888/safe.php?',

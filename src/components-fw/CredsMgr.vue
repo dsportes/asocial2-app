@@ -25,7 +25,7 @@
 
       <bar-open :title="$t('HPcredslst_1')" :bubble="$t('HPcredslst_2')"/>
       <scroll-area><template #default>
-        <div :class="dkli(idx)" v-for="([id, lc], idx) of mlocCreds" :key="id">
+        <div :class="dkli(idx)" v-for="([xid, lc], idx) of mlocCreds" :key="xid">
           <cred-row :class="crSel(lc) + 'q-my-xs cursor-pointer select'" @click="selCred(lc)"
             :cred="lc.cred" :st="lc.st"/>
         </div>
@@ -48,12 +48,21 @@
             <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
           </div>
 
-          <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
-          <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.org, $t('ROLE' + origCred.role)])}}</div>
-
-          <div v-if="localCred.st === 2" class="q-my-xs row">
-            <span class="fs-md">{{origCred.about}}</span>
-            <span v-if="origCred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</span>
+          <div v-if="localCred.st === 2">
+            <div class="q-my-xs row">
+              <div class="fs-md">{{origCred.cred.about}}</div>
+              <div v-if="origCred.cred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.cred.entid + ']'}}</div>
+            </div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.cred.svc, origCred.cred.org, $t('ROLE' + origCred.cred.role)])}}</div>
+            <text-zoom :label="$t('HPcreddis')" :text="origCred.cred.toJson"/>
+          </div>
+          <div v-else>
+            <div class="q-my-xs row">
+              <div class="fs-md">{{localCred.cred.about}}</div>
+              <div v-if="localCred.cred.entid" class="font-mono fs-sm q-ml-md">{{'[' + localCred.cred.entid + ']'}}</div>
+            </div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.svc, localCred.cred.org, $t('ROLE' + localCred.cred.role)])}}</div>
+            <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
           </div>
 
           <input-a v-if="localCred.st !== 2"
@@ -366,17 +375,17 @@ const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 const origCreds = computed(() => sf.mySafeCreds)
 // const origCreds = ref(testCred()) // simulation pour test
 /* Chargement des credentials */
-for(const [, c] of origCreds.value)
-  mlocCreds.value.set(c.id, { cred: c.clone(), st: 0, psIds: new Set() })
+for(const [xid, c] of origCreds.value)
+  mlocCreds.value.set(xid, { cred: c.clone(), st: 0, psIds: new Set() })
 
 const buildXref = () => {
   for(const [,lc] of mlocCreds.value) lc.psIds.clear()
   for(const [psId, x] of mlocPS.value) {
     x.orphans.clear()
-    for(const crId of x.crIds) {
-      const lc = mlocCreds.value.get(crId)
+    for(const xid of x.crIds) {
+      const lc = mlocCreds.value.get(xid)
       if (lc && lc.st !== 2) lc.psIds.add(psId)
-      else x.orphans.add(crId)
+      else x.orphans.add(xid)
     }
   }
 }
@@ -391,10 +400,10 @@ const loading = () => {
         exav: true, exap: true, chgab: false, chgcr: false }
       mlocPS.value.set(id, ps1)
       morigPS.value.set(id, ps2)
-      for(const crId of ps1.crIds) {
-        const lc = origCreds.value.get(crId)
+      for(const xid of ps1.crIds) {
+        const lc = origCreds.value.get(xid)
         if (!lc)
-          ps1.orphans.add(crId)
+          ps1.orphans.add(xid)
       }
     }
   }
@@ -411,17 +420,17 @@ const mlocPS2 = ref(null)
 const locaboutCr = ref('')
 
 const crSel = (lc: LocalCred) => !lc ? '' :
-  (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
+  (localCred.value && localCred.value.cred.xid === lc.cred.xid ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc: LocalCred) => {
   localCred.value = lc
   locaboutCr.value = lc.cred.about || ''
-  const c = origCreds.value.get(lc.cred.id)
+  const c = origCreds.value.get(lc.cred.xid)
   origCred.value = c ? c.clone() : null
   mlocPS1.value = new Map()
   mlocPS2.value = new Map()
   for (const [psid, e] of mlocPS.value)
-    if (e.crIds.has(localCred.value.cred.id)) mlocPS1.value.set(psid, e)
+    if (e.crIds.has(localCred.value.cred.xid)) mlocPS1.value.set(psid, e)
     else mlocPS2.value.set(psid, e)
 }
 
@@ -449,7 +458,7 @@ const doAction2 = () => { // REMETTRE dans la liste le cred qui y avait été en
 }
 
 const doAction3 = () => { // credential importé (n'existait PAS): RETIRER
-  mlocCreds.value.delete(localCred.value.cred.id)
+  mlocCreds.value.delete(localCred.value.cred.xid)
   localCred.value = null
   buildXref()
 }
@@ -462,7 +471,8 @@ const doAction4 = () => { // credential existait (pas importé): RETIRER
 const onArrowD = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crIds.delete(localCred.value.cred.id)
+    e.crIds.delete(localCred.value.cred.xid)
+    e.chgcr = chgPSlc(e.id)
     buildXref()
     mlocPS1.value.delete(ps.id)
     mlocPS2.value.set(ps.id, e)
@@ -472,7 +482,8 @@ const onArrowD = (ps) => {
 const onArrowU = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crIds.add(localCred.value.cred.id)
+    e.crIds.add(localCred.value.cred.xid)
+    e.chgcr = chgPSlc(e.id)
     buildXref()
     mlocPS2.value.delete(ps.id)
     mlocPS1.value.set(ps.id, e)
@@ -501,9 +512,9 @@ const selPS = (ps: LocalPS) => {
   origPS.value = x ? { id: x.id, about: x.about, crIds: cloneSet(x.crIds) } : null
   mlocCreds1.value = new Map()
   mlocCreds2.value = new Map()
-  for (const [crid, e] of mlocCreds.value)
-    if (e.psIds.has(localPS.value.id)) mlocCreds1.value.set(crid, e)
-    else mlocCreds2.value.set(crid, e)
+  for (const [xid, e] of mlocCreds.value)
+    if (e.psIds.has(localPS.value.id)) mlocCreds1.value.set(xid, e)
+    else mlocCreds2.value.set(xid, e)
 }
 
 const initAbPs = computed(() => localPS.value.about )
@@ -542,8 +553,8 @@ const undoPS = () => {
   }
 }
 
-const removeOrph = (crid: string) => {
-  localPS.value.crIds.delete(crid)
+const removeOrph = (xid: string) => {
+  localPS.value.crIds.delete(xid)
   localPS.value.chgcr = true
   mlocPS.value.set(localPS.value.id, localPS.value)
   buildXref()
@@ -551,26 +562,26 @@ const removeOrph = (crid: string) => {
 }
 
 const onArrowDC = (lc: LocalCred) => {
-  const e = mlocCreds.value.get(lc.cred.id)
+  const e = mlocCreds.value.get(lc.cred.xid)
   if (e) {
-    localPS.value.crIds.delete(lc.cred.id)
+    localPS.value.crIds.delete(lc.cred.xid)
     localPS.value.chgcr = chgPSlc(localPS.value.id)
     mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
-    mlocCreds1.value.delete(lc.cred.id)
-    mlocCreds2.value.set(lc.cred.id, e)
+    mlocCreds1.value.delete(lc.cred.xid)
+    mlocCreds2.value.set(lc.cred.xid, e)
   }
 }
 
 const onArrowUC = (lc: LocalCred) => {
-  const e = mlocCreds.value.get(lc.cred.id)
+  const e = mlocCreds.value.get(lc.cred.xid)
   if (e) {
-    localPS.value.crIds.add(lc.cred.id)
+    localPS.value.crIds.add(lc.cred.xid)
     localPS.value.chgcr = chgPSlc(localPS.value.id)
     mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
-    mlocCreds2.value.delete(lc.cred.id)
-    mlocCreds1.value.set(lc.cred.id, e)
+    mlocCreds2.value.delete(lc.cred.xid)
+    mlocCreds1.value.set(lc.cred.xid, e)
   }
 }
 
@@ -579,7 +590,7 @@ const newps = (crIds?: Set<string>) : LocalPS => {
   const ps: LocalPS = { id, about: id, crIds: new Set(), orphans: new Set(),
     exav: false, exap: true, chgab: false, chgcr: false
   }
-  if (crIds && crIds.size) for(const crId of crIds) ps.crIds.add(crId)
+  if (crIds && crIds.size) for(const xid of crIds) ps.crIds.add(xid)
   mlocPS.value.set(id, ps)
   buildXref()
   return ps
@@ -587,7 +598,7 @@ const newps = (crIds?: Set<string>) : LocalPS => {
 
 const new1 = () => {
   const s = new Set<string>()
-  for(const [id, x] of mlocCreds.value) s.add(id)
+  for(const [xid, x] of mlocCreds.value) s.add(xid)
   newps(s)
 }
 
@@ -626,8 +637,8 @@ const processText = () => {
   try {
     const creds = Credential.parse(importedText.value)
     locImp.value = new Map()
-    for(const [id, c] of creds)
-      locImp.value.set(id, { c: c, ck: true })
+    for(const [xid, c] of creds)
+      locImp.value.set(xid, { c: c, ck: true })
     diag.value = ''
   } catch (e) {
     locImp.value = null
@@ -655,15 +666,14 @@ const unzoom = () => { if (rx.value >= 15) rx.value -= 10; else rx.value = 5 }
 
 const doImport = () => {
   if (locImp.value.size)
-    for(const [id, lc] of locImp.value)
+    for(const [xid, lc] of locImp.value)
       if (lc.ck) {
-        const orig = origCreds.value.get(lc.c.id)
+        const orig = origCreds.value.get(lc.c.xid)
         if (orig) { // existait avant import : seul son about a PEUT-ETRE changé
           if (orig.about !== lc.c.about)
-            mlocCreds.value.set(id, { cred: lc.c, st: 3, psIds: new Set() })
+            mlocCreds.value.set(xid, { cred: lc.c, st: 3, psIds: new Set() })
         } else { // n'existait PAS. Import d'un nouveau
-
-          mlocCreds.value.set(id, { cred: lc.c, st: 1, psIds: new Set() })
+          mlocCreds.value.set(xid, { cred: lc.c, st: 1, psIds: new Set() })
         }
       }
   ui.fD()
@@ -684,13 +694,13 @@ const resetExport = () => {
   exportCr.value = 1
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
   locExp.value = new Map()
-  if (mlocCreds.value.size) for(const [id, lc] of mlocCreds.value)
-    if (lc.st !== 2) locExp.value.set(id, { c: lc.cred, ck: true })
+  if (mlocCreds.value.size) for(const [xid, lc] of mlocCreds.value)
+    if (lc.st !== 2) locExp.value.set(xid, { c: lc.cred, ck: true })
 }
 
 const doExport = async () => {
   const creds = []
-  if (locExp.value.size) for(const [id, lc] of locExp.value)
+  if (locExp.value.size) for(const [xid, lc] of locExp.value)
     if (lc.ck) creds.push(lc.c)
   const toJson = Credential.toJson(creds)
   // console.log(toJson)
@@ -746,10 +756,10 @@ const validate = () => {
   report.stcr = [ new Set(), new Set(), new Set(), new Set()]
   report.stps = [ null, new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
 
-  for(const [crId, lc] of mlocCreds.value) {
+  for(const [xid, lc] of mlocCreds.value) {
     report.stcr[lc.st].add(lc.cred.about)
-    if (lc.st === 2) report.delcreds.push(crId)
-    if (lc.st === 1 || lc.st === 3) report.mcreds.set(crId, lc.cred)
+    if (lc.st === 2) report.delcreds.push(xid)
+    if (lc.st === 1 || lc.st === 3) report.mcreds.set(xid, lc.cred)
   }
 
   for(const [profId, x] of mlocPS.value) {

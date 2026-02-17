@@ -361,8 +361,10 @@ Gérer la saisie d'un credential
           <btn-cond :label="$t('SBgencred')" icon="check"
             @ok="genCred"/>
         </div>
-        <input-a class="q-my-xs" size="org" prefix="aboutcred"
+        <input-a class="q-my-xs" prefix="aboutcred"
           v-model="cred.about"/>
+        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.svc" 
+          :options="Array.from(config.services.keys())" :label="$t('service')"/>
         <input-a class="q-my-xs" size="org" prefix="orgcode"
           v-model="cred.org"/>
         <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role" 
@@ -549,7 +551,7 @@ const genSV = async () => {
 const optsRoles = ref([])
 for (const r of config.K.roles) optsRoles.value.push({ value: r, label : $t('ROLE' + r)})
 
-const cred0 = { id: '', about:'', role: '', org: '', entid: '', entkey: '', pems: '', hpems: '' }
+const cred0 = { svc: '', id: '', about:'', role: '', org: '', entid: '', entkey: '', pems: '', hpems: '' }
 const cred : Ref<CredObj> = ref({ ...cred0})
 const credRes = ref('')
 const resetCred = () => {

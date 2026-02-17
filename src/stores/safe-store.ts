@@ -521,35 +521,34 @@ export const useSafeStore = defineStore('safe', () => {
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const mcreds: Map<string, Credential> = new Map<string, Credential>()
     const delcreds = []
-    const app = stores.config.appname
+    const msvc = stores.config.services
     const m = new Map<string, Credential>()
     if (safe.creds) {
-    const mcf = safe.creds[app]
-      if (mcf) {
-        for (const credId in mcf) {
-          const x = b64ToU8(mcf[credId])
-          try {
-            if (!credId.startsWith('$')) {
-              const obj = decode(await Crypt.decrypt(keyK.value, x))
-              const c: Credential = new Credential(obj)
-              // Elimination des droits ayant changé de format (debug surtout)
-              if (credId !== c.id) delcreds.push(credId)
-              else if (c) m.set(c.id, c)
-            } else {
-              /* Credential transmis par un autre user émetteur
-              [obj credential crypté, pub: clé publique C de l'émetteur ] */
-              const [crobj, pubC] = decode(x)
-              const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-              const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
-              const obj = decode(dc)
-              const c: Credential = await Credential.fromTObj(obj, keyK.value, aes)
-              if (c) m.set(c.id, c)
-              mcreds.set(c.id, c)
-              delcreds.push(credId)
-            }
-          } catch (e) {
-            console.log(e)
+      for (const xid in safe.creds) {
+        const x = b64ToU8(safe.creds[xid])
+        const spec = xid.startsWith('$')
+        const [svcx, credId] = xid.split('.')
+        const svc = spec ? svcx.substring(1) : svcx
+        if (!msvc.has(svc)) continue
+        try {
+          if (!spec) {
+            const obj = decode(await Crypt.decrypt(keyK.value, x))
+            const c: Credential = new Credential(obj)
+            if (c) m.set(c.xid, c)
+          } else {
+            /* Credential transmis par un autre user émetteur
+            [obj credential crypté, pub: clé publique C de l'émetteur ] */
+            const [crobj, pubC] = decode(x)
+            const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
+            const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
+            const obj = decode(dc)
+            const c: Credential = await Credential.fromTObj(obj, keyK.value, aes)
+            if (c) m.set(c.xid, c)
+            mcreds.set(c.xid, c)
+            delcreds.push(xid)
           }
+        } catch (e) {
+          console.log(e)
         }
       }
     }
@@ -561,11 +560,11 @@ export const useSafeStore = defineStore('safe', () => {
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
     if (!stores.session.hasNet || !profile) return x
-    if (profile.profId !== '*') for(const id of profile.crIds) {
-        const c = mySafeCreds.value.get(id)
-        if (c) x.set(id, c)
+    if (profile.profId !== '*') for(const xid of profile.crIds) {
+        const c = mySafeCreds.value.get(xid)
+        if (c) x.set(xid, c)
       }
-    else for (const [id, c] of mySafeCreds.value) x.set(id, c)
+    else for (const [xid, c] of mySafeCreds.value) x.set(xid, c)
     return x
   }
 
@@ -1184,8 +1183,8 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shk: string
-    creds: Object // clé: crId, valeur: Objet Credential sérialisé crypté
-    delcreds: string[] // liste des crIds à supprimer
+    creds: Object // clé: xid, valeur: Objet Credential sérialisé crypté
+    delcreds: string[] // liste des xid à supprimer
     profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
     delprofs: string[] // liste des profIds à supprimer
     nosafe: boolean // ne pas retourner le safe mis à jour
@@ -1201,9 +1200,9 @@ export const useSafeStore = defineStore('safe', () => {
     let creds = {}
     let profiles = {}
 
-    if (mcreds && mcreds.size) for(const [credId, c] of mcreds) {
+    if (mcreds && mcreds.size) for(const [xid, c] of mcreds) {
       const obj = c.toObj
-      creds[credId] = u8ToB64(await Crypt.crypt(keyK.value, encode(obj)), true)
+      creds[xid] = u8ToB64(await Crypt.crypt(keyK.value, encode(obj)), true)
     }
     if (Object.keys(creds).length === 0) creds = null
 
@@ -1290,9 +1289,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   type TransmitCred = {
-    app: string
     targetId: string // id ou p0 ou r0 du destinataire du credential
-    credId: string // id du credential
+    credXid: string // id du credential
     crpub: string // [cryptedCred, pubc] encodé et en base64
     // pubC: string // clé publique (PEM) de cryptage de l'émetteur
     // cryptedCred: string // Objet Credential sérialisé crypté pour le destinataire
@@ -1318,9 +1316,8 @@ export const useSafeStore = defineStore('safe', () => {
 
       const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
-        app: stores.config.appname,
         targetId: hp0,
-        credId: cred.id,
+        credXid: cred.xid,
         crpub
       }
       const op = new SafeOperation('$TransmitCred')
