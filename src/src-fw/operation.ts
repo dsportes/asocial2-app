@@ -5,6 +5,13 @@ import { AppExc, $t } from './util'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
+export type AuthRecord = {
+  orguserId: string
+  sessionId: string
+  time: number
+  tokens: []
+}
+
 /* Opération générique ******************************************/
 export class Operation {
   opName: string

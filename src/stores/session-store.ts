@@ -20,6 +20,9 @@ type StartContext = {
   creds: Map<string, Object>
 }
 
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
 export const useSessionStore = defineStore('session', () => {
 
   // Gestion des opérations ************************************************
@@ -168,7 +171,7 @@ export const useSessionStore = defineStore('session', () => {
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
   const _creds: Ref<Map<string, Credential>> = ref(new Map())
-  const creds = computed(() => creds.value)
+  const creds = computed(() => _creds.value)
 
   const setStartContext = (
       userId: string, 

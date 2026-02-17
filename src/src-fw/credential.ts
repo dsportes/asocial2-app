@@ -1,5 +1,6 @@
-import { Crypt } from './crypt'
+import { Crypt, fromPem } from './crypt'
 import { u8ToB64, b64ToU8 } from './util'
+import stores from '../stores/all' 
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
 
@@ -116,4 +117,51 @@ export class Credential {
   }
 
   setAbout (s: string) { this.about = s }
+}
+
+type AuthToken = {
+  id: string
+  role: string
+  entid: string
+  hpems: string
+  sign: Uint8Array
+}
+
+export class AuthRecord {
+  svc: string
+  org: string
+  orguserId: string
+  sessionId: string
+  time: number
+  // Object par role / entid
+  tokens: Object
+
+  constructor (svc: string, org: string) {
+    const session = stores.session
+    this.svc = svc
+    this.org = org
+    this.orguserId = Crypt.shaS(encoder.encode(org + '/' + session.userId)),
+    this.sessionId = session.sessionId
+    this.time = Date.now()
+    this.tokens = {}
+  }
+
+  get challenge() { return encoder.encode(this.orguserId + '/' + this.time)}
+
+  async sign (role: string, entid: string) {
+    const session = stores.session
+    const cid = Crypt.shaS(encode([role, this.org, entid || '']))
+    const id = this.svc + '.' + cid
+    const c: Credential = session.creds.get(id)
+    if (!c) return
+    const ch = encoder.encode(this.orguserId + '/' + this.time)
+    const sign = new Uint8Array(await Crypt.sign(fromPem(c.pems), ch))
+    let e = this.tokens[role]
+    if (!e) {
+      e = {}
+      this.tokens[role] = e
+    }
+    e[entid || ''] = {id, role, entid: entid || '', hpems: c.hpems, sign }
+  }
+
 }

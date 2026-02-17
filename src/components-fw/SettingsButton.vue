@@ -307,8 +307,10 @@ Gérer la saisie d'un credential
     :title="$t('tech')" hdrclass='wmd' help="pings">
     <template #hdr>
       <div class="row items-center wmd full-width">
-        <btn-cond class="col-auto q-mr-xs" icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
-        <btn-cond class="col-auto q-mr-lg" icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
+        <btn-cond v-if="sf.step === 0"
+          class="col-auto q-mr-xs" icon="check" :disable="org === ''" @ok="opSetSrvStatus(1)"/>
+        <btn-cond v-if="sf.step === 0"
+          class="col-auto q-mr-lg" icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
         <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
           <q-tab name="pings" :label="$t('pings')"/>
           <q-tab name="crypto" :label="$t('crypto')" />
@@ -472,7 +474,7 @@ const styd = (c: string) => 'background:' + config.K.theme[c][0]
 async function opEcho () : Promise<void>  {
   try {
     echo.value = ''
-    echo.value = await new EchoText().run(org.value, toecho.value)
+    echo.value = await new EchoText().run('ADMIN_A', toecho.value)
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
@@ -495,7 +497,7 @@ async function opGetSrvStatus () : Promise<void> {
 async function opSetSrvStatus (stx) : Promise<void> {
   try {
     resping.value = ''
-    const { now, st, at, txt } = await new SetSrvStatus().run(org.value, stx)
+    const { now, st, at, txt } = await new SetSrvStatus().run('as2svc', org.value, stx)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_' + st, [atS])

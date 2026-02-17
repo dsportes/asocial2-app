@@ -82,7 +82,6 @@ import stores from './stores/all'
 import incognito from './assets/incognito_blanc.svg'
 
 import { set$t, readFile, fileDescr, beep, b64ToU8, u8ToB64 } from './src-fw/util'
-import { TestAuth } from './src-fw/operations'
 import { Operation, SafeOperation } from './src-fw/operation'
 import { getData, putData } from './src-fw/net'
 import { Crypt, toPem, fromPem, u8ToHex, arrayBuffertohex, hexToArrayBuffer, testECDH, testSH } from './src-fw/crypt'
@@ -187,11 +186,6 @@ async function uploadFile () : Promise<void> {
   } catch (e) {
     echo.value = 'err:' + (e.code || '???')
   }
-}
-
-const t4x = async () => {
-  const res = await new TestAuth().run('demo')
-  console.log('TestAuth:' + res)
 }
 
 class $Shas extends SafeOperation {

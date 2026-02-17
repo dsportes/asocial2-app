@@ -3,6 +3,7 @@ import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
+import { AuthRecord } from './credential'
 
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
@@ -34,44 +35,15 @@ export class  GetSrvStatus extends Operation {
 export class SetSrvStatus extends Operation {
   constructor () { super('SetSrvStatus') }
 
-  async run (org: string, stx: number) {
+  async run (svc: string, org: string, stx: number) {
     try {
       const config = stores.config
       const session = stores.session
-      const authRecord = {
-        sessionId : session.sessionId,
-        time: Date.now(),
-        tokens : [
-          { type: 'ADMIN', value: config.K.ADMIN }
-        ]
-      }
-      const args = { org, authRecord, st: stx, txt: 'info ' + stx}
+      const authRecord = new AuthRecord(svc, '*')
+      await authRecord.sign('admin', '')
+      const args = { authRecord, org: org, st: stx, txt: 'info ' + stx}
       const res = await this.post(args)
       return res['srvStatus']
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
-
-export class TestAuth extends Operation {
-  constructor () { super('TestAuth') }
-
-  async run (org: string) {
-    try {
-      const config = stores.config
-      const session = stores.session
-      const authRecord = {
-        sessionId : session.sessionId,
-        time: Date.now(),
-        tokens : [
-          { type: 'ADMIN', value: config.K.ADMIN },
-          { type: 'TEST1', toto: 'titi'},
-          { type: 'TEST2', toto: 'titi'},
-        ]
-      }
-      const res = await this.post({ authRecord, org })
-      return res['auths']
     } catch(e) {
       this.ko(e)
     }

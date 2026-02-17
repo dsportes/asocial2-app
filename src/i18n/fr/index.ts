@@ -586,6 +586,7 @@ bla bla
   DHCnondate: '(non daté)',
   DHCdansjours: 'aujourd\'hui | demain | dans {count} jours',
 
+  EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
   EX_3: '"BUG" probable: erreur inattendue récupérée par le serveur',
@@ -603,6 +604,7 @@ bla bla
   EX_1002: 'Opération inconnue [{0}]',
   EX_1003: 'Opération [{0}] - organisation inconnue [{1}]',
   EX_1004: 'Opération [{0}] - service inconnu [{1}]',
+  EX_1005: 'Droit d\'accès NON validé - organisation [{0}] - role [{1}] - entid [{2}] ]',
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_10000: 'Interruption volontaire',
 

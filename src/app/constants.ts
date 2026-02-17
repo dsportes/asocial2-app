@@ -4,7 +4,7 @@ export const K = {
   SERVICES: {
     as2svc: { url: 'http://localhost:8080/', api: 1 },
   },
-  DEFAULT_SERVICE: 'asocial2SVC',
+  DEFAULT_SERVICE: 'as2svc',
   SAFE_URL1: 'http://localhost:8888/safe.php?',
   SAFE_URL: 'http://localhost:8080/safe/',
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
