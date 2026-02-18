@@ -2,7 +2,7 @@
 <!-- Affiche un message MD : liste de choix d'actions dans le slot -->
   <q-card :class="sty('sm')">
     <q-toolbar class="tbs">
-      <btn-cond icon="close" size="md" flat color="warning" @ok="stores.ui.fD"/>
+      <btn-cond icon="close" size="md" flat color="warning" @ok="ui.fD"/>
       <q-toolbar-title class="titre-lg full-width text-center">{{title}}</q-toolbar-title>
     </q-toolbar>
     <sd-nb class="q-ma-sm q-my-md" :text="text"/>
@@ -25,7 +25,6 @@ const props = defineProps({
 })
 
 const ui = stores.ui
-const gotit = () => { ui.fD(); const f = ui.diagResolve; if (f) f()} 
 
 </script>
 

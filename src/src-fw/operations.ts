@@ -35,11 +35,11 @@ export class  GetSrvStatus extends Operation {
 export class SetSrvStatus extends Operation {
   constructor () { super('SetSrvStatus') }
 
-  async run (svc: string, org: string, stx: number) {
+  async run (org: string, stx: number) {
     try {
       const config = stores.config
       const session = stores.session
-      const authRecord = new AuthRecord(svc, '*')
+      const authRecord = new AuthRecord('as2svc', '*')
       await authRecord.sign('admin', '')
       const args = { authRecord, org: org, st: stx, txt: 'info ' + stx}
       const res = await this.post(args)
@@ -131,6 +131,59 @@ export class Sync extends Operation {
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
       await dataSt.retSync(opTime, org, subsToSync.def, x)
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export class GrantNewManager extends Operation {
+  constructor () { super('GrantNewManager') }
+
+  async run (org: string, comment: string, pemv: string) {
+    try {
+      const authRecord = new AuthRecord('as2svc', '*')
+      await authRecord.sign('admin', '')
+      const args = { authRecord, org, comment, pemv}
+      const res = await this.post(args)
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export class RevokeManager extends Operation {
+  constructor () { super('RevokeManager') }
+
+  async run (org: string, revoke: string, hpems: string) {
+    try {
+      const authRecord = new AuthRecord('as2svc', '*')
+      await authRecord.sign('admin', '')
+      const args = { authRecord, org, revoke, hpems}
+      const res = await this.post(args)
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export type ListMgrs = {
+  orguserId: string 
+  hpems: string
+  ctime: number
+  dtime: number 
+  comment: string
+  revoke: string
+}
+
+export class ListManagers extends Operation {
+  constructor () { super('RevokeManager') }
+
+  async run (org: string) : Promise<ListMgrs[]>{
+    try {
+      const args = { org }
+      const res = await this.post(args)
+      return res['list'] as ListMgrs[]
     } catch(e) {
       this.ko(e)
     }

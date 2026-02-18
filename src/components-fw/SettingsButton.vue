@@ -409,13 +409,15 @@ Gérer la saisie d'un credential
 </template>
 
 <script setup lang="ts">
-
-import { ref, onUnmounted, computed, reactive, watch } from 'vue'
+// @ts-ignore
+import { ref, Ref, onUnmounted, computed, reactive, watch } from 'vue'
+// @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
+import { LocPref } from '../stores/safe-store'
 import HelpButton from './HelpButton.vue'
 import BtnCond from './BtnCond.vue'
 import PermissionDialog from './PermissionDialog.vue'
@@ -425,11 +427,11 @@ import PrefEditor from '../components/PrefEditor.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import { $t, $q, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
+import { $t, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
 import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
-import { Credential } from '../src-fw/credential'
+import { Credential, CredObj } from '../src-fw/credential'
 
 const i18n = useI18n()
 const config = stores.config
@@ -497,7 +499,7 @@ async function opGetSrvStatus () : Promise<void> {
 async function opSetSrvStatus (stx) : Promise<void> {
   try {
     resping.value = ''
-    const { now, st, at, txt } = await new SetSrvStatus().run('as2svc', org.value, stx)
+    const { now, st, at, txt } = await new SetSrvStatus().run(org.value, stx)
     const nowS = new Date(now).toISOString()
     const atS = at ? new Date(at).toISOString() : '?'
     const stS = $t('srvStatus_' + st, [atS])
@@ -539,7 +541,7 @@ const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '' })
 const ps = reactive({ inp: '', err: ''})
 
 const validPs = async () => {
-  const sh = await Crypt.strongHash(ps.inp, false, true)
+  const sh = await Crypt.strongHash(ps.inp, false, true) as Uint8Array
   cr.b64 = u8ToB64(sh, true)
   cr.shaps = Crypt.sha(sh, false)
   cr.shaSps = Crypt.shaS(sh)

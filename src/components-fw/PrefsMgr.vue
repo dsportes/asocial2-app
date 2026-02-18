@@ -77,6 +77,7 @@
 import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+import { LocPref } from '../stores/safe-store'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import InputA from '../components-fw/InputA.vue'
@@ -114,9 +115,9 @@ const props = defineProps ({
   idc: String
 })
 
-const myPrefs: RefMap<string, [number, Uint8Array]> = ref(sf.mySafePrefs)
+const myPrefs: Ref<Map<string, [number, Uint8Array]>> = ref(sf.mySafePrefs)
 // const myPrefs: RefMap<string, [number, Uint8Array]> = ref(new Map())
-const myPrefsOrig: RefMap<string, [number, Uint8Array]> = ref(new Map())
+const myPrefsOrig: Ref<Map<string, [number, Uint8Array]>> = ref(new Map())
 watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
 
 /*
@@ -132,12 +133,6 @@ for (const code in test) {
 */
 
 for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
-
-type LocPref = {
-  code: string
-  time: number
-  obj: Uint8Array
-}
 
 const updatedPrefs: Ref<Map<string, LocPref>> = ref(new Map())
 const deletedCodes = ref(new Set<string>())

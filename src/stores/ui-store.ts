@@ -29,6 +29,10 @@ export const useUiStore = defineStore('ui', () => {
     for(const c in t) setCssVar(c, t[c][dark ? 0 : 1])
   }
 
+  const openMenu = ref(false)
+  const toggleMenu = () => { 
+    openMenu.value = !openMenu.value}
+
   // Screen
   const portrait = ref(true)
   const screenHeight = ref(0)
@@ -166,6 +170,7 @@ export const useUiStore = defineStore('ui', () => {
   const reopenSession = ref(0)
 
   const backToOpenSession = () => {
+    stores.session.endSession()
     page.value = ''
     setTimeout(() => { 
       page.value = 'home' 
@@ -176,7 +181,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   return {
-    set$t$q, setDark, isDark, $q, visibility,
+    set$t$q, setDark, isDark, $q, visibility, openMenu, toggleMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,

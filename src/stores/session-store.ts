@@ -170,7 +170,7 @@ export const useSessionStore = defineStore('session', () => {
   const userId = computed(() => _userId.value)
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
-  const _creds: Ref<Map<string, Credential>> = ref(new Map())
+  const _creds: Ref<Map<string, Credential>> = ref(null)
   const creds = computed(() => _creds.value)
 
   const setStartContext = (
@@ -181,7 +181,22 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
-    stores.ui.setPage('appHome')
+    stores.ui.setPage('app')
+  }
+
+  const endSession = () => {
+    _userId.value = ''
+    _aboutProfile.value = ''
+    _creds.value = null
+  }
+
+  // Liste des codes des services dont l'utilisateur est admin
+  const servicesAdmin = () : string[] => {
+    if (!_creds.value || !_creds.value.size) return null
+    const s: Set<string> = new Set()
+    for(const [,c] of _creds.value)
+      if (c.org === '*' && c.role === 'admin') s.add(c.svc)
+    return s.size ? Array.from(s) : null
   }
 
   return {  
@@ -192,7 +207,8 @@ export const useSessionStore = defineStore('session', () => {
     dbName, setDbName, phase, setPhase, 
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
-    userId, aboutProfile, creds, setStartContext
+    userId, aboutProfile, creds, setStartContext, endSession,
+    servicesAdmin
     // focus, getFocus, lostFocus, closingApp
   }
 })

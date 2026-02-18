@@ -396,7 +396,6 @@ import PrefsMgr from '../components-fw/PrefsMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarOpen1 from '../components-fw/BarOpen1.vue'
-import { Credential } from '../src-fw/credential'
 
 import stores from '../stores/all'
 import { TSession, Profile } from '../stores/safe-store'
@@ -409,7 +408,7 @@ import databaseW from '../assets/database_white.png'
 // @ts-ignore
 import databaseB from '../assets/database_black.png'
 
-const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
+// const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 
 const ui = stores.ui
 const sf = stores.safe
@@ -472,17 +471,13 @@ const opDelSafe = () => {
 }
 
 const delSafe = async () => {
-  try {
-    const status = await sf.delSafe()
-    if (status === 0) {
-      await ui.diagDisplay($t('HPcsret_9'))
-      ui.fD()
-      sf.backToAuth()
-    } else {
-      await ui.diagDisplay($t('HPopsret_' + status))
-    }
-  } catch (e) {
-    op.ko(e)
+  const status = await sf.delSafe()
+  if (status === 0) {
+    await ui.diagDisplay($t('HPcsret_9'))
+    ui.fD()
+    sf.backToAuth()
+  } else {
+    await ui.diagDisplay($t('HPopsret_' + status))
   }
 }
 

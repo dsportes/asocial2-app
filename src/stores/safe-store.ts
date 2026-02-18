@@ -96,6 +96,12 @@ Chaque row décrit une _session épinglée_:
 Il existe une base de données IDB de nom `app_x` où `x` est le hash court de `userId + '/' + profId`: elle contient les **documents en cache** de cette session.
 */
 
+export type LocPref = {
+  code: string
+  time: number
+  obj: Uint8Array
+}
+
 export type Profile = {
   profId: string
   about: string
@@ -1237,12 +1243,6 @@ export const useSafeStore = defineStore('safe', () => {
         console.log(e)
       }
     return ret.status
-  }
-
-  type LocPref = {
-    code: string
-    time: number
-    obj: Uint8Array
   }
 
   type UpdatePrefs = {

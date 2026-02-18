@@ -1,13 +1,10 @@
 <template>
 <q-toolbar class="full-width tbp">
-  <btn-cond label="WP" disable :color="session.wpReady ? 'green' : 'red'">
-    <q-tooltip>{{session.sessionInfo}}</q-tooltip>
-  </btn-cond>
-  <btn-cond v-if="sf.step === 2" icon="chevron_left" :label="$t('HPauthentif')" size="md" flat
-    color="warning" @ok="sf.backToAuth"/>
+  <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
+    @ok="ui.toggleMenu"/>
 
   <q-toolbar-title class="titre-md q-mx-md">
-    {{$t('step_' + sf.step) + ' - ' + (sf.step === 2 && sf.userName ? sf.userName : $t('unknown'))}}
+    {{$t('PAGEadmin')}}
   </q-toolbar-title>
 
   <settings-button class="q-ml-sm"/>
@@ -24,6 +21,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 const $t = useI18n().t
+const ui = stores.ui
 const sf = stores.safe
 const config = stores.config
 const session = stores.session

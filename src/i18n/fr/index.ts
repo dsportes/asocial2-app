@@ -67,6 +67,7 @@ export default {
   st_3: 'supprimé',
   settings: 'Préférences',
   service: 'Service',
+  endsession: 'Clore la session',
 
   minmax: 'De {0} à {1} signes. ',
   tooshort: 'Texte trop court',
@@ -115,6 +116,11 @@ export default {
   MLAcf3: 'Non, je la laisse se poursuivre',
   MLAcf4: 'Oui, je veux l\'interrompre (si possible)',
 
+  PAGEhome: 'Connexion',
+  PAGEadmin: 'Administration Technique',
+  PAGEapp: 'Auteurs et relecteurs',
+  PAGEtest: 'Page des tests',
+
   op_PingDB: 'PING de la base de données',
   op_EchoText: 'Echo du texte envoyé',
   op_$Hash: 'Test Hash PHP',
@@ -139,6 +145,9 @@ export default {
   op_$TransmitCred: 'Tramission d\'un droit d\'accès',
   op_$UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
   op_$RestoreSafe: 'Restauration d\'un "coffre fort"',
+  op_GrantNewManager: 'Enregistre un utilisateur en tant que "manager".',
+  op_RevokeManager: 'Réqvoque un utilisateur en tant que "manager".',
+  op_ListManagers: 'Liste les droits attribués de "manager".',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -166,6 +175,8 @@ export default {
   PEinfo: 'L\'application ne peut pas fonctionner correctement si les notifications sont bloquées.',
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
+
+  APservices: 'Vous êtes "Administrateur Technique" du (des) service(s) : ',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
@@ -605,7 +616,9 @@ bla bla
   EX_1003: 'Opération [{0}] - organisation inconnue [{1}]',
   EX_1004: 'Opération [{0}] - service inconnu [{1}]',
   EX_1005: 'Droit d\'accès NON validé - organisation [{0}] - role [{1}] - entid [{2}] ]',
+  EX_1006: 'Jeton d\'accès expiré sur opération pour l\'organisation [{0}] - Tenter de la relancer.',
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
+  EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau
