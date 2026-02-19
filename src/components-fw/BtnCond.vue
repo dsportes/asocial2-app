@@ -2,7 +2,7 @@
 <span>
   <q-btn v-if="stop"
     :icon="icon"
-    padding="none"
+    :padding="padding || 'none'"
     :disable="disable || false"
     :flat="flat || false"
     dense
@@ -18,7 +18,7 @@
   </q-btn>
   <q-btn v-else
     :icon="icon"
-    padding="none"
+    :padding="padding || 'none'"
     :disable="disable || false"
     :flat="flat || false"
     dense
@@ -54,7 +54,8 @@ const props = defineProps({
   flat: Boolean,
   round: Boolean,
   stop: Boolean,
-  noCaps: Boolean
+  noCaps: Boolean,
+  padding: String
 })
 
 const emit = defineEmits(['ok'])

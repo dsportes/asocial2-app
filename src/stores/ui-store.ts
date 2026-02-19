@@ -14,7 +14,7 @@ const large = 900
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
   const $q = ref()
-  const set$t$q = (t, q) => { 
+  const set$t$q = (t, q) => {
     $t.value = t
     $q.value = q
   }
@@ -29,9 +29,11 @@ export const useUiStore = defineStore('ui', () => {
     for(const c in t) setCssVar(c, t[c][dark ? 0 : 1])
   }
 
-  const openMenu = ref(false)
-  const toggleMenu = () => { 
-    openMenu.value = !openMenu.value}
+  const leftMenu = ref(false)
+  const closeMenu = () => {
+    leftMenu.value = false}
+  const openMenu = () => {
+    leftMenu.value = true}
 
   // Screen
   const portrait = ref(true)
@@ -88,8 +90,8 @@ export const useUiStore = defineStore('ui', () => {
     delete dModels.value[idc]
   }
 
-  const isOpenD = (idc: string, name: string) => 
-    idc && dModels.value[idc] && dModels.value[idc][name] 
+  const isOpenD = (idc: string, name: string) =>
+    idc && dModels.value[idc] && dModels.value[idc][name]
 
   // Gestion de l'affichage des exceptions
   const excResolve = ref(null)
@@ -105,7 +107,7 @@ export const useUiStore = defineStore('ui', () => {
     })
   }
 
-  const hideExc = () => { 
+  const hideExc = () => {
     exc.value = null
     fD()
     const f = excResolve.value
@@ -162,18 +164,18 @@ export const useUiStore = defineStore('ui', () => {
   // Gestion des pages
   const page = ref('home')
 
-  const setPage = (p: string) => { 
+  const setPage = (p: string) => {
     page.value = ''
     setTimeout(() => { page.value = p }, 350)
   }
-  
+
   const reopenSession = ref(0)
 
   const backToOpenSession = () => {
     stores.session.endSession()
     page.value = ''
-    setTimeout(() => { 
-      page.value = 'home' 
+    setTimeout(() => {
+      page.value = 'home'
       setTimeout( () => {
         reopenSession.value++
       }, 100)
@@ -181,13 +183,14 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   return {
-    set$t$q, setDark, isDark, $q, visibility, openMenu, toggleMenu,
+    set$t$q, setDark, isDark, $q, visibility,
+    openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
     exc, displayExc, hideExc,
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage, backToOpenSession, 
+    page, setPage, backToOpenSession,
     reopenSession
   }
 })

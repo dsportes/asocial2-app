@@ -146,7 +146,7 @@ export const useSessionStore = defineStore('session', () => {
   const dbName = ref('')
   const setDbName = (name: string) => { dbName.value = name }
   const hasIDB = computed(() => dbName.value !== '')
-  
+
   const phase: Ref<number> = ref(0)
   // 0 : session en phase d'initialisation
   // 1 : session running (initialisée)
@@ -156,7 +156,7 @@ export const useSessionStore = defineStore('session', () => {
   const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
   const setEdPref = (code: string, time: number, obj: Object) => {
     edPref.code = code
-    edPref.time = time 
+    edPref.time = time
     edPref.obj = obj
     edPref.orig = decode(encode(obj))
     edPref.chg = false
@@ -174,7 +174,7 @@ export const useSessionStore = defineStore('session', () => {
   const creds = computed(() => _creds.value)
 
   const setStartContext = (
-      userId: string, 
+      userId: string,
       aboutProfile: string,
       creds: Map<string, Credential>) => {
     setPhase(0)
@@ -209,24 +209,24 @@ export const useSessionStore = defineStore('session', () => {
     admin.services = s.size ? s : null
   }
 
-  return {  
+  return {
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    dbName, setDbName, phase, setPhase, 
+    dbName, setDbName, phase, setPhase,
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
     userId, aboutProfile, creds, setStartContext, endSession,
-    servicesAdmin
+    admin
     // focus, getFocus, lostFocus, closingApp
   }
 })
 
 /*
 https://pinia.vuejs.org/cookbook/hot-module-replacement.html
-Pinia supports Hot Module replacement so you can edit your stores 
-and interact with them directly in your app without reloading the page, 
+Pinia supports Hot Module replacement so you can edit your stores
+and interact with them directly in your app without reloading the page,
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
 */
 // @ts-ignore

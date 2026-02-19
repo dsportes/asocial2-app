@@ -6,7 +6,7 @@
 
     <q-toolbar v-if="ui.page !== 'home' && ui.page !== 'admin' " class="full-width tbp">
       <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
-        @ok="ui.toggleMenu"/>
+        @ok="ui.openMenu"/>
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
@@ -16,13 +16,13 @@
     </q-toolbar>
   </q-header>
 
-  <q-drawer v-model="ui.openMenu" :class="sty()"
-    show-if-above :width="300" :breakpoint="700" elevated >
-    <btn-cond class="cls" round color="primary" icon="chevron_left" @ok="ui.toggleMenu"/>
+  <q-drawer v-if="sf.step === 0" v-model="ui.leftMenu" :class="sty()"
+    show-if-above overlay :width="300" :breakpoint="700" elevated >
+    <btn-cond class="cls" round color="primary" icon="chevron_left" @ok="ui.closeMenu"/>
 
     <scroll-area class="fit" noborder>
-      <btn-cond v-if="sf.step === 0" flat icon="exit_to_app" color="warning" 
-        :label="$t('endsession')" @ok="ui.toggleMenu(); backToOpenSession()"/>
+      <btn-cond v-if="sf.step === 0" flat icon="exit_to_app" color="warning"
+        :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
       <left-menu/>
     </scroll-area>
   </q-drawer>
@@ -104,7 +104,7 @@ const session = stores.session
 const ui = stores.ui
 const sf = stores.safe
 
-const i18n = useI18n() 
+const i18n = useI18n()
 const $t = i18n.t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
 set$t($t, i18n)

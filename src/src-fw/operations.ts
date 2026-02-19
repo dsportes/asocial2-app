@@ -22,9 +22,9 @@ export class EchoText extends Operation {
 export class  GetSrvStatus extends Operation {
   constructor () { super('GetSrvStatus') }
 
-  async run (org: string) {
+  async run (svc: string) {
     try {
-      const res = await this.post({ org })
+      const res = await this.post({ }, svc)
       return res['srvStatus']
     } catch(e) {
       this.ko(e)
@@ -35,17 +35,32 @@ export class  GetSrvStatus extends Operation {
 export class SetSrvStatus extends Operation {
   constructor () { super('SetSrvStatus') }
 
-  async run (org: string, stx: number) {
+  async run (svc: string, st: number, txt: string) {
     try {
-      const config = stores.config
-      const session = stores.session
-      const authRecord = new AuthRecord('as2svc', '*')
+      const authRecord = new AuthRecord(svc, '*')
       await authRecord.sign('admin', '')
-      const args = { authRecord, org: org, st: stx, txt: 'info ' + stx}
-      const res = await this.post(args)
+      const args = { authRecord, st, txt: txt || ''}
+      const res = await this.post(args, svc)
       return res['srvStatus']
     } catch(e) {
       this.ko(e)
+    }
+  }
+}
+
+export class NewOrg extends Operation {
+  constructor () { super('NewOrg') }
+
+  async run (svc: string, neworg: string, st: number, db: string) {
+    try {
+      const authRecord = new AuthRecord(svc, '*')
+      await authRecord.sign('admin', '')
+      const args = { authRecord, neworg, st, db}
+      const res = await this.post(args, svc)
+      return res['status']
+    } catch(e) {
+      this.ko(e)
+      return -1
     }
   }
 }
@@ -74,7 +89,7 @@ export class SetSubscription extends Operation {
   }
 }
 
-/* UpdateSubscription enregistre la mise à jour d'une souscription d'une session 
+/* UpdateSubscription enregistre la mise à jour d'une souscription d'une session
 */
 export class UpdateSubscription extends Operation {
   constructor () { super('UpdateSubscription') }
@@ -100,7 +115,7 @@ export class UpdateSubscription extends Operation {
 /* Sync : synchronise les souscriptions citées *************************
 - toSync = subsToSync[]
 subsToSync = {
-  def: string, 
+  def: string,
   v: number - version 'vs' la plus récente détenue en session
 }
 Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des documents (par exemple: Article/auteurs/Zola)
@@ -168,10 +183,10 @@ export class RevokeManager extends Operation {
 }
 
 export type ListMgrs = {
-  orguserId: string 
+  orguserId: string
   hpems: string
   ctime: number
-  dtime: number 
+  dtime: number
   comment: string
   revoke: string
 }
