@@ -1,6 +1,3 @@
-<!-- TODO
-Gérer la saisie d'un credential
--->
 <template>
 <div>
   <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
@@ -50,6 +47,11 @@ Gérer la saisie d'un credential
 
         <q-separator />
 
+        <q-item clickable dense v-close-popup @click="ui.oD('0', 'servicestatus')">
+          <q-item-section avatar><q-avatar size="xl" icon="cloud"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('servicestatus')}}</q-item-section>
+        </q-item>
+
         <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
@@ -72,14 +74,6 @@ Gérer la saisie d'un credential
             <div class="titre-md text-italic q-pr-sm text-primary">{{$t('app')}}</div>
             <div class="font-mono">{{config.K.APPNAME}}</div>
             <div class="font-mono">{{ $t('build') + ': ' + config.K.BUILD }}</div>
-          </div>
-          <div class="titre-md text-italic q-mt-sm text-primary">{{ $t('services') }}</div>
-          <div v-for="[svc, x] in services" :key="svc" class="q-ml-md column">
-            <div class="font-mono fs-sm">
-              <span :class="svc === defsvc ? 'text-bold' : ''">{{svc}}</span>
-              <span class="q-ml-md">{{x.url}}</span>
-              <span class="q-ml-sm">[{{x.api}}]</span>
-            </div>
           </div>
           <div class="row q-mt-sm">
             <div class="titre-md text-italic q-pr-sm text-primary">
@@ -428,7 +422,7 @@ import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import { $t, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
-import { EchoText, GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
+import { EchoText } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { Credential, CredObj } from '../src-fw/credential'
@@ -483,31 +477,7 @@ async function opEcho () : Promise<void>  {
 }
 
 const resping = ref('')
-async function opGetSrvStatus () : Promise<void> {
-  try {
-    resping.value = ''
-    const { now, st, at, txt } = await new GetSrvStatus().run(org.value)
-    const nowS = new Date(now).toISOString()
-    const atS = at ? new Date(at).toISOString() : '?'
-    const stS = $t('srvStatus_'+ st, [atS])
-    resping.value = $t('srvStatus', [nowS, stS, txt || ''])
-  } catch (e) {
-    resping.value = 'err:' + (e.code || '???')
-  }
-}
 
-async function opSetSrvStatus (stx) : Promise<void> {
-  try {
-    resping.value = ''
-    const { now, st, at, txt } = await new SetSrvStatus().run(org.value, stx)
-    const nowS = new Date(now).toISOString()
-    const atS = at ? new Date(at).toISOString() : '?'
-    const stS = $t('srvStatus_' + st, [atS])
-    resping.value = $t('srvStatus', [nowS, stS, txt || ''])
-  } catch (e) {
-    resping.value = 'err:' + (e.code || '???')
-  }
-}
 
 const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }
 const cfCoolBye = () => { ui.oD('0', 'confirmQuit') }

@@ -54,6 +54,15 @@
   <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
   <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
   <dialog-help v-if="ui.dModels['0'].dialogHelp"/>
+  <q-dialog v-if="ui.dModels['0'].servicestatus" v-model="ui.dModels['0'].servicestatus" persistent>
+    <q-card :class="sty('sm')">
+      <q-toolbar class="tbs">
+        <btn-cond flat :label="$t('gotit')" icon="check" color="none" @ok="ui.fD"/>
+        <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
+      </q-toolbar>
+      <service-status/>
+    </q-card>
+  </q-dialog>
 
 </q-layout>
 </template>
@@ -84,6 +93,7 @@ import GotIt from './components-fw/GotIt.vue'
 import ConfirmQuit from './components-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
+import ServiceStatus from './components-fw/ServiceStatus.vue'
 
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
@@ -114,11 +124,6 @@ const backToOpenSession = async () => {
   if (ok)
     ui.backToOpenSession()
 }
-
-
-
-
-
 </script>
 
 <style lang="scss" scoped>

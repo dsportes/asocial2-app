@@ -1,15 +1,21 @@
 <template>
-<q-toolbar class="full-width tbp">
-  <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
-    @ok="ui.toggleMenu"/>
+<div class="column">
+  <q-toolbar class="full-width tbp">
+    <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
+      @ok="ui.toggleMenu"/>
 
-  <q-toolbar-title class="titre-md q-mx-md">
-    {{$t('PAGEadmin')}}
-  </q-toolbar-title>
+    <q-toolbar-title class="titre-md q-mx-md">
+      <span>{{$t('PAGEadmin')}}</span>
+      <span class="font-mono text-bold">{{session.admin.svc}}</span>
+    </q-toolbar-title>
 
-  <settings-button class="q-ml-sm"/>
-  <help-button class="q-ml-xs" page="DOCpg"/>
-</q-toolbar>
+    <settings-button class="q-ml-sm"/>
+    <help-button class="q-ml-xs q-mr-md" page="DOCpg"/>
+  </q-toolbar>
+  <div class="row items-center justify-between">
+    <input-a prefix="orgcode" size="org" v-model="session.admin.org"/>
+  </div>
+</div>
 </template>
 
 <script setup lang="ts">

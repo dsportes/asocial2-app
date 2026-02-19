@@ -38,7 +38,7 @@ export class Operation {
     const urlapi = config.K.SERVICES[svc]
     if (!urlapi) 
       throw new AppExc({ code:11002, label: 'Unknown service', args:[this.opName, svc]})
-    const u = urlapi.url + 'op/' + (args.org || 'none') + '/' + this.opName
+    const u = urlapi.url + 'op/' + (args.org || 'ADMIN') + '/' + this.opName
     try {
       session.opStart(this)
       args.APIVERSION = urlapi.api

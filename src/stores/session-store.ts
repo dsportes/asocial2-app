@@ -181,6 +181,7 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
+    servicesAdmin()
     stores.ui.setPage('app')
   }
 
@@ -188,7 +189,16 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = ''
     _aboutProfile.value = ''
     _creds.value = null
+    admin.services = null
+    admin.svc = ''
+    admin.org = ''
   }
+
+  const admin = reactive({
+    services: null,
+    svc: '',
+    org: ''
+  })
 
   // Liste des codes des services dont l'utilisateur est admin
   const servicesAdmin = () : string[] => {
@@ -196,7 +206,7 @@ export const useSessionStore = defineStore('session', () => {
     const s: Set<string> = new Set()
     for(const [,c] of _creds.value)
       if (c.org === '*' && c.role === 'admin') s.add(c.svc)
-    return s.size ? Array.from(s) : null
+    admin.services = s.size ? s : null
   }
 
   return {  
