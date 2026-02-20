@@ -18,6 +18,7 @@
         <btn-bubble class="col-auto self-start" size="sm"
           :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
       </div>
+      <input-a prefix="HPstore" class="full-width q-my-sm" v-model="safeStore"/>
     </div>
 
     <div v-if="session.hasNet && sf.devName" class="row items-center q-mt-sm">
@@ -219,15 +220,28 @@
   <!-- Dialogue d'export du safe-->
   <dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
     <template #hdr>
-      <div class="row justify-end q-px-xs q-mb-md">
-        <btn-cond flat size="lg" icon="check"
-        :disable="cryptK.key === null || !expName"
-        :label="$t('HPbackup_0')"
-        @ok="doExportSafe"/>
+      <div class="row items-center">
+        <q-tabs dense v-model="exptab" class="col bg-primary text-white shadow-2">
+          <q-tab name="info" :label="$t('HPexpinfo')"/>
+          <q-tab name="export" :label="$t('HPexpexport')" />
+        </q-tabs>
+        <btn-cond class="col-auto q-ma-xs" flat icon="check"
+          :disable="exptab === 'info' || cryptK.key === null || !expName"
+          :label="$t('HPbackup_0')"
+          @ok="doExportSafe"/>
       </div>
     </template>
     <template #default>
-      <div class="column q-mx-lg items-center">
+      <div v-if="exptab === 'info'" class="column q-mx-lg items-center">
+        <div class="titre-md text-italic q-my-sm">{{$t('HPexppub')}}</div>
+        <q-input class="q-pa-xs bord1 full-width" v-model="infopub" type="textarea" readonly
+          :rows="10"/>
+        <div class="titre-md text-italic q-my-sm">{{$t('HPexporgid')}}</div>
+        <input-a prefix="orgcode" v-model="exporg"
+          :validatefn="setExporg"/>
+        <div class='font-mono fs-lg text-center text-bold full-width q-my-xs'>{{orguser}}</div>
+      </div>
+      <div v-if="exptab === 'export'" class="column q-mx-lg items-center">
         <div class="q-my-sm full-width">
           <div class="titre-md text-italic">{{$t('HPimport_label')}}</div>
           <input-ps v-model="cryptK" :validatefn="valK" size="ps" prefix="HPimport"/>
@@ -410,6 +424,8 @@ import databaseB from '../assets/database_black.png'
 
 // const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
 
+const encoder = new TextEncoder()
+
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
@@ -429,6 +445,7 @@ onMounted(async () => {
   await sf.init0()
 })
 
+const safeStore = ref('')
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedUser = ref(null)
@@ -484,8 +501,30 @@ const delSafe = async () => {
 const expName = ref('')
 const cryptK = reactive( { inp: '', err: '', key: null } )
 const bin = ref(null)
+const exptab = ref('info')
+const infopub = ref('')
+const exporg = ref('')
+const orguser = ref('')
+
+const setExporg = () => {
+  orguser.value = Crypt.shaS(encoder.encode(exporg.value + '/' + sf.userId))
+}
+
+const setInfopub = () => {
+  exporg.value = ''
+  const t = ['Crypt KEY']
+  t.push(sf.auth.C)
+  t.push('\nVerif KEY')
+  t.push(sf.auth.V)
+  infopub.value = t.join('\n')
+}
+
+watch(exptab, (v) => {
+  setInfopub()
+})
 
 const exportSafe = async () => {
+  setInfopub()
   expName.value = ''
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
   bin.value = encode(await sf.getBinSafe())
@@ -493,6 +532,7 @@ const exportSafe = async () => {
     await ui.diagDisplay($t('HPexportsafe_ko'))
     return
   }
+
   ui.oD(idc, 'exportsafe')
 }
 

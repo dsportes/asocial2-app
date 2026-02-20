@@ -1,21 +1,23 @@
 <template>
 <dialog-std2 v-model="mu" :title="$t('HPmanusers')">
 <template #hdr>
-  <div class="row q-px-xs q-mb-md" style="min-height:3rem">
-    <btn-cond v-if="tab === 'user'" flat size="lg" class="col-auto" 
-      :label="$t('validate') + ' (' + nbdel + ')'" 
-      :disable="nbdel === 0" @ok="valcf"/>
+  <div>
+    <div class="row items-center q-mx-md full-size">
+      <btn-cond flat size="lg" class="col-auto q-mr-md"
+        :label="$t('validate') + ' (' + nbdel2 + ')'"
+        :disable="nbdel2 === 0 || tab !== 'user'" @ok="valcf"/>
+      <q-tabs v-model="tab" class="col bg-grey-9 q-mb-md" dense>
+        <q-tab name="user" icon="person" :label="$t('HPmanuser')" />
+        <q-tab class="text-warning bg-yellow-3" name="safe" icon="warning" :label="$t('HPdanger')" />
+      </q-tabs>
+    </div>
     <div v-if="diag !== ''" class="col q-ml-md msg2">{{diag}}</div>
   </div>
 </template>
 
 <template #default>
-<div class="column items-center">
+<div class="q-mt-sm column items-center">
 <div class="wmd full-width">
-  <q-tabs v-model="tab" class="bg-grey-9 q-mb-md" dense>
-    <q-tab name="user" icon="person" :label="$t('HPmanuser')" />
-    <q-tab class="text-warning bg-yellow-3" name="safe" icon="warning" :label="$t('HPdanger')" />
-  </q-tabs>
 
   <div v-if="tab === 'user'">
     <bar-open1 :title="$t('HPmanu_1')" :bubble="$t('HPunpin_1')"/>
@@ -35,6 +37,19 @@
 
     <q-separator class="q-mt-xs q-mb-sm"/>
 
+    <div v-if="usersNo && usersNo.size">
+      <div class="titre-md text-italic q-mb-xs">{{$t('HPusersN')}}</div>
+      <div class="row q-gutter-sm">
+        <btn-cond v-for="[u, p] in usersNo" :key="u" no-caps
+          :icon="tDel2.has(u) ? 'undo' : 'delete'"
+          :color="tDel2.has(u) ? 'warning' : 'primary'"
+          :label="p + ' ['+ u.substring(0, 5) + ']'"
+          padding="none xs" @ok="delUserNo(u)"/>
+      </div>
+      <q-separator class="q-mt-xs q-mb-sm"/>
+    </div>
+
+    <div class="titre-md text-italic q-mt-md q-mb-xs">{{$t('HPusersY')}}</div>
     <div v-for="[id, u] of synthU" :key="u.id">
       <div class="row font-mono fs-md items-start bg-primary q-mt-md">
         <div class="col-9 q-pr-xs">{{u.pseudo}}</div>
@@ -138,7 +153,7 @@
         </div>
       </div>
     </div>
-    <btn-cond class="q-my-md" :label="$t('reset')" 
+    <btn-cond class="q-my-md" :label="$t('reset')"
       icon="undo" @ok="reset"/>
   </div>
 
@@ -147,14 +162,15 @@
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
     <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
     <div class="q-my-sm titre-lg text-bold text-center">
-        {{$t('HPskull_0', [sDel.size, tDel.size])}}
+        {{$t('HPskull_0', [sDel ? sDel.size : 0, nbdel2])}}
       </div>
       <div class="q-my-sm titre-md text-bold text-italic text-center">
         {{$t('HPskull_1')}}
       </div>
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
-        <btn-confirm :actif="nbdel !== 0" :confirm="close"/>
+        <btn-confirm :actif="nbdel2 !== 0 || (sDel && sDel.size)"
+          :confirm="close"/>
       </div>
     </q-card>
   </q-dialog>
@@ -238,11 +254,14 @@ const valcf = () => {
 const size: Ref<number[]> = ref(0)
 const nbc = computed(() => size.value ? size.value.length : 0 )
 const synthU = ref(0)
+const usersNo: Ref<Map<string, string>> = ref()
 
 onMounted(async () => {
-  const [sy, sz] = await sf.synthUsers()
+  const [sy, sz, sn] = await sf.synthUsers()
   synthU.value = sy
   size.value = sz
+  usersNo.value = sn
+  tDel2.value.clear()
 })
 
 const delSize: Ref<number[]> = ref(new Array(nbc.value).fill(0))
@@ -250,6 +269,7 @@ const delSize: Ref<number[]> = ref(new Array(nbc.value).fill(0))
 const nbdel = ref(0)
 const sDel = ref()
 const tDel = ref()
+const tDel2 = ref(new Set())
 
 const cku = (u) => {
   for(const [,a] of u.ma) {
@@ -291,16 +311,28 @@ const recalc = () => {
   tDel.value = setT
 }
 
+const nbdel2 = computed(() => nbdel.value + tDel2.value.size )
+
+const delUserNo = (u) => {
+  if (tDel2.value.has(u)) tDel2.value.delete(u)
+  else tDel2.value.add(u)
+}
+
 const close = async () => {
   const l = []
   const allSessions = await sf.getAllSessions()
-  for(const id of sDel.value) {
-    const s = allSessions.get(id)
-    l.push(s)
-  }
+  if (sDel.value && sDel.value.size)
+    for(const id of sDel.value) {
+      const s = allSessions.get(id)
+      l.push(s)
+    }
   if (l.length) await sf.purgeIDBS(l)
-  for(const id of sDel.value) await sf.delTSession(null, id)
-  for(const id of tDel.value) await sf.delTrusting(id)
+  if (sDel.value && sDel.value.size)
+    for(const id of sDel.value) await sf.delTSession(null, id)
+  if (tDel.value && tDel.value.size)
+    for(const id of tDel.value) await sf.delTrusting(id)
+  if (tDel2.value && tDel2.value.size)
+    for(const id of tDel2.value) await sf.delTrusting(id)
   ui.fD()
   emit('close', null)
 }

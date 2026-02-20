@@ -1,7 +1,8 @@
 <template>
   <q-input style="width:14rem" :class="'bord999' + (actif ? 2 : 1)"
-    dense outlined standout="bg-warning text-white" :disable="!actif" v-model="text" 
-    :label="actif ? $t('confirm', [code]) : $t('nothing2confirm')" />  
+    dense outlined
+    :disable="!actif" v-model="text"
+    :label="actif ? $t('confirm', [code]) : $t('nothing2confirm')" />
 </template>
 
 <script setup lang="ts">
@@ -9,9 +10,9 @@ import { ref, watch } from 'vue'
 
 import { Crypt } from '../src-fw/crypt'
 
-const props = defineProps({ 
-  actif: Boolean, 
-  confirm: Function 
+const props = defineProps({
+  actif: Boolean,
+  confirm: Function
 })
 
 const text = ref('')

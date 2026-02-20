@@ -559,7 +559,7 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     mySafeCreds.value = m
-    if (mcreds.size || delcreds.length) 
+    if (mcreds.size || delcreds.length)
       await updateCreds(mcreds, delcreds, null, null, true)
   }
 
@@ -1111,13 +1111,25 @@ export const useSafeStore = defineStore('safe', () => {
     return m
   }
 
-  const synthUsers = async () : Promise<[Map<string, Su>, number[]]> => {
+  const synthUsers = async ()
+  : Promise<[Map<string, Su>, number[], Map<string, string>]> => {
     const app = stores.config.appname
     const nbc = coeffs.length
     let n = 0
     const synthU: Map<string, Su> = new Map<string, Su>()
     const size = new Array(nbc).fill(0)
     const sessions = await getAllSessions()
+
+    // Recherche des users n'ayant pas de sessions
+    const usersNo: Map<string, string> = new Map()
+    for (const [,t] of trustings.value) {
+      const u = t.userId
+      let f = false
+      for(const [,s] of sessions)
+        if (s.userId === u) {f = true; break;}
+      if (!f) usersNo.set(u, t.pseudo)
+    }
+
     for(const [id, s] of sessions) {
       let su = synthU.get(s.userId)
       if (!su) {
@@ -1173,7 +1185,7 @@ export const useSafeStore = defineStore('safe', () => {
         size[i] += suas.size[i]
       }
     }
-    return [synthU, size]
+    return [synthU, size, usersNo]
   }
 
   const resetAllLocal = async () => {

@@ -229,6 +229,11 @@ export default {
   SBentid_label: 'ID de l\'entité (fac)',
   SBentkey_label: 'Clé AES (base 64) de l\'entité (fac)',
 
+  HPstore_label: 'Dépôt SPECIFIQUE du "coffre-fort"',
+  HPstore_bub: `# Dépôt SPECIFIQUE du "coffre-fort"
+  bla bla
+  `,
+
   HPbackopen: `**Voulez-vous terminer cette session et retourner au choix d'une autre à ouvrir ?**
 
   OUI: _Je confirme_
@@ -365,7 +370,7 @@ bla bla
   HPupc_3: 'Volume',
   HPupc_4: 'Dernière connexion ici',
   */
-  HPskull_0: '{0} sessions(s) et {1} utilisteur(s) seront supprimé(s)',
+  HPskull_0: '{0} sessions(s) et {1} utilisateur(s) seront supprimé(s)',
   HPskull_1: 'Leurs données enregistrées localement seront supprimées. Les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour les utilisateurs supprimés.',
 
@@ -599,6 +604,12 @@ bla bla
   HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
   HPnothing: 'Aucun changement à valider',
   HPtransmit_label: 'Cible de la transmission (TEST)',
+  HPexpinfo: 'Information',
+  HPexpexport: 'Export',
+  HPexppub: 'Clés publiques',
+  HPexporgid: 'ID localisée pour une organisation',
+  HPusersN: 'Utilisateur(s) sans sessions épinglées:',
+  HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
