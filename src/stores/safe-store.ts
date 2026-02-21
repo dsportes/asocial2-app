@@ -278,6 +278,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  /*
   const purgeIDBS = async (l: TSession[]) => {
     if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
@@ -296,6 +297,7 @@ export const useSafeStore = defineStore('safe', () => {
       await delTSession(s, true)
     }
   }
+  */
 
   const recordIDB = (dbName: string) => {
     if (stores.session.incognito) return
@@ -303,15 +305,6 @@ export const useSafeStore = defineStore('safe', () => {
     const dbl = x.split(' ')
     const n = dbl.indexOf(dbName)
     if (n === -1) dbl.push(dbName)
-    localStorage.setItem('$DBLIST', dbl.join(' '))
-  }
-
-  const delIDB = (dbName: string) => {
-    if (stores.session.incognito) return
-    const x = localStorage.getItem('$DBLIST') || ''
-    const dbl = x.split(' ')
-    const n = dbl.indexOf(dbName)
-    if (n === -1) dbl.splice(n, 1)
     localStorage.setItem('$DBLIST', dbl.join(' '))
   }
 
@@ -340,6 +333,7 @@ export const useSafeStore = defineStore('safe', () => {
     setStep(1)
   }
 
+  const mySafeStore = ref('')
   const userId = ref(null)
   const keyK = ref(null)
   /* sh1p sh1r ont été donnés:
@@ -639,13 +633,19 @@ export const useSafeStore = defineStore('safe', () => {
   c'est une purge depuis ManageUsers, la base a déjà été supprimée
   par purgeIDBS
   */
-  const delTSession = async (s: TSession, nodel?: boolean) => {
-    try {
-      const id = s.idOf
-      await db.value.tsessions.where({ id }).delete()
-      mySessions.value.delete(id)
-      if (!nodel) {
-        delIDB(s.dbName)
+  const delTSession = async (l: TSession[]) => {
+    for (const s of l) {
+      try {
+        const id = s.idOf
+        await db.value.tsessions.where({ id }).delete()
+        mySessions.value.delete(id)
+        if (!stores.session.incognito) {
+          const x = localStorage.getItem('$DBLIST') || ''
+          const dbl = x.split(' ')
+          const n = dbl.indexOf(s.dbName)
+          if (n === -1) dbl.splice(n, 1)
+          localStorage.setItem('$DBLIST', dbl.join(' '))
+        }
         try {
           await Dexie.delete(s.dbName)
           await sleep(300)
@@ -653,9 +653,9 @@ export const useSafeStore = defineStore('safe', () => {
         } catch (e) {
           console.log(s.dbName + ' deletion FAILED: ', e.message())
         }
+      } catch (e) {
+        console.log(e)
       }
-    } catch (e) {
-      throw EX(e, 2)
     }
   }
 
@@ -727,7 +727,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UpdCodesSafe')
     let ret
     try {
-      ret = await op.post({ safeCodes })
+      ret = await op.post({ safeCodes }, mySafeStore.value)
     } catch (e) {
       op.ko(e)
       return -1
@@ -776,14 +776,29 @@ export const useSafeStore = defineStore('safe', () => {
       profiles: null,
       prefs: null
     }
-    const op = new SafeOperation('$CreateSafe')
+
+    let op = new SafeOperation('$SetPubKeys')
     let ret
     try {
-      ret = await op.post({ safe })
+      // Enregistrement des clés publiques dans le dépôt générique
+      await op.post({
+        userId: userId.value,
+        pemC: safe.C,
+        pemV: safe.V
+      }, '')
     } catch (e) {
       op.ko(e)
       return -1
     }
+
+    op = new SafeOperation('$CreateSafe')
+    try {
+      ret = await op.post({ safe }, mySafeStore.value)
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
+
     if (ret.status === 0) {
       openMode.value = 1
       await compileSafe(safe)
@@ -794,7 +809,7 @@ export const useSafeStore = defineStore('safe', () => {
   const delSafe = async () => {
     const op = new SafeOperation('$DelSafe')
     try {
-      const ret = await op.post({ userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value })
+      const ret = await op.post({ userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value }, mySafeStore.value)
       return ret.status
     } catch (e) {
       op.ko(e)
@@ -808,7 +823,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$OpenSafeByPR')
     let ret
     try {
-      ret = await op.post({sh0: _sh0, sh1: _sh1})
+      ret = await op.post({sh0: _sh0, sh1: _sh1}, mySafeStore.value)
     } catch (e) {
       op.ko(e)
       return -1
@@ -833,7 +848,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     const op1 = new SafeOperation('$OpenSafeByPin')
     try {
-      ret = await op1.post({userId: userId.value, devId: devId.value, pincx})
+      ret = await op1.post({userId: userId.value, devId: devId.value, pincx}, mySafeStore.value)
     } catch (e) {
       op1.ko(e)
       return -1
@@ -851,7 +866,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret2
     const op2 = new SafeOperation('$OpenSafeById')
     try {
-      ret2 = await op2.post({userId: userId.value, shk})
+      ret2 = await op2.post({userId: userId.value, shk}, mySafeStore.value)
     } catch (e) {
       op2.ko(e)
       return -1
@@ -950,7 +965,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$TrustDevice')
     let ret
     try {
-      ret = await op.post({trustDev})
+      ret = await op.post({trustDev}, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return -1
@@ -972,7 +987,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UntrustDevices')
     let ret
     try {
-      ret = await op.post({untrustDev})
+      ret = await op.post({untrustDev}, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return -1
@@ -994,7 +1009,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UntrustDevices')
     let ret
     try {
-      ret = await op.post({untrustDev})
+      ret = await op.post({untrustDev}, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return -1
@@ -1012,7 +1027,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$OpenSafeById')
     let ret
     try {
-      ret = await op.post(args)
+      ret = await op.post(args, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return -1
@@ -1030,7 +1045,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$GetBinSafe')
     let ret
     try {
-      ret = await op.post(args)
+      ret = await op.post(args, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return null
@@ -1051,7 +1066,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$SetAboutProfile')
     let ret
     try {
-      ret = await op.post({aboutProfile})
+      ret = await op.post({aboutProfile}, mySafeStore.value)
     } catch(e) {
       op.ko(e)
       return 9
@@ -1243,7 +1258,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UpdateCreds')
     let ret
     try {
-      ret = await op.post({updateCreds})
+      ret = await op.post({updateCreds}, mySafeStore.value)
     } catch(e) {
       op.ko(e);
       return -1
@@ -1286,7 +1301,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UpdatePrefs')
     let ret
     try {
-      ret = await op.post({updatePrefs})
+      ret = await op.post({updatePrefs}, mySafeStore.value)
     } catch(e) {
       op.ko(e);
       return -1
@@ -1308,13 +1323,13 @@ export const useSafeStore = defineStore('safe', () => {
     // cryptedCred: string // Objet Credential sérialisé crypté pour le destinataire
   }
 
-  const transmitCred = async (cred: Credential, targetId: string) => {
+  const transmitCred = async (safeStore: string, cred: Credential, targetId: string) => {
     const op = new SafeOperation('$GetPublicKeys')
     let pubC
     const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
     const hp0 =  u8ToB64(sh0, true)
     try {
-      const ret = await op.post({id: hp0})
+      const ret = await op.post({id: hp0}, safeStore)
       pubC = ret.crypt
       if (!pubC) return -1
     } catch(e) {
@@ -1333,7 +1348,7 @@ export const useSafeStore = defineStore('safe', () => {
         crpub
       }
       const op = new SafeOperation('$TransmitCred')
-      const ret = await op.post({transmitCred})
+      const ret = await op.post({transmitCred}, safeStore)
       return ret.status
     } catch(e) {
       op.ko(e);
@@ -1359,7 +1374,8 @@ export const useSafeStore = defineStore('safe', () => {
   })
 
   return {
-    step, setStep, backToAuth, userId, userName, keyK,
+    step, setStep, backToAuth,
+    mySafeStore, userId, userName, keyK,
     selectedProfile, selectedSession,
     openMode, incognito,
     devId, devName,
@@ -1374,7 +1390,7 @@ export const useSafeStore = defineStore('safe', () => {
     mySafePrefs,
     auth,
     devices,
-    purgeIDBS, getAllSessions,
+    getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
     synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs

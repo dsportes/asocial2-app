@@ -324,11 +324,9 @@ const close = async () => {
   if (sDel.value && sDel.value.size)
     for(const id of sDel.value) {
       const s = allSessions.get(id)
-      l.push(s)
+      if (s) l.push(s)
     }
-  if (l.length) await sf.purgeIDBS(l)
-  if (sDel.value && sDel.value.size)
-    for(const id of sDel.value) await sf.delTSession(null, id)
+  if (l.length) await sf.delTSession(l)
   if (tDel.value && tDel.value.size)
     for(const id of tDel.value) await sf.delTrusting(id)
   if (tDel2.value && tDel2.value.size)
@@ -346,8 +344,10 @@ const safe = ref(null)
 const statusSafe = ref(null)
 const cfImp = ref(false)
 const keyK = ref(null)
+const impSafeStore = ref('')
 
 const reset = () => {
+  impSafeStore.value = ''
   fileList.value = null
   fd.value = { name: '', size: 0 }
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
@@ -402,7 +402,7 @@ const getStatus = async (id, hp0, hr0) => {
   cfImp.value = false
   const op = new SafeOperation('$StatusSafe')
   try {
-    const ret = await op.post({ id, hp0, hr0 })
+    const ret = await op.post({ id, hp0, hr0 }, sf.myStore)
     statusSafe.value = ret.statusSafe
     // statusSafe.value = { lm: -1, xp: false, xr: false }
   } catch (e) {
@@ -416,7 +416,7 @@ const importBackup = async () => {
   const op = new SafeOperation('$RestoreSafe')
   let ret
   try {
-    ret = await op.post({ safe: safe.value })
+    ret = await op.post({ safe: safe.value }, sf.mySafeStore)
     await ui.diagDisplay($t('HPcsret_2' + ret.status))
     reset()
   } catch (e) {

@@ -1,23 +1,27 @@
 export const K = {
+  BUILD: 'v2.1',
   APPNAME: 'asocial2',
-  ADMIN: 'oKqMNBgdGotqrhdE9dChrJ8WY_b821OnauupPZiY5cg',
+
   SERVICES: {
     as2svc: { url: 'http://localhost:8080/', api: 1 },
   },
   DEFAULT_SERVICE: 'as2svc',
-  SAFE_URL1: 'http://localhost:8888/safe.php?',
+
   SAFE_URL: 'http://localhost:8080/safe/',
+  SAFE_URLS: { // Safes spécifiques "bien connus"
+    php: 'http://localhost:8888/safe.php?'
+  },
+
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
 
-  BUILD: 'v2.1',
+  docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
+
   localeOptions: [
     { value: 'en', label: 'English 🇬🇧',  flag: '🇬🇧', name: 'English' },
     { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', name: 'Français' }
   ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
-
-  docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 
   sizes: {
     p0: [8, 20],

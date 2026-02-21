@@ -36,7 +36,7 @@ export class Operation {
     const session = stores.session
     const svc = service || config.K.DEFAULT_SERVICE
     const urlapi = config.K.SERVICES[svc]
-    if (!urlapi) 
+    if (!urlapi)
       throw new AppExc({ code:11002, label: 'Unknown service', args:[this.opName, svc]})
     const u = urlapi.url + 'op/' + (args.org || 'ADMIN') + '/' + this.opName
     try {
@@ -94,18 +94,29 @@ export class SafeOperation extends Operation {
     super(opName)
   }
 
-  /* Declare que désormais le repository des safes 
+  /* Declare que désormais le repository des safes
   est un site Web disposant d'un script PHP 'safe.php'
   si url est vide, retour au repository par défaut (standard)
   */
-  static setSafeUrl (url: string) {
+  /*static setSafeUrl (url: string) {
     SafeOperation.urlx = url + '/safe.php?'
   }
+  */
 
-  async post (args: any) : Promise<any>{
+  async post (args: any, safe: string) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    const u = SafeOperation.urlx ? SafeOperation.urlx : config.K.SAFE_URL
+    let u = config.K.SAFE_URL
+    if (safe) {
+      let x = config.K.SAFE_URLS[safe]
+      if (x) u = x
+      else {
+        x = safe
+        if (!x.startsWith('http')) x = 'HTTPS://' + x
+        if (!x.endsWith('.php?')) x += '/safe.php?'
+        u = x
+      }
+    }
     try {
       session.opStart(this)
       this.controller = new AbortController()

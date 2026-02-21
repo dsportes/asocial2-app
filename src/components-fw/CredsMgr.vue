@@ -70,9 +70,15 @@
             v-model="locaboutCr" :validatefn="valAbCr"/>
 
           <!-- TEST de transmission d'un credential -->
-          <input-a size="p0" prefix="HPtransmit"
-            v-model="targetName" :validatefn="transmitTest"/>
-
+          <q-expansion-item switch-toggle-side expand-separator dense
+            header-class="full-width tbs" :label="$t('HPtransmit_test')">
+            <div class="bord1 q-pa-xs">
+              <input-a prefix="HPstore" class="full-width q-my-sm"
+                v-model="transSafeStore"/>
+              <input-a size="p0" prefix="HPtransmit"
+                v-model="targetName" :validatefn="transmitTest"/>
+            </div>
+        </q-expansion-item>
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <scroll-area size="sm"><template #default>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">
@@ -816,10 +822,12 @@ const confValidate = async () => {
 }
 
 const targetName = ref('')
+const transSafeStore = ref('')
 const transmitTest = async () => {
   const c = localCred.value.cred
-  const status = await sf.transmitCred(c, targetName.value)
+  const status = await sf.transmitCred(transSafeStore.value, c, targetName.value)
   console.log(status)
+  transSafeStore.value = ''
 }
 </script>
 

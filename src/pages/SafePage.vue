@@ -18,7 +18,7 @@
         <btn-bubble class="col-auto self-start" size="sm"
           :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
       </div>
-      <input-a prefix="HPstore" class="full-width q-my-sm" v-model="safeStore"/>
+      <input-a prefix="HPstore" class="full-width q-my-sm" v-model="sf.mySafeStore"/>
     </div>
 
     <div v-if="session.hasNet && sf.devName" class="row items-center q-mt-sm">
@@ -233,13 +233,11 @@
     </template>
     <template #default>
       <div v-if="exptab === 'info'" class="column q-mx-lg items-center">
+        <div class='font-mono fs-lg text-center text-bold full-width q-my-md'>
+          {{sf.userId}}</div>
         <div class="titre-md text-italic q-my-sm">{{$t('HPexppub')}}</div>
         <q-input class="q-pa-xs bord1 full-width" v-model="infopub" type="textarea" readonly
           :rows="10"/>
-        <div class="titre-md text-italic q-my-sm">{{$t('HPexporgid')}}</div>
-        <input-a prefix="orgcode" v-model="exporg"
-          :validatefn="setExporg"/>
-        <div class='font-mono fs-lg text-center text-bold full-width q-my-xs'>{{orguser}}</div>
       </div>
       <div v-if="exptab === 'export'" class="column q-mx-lg items-center">
         <div class="q-my-sm full-width">
@@ -445,7 +443,6 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const safeStore = ref('')
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
 const selectedUser = ref(null)
@@ -503,15 +500,8 @@ const cryptK = reactive( { inp: '', err: '', key: null } )
 const bin = ref(null)
 const exptab = ref('info')
 const infopub = ref('')
-const exporg = ref('')
-const orguser = ref('')
-
-const setExporg = () => {
-  orguser.value = Crypt.shaS(encoder.encode(exporg.value + '/' + sf.userId))
-}
 
 const setInfopub = () => {
-  exporg.value = ''
   const t = ['Crypt KEY']
   t.push(sf.auth.C)
   t.push('\nVerif KEY')
@@ -525,14 +515,12 @@ watch(exptab, (v) => {
 
 const exportSafe = async () => {
   setInfopub()
-  expName.value = ''
   cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
   bin.value = encode(await sf.getBinSafe())
   if (!bin.value) {
     await ui.diagDisplay($t('HPexportsafe_ko'))
     return
   }
-
   ui.oD(idc, 'exportsafe')
 }
 
@@ -777,7 +765,7 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
         elle EST effacée en tant que session
         elle peut avoir un profil (ou '*') et une préférence (ou par défaut)
         */
-        await sf.delTSession(sv)
+        await sf.delTSession([sv])
         session.setDbName('')
       } else {
         // save tsession avec time, raz db si requis

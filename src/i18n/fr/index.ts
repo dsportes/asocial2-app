@@ -603,6 +603,7 @@ bla bla
   HPps_5: 'Sessions sans droits d\'accès : {0}',
   HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
   HPnothing: 'Aucun changement à valider',
+  HPtransmit_test: 'TEST de transmission d\'un droit d\'accès',
   HPtransmit_label: 'Cible de la transmission (TEST)',
   HPexpinfo: 'Information',
   HPexpexport: 'Export',
