@@ -1,6 +1,6 @@
 import { Crypt, fromPem } from './crypt'
 import { u8ToB64, b64ToU8 } from './util'
-import stores from '../stores/all' 
+import stores from '../stores/all'
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
 
@@ -19,6 +19,22 @@ export type CredObj = {
   entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
   pems: string // clé PRIVEE de signature, le texte de 400c.
   hpems: string // hash court de `pems`.
+}
+
+export type CredRequest = {
+  userId: string
+  role: string
+  org: string
+  entid: string
+  hpems: string
+  pemv: string
+  ctime: number
+  dtime: number
+  infou: Uint8Array // info pour utilisateur cryté pour lui
+  infous: Uint8Array // info pour utilisateur cryté pour le setter
+  infos: Uint8Array // info pour le setter cryté pour le setter
+  setterId: string
+  cond: Object
 }
 
 export class Credential {

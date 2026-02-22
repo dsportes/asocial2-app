@@ -36,7 +36,8 @@ export const K = {
     stdb: [3, 16, 'b64'],
     file: [1, 32],
     ps: [8, 40],
-    entid: [0, 60]
+    entid: [0, 60],
+    isotime: [24, 24]
   },
 
   regexp: {

@@ -13,15 +13,15 @@
     :hint="hint"
     @keydown.enter.prevent="diffval">
     <template v-slot:append>
-      <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'" 
+      <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
-      <btn-cond round size="md" icon="close" @ok="m = ''" 
+      <btn-cond round size="md" icon="close" @ok="m = ''"
         :disable="_disable || !m || m.length === 0" color="none"/>
-      <btn-cond round v-if="hasInitVal" 
+      <btn-cond round v-if="hasInitVal"
         size="md" icon="undo" @ok="undo" :disable="_disable || !chg" color="none"/>
       <btn-cond v-if="validatefn" size="md" icon="check" round
         :disable="!mayVal" color="warning" @ok="val" />
-      <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star" 
+      <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
         color="warning"
         @ok="m = fill(m); diffval()"
       />
@@ -50,8 +50,8 @@ Le composant parent peut accéder à tout instant:
 - au code l'erreur courante dans la propriété "err" d'un objet passé sur la propriété "objerr":
 de cette façon le parent peut, s'il le souhaite, gérer à tout instant si le texte saisi est correct syntaxiquement ou non.
 
-Si la propriété optionnelle "disable" est fixée, <input-A> interdit la saisie. 
-Cette propriété est dynamique et réévaluée si sa valeur change, typiquement quand le 
+Si la propriété optionnelle "disable" est fixée, <input-A> interdit la saisie.
+Cette propriété est dynamique et réévaluée si sa valeur change, typiquement quand le
 composant affiche la valeur courante d'une liste qui est balayée.
 
 La propriété optionnelle "initval" donne la valeur initiale avant saisie:
@@ -118,7 +118,7 @@ const bubble = computed(() => {
 const star = (config.K.phrasestar || false) && (props.size === 'ps' || props.size === 'p1')
 const disval = ref(false)
 const mayStar = computed(() => m.value.length > 2 && m.value.endsWith('*'))
-const mayVal = computed(() => 
+const mayVal = computed(() =>
   !_disable.value && err.value === '' && chg.value && !disval.value)
 
 const ph = computed(() => {
@@ -149,16 +149,16 @@ const hasInitVal = computed(() => {
 
 const init = () => {
   _disable.value = typeof(props.disable) !== 'undefined' ? props.disable : false
-  _initval.value = typeof(props.initval) !== 'undefined' ? 
+  _initval.value = typeof(props.initval) !== 'undefined' ?
     (props.initval ? props.initval : null) : null
 }
 
 init()
-watch(() => props.initval, () => { 
-  init() 
+watch(() => props.initval, () => {
+  init()
 })
-watch(() => props.disable, () => { 
-  init() 
+watch(() => props.disable, () => {
+  init()
 })
 
 const chg = computed(() => _initval.value !== null ? _initval.value !== m.value : true)
@@ -168,6 +168,7 @@ const xe = () => {
   if (reg && !reg.test(m.value)) return 'badform'
   if (m.value.length < sz.value[0]) return 'tooshort'
   if (m.value.length > sz.value[1]) return 'toolong'
+  if (props.size === 'isotime' && isNaN(Date.parse(m.value))) return 'badform'
   return ''
 }
 
@@ -185,7 +186,7 @@ const undo = () => {
 }
 
 const val = () => {
-  if (props.validatefn && !_disable.value && err.value === '') 
+  if (props.validatefn && !_disable.value && err.value === '')
     props.validatefn()
 }
 

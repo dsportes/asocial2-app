@@ -3,7 +3,7 @@ import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
-import { AuthRecord } from './credential'
+import { AuthRecord, CredRequest } from './credential'
 
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
@@ -155,14 +155,16 @@ export class Sync extends Operation {
 export class GrantNewManager extends Operation {
   constructor () { super('GrantNewManager') }
 
-  async run (org: string, comment: string, pemv: string) {
+  async run (svc: string, credRequest: CredRequest) {
     try {
-      const authRecord = new AuthRecord('as2svc', '*')
+      const authRecord = new AuthRecord(svc, '*')
       await authRecord.sign('admin', '')
-      const args = { authRecord, org, comment, pemv}
-      const res = await this.post(args)
+      const args = { authRecord, credRequest}
+      await this.post(args)
+      return true
     } catch(e) {
       this.ko(e)
+      return false
     }
   }
 }
@@ -170,11 +172,11 @@ export class GrantNewManager extends Operation {
 export class RevokeManager extends Operation {
   constructor () { super('RevokeManager') }
 
-  async run (org: string, revoke: string, hpems: string) {
+  async run (svc: string, revoke: string, hpems: string) {
     try {
-      const authRecord = new AuthRecord('as2svc', '*')
+      const authRecord = new AuthRecord(svc, '*')
       await authRecord.sign('admin', '')
-      const args = { authRecord, org, revoke, hpems}
+      const args = { authRecord, revoke, hpems}
       const res = await this.post(args)
     } catch(e) {
       this.ko(e)

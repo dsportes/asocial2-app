@@ -192,6 +192,12 @@ export default {
   APcr_1: 'Organisation [{0}] créée.',
   APcr_0: 'Organisation [{0}] mise à jour.',
   APko: 'Echec de la création / mise à jour de l\'organisation [{0}].',
+  APnewManager: 'Attribution du rôle "manager" à un utilisateur',
+  APnouser: 'Utilisateur inconnu pour ce pseudo',
+  APdiagorg: 'Le code de l\'organisation est incorrect ou manquant',
+  APdiagtarget: 'Le pseudo de l\'utilisateur cible est incorrect ou manquant',
+  APkomanager: 'Echec de l\'enregistrement d\'un nouveau "manager".',
+  APokmanager: 'Succès de l\'enregistrement d\'un nouveau "manager".',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
@@ -623,6 +629,39 @@ bla bla
   DHCja: '{0}',
   DHCnondate: '(non daté)',
   DHCdansjours: 'aujourd\'hui | demain | dans {count} jours',
+
+  // FormCred
+  FCentid_label: 'ID de l\'entité cible',
+  FCentid_bub: `# ID de l\'entité cible
+bla bla
+`,
+  FChpems_label: 'Hash court du PEM de signature',
+  FChpems_bub: `# Hash court du PEM de signature
+bla bla
+`,
+  FCpemv_label: 'PEM de vérification',
+  FCpemv_bub: `# PEM de vérification
+bla bla
+`,
+  FCdtime_label: 'Date-Heure UTC de fin de validité',
+  FCdtime_bub: `# Date-Heure UTC de fin de validité
+bla bla
+`,
+  FCinfou_label: 'Texte informatif pour l\'utilisateur cible',
+  FCinfou_bub: `# Texte informatif pour l\'utilisateur cible
+bla bla
+`,
+  FCinfos_label: 'Texte informatif pour le déclarant',
+  FCinfos_bub: `# Texte informatif pour le déclarant
+bla bla
+`,
+  FCtarget_label: 'Pseudo de l\'utilisateur cible',
+  FCtarget_bub: `# Pseudo de l\'utilisateur cible
+bla bla
+`,
+  FCmissing: 'Le champ [{0}] ne doit pas être vide',
+  FCroleko: 'Le champ "rôle" n\'a pas une valeur reconnue',
+  FCdtimeko: 'Le champ "dtime" est mal formé, date-heure non reconnue',
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',

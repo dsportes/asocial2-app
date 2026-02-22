@@ -195,6 +195,8 @@ export const useSafeStore = defineStore('safe', () => {
   const hasIDBS = computed(() => db.value !== null)
   const incognito = ref(false)
 
+  const pubKeys : Ref<Map<string, [String, string]>> = ref(new Map())
+
   // Safe IDB : image en mémoire
   const devId = ref('') // Depuis IDB Header
   const devName = ref('') // Depuis IDB Header
@@ -786,6 +788,7 @@ export const useSafeStore = defineStore('safe', () => {
         pemC: safe.C,
         pemV: safe.V
       }, '')
+      pubKeys.value.set(userId.value, [safe.C, safe.V])
     } catch (e) {
       op.ko(e)
       return -1
@@ -1324,18 +1327,11 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const transmitCred = async (safeStore: string, cred: Credential, targetId: string) => {
-    const op = new SafeOperation('$GetPublicKeys')
-    let pubC
-    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
-    const hp0 =  u8ToB64(sh0, true)
-    try {
-      const ret = await op.post({id: hp0}, safeStore)
-      pubC = ret.crypt
-      if (!pubC) return -1
-    } catch(e) {
-      op.ko(e);
-      return -1
-    }
+
+    const p = await getPublicKeys(safeStore, targetId)
+    if (!p) return -1
+    const [id, pubC, pubV] = p
+    const op = new SafeOperation('$TransmitCred')
     try {
       const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
       const objt = await cred.toTObj(keyK.value, aes)
@@ -1343,11 +1339,11 @@ export const useSafeStore = defineStore('safe', () => {
 
       const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
-        targetId: hp0,
+        targetId: id,
         credXid: cred.xid,
         crpub
       }
-      const op = new SafeOperation('$TransmitCred')
+
       const ret = await op.post({transmitCred}, safeStore)
       return ret.status
     } catch(e) {
@@ -1373,6 +1369,31 @@ export const useSafeStore = defineStore('safe', () => {
     }
   })
 
+  /* targetId est soit id, soit hp0, soit hr0
+  retourne [userId, pemC, pemV]
+  */
+  const getPublicKeys = async (safeStore: string, targetId)
+    : Promise<[string, string, string]> => {
+    const p = pubKeys.value.get(targetId)
+    if (p) return [targetId, p[0], p[1]]
+    const op = new SafeOperation('$GetPublicKeys')
+    let pubC, pubV, id
+    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
+    const hp0 =  u8ToB64(sh0, true)
+    try {
+      const ret = await op.post({id: hp0}, safeStore)
+      id = ret.userId
+      pubC = ret.crypt
+      pubV = ret.verify
+      if (!pubC || !pubV) return null
+      pubKeys.value.set(id, [pubC, pubV])
+      return [id, pubC, pubV]
+    } catch(e) {
+      op.ko(e);
+      return null
+    }
+  }
+
   return {
     step, setStep, backToAuth,
     mySafeStore, userId, userName, keyK,
@@ -1392,7 +1413,7 @@ export const useSafeStore = defineStore('safe', () => {
     devices,
     getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
-    setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred,
+    setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred, getPublicKeys,
     synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs
   }
 })
