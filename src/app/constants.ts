@@ -3,13 +3,13 @@ export const K = {
   APPNAME: 'asocial2',
 
   SERVICES: {
-    as2svc: { url: 'http://localhost:8080/', api: 1 },
+    AS2: { api: 1 },
   },
-  DEFAULT_SERVICE: 'as2svc',
+  DEFAULT_SERVICE: 'AS2',
 
   SAFE_URL: 'http://localhost:8080/safe/',
   SAFE_URLS: { // Safes spécifiques "bien connus"
-    php: 'http://localhost:8888/safe.php?'
+    dsphp: 'http://localhost:8888/safe.php?'
   },
 
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'

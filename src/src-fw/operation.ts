@@ -12,6 +12,50 @@ export type AuthRecord = {
   tokens: []
 }
 
+const svcOpUrl: Map<string, string> = new Map()
+const svcOrgUrl: Map<string, string> = new Map()
+
+export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string ): Promise<string> {
+  if (!stores.config.K.SERVICES[SVC])
+    throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
+  const sf = stores.safe
+  let u = svcOpUrl.get(SVC + '/' + $OP)
+  if (!u) {
+    const safeop = new SafeOperation('$$GetSvcOpUrl')
+    try {
+      const res = await safeop.post({ SVC, $OP }, sf.mySafeStore)
+      if (!res.url)
+        throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
+      svcOpUrl.set(SVC + '/' + $OP, res.url)
+      return res.url
+    } catch (e) {
+      this.ko(e)
+      return ''
+    }
+  }
+}
+
+
+export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string ): Promise<string> {
+  if (!stores.config.K.SERVICES[SVC])
+    throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
+  const sf = stores.safe
+  let u = svcOrgUrl.get(SVC + '/' + org)
+  if (!u) {
+    const safeop = new SafeOperation('$$GetSvcOrgUrl')
+    try {
+      const res = await safeop.post({ SVC, org }, sf.mySafeStore)
+      if (!res.url)
+        throw new AppExc({code: 1008, label: 'svcorgurl not found', opName, args: [org, SVC] })
+      svcOrgUrl.set(SVC + '/' + org, res.url)
+      return res.url
+    } catch (e) {
+      this.ko(e)
+      return ''
+    }
+  }
+}
+
 /* Opération générique ******************************************/
 export class Operation {
   opName: string
@@ -35,13 +79,21 @@ export class Operation {
     const config = stores.config
     const session = stores.session
     const svc = service || config.K.DEFAULT_SERVICE
-    const urlapi = config.K.SERVICES[svc]
-    if (!urlapi)
-      throw new AppExc({ code:11002, label: 'Unknown service', args:[this.opName, svc]})
-    const u = urlapi.url + 'op/' + (args.org || 'ADMIN') + '/' + this.opName
+    let u: string = '?'
     try {
       session.opStart(this)
-      args.APIVERSION = urlapi.api
+      let url: string
+      let opOrg: string
+      if (args.org === '*') {
+        url = await $GetSvcOpUrl(this.opName, svc, args.$OP)
+        opOrg = args.$OP
+      } else {
+        url = await $GetSvcOrgUrl(this.opName, svc, args.org)
+        opOrg = args.org
+      }
+      u = url + 'op/' + opOrg + '/' + this.opName
+      args.APIVERSION = config.K.SERVICES[svc].api
+
       this.controller = new AbortController()
       this.aborted = false
 

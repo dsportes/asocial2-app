@@ -5,6 +5,9 @@ import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
 import { AuthRecord, CredRequest } from './credential'
 
+/* Echo du texte : test s'il existe un opérateur gérant l'organisation citée
+par le service par défaut de l'application
+*/
 export class EchoText extends Operation {
   constructor () { super('EchoText') }
 
