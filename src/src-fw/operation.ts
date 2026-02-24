@@ -21,21 +21,19 @@ export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string )
     throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
   const sf = stores.safe
   let u = svcOpUrl.get(SVC + '/' + $OP)
-  if (!u) {
-    const safeop = new SafeOperation('$$GetSvcOpUrl', sf.mySafeStore)
-    try {
-      const res = await safeop.post({ SVC, $OP })
-      if (!res.url)
-        throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
-      svcOpUrl.set(SVC + '/' + $OP, res.url)
-      return res.url
-    } catch (e) {
-      this.ko(e)
-      return ''
-    }
+  if (u) return u
+  const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
+  try {
+    const res = await safeop.post({ SVC, $OP })
+    if (!res.url)
+      throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
+    svcOpUrl.set(SVC + '/' + $OP, res.url)
+    return res.url
+  } catch (e) {
+    this.ko(e)
+    return ''
   }
 }
-
 
 export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string )
 : Promise<[string, string]> {
@@ -44,7 +42,7 @@ export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string )
   const sf = stores.safe
   let uo = svcOrgUrl.get(SVC + '/' + org)
   if (uo) return uo
-  const safeop = new SafeOperation('$$GetSvcOrgUrl', sf.mySafeStore)
+  const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
   try {
     const res = await safeop.post({ SVC, org })
     if (!res.url)
@@ -97,18 +95,19 @@ export class Operation {
       }
       this.url = u + 'op/' + (this.$OP || this.org) + '/' + this.opName
       args.APIVERSION = config.K.SERVICES[this.SVC].api
+      const body = new Uint8Array(encode(args))
 
       this.controller = new AbortController()
       this.aborted = false
 
-      const response = await fetch(u, {
+      const response = await fetch(this.url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',  // sent request
           'Accept':       'application/octet-stream'   // expected data sent back
         },
         signal: this.controller.signal,
-        body: new Uint8Array(encode(args || {}))
+        body,
       })
       this.controller = null
       const buf = await response.bytes()

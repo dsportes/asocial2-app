@@ -35,7 +35,7 @@ import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
 import InputA from './InputA.vue'
-import { GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
+// import { GetSrvStatus, SetSrvStatus } from '../src-fw/operations'
 
 const ui = stores.ui
 const config = stores.config

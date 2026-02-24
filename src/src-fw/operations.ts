@@ -5,35 +5,17 @@ import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
 import { AuthRecord, CredRequest } from './credential'
 
-/* Echo du texte : test s'il existe un opérateur gérant l'organisation citée
-par le service par défaut de l'application
-*/
-export class EchoText extends Operation {
-  constructor () { super('EchoText') }
+export class  GetSvcOpStatus extends Operation {
+  constructor (SVC: string) { super('GetSvcOpStatus', SVC) }
 
-  async run (org: string, toecho: string) {
+  async run ($OP: string) {
     try {
-      await sleep(1000)
-      const res = await this.post({ org, text: toecho })
-      return res['echo']
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
-
-export class  GetSrvStatus extends Operation {
-  constructor () { super('GetSrvStatus') }
-
-  async run (svc: string) {
-    /* TODO
-    try {
-      const res = await this.post({ }, svc)
+      const res = await this.post({ $OP })
       return res['srvStatus']
     } catch(e) {
       this.ko(e)
+      throw e
     }
-    */
   }
 }
 

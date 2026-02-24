@@ -314,24 +314,22 @@
     </template>
     <template #default>
       <div v-if="tab === 'pings'" class="q-pa-xs">
-        <q-separator color="orange" class="q-my-md"/>
-
-        <input-a size="org" prefix="orgcode" v-model="org"/>
-
-        <q-separator color="orange" class="q-my-md"/>
-
+        <div class="row q-my-sm">
+          <q-select class="col-5" dense filled v-model="service"
+            :options="services" emit-value :label="$t('service')"/>
+          <div class="col-1"/>
+          <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"/>
+        </div>
         <div class="column q-px-sm">
-          <btn-cond icon-right="send" :label="$t('ping')" :disable="org === ''"
-            @click="opGetSrvStatus"/>
-          <div class="q-mt-sm q-mx-sm font-mono height-4">{{resping}}</div>
+          <btn-cond icon-right="send" :label="$t('service_status')" :disable="$OP === ''"
+            @click="svcOpStatus"/>
+          <div v-if="resping !== null">
+            <div>{{$t('svcStatus_now', [dhcool(resping.now)])}}</div>
+            <div>{{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
+            <div>{{resping.txt || $t('svcnocomment')}}</div>
+          </div>
         </div>
 
-        <q-separator color="orange" class="q-my-md"/>
-
-        <div class="column q-px-sm q-gutter-md q-mb-md">
-          <input-a size="org" prefix="toecho" v-model="toecho" :validatefn="opEcho"/>
-          <div class="font-mono">{{$t('echo', [echo])}}</div>
-        </div>
       </div>
       <div v-if="tab === 'crypto'" class="q-pa-xs">
         <input-ps class="q-mt-md q-mb-sm" v-model="ps" size="p1"
@@ -359,11 +357,11 @@
         </div>
         <input-a class="q-my-xs" prefix="aboutcred"
           v-model="cred.about"/>
-        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.svc" 
+        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.svc"
           :options="Array.from(config.services.keys())" :label="$t('service')"/>
         <input-a class="q-my-xs" size="org" prefix="orgcode"
           v-model="cred.org"/>
-        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role" 
+        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role"
           :options="optsRoles" emit-value :label="$t('ROLE')"/>
         <input-a class="q-my-xs" size="entid" prefix="SBentid"
           v-model="cred.entid"/>
@@ -422,7 +420,7 @@ import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import { $t, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
-import { EchoText } from '../src-fw/operations'
+import { GetSvcOpStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { Credential, CredObj } from '../src-fw/credential'
@@ -435,17 +433,32 @@ const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const services = ref()
-{
-  const m = new Map<string, Object>()
-  for (const svc in config.K.SERVICES) m.set(svc, config.K.SERVICES[svc])
-  services.value = m
+const services = Array.from(Object.keys(config.K.SERVICES))
+
+const service = ref()
+const org = ref('')
+const $OP = ref()
+const resping = ref(null)
+const respingC = ref('')
+
+const resetPing = () => {
+  org.value = ''
+  $OP.value = ''
+  service.value = services[0]
+  resping.value = null
 }
-const defsvc = ref(config.K.DEFAULT_SERVICE)
+
+const svcOpStatus = async () => {
+  resping.value = null
+  try {
+    resping.value = await new GetSvcOpStatus(service.value).run($OP.value)
+  } catch (e) { }
+}
 
 const tab = ref('cred')
 watch(tab, (t) => {
   if (t === 'cred') resetCred()
+  else if (t === 'pings') resetPing()
 })
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
@@ -454,10 +467,6 @@ const choix = (lg: localeOption) : void => {
   i18n.locale.value = lg.value
   config.setLocale(lg.value)
 }
-
-const org = ref('')
-const toecho = ref('')
-const echo = ref('')
 
 function darkClear () {
   ui.setDark(!ui.isDark)
@@ -476,7 +485,7 @@ async function opEcho () : Promise<void>  {
   }
 }
 
-const resping = ref('')
+
 
 
 const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }

@@ -4,6 +4,7 @@ export const K = {
 
   SERVICES: {
     AS2: { api: 1 },
+    ASSO2: { api: 1 }
   },
   DEFAULT_SERVICE: 'AS2',
 
@@ -33,6 +34,7 @@ export const K = {
     about: [4, 64],
     pref: [4, 32],
     org: [3, 16, 'an1'],
+    oper: [3, 8, 'oper'],
     stdb: [3, 16, 'b64'],
     file: [1, 32],
     ps: [8, 40],
@@ -43,7 +45,8 @@ export const K = {
   regexp: {
     b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
     num: new RegExp('^[0-9]*$'),
-    an1: new RegExp('^[0-9a-z]*$')
+    an1: new RegExp('^[0-9a-z]*$'),
+    oper: new RegExp('^[$][0-9A-Z]*$')
   },
 
   phrasestar: true,
