@@ -726,10 +726,10 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: u8ToB64(await Crypt.crypt(rsh, keyK.value), true)
     }
 
-    const op = new SafeOperation('$UpdCodesSafe')
+    const op = new SafeOperation('$UpdCodesSafe', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({ safeCodes }, mySafeStore.value)
+      ret = await op.post({ safeCodes })
     } catch (e) {
       op.ko(e)
       return -1
@@ -779,7 +779,7 @@ export const useSafeStore = defineStore('safe', () => {
       prefs: null
     }
 
-    let op = new SafeOperation('$SetPubKeys')
+    let op = new SafeOperation('$SetPubKeys', '')
     let ret
     try {
       // Enregistrement des clés publiques dans le dépôt générique
@@ -787,16 +787,16 @@ export const useSafeStore = defineStore('safe', () => {
         userId: userId.value,
         pemC: safe.C,
         pemV: safe.V
-      }, '')
+      })
       pubKeys.value.set(userId.value, [safe.C, safe.V])
     } catch (e) {
       op.ko(e)
       return -1
     }
 
-    op = new SafeOperation('$CreateSafe')
+    op = new SafeOperation('$CreateSafe', mySafeStore.value)
     try {
-      ret = await op.post({ safe }, mySafeStore.value)
+      ret = await op.post({ safe })
     } catch (e) {
       op.ko(e)
       return -1
@@ -810,9 +810,9 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delSafe = async () => {
-    const op = new SafeOperation('$DelSafe')
+    const op = new SafeOperation('$DelSafe', mySafeStore.value)
     try {
-      const ret = await op.post({ userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value }, mySafeStore.value)
+      const ret = await op.post({ userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value })
       return ret.status
     } catch (e) {
       op.ko(e)
@@ -823,10 +823,10 @@ export const useSafeStore = defineStore('safe', () => {
     const _sh0 = u8ToB64(sh0, true)
     const _sh1 = u8ToB64(sh1, true)
     // const hh1 = Crypt.shaS(sh1)
-    const op = new SafeOperation('$OpenSafeByPR')
+    const op = new SafeOperation('$OpenSafeByPR', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({sh0: _sh0, sh1: _sh1}, mySafeStore.value)
+      ret = await op.post({sh0: _sh0, sh1: _sh1})
     } catch (e) {
       op.ko(e)
       return -1
@@ -849,9 +849,9 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
 
     let ret
-    const op1 = new SafeOperation('$OpenSafeByPin')
+    const op1 = new SafeOperation('$OpenSafeByPin', mySafeStore.value)
     try {
-      ret = await op1.post({userId: userId.value, devId: devId.value, pincx}, mySafeStore.value)
+      ret = await op1.post({userId: userId.value, devId: devId.value, pincx})
     } catch (e) {
       op1.ko(e)
       return -1
@@ -867,9 +867,9 @@ export const useSafeStore = defineStore('safe', () => {
     const shk = await Crypt.strongHash(keyK.value, false, false)
 
     let ret2
-    const op2 = new SafeOperation('$OpenSafeById')
+    const op2 = new SafeOperation('$OpenSafeById', mySafeStore.value)
     try {
-      ret2 = await op2.post({userId: userId.value, shk}, mySafeStore.value)
+      ret2 = await op2.post({userId: userId.value, shk})
     } catch (e) {
       op2.ko(e)
       return -1
@@ -965,10 +965,10 @@ export const useSafeStore = defineStore('safe', () => {
       devName: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(devName.value)), true),
       Va, cy, sign
     }
-    const op = new SafeOperation('$TrustDevice')
+    const op = new SafeOperation('$TrustDevice', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({trustDev}, mySafeStore.value)
+      ret = await op.post({trustDev})
     } catch(e) {
       op.ko(e)
       return -1
@@ -987,10 +987,10 @@ export const useSafeStore = defineStore('safe', () => {
       sh1p: sh1p.value,
       sh1r: sh1r.value
     }
-    const op = new SafeOperation('$UntrustDevices')
+    const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({untrustDev}, mySafeStore.value)
+      ret = await op.post({untrustDev})
     } catch(e) {
       op.ko(e)
       return -1
@@ -1009,10 +1009,10 @@ export const useSafeStore = defineStore('safe', () => {
       sh1p: sh1p.value,
       sh1r: sh1r.value
     }
-    const op = new SafeOperation('$UntrustDevices')
+    const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({untrustDev}, mySafeStore.value)
+      ret = await op.post({untrustDev})
     } catch(e) {
       op.ko(e)
       return -1
@@ -1027,10 +1027,10 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
-    const op = new SafeOperation('$OpenSafeById')
+    const op = new SafeOperation('$OpenSafeById', mySafeStore.value)
     let ret
     try {
-      ret = await op.post(args, mySafeStore.value)
+      ret = await op.post(args)
     } catch(e) {
       op.ko(e)
       return -1
@@ -1045,10 +1045,10 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
-    const op = new SafeOperation('$GetBinSafe')
+    const op = new SafeOperation('$GetBinSafe', mySafeStore.value)
     let ret
     try {
-      ret = await op.post(args, mySafeStore.value)
+      ret = await op.post(args)
     } catch(e) {
       op.ko(e)
       return null
@@ -1066,10 +1066,10 @@ export const useSafeStore = defineStore('safe', () => {
       profId,
       about: u8ToB64(await ecX(about), true)
     }
-    const op = new SafeOperation('$SetAboutProfile')
+    const op = new SafeOperation('$SetAboutProfile', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({aboutProfile}, mySafeStore.value)
+      ret = await op.post({aboutProfile})
     } catch(e) {
       op.ko(e)
       return 9
@@ -1258,10 +1258,10 @@ export const useSafeStore = defineStore('safe', () => {
       delprofs: delprofs || [],
       nosafe: nocompile || false
      }
-    const op = new SafeOperation('$UpdateCreds')
+    const op = new SafeOperation('$UpdateCreds', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({updateCreds}, mySafeStore.value)
+      ret = await op.post({updateCreds})
     } catch(e) {
       op.ko(e);
       return -1
@@ -1301,10 +1301,10 @@ export const useSafeStore = defineStore('safe', () => {
       prefs,
       delprefs : delprefs || []
      }
-    const op = new SafeOperation('$UpdatePrefs')
+    const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
     let ret
     try {
-      ret = await op.post({updatePrefs}, mySafeStore.value)
+      ret = await op.post({updatePrefs})
     } catch(e) {
       op.ko(e);
       return -1
@@ -1331,7 +1331,7 @@ export const useSafeStore = defineStore('safe', () => {
     const p = await getPublicKeys(safeStore, targetId)
     if (!p) return -1
     const [id, pubC, pubV] = p
-    const op = new SafeOperation('$TransmitCred')
+    const op = new SafeOperation('$TransmitCred', safeStore)
     try {
       const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
       const objt = await cred.toTObj(keyK.value, aes)
@@ -1344,7 +1344,7 @@ export const useSafeStore = defineStore('safe', () => {
         crpub
       }
 
-      const ret = await op.post({transmitCred}, safeStore)
+      const ret = await op.post({transmitCred})
       return ret.status
     } catch(e) {
       op.ko(e);
@@ -1376,12 +1376,12 @@ export const useSafeStore = defineStore('safe', () => {
     : Promise<[string, string, string]> => {
     const p = pubKeys.value.get(targetId)
     if (p) return [targetId, p[0], p[1]]
-    const op = new SafeOperation('$GetPublicKeys')
+    const op = new SafeOperation('$GetPublicKeys', safeStore)
     let pubC, pubV, id
     const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
     const hp0 =  u8ToB64(sh0, true)
     try {
-      const ret = await op.post({id: hp0}, safeStore)
+      const ret = await op.post({id: hp0})
       id = ret.userId
       pubC = ret.crypt
       pubV = ret.verify

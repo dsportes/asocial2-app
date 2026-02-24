@@ -13,17 +13,18 @@ export type AuthRecord = {
 }
 
 const svcOpUrl: Map<string, string> = new Map()
-const svcOrgUrl: Map<string, string> = new Map()
+const svcOrgUrl: Map<string, [string, string]> = new Map()
 
-export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string ): Promise<string> {
+export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string )
+: Promise<string> {
   if (!stores.config.K.SERVICES[SVC])
     throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
   const sf = stores.safe
   let u = svcOpUrl.get(SVC + '/' + $OP)
   if (!u) {
-    const safeop = new SafeOperation('$$GetSvcOpUrl')
+    const safeop = new SafeOperation('$$GetSvcOpUrl', sf.mySafeStore)
     try {
-      const res = await safeop.post({ SVC, $OP }, sf.mySafeStore)
+      const res = await safeop.post({ SVC, $OP })
       if (!res.url)
         throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
       svcOpUrl.set(SVC + '/' + $OP, res.url)
@@ -36,23 +37,23 @@ export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string ): 
 }
 
 
-export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string ): Promise<string> {
+export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string )
+: Promise<[string, string]> {
   if (!stores.config.K.SERVICES[SVC])
     throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
   const sf = stores.safe
-  let u = svcOrgUrl.get(SVC + '/' + org)
-  if (!u) {
-    const safeop = new SafeOperation('$$GetSvcOrgUrl')
-    try {
-      const res = await safeop.post({ SVC, org }, sf.mySafeStore)
-      if (!res.url)
-        throw new AppExc({code: 1008, label: 'svcorgurl not found', opName, args: [org, SVC] })
-      svcOrgUrl.set(SVC + '/' + org, res.url)
-      return res.url
-    } catch (e) {
-      this.ko(e)
-      return ''
-    }
+  let uo = svcOrgUrl.get(SVC + '/' + org)
+  if (uo) return uo
+  const safeop = new SafeOperation('$$GetSvcOrgUrl', sf.mySafeStore)
+  try {
+    const res = await safeop.post({ SVC, org })
+    if (!res.url)
+      throw new AppExc({code: 1008, label: 'svcorgurl not found', opName, args: [org, SVC] })
+    svcOrgUrl.set(SVC + '/' + org, [res.url, res.$OP])
+    return [res.url, res.$OP]
+  } catch (e) {
+    this.ko(e)
+    throw(e)
   }
 }
 
@@ -62,10 +63,15 @@ export class Operation {
   controller: AbortController
   aborted: boolean
   background: boolean
+  $OP: string
+  org: string
+  SVC: string
+  url: string
 
-  constructor (opName: string, background?: boolean) {
+  constructor (opName: string, SVC?: string, background?: boolean) {
     this.opName = opName
     this.background = background || false
+    this.SVC = SVC || stores.config.K.DEFAULT_SERVICE
   }
 
   get label () { return $t('OP_' + this.opName) }
@@ -75,24 +81,22 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
-  async post (args: any, service?: string) : Promise<any> {
+  async post (args: any) : Promise<any> {
     const config = stores.config
     const session = stores.session
-    const svc = service || config.K.DEFAULT_SERVICE
-    let u: string = '?'
+    this.org = args.org
+    this.$OP = args.$OP
     try {
       session.opStart(this)
-      let url: string
-      let opOrg: string
-      if (args.org === '*') {
-        url = await $GetSvcOpUrl(this.opName, svc, args.$OP)
-        opOrg = args.$OP
-      } else {
-        url = await $GetSvcOrgUrl(this.opName, svc, args.org)
-        opOrg = args.org
+      let u: string
+      if (this.$OP) u = await $GetSvcOpUrl(this.opName, this.SVC, this.$OP)
+      else {
+        const x = await $GetSvcOrgUrl(this.opName, this.SVC, this.org)
+        u = x[0]
+        this.$OP = x[1]
       }
-      u = url + 'op/' + opOrg + '/' + this.opName
-      args.APIVERSION = config.K.SERVICES[svc].api
+      this.url = u + 'op/' + (this.$OP || this.org) + '/' + this.opName
+      args.APIVERSION = config.K.SERVICES[this.SVC].api
 
       this.controller = new AbortController()
       this.aborted = false
@@ -130,7 +134,7 @@ export class Operation {
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
       throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
-        args:[(u || '?'), e.toString()]})
+        args:[(this.url || '?'), e.toString()]})
     }
   }
 
@@ -142,8 +146,18 @@ export class Operation {
 export class SafeOperation extends Operation {
   static urlx: string
 
-  constructor (opName: string) {
+  constructor (opName: string, safeStore: string) {
+    const K = stores.config.K
     super(opName)
+    if (safeStore) {
+      let x = K.SAFE_URLS[safeStore]
+      if (!x) {
+        x = safeStore
+        if (!x.startsWith('http')) x = 'HTTPS://' + x
+        if (!x.endsWith('.php?')) x += '/safe.php?'
+      }
+      this.url = x + opName
+    } else this.url = K.SAFE_URL + opName
   }
 
   /* Declare que désormais le repository des safes
@@ -155,26 +169,15 @@ export class SafeOperation extends Operation {
   }
   */
 
-  async post (args: any, safe: string) : Promise<any>{
+  async post (args: any) : Promise<any>{
     const config = stores.config
     const session = stores.session
-    let u = config.K.SAFE_URL
-    if (safe) {
-      let x = config.K.SAFE_URLS[safe]
-      if (x) u = x
-      else {
-        x = safe
-        if (!x.startsWith('http')) x = 'HTTPS://' + x
-        if (!x.endsWith('.php?')) x += '/safe.php?'
-        u = x
-      }
-    }
     try {
       session.opStart(this)
       this.controller = new AbortController()
       this.aborted = false
 
-      const response = await fetch(u + this.opName, {
+      const response = await fetch(this.url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',  // sent request
@@ -195,14 +198,14 @@ export class SafeOperation extends Operation {
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
       throw new AppExc({ code:11001, label: 'Unexpected from server',
-        args:[response.status, (u || '?'), txt]})
+        args:[response.status, (this.url || '?'), txt]})
     } catch (e) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
       throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
-        args:[(u || '?'), e.toString()]})
+        args:[(this.url || '?'), e.toString()]})
     }
   }
 }

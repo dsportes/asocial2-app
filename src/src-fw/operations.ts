@@ -26,12 +26,14 @@ export class  GetSrvStatus extends Operation {
   constructor () { super('GetSrvStatus') }
 
   async run (svc: string) {
+    /* TODO
     try {
       const res = await this.post({ }, svc)
       return res['srvStatus']
     } catch(e) {
       this.ko(e)
     }
+    */
   }
 }
 
@@ -39,6 +41,7 @@ export class SetSrvStatus extends Operation {
   constructor () { super('SetSrvStatus') }
 
   async run (svc: string, st: number, txt: string) {
+    /* TODO
     try {
       const authRecord = new AuthRecord(svc, '*')
       await authRecord.sign('admin', '')
@@ -48,6 +51,7 @@ export class SetSrvStatus extends Operation {
     } catch(e) {
       this.ko(e)
     }
+    */
   }
 }
 
@@ -55,6 +59,7 @@ export class NewOrg extends Operation {
   constructor () { super('NewOrg') }
 
   async run (svc: string, neworg: string, st: number, db: string) {
+    /* TODO
     try {
       const authRecord = new AuthRecord(svc, '*')
       await authRecord.sign('admin', '')
@@ -65,6 +70,7 @@ export class NewOrg extends Operation {
       this.ko(e)
       return -1
     }
+    */
   }
 }
 
