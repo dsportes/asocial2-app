@@ -11,7 +11,21 @@ export class  GetSvcOpStatus extends Operation {
   async run ($OP: string) {
     try {
       const res = await this.post({ $OP })
-      return res['srvStatus']
+      return res['svcStatus']
+    } catch(e) {
+      this.ko(e)
+      throw e
+    }
+  }
+}
+
+export class  GetSvcOrgStatus extends Operation {
+  constructor (SVC: string) { super('GetSvcOrgStatus', SVC) }
+
+  async run (org: string) {
+    try {
+      const res = await this.post({ org })
+      return res['orgStatus']
     } catch(e) {
       this.ko(e)
       throw e

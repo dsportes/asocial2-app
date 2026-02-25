@@ -13,6 +13,8 @@ export const K = {
     dsphp: 'http://localhost:8888/safe.php?'
   },
 
+  FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
+
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
 

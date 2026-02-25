@@ -23,8 +23,16 @@
         :disable="!mayVal" color="warning" @ok="val" />
       <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
         color="warning"
-        @ok="m = fill(m); diffval()"
-      />
+        @ok="m = fill(m); diffval()"/>
+      <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down" 
+        dense padding="none" color="primary">
+        <q-menu auto-close>
+          <div class="column q-pa-xs items-start">
+            <q-btn dense flat v-for="x in list" :key="x" :label="x"
+              @click="m = x"/>
+          </div>
+        </q-menu>
+      </q-btn>
     </template>
     <template v-slot:error>{{$t(err)}}</template>
   </q-input>
@@ -101,7 +109,8 @@ const props = defineProps({
   disable: Boolean,
   validatefn: Function,
   objerr: Object,
-  valctrl: Function
+  valctrl: Function,
+  list: Array
 })
 
 const sz = ref(stores.config.K.sizes[props.size] || [0, 80])

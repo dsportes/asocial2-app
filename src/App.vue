@@ -54,7 +54,8 @@
   <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
   <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
   <dialog-help v-if="ui.dModels['0'].dialogHelp"/>
-  <q-dialog v-if="ui.dModels['0'].servicestatus" v-model="ui.dModels['0'].servicestatus" persistent>
+  <q-dialog v-if="ui.dModels['0'].servicestatus" v-model="ui.dModels['0'].servicestatus"
+    full-height persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
         <btn-cond flat :label="$t('gotit')" icon="check" color="none" @ok="ui.fD"/>

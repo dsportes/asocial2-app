@@ -306,31 +306,12 @@
         <btn-cond v-if="sf.step === 0"
           class="col-auto q-mr-lg" icon="check" :disable="org === ''" color="warning" @ok="opSetSrvStatus(2)"/>
         <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
-          <q-tab name="pings" :label="$t('pings')"/>
           <q-tab name="crypto" :label="$t('crypto')" />
           <q-tab name="cred" :label="$t('cred')" />
         </q-tabs>
       </div>
     </template>
     <template #default>
-      <div v-if="tab === 'pings'" class="q-pa-xs">
-        <div class="row q-my-sm">
-          <q-select class="col-5" dense filled v-model="service"
-            :options="services" emit-value :label="$t('service')"/>
-          <div class="col-1"/>
-          <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"/>
-        </div>
-        <div class="column q-px-sm">
-          <btn-cond icon-right="send" :label="$t('service_status')" :disable="$OP === ''"
-            @click="svcOpStatus"/>
-          <div v-if="resping !== null">
-            <div>{{$t('svcStatus_now', [dhcool(resping.now)])}}</div>
-            <div>{{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
-            <div>{{resping.txt || $t('svcnocomment')}}</div>
-          </div>
-        </div>
-
-      </div>
       <div v-if="tab === 'crypto'" class="q-pa-xs">
         <input-ps class="q-mt-md q-mb-sm" v-model="ps" size="p1"
           prefix="SBphrase" :validatefn="validPs"/>
@@ -433,28 +414,6 @@ const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const services = Array.from(Object.keys(config.K.SERVICES))
-
-const service = ref()
-const org = ref('')
-const $OP = ref()
-const resping = ref(null)
-const respingC = ref('')
-
-const resetPing = () => {
-  org.value = ''
-  $OP.value = ''
-  service.value = services[0]
-  resping.value = null
-}
-
-const svcOpStatus = async () => {
-  resping.value = null
-  try {
-    resping.value = await new GetSvcOpStatus(service.value).run($OP.value)
-  } catch (e) { }
-}
-
 const tab = ref('cred')
 watch(tab, (t) => {
   if (t === 'cred') resetCred()
@@ -475,18 +434,6 @@ function darkClear () {
 ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
-
-async function opEcho () : Promise<void>  {
-  try {
-    echo.value = ''
-    echo.value = await new EchoText().run('ADMIN_A', toecho.value)
-  } catch (e) {
-    echo.value = 'err:' + (e.code || '???')
-  }
-}
-
-
-
 
 const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }
 const cfCoolBye = () => { ui.oD('0', 'confirmQuit') }

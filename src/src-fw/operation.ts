@@ -15,44 +15,27 @@ export type AuthRecord = {
 const svcOpUrl: Map<string, string> = new Map()
 const svcOrgUrl: Map<string, [string, string]> = new Map()
 
-export async function $GetSvcOpUrl (opName: string, SVC: string, $OP: string )
+export async function $GetSvcOpUrl (SVC: string, $OP: string )
 : Promise<string> {
-  if (!stores.config.K.SERVICES[SVC])
-    throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
   const sf = stores.safe
   let u = svcOpUrl.get(SVC + '/' + $OP)
   if (u) return u
   const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
-  try {
-    const res = await safeop.post({ SVC, $OP })
-    if (!res.url)
-      throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
-    svcOpUrl.set(SVC + '/' + $OP, res.url)
-    return res.url
-  } catch (e) {
-    this.ko(e)
-    return ''
-  }
+  const res = await safeop.post({ SVC, $OP })
+  if (!res.url) return null
+  svcOpUrl.set(SVC + '/' + $OP, res.url)
+  return res.url
 }
 
-export async function $GetSvcOrgUrl (opName: string, SVC: string, org: string )
+export async function $GetSvcOrgUrl (SVC: string, org: string )
 : Promise<[string, string]> {
-  if (!stores.config.K.SERVICES[SVC])
-    throw new AppExc({code: 1009, label: 'svc unknown for application', opName, args: [SVC] })
   const sf = stores.safe
   let uo = svcOrgUrl.get(SVC + '/' + org)
   if (uo) return uo
   const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-  try {
-    const res = await safeop.post({ SVC, org })
-    if (!res.url)
-      throw new AppExc({code: 1008, label: 'svcorgurl not found', opName, args: [org, SVC] })
-    svcOrgUrl.set(SVC + '/' + org, [res.url, res.$OP])
-    return [res.url, res.$OP]
-  } catch (e) {
-    this.ko(e)
-    throw(e)
-  }
+  const res = await safeop.post({ SVC, org })
+  if (res.urlOp[0]) svcOrgUrl.set(SVC + '/' + org, res.urlOp)
+  return res.urlOp
 }
 
 /* Opération générique ******************************************/
@@ -79,6 +62,8 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
+  //     throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
+
   async post (args: any) : Promise<any> {
     const config = stores.config
     const session = stores.session
@@ -86,12 +71,22 @@ export class Operation {
     this.$OP = args.$OP
     try {
       session.opStart(this)
+      if (!stores.config.K.SERVICES[this.SVC])
+        throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
+
       let u: string
-      if (this.$OP) u = await $GetSvcOpUrl(this.opName, this.SVC, this.$OP)
-      else {
-        const x = await $GetSvcOrgUrl(this.opName, this.SVC, this.org)
-        u = x[0]
-        this.$OP = x[1]
+      if (this.$OP) {
+        u = await $GetSvcOpUrl(this.SVC, this.$OP)
+        if (!u)
+          throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.$OP] })
+      } else {
+        if (!this.org)
+          throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
+        const [u1, op] = await $GetSvcOrgUrl(this.SVC, this.org)
+        if (!u1)
+          throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.org, this.SVC] })
+        u = u1
+        this.$OP = op
       }
       this.url = u + 'op/' + (this.$OP || this.org) + '/' + this.opName
       args.APIVERSION = config.K.SERVICES[this.SVC].api
