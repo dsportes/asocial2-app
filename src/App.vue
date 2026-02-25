@@ -18,13 +18,7 @@
 
   <q-drawer v-if="sf.step === 0" v-model="ui.leftMenu" :class="sty()"
     show-if-above overlay :width="300" :breakpoint="700" elevated >
-    <btn-cond class="cls" round color="primary" icon="chevron_left" @ok="ui.closeMenu"/>
-
-    <scroll-area class="fit" noborder>
-      <btn-cond v-if="sf.step === 0" flat icon="exit_to_app" color="warning"
-        :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
-      <left-menu/>
-    </scroll-area>
+    <left-menu/>
   </q-drawer>
 
   <q-page-container class="font-def">
@@ -120,11 +114,6 @@ watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
 
-const backToOpenSession = async () => {
-  const ok = await ui.diagDisplay($t('HPbackopen'), true)
-  if (ok)
-    ui.backToOpenSession()
-}
 </script>
 
 <style lang="scss" scoped>

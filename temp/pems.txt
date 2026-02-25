@@ -9,9 +9,10 @@ MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMe
 
 Credential:
 {
-	"id": "GXbMsWjNBmmuZ_BwWJMG",
-	"about": "Superman",
-	"org": "*",
+	"svc": "AS2",
+	"id": "0QF_mlnBN-3I3wV3o_DA",
+	"about": "administrateur technique",
+	"org": "",
 	"role": "admin",
 	"entid": "",
 	"entkey": "",
@@ -28,18 +29,6 @@ MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAJvTl4mrOvMllV9pRVg5ZdBT5z0XEOKJz6iF7E3gF14+s
 MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFhQFhAXbttBwQLCNjD+3N77UpX38QwK2P9/xrEh6bxQeZ8sZLZjjMrjMOhgYkDgYYABAAm9OXias68yWVX2lFWDll0FPnPRcQ4onPqIXsTeAXXj6zNyn3wmXX1WFx+xBu9HPla1h23sxm8cJrQRHMDUW60EwCnutzznGChwWFK4hvuhOcMp6tPCpl4HVE9Mv12ifYMlYN0IuNLESkcBrbE54ELBSlMGfcuazgkiWhItxPdyDPcPA==
 -----END PRIVATE KEY-----
 
-Credential:
-{
-	"svc": "as2svc",
-	"id": "191XPnCQ3ZyY6jTdxCW7",
-	"about": "THE manager de demo",
-	"org": "demo",
-	"role": "manager",
-	"entid": "",
-	"entkey": "",
-	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFhQFhAXbttBwQLCNjD+3N77UpX38QwK2P9/xrEh6bxQeZ8sZLZjjMrjMOhgYkDgYYABAAm9OXias68yWVX2lFWDll0FPnPRcQ4onPqIXsTeAXXj6zNyn3wmXX1WFx+xBu9HPla1h23sxm8cJrQRHMDUW60EwCnutzznGChwWFK4hvuhOcMp6tPCpl4HVE9Mv12ifYMlYN0IuNLESkcBrbE54ELBSlMGfcuazgkiWhItxPdyDPcPA==\n-----END PRIVATE KEY-----",
-	"hpems": "w1K0cNcrSCny5E3hGvJG"
-}
 
 p2 
 -----BEGIN PUBLIC KEY-----

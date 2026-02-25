@@ -1,46 +1,62 @@
 <template>
-<div class="column">
-  <div v-if="sf.step === 0 && lstSvc !== null" class="q-mt-sm q-mb-xs">
-    <div class="titre-md text-italic">{{$t('PAGEadmin')}}</div>
-    <div class="q-ml-md q-gutter-sm row">
-      <btn-cond v-for="svc in lstSvc" :key="svc" color="primary"
-        :label="svc" padding="none xs"
-        @ok="openAdmin(svc)"/>
+<q-layout container view="hHh lpR fFf">
+  <q-header :class="sty()">
+    <q-toolbar class="tbs">
+      <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.closeMenu()"/>
+      <q-toolbar-title class="titre-md text-center q-mx-sm">{{sf.userName || sf.userId}}</q-toolbar-title>
+      <help-button :page="help"/>
+    </q-toolbar>
+    <div class="column items-center">
+      <input-A  class="q-ma-sm" prefix="orgcode" 
+        v-model="session.currentOrg" size="org"/>
     </div>
-  </div>
-  <btn-cond class="q-my-xs" v-if="sf.step === 0 && ui.page !== 'app'"
-    flat :label="$t('PAGEapp')"
-    @ok="ui.closeMenu(); ui.setPage('app')"/>
-  <btn-cond class="q-my-xs" v-if="sf.step === 0 && ui.page !== 'test'"
-    flat :label="$t('PAGEtest')"
-    @ok="ui.closeMenu(); ui.setPage('test')"/>
-  <div class="q-mt-lg q-pa-sm">
-    <div v-for="n in 50" :key="n">Drawer {{ n }} / 50</div>
-  </div>
-</div>
+  </q-header>
+  <q-page-container>
+    <div v-if="sf.step === 0" class="column q-pa-sm">
+      <btn-cond  class="q-mb-sm"
+        flat icon="exit_to_app" color="warning"
+        :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
+      <btn-cond v-if="session.admin.services.size !== 0" class="q-mb-sm"
+        flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
+        @ok="openAdmin"/>
+      <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm" 
+        flat :label="$t('PAGEapp')"
+        @ok="ui.closeMenu(); ui.setPage('app')"/>
+      <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
+        flat :label="$t('PAGEtest')"
+        @ok="ui.closeMenu(); ui.setPage('test')"/>
+      <div class="q-my-lg q-pa-sm">
+        <div v-for="n in 50" :key="n">Drawer {{ n }} / 50</div>
+      </div>
+    </div>
+  </q-page-container>
+</q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import { computed } from 'vue'
 import stores from '../stores/all'
-// import HelpButton from '../components-fw/HelpButton.vue'
+import HelpButton from '../components-fw/HelpButton.vue'
+import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import { $t } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
 
 const sf = stores.safe
 const ui = stores.ui
 // const config = stores.config
 const session = stores.session
-const lstSvc = computed(() => {
-  const x = session.admin.services
-  return x ? Array.from(x) : null
-})
+
+const backToOpenSession = async () => {
+  const ok = await ui.diagDisplay($t('HPbackopen'), true)
+  if (ok)
+    ui.backToOpenSession()
+}
 
 const openAdmin = (svc) => {
   ui.closeMenu()
   ui.setPage('admin')
-  session.admin.svc = svc
+  session.admin.svc = ''
   session.admin.org = ''
 }
 

@@ -1,24 +1,13 @@
 [
 {
-	"svc": "as2svc",
-	"id": "GXbMsWjNBmmuZ_BwWJMG",
-	"about": "Superman",
-	"org": "*",
+	"svc": "AS2",
+	"id": "0QF_mlnBN-3I3wV3o_DA",
+	"about": "administrateur technique",
+	"org": "",
 	"role": "admin",
 	"entid": "",
 	"entkey": "",
 	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMev4GC4XDZDJPEU9IGjcE/WCeVv3yKY3pbERzKCQXmsMA9m5QElxKTrE6hgYkDgYYABABa8jj+/cxfUTI8z/uM2y2vdOVFDNZtes7kJfETlDLyqP+5gULCVyoD6KeRlknCbfJTdEqc3543zzVo3raBtzhxKAGo0PFM4OhlgTGoM2PGe5z1AgXct2feiEy9C1QTKiV3g4eCmoj4MSBS/nZmHeS0vQkJzmctes458XJP776YvwjHOA==\n-----END PRIVATE KEY-----",
 	"hpems": "7sqySnoV0fZSHCGZ2ifM"
-},
-{
-	"svc": "as2svc",
-	"id": "191XPnCQ3ZyY6jTdxCW7",
-	"about": "THE manager de demo",
-	"org": "demo",
-	"role": "manager",
-	"entid": "",
-	"entkey": "",
-	"pems": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAhvpkTmfcSybe/2OQkl3e1RnJTpeneIFhQFhAXbttBwQLCNjD+3N77UpX38QwK2P9/xrEh6bxQeZ8sZLZjjMrjMOhgYkDgYYABAAm9OXias68yWVX2lFWDll0FPnPRcQ4onPqIXsTeAXXj6zNyn3wmXX1WFx+xBu9HPla1h23sxm8cJrQRHMDUW60EwCnutzznGChwWFK4hvuhOcMp6tPCpl4HVE9Mv12ifYMlYN0IuNLESkcBrbE54ELBSlMGfcuazgkiWhItxPdyDPcPA==\n-----END PRIVATE KEY-----",
-	"hpems": "w1K0cNcrSCny5E3hGvJG"
 }
 ]

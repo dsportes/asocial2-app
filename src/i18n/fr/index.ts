@@ -46,7 +46,7 @@ export default {
   restartApp: 'Redémmarrer l\'application',
   svcStatus_now: 'Statut observé à: {0}',
   svcnocomment: '(pas de commentaires)',
-  svcStatus_0: 'inconnu',
+  svcStatus_0: 'Status non connu',
   svcStatus_1: 'UP - dernière mise à jour: {0}',
   svcStatus_2: 'LECTURE - dernière mise à jour: {0}',
   svcStatus_9: 'DOWN - dernière mise à jour: {0}',

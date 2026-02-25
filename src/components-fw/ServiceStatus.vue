@@ -11,7 +11,7 @@
   <q-separator color="orange" class="q-my-sm"/>
 
   <div class="row q-px-sm">
-    <div class="col-5 column items-center">
+    <div class="col-5 column items-center q-pr-sm">
       <btn-cond :label="$t('service_status')" :disable="!$OP"
         @click="svcOpStatus"/>
     </div>
@@ -25,7 +25,7 @@
   <q-separator color="orange" class="q-my-sm"/>
 
   <div class="row q-px-sm">
-    <div class="col-5 column items-center">
+    <div class="col-5 column items-center q-pr-sm">
       <input-A class="full-with" prefix="orgcode" v-model="org" size="org"/>
       <btn-cond :label="$t('org_status')" :disable="!$OP || !org"
         @click="svcOrgStatus"/>

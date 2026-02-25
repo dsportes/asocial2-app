@@ -166,6 +166,7 @@ export const useSessionStore = defineStore('session', () => {
     pref.code = code; pref.time = time; pref.obj = obj
   }
 
+  const currentOrg = ref('')
   const _userId: Ref<string> = ref('')
   const userId = computed(() => _userId.value)
   const _aboutProfile: Ref<string> = ref('')
@@ -205,8 +206,8 @@ export const useSessionStore = defineStore('session', () => {
     if (!_creds.value || !_creds.value.size) return null
     const s: Set<string> = new Set()
     for(const [,c] of _creds.value)
-      if (c.org === '*' && c.role === 'admin') s.add(c.svc)
-    admin.services = s.size ? s : null
+      if (c.org === '' && c.role === 'admin') s.add(c.svc)
+    admin.services = s
   }
 
   return {
@@ -217,7 +218,7 @@ export const useSessionStore = defineStore('session', () => {
     dbName, setDbName, phase, setPhase,
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
-    userId, aboutProfile, creds, setStartContext, endSession,
+    userId, currentOrg, aboutProfile, creds, setStartContext, endSession,
     admin
     // focus, getFocus, lostFocus, closingApp
   }
