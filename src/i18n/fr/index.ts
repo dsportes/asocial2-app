@@ -140,7 +140,7 @@ export default {
   op_RegisterSubscription: 'Enregistrement de web-push',
   op_TestAuth: 'Test d\'authentification',
   op_GetSrvStatus: 'Status du service',
-  op_SetSrvStatus: 'Fixe le status du service',
+  op_SetSvcOpStatus: 'Fixe le status du service pour un opérateur',
 
   op_$Shas: 'Test shaS en PHP',
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
@@ -190,7 +190,7 @@ export default {
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
-  APservices: 'Vous êtes "Administrateur Technique" du (des) service(s) : ',
+  APservices: 'Vous êtes "Administrateur Technique" du (des) [service / opérateur] : ',
   APnewOrg: 'Création d\'une nouvelle organisation',
   APdbcode_label: 'Code de config de la DB',
   APdbcode_ph: 'sqlite_a',

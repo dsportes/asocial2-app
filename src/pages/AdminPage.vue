@@ -2,8 +2,8 @@
 <div class="column">
   <div class="row q-gutter-sm">
     <div class="titre-md text-italic">{{ $t('APservices') }}</div>
-    <div v-if="adminServices" v-for="svc in adminServices" :key="svc"
-      class="font-mono text-bold">{{svc}}</div>
+    <div v-if="session.admin" v-for="svcOp in session.admin.svcOps" :key="svcOp"
+      class="font-mono text-bold">{{svcOp.replace('/', ' / ')}}</div>
   </div>
   <q-expansion-item switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('svcStatus')">
@@ -93,7 +93,7 @@ const session = stores.session
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-const adminServices = computed(() => session.admin.services )
+// const adminServices = computed(() => session.admin.services )
 
 const neworg = reactive({ neworg: '', db: '', st: '', val: false })
 

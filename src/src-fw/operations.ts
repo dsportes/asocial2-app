@@ -33,21 +33,19 @@ export class  GetSvcOrgStatus extends Operation {
   }
 }
 
-export class SetSrvStatus extends Operation {
-  constructor () { super('SetSrvStatus') }
+export class SetSvcOpStatus extends Operation {
+  constructor (SVC: string) { super('SetSvcOpStatus', SVC) }
 
-  async run (svc: string, st: number, txt: string) {
-    /* TODO
+  async run ($OP: string, st: number, txt: string) {
     try {
-      const authRecord = new AuthRecord(svc, '*')
+      const authRecord = new AuthRecord(this.SVC, $OP)
       await authRecord.sign('admin', '')
-      const args = { authRecord, st, txt: txt || ''}
-      const res = await this.post(args, svc)
-      return res['srvStatus']
+      const args = { authRecord: authRecord.toObj, $OP, st, txt: txt || ''}
+      const res = await this.post(args)
+      return res['svcOpStatus']
     } catch(e) {
       this.ko(e)
     }
-    */
   }
 }
 

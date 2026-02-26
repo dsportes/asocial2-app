@@ -9,10 +9,10 @@ MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+E+lvheS3e8tcT+Q5QKmhUs4KrcRkhMe
 
 Credential:
 {
+	"xid": "sJbAC1OREjfNM9HJQTuC",
 	"svc": "AS2",
-	"id": "0QF_mlnBN-3I3wV3o_DA",
-	"about": "administrateur technique",
-	"org": "",
+	"about": "Daniel pour AS2 $RED",
+	"org": "$RED",
 	"role": "admin",
 	"entid": "",
 	"entkey": "",

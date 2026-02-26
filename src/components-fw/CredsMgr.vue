@@ -50,11 +50,11 @@
 
           <div v-if="localCred.st === 2">
             <div class="q-my-xs row">
-              <div class="fs-md">{{origCred.cred.about}}</div>
-              <div v-if="origCred.cred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.cred.entid + ']'}}</div>
+              <div class="fs-md">{{origCred.about}}</div>
+              <div v-if="origCred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</div>
             </div>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.cred.svc, origCred.cred.org, $t('ROLE' + origCred.cred.role)])}}</div>
-            <text-zoom :label="$t('HPcreddis')" :text="origCred.cred.toJson"/>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.svc, origCred.org, $t('ROLE' + origCred.role)])}}</div>
+            <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
           </div>
           <div v-else>
             <div class="q-my-xs row">

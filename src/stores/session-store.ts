@@ -182,7 +182,7 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
-    servicesAdmin()
+    setAdminInfo()
     stores.ui.setPage('app')
   }
 
@@ -190,24 +190,28 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = ''
     _aboutProfile.value = ''
     _creds.value = null
-    admin.services = null
+    admin.svcOps = new Set()
+    admin.svcOrgs = new Set()
+    admin.$OP = ''
     admin.svc = ''
     admin.org = ''
   }
 
   const admin = reactive({
-    services: null,
+    svcOps: new Set(),
+    svcOrgs: new Set(),
+    $OP : '',
     svc: '',
     org: ''
   })
 
   // Liste des codes des services dont l'utilisateur est admin
-  const servicesAdmin = () : string[] => {
-    if (!_creds.value || !_creds.value.size) return null
-    const s: Set<string> = new Set()
-    for(const [,c] of _creds.value)
-      if (c.org === '' && c.role === 'admin') s.add(c.svc)
-    admin.services = s
+  const setAdminInfo = () => {
+    if (!_creds.value || !_creds.value.size) return
+    for(const [,c] of _creds.value) {
+      if (c.role === 'admin') admin.svcOps.add(c.svc + '/' + c.org)
+      else admin.svcOrgs.add(c.svc + '/' + c.org)
+    }
   }
 
   return {
@@ -219,7 +223,7 @@ export const useSessionStore = defineStore('session', () => {
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
     userId, currentOrg, aboutProfile, creds, setStartContext, endSession,
-    admin
+    setAdminInfo, admin
     // focus, getFocus, lostFocus, closingApp
   }
 })

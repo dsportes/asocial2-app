@@ -529,22 +529,21 @@ export const useSafeStore = defineStore('safe', () => {
       for (const xid in safe.creds) {
         const x = b64ToU8(safe.creds[xid])
         const spec = xid.startsWith('$')
-        const [svcx, credId] = xid.split('.')
-        const svc = spec ? svcx.substring(1) : svcx
-        if (!msvc.has(svc)) continue
         try {
           if (!spec) {
             const obj = decode(await Crypt.decrypt(keyK.value, x))
             const c: Credential = new Credential(obj)
+            if (!msvc.has(c.svc)) continue
             if (c) m.set(c.xid, c)
           } else {
-            /* Credential transmis par un autre user émetteur
-            [obj credential crypté, pub: clé publique C de l'émetteur ] */
+            // Credential transmis par un autre user émetteur
+            // [obj credential crypté, pub: clé publique C de l'émetteur ] 
             const [crobj, pubC] = decode(x)
             const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
             const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
             const obj = decode(dc)
             const c: Credential = await Credential.fromTObj(obj, keyK.value, aes)
+            if (!msvc.has(c.svc)) continue
             if (c) m.set(c.xid, c)
             mcreds.set(c.xid, c)
             delcreds.push(xid)

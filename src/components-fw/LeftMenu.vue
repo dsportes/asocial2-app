@@ -4,7 +4,7 @@
     <q-toolbar class="tbs">
       <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.closeMenu()"/>
       <q-toolbar-title class="titre-md text-center q-mx-sm">{{sf.userName || sf.userId}}</q-toolbar-title>
-      <help-button :page="help"/>
+      <help-button page="help"/>
     </q-toolbar>
     <div class="column items-center">
       <input-A  class="q-ma-sm" prefix="orgcode" 
@@ -16,7 +16,7 @@
       <btn-cond  class="q-mb-sm"
         flat icon="exit_to_app" color="warning"
         :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
-      <btn-cond v-if="session.admin.services.size !== 0" class="q-mb-sm"
+      <btn-cond v-if="session.admin.svcOps.size !== 0" class="q-mb-sm"
         flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm" 

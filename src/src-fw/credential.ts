@@ -10,8 +10,8 @@ const encoder = new TextEncoder()
 - id et hpems ne sont pas utilisé mais reconstruit
 */
 export type CredObj = {
+  xid: string // ID "absolu" hash court de `[svc, role, org, entid, hpems]`.
   svc: string // code du service
-  id: string // hash court de `[role, org, entid]`.
   about: string // un texte court _à propos_ du `entid`.
   role: string // un des codes de rôle connu du service.
   org: string // le code de l'organisation.
@@ -79,7 +79,6 @@ export class Credential {
 
   constructor (obj: CredObj) {
     this.svc = obj.svc
-    this.id = Crypt.shaS(encode([obj.role, obj.org, obj.entid]))
     this.about = obj.about
     this.role = obj.role
     this.org = obj.org
@@ -87,12 +86,13 @@ export class Credential {
     this.entkey = obj.entkey
     this.pems = obj.pems
     this.hpems = Crypt.shaS(encoder.encode(obj.pems))
+    this.xid = Crypt.shaS(encode([this.svc, this.role, this.org, this.entid, this.hpems]))
   }
 
   get toObj () : CredObj {
     return {
+      xid: this.xid,
       svc: this.svc,
-      id: this.id,
       about: this.about,
       org: this.org,
       role: this.role,
@@ -116,8 +116,8 @@ export class Credential {
     return new Credential(this.toObj)
   }
 
+  xid: string // ID "absolu" hash court de `[svc, role, org, entid, hpems]`.
   svc: string // code du service
-  id: string // hash court de `[role, org, entid]`.
   about: string // un texte court _à propos_ du `entid`.
   role: string // un des codes de rôle connu du service.
   org: string // le code de l'organisation.
@@ -125,8 +125,6 @@ export class Credential {
   entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
   pems: string // clé PRIVEE de signature, le texte de 400c.
   hpems: string // hash court de `pems`.
-
-  get xid () :string { return this.svc + '.' + this.id }
 
   get toJson () :string {
     return JSON.stringify(this.toObj, null, '\t')
@@ -146,38 +144,42 @@ type AuthToken = {
 export class AuthRecord {
   svc: string
   org: string
-  orguserId: string
+  userId: string
   sessionId: string
   time: number
+  challenge: Uint8Array
   // Object par role / entid
   tokens: Object
 
-  constructor (svc: string, org: string) {
+  constructor (svc: string, org: string) { // ici, org ou $OP
     const session = stores.session
     this.svc = svc
     this.org = org
-    this.orguserId = Crypt.shaS(encoder.encode(org + '/' + session.userId)),
+    this.userId = session.userId
     this.sessionId = session.sessionId
     this.time = Date.now()
+    this.challenge = encoder.encode(this.userId + '/' + this.time)
     this.tokens = {}
   }
 
-  get challenge() { return encoder.encode(this.orguserId + '/' + this.time)}
+  get toObj() {
+    return { userId: this.userId, sessionId: this.sessionId, time: this.time, tokens: this.tokens }
+  }
 
   async sign (role: string, entid: string) {
     const session = stores.session
-    const cid = Crypt.shaS(encode([role, this.org, entid || '']))
-    const id = this.svc + '.' + cid
-    const c: Credential = session.creds.get(id)
-    if (!c) return
-    const ch = encoder.encode(this.orguserId + '/' + this.time)
-    const sign = new Uint8Array(await Crypt.sign(fromPem(c.pems), ch))
-    let e = this.tokens[role]
-    if (!e) {
-      e = {}
-      this.tokens[role] = e
+    for(const [xid, c] of session.creds) {
+      if (c.svc === this.svc && c.org === this.org 
+        && c.role === c.role && c.entid === entid) {
+        const sign = new Uint8Array(await Crypt.sign(fromPem(c.pems), this.challenge))
+        let e = this.tokens[role]
+        if (!e) {
+          e = {}
+          this.tokens[role] = e
+        }
+        e[c.xid] = { role, entid: entid || '', hpems: c.hpems, sign }
+      }
     }
-    e[entid || ''] = {id, role, entid: entid || '', hpems: c.hpems, sign }
   }
 
 }
