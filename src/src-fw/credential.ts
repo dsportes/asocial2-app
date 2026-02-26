@@ -148,7 +148,7 @@ export class AuthRecord {
   sessionId: string
   time: number
   challenge: Uint8Array
-  // Object par role / entid
+  // Object par role / entid : [token]
   tokens: Object
 
   constructor (svc: string, org: string) { // ici, org ou $OP
@@ -177,7 +177,8 @@ export class AuthRecord {
           e = {}
           this.tokens[role] = e
         }
-        e[c.xid] = { role, entid: entid || '', hpems: c.hpems, sign }
+        if (!e[entid]) e[entid] = []
+        e[entid].push({ xid, role, entid: entid || '', hpems: c.hpems, sign })
       }
     }
   }

@@ -5,7 +5,8 @@
     <div class="row q-gutter-sm">
       <div v-for="svcOp in session.admin.svcOps" :key="svcOp"
         @click=setSvcOp(svcOp)
-        class="font-mono text-bold cursor-pointer text-underlined">
+        class="font-mono text-bold cursor-pointer"
+        style="text-decoration: underline;">
         {{svcOp.replace('/', ' / ')}}
       </div>
     </div>
@@ -28,7 +29,8 @@
     </div>
     <div v-if="resping !== null" class="col-7">
       <div>{{$t('svcStatus_now', [dhcool(resping.now)])}}</div>
-      <div>{{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
+      <div :class="resping.st === 9 ? 'text-warning text-bold' : ''">
+        {{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
       <div>{{resping.txt || $t('svcnocomment')}}</div>
     </div>
   </div>
@@ -40,9 +42,9 @@
     <input-a prefix="svcStatus" v-model="newComment"/>
     <div class="q--mt-sm row justify-end q-gutter-sm">
       <btn-cond color="primary" :label="$t('up')" padding="none sm"
-        @ok="setSrvStatus(1)"/>
+        @ok="setSvcOpStatus(1)"/>
       <btn-cond color="warning" :label="$t('down')" padding="none sm"
-        @ok="setSrvStatus(9)"/>
+        @ok="setSvcOpStatus(9)"/>
     </div>
     <q-separator color="orange" class="q-my-sm"/>
   </div>
@@ -71,7 +73,7 @@ import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
 import InputA from './InputA.vue'
-import { GetSvcOpStatus, GetSvcOrgStatus } from '../src-fw/operations'
+import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus } from '../src-fw/operations'
 
 const ui = stores.ui
 const config = stores.config
@@ -95,7 +97,7 @@ const resetPing = () => {
   service.value = services[0]
   resping.value = null
   resping2.value = null
-  mewComment.value = ''
+  newComment.value = ''
 }
 
 const setSvcOp = (svcOp) => {
@@ -128,7 +130,8 @@ const svcOrgStatus = async () => {
 */
 async function setSvcOpStatus (stx) : Promise<void> {
   const op = new SetSvcOpStatus(service.value)
-  const res = await op.run($OP.value, stx, mewComment.value)
+  const res = await op.run($OP.value, stx, newComment.value)
+  // res.svcOpStatus contient le status mis à jour
   await svcOpStatus()
 }
 
