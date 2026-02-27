@@ -1,4 +1,4 @@
-import { Operation } from './operation'
+import { Operation, SafeOperation } from './operation'
 import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'

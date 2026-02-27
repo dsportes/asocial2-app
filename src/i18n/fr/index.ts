@@ -23,6 +23,12 @@ export default {
   pings: 'Ping, etc.',
   service_status: 'Status du service',
   org_status: 'Status organisation',
+  url_label: 'URL du service',
+  url_ph: 'https://srv1.monservice.com',
+  url_set: 'Déclarer l\'URL du service',
+  adminuser_label: 'Code de l\'utilisateur "Administrateur"',
+  grant: 'Autoriser',
+  revoke: 'Révoquer',
   service_url: 'URL du service: {0}',
   operator_label: 'Code opérateur',
   operator_ph: '$RED',
@@ -241,6 +247,9 @@ export default {
   SBcredres: 'Credential normalisé et identifié',
   SBentid_label: 'ID de l\'entité (fac)',
   SBentkey_label: 'Clé AES (base 64) de l\'entité (fac)',
+  SBhot: 'HOT!',
+  SBhot_info: 'Ces actions requièrent d\'être enregistré comme Administrtaur du dépôt générique des "coffres forts".',
+  SBnotauth: 'Ces actions requièrent d\'être authentifié',
 
   HPstore_label: 'Dépôt SPECIFIQUE du "coffre-fort"',
   HPstore_bub: `# Dépôt SPECIFIQUE du "coffre-fort"
@@ -693,7 +702,11 @@ bla bla
   EX_1007: 'Le service [{0}] n\'est pas assuré par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
   EX_1008: 'L\'organisation [{0}] n\'a pas d\'opérateur assurant le service [{1}]. Erreur de saisie (ou BUG improbable)',
   EX_1009: 'Le service [{1}] n\'est pas géré par l\'application. Erreur de saisie (ou BUG improbable)',
+
   EX_2001: 'BUG probable: opération sans cible organisation ou opérateur.',
+  EX_2002: 'Vous n\'êtes pas enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
+  EX_2003: 'Signature "hors délai" dans la vérification que vous êtes enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
+
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
   EX_10000: 'Interruption volontaire',

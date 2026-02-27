@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
+import { Crypt, fromPem } from './crypt'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 

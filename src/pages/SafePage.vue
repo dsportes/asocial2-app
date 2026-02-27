@@ -502,11 +502,7 @@ const exptab = ref('info')
 const infopub = ref('')
 
 const setInfopub = () => {
-  const t = ['Crypt KEY']
-  t.push(sf.auth.C)
-  t.push('\nVerif KEY')
-  t.push(sf.auth.V)
-  infopub.value = t.join('\n')
+  infopub.value = JSON.stringify([sf.auth.C, sf.auth.V], null, '\t')
 }
 
 watch(exptab, (v) => {

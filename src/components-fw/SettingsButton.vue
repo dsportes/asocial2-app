@@ -304,6 +304,7 @@
         <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
           <q-tab name="crypto" :label="$t('crypto')" />
           <q-tab name="cred" :label="$t('cred')" />
+          <q-tab name="hot" icon="img:icons/superman.jpg" :label="$t('SBhot')" />
         </q-tabs>
       </div>
     </template>
@@ -325,6 +326,32 @@
         <q-input class="q-pa-xs bord1" v-model="cr.pems" type="textarea"
          :rows="15"/>
       </div>
+      <div v-if="tab === 'hot'" class="column q-pa-xs">
+        <div class='titre-lg text-italic text-center self-center q-my-md'>{{$t('SBhot_info')}}</div>
+
+        <div v-if="sf.step === 1" class="msg2 q-my-md self-center">{{$t('SBnotauth')}}</div>
+        <div v-else class="column">
+          <div class="row q-mb-md">
+            <input-A class="col-6" prefix="service" v-model="SVC" size="svc"
+              :list="Array.from(Object.keys(config.K.SERVICES))"/>
+            <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
+              :list="config.K.FAVORITE_OPERATORS"/>
+          </div>
+          <input-A class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
+          <btn-cond color="warning" :label="$t('url_set')" class="self-end"
+            @ok="setSvcUrl" :disable="!SVC || !$OP || !svcurl"/>
+
+          <q-separator color="orange" class="q-my-md"/>
+
+          <input-A class="full-witdh q-mb-sm" prefix="adminuser" v-model="user"/>
+          <div class="self-end row justify-end q-gutter-sm q-mb-md">
+            <btn-cond color="warning" :label="$t('grant')"
+              @ok="setGrantRevoke(1)" :disable="!SVC || !$OP || !user"/>
+            <btn-cond color="warning" :label="$t('revoke')"
+              @ok="setGrantRevoke(2)" :disable="!SVC || !$OP || !user"/>
+          </div>
+        </div>
+      </div>      
       <div v-if="tab === 'cred'" class="q-pa-xs">
         <div class="row q-my-sm q-gutter-sm">
           <btn-cond class="warning" :label="$t('reset')" icon="undo"
@@ -407,6 +434,7 @@ import { GetSvcOpStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { Credential, CredObj } from '../src-fw/credential'
+import { $SetOpUrl } from '../src-fw/operation'
 
 const i18n = useI18n()
 const config = stores.config
@@ -419,7 +447,7 @@ onUnmounted(() => ui.closeVue(idc))
 const tab = ref('cred')
 watch(tab, (t) => {
   if (t === 'cred') resetCred()
-  else if (t === 'pings') resetPing()
+  else if (t === 'hot') resetHot()
 })
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
@@ -508,6 +536,29 @@ const genCred = () => {
   }
 }
 resetCred()
+
+const svcurl = ref('')
+const SVC = ref('')
+const $OP = ref('')
+const user = ref('')
+const adminId = ref('')
+
+const resetHot = () => {
+  svcurl.value = ''
+  SVC.value = ''
+  $OP.value = ''
+  user.value = ''
+}
+
+const setGrantRevoke = async (gr: number) => {
+
+}
+
+const setSvcUrl = async () => {
+  const b = await sf.SetOpUrl (SVC.value, $OP.value, svcurl.value)
+  if (b) await ui.diagDisplay($t('HPcsret_00'))
+}
+resetHot()
 </script>
 
 <style lang="scss" scoped>

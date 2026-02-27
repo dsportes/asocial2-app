@@ -41,14 +41,16 @@ export const K = {
     file: [1, 32],
     ps: [8, 40],
     entid: [0, 60],
-    isotime: [24, 24]
+    isotime: [24, 24],
+    svc: [3, 8, 'svc']
   },
 
   regexp: {
     b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
     num: new RegExp('^[0-9]*$'),
     an1: new RegExp('^[0-9a-z]*$'),
-    oper: new RegExp('^[$][0-9A-Z]*$')
+    oper: new RegExp('^[$][0-9A-Z]*$'),
+    svc: new RegExp('^[A-Z][0-9A-Z]*$')
   },
 
   phrasestar: true,

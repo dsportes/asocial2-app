@@ -1393,6 +1393,22 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const SetOpUrl = async (SVC: string, $OP: string, url: string ) 
+  : Promise<boolean> => {
+      const params = [SVC, $OP, url]
+    const time = Date.now()
+    const ch = encode([time, params])
+    const sign = await Crypt.sign(fromPem(auth.value.S), ch)
+    const op = new SafeOperation('$SetOpUrl', '')
+    try {
+      const ret = await op.post({ userId: userId.value, time, params, sign })
+      return true
+    } catch(e) {
+      op.ko(e)
+      return false
+    }
+  }
+
   return {
     step, setStep, backToAuth,
     mySafeStore, userId, userName, keyK,
@@ -1413,7 +1429,8 @@ export const useSafeStore = defineStore('safe', () => {
     getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred, getPublicKeys,
-    synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs
+    synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs,
+    SetOpUrl
   }
 })
 
