@@ -21,6 +21,7 @@ export default {
   crypto: 'Cryptographie',
   cred: 'Credential',
   pings: 'Ping, etc.',
+  service_label: 'Code su service',
   service_status: 'Status du service',
   org_status: 'Status organisation',
   url_label: 'URL du service',
@@ -167,7 +168,8 @@ export default {
   op_ListManagers: 'Liste les droits attribués de "manager".',
   op_GetSvcOpStatus: 'Obtention du status du service / opérateur',
   op_GetSvcOrgStatus: 'Obtention du status d\'une organisation (pour un service / opérateur)',
-
+  op_GrantSvcOpOrg: 'Autoiser le service d\'une organisation par un opérateur',
+  op_RevokeSvcOpOrg: 'Révoquer le service d\'une organisation par un opérateur',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -241,6 +243,7 @@ export default {
   SBphrase_shaS: 'SHA "court" du SH:',
   SBgensv: 'Générer un couple de clés de signature / vérification',
   SBgensv2: 'Signature: PEM "private" - Vérification: PEM "public"',
+  SBmanorg: 'Autoriser / révoquer une organisation pour ce service et cet opérateur',
 
   SBprivpem: 'Coller le PEM (private) de signature',
   SBgencred: 'Générer le credential',
@@ -706,6 +709,7 @@ bla bla
   EX_2001: 'BUG probable: opération sans cible organisation ou opérateur.',
   EX_2002: 'Vous n\'êtes pas enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
   EX_2003: 'Signature "hors délai" dans la vérification que vous êtes enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
+  EX_2004: 'Pour le service [{0}], l\'organisation [{2}] n\'est pas hébergée par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
 
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',

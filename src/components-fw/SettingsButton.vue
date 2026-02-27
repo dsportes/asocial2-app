@@ -3,7 +3,7 @@
   <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
   <q-btn v-else flat dense icon="settings" :class="session.newVersionReady ? 'bg-negative text-white' : ''">
     <q-menu>
-      <q-list style="min-width: 350px">
+      <q-list style="min-width: 300px;">
 
         <q-item v-if="session.newVersionReady" clickable dense v-close-popup
           class="bg-negative text-white"
@@ -69,7 +69,9 @@
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
         </q-item>
 
-        <scroll-area size="sm" class="q-mt-sm full-width"><template #default>
+        <q-separator />
+
+        <div class="q-pa-xs">
           <div class="row">
             <div class="titre-md text-italic q-pr-sm text-primary">{{$t('app')}}</div>
             <div class="font-mono">{{config.K.APPNAME}}</div>
@@ -96,13 +98,7 @@
             <div class="titre-md text-italic q-pr-sm text-primary">{{$t('step')}}</div>
             <div class="font-mono">{{$t('step_' + sf.step)}}</div>
           </div>
-        </template></scroll-area>
-        <!-- Test surcharge traductions
-        <q-item>
-          <q-item-section class="font-mono text-center text-italic">{{ $t('blabla') + ' - ' + $t('blabla1') }}</q-item-section>
-        </q-item>
-        -->
-
+        </div>
       </q-list>
     </q-menu>
   </q-btn>
@@ -337,21 +333,25 @@
             <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
               :list="config.K.FAVORITE_OPERATORS"/>
           </div>
+
+          <q-separator color="orange" class="q-my-md"/>
+
           <input-A class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
           <btn-cond color="warning" :label="$t('url_set')" class="self-end"
             @ok="setSvcUrl" :disable="!SVC || !$OP || !svcurl"/>
 
           <q-separator color="orange" class="q-my-md"/>
 
-          <input-A class="full-witdh q-mb-sm" prefix="adminuser" v-model="user"/>
+          <div class="q-my-sm titre-md text-italic">{{$t('SBmanorg')}}</div>
+          <input-a class="q-my-xs" prefix="orgcode" size="org" v-model="org"/>
           <div class="self-end row justify-end q-gutter-sm q-mb-md">
             <btn-cond color="warning" :label="$t('grant')"
-              @ok="setGrantRevoke(1)" :disable="!SVC || !$OP || !user"/>
+              @ok="setGrantRevoke(true)" :disable="!SVC || !$OP || !org"/>
             <btn-cond color="warning" :label="$t('revoke')"
-              @ok="setGrantRevoke(2)" :disable="!SVC || !$OP || !user"/>
+              @ok="setGrantRevoke(false)" :disable="!SVC || !$OP || !org"/>
           </div>
         </div>
-      </div>      
+      </div>
       <div v-if="tab === 'cred'" class="q-pa-xs">
         <div class="row q-my-sm q-gutter-sm">
           <btn-cond class="warning" :label="$t('reset')" icon="undo"
@@ -367,10 +367,10 @@
           :options="Array.from(config.services.keys())" :label="$t('service')"/>
         <input-a v-if="!isAdmin" class="q-my-xs" size="org" prefix="orgcode"
           v-model="cred.org"/>
-        <input-A v-if="isAdmin" class="q-my-xs" 
+        <input-A v-if="isAdmin" class="q-my-xs"
           prefix="operator" v-model="cred.org" size="oper"
           :list="config.K.FAVORITE_OPERATORS"/>
-        <q-select v-if="!isAdmin" 
+        <q-select v-if="!isAdmin"
           dense class="q-my-xs q-ml-lg" filled v-model="cred.role"
           :options="optsRoles" emit-value :label="$t('ROLE')"/>
         <input-a v-if="!isAdmin" class="q-my-xs" size="entid" prefix="SBentid"
@@ -542,16 +542,19 @@ const SVC = ref('')
 const $OP = ref('')
 const user = ref('')
 const adminId = ref('')
+const org = ref('')
 
 const resetHot = () => {
   svcurl.value = ''
   SVC.value = ''
   $OP.value = ''
   user.value = ''
+  org.value = ''
 }
 
-const setGrantRevoke = async (gr: number) => {
-
+const setGrantRevoke = async (grant: boolean) => {
+  const b = await sf.GRSvcOpOrg (grant, SVC.value, $OP.value, org.value)
+  if (b) await ui.diagDisplay($t('HPcsret_00'))
 }
 
 const setSvcUrl = async () => {

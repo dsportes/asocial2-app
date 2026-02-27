@@ -537,7 +537,7 @@ export const useSafeStore = defineStore('safe', () => {
             if (c) m.set(c.xid, c)
           } else {
             // Credential transmis par un autre user émetteur
-            // [obj credential crypté, pub: clé publique C de l'émetteur ] 
+            // [obj credential crypté, pub: clé publique C de l'émetteur ]
             const [crobj, pubC] = decode(x)
             const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
             const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
@@ -1393,13 +1393,29 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const SetOpUrl = async (SVC: string, $OP: string, url: string ) 
+  const SetOpUrl = async (SVC: string, $OP: string, url: string )
   : Promise<boolean> => {
-      const params = [SVC, $OP, url]
+    const params = [SVC, $OP, url]
     const time = Date.now()
     const ch = encode([time, params])
     const sign = await Crypt.sign(fromPem(auth.value.S), ch)
     const op = new SafeOperation('$SetOpUrl', '')
+    try {
+      const ret = await op.post({ userId: userId.value, time, params, sign })
+      return true
+    } catch(e) {
+      op.ko(e)
+      return false
+    }
+  }
+
+  const GRSvcOpOrg = async (grant: boolean, SVC: string, $OP: string, org: string )
+  : Promise<boolean> => {
+    const params = [SVC, $OP, org]
+    const time = Date.now()
+    const ch = encode([time, params])
+    const sign = await Crypt.sign(fromPem(auth.value.S), ch)
+    const op = new SafeOperation(grant ? '$GrantSvcOpOrg' : '$RevokeSvcOpOrg', '')
     try {
       const ret = await op.post({ userId: userId.value, time, params, sign })
       return true
@@ -1430,7 +1446,7 @@ export const useSafeStore = defineStore('safe', () => {
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred, getPublicKeys,
     synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs,
-    SetOpUrl
+    SetOpUrl, GRSvcOpOrg
   }
 })
 
