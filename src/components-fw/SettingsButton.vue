@@ -359,23 +359,18 @@
           <btn-cond :label="$t('SBgencred')" icon="check"
             @ok="genCred"/>
         </div>
-        <q-checkbox class="col-1" dense size="md" v-model="isAdmin"
-          :label="$t('ROLEadmin')" @click="setAdmin"/>
-        <input-a class="q-my-xs" prefix="aboutcred"
-          v-model="cred.about"/>
+        <input-a class="q-my-xs" prefix="aboutcred" v-model="cred.about"/>
         <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.svc"
           :options="Array.from(config.services.keys())" :label="$t('service')"/>
-        <input-a v-if="!isAdmin" class="q-my-xs" size="org" prefix="orgcode"
+        <input-a class="q-my-xs" size="org" prefix="orgcode"
           v-model="cred.org"/>
-        <input-A v-if="isAdmin" class="q-my-xs"
-          prefix="operator" v-model="cred.org" size="oper"
+        <input-A class="q-my-xs" prefix="operator" v-model="cred.org" size="oper"
           :list="config.K.FAVORITE_OPERATORS"/>
-        <q-select v-if="!isAdmin"
-          dense class="q-my-xs q-ml-lg" filled v-model="cred.role"
+        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role"
           :options="optsRoles" emit-value :label="$t('ROLE')"/>
-        <input-a v-if="!isAdmin" class="q-my-xs" size="entid" prefix="SBentid"
+        <input-a class="q-my-xs" size="entid" prefix="SBentid"
           v-model="cred.entid"/>
-        <input-a v-if="!isAdmin" class="q-my-xs" size="entkey" prefix="SBentkey"
+        <input-a class="q-my-xs" size="entkey" prefix="SBentkey"
           v-model="cred.entkey"/>
         <div class="q-my-xs titre-md text-italic">{{$t('SBprivpem')}}</div>
         <q-input dense class="q-pa-xs bord1" v-model="cred.pems" type="textarea"
@@ -511,20 +506,12 @@ const genSV = async () => {
 const optsRoles = ref([])
 for (const r of config.K.roles) optsRoles.value.push({ value: r, label : $t('ROLE' + r)})
 
-const isAdmin = ref(false)
 const cred0 = { svc: '', id: '', about:'', role: '', org: '', entid: '', entkey: '', pems: '', hpems: '' }
 const cred : Ref<CredObj> = ref({ ...cred0})
 const credRes = ref('')
 const resetCred = () => {
-  isAdmin.value = false
   credRes.value = ''
   cred.value = { ...cred0 }
-}
-const setAdmin = () => {
-  cred.value = { ...cred0 }
-  if (isAdmin) {
-    cred.value.role = 'admin'
-  }
 }
 
 const genCred = () => {

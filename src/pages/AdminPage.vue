@@ -93,8 +93,6 @@ const session = stores.session
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
-// const adminServices = computed(() => session.admin.services )
-
 const neworg = reactive({ neworg: '', db: '', st: '', val: false })
 
 const resetNewOrg = () => {
@@ -103,7 +101,7 @@ const resetNewOrg = () => {
 
 const cfNewOrg = async () => {
   // run (svc: string, neworg: string, st: number, db: string)
-  const cr = await new NewOrg().run(session.admin.svc, neworg.neworg, neworg.st, neworg.db)
+  const cr = await new NewOrg().run(session.SVC, neworg.neworg, neworg.st, neworg.db)
   if (cr >= 0 ) {
     await ui.diagDisplay($t('APcr_' + cr, [neworg.neworg]))
     resetNewOrg()
@@ -211,7 +209,7 @@ const recordManager = async () => {
   }
 
   const op = new GrantNewManager()
-  const ok = await op.run(session.admin.svc, credRequest)
+  const ok = await op.run(session.SVC, credRequest)
   if (!ok) {
     await ui.diagDisplay($t('APkomanager'))
     return
@@ -219,7 +217,7 @@ const recordManager = async () => {
 
   // Pour transmettre un nouveau Credential à l'utilisateur cible
   const credObj: CredObj = {
-    svc: session.admin.svc,
+    svc: session.SVC,
     id: '',
     about: infou,
     role: 'manager',

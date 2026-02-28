@@ -451,8 +451,11 @@ export const useSafeStore = defineStore('safe', () => {
       D: pemD,
       S: pemS,
       V: safe.V,
+      contact: await dcX(b64ToU8(safe.contact)),
+      hct: safe.hct,
       Ka: safe.Ka,
       Kr: safe.Kr,
+      admins: await dcX(b64ToU8(safe.admins)),
     } as Auth
 
     await loadDevices(safe) // devices
@@ -697,6 +700,9 @@ export const useSafeStore = defineStore('safe', () => {
     DK: string // clé privée de décryptage, cryptée par la clé K
     SK: string // clé privée de signature, cryptée par la clé K
     V: string // clé publique de vérification
+    contact: string // pseudo temporaire de contact externe crypté par la clé K
+    hct: string // SH du contact en b64
+    admins: string // cryptage de l'encode de la liste des couples SVC.$OP dont l'utilisateur est administrateur
 
     devices: Object
     creds: Object
@@ -769,6 +775,9 @@ export const useSafeStore = defineStore('safe', () => {
       DK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(toPem(kpcd.priv))), true),
       V: toPem(kpsv.pub, true),
       SK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(toPem(kpsv.priv))), true),
+      contact: '',
+      hct: '',
+      admins: '',
       /* ATTENTION PHP msgpack traite MAL les objects vide
       Ils sont passés à null
       */
@@ -897,6 +906,21 @@ export const useSafeStore = defineStore('safe', () => {
     sh1r: string
   }
 
+  type SetContact = {
+    userId: string
+    contact: string
+    hct: string
+    sh1p: string
+    sh1r: string
+  }
+
+  type SetAdmins = {
+    userId: string
+    admins: string
+    sh1p: string
+    sh1r: string
+  }
+
   type SetAboutProfile = {
     app: string,
     userId: string
@@ -990,6 +1014,56 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       ret = await op.post({untrustDev})
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  const setContact = async (inp: string) => {
+    const contact = inp ?
+      u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(inp)))
+      : ''
+    const hct = inp ?
+      await Crypt.strongHash(inp, true, false) as string
+      : ''
+    const setcontact: SetContact = {
+      userId: userId.value,
+      contact,
+      hct,
+      sh1p: sh1p.value,
+      sh1r: sh1r.value
+    }
+    const op = new SafeOperation('$SetContact', mySafeStore.value)
+    let ret
+    try {
+      ret = await op.post({setcontact})
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  const setAdmins = async (lst: string[]) => {
+    const admins = lst.length ?
+      u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(lst.join('/'))))
+      : ''
+    const setadmins: SetAdmins = {
+      userId: userId.value,
+      admins,
+      sh1p: sh1p.value,
+      sh1r: sh1r.value
+    }
+    const op = new SafeOperation('$SetAdmins', mySafeStore.value)
+    let ret
+    try {
+      ret = await op.post({setadmins})
     } catch(e) {
       op.ko(e)
       return -1
@@ -1446,6 +1520,7 @@ export const useSafeStore = defineStore('safe', () => {
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
     setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred, getPublicKeys,
     synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs,
+    setAdmins, setContact,
     SetOpUrl, GRSvcOpOrg
   }
 })

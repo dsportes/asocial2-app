@@ -151,9 +151,9 @@ export class AuthRecord {
   // Object par role / entid : [token]
   tokens: Object
 
-  constructor (svc: string, org: string) { // ici, org ou $OP
+  constructor (SVC: string, org: string) { // ici, org ou $OP
     const session = stores.session
-    this.svc = svc
+    this.svc = SVC || stores.config.K.DEFAULT_SERVICE
     this.org = org
     this.userId = session.userId
     this.sessionId = session.sessionId
@@ -169,7 +169,7 @@ export class AuthRecord {
   async sign (role: string, entid: string) {
     const session = stores.session
     for(const [xid, c] of session.creds) {
-      if (c.svc === this.svc && c.org === this.org 
+      if (c.svc === this.svc && c.org === this.org
         && c.role === c.role && c.entid === entid) {
         const sign = new Uint8Array(await Crypt.sign(fromPem(c.pems), this.challenge))
         let e = this.tokens[role]

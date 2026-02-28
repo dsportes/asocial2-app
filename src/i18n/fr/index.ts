@@ -636,6 +636,13 @@ bla bla
   HPexporgid: 'ID localisée pour une organisation',
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
+  HPadmin_add: 'M\'ajouter en tant qu\'Administrateur',
+  HPadnim_label: 'Gérer mes rôles d\'Adiminstrateur Technique',
+  HPadnim_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
+bla bla
+`,
+  HPadmin_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
+  HPadmin_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

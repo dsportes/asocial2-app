@@ -6,41 +6,11 @@ import { Crypt, fromPem } from './crypt'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
-export type AuthRecord = {
-  orguserId: string
-  sessionId: string
-  time: number
-  tokens: []
-}
-
-const svcOpUrl: Map<string, string> = new Map()
-const svcOrgUrl: Map<string, [string, string]> = new Map()
-
-export async function $GetSvcOpUrl (SVC: string, $OP: string )
-: Promise<string> {
-  const sf = stores.safe
-  let u = svcOpUrl.get(SVC + '/' + $OP)
-  if (u) return u
-  const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
-  const res = await safeop.post({ SVC, $OP })
-  if (!res.url) return null
-  svcOpUrl.set(SVC + '/' + $OP, res.url)
-  return res.url
-}
-
-export async function $GetSvcOrgUrl (SVC: string, org: string )
-: Promise<[string, string]> {
-  const sf = stores.safe
-  let uo = svcOrgUrl.get(SVC + '/' + org)
-  if (uo) return uo
-  const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-  const res = await safeop.post({ SVC, org })
-  if (res.urlOp[0]) svcOrgUrl.set(SVC + '/' + org, res.urlOp)
-  return res.urlOp
-}
-
 /* Opération générique ******************************************/
 export class Operation {
+  static svcOpUrl: Map<string, string> = new Map()
+  static svcOrgUrl: Map<string, [string, string]> = new Map()
+
   opName: string
   controller: AbortController
   aborted: boolean
@@ -49,6 +19,27 @@ export class Operation {
   org: string
   SVC: string
   url: string
+
+  async $GetSvcOpUrl () : Promise<string> {
+    const sf = stores.safe
+    let u = Operation.svcOpUrl.get(this.SVC + '/' + this.$OP)
+    if (u) return u
+    const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
+    const res = await safeop.post({ SVC: this.SVC, $OP: this.$OP })
+    if (!res.url) return null
+    Operation.svcOpUrl.set(this.SVC + '/' + this.$OP, res.url)
+    return res.url
+  }
+
+  async $GetSvcOrgUrl () : Promise<[string, string]> {
+    const sf = stores.safe
+    let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.org)
+    if (uo) return uo
+    const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
+    const res = await safeop.post({ SVC: this.SVC, $OP: this.$OP })
+    if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.org, res.urlOp)
+    return res.urlOp
+  }
 
   constructor (opName: string, SVC?: string, background?: boolean) {
     this.opName = opName
@@ -63,8 +54,6 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
-  //     throw new AppExc({code: 1007, label: 'svcopurl not found', opName, args: [SVC, $OP] })
-
   async post (args: any) : Promise<any> {
     const config = stores.config
     const session = stores.session
@@ -77,13 +66,13 @@ export class Operation {
 
       let u: string
       if (this.$OP) {
-        u = await $GetSvcOpUrl(this.SVC, this.$OP)
+        u = await this.$GetSvcOpUrl()
         if (!u)
           throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.$OP] })
       } else {
         if (!this.org)
           throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
-        const [u1, op] = await $GetSvcOrgUrl(this.SVC, this.org)
+        const [u1, op] = await this.$GetSvcOrgUrl()
         if (!u1)
           throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.org, this.SVC] })
         u = u1
@@ -152,17 +141,8 @@ export class SafeOperation extends Operation {
         if (!x.endsWith('.php?')) x += '/safe.php?'
       }
       this.url = x + opName
-    } else this.url = K.SAFE_URL + opName
+    } else this.url = K.MASTERDIR_URL + opName
   }
-
-  /* Declare que désormais le repository des safes
-  est un site Web disposant d'un script PHP 'safe.php'
-  si url est vide, retour au repository par défaut (standard)
-  */
-  /*static setSafeUrl (url: string) {
-    SafeOperation.urlx = url + '/safe.php?'
-  }
-  */
 
   async post (args: any) : Promise<any>{
     const config = stores.config

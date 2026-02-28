@@ -169,6 +169,11 @@
       :disable="!session.hasNet || session.incognito || sf.openMode > 2"
       :fnopen="openTrustings" size="sm"/>
 
+    <bar-open :bubble="$t('HPadmin_bub')" :disbubble="$t('HPadmin_bub')"
+      :title="$t('HPadmin_label')"
+      :disable="!session.hasNet"
+      :fnopen="openAdminMgr" size="sm"/>
+
     <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
       :title="$t('HPprefs_1')"
       :disable="!session.hasNet || session.incognito"
@@ -260,7 +265,10 @@
   <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
 
   <!-- Gestion des préférences -->
-  <prefs-mgr v-if="pm" :idc="idc" @updated="openPM"/>
+  <prefs-mgr v-if="pm" :idc="idc"/>
+
+  <!-- Gestion des rôles "admin" -->
+  <admin-mgr v-if="adm" :idc="idc"/>
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
@@ -405,6 +413,7 @@ import SafeCr from '../components-fw/SafeCr.vue'
 import ManageUsers from '../components-fw/ManageUsers.vue'
 import CredsMgr from '../components-fw/CredsMgr.vue'
 import PrefsMgr from '../components-fw/PrefsMgr.vue'
+import AdminMgr from '../components-fw/AdminMgr.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarOpen1 from '../components-fw/BarOpen1.vue'
@@ -436,6 +445,7 @@ const mu = computed(() => ui.dModels[idc].manusers)
 const sc = computed(() => ui.dModels[idc].createsafe)
 const cm = computed(() => ui.dModels[idc].credsmgr)
 const pm = computed(() => ui.dModels[idc].prefsmgr)
+const adm = computed(() => ui.dModels[idc].adminmgr)
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -594,6 +604,10 @@ const openTrustings = () => {
 
 const openPrefsMgr = () => {
   ui.oD(idc, 'prefsmgr')
+}
+
+const openAdminMgr = () => {
+  ui.oD(idc, 'adminmgr')
 }
 
 const delTrustIt = (id) => {

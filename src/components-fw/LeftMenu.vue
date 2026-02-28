@@ -7,7 +7,7 @@
       <help-button page="help"/>
     </q-toolbar>
     <div class="column items-center">
-      <input-A  class="q-ma-sm" prefix="orgcode" 
+      <input-A  class="q-ma-sm" prefix="orgcode"
         v-model="session.currentOrg" size="org"/>
     </div>
   </q-header>
@@ -19,7 +19,7 @@
       <btn-cond v-if="session.admin.svcOps.size !== 0" class="q-mb-sm"
         flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
-      <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm" 
+      <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
@@ -56,8 +56,9 @@ const backToOpenSession = async () => {
 const openAdmin = (svc) => {
   ui.closeMenu()
   ui.setPage('admin')
-  session.admin.svc = ''
-  session.admin.org = ''
+  session.SVC = ''
+  session.$OP = ''
+  session.org = ''
 }
 
 </script>

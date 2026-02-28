@@ -8,7 +8,7 @@ export const K = {
   },
   DEFAULT_SERVICE: 'AS2',
 
-  SAFE_URL: 'http://localhost:8080/safe/',
+  MASTERDIR_URL: 'http://localhost:8080/safe/',
   SAFE_URLS: { // Safes spécifiques "bien connus"
     dsphp: 'http://localhost:8888/safe.php?'
   },
@@ -55,7 +55,7 @@ export const K = {
 
   phrasestar: true,
 
-  roles: new Set(['admin', 'manager', 'auteur', 'lecteur', 'manager', 'groupe']),
+  roles: new Set(['manager', 'auteur', 'lecteur', 'groupe']),
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

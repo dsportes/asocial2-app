@@ -171,8 +171,12 @@ export const useSessionStore = defineStore('session', () => {
   const userId = computed(() => _userId.value)
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
-  const _creds: Ref<Map<string, Credential>> = ref(null)
+  const _creds: Ref<Map<string, Credential>> = null
   const creds = computed(() => _creds.value)
+  const svcOrgs = ref(new Set())
+  const $OP = ref('')
+  const SVC = ref('')
+  const org = ref('')
 
   const setStartContext = (
       userId: string,
@@ -182,7 +186,11 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
-    setAdminInfo()
+    $OP.value =''
+    SVC.value = ''
+    org.value = ''
+    svcOrgs .clear()
+    for(const [,c] of _creds.value) svcOrgs.value.add(c.svc + '/' + c.org)
     stores.ui.setPage('app')
   }
 
@@ -190,28 +198,10 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = ''
     _aboutProfile.value = ''
     _creds.value = null
-    admin.svcOps = new Set()
-    admin.svcOrgs = new Set()
-    admin.$OP = ''
-    admin.svc = ''
-    admin.org = ''
-  }
-
-  const admin = reactive({
-    svcOps: new Set(),
-    svcOrgs: new Set(),
-    $OP : '',
-    svc: '',
-    org: ''
-  })
-
-  // Liste des codes des services dont l'utilisateur est admin
-  const setAdminInfo = () => {
-    if (!_creds.value || !_creds.value.size) return
-    for(const [,c] of _creds.value) {
-      if (c.role === 'admin') admin.svcOps.add(c.svc + '/' + c.org)
-      else admin.svcOrgs.add(c.svc + '/' + c.org)
-    }
+    svcOrgs .clear()
+    $OP.value =''
+    SVC.value = ''
+    org.value = ''
   }
 
   return {
@@ -223,7 +213,7 @@ export const useSessionStore = defineStore('session', () => {
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
     userId, currentOrg, aboutProfile, creds, setStartContext, endSession,
-    setAdminInfo, admin
+    SVC, $OP, org, svcOrgs
     // focus, getFocus, lostFocus, closingApp
   }
 })

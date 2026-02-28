@@ -6,15 +6,13 @@
 
     <q-toolbar-title class="titre-md q-mx-md">
       <span>{{$t('PAGEadmin')}}</span>
-      <span class="q-ml-md font-mono text-bold">[{{session.admin.svc}}]</span>
+      <span class="q-ml-md font-mono text-bold">[{{session.SVC}}]</span>
     </q-toolbar-title>
 
     <settings-button class="q-ml-sm"/>
     <help-button class="q-ml-xs q-mr-md" page="DOCpg"/>
   </q-toolbar>
-  <!--div class="row items-center justify-between">
-    <input-a prefix="orgcode" size="org" v-model="session.admin.org"/>
-  </div-->
+
 </div>
 </template>
 

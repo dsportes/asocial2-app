@@ -3,7 +3,7 @@
 <dialog-std2 v-model="pm" :title="$t('HPprefs_1')">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
-      <btn-cond flat size="lg" icon="check" color="warning" 
+      <btn-cond flat size="lg" icon="check" color="warning"
         :label="$t('validate')" @ok="validate"
         :disable="deletedCodes.size === 0 && updatedPrefs.size === 0"/>
     </div>
@@ -15,7 +15,7 @@
     <div class="q-my-md text-center titre-md">{{$t('HPprefslist')}}</div>
     <scroll-area class='pwsm'><template #default>
       <div :class="dkli(idx)" v-for="([code, [time, obj]], idx) of myPrefs" :key="code">
-        <div :class="pSel(code) + 'row q-my-xs cursor-pointer select'" 
+        <div :class="pSel(code) + 'row q-my-xs cursor-pointer select'"
           @click="selPref({ code, time, obj })">
           <div class="col-6 font-mono q-pr-sm">{{code}}</div>
           <div class="col-6">{{dhcool(time)}}</div>
@@ -49,7 +49,7 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-if="pe" v-model="pe" 
+<dialog-std1 v-if="pe" v-model="pe"
   :title="$t('HPprefs_ed')" hdrclass='wmd'>
   <template #hdr>
     <div class="row q-ma-xs items-center justify-between">
@@ -109,8 +109,6 @@ onUnmounted(() => ui.closeVue(idc2))
 const pe = computed(() => ui.dModels[idc2].edprf)
 const pm = computed(() => ui.dModels[props.idc].prefsmgr)
 
-const emit = defineEmits(['updated'])
-
 const props = defineProps ({
   idc: String
 })
@@ -144,12 +142,12 @@ const pSel = (code: string) => {
   return x + y + z
 }
 
-const selPref = (p) => { 
+const selPref = (p) => {
   if (selP.value && selP.value.code === p.code) {
     selP.value = null
   } else {
     selP.value = p
-    edName.value = 0 
+    edName.value = 0
   }
 }
 const rawText = computed(() => !selP.value ? '???' : JSON.stringify(decode(selP.value.obj), null, '\t'))
@@ -162,7 +160,7 @@ const st = computed(() => { // 0: inchangé 1: ajouté 2: modifié 3: supprimé
   return 0
 })
 
-const delPref = () => { 
+const delPref = () => {
   if (st.value !== 1) deletedCodes.value.add(selP.value.code)
   else {
     myPrefs.value.delete(selP.value.code)
@@ -170,7 +168,7 @@ const delPref = () => {
   }
 }
 
-const undoPref = () => { 
+const undoPref = () => {
   const code = selP.value.code
   switch (st.value) {
     case 0: return // inchangé
@@ -217,8 +215,8 @@ const valNamep = async (edit) => {
     return
   }
   const obj = selP.value && selP.value.obj ? decode(selP.value.obj) : {}
-  session.setEdPref(namep.value, 
-    edName.value === 2 ? 0 : selP.value.time, 
+  session.setEdPref(namep.value,
+    edName.value === 2 ? 0 : selP.value.time,
     edName.value === 2 ? {} : obj)
   ui.oD(idc2, 'edprf')
 }

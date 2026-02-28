@@ -5,6 +5,21 @@ import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
 import { AuthRecord, CredRequest } from './credential'
 
+export class  SvcOpIsAdmin extends Operation {
+  constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
+
+  async run ($OP: string) {
+    try {
+      const authRecord = new AuthRecord(this.SVC, $OP)
+      const res = await this.post({ authRecord, $OP })
+      return res['isadmin']
+    } catch(e) {
+      this.ko(e)
+      throw e
+    }
+  }
+}
+
 export class  GetSvcOpStatus extends Operation {
   constructor (SVC: string) { super('GetSvcOpStatus', SVC) }
 
@@ -39,7 +54,6 @@ export class SetSvcOpStatus extends Operation {
   async run ($OP: string, st: number, txt: string) {
     try {
       const authRecord = new AuthRecord(this.SVC, $OP)
-      await authRecord.sign('admin', '')
       const args = { authRecord: authRecord.toObj, $OP, st, txt: txt || ''}
       const res = await this.post(args)
       return res['svcOpStatus']
@@ -56,7 +70,6 @@ export class NewOrg extends Operation {
     /* TODO
     try {
       const authRecord = new AuthRecord(svc, '*')
-      await authRecord.sign('admin', '')
       const args = { authRecord, neworg, st, db}
       const res = await this.post(args, svc)
       return res['status']
@@ -80,11 +93,7 @@ export class SetSubscription extends Operation {
       const session = stores.session
       const subJSON = session.subJSON
       const sessionId = session.sessionId
-      const authRecord = {
-        sessionId,
-        time: Date.now(),
-        tokens : [ ]
-      }
+      const authRecord = new AuthRecord('', org)
       const res = await this.post({ authRecord, org, subscription, longLife })
     } catch(e) {
       this.ko(e)
@@ -102,11 +111,7 @@ export class UpdateSubscription extends Operation {
       const session = stores.session
       const subJSON = session.subJSON
       const sessionId = session.sessionId
-      const authRecord = {
-        sessionId,
-        time: Date.now(),
-        tokens : [ ]
-      }
+      const authRecord = new AuthRecord('', org)
       const res = await this.post({ authRecord, org, title, url, defs })
     } catch(e) {
       this.ko(e)
@@ -139,12 +144,7 @@ export class Sync extends Operation {
       const type = subsToSync.def.split('/').length - 1
       const dataSt = stores.data
       const session = stores.session
-      const authRecord = {
-        sessionId : session.sessionId,
-        time: Date.now(),
-        tokens : [
-        ]
-      }
+      const authRecord = new AuthRecord('', org)
       const res = await this.post({ authRecord, org, toSync: [subsToSync] })
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
@@ -160,8 +160,7 @@ export class GrantNewManager extends Operation {
 
   async run (svc: string, credRequest: CredRequest) {
     try {
-      const authRecord = new AuthRecord(svc, '*')
-      await authRecord.sign('admin', '')
+      const authRecord = new AuthRecord(svc, '*') // TODO
       const args = { authRecord, credRequest}
       await this.post(args)
       return true
@@ -177,8 +176,7 @@ export class RevokeManager extends Operation {
 
   async run (svc: string, revoke: string, hpems: string) {
     try {
-      const authRecord = new AuthRecord(svc, '*')
-      await authRecord.sign('admin', '')
+      const authRecord = new AuthRecord(svc, '*') // TODO
       const args = { authRecord, revoke, hpems}
       const res = await this.post(args)
     } catch(e) {
