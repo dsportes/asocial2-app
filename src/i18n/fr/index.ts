@@ -710,9 +710,13 @@ bla bla
   EX_2002: 'Vous n\'êtes pas enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
   EX_2003: 'Signature "hors délai" dans la vérification que vous êtes enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
   EX_2004: 'Pour le service [{0}], l\'organisation [{2}] n\'est pas hébergée par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
+  EX_2005: 'Utilisateur non authentifié par le service (PEMV non trouvé).',
+  EX_2006: 'Utilisateur non authentifié par le service (signature invalide).',
+  EX_2007: 'Cette opération n\'est accessible qu\'à un utilisateur ADMINISTRATEUR du service.',
 
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
+  EX_3003: 'BUG probable: retour d\'opération [{0}] MASTERDIR: {1}',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau
