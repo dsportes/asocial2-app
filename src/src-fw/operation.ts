@@ -36,7 +36,7 @@ export class Operation {
     let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.org)
     if (uo) return uo
     const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-    const res = await safeop.post({ SVC: this.SVC, $OP: this.$OP })
+    const res = await safeop.post({ SVC: this.SVC, org: this.org })
     if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.org, res.urlOp)
     return res.urlOp
   }

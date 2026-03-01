@@ -1,20 +1,20 @@
 <template>
 <div>
-  <div v-if="session.admin && session.admin.svcOps.size">
+  <div v-if="sf.auth && sf.auth.admins">
     <div class="titre-md text-italic">{{ $t('APservices') }}</div>
-    <div class="row q-gutter-sm">
-      <div v-for="svcOp in session.admin.svcOps" :key="svcOp"
+    <div class="row q-gutter-md">
+      <div v-for="[k,svcOp] of svcOps" :key="k"
         @click=setSvcOp(svcOp)
         class="font-mono text-bold cursor-pointer"
         style="text-decoration: underline;">
-        {{svcOp.replace('/', ' / ')}}
+        {{svcOp.svc + ' ' + svcOp.op}}
       </div>
     </div>
   </div>
 
   <div class="row q-my-sm q-px-xs">
-    <q-select class="col-5" dense filled v-model="service"
-      :options="services" emit-value :label="$t('service')"/>
+    <q-select class="col-5" dense filled v-model="SVC"
+      :options="Array.from(services)" emit-value :label="$t('service')"/>
     <div class="col-1"/>
     <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
       :list="config.K.FAVORITE_OPERATORS"/>
@@ -61,7 +61,7 @@
       <div>{{resping2.txt || $t('svcnocomment')}}</div>
     </div>
   </div>
-    
+
   <q-separator color="orange" class="q-my-sm"/>
 
 </div>
@@ -82,35 +82,60 @@ const sf = stores.safe
 
 const services = Array.from(Object.keys(config.K.SERVICES))
 
-const service = ref('')
-const org = ref('')
+type Elt = {
+  svc: string
+  op: string
+}
+const svcOps: Ref<Map<string, Elt>> = ref(new Map())
+const services2: Ref<string> = ref(new Set())
+
+const SVC = ref('')
 const $OP = ref('')
+const org = ref('')
+
 const resping = ref(null)
 const resping2 = ref(null)
 const newComment = ref('')
 
-const maySetSt = computed(() => session.admin.svcOps.has(service.value + '/' + $OP.value))
-
-const resetPing = () => {
+const reset = () => {
   org.value = ''
   $OP.value = ''
-  service.value = services[0]
+  SVC.value = ''
   resping.value = null
   resping2.value = null
   newComment.value = ''
+  services2.value.clear()
+  svcOps.value.clear()
+  const x = sf.auth && sf.auth.admins ? sf.auth.admins : ''
+  if (x) {
+    const y = x.split('/')
+    let b = true
+    for (const k of y) {
+      const z = k.split('.')
+      svcOps.value.set(k, { svc: z[0], op: z[1]})
+      services2.value.add(z[0])
+      if (b) {
+        SVC.value = z[0]
+        $OP.value = z[1]
+      }
+    }
+  }
 }
 
+reset()
+
+const maySetSt = computed(() => svcOps.value.has(SVC.value + '.' + $OP.value))
+
 const setSvcOp = (svcOp) => {
-  const [svc, op] = svcOp.split('/')
-  service.value = svc
-  $OP.value = op
+  SVC.value = svcOp.svc
+  $OP.value = svcOp.op
   org.value = ''
 }
 
 const svcOpStatus = async () => {
   resping.value = null
   try {
-    resping.value = await new GetSvcOpStatus(service.value).run($OP.value)
+    resping.value = await new GetSvcOpStatus(SVC.value).run($OP.value)
   } catch (e) { }
 }
 
@@ -118,10 +143,9 @@ const svcOrgStatus = async () => {
   await svcOpStatus()
   resping2.value = null
   try {
-    resping2.value = await new GetSvcOrgStatus(service.value).run(org.value)
+    resping2.value = await new GetSvcOrgStatus(SVC.value).run(org.value)
   } catch (e) { }
 }
-
 
 /* SetSvcOpStatus fixe le status du service: { st, at, txt }
   st: code 9: DOWN, 1: UP
@@ -129,10 +153,11 @@ const svcOrgStatus = async () => {
   ADMINISTRATEUR
 */
 async function setSvcOpStatus (stx) : Promise<void> {
-  const op = new SetSvcOpStatus(service.value)
+  const op = new SetSvcOpStatus(SVC.value)
   const res = await op.run($OP.value, stx, newComment.value)
   // res.svcOpStatus contient le status mis à jour
   await svcOpStatus()
+  newComment.value = ''
 }
 
 </script>

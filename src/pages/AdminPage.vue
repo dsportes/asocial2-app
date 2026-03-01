@@ -2,8 +2,12 @@
 <div class="column">
   <div class="row q-gutter-sm">
     <div class="titre-md text-italic">{{ $t('APservices') }}</div>
-    <div v-if="session.admin" v-for="svcOp in session.admin.svcOps" :key="svcOp"
-      class="font-mono text-bold">{{svcOp.replace('/', ' / ')}}</div>
+    <div v-for="[k,svcOp] of svcOps" :key="k"
+      @click=setSvcOp(svcOp)
+      class="font-mono text-bold cursor-pointer"
+      style="text-decoration: underline;">
+      {{svcOp.svc + ' ' + svcOp.op}}
+    </div>
   </div>
   <q-expansion-item switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('svcStatus')">
@@ -92,6 +96,46 @@ const session = stores.session
 
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
+
+const services = Array.from(Object.keys(config.K.SERVICES))
+
+type Elt = {
+  svc: string
+  op: string
+}
+const svcOps: Ref<Map<string, Elt>> = ref(new Map())
+const services2: Ref<string> = ref(new Set())
+
+const SVC = ref('')
+const $OP = ref('')
+
+const reset = () => {
+  $OP.value = ''
+  SVC.value = ''
+  services2.value.clear()
+  svcOps.value.clear()
+  const x = sf.auth && sf.auth.admins ? sf.auth.admins : ''
+  if (x) {
+    const y = x.split('/')
+    let b = true
+    for (const k of y) {
+      const z = k.split('.')
+      svcOps.value.set(k, { svc: z[0], op: z[1]})
+      services2.value.add(z[0])
+      if (b) {
+        SVC.value = z[0]
+        $OP.value = z[1]
+      }
+    }
+  }
+}
+
+reset()
+
+const setSvcOp = (svcOp) => {
+  SVC.value = svcOp.svc
+  $OP.value = svcOp.op
+}
 
 const neworg = reactive({ neworg: '', db: '', st: '', val: false })
 

@@ -16,7 +16,7 @@
       <btn-cond  class="q-mb-sm"
         flat icon="exit_to_app" color="warning"
         :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
-      <btn-cond v-if="session.admin.svcOps.size !== 0" class="q-mb-sm"
+      <btn-cond v-if="sf.auth.admins" class="q-mb-sm"
         flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
