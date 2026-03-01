@@ -64,6 +64,20 @@
 
   <q-separator color="orange" class="q-my-sm"/>
 
+  <div v-if="maySetSt">
+    <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
+    <input-a prefix="svcStatus" v-model="newComment"/>
+    <div class="q--mt-sm row justify-end q-gutter-sm">
+      <btn-cond color="primary" :label="$t('up')" padding="none sm"
+        @ok="setSvcOrgStatus(1)"/>
+      <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
+        @ok="setSvcOrgStatus(2)"/>
+      <btn-cond color="warning" :label="$t('down')" padding="none sm"
+        @ok="setSvcOrgStatus(9)"/>
+    </div>
+    <q-separator color="orange" class="q-my-sm"/>
+  </div>
+
 </div>
 </template>
 
@@ -73,7 +87,7 @@ import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
 import InputA from './InputA.vue'
-import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus } from '../src-fw/operations'
+import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus } from '../src-fw/operations'
 
 const ui = stores.ui
 const config = stores.config
@@ -160,6 +174,18 @@ async function setSvcOpStatus (stx) : Promise<void> {
   newComment.value = ''
 }
 
+/* SetSvcOrgStatus fixe le status de l'otganisation pour le service: { st, at, txt }
+  st: code 9: DOWN, 1: UP
+  txt: texte explicatif éventuel de l'administrateur
+  ADMINISTRATEUR
+*/
+async function setSvcOrgStatus (stx) : Promise<void> {
+  const op = new SetSvcOrgStatus(SVC.value)
+  const res = await op.run(org.value, stx, newComment.value)
+  // res.svcOrgStatus contient le status mis à jour
+  await svcOrgStatus()
+  newComment.value = ''
+}
 </script>
 
 <style lang="scss" scoped>

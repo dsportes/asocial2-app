@@ -20,6 +20,7 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import InputA from '../components-fw/InputA.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
 
 const $t = useI18n().t
 const ui = stores.ui

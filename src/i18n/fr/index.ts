@@ -62,6 +62,7 @@ export default {
   svcStatus: 'Status des services',
   up: 'UP',
   down: 'DOWN',
+  readonly: 'LECTURE SEULE',
   readme: 'LISEZMOI',
   deplier: 'Déplier',
   replier: 'Replier',
@@ -175,6 +176,7 @@ export default {
   op_SetAdmins: 'Déclarer les service / opérateur dont l\'utilisateur est Administrateur',
   op_SvcOpIsAdmin: 'Test si l\'utilisateur est Administrateur',
   op_$SetAdmins: 'Enregistre la liste des service/opérateur dont l\'utilisateur est Administrateur.',
+  op_SetSvcOrgStatus: 'Met à jour le status d\'une organisation pour un service.',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',

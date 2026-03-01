@@ -171,7 +171,7 @@ export const useSessionStore = defineStore('session', () => {
   const userId = computed(() => _userId.value)
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
-  const _creds: Ref<Map<string, Credential>> = null
+  const _creds: Ref<Map<string, Credential>> = ref(null)
   const creds = computed(() => _creds.value)
   const svcOrgs = ref(new Set())
   const $OP = ref('')
@@ -189,8 +189,9 @@ export const useSessionStore = defineStore('session', () => {
     $OP.value =''
     SVC.value = ''
     org.value = ''
-    svcOrgs .clear()
-    for(const [,c] of _creds.value) svcOrgs.value.add(c.svc + '/' + c.org)
+    svcOrgs.value.clear()
+    for(const [,c] of _creds.value)
+      svcOrgs.value.add(c.svc + '/' + c.org)
     stores.ui.setPage('app')
   }
 

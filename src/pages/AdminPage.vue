@@ -92,7 +92,7 @@ const encoder = new TextEncoder()
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
-// const cfg = stores.config
+const config = stores.config
 
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))

@@ -1,4 +1,4 @@
-<template> <!-- Gérer les credentials -->
+<template>
 <dialog-std2 v-model="adm" :title="$t('HPadmin_label')">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">

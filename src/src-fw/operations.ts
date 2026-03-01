@@ -63,6 +63,20 @@ export class SetSvcOpStatus extends Operation {
   }
 }
 
+export class SetSvcOrgStatus extends Operation {
+  constructor (SVC: string) { super('SetSvcOrgStatus', SVC) }
+
+  async run (org: string, st: number, txt: string) {
+    try {
+      const authRecord = await AuthRecord.create(this.SVC, org)
+      const args = { authRecord, org, st, txt: txt || ''}
+      const res = await this.post(args)
+      return res['svcOpStatus']
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
 export class NewOrg extends Operation {
   constructor () { super('NewOrg') }
 
