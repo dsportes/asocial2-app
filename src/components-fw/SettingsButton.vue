@@ -541,12 +541,12 @@ const resetHot = () => {
 
 const setGrantRevoke = async (grant: boolean) => {
   const b = await sf.GRSvcOpOrg (grant, SVC.value, $OP.value, org.value)
-  if (b) await ui.diagDisplay($t('HPcsret_00'))
+  if (b) await ui.diagDisplay($t('recorded'))
 }
 
 const setSvcUrl = async () => {
   const b = await sf.SetOpUrl (SVC.value, $OP.value, svcurl.value)
-  if (b) await ui.diagDisplay($t('HPcsret_00'))
+  if (b) await ui.diagDisplay($t('recorded'))
 }
 resetHot()
 </script>

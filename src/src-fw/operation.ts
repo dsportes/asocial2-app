@@ -45,6 +45,8 @@ export class Operation {
     this.opName = opName
     this.background = background || false
     this.SVC = SVC || stores.config.K.DEFAULT_SERVICE
+    if (!stores.config.K.SERVICES[this.SVC])
+      throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
   }
 
   get label () { return $t('OP_' + this.opName) }
@@ -54,6 +56,26 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
+  async getBaseUrl ($OP?: string, org?: string) : Promise<string> {
+    if ($OP) this.$OP = $OP
+    if (org) this.org = org
+    let u: string
+    if (this.$OP) {
+      u = await this.$GetSvcOpUrl()
+      if (!u)
+        throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.$OP] })
+    } else {
+      if (!this.org)
+        throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
+      const [u1, op] = await this.$GetSvcOrgUrl()
+      if (!u1)
+        throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.org, this.SVC] })
+      u = u1
+      this.$OP = op
+    }
+    return u
+  }
+
   async post (args: any) : Promise<any> {
     const config = stores.config
     const session = stores.session
@@ -61,23 +83,7 @@ export class Operation {
     this.$OP = args.$OP
     try {
       session.opStart(this)
-      if (!stores.config.K.SERVICES[this.SVC])
-        throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
-
-      let u: string
-      if (this.$OP) {
-        u = await this.$GetSvcOpUrl()
-        if (!u)
-          throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.$OP] })
-      } else {
-        if (!this.org)
-          throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
-        const [u1, op] = await this.$GetSvcOrgUrl()
-        if (!u1)
-          throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.org, this.SVC] })
-        u = u1
-        this.$OP = op
-      }
+      const u = await this.getBaseUrl()
       this.url = u + 'op/' + (this.$OP || this.org) + '/' + this.opName
       args.APIVERSION = config.K.SERVICES[this.SVC].api
       const body = new Uint8Array(encode(args))

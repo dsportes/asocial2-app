@@ -24,7 +24,7 @@
       <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
         color="warning"
         @ok="m = fill(m); diffval()"/>
-      <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down" 
+      <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
         dense padding="none" color="primary">
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
@@ -74,10 +74,10 @@ La validation n'est invoquée que si,
 - la valeur a changé par rapport à "initval" (si elle a été donnée),
 - enfin si le résultat de l'appel de la fonction "valctrl" (si elle a été donnée) est true.
 
-Quand une fonction "valctrl" est donnée en propriété, elle donne au composant parent le moen de
+Quand une fonction "valctrl" est donnée en propriété, elle donne au composant parent le moyen de
 contrôler si la valeur en cours de sasie est "validable" ou non en fonction du contexte
 détenu par la parent et non pas seulment sur la seule valeur intrinséque du model.
-Cette fonction n'est invquée que si le model n'est pas disable, a changé de valeur et n'a pas d'eereur syntaxique.
+Cette fonction n'est invoquée que si le model n'est pas disable, a changé de valeur et n'a pas d'eereur syntaxique.
 
 Les libellés sont contrôlés par "prefix". Soit XXpfx ce préfixe,
 - le dictionnaire linguistique peut avoir plusieurs entrées,
@@ -124,7 +124,7 @@ const bubble = computed(() => {
   }
   return 'REGexp_all'
 })
-const star = (config.K.phrasestar || false) && (props.size === 'ps' || props.size === 'p1')
+const star = config.K.phrasestar.has(props.size)
 const disval = ref(false)
 const mayStar = computed(() => m.value.length > 2 && m.value.endsWith('*'))
 const mayVal = computed(() =>

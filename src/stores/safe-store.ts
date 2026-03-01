@@ -910,15 +910,13 @@ export const useSafeStore = defineStore('safe', () => {
     userId: string
     contact: string
     hct: string
-    sh1p: string
-    sh1r: string
+    shk: string
   }
 
   type SetAdmins = {
     userId: string
     admins: string
-    sh1p: string
-    sh1r: string
+    shk: string
   }
 
   type SetAboutProfile = {
@@ -1034,8 +1032,7 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       contact,
       hct,
-      sh1p: sh1p.value,
-      sh1r: sh1r.value
+      shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
     const op = new SafeOperation('$SetContact', mySafeStore.value)
     let ret
@@ -1057,8 +1054,7 @@ export const useSafeStore = defineStore('safe', () => {
     const setadmins: SetAdmins = {
       userId: userId.value,
       admins,
-      sh1p: sh1p.value,
-      sh1r: sh1r.value
+      shk: await Crypt.strongHash(keyK.value, false, false) as string
     }
     const op = new SafeOperation('$SetAdmins', mySafeStore.value)
     let ret

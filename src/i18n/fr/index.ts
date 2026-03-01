@@ -86,6 +86,7 @@ export default {
   service: 'Service',
   endsession: 'Clore la session',
   servicestatus: 'Status des services',
+  recorded: 'Enregistrement effectué avec succès.',
 
   minmax: 'De {0} à {1} signes. ',
   tooshort: 'Texte trop court',
@@ -170,6 +171,10 @@ export default {
   op_GetSvcOrgStatus: 'Obtention du status d\'une organisation (pour un service / opérateur)',
   op_GrantSvcOpOrg: 'Autoiser le service d\'une organisation par un opérateur',
   op_RevokeSvcOpOrg: 'Révoquer le service d\'une organisation par un opérateur',
+  op_SetContact: 'Déclarer le pseudo de contact de l\'utilisateur',
+  op_SetAdmins: 'Déclarer les service / opérateur dont l\'utilisateur est Administrateur',
+  op_SvcOpIsAdmin: 'Test si l\'utilisateur est Administrateur',
+  op_$SetAdmins: 'Enregistre la liste des service/opérateur dont l\'utilisateur est Administrateur.',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -608,6 +613,8 @@ A propos du status ...
   HPpsab_ph: 'ma session pour ...',
   HPtab_c: 'Droits d\'accès',
   HPtab_s: 'Sessions',
+  HPtab_ctc: 'Information de contact',
+  HPtab_adm: 'Administrateur de ...',
   HPpslst_1: 'Liste des sessions',
   HPpslst_2: `# Liste des sessions
 bla bla
@@ -637,12 +644,16 @@ bla bla
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
   HPadmin_add: 'M\'ajouter en tant qu\'Administrateur',
-  HPadnim_label: 'Gérer mes rôles d\'Adiminstrateur Technique',
-  HPadnim_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
+  HPadmin_label: 'Gérer mes rôles d\'Adiministrateur et mon pseudo de contact',
+  HPadmin_bub: `# Gérer mes rôles d\'Adiminstrateur Technique et mon pseudo / phrase de contact
 bla bla
 `,
   HPadmin_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
   HPadmin_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
+  HPadminkosvc: 'Ce service n\'est assuré par cet opérateur.',
+  HPctc_label: 'Pseudo / phrase de contact',
+  HPctc_ph: 'Les framboises sont bleues cet hiver',
+  HPctc_del: 'Supprimer le pseudo / phrase de contact',
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',

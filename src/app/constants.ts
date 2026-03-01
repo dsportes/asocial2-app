@@ -42,7 +42,8 @@ export const K = {
     ps: [8, 40],
     entid: [0, 60],
     isotime: [24, 24],
-    svc: [3, 8, 'svc']
+    svc: [3, 8, 'svc'],
+    contact: [16, 24]
   },
 
   regexp: {
@@ -53,7 +54,7 @@ export const K = {
     svc: new RegExp('^[A-Z][0-9A-Z]*$')
   },
 
-  phrasestar: true,
+  phrasestar: new Set(['ps', 'p1', 'contact']),
 
   roles: new Set(['manager', 'auteur', 'lecteur', 'groupe']),
 

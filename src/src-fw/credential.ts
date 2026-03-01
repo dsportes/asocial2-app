@@ -148,14 +148,23 @@ export class AuthRecord {
   sessionId: string
   time: number
   challenge: Uint8Array
+  userSign: Uint8Array
   // Object par role / entid : [token]
   tokens: Object
 
+  static async create (SVC: string, org: string) {
+    const sf = stores.safe
+    const ar = new AuthRecord(SVC, org)
+    ar.userSign = await Crypt.sign(fromPem(sf.auth.S), ar.challenge)
+    return ar
+  }
+
   constructor (SVC: string, org: string) { // ici, org ou $OP
     const session = stores.session
+    const sf = stores.safe
     this.svc = SVC || stores.config.K.DEFAULT_SERVICE
     this.org = org
-    this.userId = session.userId
+    this.userId = sf.userId
     this.sessionId = session.sessionId
     this.time = Date.now()
     this.challenge = encoder.encode(this.userId + '/' + this.time)

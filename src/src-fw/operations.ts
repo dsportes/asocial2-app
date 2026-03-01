@@ -10,7 +10,7 @@ export class  SvcOpIsAdmin extends Operation {
 
   async run ($OP: string) {
     try {
-      const authRecord = new AuthRecord(this.SVC, $OP)
+      const authRecord = await AuthRecord.create(this.SVC, $OP)
       const res = await this.post({ authRecord, $OP })
       return res['isadmin']
     } catch(e) {
@@ -53,8 +53,8 @@ export class SetSvcOpStatus extends Operation {
 
   async run ($OP: string, st: number, txt: string) {
     try {
-      const authRecord = new AuthRecord(this.SVC, $OP)
-      const args = { authRecord: authRecord.toObj, $OP, st, txt: txt || ''}
+      const authRecord = await AuthRecord.create(this.SVC, $OP)
+      const args = { authRecord, $OP, st, txt: txt || ''}
       const res = await this.post(args)
       return res['svcOpStatus']
     } catch(e) {
@@ -69,7 +69,7 @@ export class NewOrg extends Operation {
   async run (svc: string, neworg: string, st: number, db: string) {
     /* TODO
     try {
-      const authRecord = new AuthRecord(svc, '*')
+      const authRecord = await AuthRecord.create(svc, '*')
       const args = { authRecord, neworg, st, db}
       const res = await this.post(args, svc)
       return res['status']
@@ -93,7 +93,7 @@ export class SetSubscription extends Operation {
       const session = stores.session
       const subJSON = session.subJSON
       const sessionId = session.sessionId
-      const authRecord = new AuthRecord('', org)
+      const authRecord = await AuthRecord.create('', org)
       const res = await this.post({ authRecord, org, subscription, longLife })
     } catch(e) {
       this.ko(e)
@@ -111,7 +111,7 @@ export class UpdateSubscription extends Operation {
       const session = stores.session
       const subJSON = session.subJSON
       const sessionId = session.sessionId
-      const authRecord = new AuthRecord('', org)
+      const authRecord = await AuthRecord.create('', org)
       const res = await this.post({ authRecord, org, title, url, defs })
     } catch(e) {
       this.ko(e)
@@ -144,7 +144,7 @@ export class Sync extends Operation {
       const type = subsToSync.def.split('/').length - 1
       const dataSt = stores.data
       const session = stores.session
-      const authRecord = new AuthRecord('', org)
+      const authRecord = await AuthRecord.create('', org)
       const res = await this.post({ authRecord, org, toSync: [subsToSync] })
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
@@ -160,7 +160,7 @@ export class GrantNewManager extends Operation {
 
   async run (svc: string, credRequest: CredRequest) {
     try {
-      const authRecord = new AuthRecord(svc, '*') // TODO
+      const authRecord = await AuthRecord.create(svc, '*') // TODO
       const args = { authRecord, credRequest}
       await this.post(args)
       return true
@@ -176,7 +176,7 @@ export class RevokeManager extends Operation {
 
   async run (svc: string, revoke: string, hpems: string) {
     try {
-      const authRecord = new AuthRecord(svc, '*') // TODO
+      const authRecord = await AuthRecord.create(svc, '*') // TODO
       const args = { authRecord, revoke, hpems}
       const res = await this.post(args)
     } catch(e) {
