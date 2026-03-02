@@ -47,6 +47,7 @@
   <form-cred v-if="ui.dModels[idc].formcred" :validatefn="recordManager"
     v-model="formCred" org dtime infou infos
     :idc="idc" :title="$t('APnewManager')"/>
+
 </div>
 </template>
 

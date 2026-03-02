@@ -77,6 +77,36 @@ export class SetSvcOrgStatus extends Operation {
     }
   }
 }
+
+export class GetOrgConfig extends Operation {
+  constructor (SVC: string) { super('GetOrgConfig', SVC) }
+
+  async run (org: string) {
+    try {
+      const authRecord = await AuthRecord.create(this.SVC, org)
+      const args = { authRecord, org}
+      const res = await this.post(args)
+      return res['orgconfig']
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export class SetOrgConfig extends Operation {
+  constructor (SVC: string) { super('SetOrgConfig', SVC) }
+
+  async run (org: string, db: string, st: string ) {
+    try {
+      const authRecord = await AuthRecord.create(this.SVC, org)
+      const args = { authRecord, org, db, st}
+      await this.post(args)
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
 export class NewOrg extends Operation {
   constructor () { super('NewOrg') }
 

@@ -64,7 +64,7 @@
 
   <q-separator color="orange" class="q-my-sm"/>
 
-  <div v-if="maySetSt">
+  <div v-if="maySetSt" class="column">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
     <input-a prefix="svcStatus" v-model="newComment"/>
     <div class="q--mt-sm row justify-end q-gutter-sm">
@@ -75,9 +75,51 @@
       <btn-cond color="warning" :label="$t('down')" padding="none sm"
         @ok="setSvcOrgStatus(9)"/>
     </div>
+    <btn-cond :label="$t('APorgconfig')" class="seld-center q-my-md"
+      icon="open_in_new" @ok="openOrgConfig"/>
     <q-separator color="orange" class="q-my-sm"/>
   </div>
 
+  <dialog-std0 v-if="ui.dModels[idc].orgconfig" v-model="ui.dModels[idc].orgconfig"
+    :title="$t('APorgconfig')">
+    <template #default>
+      <div class="column full-width">
+        <div class="row">
+          <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_svc')}}</div>
+          <div class="col-6 font-mono text-bold">{{SVC}}</div>
+        </div>
+        <div class="row">
+          <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_op')}}</div>
+          <div class="col-6 font-mono text-bold">{{$OP}}</div>
+        </div>
+        <div class="row">
+          <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_org')}}</div>
+          <div class="col-6 font-mono text-bold">{{org}}</div>
+        </div>
+        <div class="row">
+          <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_db')}}</div>
+          <div class="col-6 font-mono text-bold">{{oc.ac.db || $t('APnc')}}</div>
+        </div>
+        <div class="row">
+          <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_st')}}</div>
+          <div class="col-6 font-mono text-bold">{{oc.ac.st || $t('APnc')}}</div>
+        </div>
+
+        <div class="row q-my-md q-px-xs">
+          <q-select class="col-5" dense filled v-model="oc.dbn"
+            :options="oc.dbs" emit-value :label="$t('APoc_dbs')"/>
+          <div class="col-1"/>
+          <q-select class="col-5" dense filled v-model="oc.dbn"
+            :options="oc.sts" emit-value :label="$t('APoc_sts')"/>
+        </div>
+
+        <div v-if="nch" class="self-center text-bold text-italic">{{$t('APoc_nch')}}</div>
+        <btn-cond class="self-center q-mb-lg" icon="check" :label="$t('APoc_cfg')"
+          :disable="nch" @ok="setOrgConfig"/>
+
+      </div>
+    </template>
+  </dialog-std0>
 </div>
 </template>
 
@@ -87,12 +129,16 @@ import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
 import InputA from './InputA.vue'
-import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus } from '../src-fw/operations'
+import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
+  GetOrgConfig, SetOrgConfig } from '../src-fw/operations'
 
 const ui = stores.ui
 const config = stores.config
 const session = stores.session
 const sf = stores.safe
+
+const idc = ui.getIdc()
+onUnmounted(() => ui.closeVue(idc))
 
 const services = Array.from(Object.keys(config.K.SERVICES))
 
@@ -186,6 +232,25 @@ async function setSvcOrgStatus (stx) : Promise<void> {
   await svcOrgStatus()
   newComment.value = ''
 }
+
+const oc = reactive({ ac : {db: '', st: '', dbs: [], sts: []}, dbn: '', stn: '' })
+
+const nch = computed(() => oc.ac.db !== oc.dbn || oc.ac.st !== oc.stn)
+
+const openOrgConfig = async () => {
+  const ret = await new GetOrgConfig(SVC.value).post(org.value)
+  if (ret) {
+    oc.ac = ret
+    oc.dbn = oc.ac.db || ''
+    oc.stn = oc.ac.st
+    ui.oD(idc, 'orgconfig')
+  }
+}
+
+const setOrgConfig = async () => {
+  const ret = await new SetOrgConfig(SVC.value).post(org.value, oc.dbn, oc.stn)
+}
+
 </script>
 
 <style lang="scss" scoped>
