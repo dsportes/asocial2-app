@@ -177,6 +177,8 @@ export default {
   op_SvcOpIsAdmin: 'Test si l\'utilisateur est Administrateur',
   op_$SetAdmins: 'Enregistre la liste des service/opérateur dont l\'utilisateur est Administrateur.',
   op_SetSvcOrgStatus: 'Met à jour le status d\'une organisation pour un service.',
+  op_GetOrgConfig: 'Récupération de la configuration d\'une organisation',
+  op_SetOrgConfig: 'Enregistrement de la configuration d\'une organisation',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -220,7 +222,7 @@ export default {
   APdiagtarget: 'Le pseudo de l\'utilisateur cible est incorrect ou manquant',
   APkomanager: 'Echec de l\'enregistrement d\'un nouveau "manager".',
   APokmanager: 'Succès de l\'enregistrement d\'un nouveau "manager".',
-  APorgconfig: 'Configurer l\'organisation',
+  APorgconfig: 'Configurer',
   APoc_svc: 'Service',
   APoc_op: 'Opérateur',
   APoc_org: 'Organisation',
@@ -230,6 +232,7 @@ export default {
   APoc_sts: 'Storages',
   APoc_nch: 'Configuation non modifiée',
   APoc_cfg: 'Mettre à jour la configuration',
+  APoc_del: 'SUPPRIMER la configuration',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',

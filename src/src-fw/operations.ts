@@ -100,7 +100,8 @@ export class SetOrgConfig extends Operation {
     try {
       const authRecord = await AuthRecord.create(this.SVC, org)
       const args = { authRecord, org, db, st}
-      await this.post(args)
+      const res = await this.post(args)
+      return res['orgconfig']
     } catch(e) {
       this.ko(e)
     }

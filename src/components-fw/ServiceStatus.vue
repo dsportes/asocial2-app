@@ -54,6 +54,8 @@
       <input-A class="full-with" prefix="orgcode" v-model="org" size="org"/>
       <btn-cond :label="$t('org_status')" :disable="!$OP || !org"
         @ok="svcOrgStatus"/>
+      <btn-cond :label="$t('APorgconfig')" :disable="!$OP || !org" class="q-mt-sm"
+        icon="open_in_new" @ok="openOrgConfig"/>
     </div>
     <div v-if="resping2 !== null" class="col-7">
       <div>{{$t('svcStatus_now', [dhcool(resping2.now)])}}</div>
@@ -62,9 +64,9 @@
     </div>
   </div>
 
-  <q-separator color="orange" class="q-my-sm"/>
+  <q-separator color="orange" class="q-my-sm q-mx-lg"/>
 
-  <div v-if="maySetSt" class="column">
+  <div v-if="maySetSt" class="column q-mx-lg">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
     <input-a prefix="svcStatus" v-model="newComment"/>
     <div class="q--mt-sm row justify-end q-gutter-sm">
@@ -75,9 +77,6 @@
       <btn-cond color="warning" :label="$t('down')" padding="none sm"
         @ok="setSvcOrgStatus(9)"/>
     </div>
-    <btn-cond :label="$t('APorgconfig')" class="seld-center q-my-md"
-      icon="open_in_new" @ok="openOrgConfig"/>
-    <q-separator color="orange" class="q-my-sm"/>
   </div>
 
   <dialog-std0 v-if="ui.dModels[idc].orgconfig" v-model="ui.dModels[idc].orgconfig"
@@ -107,15 +106,18 @@
 
         <div class="row q-my-md q-px-xs">
           <q-select class="col-5" dense filled v-model="oc.dbn"
-            :options="oc.dbs" emit-value :label="$t('APoc_dbs')"/>
-          <div class="col-1"/>
-          <q-select class="col-5" dense filled v-model="oc.dbn"
-            :options="oc.sts" emit-value :label="$t('APoc_sts')"/>
+            :options="oc.ac.dbs" emit-value :label="$t('APoc_dbs')"/>
+          <div class="col-2"/>
+          <q-select class="col-5" dense filled v-model="oc.stn"
+            :options="oc.ac.sts" emit-value :label="$t('APoc_sts')"/>
         </div>
 
         <div v-if="nch" class="self-center text-bold text-italic">{{$t('APoc_nch')}}</div>
-        <btn-cond class="self-center q-mb-lg" icon="check" :label="$t('APoc_cfg')"
+        <btn-cond class="self-center q-mb-sm" icon="check" :label="$t('APoc_cfg')"
           :disable="nch" @ok="setOrgConfig"/>
+
+        <btn-cond class="self-center q-mb-lg" icon="check" :label="$t('APoc_del')"
+          @ok="delOrgConfig"/>
 
       </div>
     </template>
@@ -124,11 +126,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onUnmounted } from 'vue'
 import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
 import InputA from './InputA.vue'
+import DialogStd0 from './DialogStd0.vue'
 import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
   GetOrgConfig, SetOrgConfig } from '../src-fw/operations'
 
@@ -235,10 +238,10 @@ async function setSvcOrgStatus (stx) : Promise<void> {
 
 const oc = reactive({ ac : {db: '', st: '', dbs: [], sts: []}, dbn: '', stn: '' })
 
-const nch = computed(() => oc.ac.db !== oc.dbn || oc.ac.st !== oc.stn)
+const nch = computed(() => oc.ac.db === oc.dbn && oc.ac.st === oc.stn)
 
 const openOrgConfig = async () => {
-  const ret = await new GetOrgConfig(SVC.value).post(org.value)
+  const ret = await new GetOrgConfig(SVC.value).run(org.value)
   if (ret) {
     oc.ac = ret
     oc.dbn = oc.ac.db || ''
@@ -248,7 +251,13 @@ const openOrgConfig = async () => {
 }
 
 const setOrgConfig = async () => {
-  const ret = await new SetOrgConfig(SVC.value).post(org.value, oc.dbn, oc.stn)
+  const { db, st } = await new SetOrgConfig(SVC.value).run(org.value, oc.dbn, oc.stn)
+  oc.ac.db = db
+  oc.ac.st = st
+}
+
+const delOrgConfig = async () => {
+  const ret = await new SetOrgConfig(SVC.value).run(org.value, '', '')
 }
 
 </script>
