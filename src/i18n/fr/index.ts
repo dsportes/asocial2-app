@@ -274,6 +274,7 @@ export default {
   SBhot_info: 'Ces actions requièrent d\'être enregistré comme Administrtaur du dépôt générique des "coffres forts".',
   SBnotauth: 'Ces actions requièrent d\'être authentifié',
 
+  HPstartpref: 'Ouvrir avec préférences ...',
   HPstore_label: 'Dépôt SPECIFIQUE du "coffre-fort"',
   HPstore_bub: `# Dépôt SPECIFIQUE du "coffre-fort"
   bla bla
@@ -422,7 +423,7 @@ bla bla
   HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
   HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
-  HPclicksession: 'Cliquer sur la session à ouvrir / rouvrir.',
+  HPclicksession: 'Choisir la session ou profil à ouvrir / rouvrir.',
   HPnoclick: 'Aucune session sélectionnée',
   HPskull_9: 'Votre "coffre fort" va être irrémédiablement supprimé. Avez-vous effectué un "backup" par précaution ?',
   HPskull_8: 'Renoncer ou confirmer.',
@@ -447,7 +448,7 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
 - autorise son ouverture en mode AVION sur ce terminal.
 `,
   HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
-  HPpref_1: '... par défaut',
+  HPpref_1: 'par défaut',
   HPnotpinned: '(non épinglée)',
   HPexpname_label: 'Nom du fichier de backup',
   HPexpsafe_1: 'Faire un backup de son "coffre-fort"',
@@ -634,6 +635,7 @@ A propos du status ...
   HPpslst_2: `# Liste des sessions
 bla bla
 `,
+  HPoptstart: 'Options de lancement ...',
   HPnewps_0: 'Nouvelle session ...',
   HPnewps_1: 'AVEC tous les droits d\'accès',
   HPnewps_2: 'SANS AUCUN droit d\'accès',
@@ -714,6 +716,16 @@ bla bla
   FCmissing: 'Le champ [{0}] ne doit pas être vide',
   FCroleko: 'Le champ "rôle" n\'a pas une valeur reconnue',
   FCdtimeko: 'Le champ "dtime" est mal formé, date-heure non reconnue',
+
+  // User Profile
+  UPtitle: 'Profil utilisateur',
+  UPid: 'ID',
+  UPpseudo: 'Pseudo local à ce terminal',
+  UPnone: '(aucun)',
+  UPcontact: 'Pseudo ou phrase de contact externe',
+  UPsessionid: 'ID de synchronisation de la session',
+  UPadmins: 'Administrateur technique de',
+
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',

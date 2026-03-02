@@ -81,72 +81,47 @@
       @ok="openCM"/>
 
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-    <scroll-area><template #default>
+    <scroll-area size="lg" class="q-mb-lg"><template #default>
       <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
         <div v-if="sOfP(profId)">
-          <div :class="clSel(sOfP(profId)) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selSession(sOfP(profId))">
-            <div class="col-7 q-pr-xs">{{p.about || $t('HPpstar')}}</div>
-            <div class="col-4 text-italic">{{dhcool(sOfP(profId).time)}}</div>
-            <div class="col-1 row justify-end">
-              <q-img :src="database" style="height: 24px; max-width: 24px"/>
+          <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selSession(sOfP(profId), true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div>
+                <q-img :src="database" style="height: 18px; max-width: 18px"/>
+                <span class="font-mono text-italic q-ml-md">{{dhcool(sOfP(profId).time)}}</span>
+              </div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionS(sOfP(profId), '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionS(sOfP(profId), code, time, obj)"/>
+              </div>
             </div>
           </div>
         </div>
         <div v-else>
-          <div :class="clSel(p) + 'row q-my-xs font-mono fs-md items-start cursor-pointer select'"
-            @click="selProfile(p)">
-            <div class="col-7 q-pr-xs q-pl-xs">{{p.about || $t('HPpstar')}}</div>
-            <div class="col-4">{{$t('HPnotpinned')}}</div>
-            <div class="col-1"/>
+          <div :class="clSel(p) + 'row q-my-sm'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selProfile(p, true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div class="fs-md text-italic">{{$t('HPnotpinned')}}</div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionP(p, '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionP(p, code, time, obj)"/>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </template></scroll-area>
-
-    <div v-if="nvSP" class="q-mt-md">
-      <input-a v-if="session.hasNet && !selStar"
-        size="about" prefix="HPpsab" :initval="selSessionAbBefore"
-        v-model="selSessionAb" :validatefn="valAbPs"/>
-      <div v-else class="font-mono text-bold">{{selSessionAb}}</div>
-
-      <div v-if="sf.selectedSession">
-        <div v-if="session.hasNet" class="row justify-between items-center">
-          <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
-          <btn-bubble class="col-auto self-start" size="sm"
-            :text="$t('HPunpin_1')"/>
-        </div>
-        <div v-if="!unpinme" class="row justify-between items-center">
-          <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
-          <btn-bubble class="col-auto self-start" size="sm"
-            :text="$t('HPresetdb_1')"/>
-        </div>
-      </div>
-      <div v-else>
-        <div v-if="session.hasNet" class="row justify-between items-center">
-          <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
-          <btn-bubble class="col-auto self-start" size="sm"
-            :text="$t('HPpin_1')"/>
-        </div>
-      </div>
-    </div>
-    <div v-else class="titre-lg text-warning text-italic q-mt-sm">{{$t('HPnoclick')}}</div>
-
-    <!--div :class="!nvSP ? 'disabled' : ''">
-      <div v-if="sf.selectedSession" class="font-mono text-bold q-mt-sm">
-        {{sf.selectedSession.profId === '*' ? $t('HPpstar') : sf.selectedSession.about}}
-      </div>
-    </div-->
-    <div v-if="nvSP">
-      <div class="titre-md text-italic text-bold text-right">{{$t('HPwprfs')}}</div>
-      <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('HPpref_1')" @ok="validateSession('', 0, null)"/>
-        <btn-cond v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-          flat :label="'... ' + code" @ok="validateSession(code, time, obj)"/>
-      </q-card-actions>
-    </div>
-
-    <q-separator class="q-my-md" color="orange"/>
 
     <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
       :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
@@ -191,8 +166,52 @@
       :disable="session.incognito || !session.hasNet" size="sm"
       :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
   </div>
-
 </div>
+
+  <!-- Dialogue d'options de lancement -->
+  <q-dialog v-model="ui.dModels[idc].optstart" persistent>
+    <q-card :class="sty('sm')">
+      <q-toolbar class="tbs">
+        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
+        <q-toolbar-title class="titre-lg text-right q-mx-xs">{{$t('HPoptstart')}}</q-toolbar-title>
+      </q-toolbar>
+      <div class="full-width q-pa-sm">
+        <input-a v-if="session.hasNet && !selStar" class="q-my-sm"
+          size="about" prefix="HPpsab" :initval="selSessionAbBefore"
+          v-model="selSessionAb" :validatefn="valAbPs"/>
+        <div v-else class="q-my-sm font-mono text-bold">{{selSessionAb}}</div>
+
+        <div v-if="sf.selectedSession">
+          <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
+            <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
+            <btn-bubble class="col-auto self-start" size="sm"
+              :text="$t('HPunpin_1')"/>
+          </div>
+          <div v-if="!unpinme" class="q-my-sm row justify-between items-center">
+            <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
+            <btn-bubble class="col-auto self-start" size="sm"
+              :text="$t('HPresetdb_1')"/>
+          </div>
+        </div>
+        <div v-else>
+          <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
+            <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
+            <btn-bubble class="col-auto self-start" size="sm"
+              :text="$t('HPpin_1')"/>
+          </div>
+        </div>
+
+        <div class="row q-my-md q-gutter-sm">
+          <div class="text-italic text-bold">{{$t('HPstartpref')}}</div>
+          <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionD('', 0, null)"/>
+          <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+            :label="code" padding="none xs"
+            @ok="validateSessionD(code, time, obj)"/>
+        </div>
+
+      </div>
+    </q-card>
+  </q-dialog>
 
   <!-- Dialogue de saisie d'un code PIN-->
   <q-dialog v-model="ui.dModels[idc].pindial" persistent>
@@ -704,7 +723,7 @@ const valAbPs = async () => {
   }
 }
 
-const selSession = (s) => {
+const selSession = (s, dial: boolean) => {
   resetdb.value = false
   unpinme.value = false
   sf.selectedSession = s
@@ -722,14 +741,16 @@ const selSession = (s) => {
       selSessionAbBefore.value = s.about
     }
   }
+  if (dial) ui.oD(idc, 'optstart')
 }
 
-const selProfile = (profile: Profile) => {
+const selProfile = (profile: Profile, dial: boolean) => {
   pinme.value = false
   sf.selectedSession = null
   sf.selectedProfile = profile
   selSessionAb.value = profile.profId === '*' ? $t('HPpstar') : profile.about
   selSessionAbBefore.value = selSessionAb.value
+  if (dial) ui.oD(idc, 'optstart')
 }
 
 const selStar = computed(() =>
@@ -747,6 +768,21 @@ const locSafeProfiles = ref(sf.mySafeProfiles)
 watch(() => sf.mySafeProfiles, (v) => {
   locSafeProfiles.value = v
 })
+
+const validateSessionS = async (s, prefCode, prefTime, prefObj) => {
+  selSession(s)
+  await validateSession(prefCode, prefTime, prefObj)
+}
+
+const validateSessionP = async (p, prefCode, prefTime, prefObj) => {
+  selProfile(p)
+  await validateSession(prefCode, prefTime, prefObj)
+}
+
+const validateSessionD = async (prefCode, prefTime, prefObj) => {
+  ui.fD()
+  await validateSession(prefCode, prefTime, prefObj)
+}
 
 const validateSession = async (prefCode, prefTime, prefObj) => {
   let sv = sf.selectedSession

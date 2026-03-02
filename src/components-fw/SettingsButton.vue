@@ -40,6 +40,12 @@
 
         <q-separator v-if="stores.safe.step === 0"/>
 
+        <q-item  v-if="stores.safe.step !== 1"
+          clickable dense v-close-popup @click="openUP">
+          <q-item-section avatar><q-avatar size="xl" icon="img:icons/anonymous_white.png"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('UPtitle')}}</q-item-section>
+        </q-item>
+
         <q-item  v-if="stores.safe.step === 0" clickable dense v-close-popup @click="openPrefs">
           <q-item-section avatar><q-avatar size="xl" icon="settings"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('settings')}}</q-item-section>
@@ -57,7 +63,12 @@
           <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
         </q-item>
 
-        <q-separator v-if="ui.page !== 'home'" />
+        <q-separator/>
+
+        <q-item clickable dense v-close-popup @click="backToOpenSession()">
+          <q-item-section avatar><q-avatar size="xl" icon="exit_to_app"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
+        </q-item>
 
         <q-item clickable dense v-close-popup @click="cfReloadPage">
           <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
@@ -73,30 +84,12 @@
 
         <div class="q-pa-xs">
           <div class="row">
-            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('app')}}</div>
-            <div class="font-mono">{{config.K.APPNAME}}</div>
-            <div class="font-mono">{{ $t('build') + ': ' + config.K.BUILD }}</div>
-          </div>
-          <div class="row q-mt-sm">
-            <div class="titre-md text-italic q-pr-sm text-primary">
-              {{$t('userid')}}</div>
-            <div class="font-mono">{{sf.userId ? sf.userId: $t('unknown')}}</div>
+            <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('app')}}</div>
+            <div class="font-mono text-bold">{{config.K.APPNAME}}</div>
           </div>
           <div class="row">
-            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('username')}}</div>
-            <div class="font-mono">{{sf.userName ? sf.userName: $t('unknown')}}</div>
-          </div>
-          <div class="row">
-            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('authby')}}</div>
-            <div class="font-mono">{{$t('authby_' + sf.openMode)}}</div>
-          </div>
-          <div class="row">
-            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('sessionid')}}</div>
-            <div class="font-mono">{{session.sessionInfo}}</div>
-          </div>
-          <div v-if="sf.step !== 0" class="row">
-            <div class="titre-md text-italic q-pr-sm text-primary">{{$t('step')}}</div>
-            <div class="font-mono">{{$t('step_' + sf.step)}}</div>
+            <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('build')}}</div>
+            <div class="font-mono text-bold">{{config.K.BUILD}}</div>
           </div>
         </div>
       </q-list>
@@ -382,6 +375,7 @@
 
     </template>
   </dialog-std1>
+
   <!-- Maj préférences -->
   <dialog-std1 v-model="ui.dModels[idc].edprf"
     :title="$t('HPprefs_ed')" hdrclass='wmd'>
@@ -402,6 +396,9 @@
       <pref-editor class="q-pa-xs"/>
     </template>
   </dialog-std1>
+
+  <user-profile v-if="ui.dModels['0'].userprofile"/>
+
 </div>
 </template>
 
@@ -424,6 +421,7 @@ import PrefEditor from '../components/PrefEditor.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
+import UserProfile from '../components-fw/UserProfile.vue'
 import { $t, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
 import { GetSvcOpStatus } from '../src-fw/operations'
 import { localeOption } from '../stores/config-store'
@@ -438,6 +436,16 @@ const sf = stores.safe
 const ui = stores.ui
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
+
+const backToOpenSession = async () => {
+  const ok = await ui.diagDisplay($t('HPbackopen'), true)
+  if (ok)
+    ui.backToOpenSession()
+}
+
+const openUP = () => {
+  ui.oD('0', 'userprofile')
+}
 
 const tab = ref('cred')
 watch(tab, (t) => {

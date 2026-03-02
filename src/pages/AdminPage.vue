@@ -14,21 +14,6 @@
     <service-status/>
   </q-expansion-item>
   <q-expansion-item switch-toggle-side expand-separator dense
-    header-class="full-width tbs" :label="$t('APnewOrg')">
-    <div class="q-py-sm q-px-md">
-      <input-a class="q-my-xs" prefix="orgcode" size="org" v-model="neworg.neworg"/>
-      <input-a class="q-my-xs" prefix="APdbcode" size="stdb" v-model="neworg.db"/>
-      <input-a class="q-my-xs" prefix="APstcode" size="stdb" v-model="neworg.st"/>
-      <div class="q-my-md row items-center justify-end q-gutter-sm">
-        <btn-cond icon="undo" :label="$t('giveup')" flat
-          @ok="resetNewOrg"/>
-        <btn-cond icon="check" color="warning" :label="$t('validate')"
-          @ok="neworg.val = true"/>
-        <btn-confirm :actif="neworg.val" :confirm="cfNewOrg"/>
-      </div>
-    </div>
-  </q-expansion-item>
-  <q-expansion-item switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('APnewManager')">
     <div class="column items-center">
     <div class="q-my-md wmd full-width column items-center">

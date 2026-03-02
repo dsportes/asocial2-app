@@ -199,7 +199,7 @@ export const useSessionStore = defineStore('session', () => {
     _userId.value = ''
     _aboutProfile.value = ''
     _creds.value = null
-    svcOrgs .clear()
+    svcOrgs.value.clear()
     $OP.value =''
     SVC.value = ''
     org.value = ''

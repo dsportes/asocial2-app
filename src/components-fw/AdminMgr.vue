@@ -1,5 +1,5 @@
 <template>
-<dialog-std2 v-model="adm" :title="$t('HPadmin_label')">
+<dialog-std2 v-model="adm" :title="$t('HPadmin_label')" tbclass="tbs">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">
       <q-tab name="admins" :label="$t('HPtab_adm')"
