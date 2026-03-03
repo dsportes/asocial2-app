@@ -49,7 +49,7 @@ export const K = {
   regexp: {
     b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
     num: new RegExp('^[0-9]*$'),
-    an1: new RegExp('^[0-9a-z]*$'),
+    an1: new RegExp('^[a-z][0-9a-z]*$'),
     oper: new RegExp('^[$][0-9A-Z]*$'),
     svc: new RegExp('^[A-Z][0-9A-Z]*$')
   },
