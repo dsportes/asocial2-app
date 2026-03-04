@@ -6,14 +6,19 @@
       <q-icon v-if="st === 2" class="col-1" name="delete" size="24px"  color="warning"/>
       <q-icon v-if="st === 0 || st === 3" class="col-1" name="check" size="12px"  color="none"/>
       <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.svc}}</div>
-      <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.xid.substring(0, 8)}}</div>
+      <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.id.substring(0, 8)}}</div>
       <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.org}}</div>
-      <div :class="'col-4 ellipsis q-pr-xs' + cl">{{$t('ROLE' + cred.role)}}</div>
+      <div :class="'col-4 ellipsis q-pr-xs' + cl">{{$t(cred.$trole)}}</div>
     </div>
-    <div class="row font-mono fs-md">
+    <div v-if="cred.objId" class="row font-mono fs-md">
       <div class="col-2"></div>
       <div :class="'col-10 mh' + (st === 3 ? ' text-warning text-italic' : ' text-italic') + cl">
-        {{cred.about + (cred.entid ? ' [' + cred.entid.substring(0, 8) + ']' : '')}}</div>
+        {{(cred.name || '') + ' [' + cred.objId.substring(0, 8) + ']'}}</div>
+    <div v-if="cred.comment" class="row font-mono fs-md">
+      <div class="col-2"></div>
+      <div :class="'col-10 mh' + (st === 3 ? ' text-warning text-italic' : ' text-italic') + cl">
+        {{cred.comment}}</div>
+    </div>
     </div>
   </div>
 </div>

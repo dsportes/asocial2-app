@@ -75,6 +75,14 @@ export function toPem(key: ArrayBuffer, pub?: boolean) : string {
   : `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`
 }
 
+export function keyToB64(key: ArrayBuffer) : string {
+  return window.btoa(ab2str(key))
+}
+
+export function keyFromB64 (key: string) {
+  return str2ab(window.atob(key))
+}
+
 export function fromPem(pem: string, pub?: boolean) : ArrayBuffer {
   // fetch the part of the PEM string between header and footer
   const pemHeader = pub ? '-----BEGIN PUBLIC KEY-----' : '-----BEGIN PRIVATE KEY-----'

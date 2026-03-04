@@ -411,6 +411,13 @@ export const useSafeStore = defineStore('safe', () => {
   - `data`: sérialisation du détail du _credential_:
   */
   const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
+  /* Section construite skeys
+  Clé AES skey pour chaque svc / role / docId
+  */
+  const skeys : Ref<Map<string, Uint8Array>> = ref(null)
+  const skey = (svc: string, roleOrClass: string, docId?: string) :Uint8Array => {
+    return skeys.get(svc + '/' + roleOrClass + '/' + (docId || ''))
+  }
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -528,6 +535,7 @@ export const useSafeStore = defineStore('safe', () => {
     const delcreds = []
     const msvc = stores.config.services
     const m = new Map<string, Credential>()
+    const sk = new Map<string, Uint8Array>()
     if (safe.creds) {
       for (const xid in safe.creds) {
         const x = b64ToU8(safe.creds[xid])
@@ -535,9 +543,16 @@ export const useSafeStore = defineStore('safe', () => {
         try {
           if (!spec) {
             const obj = decode(await Crypt.decrypt(keyK.value, x))
-            const c: Credential = new Credential(obj)
+            const c: Credential = new Credential().fromObj(obj)
             if (!msvc.has(c.svc)) continue
-            if (c) m.set(c.xid, c)
+            if (c) {
+              m.set(c.id, c)
+              if (c.skey) {
+                const x = b64ToU8(c.skey)
+                sk.set(c.skeyId, x)
+                if (c.subRole) sk.set(c.skeyId2, x)
+              }
+            }
           } else {
             // Credential transmis par un autre user émetteur
             // [obj credential crypté, pub: clé publique C de l'émetteur ]
@@ -545,17 +560,23 @@ export const useSafeStore = defineStore('safe', () => {
             const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
             const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
             const obj = decode(dc)
-            const c: Credential = await Credential.fromTObj(obj, keyK.value, aes)
+            const c: Credential = new Credential().fromObj(obj)
             if (!msvc.has(c.svc)) continue
-            if (c) m.set(c.xid, c)
-            mcreds.set(c.xid, c)
-            delcreds.push(xid)
+            m.set(c.id, c)
+            if (c.skey) {
+              const x = b64ToU8(c.skey)
+              sk.set(c.skeyId, x)
+              if (c.subRole) sk.set(c.skeyId2, x)
+            }
+            mcreds.set(c.id, c) // SANS $ en préfixe
+            delcreds.push(xid) // AVEC $ en préfixe
           }
         } catch (e) {
           console.log(e)
         }
       }
     }
+    skeys.value = sk
     mySafeCreds.value = m
     if (mcreds.size || delcreds.length)
       await updateCreds(mcreds, delcreds, null, null, true)
@@ -1388,12 +1409,10 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   type TransmitCred = {
-    targetId: string // id ou p0 ou r0 du destinataire du credential
-    credXid: string // id du credential
+    targetId: string // id ou p0 ou r0 ou contact de U cible du credential
+    credid: string // id du credential
     crpub: string // [cryptedCred, pubc] encodé et en base64
-    // pubC: string // clé publique (PEM) de cryptage de l'émetteur
-    // cryptedCred: string // Objet Credential sérialisé crypté pour le destinataire
-  }
+   }
 
   const transmitCred = async (safeStore: string, cred: Credential, targetId: string) => {
 
@@ -1403,13 +1422,12 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$TransmitCred', safeStore)
     try {
       const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-      const objt = await cred.toTObj(keyK.value, aes)
+      const objt = cred.toObj
       const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(objt)))
-
       const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
         targetId: id,
-        credXid: cred.xid,
+        credid: cred.id,
         crpub
       }
 
@@ -1507,7 +1525,7 @@ export const useSafeStore = defineStore('safe', () => {
     newTrusting, newTSession,
     trustings, setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
-    mySafeCreds, getCreds,
+    mySafeCreds, getCreds,skey,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
     auth,

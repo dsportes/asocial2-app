@@ -31,7 +31,7 @@
       <div>{{$t('svcStatus_now', [dhcool(resping.now)])}}</div>
       <div :class="resping.st === 9 ? 'text-warning text-bold' : ''">
         {{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
-      <div>{{resping.txt || $t('svcnocomment')}}</div>
+      <div>{{resping.txt || $t('nocomment')}}</div>
     </div>
   </div>
 
@@ -60,7 +60,7 @@
     <div v-if="resping2 !== null" class="col-7">
       <div>{{$t('svcStatus_now', [dhcool(resping2.now)])}}</div>
       <div>{{$t('svcStatus_' + resping2.st, [dhcool(resping2.at)])}}</div>
-      <div>{{resping2.txt || $t('svcnocomment')}}</div>
+      <div>{{resping2.txt || $t('nocomment')}}</div>
     </div>
   </div>
 

@@ -291,8 +291,7 @@
     <template #hdr>
       <div class="row items-center wmd full-width">
         <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
-          <q-tab name="crypto" :label="$t('crypto')" />
-          <q-tab name="cred" :label="$t('cred')" />
+          <q-tab name="crypto" icon="key" :label="$t('crypto')" />
           <q-tab name="hot" icon="img:icons/superman.jpg" :label="$t('SBhot')" />
         </q-tabs>
       </div>
@@ -345,34 +344,6 @@
           </div>
         </div>
       </div>
-      <div v-if="tab === 'cred'" class="q-pa-xs">
-        <div class="row q-my-sm q-gutter-sm">
-          <btn-cond class="warning" :label="$t('reset')" icon="undo"
-            @ok="resetCred"/>
-          <btn-cond :label="$t('SBgencred')" icon="check"
-            @ok="genCred"/>
-        </div>
-        <input-a class="q-my-xs" prefix="aboutcred" v-model="cred.about"/>
-        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.svc"
-          :options="Array.from(config.services.keys())" :label="$t('service')"/>
-        <input-a class="q-my-xs" size="org" prefix="orgcode"
-          v-model="cred.org"/>
-        <input-A class="q-my-xs" prefix="operator" v-model="cred.org" size="oper"
-          :list="config.K.FAVORITE_OPERATORS"/>
-        <q-select dense class="q-my-xs q-ml-lg" filled v-model="cred.role"
-          :options="optsRoles" emit-value :label="$t('ROLE')"/>
-        <input-a class="q-my-xs" size="entid" prefix="SBentid"
-          v-model="cred.entid"/>
-        <input-a class="q-my-xs" size="entkey" prefix="SBentkey"
-          v-model="cred.entkey"/>
-        <div class="q-my-xs titre-md text-italic">{{$t('SBprivpem')}}</div>
-        <q-input dense class="q-pa-xs bord1" v-model="cred.pems" type="textarea"
-         :rows="7"/>
-        <div class="q-my-sm titre-md text-italic">{{$t('SBcredres')}}</div>
-        <q-input dense class="q-pa-xs bord1" v-model="credRes" type="textarea"
-         :rows="10"/>
-      </div>
-
     </template>
   </dialog-std1>
 
@@ -449,8 +420,7 @@ const openUP = () => {
 
 const tab = ref('cred')
 watch(tab, (t) => {
-  if (t === 'cred') resetCred()
-  else if (t === 'hot') resetHot()
+  if (t === 'hot') resetHot()
 })
 
 const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
@@ -505,32 +475,6 @@ const validPs = async () => {
   cr.shaps = Crypt.sha(sh, false)
   cr.shaSps = Crypt.shaS(sh)
 }
-
-const genSV = async () => {
-  const { pub, priv } = await Crypt.getSVKeyPair()
-  cr.pems = toPem(pub, true) + '\n\n' + toPem(priv)
-}
-
-const optsRoles = ref([])
-for (const r of config.K.roles) optsRoles.value.push({ value: r, label : $t('ROLE' + r)})
-
-const cred0 = { svc: '', id: '', about:'', role: '', org: '', entid: '', entkey: '', pems: '', hpems: '' }
-const cred : Ref<CredObj> = ref({ ...cred0})
-const credRes = ref('')
-const resetCred = () => {
-  credRes.value = ''
-  cred.value = { ...cred0 }
-}
-
-const genCred = () => {
-  try {
-    const c = new Credential(cred.value)
-    credRes.value = c.toJson
-  } catch (e) {
-    credRes.value = e.toString()
-  }
-}
-resetCred()
 
 const svcurl = ref('')
 const SVC = ref('')

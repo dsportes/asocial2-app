@@ -52,7 +52,7 @@ export default {
   closeApp: 'Fermer l\'application',
   restartApp: 'Redémmarrer l\'application',
   svcStatus_now: 'Statut observé à: {0}',
-  svcnocomment: '(pas de commentaires)',
+  nocomment: '(pas de commentaire)',
   svcStatus_0: 'Status non connu',
   svcStatus_1: 'UP - dernière mise à jour: {0}',
   svcStatus_2: 'LECTURE - dernière mise à jour: {0}',
@@ -271,7 +271,7 @@ export default {
   SBentid_label: 'ID de l\'entité (fac)',
   SBentkey_label: 'Clé AES (base 64) de l\'entité (fac)',
   SBhot: 'HOT!',
-  SBhot_info: 'Ces actions requièrent d\'être enregistré comme Administrtaur du dépôt générique des "coffres forts".',
+  SBhot_info: 'Ces actions requièrent d\'être enregistré comme Administrtaur du "MASTERDIR".',
   SBnotauth: 'Ces actions requièrent d\'être authentifié',
 
   HPstartpref: 'Ouvrir avec préférences ...',

@@ -1,8 +1,9 @@
-import { Crypt, fromPem } from './crypt'
+import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
 import { u8ToB64, b64ToU8 } from './util'
 import stores from '../stores/all'
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
+import { Operation } from './operation'
 
 const encoder = new TextEncoder()
 
@@ -21,24 +22,20 @@ export type CredObj = {
   hpems: string // hash court de `pems`.
 }
 
-export type CredRequest = {
+export type CredentialD = {
+  id: string
   userId: string
   role: string
-  org: string
-  entid: string
-  hpems: string
+  docId: string
+  time: number
   pemv: string
-  ctime: number
-  dtime: number
-  infou: Uint8Array // info pour utilisateur cryté pour lui
-  infous: Uint8Array // info pour utilisateur cryté pour le setter
-  infos: Uint8Array // info pour le setter cryté pour le setter
-  setterId: string
+  limit: number
   cond: Object
 }
 
 export class Credential {
 
+  /*
   static parse (inp: string) : Map<string, Credential> {
     const m = new Map<string, Credential>()
     const objs: CredObj[] = JSON.parse(inp)
@@ -59,6 +56,7 @@ export class Credential {
     const u8 = Crypt.random(24)
     return u8ToB64(u8).replaceAll('+', '1').replaceAll('/', '2')
   }
+    */
 
   /* Construit un credential depuis un object de type CredObj
   reçu par transmission d'un transmetteur T:
@@ -66,6 +64,7 @@ export class Credential {
   - aes: clé obtenue depuis pubT / privD
   La donnée entkey est décryptée / ré-encryptée
   */
+  /*
   static async fromTObj (obj: CredObj, keyK: Uint8Array, aes: Uint8Array )
     : Promise<Credential> {
 
@@ -76,118 +75,143 @@ export class Credential {
     }
     return c
   }
+  */
 
-  constructor (obj: CredObj) {
-    this.svc = obj.svc
-    this.about = obj.about
-    this.role = obj.role
-    this.org = obj.org
-    this.entid = obj.entid
-    this.entkey = obj.entkey
-    this.pems = obj.pems
-    this.hpems = Crypt.shaS(encoder.encode(obj.pems))
-    this.xid = Crypt.shaS(encode([this.svc, this.role, this.org, this.entid, this.hpems]))
+  static props = [ 'id', 'svc', 'org', 'role', 'docId', 'time', 'pems', 'skey', 'comment' ]
+
+  fromObj (obj: Object) : Credential {
+    for (const p of Credential.props) this[p] = obj[p] || null
+    return this
   }
 
-  get toObj () : CredObj {
-    return {
-      xid: this.xid,
-      svc: this.svc,
-      about: this.about,
-      org: this.org,
-      role: this.role,
-      entid: this.entid,
-      entkey: this.entkey,
-      pems: this.pems,
-      hpems: this.hpems
-    }
-  }
-
-  async toTObj (keyK: Uint8Array, aes: Uint8Array) : Promise<CredObj> {
-    const obj = this.toObj
-    if (obj.entkey) {
-      const dc = await Crypt.decrypt(keyK, b64ToU8(obj.entkey))
-      this.entkey = u8ToB64(await Crypt.crypt(aes, dc))
-    }
+  get toObj () : Object {
+    const obj = {}
+    for (const p of Credential.props) obj[p] = this[p] || null
     return obj
   }
 
-  clone () : Credential {
-    return new Credential(this.toObj)
+  get skeyId () { return this.svc + '/' + this.role + '/' + this.docId}
+  get skeyId2 () { return this.svc + '/' + this.docClass + '/' + this.docId}
+
+  get subRole () : string {
+    const i = this.role.indexOf('.')
+    return i === -1 ? '' : this.role.substring(i+ 1)
   }
 
-  xid: string // ID "absolu" hash court de `[svc, role, org, entid, hpems]`.
+  get docClass () : string {
+    const i = this.role.indexOf('.')
+    return i === -1 ? this.role : this.role.substring(0, i)
+  }
+
+  get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
+
+  setId () { this.id = Crypt.rnd(18) }
+
+  clone () : Credential {
+    return new Credential().fromObj(this.toObj)
+  }
+
+  id: string // ID de la version du credential.
   svc: string // code du service
-  about: string // un texte court _à propos_ du `entid`.
-  role: string // un des codes de rôle connu du service.
   org: string // le code de l'organisation.
-  entid: string // identifiant d'une entité interprétable pour le service.
-  entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
+  role: string // docClass.role : un des codes de rôle connu du service.
+  docId: string // identifiant du document cible du credential.
+  time: number // epoch en seconde de génération
   pems: string // clé PRIVEE de signature, le texte de 400c.
-  hpems: string // hash court de `pems`.
+  name: string // libellé / label etc. lisible de docId
+  skey: string // clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
+  comment: string // un texte court libre de l'utilisateur.
 
   get toJson () :string {
     return JSON.stringify(this.toObj, null, '\t')
   }
 
-  setAbout (s: string) { this.about = s }
+  setComment (s: string) { this.comment = s }
+
+  static async buildCreds (
+    targetId: string, // target U
+    role: string,
+    docId: string,
+    skey: Uint8Array,
+    name: string,
+    limit: number
+  ) : Promise<[Credential, CredentialD]> {
+    const c = new Credential()
+    c.setId()
+    const { pub, priv } = await Crypt.getSVKeyPair()
+    c.pems = keyToB64(priv)
+    c.role = role
+    c.docId = docId || ''
+    c.name = name || ''
+    c.skey = skey ? u8ToB64(skey) : ''
+    c.time = Math.floor(Date.now() / 1000)
+    const d: CredentialD = {
+      id: c.id,
+      userId: targetId,
+      pemv: keyToB64(pub),
+      role,
+      docId: docId || '',
+      time: c.time,
+      limit: limit || 0,
+      cond: null
+    }
+    return [c, d]
+  }
 }
 
-type AuthToken = {
-  id: string
-  role: string
-  entid: string
-  hpems: string
-  sign: Uint8Array
-}
-
+/*
+Toute opération requérant la présence d'au moins un credential est sollicitée en passant
+en arguments un objet de classe `AuthRecord`, construit par l'application et ayant les propriétés suivantes:
+- `userId`: de l'utilisateur.
+- `sessionId`: identifiant de session.
+- `time`: date-heure en seconde de création du record.
+- _challenge_: propriété virtuelle _userId + '/' + time_
+- `userSign`: signature par la clé privée de signature de l'utilisateur, du _challenge_.
+- `signatures`: objet ayant une propriété par ID de credential inscrit dans le record
+  donnant la signature du challenge par la clé privée de signature du credential.
+*/
 export class AuthRecord {
   svc: string
-  org: string
+  args: Object
   userId: string
   sessionId: string
   time: number
-  challenge: Uint8Array
   userSign: Uint8Array
   // Object par role / entid : [token]
-  tokens: Object
+  signatures: Object
 
-  static async create (SVC: string, org: string) {
+  get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }
+
+  static async open (op: Operation, args: Object) {
     const sf = stores.safe
-    const ar = new AuthRecord(SVC, org)
+    const session = stores.session
+    const ar = new AuthRecord()
+    ar.svc = op.SVC
+    ar.args = args
+    ar.userId = sf.userId
+    ar.sessionId = session.sessionId
+    ar.time = Date.now()
+    ar.signatures = {}
     ar.userSign = await Crypt.sign(fromPem(sf.auth.S), ar.challenge)
     return ar
   }
 
-  constructor (SVC: string, org: string) { // ici, org ou $OP
-    const session = stores.session
-    const sf = stores.safe
-    this.svc = SVC || stores.config.K.DEFAULT_SERVICE
-    this.org = org
-    this.userId = sf.userId
-    this.sessionId = session.sessionId
-    this.time = Date.now()
-    this.challenge = encoder.encode(this.userId + '/' + this.time)
-    this.tokens = {}
+  close () : Object {
+    this.args['authRecord'] = this.toObj
+    return this.args
   }
 
   get toObj() {
-    return { userId: this.userId, sessionId: this.sessionId, time: this.time, tokens: this.tokens }
+    return { userId: this.userId, sessionId: this.sessionId, time: this.time, signatures: this.signatures }
   }
 
-  async sign (role: string, entid: string) {
+  async sign (role: string, docId?: string) {
     const session = stores.session
-    for(const [xid, c] of session.creds) {
-      if (c.svc === this.svc && c.org === this.org
-        && c.role === c.role && c.entid === entid) {
-        const sign = new Uint8Array(await Crypt.sign(fromPem(c.pems), this.challenge))
-        let e = this.tokens[role]
-        if (!e) {
-          e = {}
-          this.tokens[role] = e
-        }
-        if (!e[entid]) e[entid] = []
-        e[entid].push({ xid, role, entid: entid || '', hpems: c.hpems, sign })
+    for(const [id, c] of session.creds) {
+      if (c.svc === this.svc && c.org === this.args['org']
+        && c.role === c.role && (docId ? c.docId === docId : true)) {
+        const sign = new Uint8Array(await Crypt.sign(keyFromB64(c.pems), this.challenge))
+        this.signatures[c.id] = sign
       }
     }
   }

@@ -10,8 +10,9 @@ export class  SvcOpIsAdmin extends Operation {
 
   async run ($OP: string) {
     try {
-      const authRecord = await AuthRecord.create(this.SVC, $OP)
-      const res = await this.post({ authRecord, $OP })
+      const args = { $OP }
+      const ar = await AuthRecord.open(this, args)
+      const res = await this.post(ar.close())
       return res['isadmin']
     } catch(e) {
       this.ko(e)
@@ -53,9 +54,10 @@ export class SetSvcOpStatus extends Operation {
 
   async run ($OP: string, st: number, txt: string) {
     try {
-      const authRecord = await AuthRecord.create(this.SVC, $OP)
-      const args = { authRecord, $OP, st, txt: txt || ''}
-      const res = await this.post(args)
+
+      const args = { $OP, st, txt: txt || ''}
+      const ar = await AuthRecord.open(this, args)
+      const res = await this.post(ar.close())
       return res['svcOpStatus']
     } catch(e) {
       this.ko(e)
@@ -68,9 +70,9 @@ export class SetSvcOrgStatus extends Operation {
 
   async run (org: string, st: number, txt: string) {
     try {
-      const authRecord = await AuthRecord.create(this.SVC, org)
-      const args = { authRecord, org, st, txt: txt || ''}
-      const res = await this.post(args)
+      const args = { org, st, txt: txt || ''}
+      const ar = await AuthRecord.open(this, args)
+       const res = await this.post(ar.close())
       return res['svcOpStatus']
     } catch(e) {
       this.ko(e)
@@ -83,9 +85,9 @@ export class GetOrgConfig extends Operation {
 
   async run (org: string) {
     try {
-      const authRecord = await AuthRecord.create(this.SVC, org)
-      const args = { authRecord, org}
-      const res = await this.post(args)
+      const args = { org}
+      const ar = await AuthRecord.open(this, args)
+      const res = await this.post(ar.close())
       return res['orgconfig']
     } catch(e) {
       this.ko(e)

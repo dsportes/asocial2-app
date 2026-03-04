@@ -152,8 +152,9 @@ const addElt = async () => {
     await ui.diagDisplay($t('HPadminkosvc'))
     return
   }
-  const authRecord = await AuthRecord.create(SVC.value, $OP.value)
-  const ret = await op.post({ authRecord, $OP: $OP.value })
+  const args = { $OP: $OP.value }
+  const ar = await AuthRecord.open(op, args)
+  const ret = await op.post(ar.close())
   if (!ret.isadmin) {
     if (elt) elt.st = 2
     ui.diagDisplay($t('HPadmin_ko', [$OP.value, SVC.value]))

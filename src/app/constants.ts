@@ -34,6 +34,7 @@ export const K = {
     pin: [8, 16],
     sn: [3, 40], // Nom des sessions
     about: [4, 64],
+    comment: [4, 80],
     pref: [4, 32],
     org: [3, 16, 'an1'],
     oper: [3, 8, 'oper'],

@@ -2,7 +2,7 @@
 <div>
 <dialog-std2 v-model="cm" :title="$t('HPcredsmgr_1')">
   <template #hdr>
-    <div class="row justify-between q-px-xs q-mb-md">
+    <!--div class="row justify-between q-px-xs q-mb-md">
       <div class="row">
         <btn-cond class="q-mr-sm" flat size="md" icon="download" :label="$t('HPimport_0')"
           @ok="resetImport(); ui.oD(idc2, 'import')"/>
@@ -11,11 +11,16 @@
       </div>
       <btn-cond flat size="lg" icon="check" color="warning"
         :label="$t('validate')" @ok="validate"/>
+    </div-->
+    <div class="row q-px-xs q-mb-md items-center">
+      <q-tabs class="col" v-model="tab" dense class="tbp">
+        <q-tab name="bysessions" :label="$t('HPtab_s')" />
+        <q-tab name="bycreds" :label="$t('HPtab_c')" />
+      </q-tabs>
+      <btn-cond class="col-auto q-mr-md"
+        flat size="md" icon="check" color="warning"
+        :label="$t('validate')" @ok="validate"/>
     </div>
-    <q-tabs v-model="tab" dense class="tbp">
-      <q-tab name="bysessions" :label="$t('HPtab_s')" />
-      <q-tab name="bycreds" :label="$t('HPtab_c')" />
-    </q-tabs>
   </template>
 
 <template #default>
@@ -43,33 +48,35 @@
           <div v-if="localCred.st === 1">
             <bar-open :title="$t('HPcredac_3')" :fnopen="doAction3" icon="delete" color="warning"/>
           </div>
-          <!-- crédential existait, pas importé pas supprimé: about PEUT-ETRE changé -->
+          <!-- crédential existait, pas importé pas supprimé: comment PEUT-ETRE changé -->
           <div v-if="localCred.st === 0 || localCred.st === 3">
             <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
           </div>
 
           <div v-if="localCred.st === 2">
             <div class="q-my-xs row">
-              <div class="fs-md">{{origCred.about}}</div>
-              <div v-if="origCred.entid" class="font-mono fs-sm q-ml-md">{{'[' + origCred.entid + ']'}}</div>
+              <div class="fs-md">{{origCred.comment}}</div>
+              <div v-if="origCred.docId" class="font-mono fs-sm q-ml-md">{{'[' + origCred.docId + ']'}}</div>
             </div>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.svc, origCred.org, $t('ROLE' + origCred.role)])}}</div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.svc, origCred.org, $t(origCred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
           </div>
           <div v-else>
+            <div v-if="localCred.cred.comment" class="fs-md">{{localCred.cred.comment}}</div>
+            <div v-else>{{$t('nocomment')}}</div>
             <div class="q-my-xs row">
-              <div class="fs-md">{{localCred.cred.about}}</div>
-              <div v-if="localCred.cred.entid" class="font-mono fs-sm q-ml-md">{{'[' + localCred.cred.entid + ']'}}</div>
+              <div v-if="localCred.cred.name" class="fs-md">{{localCred.cred.name}}</div>
+              <div v-if="localCred.cred.docId" class="font-mono fs-sm q-ml-md">{{'[' + localCred.cred.docId + ']'}}</div>
             </div>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.svc, localCred.cred.org, $t('ROLE' + localCred.cred.role)])}}</div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.svc, localCred.cred.org, $t(localCred.cred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
           </div>
 
           <input-a v-if="localCred.st !== 2"
-            size="about" prefix="HPcrab" :initval="initAbCr"
-            v-model="locaboutCr" :validatefn="valAbCr"/>
+            size="comment" prefix="HPcrab" :initval="initAbCr"
+            v-model="loccommentCr" :validatefn="valAbCr"/>
 
-          <!-- TEST de transmission d'un credential -->
+          <!-- TEST de transmission d'un credential
           <q-expansion-item switch-toggle-side expand-separator dense
             header-class="full-width tbs" :label="$t('HPtransmit_test')">
             <div class="bord1 q-pa-xs">
@@ -78,6 +85,7 @@
               <input-a size="p0" prefix="HPtransmit"
                 v-model="targetName" :validatefn="transmitTest"/>
             </div>
+          -->
         </q-expansion-item>
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <scroll-area size="sm"><template #default>
@@ -119,7 +127,7 @@
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
         <input-a size="sn" prefix="HPpsab" :initval="initAbPs"
-          v-model="locaboutPs" :validatefn="valAbPs"/>
+          v-model="loccommentPs" :validatefn="valAbPs"/>
 
         <div class="row justify-end q-my-sm">
           <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
@@ -159,6 +167,7 @@
 </template>
 </dialog-std2>
 
+<!--
 <dialog-std1 v-model="ui.dModels[idc2].import" :title="$t('HPimport_1')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-md">
@@ -212,7 +221,9 @@
   </div>
   </template>
 </dialog-std1>
+-->
 
+<!--
 <dialog-std1 v-model="ui.dModels[idc2].export" :title="$t('HPexport_1')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-md">
@@ -250,6 +261,7 @@
   </div>
   </template>
 </dialog-std1>
+-->
 
 <dialog-std1 v-model="ui.dModels[idc2].report" :title="$t('HPcfupd')" hdrclass='wmd'>
   <template #hdr>
@@ -320,26 +332,25 @@ import { Profile } from '../stores/safe-store'
 
 type LocalPS = { // session
   id: string
-  about: string
+  comment: string
   exav: boolean, // existait avant
   exap: boolean, // existe après
   chgcr: boolean, // a changé de liste de creds
-  chgab: boolean, // a changé d'about
+  chgab: boolean, // a changé de comment
   crIds: Set<string> // Set des ids des credentials
   orphans: Set<string> // Set des ids des credentials N'EXISTANT PAS
 }
 
 type LocalCred = {
   cred: Credential
-  st: number // 0: inchangé 1:importé/créé 2:supprimé 3:about corrigé
+  st: number // 0: inchangé 1:importé/créé 2:supprimé 3:comment corrigé
   psIds: Set<string> // Set des ids des sessions le référençant
 }
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-const aboutSize = [4, 64]
-
+/*
 const importOpts = [
   { label: $t('HPimport_clear'), value: 1 },
   { label: $t('HPimport_crypt'), value: 2 },
@@ -350,6 +361,7 @@ const exportOpts = [
   { label: $t('HPexport_clear'), value: 1 },
   { label: $t('HPexport_crypt'), value: 2 }
 ]
+*/
 
 const props = defineProps ({
   idc: String
@@ -400,9 +412,9 @@ const buildXref = () => {
 const loading = () => {
   for (const [id, x] of sf.mySafeProfiles) {
     if (x.profId !== '*') {
-      const ps1: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
+      const ps1: LocalPS = { id, comment: x.comment, crIds: new Set(x.crIds), orphans: new Set(),
         exav: true, exap: true, chgab: false, chgcr: false }
-      const ps2: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
+      const ps2: LocalPS = { id, comment: x.comment, crIds: new Set(x.crIds), orphans: new Set(),
         exav: true, exap: true, chgab: false, chgcr: false }
       mlocPS.value.set(id, ps1)
       morigPS.value.set(id, ps2)
@@ -423,14 +435,14 @@ const origCred = ref(null)
 const mlocPS1 = ref(null)
 const mlocPS2 = ref(null)
 
-const locaboutCr = ref('')
+const loccommentCr = ref('')
 
 const crSel = (lc: LocalCred) => !lc ? '' :
   (localCred.value && localCred.value.cred.xid === lc.cred.xid ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc: LocalCred) => {
   localCred.value = lc
-  locaboutCr.value = lc.cred.about || ''
+  loccommentCr.value = lc.cred.comment || ''
   const c = origCreds.value.get(lc.cred.xid)
   origCred.value = c ? c.clone() : null
   mlocPS1.value = new Map()
@@ -441,19 +453,19 @@ const selCred = (lc: LocalCred) => {
 }
 
 const initAbCr = computed(() =>
-  localCred.value.st === 1 ? localCred.value.cred.about || ''
-  : (origCred.value ? origCred.value.about || '' : ''))
+  localCred.value.st === 1 ? localCred.value.cred.comment || ''
+  : (origCred.value ? origCred.value.comment || '' : ''))
 
 const valAbCr = () => {
   const st = localCred.value.st
-  if (st === 1) localCred.value.cred.about = locaboutCr.value // importé: ne change rien au statut
-  else { // pas importé : statut à 3 si about changé ou remis à 0 si rétabli
-    if (origCred.value.about === locaboutCr.value) {
+  if (st === 1) localCred.value.cred.comment = loccommentCr.value // importé: ne change rien au statut
+  else { // pas importé : statut à 3 si comment changé ou remis à 0 si rétabli
+    if (origCred.value.comment === loccommentCr.value) {
       localCred.value.st = 0
-      localCred.value.cred.about = origCred.value.about
+      localCred.value.cred.comment = origCred.value.comment
     } else {
       localCred.value.st = 3
-      localCred.value.cred.about = locaboutCr.value
+      localCred.value.cred.comment = loccommentCr.value
     }
   }
 }
@@ -506,16 +518,16 @@ const localPS = ref(null)
 const origPS = ref(null)
 const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
 const mlocCreds2 = ref(null) // Map des creds NE référençant PAS le PS courant
-const locaboutPs = ref('')
+const loccommentPs = ref('')
 
 const psSel = (ps: LocalPS) => !ps ? '' :
   (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
 const selPS = (ps: LocalPS) => {
   localPS.value = ps
-  locaboutPs.value = localPS.value.about
+  loccommentPs.value = localPS.value.comment
   const x = morigPS.value.get(ps.id)
-  origPS.value = x ? { id: x.id, about: x.about, crIds: cloneSet(x.crIds) } : null
+  origPS.value = x ? { id: x.id, comment: x.comment, crIds: cloneSet(x.crIds) } : null
   mlocCreds1.value = new Map()
   mlocCreds2.value = new Map()
   for (const [xid, e] of mlocCreds.value)
@@ -523,10 +535,10 @@ const selPS = (ps: LocalPS) => {
     else mlocCreds2.value.set(xid, e)
 }
 
-const initAbPs = computed(() => localPS.value.about )
+const initAbPs = computed(() => localPS.value.comment )
 
 const valAbPs = async () => {
-  localPS.value.about = locaboutPs.value
+  localPS.value.comment = loccommentPs.value
   localPS.value.chgab = true
   mlocPS.value.set(localPS.value.id, localPS.value)
 }
@@ -535,7 +547,7 @@ const delPS = () => {
   if (localPS.value.exav) {
     localPS.value.exap = false
     localPS.value.crIds = new Set()
-    localPS.value.about = ''
+    localPS.value.comment = ''
     localPS.value.chgab = false
     localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
@@ -552,7 +564,7 @@ const undoPS = () => {
     localPS.value = null
   } else {
     localPS.value.crIds = cloneSet(av.crIds)
-    localPS.value.about = av.about
+    localPS.value.comment = av.comment
     localPS.value.chgab = false
     localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
@@ -593,7 +605,7 @@ const onArrowUC = (lc: LocalCred) => {
 
 const newps = (crIds?: Set<string>) : LocalPS => {
   const id = Crypt.shaS(Crypt.random(32))
-  const ps: LocalPS = { id, about: id, crIds: new Set(), orphans: new Set(),
+  const ps: LocalPS = { id, comment: id, crIds: new Set(), orphans: new Set(),
     exav: false, exap: true, chgab: false, chgcr: false
   }
   if (crIds && crIds.size) for(const xid of crIds) ps.crIds.add(xid)
@@ -615,7 +627,7 @@ const new2 = () => {
 const new3 = () => {
   newps(localPS.value.crIds)
 }
-
+/*
 const importCr = ref(1)
 const exportCr = ref(1)
 
@@ -675,8 +687,8 @@ const doImport = () => {
     for(const [xid, lc] of locImp.value)
       if (lc.ck) {
         const orig = origCreds.value.get(lc.c.xid)
-        if (orig) { // existait avant import : seul son about a PEUT-ETRE changé
-          if (orig.about !== lc.c.about)
+        if (orig) { // existait avant import : seul son comment a PEUT-ETRE changé
+          if (orig.comment !== lc.c.comment)
             mlocCreds.value.set(xid, { cred: lc.c, st: 3, psIds: new Set() })
         } else { // n'existait PAS. Import d'un nouveau
           mlocCreds.value.set(xid, { cred: lc.c, st: 1, psIds: new Set() })
@@ -727,6 +739,7 @@ const doExport = async () => {
   await ui.diagDisplay($t('HPexport_ok', [nf]))
   // ui.fD()
 }
+*/
 
 type Report = {
   mcreds: Map<string, Credential>
@@ -763,7 +776,7 @@ const validate = () => {
   report.stps = [ null, new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
 
   for(const [xid, lc] of mlocCreds.value) {
-    report.stcr[lc.st].add(lc.cred.about)
+    report.stcr[lc.st].add(lc.cred.comment)
     if (lc.st === 2) report.delcreds.push(xid)
     if (lc.st === 1 || lc.st === 3) report.mcreds.set(xid, lc.cred)
   }
@@ -775,7 +788,7 @@ const validate = () => {
     const del = (x.exav && !x.exap)
     if (del) report.delprofs.push(profId)
     if (maj || cre)
-      report.mprofs.set(profId, { profId, about: x.about,
+      report.mprofs.set(profId, { profId, comment: x.comment,
           crIds: Array.from(x.crIds) })
 
     /*
@@ -786,12 +799,12 @@ const validate = () => {
     HPps_5: 'Sessions sans droits d\'accès : {0}',
     HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
     */
-    if (cre) report.stps[1].add(x.about)
-    if (del) report.stps[2].add(x.about)
-    if (maj && x.chgab) report.stps[3].add(x.about)
-    if (maj && x.chgcr) report.stps[4].add(x.about)
-    if (x.exap && x.crIds.size === 0) report.stps[5].add(x.about)
-    if ((x.exap && x.orphans.size)) report.stps[6].add(x.about)
+    if (cre) report.stps[1].add(x.comment)
+    if (del) report.stps[2].add(x.comment)
+    if (maj && x.chgab) report.stps[3].add(x.comment)
+    if (maj && x.chgcr) report.stps[4].add(x.comment)
+    if (x.exap && x.crIds.size === 0) report.stps[5].add(x.comment)
+    if ((x.exap && x.orphans.size)) report.stps[6].add(x.comment)
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
@@ -821,6 +834,7 @@ const confValidate = async () => {
   }
 }
 
+/*
 const targetName = ref('')
 const transSafeStore = ref('')
 const transmitTest = async () => {
@@ -829,6 +843,7 @@ const transmitTest = async () => {
   console.log(status)
   transSafeStore.value = ''
 }
+*/
 </script>
 
 <style lang="scss" scoped>
