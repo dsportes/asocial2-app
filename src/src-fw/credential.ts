@@ -86,6 +86,8 @@ export class Credential {
   setComment (s: string) { this.comment = s }
 
   static async buildCreds (
+    svc: string,
+    org: string,
     targetId: string, // target U
     role: string,
     docId: string,
@@ -94,6 +96,8 @@ export class Credential {
     limit: number
   ) : Promise<[Credential, CredRequest]> {
     const c = new Credential()
+    c.svc = svc
+    c.org = org
     c.setId()
     const { pub, priv } = await Crypt.getSVKeyPair()
     c.pems = keyToB64(priv)

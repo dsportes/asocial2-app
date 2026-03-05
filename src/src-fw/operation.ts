@@ -44,12 +44,12 @@ export class Operation {
 
   async $GetSvcOrgUrl () : Promise<[string, string]> {
     const sf = stores.safe
-    let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.org)
+    let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.args.org)
     if (uo) return uo
     const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-    safeop.args = { SVC: this.SVC, org: this.org }
+    safeop.args = { SVC: this.SVC, org: this.args.org }
     const res = await safeop.post()
-    if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.org, res.urlOp)
+    if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.args.org, res.urlOp)
     return res.urlOp
   }
 

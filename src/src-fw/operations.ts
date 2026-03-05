@@ -3,7 +3,7 @@ import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
-import { CredRequest } from './credential'
+import { Credential, CredRequest } from './credential'
 
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
@@ -179,9 +179,19 @@ export class Sync extends Operation {
 export class GrantNewManager extends Operation {
   constructor (SVC: string) { super('GrantNewManager', SVC) }
 
-  async run (credRequest: CredRequest) {
+  async run(safeStore: string, targetId: string, pubC: string, org: string, info: string) {
     try {
-      this.args = { credRequest }
+      const sf = stores.safe
+      const [ cred, credRequest] =
+        await Credential.buildCreds(
+          this.SVC, org, targetId, 'Org.manager', '', null, '', 0)
+      credRequest.cond = { info: info}
+
+      // écriture du credential dans le store de la cible
+      await sf.transmitCred(safeStore, targetId, pubC, cred)
+
+      // enregistrement du credential dans le service
+      this.args = { org, credRequest }
       await this.post()
       return true
     } catch(e) {

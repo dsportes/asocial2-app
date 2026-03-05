@@ -124,8 +124,7 @@ export default {
   `,
 
   ROLE: 'Rôle',
-  ROLEadmin: 'Administrateur technique du service',
-  ROLEmanager: 'Manager général de l\'organisation',
+  ROLEOrg_manager: 'Manager général de l\'organisation',
   ROLEauteur: 'Auteur d\'articles',
   ROLElecteur: 'Relecteur d\'articles',
   ROLEgroupe: 'Groupe de relecteurs',

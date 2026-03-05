@@ -13,7 +13,7 @@
         :label="$t('validate')" @ok="validate"/>
     </div-->
     <div class="row q-px-xs q-mb-md items-center">
-      <q-tabs class="col" v-model="tab" dense class="tbp">
+      <q-tabs class="col tbp" v-model="tab" dense>
         <q-tab name="bysessions" :label="$t('HPtab_s')" />
         <q-tab name="bycreds" :label="$t('HPtab_c')" />
       </q-tabs>
@@ -85,8 +85,9 @@
               <input-a size="p0" prefix="HPtransmit"
                 v-model="targetName" :validatefn="transmitTest"/>
             </div>
+          </q-expansion-item>
           -->
-        </q-expansion-item>
+
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <scroll-area size="sm"><template #default>
             <div :class="dkli(idx)" v-for="([psid, ps], idx) in mlocPS1" :key="psid">

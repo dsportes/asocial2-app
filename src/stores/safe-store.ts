@@ -533,7 +533,7 @@ export const useSafeStore = defineStore('safe', () => {
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const mcreds: Map<string, Credential> = new Map<string, Credential>()
     const delcreds = []
-    const msvc = stores.config.services
+    const msvc = stores.config.K.SERVICES
     const m = new Map<string, Credential>()
     const sk = new Map<string, Uint8Array>()
     if (safe.creds) {
@@ -544,7 +544,10 @@ export const useSafeStore = defineStore('safe', () => {
           if (!spec) {
             const obj = decode(await Crypt.decrypt(keyK.value, x))
             const c: Credential = new Credential().fromObj(obj)
-            if (!msvc.has(c.svc)) continue
+            if (!msvc[c.svc]) {
+              delcreds.push(xid)
+              continue
+            }
             if (c) {
               m.set(c.id, c)
               if (c.skey) {
@@ -561,7 +564,10 @@ export const useSafeStore = defineStore('safe', () => {
             const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
             const obj = decode(dc)
             const c: Credential = new Credential().fromObj(obj)
-            if (!msvc.has(c.svc)) continue
+            if (!msvc[c.svc]) {
+              delcreds.push(xid)
+              continue
+            }
             m.set(c.id, c)
             if (c.skey) {
               const x = b64ToU8(c.skey)
@@ -1429,11 +1435,8 @@ export const useSafeStore = defineStore('safe', () => {
     crpub: string // [cryptedCred, pubc] encodé et en base64
    }
 
-  const transmitCred = async (safeStore: string, cred: Credential, targetId: string) => {
+  const transmitCred = async (safeStore: string, targetId: string, pubC: string, cred: Credential) => {
 
-    const p = await getPublicKeys(safeStore, targetId)
-    if (!p) return -1
-    const [id, pubC, pubV] = p
     const op = new SafeOperation('$TransmitCred', safeStore)
     try {
       const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
@@ -1441,7 +1444,7 @@ export const useSafeStore = defineStore('safe', () => {
       const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(objt)))
       const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
       const transmitCred : TransmitCred = {
-        targetId: id,
+        targetId,
         credid: cred.id,
         crpub
       }
