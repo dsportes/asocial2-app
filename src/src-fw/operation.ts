@@ -2,9 +2,17 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
-import { Crypt, fromPem } from './crypt'
+import { AuthRecord } from './credential'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
+
+export type OpArgs = {
+  org?: string
+  $OP?: string
+  SVC?: string
+  APIVERSION?: string
+  authRecord?: Object
+}
 
 /* Opération générique ******************************************/
 export class Operation {
@@ -12,9 +20,11 @@ export class Operation {
   static svcOrgUrl: Map<string, [string, string]> = new Map()
 
   opName: string
+  args: OpArgs | any
   controller: AbortController
   aborted: boolean
   background: boolean
+  authRecord: AuthRecord
   $OP: string
   org: string
   SVC: string
@@ -25,7 +35,8 @@ export class Operation {
     let u = Operation.svcOpUrl.get(this.SVC + '/' + this.$OP)
     if (u) return u
     const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
-    const res = await safeop.post({ SVC: this.SVC, $OP: this.$OP })
+    safeop.args = { SVC: this.SVC, $OP: this.$OP }
+    const res = await safeop.post()
     if (!res.url) return null
     Operation.svcOpUrl.set(this.SVC + '/' + this.$OP, res.url)
     return res.url
@@ -36,7 +47,8 @@ export class Operation {
     let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.org)
     if (uo) return uo
     const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-    const res = await safeop.post({ SVC: this.SVC, org: this.org })
+    safeop.args = { SVC: this.SVC, org: this.org }
+    const res = await safeop.post()
     if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.org, res.urlOp)
     return res.urlOp
   }
@@ -47,6 +59,7 @@ export class Operation {
     this.SVC = SVC || stores.config.K.DEFAULT_SERVICE
     if (!stores.config.K.SERVICES[this.SVC])
       throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
+    this.authRecord = new AuthRecord()
   }
 
   get label () { return $t('OP_' + this.opName) }
@@ -56,37 +69,43 @@ export class Operation {
     if (this.controller) this.controller.abort()
   }
 
-  async getBaseUrl ($OP?: string, org?: string) : Promise<string> {
-    if ($OP) this.$OP = $OP
-    if (org) this.org = org
+  async getBaseUrl () : Promise<string> {
     let u: string
-    if (this.$OP) {
+    if (this.args.$OP) {
       u = await this.$GetSvcOpUrl()
       if (!u)
-        throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.$OP] })
+        throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.args.$OP] })
     } else {
-      if (!this.org)
+      if (!this.args.org)
         throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
       const [u1, op] = await this.$GetSvcOrgUrl()
       if (!u1)
-        throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.org, this.SVC] })
+        throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.args.org, this.SVC] })
       u = u1
       this.$OP = op
     }
     return u
   }
 
-  async post (args: any) : Promise<any> {
+  /* Ajoute au AuthRecord une signature pour ce role / docId */
+  async sign (role: string, docId?: string) {
+    await this.authRecord.sign(this.SVC, this.org, role, docId)
+  }
+
+  /* Si noAuth est true, l'opération N'INCLUE PAS de AuthRecord
+  elle est "publique" sans authentification.
+  */
+  async post (noAuth?: boolean) : Promise<any> {
     const config = stores.config
     const session = stores.session
-    this.org = args.org
-    this.$OP = args.$OP
     try {
       session.opStart(this)
       const u = await this.getBaseUrl()
-      this.url = u + 'op/' + (this.$OP || this.org) + '/' + this.opName
-      args.APIVERSION = config.K.SERVICES[this.SVC].api
-      const body = new Uint8Array(encode(args))
+      this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
+      this.args.APIVERSION = config.K.SERVICES[this.SVC].api
+      if (!noAuth) await this.authRecord.signUser()
+      this.args.authRecord = this.authRecord.toObj
+      const body = new Uint8Array(encode(this.args))
 
       this.controller = new AbortController()
       this.aborted = false
@@ -133,8 +152,11 @@ export class Operation {
   }
 }
 
+/* Les SafeOperation n'ont pas de AuthRecord"
+Le service Safe vérifie les authentifications par les paramètres
+comme hp0, hr0, etc.
+*/
 export class SafeOperation extends Operation {
-  static urlx: string
 
   constructor (opName: string, safeStore: string) {
     const K = stores.config.K
@@ -150,7 +172,7 @@ export class SafeOperation extends Operation {
     } else this.url = K.MASTERDIR_URL + opName
   }
 
-  async post (args: any) : Promise<any>{
+  async post () : Promise<any>{
     const config = stores.config
     const session = stores.session
     try {
@@ -165,7 +187,7 @@ export class SafeOperation extends Operation {
           'Accept':       'application/octet-stream'   // expected data sent back
         },
         signal: this.controller.signal,
-        body: new Uint8Array(encode(args || {}))
+        body: new Uint8Array(encode(this.args || {}))
       })
       this.controller = null
       const buf = await response.bytes()

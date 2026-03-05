@@ -151,7 +151,7 @@ export default {
   op_GetSrvStatus: 'Status du service',
   op_SetSvcOpStatus: 'Fixe le status du service pour un opérateur',
 
-  op_$Shas: 'Test shaS en PHP',
+  // op_$Shas: 'Test shaS en PHP',
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
   op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
   op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',

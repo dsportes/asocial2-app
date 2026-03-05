@@ -98,42 +98,21 @@ async function uploadFile () : Promise<void> {
   }
 }
 
-class $Shas extends SafeOperation {
-  constructor () { super('$Shas') }
-
-  async run () {
-    try {
-      const inp = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-      const sh1 = await Crypt.strongHash(inp, true, true) as Uint8Array
-      const input = u8ToB64(sh1, true)
-      const shas = Crypt.shaS(sh1)
-      const res = await this.post({ input })
-      if (res.shaS === shas)
-        console.log('ok')
-      return res
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
-
-class Verify extends SafeOperation {
-  constructor () { super('$Verify') }
-
-  async run (data) {
-    try {
-      SafeOperation.setSafeUrl('http://localhost:8888')
-      const res = await this.post(data)
-      return res
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
-
+/* Test shaS en PHP */
 const t1 = async () => {
-  const ret = await new $Shas().run()
-  console.log(ret.shaS)
+  const $Shas = new SafeOperation('$Shas', 'http://localhost:8888')
+  try {
+    const inp = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    const sh1 = await Crypt.strongHash(inp, true, true) as Uint8Array
+    const input = u8ToB64(sh1, true)
+    const shas = Crypt.shaS(sh1)
+    $Shas.args = { input }
+    const res = await this.post()
+    if (res.shaS === shas)
+      console.log('ok')
+  } catch(e) {
+    this.ko(e)
+  }
 }
 
 const t2 = async () => {
@@ -141,6 +120,7 @@ const t2 = async () => {
   // await testSH()
 }
 
+/* Test $Verify en PHP */
 const t2sv = async () => {
   // rsa.KJUR.crypto.ECDSA.concatSigToASN1Sig()
   const x = 'toto est tres tres beau'
@@ -183,7 +163,9 @@ wu3pz2zpU3mrRKCjucw=
 
   args['sign'] = signAsn1
   args['pubPem'] = pubPem
-  const ret = await new Verify().run(args)
+  const verify = new SafeOperation('$Verify', 'http://localhost:8888')
+  verify.args = args
+  const ret = await verify.post()
   console.log(v, ret)
 }
 </script>

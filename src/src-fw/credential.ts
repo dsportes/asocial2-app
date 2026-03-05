@@ -182,34 +182,30 @@ export class AuthRecord {
 
   get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }
 
-  static async open (op: Operation, args: Object) {
+  constructor () {
     const sf = stores.safe
     const session = stores.session
-    const ar = new AuthRecord()
-    ar.svc = op.SVC
-    ar.args = args
-    ar.userId = sf.userId
-    ar.sessionId = session.sessionId
-    ar.time = Date.now()
-    ar.signatures = {}
-    ar.userSign = await Crypt.sign(fromPem(sf.auth.S), ar.challenge)
-    return ar
+    this.userId = sf.userId
+    this.sessionId = session.sessionId
+    this.time = Date.now()
+    this.signatures = {}
+    this.userSign = null
   }
 
-  close () : Object {
-    this.args['authRecord'] = this.toObj
-    return this.args
+  async signUser () {
+    const sf = stores.safe
+    this.userSign = await Crypt.sign(fromPem(sf.auth.S), this.challenge)
   }
 
   get toObj() {
     return { userId: this.userId, sessionId: this.sessionId, time: this.time, signatures: this.signatures }
   }
 
-  async sign (role: string, docId?: string) {
+  async sign (svc: string, org: string, role: string, docId?: string) {
     const session = stores.session
     for(const [id, c] of session.creds) {
-      if (c.svc === this.svc && c.org === this.args['org']
-        && c.role === c.role && (docId ? c.docId === docId : true)) {
+      if (c.svc === svc && c.org === org
+        && c.role === role && (docId ? c.docId === docId : true)) {
         const sign = new Uint8Array(await Crypt.sign(keyFromB64(c.pems), this.challenge))
         this.signatures[c.id] = sign
       }

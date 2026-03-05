@@ -146,15 +146,14 @@ const addElt = async () => {
   const elt = lstAdmins.value.get(k)
   if (elt && elt.st === 1) return
   const op = new Operation('SvcOpIsAdmin', SVC.value)
+  op.args = { $OP: $OP.value }
   try {
-    const u = await op.getBaseUrl($OP.value, '')
+    const u = await op.getBaseUrl()
   } catch(e) {
     await ui.diagDisplay($t('HPadminkosvc'))
     return
   }
-  const args = { $OP: $OP.value }
-  const ar = await AuthRecord.open(op, args)
-  const ret = await op.post(ar.close())
+  const ret = await op.post()
   if (!ret.isadmin) {
     if (elt) elt.st = 2
     ui.diagDisplay($t('HPadmin_ko', [$OP.value, SVC.value]))

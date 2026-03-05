@@ -3,16 +3,15 @@ import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
-import { AuthRecord, CredRequest } from './credential'
+import { AuthRecord } from './credential'
 
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
 
   async run ($OP: string) {
     try {
-      const args = { $OP }
-      const ar = await AuthRecord.open(this, args)
-      const res = await this.post(ar.close())
+      this.args = { $OP }
+      const res = await this.post()
       return res['isadmin']
     } catch(e) {
       this.ko(e)
@@ -26,7 +25,8 @@ export class  GetSvcOpStatus extends Operation {
 
   async run ($OP: string) {
     try {
-      const res = await this.post({ $OP })
+      this.args = { $OP }
+      const res = await this.post(true)
       return res['svcStatus']
     } catch(e) {
       this.ko(e)
@@ -40,7 +40,8 @@ export class  GetSvcOrgStatus extends Operation {
 
   async run (org: string) {
     try {
-      const res = await this.post({ org })
+      this.args = { org }
+      const res = await this.post(true)
       return res['orgStatus']
     } catch(e) {
       this.ko(e)
@@ -54,10 +55,8 @@ export class SetSvcOpStatus extends Operation {
 
   async run ($OP: string, st: number, txt: string) {
     try {
-
-      const args = { $OP, st, txt: txt || ''}
-      const ar = await AuthRecord.open(this, args)
-      const res = await this.post(ar.close())
+      this.args = { $OP, st, txt: txt || ''}
+      const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
       this.ko(e)
@@ -70,9 +69,8 @@ export class SetSvcOrgStatus extends Operation {
 
   async run (org: string, st: number, txt: string) {
     try {
-      const args = { org, st, txt: txt || ''}
-      const ar = await AuthRecord.open(this, args)
-       const res = await this.post(ar.close())
+      this.args = { org, st, txt: txt || ''}
+      const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
       this.ko(e)
@@ -85,9 +83,8 @@ export class GetOrgConfig extends Operation {
 
   async run (org: string) {
     try {
-      const args = { org}
-      const ar = await AuthRecord.open(this, args)
-      const res = await this.post(ar.close())
+      this.args = { org}
+      const res = await this.post()
       return res['orgconfig']
     } catch(e) {
       this.ko(e)
@@ -100,31 +97,12 @@ export class SetOrgConfig extends Operation {
 
   async run (org: string, db: string, st: string ) {
     try {
-      const authRecord = await AuthRecord.create(this.SVC, org)
-      const args = { authRecord, org, db, st}
-      const res = await this.post(args)
+      this.args = { org, db, st}
+      const res = await this.post()
       return res['orgconfig']
     } catch(e) {
       this.ko(e)
     }
-  }
-}
-
-export class NewOrg extends Operation {
-  constructor () { super('NewOrg') }
-
-  async run (svc: string, neworg: string, st: number, db: string) {
-    /* TODO
-    try {
-      const authRecord = await AuthRecord.create(svc, '*')
-      const args = { authRecord, neworg, st, db}
-      const res = await this.post(args, svc)
-      return res['status']
-    } catch(e) {
-      this.ko(e)
-      return -1
-    }
-    */
   }
 }
 
@@ -133,15 +111,13 @@ export class NewOrg extends Operation {
 - Créé une nouvelle si l'argument subscription n'est pas null
 */
 export class SetSubscription extends Operation {
-  constructor () { super('SetSubscription') }
+  constructor (SVC: string) { super('SetSubscription', SVC) }
 
   async run (org: string, subscription: Subscription, longLife: boolean ) {
     try {
-      const session = stores.session
-      const subJSON = session.subJSON
-      const sessionId = session.sessionId
-      const authRecord = await AuthRecord.create('', org)
-      const res = await this.post({ authRecord, org, subscription, longLife })
+      // const subJSON = stores.session.subJSON
+      this.args = { org, subscription, longLife }
+      const res = await this.post()
     } catch(e) {
       this.ko(e)
     }
@@ -151,15 +127,13 @@ export class SetSubscription extends Operation {
 /* UpdateSubscription enregistre la mise à jour d'une souscription d'une session
 */
 export class UpdateSubscription extends Operation {
-  constructor () { super('UpdateSubscription') }
+  constructor (SVC: string) { super('UpdateSubscription'), SVC }
 
   async run (org: string, title: string, url: string, defs: Object ) {
     try {
-      const session = stores.session
-      const subJSON = session.subJSON
-      const sessionId = session.sessionId
-      const authRecord = await AuthRecord.create('', org)
-      const res = await this.post({ authRecord, org, title, url, defs })
+      // const subJSON = stores.session.subJSON
+      this.args = { org, title, url, defs }
+      const res = await this.post()
     } catch(e) {
       this.ko(e)
     }
@@ -183,16 +157,15 @@ Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des docum
   - data: data du document s'il est dans la collection
 */
 export class Sync extends Operation {
-  constructor () { super('TestAuth') }
+  constructor (SVC: string) { super('Sync', SVC) }
 
   async run (subsToSync: subsToSync) {
     try {
       const org = subsToSync.org
-      const type = subsToSync.def.split('/').length - 1
+      // const type = subsToSync.def.split('/').length - 1
       const dataSt = stores.data
-      const session = stores.session
-      const authRecord = await AuthRecord.create('', org)
-      const res = await this.post({ authRecord, org, toSync: [subsToSync] })
+      this.args = { org, toSync: [subsToSync] }
+      const res = await this.post()
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
       await dataSt.retSync(opTime, org, subsToSync.def, x)
@@ -202,14 +175,14 @@ export class Sync extends Operation {
   }
 }
 
+// TODO
 export class GrantNewManager extends Operation {
-  constructor () { super('GrantNewManager') }
+  constructor (SVC: string) { super('GrantNewManager', SVC) }
 
-  async run (svc: string, credRequest: CredRequest) {
+  async run (svc: string, credRequest: any) {
     try {
-      const authRecord = await AuthRecord.create(svc, '*') // TODO
-      const args = { authRecord, credRequest}
-      await this.post(args)
+      this.args = { credRequest}
+      await this.post()
       return true
     } catch(e) {
       this.ko(e)
@@ -218,14 +191,14 @@ export class GrantNewManager extends Operation {
   }
 }
 
+// TODO
 export class RevokeManager extends Operation {
-  constructor () { super('RevokeManager') }
+  constructor (SVC: string) { super('RevokeManager', SVC) }
 
   async run (svc: string, revoke: string, hpems: string) {
     try {
-      const authRecord = await AuthRecord.create(svc, '*') // TODO
-      const args = { authRecord, revoke, hpems}
-      const res = await this.post(args)
+      this.args = { revoke, hpems}
+      const res = await this.post()
     } catch(e) {
       this.ko(e)
     }
@@ -241,13 +214,14 @@ export type ListMgrs = {
   revoke: string
 }
 
+// TODO
 export class ListManagers extends Operation {
-  constructor () { super('RevokeManager') }
+  constructor (SVC: string) { super('RevokeManager', SVC) }
 
   async run (org: string) : Promise<ListMgrs[]>{
     try {
       const args = { org }
-      const res = await this.post(args)
+      const res = await this.post()
       return res['list'] as ListMgrs[]
     } catch(e) {
       this.ko(e)

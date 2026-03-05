@@ -400,9 +400,10 @@ const authPS = async (args) => {
 
 const getStatus = async (id, hp0, hr0) => {
   cfImp.value = false
-  const op = new SafeOperation('$StatusSafe')
+  const op = new SafeOperation('$StatusSafe', sf.myStore)
   try {
-    const ret = await op.post({ id, hp0, hr0 }, sf.myStore)
+    op.args = { id, hp0, hr0 }
+    const ret = await op.post()
     statusSafe.value = ret.statusSafe
     // statusSafe.value = { lm: -1, xp: false, xr: false }
   } catch (e) {
@@ -413,10 +414,11 @@ const getStatus = async (id, hp0, hr0) => {
 
 const importBackup = async () => {
   console.log('importBackup')
-  const op = new SafeOperation('$RestoreSafe')
+  const op = new SafeOperation('$RestoreSafe', sf.mySafeStore)
   let ret
   try {
-    ret = await op.post({ safe: safe.value }, sf.mySafeStore)
+    op.args = { safe: safe.value }
+    ret = await op.post()
     await ui.diagDisplay($t('HPcsret_2' + ret.status))
     reset()
   } catch (e) {
