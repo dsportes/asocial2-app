@@ -3,7 +3,7 @@ import { sleep } from './util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'./document'
-import { AuthRecord } from './credential'
+import { CredRequest } from './credential'
 
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
@@ -179,9 +179,9 @@ export class Sync extends Operation {
 export class GrantNewManager extends Operation {
   constructor (SVC: string) { super('GrantNewManager', SVC) }
 
-  async run (svc: string, credRequest: any) {
+  async run (credRequest: CredRequest) {
     try {
-      this.args = { credRequest}
+      this.args = { credRequest }
       await this.post()
       return true
     } catch(e) {

@@ -758,6 +758,8 @@ bla bla
   EX_2005: 'Utilisateur non authentifié par le service (PEMV non trouvé).',
   EX_2006: 'Utilisateur non authentifié par le service (signature invalide).',
   EX_2007: 'Cette opération n\'est accessible qu\'à un utilisateur ADMINISTRATEUR du service.',
+  EX_2008: 'Un credential au moins a été rejeté. Liste des rejets: [{0}]',
+  EX_2009: 'Cette opération n\'est accessible qu\'à un utilisateur authentifié.',
 
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
