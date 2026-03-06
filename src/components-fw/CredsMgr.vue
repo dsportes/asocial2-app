@@ -2,23 +2,13 @@
 <div>
 <dialog-std2 v-model="cm" :title="$t('HPcredsmgr_1')">
   <template #hdr>
-    <!--div class="row justify-between q-px-xs q-mb-md">
-      <div class="row">
-        <btn-cond class="q-mr-sm" flat size="md" icon="download" :label="$t('HPimport_0')"
-          @ok="resetImport(); ui.oD(idc2, 'import')"/>
-        <btn-cond class="q-mr-sm" flat size="md" icon="upload" :label="$t('HPexport_0')"
-          @ok="resetExport(); ui.oD(idc2, 'export')"/>
-      </div>
-      <btn-cond flat size="lg" icon="check" color="warning"
-        :label="$t('validate')" @ok="validate"/>
-    </div-->
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
         <q-tab name="bysessions" :label="$t('HPtab_s')" />
         <q-tab name="bycreds" :label="$t('HPtab_c')" />
       </q-tabs>
       <btn-cond class="col-auto q-mr-md"
-        flat size="md" icon="check" color="warning"
+        flat size="lg" icon="check" color="warning"
         :label="$t('validate')" @ok="validate"/>
     </div>
   </template>
@@ -36,57 +26,38 @@
         </div>
       </template></scroll-area>
 
-      <bar-open class="q-mt-md" :title="$t('HPcredsdet_1')" :bubble="$t('HPcredsdet_2')"/>
       <div class='q-pa-xs'>
         <div v-if="localCred === null" class="titre-md text-italic">{{$t('HPcredno')}}</div>
         <div v-else class="column">
-          <!-- credential retiré de la liste -->
-          <div v-if="localCred.st === 2">
-            <bar-open :title="$t('HPcredac_2')" :fnopen="doAction2" icon="redo" color="primary"/>
-          </div>
-          <!-- credential importé (n'existait PAS) -->
-          <div v-if="localCred.st === 1">
-            <bar-open :title="$t('HPcredac_3')" :fnopen="doAction3" icon="delete" color="warning"/>
-          </div>
-          <!-- crédential existait, pas importé pas supprimé: comment PEUT-ETRE changé -->
-          <div v-if="localCred.st === 0 || localCred.st === 3">
-            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
-          </div>
-
-          <div v-if="localCred.st === 2">
-            <div class="q-my-xs row">
-              <div class="fs-md">{{origCred.comment}}</div>
-              <div v-if="origCred.docId" class="font-mono fs-sm q-ml-md">{{'[' + origCred.docId + ']'}}</div>
+          <div v-if="localCred.st === 2" class="q-my-md">
+            <div v-if="origCred.docId" class="row">
+              <div v-if="origCred.name" class="fs-md q-mr-md">{{origCred.name}}</div>
+              <div class="font-mono fs-sm">[{{origCred.docId}}]</div>
             </div>
             <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.svc, origCred.org, $t(origCred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
           </div>
-          <div v-else>
-            <div v-if="localCred.cred.comment" class="fs-md">{{localCred.cred.comment}}</div>
-            <div v-else>{{$t('nocomment')}}</div>
-            <div class="q-my-xs row">
-              <div v-if="localCred.cred.name" class="fs-md">{{localCred.cred.name}}</div>
-              <div v-if="localCred.cred.docId" class="font-mono fs-sm q-ml-md">{{'[' + localCred.cred.docId + ']'}}</div>
+          <div v-else class="q-my-md">
+            <div v-if="localCred.cred.docId" class="row">
+              <div v-if="localCred.cred.name" class="fs-md q-mr-md">{{localCred.cred.name}}</div>
+              <div class="font-mono fs-sm">[{{localCred.cred.docId}}]</div>
             </div>
             <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.svc, localCred.cred.org, $t(localCred.cred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
           </div>
 
-          <input-a v-if="localCred.st !== 2"
+          <input-a v-if="localCred.st !== 2" class="q-mb-md"
             size="comment" prefix="HPcrab" :initval="initAbCr"
             v-model="loccommentCr" :validatefn="valAbCr"/>
 
-          <!-- TEST de transmission d'un credential
-          <q-expansion-item switch-toggle-side expand-separator dense
-            header-class="full-width tbs" :label="$t('HPtransmit_test')">
-            <div class="bord1 q-pa-xs">
-              <input-a prefix="HPstore" class="full-width q-my-sm"
-                v-model="transSafeStore"/>
-              <input-a size="p0" prefix="HPtransmit"
-                v-model="targetName" :validatefn="transmitTest"/>
-            </div>
-          </q-expansion-item>
-          -->
+          <!-- credential supprimé -->
+          <div v-if="localCred.st === 2">
+            <bar-open :title="$t('HPcredac_2')" :fnopen="doAction2" icon="redo" color="primary"/>
+          </div>
+          <!-- crédential pas supprimé: comment PEUT-ETRE changé -->
+          <div v-if="localCred.st === 0 || localCred.st === 3">
+            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
+          </div>
 
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
           <scroll-area size="sm"><template #default>
@@ -128,7 +99,7 @@
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
         <input-a size="sn" prefix="HPpsab" :initval="initAbPs"
-          v-model="loccommentPs" :validatefn="valAbPs"/>
+          v-model="locAboutPs" :validatefn="valAbPs"/>
 
         <div class="row justify-end q-my-sm">
           <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
@@ -168,102 +139,6 @@
 </template>
 </dialog-std2>
 
-<!--
-<dialog-std1 v-model="ui.dModels[idc2].import" :title="$t('HPimport_1')" hdrclass='wmd'>
-  <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check" :label="$t('HPimport_0')"
-      :disable="locImp === null"
-      @ok="doImport"/>
-    </div>
-  </template>
-  <template #default>
-    <div class="column q-mx-lg items-center">
-      <div class="q-mb-sm">
-        <q-option-group :options="importOpts" dense type="radio" v-model="importCr" />
-      </div>
-      <div v-if="importCr === 2" class="q-my-sm">
-        <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="cryptK" prefix="HPimport" size="ps"
-          :validatefn="valK"/>
-      </div>
-
-      <q-file v-if="(importCr === 2 && cryptK.key !== null) || importCr === 1"
-        class="full-width" dense filled v-model="fileList"
-        :label="$t('pickfile')" max-file-size="50000000" max-file="1"/>
-
-      <div v-if="diag !== ''" class="q-my-xs msg2">{{diag}}</div>
-      <text-zoom v-if="importedText !== null && importCr !== 3"
-        :label="$t('HPimport_disp')" :text="importedText"/>
-    </div>
-
-    <div v-if="importCr === 3" class="bord1">
-      <q-toolbar>
-        <q-toolbar-title class="titre-md full-width text-center q-pr-xs">{{$t('HPimport_inp')}}</q-toolbar-title>
-        <btn-cond icon="zoom_in" flat @ok="zoom"/>
-        <btn-cond class="q-ml-xs" icon="zoom_out" flat @ok="unzoom" :disable="rx < 5"/>
-        <btn-cond class="q-ml-xs" icon="check" color="warning" round
-          :disable="!importedText" @ok="processText"/>
-      </q-toolbar>
-      <q-input class="q-pa-xs full-width bord-top" v-model="importedText"
-        type="textarea" :rows="rx"/>
-    </div>
-
-    <div v-if="diag === '' && importedText !== null">
-      <scroll-area class='q-my-md'><template #default>
-        <div :class="dkli(idx)" v-for="([id, lc], idx) of locImp" :key="id">
-          <div class="row q-my-xs items-start">
-            <q-checkbox class="col-1" dense v-model="lc.ck"/>
-            <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
-          </div>
-        </div>
-      </template></scroll-area>
-      <div class='titre-md text-italic q-my-sm'>{{$t('HPimport_unck')}}</div>
-  </div>
-  </template>
-</dialog-std1>
--->
-
-<!--
-<dialog-std1 v-model="ui.dModels[idc2].export" :title="$t('HPexport_1')" hdrclass='wmd'>
-  <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="check"
-      :disable="exportCr === 2 && cryptK.key === null"
-      :label="$t('HPexport_0')"
-      @ok="doExport"/>
-    </div>
-  </template>
-  <template #default>
-    <div class="column q-mx-lg items-center">
-      <div class="q-mb-sm">
-        <q-option-group :options="exportOpts" dense type="radio" v-model="exportCr" />
-      </div>
-      <div v-if="exportCr === 2" class="q-my-sm">
-        <div class="titre-md text-italic">{{$t('HP3ps')}}</div>
-        <input-ps v-model="cryptK" iconcheck :validatefn="valK"
-          prefix="HPimport" size="ps"/>
-      </div>
-
-      <scroll-area class='q-my-md'><template #default>
-        <div :class="dkli(idx)" v-for="([id, lc], idx) of locExp" :key="id">
-          <div class="row q-my-xs items-start">
-            <q-checkbox class="col-1" dense v-model="lc.ck"/>
-            <cred-row class="col-11" :cred="lc.c" :st="lc.st"/>
-          </div>
-        </div>
-      </template></scroll-area>
-
-      <div v-if="exportCr === 2 && cryptK.key === null"
-        class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
-      <div v-if="exportCr === 1 || (exportCr === 2 && cryptK.key !== null)"
-        class='titre-md text-italic q-my-sm'>{{$t('HPexport_unck')}}</div>
-      <div v-if="diag !== ''" class="q-my-xs msg2">{{diag}}</div>
-  </div>
-  </template>
-</dialog-std1>
--->
-
 <dialog-std1 v-model="ui.dModels[idc2].report" :title="$t('HPcfupd')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
@@ -274,7 +149,6 @@
   </template>
   <template #default>
     <!--
-      HPstcr_1: 'Droits d\'accès ajoutés : {0}',
       HPstcr_2: 'Droits d\'accès supprimés : {0}',
       HPstcr_3: 'Droits d\'accès mis à jour (à propos) : {0}',
       HPps_1: 'Sessions créées: {0}',
@@ -289,7 +163,7 @@
       class="titre-lg q-pa-md self-center text-italic q-my-sm bord1 text-warning">
         {{$t('HPnothing')}}</div>
 
-      <div v-for="i in 3">
+      <div v-for="i in [2, 3]" :key="i">
         <div :class="'titre-md q-mt-sm ' + clr1(i)">
           {{ $t('HPstcr_' + i, [report.stcr[i].size]) }}</div>
         <div v-if="report.stcr[i].size" class="font-mono fs-sm q-px-md q-my-sm">
@@ -413,9 +287,9 @@ const buildXref = () => {
 const loading = () => {
   for (const [id, x] of sf.mySafeProfiles) {
     if (x.profId !== '*') {
-      const ps1: LocalPS = { id, comment: x.comment, crIds: new Set(x.crIds), orphans: new Set(),
+      const ps1: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
         exav: true, exap: true, chgab: false, chgcr: false }
-      const ps2: LocalPS = { id, comment: x.comment, crIds: new Set(x.crIds), orphans: new Set(),
+      const ps2: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
         exav: true, exap: true, chgab: false, chgcr: false }
       mlocPS.value.set(id, ps1)
       morigPS.value.set(id, ps2)
@@ -439,35 +313,30 @@ const mlocPS2 = ref(null)
 const loccommentCr = ref('')
 
 const crSel = (lc: LocalCred) => !lc ? '' :
-  (localCred.value && localCred.value.cred.xid === lc.cred.xid ? 'bord2w ' : 'bord2c ')
+  (localCred.value && localCred.value.cred.id === lc.cred.id ? 'bord2w ' : 'bord2c ')
 
 const selCred = (lc: LocalCred) => {
   localCred.value = lc
   loccommentCr.value = lc.cred.comment || ''
-  const c = origCreds.value.get(lc.cred.xid)
+  const c = origCreds.value.get(lc.cred.id)
   origCred.value = c ? c.clone() : null
   mlocPS1.value = new Map()
   mlocPS2.value = new Map()
   for (const [psid, e] of mlocPS.value)
-    if (e.crIds.has(localCred.value.cred.xid)) mlocPS1.value.set(psid, e)
+    if (e.crIds.has(localCred.value.cred.id)) mlocPS1.value.set(psid, e)
     else mlocPS2.value.set(psid, e)
 }
 
-const initAbCr = computed(() =>
-  localCred.value.st === 1 ? localCred.value.cred.comment || ''
-  : (origCred.value ? origCred.value.comment || '' : ''))
+const initAbCr = computed(() => origCred.value ? origCred.value.comment || '' : '')
 
 const valAbCr = () => {
   const st = localCred.value.st
-  if (st === 1) localCred.value.cred.comment = loccommentCr.value // importé: ne change rien au statut
-  else { // pas importé : statut à 3 si comment changé ou remis à 0 si rétabli
-    if (origCred.value.comment === loccommentCr.value) {
-      localCred.value.st = 0
-      localCred.value.cred.comment = origCred.value.comment
-    } else {
-      localCred.value.st = 3
-      localCred.value.cred.comment = loccommentCr.value
-    }
+  if (origCred.value.comment === loccommentCr.value) {
+    localCred.value.st = 0
+    localCred.value.cred.comment = origCred.value.comment
+  } else {
+    localCred.value.st = 3
+    localCred.value.cred.comment = loccommentCr.value
   }
 }
 
@@ -477,7 +346,7 @@ const doAction2 = () => { // REMETTRE dans la liste le cred qui y avait été en
 }
 
 const doAction3 = () => { // credential importé (n'existait PAS): RETIRER
-  mlocCreds.value.delete(localCred.value.cred.xid)
+  mlocCreds.value.delete(localCred.value.cred.id)
   localCred.value = null
   buildXref()
 }
@@ -490,7 +359,7 @@ const doAction4 = () => { // credential existait (pas importé): RETIRER
 const onArrowD = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crIds.delete(localCred.value.cred.xid)
+    e.crIds.delete(localCred.value.cred.id)
     e.chgcr = chgPSlc(e.id)
     buildXref()
     mlocPS1.value.delete(ps.id)
@@ -501,7 +370,7 @@ const onArrowD = (ps) => {
 const onArrowU = (ps) => {
   const e = mlocPS.value.get(ps.id)
   if (e) {
-    e.crIds.add(localCred.value.cred.xid)
+    e.crIds.add(localCred.value.cred.id)
     e.chgcr = chgPSlc(e.id)
     buildXref()
     mlocPS2.value.delete(ps.id)
@@ -519,16 +388,16 @@ const localPS = ref(null)
 const origPS = ref(null)
 const mlocCreds1 = ref(null) // Map des creds référençant le PS courant
 const mlocCreds2 = ref(null) // Map des creds NE référençant PAS le PS courant
-const loccommentPs = ref('')
+const locAboutPs = ref('')
 
 const psSel = (ps: LocalPS) => !ps ? '' :
   (localPS.value && localPS.value.id === ps.id ? 'bord2g ' : 'bord2c ')
 
 const selPS = (ps: LocalPS) => {
   localPS.value = ps
-  loccommentPs.value = localPS.value.comment
+  locAboutPs.value = localPS.value.about
   const x = morigPS.value.get(ps.id)
-  origPS.value = x ? { id: x.id, comment: x.comment, crIds: cloneSet(x.crIds) } : null
+  origPS.value = x ? { id: x.id, about: x.about, crIds: cloneSet(x.crIds) } : null
   mlocCreds1.value = new Map()
   mlocCreds2.value = new Map()
   for (const [xid, e] of mlocCreds.value)
@@ -536,10 +405,10 @@ const selPS = (ps: LocalPS) => {
     else mlocCreds2.value.set(xid, e)
 }
 
-const initAbPs = computed(() => localPS.value.comment )
+const initAbPs = computed(() => localPS.value.about )
 
 const valAbPs = async () => {
-  localPS.value.comment = loccommentPs.value
+  localPS.value.about = locAboutPs.value
   localPS.value.chgab = true
   mlocPS.value.set(localPS.value.id, localPS.value)
 }
@@ -548,7 +417,7 @@ const delPS = () => {
   if (localPS.value.exav) {
     localPS.value.exap = false
     localPS.value.crIds = new Set()
-    localPS.value.comment = ''
+    localPS.value.about = ''
     localPS.value.chgab = false
     localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
@@ -565,7 +434,7 @@ const undoPS = () => {
     localPS.value = null
   } else {
     localPS.value.crIds = cloneSet(av.crIds)
-    localPS.value.comment = av.comment
+    localPS.value.about = av.about
     localPS.value.chgab = false
     localPS.value.chgcr = false
     mlocPS.value.set(localPS.value.id, localPS.value)
@@ -581,32 +450,32 @@ const removeOrph = (xid: string) => {
 }
 
 const onArrowDC = (lc: LocalCred) => {
-  const e = mlocCreds.value.get(lc.cred.xid)
+  const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    localPS.value.crIds.delete(lc.cred.xid)
+    localPS.value.crIds.delete(lc.cred.id)
     localPS.value.chgcr = chgPSlc(localPS.value.id)
     mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
-    mlocCreds1.value.delete(lc.cred.xid)
-    mlocCreds2.value.set(lc.cred.xid, e)
+    mlocCreds1.value.delete(lc.cred.id)
+    mlocCreds2.value.set(lc.cred.id, e)
   }
 }
 
 const onArrowUC = (lc: LocalCred) => {
-  const e = mlocCreds.value.get(lc.cred.xid)
+  const e = mlocCreds.value.get(lc.cred.id)
   if (e) {
-    localPS.value.crIds.add(lc.cred.xid)
+    localPS.value.crIds.add(lc.cred.id)
     localPS.value.chgcr = chgPSlc(localPS.value.id)
     mlocPS.value.set(localPS.value.id, localPS.value)
     buildXref()
-    mlocCreds2.value.delete(lc.cred.xid)
-    mlocCreds1.value.set(lc.cred.xid, e)
+    mlocCreds2.value.delete(lc.cred.id)
+    mlocCreds1.value.set(lc.cred.id, e)
   }
 }
 
 const newps = (crIds?: Set<string>) : LocalPS => {
   const id = Crypt.shaS(Crypt.random(32))
-  const ps: LocalPS = { id, comment: id, crIds: new Set(), orphans: new Set(),
+  const ps: LocalPS = { id, about: id, crIds: new Set(), orphans: new Set(),
     exav: false, exap: true, chgab: false, chgcr: false
   }
   if (crIds && crIds.size) for(const xid of crIds) ps.crIds.add(xid)
@@ -628,119 +497,6 @@ const new2 = () => {
 const new3 = () => {
   newps(localPS.value.crIds)
 }
-/*
-const importCr = ref(1)
-const exportCr = ref(1)
-
-const fileList = ref(null)
-const defFd: fileDescr = { name: '', size: 0 }
-const fd = ref(defFd)
-const cryptK = reactive( { inp: '', err: '', key: null } )
-const diag = ref('')
-
-const locImp = ref(null)
-const importedText = ref(null)
-const locExp = ref(null)
-
-watch(fileList, async (file: any) : Promise<void> => {
-  if (file) fd.value = await readFile(file, true)
-  await downloadFile()
-})
-
-const valK = async () => {
-  if (cryptK.err === '') cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
-  else cryptK.key = null
-}
-
-const processText = () => {
-  try {
-    const creds = Credential.parse(importedText.value)
-    locImp.value = new Map()
-    for(const [xid, c] of creds)
-      locImp.value.set(xid, { c: c, ck: true })
-    diag.value = ''
-  } catch (e) {
-    locImp.value = null
-    importedText.value = null
-    diag.value = $t('HPimport_bf3')
-  }
-}
-
-const downloadFile = async () => {
-  fileList.value = null
-  try {
-    importedText.value = decoder.decode(importCr.value === 2 ?
-      await Crypt.decrypt(cryptK.key, fd.value.u8) : fd.value.u8)
-    processText()
-  } catch (e) {
-    locImp.value = null
-    diag.value = $t('HPimport_bf2')
-    importedText.value = null
-  }
-}
-
-const rx = ref(5)
-const zoom = () => { rx.value += 10 }
-const unzoom = () => { if (rx.value >= 15) rx.value -= 10; else rx.value = 5 }
-
-const doImport = () => {
-  if (locImp.value.size)
-    for(const [xid, lc] of locImp.value)
-      if (lc.ck) {
-        const orig = origCreds.value.get(lc.c.xid)
-        if (orig) { // existait avant import : seul son comment a PEUT-ETRE changé
-          if (orig.comment !== lc.c.comment)
-            mlocCreds.value.set(xid, { cred: lc.c, st: 3, psIds: new Set() })
-        } else { // n'existait PAS. Import d'un nouveau
-          mlocCreds.value.set(xid, { cred: lc.c, st: 1, psIds: new Set() })
-        }
-      }
-  ui.fD()
-  buildXref()
-}
-
-const resetImport = () => {
-  rx.value = 5
-  importCr.value = 1
-  fileList.value = null
-  cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
-  diag.value = ''
-  locImp.value = null
-  importedText.value = null
-}
-
-const resetExport = () => {
-  exportCr.value = 1
-  cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
-  locExp.value = new Map()
-  if (mlocCreds.value.size) for(const [xid, lc] of mlocCreds.value)
-    if (lc.st !== 2) locExp.value.set(xid, { c: lc.cred, ck: true })
-}
-
-const doExport = async () => {
-  const creds = []
-  if (locExp.value.size) for(const [xid, lc] of locExp.value)
-    if (lc.ck) creds.push(lc.c)
-  const toJson = Credential.toJson(creds)
-  // console.log(toJson)
-  let buf
-  if (exportCr.value === 2) try {
-    buf = await Crypt.crypt(cryptK.key, encoder.encode(toJson))
-    if (!buf) {
-      diag.value = $t('HPexport_bf2')
-      return
-    }
-  } catch (e) {
-    diag.value = $t('HPexport_bf2')
-    return
-  }
-  const nf = 'credentials.json' + (exportCr.value === 2 ? '.bin' : '')
-  const blob = new Blob([buf], { type: exportCr.value === 1 ? 'application/json' : 'application/octet-stream'})
-  saveAs(blob, nf)
-  await ui.diagDisplay($t('HPexport_ok', [nf]))
-  // ui.fD()
-}
-*/
 
 type Report = {
   mcreds: Map<string, Credential>
@@ -779,7 +535,7 @@ const validate = () => {
   for(const [xid, lc] of mlocCreds.value) {
     report.stcr[lc.st].add(lc.cred.comment)
     if (lc.st === 2) report.delcreds.push(xid)
-    if (lc.st === 1 || lc.st === 3) report.mcreds.set(xid, lc.cred)
+    if (lc.st === 3) report.mcreds.set(xid, lc.cred)
   }
 
   for(const [profId, x] of mlocPS.value) {
@@ -789,8 +545,7 @@ const validate = () => {
     const del = (x.exav && !x.exap)
     if (del) report.delprofs.push(profId)
     if (maj || cre)
-      report.mprofs.set(profId, { profId, comment: x.comment,
-          crIds: Array.from(x.crIds) })
+      report.mprofs.set(profId, { profId, about: x.about, crIds: Array.from(x.crIds) })
 
     /*
     HPps_1: 'Sessions créées: {0}',
@@ -800,12 +555,12 @@ const validate = () => {
     HPps_5: 'Sessions sans droits d\'accès : {0}',
     HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
     */
-    if (cre) report.stps[1].add(x.comment)
-    if (del) report.stps[2].add(x.comment)
-    if (maj && x.chgab) report.stps[3].add(x.comment)
-    if (maj && x.chgcr) report.stps[4].add(x.comment)
-    if (x.exap && x.crIds.size === 0) report.stps[5].add(x.comment)
-    if ((x.exap && x.orphans.size)) report.stps[6].add(x.comment)
+    if (cre) report.stps[1].add(x.about)
+    if (del) report.stps[2].add(x.about)
+    if (maj && x.chgab) report.stps[3].add(x.about)
+    if (maj && x.chgcr) report.stps[4].add(x.about)
+    if (x.exap && x.crIds.size === 0) report.stps[5].add(x.about)
+    if ((x.exap && x.orphans.size)) report.stps[6].add(x.about)
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
@@ -835,16 +590,6 @@ const confValidate = async () => {
   }
 }
 
-/*
-const targetName = ref('')
-const transSafeStore = ref('')
-const transmitTest = async () => {
-  const c = localCred.value.cred
-  const status = await sf.transmitCred(transSafeStore.value, c, targetName.value)
-  console.log(status)
-  transSafeStore.value = ''
-}
-*/
 </script>
 
 <style lang="scss" scoped>

@@ -23,7 +23,6 @@ export type CredObj = {
 }
 
 export type CredRequest = {
-  id: string
   userId: string
   role: string
   docId: string
@@ -36,7 +35,7 @@ export type CredRequest = {
 export class Credential {
   static props = [ 'id', 'svc', 'org', 'role', 'docId', 'time', 'pems', 'skey', 'comment' ]
 
-  id: string // ID de la version du credential.
+  id: string // ID du credential.
   svc: string // code du service
   org: string // le code de l'organisation.
   role: string // docClass.role : un des codes de rôle connu du service.
@@ -58,9 +57,6 @@ export class Credential {
     return obj
   }
 
-  get skeyId () { return this.svc + '/' + this.role + '/' + this.docId}
-  get skeyId2 () { return this.svc + '/' + this.docClass + '/' + this.docId}
-
   get subRole () : string {
     const i = this.role.indexOf('.')
     return i === -1 ? '' : this.role.substring(i+ 1)
@@ -73,7 +69,13 @@ export class Credential {
 
   get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
 
-  setId () { this.id = Crypt.rnd(18) }
+  get idStr () { return this.svc + '/' + this.org + '/' + this.role + '/' + (this.docId || '') }
+
+  get pkStr () { return stores.safe.userId + '/' + this.role + '/' + (this.docId || '') }
+
+  getId () { return Crypt.shaS(encoder.encode(this.idStr))}
+
+  getPk () { return Crypt.shaS(encoder.encode(this.pkStr)) }
 
   clone () : Credential {
     return new Credential().fromObj(this.toObj)
@@ -95,19 +97,18 @@ export class Credential {
     name: string,
     limit: number
   ) : Promise<[Credential, CredRequest]> {
+    const { pub, priv } = await Crypt.getSVKeyPair()
     const c = new Credential()
     c.svc = svc
     c.org = org
-    c.setId()
-    const { pub, priv } = await Crypt.getSVKeyPair()
     c.pems = keyToB64(priv)
     c.role = role
     c.docId = docId || ''
     c.name = name || ''
     c.skey = skey ? u8ToB64(skey) : ''
-    c.time = Math.floor(Date.now() / 1000)
+    c.time = Date.now()
+    c.id = c.getId()
     const cr: CredRequest = {
-      id: c.id,
       userId: targetId,
       pemv: keyToB64(pub),
       role,
@@ -169,7 +170,7 @@ export class AuthRecord {
         && c.role === role && (docId ? c.docId === docId : true)) {
         const sign = new Uint8Array(await Crypt.sign(keyFromB64(c.pems), this.challenge))
         if (!this.signatures) this.signatures = {}
-        this.signatures[c.id] = sign
+        this.signatures[c.role + '/' + (c.docId || '')] = sign
       }
     }
   }

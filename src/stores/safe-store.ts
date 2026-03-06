@@ -411,12 +411,14 @@ export const useSafeStore = defineStore('safe', () => {
   - `data`: sérialisation du détail du _credential_:
   */
   const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
+
   /* Section construite skeys
-  Clé AES skey pour chaque svc / role / docId
+  Clé AES skey pour chaque idStr de Credential (svc / org / role / docId)
   */
   const skeys : Ref<Map<string, Uint8Array>> = ref(null)
-  const skey = (svc: string, roleOrClass: string, docId?: string) :Uint8Array => {
-    return skeys.get(svc + '/' + roleOrClass + '/' + (docId || ''))
+
+  const skey = (svc: string, org: string, role: string, docId?: string) :Uint8Array => {
+    return skeys.get(svc + '/' + org + '/' + role + '/' + (docId || ''))
   }
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
@@ -530,59 +532,70 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeProfiles.value = m
   }
 
+  const storeSkey = (c: Credential, del?: boolean) => {
+    const x = b64ToU8(c.skey)
+    if (del) skeys.value.delete(c.id)
+    skeys.value.set(c.id, x)
+  }
+
   const loadCreds = async (safe: Safe) : Promise<void> => {
+    if (!safe.creds) {
+      mySafeCreds.value = new Map()
+      skeys.value = new Map()
+      return
+    }
     const mcreds: Map<string, Credential> = new Map<string, Credential>()
     const delcreds = []
     const msvc = stores.config.K.SERVICES
     const m = new Map<string, Credential>()
-    const sk = new Map<string, Uint8Array>()
-    if (safe.creds) {
-      for (const xid in safe.creds) {
-        const x = b64ToU8(safe.creds[xid])
-        const spec = xid.startsWith('$')
-        try {
-          if (!spec) {
-            const obj = decode(await Crypt.decrypt(keyK.value, x))
-            const c: Credential = new Credential().fromObj(obj)
-            if (!msvc[c.svc]) {
-              delcreds.push(xid)
-              continue
-            }
-            if (c) {
-              m.set(c.id, c)
-              if (c.skey) {
-                const x = b64ToU8(c.skey)
-                sk.set(c.skeyId, x)
-                if (c.subRole) sk.set(c.skeyId2, x)
-              }
-            }
-          } else {
-            // Credential transmis par un autre user émetteur
-            // [obj credential crypté, pub: clé publique C de l'émetteur ]
-            const [crobj, pubC] = decode(x)
-            const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-            const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
-            const obj = decode(dc)
-            const c: Credential = new Credential().fromObj(obj)
-            if (!msvc[c.svc]) {
-              delcreds.push(xid)
-              continue
-            }
-            m.set(c.id, c)
-            if (c.skey) {
-              const x = b64ToU8(c.skey)
-              sk.set(c.skeyId, x)
-              if (c.subRole) sk.set(c.skeyId2, x)
-            }
-            mcreds.set(c.id, c) // SANS $ en préfixe
-            delcreds.push(xid) // AVEC $ en préfixe
-          }
-        } catch (e) {
-          console.log(e)
-        }
+    const waiting = []
+     
+    for (const xid in safe.creds) {
+      const x = b64ToU8(safe.creds[xid])
+      if (xid.startsWith('$')) waiting.push(x)
+      else try {
+        const obj = decode(await Crypt.decrypt(keyK.value, x))
+        const c: Credential = new Credential().fromObj(obj)
+        if (msvc[c.svc]) {
+          m.set(c.id, c)
+          if (c.skey) storeSkey(c)
+        } else delcreds.push(xid)
+      } catch (e) {
+        console.log(e)
       }
     }
-    skeys.value = sk
+        
+    if (waiting.length) for (const x of waiting) {
+      // Credential transmis par un autre user émetteur
+      // [obj credential crypté, pub: clé publique C de l'émetteur ]
+      const [crobj, pubC] = decode(x)
+      const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
+      const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
+      const obj = decode(dc)
+      const c: Credential = new Credential().fromObj(obj)
+      if (msvc[c.svc]) {
+        const c1 = m.get(c.id)
+        if (c1) { // Existait AVANT - mais pas forcément plus récent
+          if (c.time > c1.time) {
+            if (c.pems) { // existe toujours - MAJ ou re-création
+              c.comment = c.comment || c1.comment
+              m.set(c.id, c)
+              mcreds.set(c.id, c)
+              if (c.skey) storeSkey(c)
+            } else { // suppression "logique" (plus de PEMS)
+              m.delete(c.id)
+              delcreds.push(c.id)
+            }
+          } // else // plus ancien - Ignorer
+        } else { // n'existait pas - tout nouveau
+          m.set(c.id, c)
+          mcreds.set(c.id, c)
+          if (c.skey) storeSkey(c)
+        }
+      }
+      delcreds.push('$' + c.id)
+    }
+    
     mySafeCreds.value = m
     if (mcreds.size || delcreds.length)
       await updateCreds(mcreds, delcreds, null, null, true)

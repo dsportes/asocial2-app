@@ -76,12 +76,12 @@
       :title="$t('HPmanusers')" :fnopen="manUsers"/>
   </div>
 
-  <div v-if="sf.step === 2" class="q-pa-sm">
+  <div v-if="sf.step === 2" class="column items-center q-pa-sm">
     <btn-cond v-if="session.hasNet" class="q-my-sm" :label="$t('HPcfgPS')" icon="settings"
       @ok="openCM"/>
 
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-    <scroll-area size="lg" class="q-mb-lg"><template #default>
+    <scroll-area size="lg" class="full-width q-mb-lg"><template #default>
       <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
         <div v-if="sOfP(profId)">
           <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">

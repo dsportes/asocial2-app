@@ -175,7 +175,9 @@ export class Sync extends Operation {
   }
 }
 
-// TODO
+/* Enregistre un user en tant que "manager" de l'organisation
+créé son Credential et le stocke "en attente" dans son safe
+*/
 export class GrantNewManager extends Operation {
   constructor (SVC: string) { super('GrantNewManager', SVC) }
 
@@ -216,25 +218,24 @@ export class RevokeManager extends Operation {
 }
 
 export type ListMgrs = {
-  orguserId: string
-  hpems: string
-  ctime: number
-  dtime: number
-  comment: string
-  revoke: string
+  userId: string
+  time: number
+  limit: number
+  cond: Object
 }
 
 // TODO
 export class ListManagers extends Operation {
-  constructor (SVC: string) { super('RevokeManager', SVC) }
+  constructor (SVC: string) { super('ListManagers', SVC) }
 
   async run (org: string) : Promise<ListMgrs[]>{
     try {
-      const args = { org }
+      this.args = { org }
       const res = await this.post()
       return res['list'] as ListMgrs[]
     } catch(e) {
       this.ko(e)
+      return null
     }
   }
 }

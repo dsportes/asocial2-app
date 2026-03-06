@@ -16,26 +16,36 @@
   <q-expansion-item switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('APnewManager')">
     <div class="column items-center">
-    <div class="q-my-md wmd full-width column items-center">
-      <input-a class="q-my-xs full-width" prefix="HPstore"
-        :objerr="areq.safeStore" v-model="areq.safeStore.inp"/>
-      <input-a class="q-my-xs full-width" prefix="FCtarget" size="p0"
-        :objerr="areq.targetUser" v-model="areq.targetUser.inp"/>
-      <input-a class="q-my-xs full-with" prefix="orgcode"
-        v-model="areq.org.inp" size="org"/>
-      <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
-      <btn-cond class="q-my-xs self-end" :label="$t('ok')" icon="check"
-        :disable="diagReq !== ''"
-        @ok="grantManager"/>
-    </div>
-  </div>
-  </q-expansion-item>
+      <div class="q-my-md wmd full-width column items-center">
+        <input-a class="col q-mr-sm" prefix="orgcode"
+            v-model="areq.org.inp" size="org"/>
+        <q-separator color="orange" class="q-my-sm"/>
 
-  <!--
-  <form-cred v-if="ui.dModels[idc].formcred" :validatefn="recordManager"
-    v-model="formCred" org dtime infou infos
-    :idc="idc" :title="$t('APnewManager')"/>
-  -->
+        <input-a class="q-my-xs full-width" prefix="HPstore"
+          :objerr="areq.safeStore" v-model="areq.safeStore.inp"/>
+        <input-a class="q-my-xs full-width" prefix="FCtarget" size="p0"
+          :objerr="areq.targetUser" v-model="areq.targetUser.inp"/>
+        <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
+        <btn-cond class="col-auto" :label="$t('APgrantmgr')" icon="check"
+          :disable="diagReq !== ''" @ok="grantManager"/>
+        <q-separator color="orange" class="q-my-sm"/>
+
+        <btn-cond class="q-my-sm" flat :label="$t('APlstmgr')" 
+          :disable="!areq.org.inp" @ok="dolist"/>
+        <scroll-area class="full-width bord1">
+          <div class="q-my-xs" v-for="(idx, m) in lstMgr" :key="idx" :class="dkli(idx)">
+            <div class="row">
+              <btn-cond class="col-1" icon="delete" color="warning" @ok="revoke(m)"/>
+              <div class="col-3 font-mono">{{m.userId}}</div>
+              <div class="col-4">{{dhcool(m.time)}}</div>
+              <div class="col-4">{{mLimit ? dhcool(m.limit) : $t('APnolimit')}}</div>
+            </div>
+            <div class="q-ml-xl">{{m.cond.info}}</div>
+          </div>
+        </scroll-area>
+      </div>
+    </div>
+  </q-expansion-item>
 
 </div>
 </template>
@@ -52,18 +62,16 @@ import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
-import { GrantNewManager } from '../src-fw/operations'
-import { $t } from '../src-fw/util'
-// import { CredObj, CredRequest, Credential } from '../src-fw/credential'
+import { GrantNewManager, ListManagers } from '../src-fw/operations'
+import { $t, dkli, dhcool } from '../src-fw/util'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 import { Crypt, toPem, fromPem } from '../src-fw/crypt'
-// import FormCred from '../components-fw/FormCred.vue'
 /*
-// @ts-ignore
 import { saveAs } from 'file-saver'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
+
 import HelpButton from '../components-fw/HelpButton.vue'
 import ChooseIt from '../components-fw/ChooseIt.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -171,12 +179,27 @@ const grantManager = async () => {
   const [targetId, pubc, pubV] = p
   const ok = await new GrantNewManager('AS2')
     .run(safeStore, targetId, pubc, areq.org.inp, areq.targetUser.inp)
-  if (!ok)
-    await ui.diagDisplay($t('APkomanager'))
+  if (!ok) await ui.diagDisplay($t('APkomanager'))
+  else {
+    await ui.diagDisplay($t('APokmanager'))
+    resetAreq()
+  }
 }
 
+const lstMgr = ref()
+
+const dolist = async () => {
+  lstMgr.value = []
+  const l = await new ListManagers('AS2').run(areq.org.inp)
+  lstMgr.value = l || []
+}
+
+const revoke = async (userId) => {
+
+}
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 </style>
