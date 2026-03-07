@@ -160,7 +160,8 @@ export class AuthRecord {
   }
 
   get toObj() {
-    return { userId: this.userId, sessionId: this.sessionId, time: this.time, signatures: this.signatures }
+    return { userId: this.userId, sessionId: this.sessionId, time: this.time, 
+      signatures: this.signatures, userSign: this.userSign }
   }
 
   async sign (svc: string, org: string, role: string, docId?: string) {

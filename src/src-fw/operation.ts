@@ -89,7 +89,7 @@ export class Operation {
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
   async sign (role: string, docId?: string) {
-    await this.authRecord.sign(this.SVC, this.org, role, docId)
+    await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
   }
 
   /* Si noAuth est true, l'opération N'INCLUE PAS de AuthRecord
@@ -103,7 +103,8 @@ export class Operation {
       const u = await this.getBaseUrl()
       this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
-      if (!noAuth) await this.authRecord.signUser()
+      if (!noAuth) 
+        await this.authRecord.signUser()
       this.args.authRecord = this.authRecord.toObj
       const body = new Uint8Array(encode(this.args))
 

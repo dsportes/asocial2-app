@@ -140,6 +140,8 @@ export default {
   PAGEapp: 'Auteurs et relecteurs',
   PAGEtest: 'Page des tests',
 
+  PanelManager: 'Management des organisations',
+  
   op_PingDB: 'PING de la base de données',
   op_EchoText: 'Echo du texte envoyé',
   op_$Hash: 'Test Hash PHP',
@@ -235,6 +237,7 @@ export default {
   APoc_del: 'SUPPRIMER la configuration',
   APnolimit: '(illimité)',
   APlstmgr: 'Rafraîchir la liste des managers',
+  APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "mangers" de l\'organisation.',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',

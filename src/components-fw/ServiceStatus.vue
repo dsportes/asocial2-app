@@ -54,7 +54,7 @@
       <input-A class="full-with" prefix="orgcode" v-model="org" size="org"/>
       <btn-cond :label="$t('org_status')" :disable="!$OP || !org"
         @ok="svcOrgStatus"/>
-      <btn-cond :label="$t('APorgconfig')" :disable="!$OP || !org" class="q-mt-sm"
+      <btn-cond :label="$t('APorgconfig')" :disable="!$OP || !org || !maySetSt" class="q-mt-sm"
         icon="open_in_new" @ok="openOrgConfig"/>
     </div>
     <div v-if="resping2 !== null" class="col-7">
@@ -219,7 +219,7 @@ async function setSvcOpStatus (stx) : Promise<void> {
   const op = new SetSvcOpStatus(SVC.value)
   const res = await op.run($OP.value, stx, newComment.value)
   // res.svcOpStatus contient le status mis à jour
-  await svcOpStatus()
+  // await svcOpStatus()
   newComment.value = ''
 }
 

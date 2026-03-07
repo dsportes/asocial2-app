@@ -16,6 +16,9 @@
       <btn-cond  class="q-mb-sm"
         flat icon="exit_to_app" color="warning"
         :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
+      <btn-cond v-if="hasManagedOrgs" class="q-mb-sm"
+        flat icon="img:icons/superman.jpg" color="warning" :label="$t('PanelManager')"
+        @ok="openManager"/>
       <btn-cond v-if="sf.auth.admins" class="q-mb-sm"
         flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
@@ -30,16 +33,19 @@
       </div>
     </div>
   </q-page-container>
+
+  <managed-orgs v-if="ui.dModels[idc].managedorgs" :idc="idc"/>
 </q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import stores from '../stores/all'
 import HelpButton from '../components-fw/HelpButton.vue'
 import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import ManagedOrgs from '../components-fw/ManagedOrgs.vue'
 import { $t, sty } from '../src-fw/util'
 
 const sf = stores.safe
@@ -47,11 +53,26 @@ const ui = stores.ui
 // const config = stores.config
 const session = stores.session
 
+const idc = ui.getIdc()
+onUnmounted(() => ui.closeVue(idc))
+
 const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
   if (ok)
     ui.backToOpenSession()
 }
+
+watch(() => ui.leftmenu, (v) => { 
+  onOpen() 
+})
+
+const hasManagedOrgs = ref(false)
+
+const onOpen = () => {
+  const m = sf.managedOrgs()
+  hasManagedOrgs.value = m.size !== 0
+}
+onOpen()
 
 const openAdmin = (svc) => {
   ui.closeMenu()
@@ -59,6 +80,11 @@ const openAdmin = (svc) => {
   session.SVC = ''
   session.$OP = ''
   session.org = ''
+}
+
+const openManager = () => {
+  ui.closeMenu()
+  ui.oD(idc, 'managedorgs')
 }
 
 </script>

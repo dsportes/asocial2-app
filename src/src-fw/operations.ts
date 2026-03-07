@@ -224,15 +224,18 @@ export type ListMgrs = {
   cond: Object
 }
 
-// TODO
 export class ListManagers extends Operation {
   constructor (SVC: string) { super('ListManagers', SVC) }
 
-  async run (org: string) : Promise<ListMgrs[]>{
+  async run (org: string, mgr?: boolean) : Promise<ListMgrs[]>{
     try {
       this.args = { org }
+      if (mgr)
+        this.sign('Org.manager')
       const res = await this.post()
-      return res['list'] as ListMgrs[]
+      const l = res['list'] as ListMgrs[]
+      const s = res['status']
+      return [s, l]
     } catch(e) {
       this.ko(e)
       return null

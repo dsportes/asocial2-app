@@ -33,14 +33,17 @@
         <btn-cond class="q-my-sm" flat :label="$t('APlstmgr')" 
           :disable="!areq.org.inp" @ok="dolist"/>
         <scroll-area class="full-width bord1">
-          <div class="q-my-xs" v-for="(idx, m) in lstMgr" :key="idx" :class="dkli(idx)">
+          <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
             <div class="row">
               <btn-cond class="col-1" icon="delete" color="warning" @ok="revoke(m)"/>
-              <div class="col-3 font-mono">{{m.userId}}</div>
+              <div class="col-3 font-mono ellipsis">{{m.userId}}</div>
               <div class="col-4">{{dhcool(m.time)}}</div>
-              <div class="col-4">{{mLimit ? dhcool(m.limit) : $t('APnolimit')}}</div>
+              <div class="col-4">{{m.limit ? dhcool(m.limit) : $t('APnolimit')}}</div>
             </div>
-            <div class="q-ml-xl">{{m.cond.info}}</div>
+            <div class="row">
+              <div class="col-1"></div>
+              <div class="col-11 text-italic">{{m.cond.info}}</div>
+            </div>
           </div>
         </scroll-area>
       </div>
@@ -160,7 +163,7 @@ const diagReq = computed(() => {
 const areq = reactive({
   targetUser: { inp: '', err: ''},
   safeStore: { inp: '', err: ''},
-  org: { inp: '' }
+  org: { inp: session.currentOrg || '' }
 })
 
 const resetAreq = () => {
@@ -186,11 +189,13 @@ const grantManager = async () => {
   }
 }
 
-const lstMgr = ref()
+const lstMgr = ref([])
 
 const dolist = async () => {
   lstMgr.value = []
-  const l = await new ListManagers('AS2').run(areq.org.inp)
+  const [s, l] = await new ListManagers(SVC.value).run(areq.org.inp)
+  if (s) 
+    await ui.diagDisplay($t('APmgrnolst'))
   lstMgr.value = l || []
 }
 
@@ -202,4 +207,5 @@ const revoke = async (userId) => {
 <style lang="scss" scoped>
 @import '../css/app.scss';
 .bord1 { border: 1px solid $grey-5; border-radius: 5px; }
+.ellipsis { text-decoration: ellipsis}
 </style>
