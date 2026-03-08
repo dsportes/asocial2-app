@@ -10,7 +10,8 @@ export const K = {
 
   MASTERDIR_URL: 'http://localhost:8080/safe/',
   SAFE_URLS: { // Safes spécifiques "bien connus"
-    dsphp: 'http://localhost:8888/safe.php?'
+    dsphp: 'http://localhost:8888/safe.php?',
+    std: 'http://localhost:8080/safe/'
   },
 
   FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],

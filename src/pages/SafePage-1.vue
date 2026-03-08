@@ -1,149 +1,172 @@
 <template>
 <div class="column items-center">
-  <div :class="sty('md')">
-    <div v-if="sf.tab === 'login' && sf.step === 1">
-      <div class="row justify-between items-center q-my-sm">
+<div :class="sty('md')">
+
+  <div v-if="sf.step === 1" class="q-pa-sm q-mb-md">
+    <!-- Entête : accès Internet, incognito, nom du terminal -->
+    <div :class="'full-width x-py-xs column bordx' + (session.incognito && session.noNet ? '2' : '1')">
+      <div class="row justify-between items-center">
         <q-toggle class="col q-pr-md" v-model="session.noNet" dense color="negative"
-          :label="$t('LOGnet_' + (session.noNet ? '2' : '1'))" />
+          :label="$t('HPnet_' + (session.noNet ? '2' : '1'))" />
         <btn-bubble class="col-auto self-start" size="sm"
-          :text="$t('LOGnet_3')"/>
+          :text="$t('HPmode_' + (session.incognito ? '3' : '1'))"/>
       </div>
 
-      <security-site v-model="sf.safeStore"/>
+      <div class="row justify-between items-center">
+        <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
+          :label="$t('HPincognito_' + (session.incognito ? '2' : '1'))"/>
+        <btn-bubble class="col-auto self-start" size="sm"
+          :text="$t('HPmode_' + (session.noNet ? '3' : '2'))"/>
+      </div>
+      <input-a prefix="HPstore" class="full-width q-my-sm" v-model="sf.mySafeStore"/>
+    </div>
+
+    <div v-if="session.hasNet && sf.devName" class="row items-center q-mt-sm">
+      <span class="titre-sm text-italic">{{$t('HPterminal')}}</span>
+      <span class="font-mono fs-sm text-italic q-ml-sm">{{sf.devId.substring(0,5) + ' [' + sf.devName + ']'}}</span>
+    </div>
+
+    <!-- Je suis enregistré -->
+    <div class="full-width row q-mt-md items-center">
+      <btn-bubble class="self-start" size="md" :text="$t('HPregist_2')"/>
+      <div :class="'q-ml-sm titre-lg text-italic' + (session.noNet && session.incognito ? '  disabled' : '')">
+        {{$t('HPregist_1')}}</div>
+    </div>
+
+    <div v-if="session.hasNet || !session.incognito" class="q-pl-md">
+      <!-- Authentification FORTE -->
+      <bar-open :bubble="$t('HPauthstrong_2')"
+        :title="$t('HPauthstrong_1')" :fnopen="openStrongAuth"/>
 
       <!-- Authentification par code PIN -->
-      <div v-if="sf.users.length" class="q-my-md">
-        <bar-open v-if="sf.users.length === 1" :bubble="$t('LOGauthbypin_2')" center
-          :title="$t('LOGauthbypin_1a', [sf.users[0].pseudo])"/>
-        <bar-open v-else :bubble="$t('LOGauthbypin_2')" center
-          :title="$t('LOGauthbypin_1b', [sf.users.length])"/>
-        <div v-if="sf.users.length > 1"
-          class="row full-width justify-center items-center q-gutter-sm">
-          <btn-cond v-for="u in sf.users" :key="u.userId" padding="none xs"
-            :label="u.pseudo" no-caps
-            :size="u === selectedUser ? 'lg' : 'md'"
-            :color="u === selectedUser ? 'warning' : 'primary'"
-            @ok="selectUser(u)"/>
+      <div v-if="session.hasNet && sf.users.length">
+        <div v-if="session.hasNet && sf.users.length === 1">
+          <bar-open :bubble="$t('HPauthbypin_2')"
+            :title="$t('HPauthbypin_1a', [sf.users[0].pseudo])" :fnopen="selectUser0"/>
         </div>
-        <div v-if="selectedUser" :class="sty('sm')">
-          <div class="full-width q-pa-sm">
-            <input-ps v-model="pin" prefix="PSpin" size="pin" :validatefn="authPIN"/>
+        <div v-else class="column">
+          <bar-open :bubble="$t('HPauthbypin_2')" :title="$t('HPauthbypin_1b', [sf.users.length])"/>
+          <div class="row self-center q-mx-xl">
+            <div v-for="u in sf.users" :key="u.userId"
+              class="q-ml-sm font-mono fs-lg text-bold text-primary cursor-pointer"
+              style="text-decoration-line: underline;"
+              @click="selectUser(u)">{{u.pseudo}}</div>
           </div>
         </div>
-        <q-separator color="orange" class="q-mt-lg"/>
-      </div>
-
-      <!-- Authentification "forte" -->
-      <div class="full-width">
-        <bar-open :bubble="$t('LOGauthstrong_2')" center 
-          :title="$t('LOGauthstrong_1')" class="q-mb-sm"/>
-        <p0-p1 @ok="authPS" class="full-width"/>
       </div>
     </div>
 
-    <div v-if="sf.tab === 'login' && sf.step === 2" class="column items-center q-pa-sm">
-      <div class="row self-start full-width justify-between items-center q-my-sm">
-        <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
-          :label="$t('SESincognito_' + (session.incognito ? '2' : '1'))"/>
-        <btn-bubble class="col-auto self-start" size="sm"
-          :text="$t('SESmodes')"/>
-      </div>
-
-      <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-      <scroll-area size="lg" class="full-width q-mb-lg"><template #default>
-        <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
-          <div v-if="sOfP(profId)">
-            <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
-              <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
-                @ok="selSession(sOfP(profId), true)"/>
-              <div class="col">
-                <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
-                <div>
-                  <q-img :src="database" style="height: 18px; max-width: 18px"/>
-                  <span class="font-mono text-italic q-ml-md">{{dhcool(sOfP(profId).time)}}</span>
-                </div>
-                <div class="row q-gutter-sm">
-                  <div class="text-italic">{{$t('HPstartpref')}}</div>
-                  <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionS(sOfP(profId), '', 0, null)"/>
-                  <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-                    :label="code" padding="none xs"
-                    @ok="validateSessionS(sOfP(profId), code, time, obj)"/>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div v-else>
-            <div :class="clSel(p) + 'row q-my-sm'">
-              <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
-                @ok="selProfile(p, true)"/>
-              <div class="col">
-                <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
-                <div class="fs-md text-italic">{{$t('HPnotpinned')}}</div>
-                <div class="row q-gutter-sm">
-                  <div class="text-italic">{{$t('HPstartpref')}}</div>
-                  <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionP(p, '', 0, null)"/>
-                  <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-                    :label="code" padding="none xs"
-                    @ok="validateSessionP(p, code, time, obj)"/>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template></scroll-area>
-
-      <safe-tools/>
-      <!--
-      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
-        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
-        :fnopen="openChgCodes" size="sm"/>
-
-      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openUntrust" size="sm"/>
-
-      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-        :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
-        :fnopen="openTrustings" size="sm"/>
-
-      <bar-open :bubble="$t('HPadmin_bub')" :disbubble="$t('HPadmin_bub')"
-        :title="$t('HPadmin_label')"
-        :disable="!session.hasNet"
-        :fnopen="openAdminMgr" size="sm"/>
-
-      <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
-        :title="$t('HPprefs_1')"
-        :disable="!session.hasNet || session.incognito"
-        :fnopen="openPrefsMgr" size="sm"/>
-
-      <bar-open :bubble="$t('HPmanuinfo')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPmanusers')" :fnopen="manUsers"/>
-
-      <bar-open :bubble="$t('HPexpsafe_2')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
-
-      <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
-    -->
+    <!-- Creation d'un Safe (enregistrement)-->
+    <div class="full-width q-my-md">
+      <bar-open1 :bubble="$t('HPregist_' + (session.noNet ? '4' : '2'))"
+        :disable="session.noNet" :title="$t('HPregist_3')"
+        :fnopen="createSafe"/>
     </div>
 
-    <div v-if="sf.tab === 'guest'">
-      <div class="titre-lg text-italic text-center q-my-md">{{$t('INVtit')}}</div>
-
+    <!-- Mode calculette -->
+    <div class="full-width q-my-md">
+      <bar-open1 :bubble="$t('HPregist_6')" :title="$t('HPregist_5')"
+        :fnopen="validateSessionV"/>
     </div>
+
+    <q-separator class="q-my-sm"/>
+
+    <bar-open class="q-mt-md":bubble="$t('HPmanuinfo')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPmanusers')" :fnopen="manUsers"/>
   </div>
+
+  <div v-if="sf.step === 2" class="column items-center q-pa-sm">
+    <btn-cond v-if="session.hasNet" class="q-my-sm" :label="$t('HPcfgPS')" icon="settings"
+      @ok="openCM"/>
+
+    <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
+    <scroll-area size="lg" class="full-width q-mb-lg"><template #default>
+      <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
+        <div v-if="sOfP(profId)">
+          <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selSession(sOfP(profId), true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div>
+                <q-img :src="database" style="height: 18px; max-width: 18px"/>
+                <span class="font-mono text-italic q-ml-md">{{dhcool(sOfP(profId).time)}}</span>
+              </div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionS(sOfP(profId), '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionS(sOfP(profId), code, time, obj)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <div :class="clSel(p) + 'row q-my-sm'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selProfile(p, true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div class="fs-md text-italic">{{$t('HPnotpinned')}}</div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionP(p, '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionP(p, code, time, obj)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template></scroll-area>
+
+    <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
+      :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
+      :fnopen="openChgCodes" size="sm"/>
+
+    <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
+      :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
+      :fnopen="openTrust" size="sm"/>
+
+    <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
+      :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
+      :fnopen="openTrust" size="sm"/>
+
+    <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
+      :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
+      :fnopen="openUntrust" size="sm"/>
+
+    <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
+      :title="$t('HPtrustings_1')"
+      :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+      :fnopen="openTrustings" size="sm"/>
+
+    <bar-open :bubble="$t('HPadmin_bub')" :disbubble="$t('HPadmin_bub')"
+      :title="$t('HPadmin_label')"
+      :disable="!session.hasNet"
+      :fnopen="openAdminMgr" size="sm"/>
+
+    <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
+      :title="$t('HPprefs_1')"
+      :disable="!session.hasNet || session.incognito"
+      :fnopen="openPrefsMgr" size="sm"/>
+
+    <bar-open :bubble="$t('HPmanuinfo')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPmanusers')" :fnopen="manUsers"/>
+
+    <bar-open :bubble="$t('HPexpsafe_2')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
+
+    <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
+      :disable="session.incognito || !session.hasNet" size="sm"
+      :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
+  </div>
+</div>
 
   <!-- Dialogue d'options de lancement -->
   <q-dialog v-model="ui.dModels[idc].optstart" persistent>
@@ -190,6 +213,34 @@
     </q-card>
   </q-dialog>
 
+  <!-- Dialogue de saisie d'un code PIN-->
+  <q-dialog v-model="ui.dModels[idc].pindial" persistent>
+    <q-card :class="sty('sm')">
+      <q-toolbar>
+        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
+        <q-toolbar-title class="titre-lg text-right q-mx-xs">{{$t('HPsaisirpin')}}</q-toolbar-title>
+        <btn-bubble :text="$t('HPauthbypin_2')"/>
+      </q-toolbar>
+      <div class="full-width q-pa-sm">
+        <input-ps v-model="pin" prefix="PSpin" size="pin" :validatefn="authPIN"/>
+      </div>
+    </q-card>
+  </q-dialog>
+
+  <!-- Dialogue d'authentification forte-->
+  <q-dialog v-model="ui.dModels[idc].strongauthdial" persistent>
+    <q-card :class="sty('sm')">
+      <q-toolbar>
+        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
+        <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPauthstrong_1')}}</q-toolbar-title>
+        <btn-bubble :text="$t('HPauthstrong_2')"/>
+      </q-toolbar>
+      <div class="full-width q-pa-sm">
+        <p0-p1 @ok="authPS"/>
+      </div>
+    </q-card>
+  </q-dialog>
+
   <!-- Dialogue d'export du safe-->
   <dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
     <template #hdr>
@@ -226,15 +277,17 @@
     </template>
   </dialog-std1>
 
-  <!--
+  <!-- Gestion des users / sessions -->
   <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
 
+  <!-- Gestion des credentials -->
   <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
 
+  <!-- Gestion des préférences -->
   <prefs-mgr v-if="pm" :idc="idc"/>
 
+  <!-- Gestion des rôles "admin" -->
   <admin-mgr v-if="adm" :idc="idc"/>
-  -->
 
   <!-- Enregistrement / Changement des codes -->
   <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
@@ -372,8 +425,6 @@ import P0P1 from '../components-fw/P0P1.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import SecuritySite from '../components-fw/SecuritySite.vue'
-import SafeTools from '../components-fw/SafeTools.vue'
 // import BtnConfirm from '../components-fw/BtnConfirm.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 // import ChooseIt from '../components-fw/ChooseIt.vue'
@@ -406,16 +457,12 @@ const sf = stores.safe
 const session = stores.session
 const cfg = stores.config
 
-watch(() => sf.safeStore, (v) => {
-  console.log('Safe Store >>> [' + v + ']')
-})
-
 const idc = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc))
 
 const mu = computed(() => ui.dModels[idc].manusers)
 const sc = computed(() => ui.dModels[idc].createsafe)
-const cm = computed(() => ui.dModels['0'].credsmgr)
+const cm = computed(() => ui.dModels[idc].credsmgr)
 const pm = computed(() => ui.dModels[idc].prefsmgr)
 const adm = computed(() => ui.dModels[idc].adminmgr)
 
@@ -427,18 +474,7 @@ onMounted(async () => {
 
 const p0p1 = ref(null)
 const pin = reactive({ inp: '', err: '' })
-const users = ref(sf.users)
-const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
-
-watch(() => sf.users, () => {
-  users.value = sf.users
-  selectedUser.value = users.value.length === 1 ? users.value[0] : null
-})
-
-const selectUser = (u) => {
-  pin.value = { inp: '', err: '' }
-  selectedUser.value = selectedUser.value === u ? null : u
-}
+const selectedUser = ref(null)
 
 watch(() => sf.step, async (s) => {
   if (s === 1) {
@@ -446,13 +482,28 @@ watch(() => sf.step, async (s) => {
   }
 })
 
+const selectUser = (u) => {
+  if (u) {
+    selectedUser.value = u
+    pin.value = { inp: '', err: '' }
+    ui.oD(idc, 'pindial')
+  }
+}
+const selectUser0 = (u) => { selectUser(sf.users[0]) }
+
+const openStrongAuth = () => {
+  ui.oD(idc, 'strongauthdial')
+}
+
 const authPS = async (args) => {
+  ui.fD()
   const status = await sf.openSafeByPR(args.sh0, args.sh1, args.sh)
   if (status === 0) await openSession()
   else if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
 }
 
 const authPIN = async () => {
+  ui.fD()
   const status = await sf.openSafeByPin(pin.inp, selectedUser.value.userId)
   if (status === 0) await openSession()
   else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))

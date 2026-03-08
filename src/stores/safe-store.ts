@@ -315,6 +315,7 @@ export const useSafeStore = defineStore('safe', () => {
   - permet un affichage complet, y compris pour les données relatives
     aux autres applications que celle qui s'exécute.
   **********************************************************************/
+  const tab = ref('login')
   const locstep = ref(1)
   const step = computed(() => locstep.value)
 
@@ -1560,9 +1561,19 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  const pingSite = async (site: string) => {
+    const op = new SafeOperation('$Ping', site)
+    try {
+      const ret = await op.post()
+      return ret['ping']
+    } catch(e) {
+      return false
+    }
+  }
+
   return {
-    step, setStep, backToAuth,
-    mySafeStore, userId, userName, keyK,
+    tab, step, setStep, backToAuth,
+    mySafeStore, pingSite, userId, userName, keyK,
     selectedProfile, selectedSession,
     openMode, incognito,
     devId, devName,

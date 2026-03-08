@@ -1,6 +1,7 @@
 <template> <!-- Gérer les credentials -->
 <div>
-<dialog-std2 v-model="cm" :title="$t('HPcredsmgr_1')">
+<dialog-std2 v-model="ui.dModels[idc].credsmgr" :title="$t('HPcredsmgr_1')"
+  @close="emit('close', null)">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
@@ -238,19 +239,17 @@ const exportOpts = [
 ]
 */
 
-const props = defineProps ({
-  idc: String
-})
-
 const sf = stores.safe
 const ui = stores.ui
 
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
 
-const emit = defineEmits(['updated'])
+const props = defineProps({
+  idc: String
+})
 
-const cm = computed(() => ui.dModels[props.idc].credsmgr)
+const emit = defineEmits(['close'])
 
 const tab = ref('bysessions')
 
@@ -265,7 +264,7 @@ const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
 const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
 
-const origCreds = computed(() => sf.mySafeCreds)
+const origCreds = computed(() => sf.step === 2 ? sf.mySafeCreds : new Map())
 // const origCreds = ref(testCred()) // simulation pour test
 /* Chargement des credentials */
 for(const [xid, c] of origCreds.value)
@@ -285,7 +284,7 @@ const buildXref = () => {
 
 /* Chargement des sessions */
 const loading = () => {
-  for (const [id, x] of sf.mySafeProfiles) {
+  for (const [id, x] of (sf.step === 2 ? sf.mySafeProfiles : new Map())) {
     if (x.profId !== '*') {
       const ps1: LocalPS = { id, about: x.about, crIds: new Set(x.crIds), orphans: new Set(),
         exav: true, exap: true, chgab: false, chgcr: false }
@@ -582,9 +581,9 @@ const confValidate = async () => {
     const status = await sf.updateCreds(
       report.mcreds, report.delcreds, report.mprofs, report.delprofs)
     if (status < 0) return
-    ui.fD()
     await ui.diagDisplay($t('HPsfop_' + status))
-    emit('updated', null)
+    ui.fD()
+    emit('close', null)
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

@@ -2,12 +2,13 @@
 // so you can safely delete all default props below
 
 export default {
+  app_label: 'Rédacteurs et relecteurs',
   lang: 'La langue est le Français',
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
   ok: 'OK',
-  toecho_label: 'Texte à recevoir en écho',
-  echo: 'Texte reçu en écho : {0}',
+  guest: 'Invité',
+  login: 'Login',
   later: 'Plus tard',
   important: 'Information importante',
   gotit: 'J\'ai lu',
@@ -729,7 +730,107 @@ bla bla
   UPcontact: 'Pseudo ou phrase de contact externe',
   UPsessionid: 'ID de synchronisation de la session',
   UPadmins: 'Administrateur technique de',
+ 
+  SECsite_std: 'Site standard',
+  SECsite_msg1: 'INACCESSIBLE',
+  SECsite_msg2: 'ATTENTE VERIF',
+  SECsitech_label: 'Choisir / saisir le site',
+  SECsitech_bub: `## Choisir / saisir le site
+- soit: Sélectionner l'un des sites répertoriés par l'application
+- soit saisir son URL comme https://notresite.org
+`,
 
+  SECsite_label: 'Site de confiance',
+  SECsite_bub: `## Site de confiance
+Le _site de confiance_ choisi par un utilisateur héberge son **dossier personnel d\'authentification**.
+- Pour toute autre personne que son propriétaire, le dossier est **opaque et anonyme**:
+  - les _pseudos et phrase secrètes_ qui y figurent ne sont lisibles que par lui.
+  - il est _crypté_ par un jeu de clés qui ne se révellent que par la connaissance dd'une phrase longue connue de son seul proriétaire.
+- Le dossier personnel contient,
+  - les éléments cryptographiques d'authentification de son détenteur.
+  - la liste des _terminaux de confiance_ sur lesquels les applications peuvent laisser des données, cryptées, en mémoire cache afin d'accéler la reprise de leurs sessions et pouvoir les utiliser en mode _AVION_.
+  - la liste des _droits d'accès aux diverses données et opérations_ acquis au cours du temps.
+  - des _préférences_ facilitant le déroulé des sessions:
+    - _sessions nommées_ avec une liste de droits adaptée à certaines activités fréquentes,
+    _ jeux _d'options et réglages_ préférentiels de comportement et d'affichage applicables selon le profil d'activité souhaité et le type de terminal utilisé.
+
+#### Site standard
+Un Site de confiance **standard** est géré (déploiement, sécurité, etc.) et mis à disposition de tout utilisateur.
+
+#### Sites spécifiques
+Des utilisateurs, ou toutes formes de collectifs d'utilisateurs, peuvent toutefois opter pour disposer d'un **site spécifique** de leur choix:
+- dont ils maîtrisent entièrement le déploiement d'un logiciel simple écrit en PHP (lisible et compréhensible avec un minimum d'expertise),
+- dont les données résident, cryptées, dans la base de données de leur choix.
+- dont ils assument eux-mêmes la gestion (sécurité, disponibilité, etc.).
+
+Une liste de _sites connus de l'application_ est proposée avec un **libellé** qui facilite la sélection par l'utilisateur.
+Pour désigner un site non répertorié, l'utilisateur est convié à donner son URL. 
+`,
+
+  LOGauthbypin_2: `# Authentification par code PIN
+Si vous avez **certifié** ce terminal, votre code PIN suffit à vous authentifier.
+
+Cliquer dans la liste sur vos initiales données lors de la certification.
+S'il n'y est pas, c'est que la certification a été retirée à ce terminal.
+
+> La seconde saisie consécutive erronnée d'un code PIN supprime la certification de ce terminal.
+
+> Vous _pouvez_ toujours utiliser l'authentification **forte**.
+`,
+  LOGauthbypin_1a: 'Je suis l\'utilisateur [{0}] certifié sur ce terminal',
+  LOGauthbypin_1b: 'Je suis un des {0} utilisateurs certifiés sur ce terminal...',
+  LOGauthstrong_1: 'Authentification "forte"',
+  LOGauthstrong_2: `# Authentification "forte"
+bla bla
+`,
+  LOGbypin_1: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
+  LOGbypin_2: 'Ouverture par code PIN en échec: utilisateur non enregistré.',
+  LOGbypin_3: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
+  LOGbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
+  LOGbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, le TERMINAL A PERDU SA CERTIFICATION.',
+  LOGback: 'Retour au Login',
+  LOGnet_1: 'Accès à Internet',
+  LOGnet_2: 'Mode AVION: pas d\'accès à Internet',
+  LOGnet_3: `## Ouverture de session AVEC ou SANS Internet
+#### CERTIFICATION d'un terminal par un utilisateur
+Les utilisateurs peuvent **certifier** des terminaux:
+- ils _pourront_ s'y authentifier ensuite avec un simple code PIN,
+- ils _pourront_ y **ÉPINGLER** leurs sessions (et leur donner un nom).
+
+> Une session _épinglée_ bénéficie d'un **cache** local crypté de documents et de fichiers qui accélère son démarrage et réduit le trafic sur le réseau et les coûts de calcul.
+
+## Ouvrir une session AVEC Internet
+C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
+Quand la session est _épinglée_ la mémoire locale _cache_ des documents est chargée.
+
+## Rouvrir SANS Internet une session qui a été _ÉPINGLÉE_: mode **AVION**
+La session a accès en lecture aux documents et certains fichiers, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
+
+### Rouvrir SANS Internet une session qui n'a pas été _ÉPINGLÉE_: mode **CALCULETTE**
+Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centrales, NI d'une mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
+
+`,
+
+  SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
+  SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
+  SESmodes: `## Modes NORMAL et INCOGNITO
+#### En mode NORMAL, 
+une session bénéficie du stockage en mémoire _cache_ (cryptée) des documents:
+- ouverture plus rapide et plus économe du réseau et du temps de calcul.
+- ouverture en **MODE AVION** possible en l'absence d'accès à Internet.
+
+#### En mode INCOGNITO, 
+une session ignore complètement l'existence d'une mémoire _cache_ locale de documents.
+- son chargement est plus long et plus coûteux.
+- le mode AVION en l'absence d'accès à Internet n'est pas disponible.
+- en contrepartie, la session n'a laissé aucune trace de son exécution sur le terminal.
+`,
+
+  SESconfig: 'Configuer des sessions',
+
+  SFTtit: 'Toutes les opérations de gestion de vos données "confidentielles"',
+
+  INVtit: 'J\'ai une invitation: 2 codes et une "phrase secrète"',
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',

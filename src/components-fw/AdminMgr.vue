@@ -1,5 +1,6 @@
 <template>
-<dialog-std2 v-model="adm" :title="$t('HPadmin_label')" tbclass="tbs">
+<dialog-std2 v-model="adm" :title="$t('HPadmin_label')" tbclass="tbs"
+  @close="emit('close', null)">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">
       <q-tab name="admins" :label="$t('HPtab_adm')"
@@ -87,6 +88,8 @@ import { Crypt } from '../src-fw/crypt'
 const props = defineProps ({
   idc: String
 })
+
+const emit = defineEmits(['close'])
 
 const sf = stores.safe
 const ui = stores.ui

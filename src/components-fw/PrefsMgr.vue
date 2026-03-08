@@ -1,6 +1,7 @@
 <template> <!-- Gérer les credentials -->
 <div>
-<dialog-std2 v-model="pm" :title="$t('HPprefs_1')">
+<dialog-std2 v-model="pm" :title="$t('HPprefs_1')"
+  @close="emit('close', null)">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
       <btn-cond flat size="lg" icon="check" color="warning"
@@ -107,11 +108,14 @@ const diag = computed(() => session.edPref ? session.edPref.diag : '' )
 const idc2 = ui.getIdc()
 onUnmounted(() => ui.closeVue(idc2))
 const pe = computed(() => ui.dModels[idc2].edprf)
-const pm = computed(() => ui.dModels[props.idc].prefsmgr)
+const pm = computed(() => 
+  ui.dModels[props.idc].prefsmgr)
 
 const props = defineProps ({
   idc: String
 })
+
+const emit = defineEmits(['close'])
 
 const myPrefs: Ref<Map<string, [number, Uint8Array]>> = ref(sf.mySafePrefs)
 // const myPrefs: RefMap<string, [number, Uint8Array]> = ref(new Map())

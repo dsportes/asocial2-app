@@ -28,7 +28,7 @@
         dense padding="none" color="primary">
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
-            <q-btn dense flat v-for="x in list" :key="x" :label="x"
+            <q-btn dense flat no-caps v-for="x in list" :key="x" :label="x"
               @click="m = x"/>
           </div>
         </q-menu>

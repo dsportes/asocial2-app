@@ -1,6 +1,6 @@
 <template>
 <div class="row full-width items-center">
-  <div :class="'col text-right cursor-pointer titre-md' + (disable ? ' disabled' : '')"
+  <div :class="'text-' + (center ? 'center' : 'right') + ' col cursor-pointer titre-md' + (disable ? ' disabled' : '')"
     @click="fnopen()">{{title}}</div>
   <q-btn v-if="fnopen" class="col-auto" flat :size="size || 'md'"
     :icon="icon || 'chevron_right'" padding="none"
@@ -18,6 +18,7 @@ import { sty } from '../src-fw/util'
 
 const props = defineProps({
   icon: String,
+  center: Boolean,
   disable: Boolean,
   fnopen: Function,
   title: String, // titre de la bar

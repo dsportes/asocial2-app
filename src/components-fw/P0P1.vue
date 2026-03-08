@@ -1,15 +1,15 @@
 <template>
-  <div class="column full-width">
-    <q-toolbar v-if="title" class="full-width tbs" dense>
-      <q-toolbar-title class="titre-md text-italic">{{title}}</q-toolbar-title>
-      <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
-    </q-toolbar>
+<div class="column full-width">
+  <q-toolbar v-if="title" class="full-width tbs" dense>
+    <q-toolbar-title class="titre-md text-italic">{{title}}</q-toolbar-title>
+    <btn-cond size="sm" icon="check" round :disable="err" @ok="validate"/>
+  </q-toolbar>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p0" size="p0" prefix="PSpseudo"
-      :validatefn="validate" :valctrl="valctrl"/>
+  <input-ps class="q-mb-sm" v-model="p0" size="p0" prefix="PSpseudo"
+    :validatefn="validate" :valctrl="valctrl"/>
 
-    <input-ps class="q-ml-md q-mb-sm" v-model="p1" size="p1" prefix="PSphrase"
-      :validatefn="validate" :valctrl="valctrl"/>
+  <input-ps class="q-mb-sm" v-model="p1" size="p1" prefix="PSphrase"
+    :validatefn="validate" :valctrl="valctrl"/>
 </div>
 </template>
 

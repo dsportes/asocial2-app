@@ -3,7 +3,7 @@
     round :size="size || 'md'" padding="none">
     <q-popup-proxy ref="qpp" transition-show="flip-up" transition-hide="flip-down"
       breakpoint="400">
-      <q-banner :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pa-xs'" @click="hide">
+      <q-banner :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pa-xs q-mb-xl'" @click="hide">
         <sd-noir v-if="!$q.dark.isActive" :text="text"/>
         <sd-blanc v-else :text="text"/>
       </q-banner>

@@ -1,5 +1,5 @@
 <template>
-<dialog-std2 v-model="mu" :title="$t('HPmanusers')">
+<dialog-std2 v-model="mu" :title="$t('HPmanusers')" @close="emit('close', null)">
 <template #hdr>
   <div>
     <div class="row items-center q-mx-md full-size">
