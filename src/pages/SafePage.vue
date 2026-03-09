@@ -2,55 +2,17 @@
 <div class="column items-center">
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
-      <div class="row justify-between items-center q-my-sm">
-        <q-toggle class="col q-pr-md" v-model="session.noNet" dense color="negative"
-          :label="$t('LOGnet_' + (session.noNet ? '2' : '1'))" />
-        <btn-bubble class="col-auto self-start" size="sm"
-          :text="$t('LOGnet_3')"/>
-      </div>
-
+      <mode-net/>
       <security-site v-model="sf.safeStore"/>
-
-      <!-- Authentification par code PIN -->
-      <div v-if="sf.users.length" class="q-my-md">
-        <bar-open v-if="sf.users.length === 1" :bubble="$t('LOGauthbypin_2')" center
-          :title="$t('LOGauthbypin_1a', [sf.users[0].pseudo])"/>
-        <bar-open v-else :bubble="$t('LOGauthbypin_2')" center
-          :title="$t('LOGauthbypin_1b', [sf.users.length])"/>
-        <div v-if="sf.users.length > 1"
-          class="row full-width justify-center items-center q-gutter-sm">
-          <btn-cond v-for="u in sf.users" :key="u.userId" padding="none xs"
-            :label="u.pseudo" no-caps
-            :size="u === selectedUser ? 'lg' : 'md'"
-            :color="u === selectedUser ? 'warning' : 'primary'"
-            @ok="selectUser(u)"/>
-        </div>
-        <div v-if="selectedUser" :class="sty('sm')">
-          <div class="full-width q-pa-sm">
-            <input-ps v-model="pin" prefix="PSpin" size="pin" :validatefn="authPIN"/>
-          </div>
-        </div>
-        <q-separator color="orange" class="q-mt-lg"/>
-      </div>
-
-      <!-- Authentification "forte" -->
-      <div class="full-width">
-        <bar-open :bubble="$t('LOGauthstrong_2')" center 
-          :title="$t('LOGauthstrong_1')" class="q-mb-sm"/>
-        <p0-p1 @ok="authPS" class="full-width"/>
-      </div>
+      <login-block @logged="openSession"/>
     </div>
 
     <div v-if="sf.tab === 'login' && sf.step === 2" class="column items-center q-pa-sm">
-      <div class="row self-start full-width justify-between items-center q-my-sm">
-        <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
-          :label="$t('SESincognito_' + (session.incognito ? '2' : '1'))"/>
-        <btn-bubble class="col-auto self-start" size="sm"
-          :text="$t('SESmodes')"/>
-      </div>
+      <mode-incognito/>
 
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-      <scroll-area size="lg" class="full-width q-mb-lg"><template #default>
+      <scroll-area size="lg" class="full-width q-mb-lg">
+        <template #default>
         <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
           <div v-if="sOfP(profId)">
             <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
@@ -90,14 +52,11 @@
             </div>
           </div>
         </div>
-      </template></scroll-area>
+        </template>
+      </scroll-area>
 
       <safe-tools/>
       <!--
-      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
-        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
-        :fnopen="openChgCodes" size="sm"/>
-
       <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
         :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
         :fnopen="openTrust" size="sm"/>
@@ -114,20 +73,6 @@
         :title="$t('HPtrustings_1')"
         :disable="!session.hasNet || session.incognito || sf.openMode > 2"
         :fnopen="openTrustings" size="sm"/>
-
-      <bar-open :bubble="$t('HPadmin_bub')" :disbubble="$t('HPadmin_bub')"
-        :title="$t('HPadmin_label')"
-        :disable="!session.hasNet"
-        :fnopen="openAdminMgr" size="sm"/>
-
-      <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
-        :title="$t('HPprefs_1')"
-        :disable="!session.hasNet || session.incognito"
-        :fnopen="openPrefsMgr" size="sm"/>
-
-      <bar-open :bubble="$t('HPmanuinfo')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPmanusers')" :fnopen="manUsers"/>
 
       <bar-open :bubble="$t('HPexpsafe_2')"
         :disable="session.incognito || !session.hasNet" size="sm"
@@ -146,7 +91,7 @@
   </div>
 
   <!-- Dialogue d'options de lancement -->
-  <q-dialog v-model="ui.dModels[idc].optstart" persistent>
+  <q-dialog v-model="ui.dModels[myidc].optstart" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
         <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
@@ -191,7 +136,7 @@
   </q-dialog>
 
   <!-- Dialogue d'export du safe-->
-  <dialog-std1 v-model="ui.dModels[idc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
+  <dialog-std1 v-model="ui.dModels[myidc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
     <template #hdr>
       <div class="row items-center">
         <q-tabs dense v-model="exptab" class="col bg-primary text-white shadow-2">
@@ -226,21 +171,8 @@
     </template>
   </dialog-std1>
 
-  <!--
-  <manage-users v-if="mu" :idc="idc" @close="closeManusers"/>
-
-  <creds-mgr v-if="cm" :idc="idc" @updated="credsUpdated"/>
-
-  <prefs-mgr v-if="pm" :idc="idc"/>
-
-  <admin-mgr v-if="adm" :idc="idc"/>
-  -->
-
-  <!-- Enregistrement / Changement des codes -->
-  <safe-cr v-if="sc" :idc="idc" :onValidate="openSession" :mode="createMode ? 0 : 1"/>
-
-  <!-- Gérer les terminaux de confiance -->
-  <q-dialog v-model="ui.dModels[idc].trustings" persistent>
+  <!-- Gérer les terminaux de confiance 
+  <q-dialog v-model="ui.dModels[myidc].trustings" persistent>
     <q-card :class="sty('md')">
       <q-toolbar>
         <btn-cond color="none" size="lg" icon="chevron_left" flat
@@ -274,9 +206,10 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  -->
 
-  <!-- Accorder ma confiance à ce terminal -->
-  <q-dialog v-model="ui.dModels[idc].trustit" persistent>
+  <!-- Accorder ma confiance à ce terminal
+  <q-dialog v-model="ui.dModels[myidc].trustit" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-lg row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
@@ -305,9 +238,10 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  -->
 
-  <!-- Retirer ma confiance à ce terminal -->
-  <q-dialog v-model="ui.dModels[idc].untrustit" persistent>
+  <!-- Retirer ma confiance à ce terminal 
+  <q-dialog v-model="ui.dModels[myidc].untrustit" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-md q-mb-sm titre-lg text-italic">
         {{$t('HPutnbs', sf.mySessions.size, {count: sf.mySessions.size})}}
@@ -336,10 +270,10 @@
         <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
       </q-card-actions>
     </q-card>
-  </q-dialog>
+  </q-dialog>-->
 
   <!-- Confirmation de destruction du safe -->
-  <q-dialog v-model="ui.dModels[idc].delsafe" persistent>
+  <q-dialog v-model="ui.dModels[myidc].delsafe" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
     <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
     <div class="q-my-sm titre-lg text-bold text-center">
@@ -358,7 +292,6 @@
 </template>
 
 <script setup lang="ts">
-
 // @ts-ignore
 import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
@@ -374,14 +307,9 @@ import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import SecuritySite from '../components-fw/SecuritySite.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
-// import BtnConfirm from '../components-fw/BtnConfirm.vue'
-// import HelpButton from '../components-fw/HelpButton.vue'
-// import ChooseIt from '../components-fw/ChooseIt.vue'
-import SafeCr from '../components-fw/SafeCr.vue'
-import ManageUsers from '../components-fw/ManageUsers.vue'
-import CredsMgr from '../components-fw/CredsMgr.vue'
-import PrefsMgr from '../components-fw/PrefsMgr.vue'
-import AdminMgr from '../components-fw/AdminMgr.vue'
+import LoginBlock from '../components-fw/LoginBlock.vue'
+import ModeNet from '../components-fw/ModeNet.vue'
+import ModeIncognito from '../components-fw/ModeIncognito.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarOpen1 from '../components-fw/BarOpen1.vue'
@@ -410,14 +338,8 @@ watch(() => sf.safeStore, (v) => {
   console.log('Safe Store >>> [' + v + ']')
 })
 
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
-
-const mu = computed(() => ui.dModels[idc].manusers)
-const sc = computed(() => ui.dModels[idc].createsafe)
-const cm = computed(() => ui.dModels['0'].credsmgr)
-const pm = computed(() => ui.dModels[idc].prefsmgr)
-const adm = computed(() => ui.dModels[idc].adminmgr)
+const myidc = ui.getIdc('SafePage')
+onUnmounted(() => ui.closeVue(myidc))
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -425,41 +347,8 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const p0p1 = ref(null)
-const pin = reactive({ inp: '', err: '' })
-const users = ref(sf.users)
-const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
-
-watch(() => sf.users, () => {
-  users.value = sf.users
-  selectedUser.value = users.value.length === 1 ? users.value[0] : null
-})
-
-const selectUser = (u) => {
-  pin.value = { inp: '', err: '' }
-  selectedUser.value = selectedUser.value === u ? null : u
-}
-
-watch(() => sf.step, async (s) => {
-  if (s === 1) {
-    pin.inp = ''
-  }
-})
-
-const authPS = async (args) => {
-  const status = await sf.openSafeByPR(args.sh0, args.sh1, args.sh)
-  if (status === 0) await openSession()
-  else if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
-}
-
-const authPIN = async () => {
-  const status = await sf.openSafeByPin(pin.inp, selectedUser.value.userId)
-  if (status === 0) await openSession()
-  else if (status > 0) await ui.diagDisplay($t('HPbypin_' + status))
-}
-
 const opDelSafe = () => {
-  ui.oD(idc, 'delsafe')
+  ui.oD(myidc, 'delsafe')
 }
 
 const delSafe = async () => {
@@ -495,7 +384,7 @@ const exportSafe = async () => {
     await ui.diagDisplay($t('HPexportsafe_ko'))
     return
   }
-  ui.oD(idc, 'exportsafe')
+  ui.oD(myidc, 'exportsafe')
 }
 
 const valK = async () => {
@@ -514,29 +403,22 @@ const doExportSafe = async () => {
   ui.fD()
 }
 
+/*
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
+
 const mySessions: Ref<TSession> = ref(new Map())
 const trustingMe = computed(() => sf.myTrusting )
-
-const credsUpdated = async () => {
-  ui.fD()
-  await openSession()
-}
-
-const prefsUpdated = async () => {
-  ui.fD()
-  await openSession()
-}
+*/
 
 const sOfP = (profId: string) => sf.sessionOfProfId(profId)
 
 const openSession = async () => {
   sf.setStep(2)
 }
-
+/*
 const dup = computed(() => {
   let b = false
   sf.trustings.forEach(e => {
@@ -555,27 +437,19 @@ const openTrust = async () => {
   newPIN.inp = ''
   devName.inp = newDev.value ? '' : sf.devName
   newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
-  ui.oD(idc, 'trustit')
+  ui.oD(myidc, 'trustit')
 }
-
+*/
 const openUntrust = async () => {
   await sf.getMySessions()
-  ui.oD(idc, 'untrustit')
+  ui.oD(myidc, 'untrustit')
 }
-
+/*
 const delTrustSet = ref()
 
 const openTrustings = () => {
   delTrustSet.value = new Set()
-  ui.oD(idc, 'trustings')
-}
-
-const openPrefsMgr = () => {
-  ui.oD(idc, 'prefsmgr')
-}
-
-const openAdminMgr = () => {
-  ui.oD(idc, 'adminmgr')
+  ui.oD(myidc, 'trustings')
 }
 
 const delTrustIt = (id) => {
@@ -603,6 +477,7 @@ const setTrust = async () => {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }
+  */
 
 const setUntrust = async () => {
   try {
@@ -617,27 +492,27 @@ const setUntrust = async () => {
 }
 
 const manUsers = () => {
-  ui.oD(idc, 'manusers')
+  ui.oD(myidc, 'manusers')
 }
 
 const openCM = () => {
-  ui.oD(idc, 'credsmgr')
+  ui.oD(myidc, 'credsmgr')
 }
 
 const openPM = () => {
-  ui.oD(idc, 'prefsmgr')
+  ui.oD(myidc, 'prefsmgr')
 }
 
 const createMode = ref()
 
 const createSafe = () => {
   createMode.value = true
-  ui.oD(idc, 'createsafe')
+  ui.oD('0', 'createsafe')
 }
 
 const openChgCodes = () => {
   createMode.value = false
-  ui.oD(idc, 'createsafe')
+  ui.oD('0', 'createsafe')
 }
 
 const closeManusers = () => {
@@ -690,7 +565,7 @@ const selSession = (s, dial: boolean) => {
       selSessionAbBefore.value = s.about
     }
   }
-  if (dial) ui.oD(idc, 'optstart')
+  if (dial) ui.oD(myidc, 'optstart')
 }
 
 const selProfile = (profile: Profile, dial: boolean) => {
@@ -699,7 +574,7 @@ const selProfile = (profile: Profile, dial: boolean) => {
   sf.selectedProfile = profile
   selSessionAb.value = profile.profId === '*' ? $t('HPpstar') : profile.about
   selSessionAbBefore.value = selSessionAb.value
-  if (dial) ui.oD(idc, 'optstart')
+  if (dial) ui.oD(myidc, 'optstart')
 }
 
 const selStar = computed(() =>

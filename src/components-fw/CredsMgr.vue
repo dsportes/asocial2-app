@@ -1,7 +1,7 @@
 <template> <!-- Gérer les credentials -->
 <div>
 <dialog-std2 v-model="ui.dModels[idc].credsmgr" :title="$t('HPcredsmgr_1')"
-  @close="emit('close', null)">
+  @close="emit('close', idc)">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
@@ -53,11 +53,11 @@
 
           <!-- credential supprimé -->
           <div v-if="localCred.st === 2">
-            <bar-open :title="$t('HPcredac_2')" :fnopen="doAction2" icon="redo" color="primary"/>
+            <bar-open :title="$t('HPcredac_2')" @open="doAction2" icon="redo" color="primary"/>
           </div>
           <!-- crédential pas supprimé: comment PEUT-ETRE changé -->
           <div v-if="localCred.st === 0 || localCred.st === 3">
-            <bar-open :title="$t('HPcredac_1')" :fnopen="doAction4" icon="delete" color="warning"/>
+            <bar-open :title="$t('HPcredac_1')" @open="doAction4" icon="delete" color="warning"/>
           </div>
 
           <div class="q-mt-md titre-md text-italic text-right">{{$t('HPlisted')}}</div>
@@ -140,7 +140,7 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-model="ui.dModels[idc2].report" :title="$t('HPcfupd')" hdrclass='wmd'>
+<dialog-std1 v-model="ui.dModels[myidc].report" :title="$t('HPcfupd')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
       <btn-cond flat size="lg" icon="chevron_left" @ok="ui.fD" :label="$t('giveup')"/>
@@ -242,14 +242,17 @@ const exportOpts = [
 const sf = stores.safe
 const ui = stores.ui
 
-const idc2 = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc2))
-
 const props = defineProps({
   idc: String
 })
+const myidc = ui.getIdc('CredsMgr', props.idc)
+onUnmounted(() => ui.closeVue(myidc))
 
 const emit = defineEmits(['close'])
+
+const cl = () => {
+  emit('close', myidc)
+}
 
 const tab = ref('bysessions')
 

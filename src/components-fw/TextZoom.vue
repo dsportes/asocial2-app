@@ -1,7 +1,8 @@
 <template>
 <div>
-  <btn-cond icon="open_in_new" flat :label="label" @ok="ui.oD(idc, 'zoomit')"/>
-  <q-dialog v-model="ui.dModels[idc].zoomit" persistent>
+  <btn-cond icon="open_in_new" flat :label="label" 
+    @ok="ui.oD(myidc, 'zoomit')"/>
+  <q-dialog v-model="ui.dModels[myidc].zoomit" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar>
         <btn-cond icon="close" color="none"  flat @ok="ui.fD()"/>
@@ -36,8 +37,8 @@ const loc = ref(props.text || '')
 const rx = ref(props.rows || 5)
 
 const ui = stores.ui
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
+const myidc = ui.getIdc('TextZoom')
+onUnmounted(() => ui.closeVue(myidc))
 
 const zoom = () => {
   rx.value += 10

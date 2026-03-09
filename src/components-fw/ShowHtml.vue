@@ -1,9 +1,9 @@
 <template>
 <div>
-  <div v-if="!ui.dModels[idc].SHfs" style="position:relative">
+  <div v-if="!ui.dModels[myidc].SHfs" style="position:relative">
     <!--div v-if="zoom || edit" class="row btn"-->
     <div class="row btn">
-      <btn-cond icon="fullscreen" round stop @ok="ui.oD(idc, 'SHfs')">
+      <btn-cond icon="fullscreen" round stop @ok="ui.oD(myidc, 'SHfs')">
         <q-tooltip class="bg-white text-primary">{{$t('SHpe')}}</q-tooltip>
       </btn-cond>
       <btn-cond v-if="edit" class="q-ml-xs" color="warning" round
@@ -14,7 +14,7 @@
     <sd-nb :style="styx" :text="text || ''" :idx="idx"/>
   </div>
 
-  <q-dialog v-model="ui.dModels[idc].SHfs" persistent maximized
+  <q-dialog v-model="ui.dModels[myidc].SHfs" persistent maximized
     transition-show="slide-up" transition-hide="slide-down">
     <q-layout container view="hHh lpR fFf" :class="sty()">
       <q-header elevated class="tbs">
@@ -23,7 +23,8 @@
           <btn-cond v-if="edit" round icon="edit" @ok="editer">
             <q-tooltip class="bg-white text-primary">{{$t('SHed')}}</q-tooltip>
           </btn-cond>
-          <btn-cond round icon="close_fullscreen" @ok="ui.fD" class="q-ml-xs">
+          <btn-cond round icon="close_fullscreen" 
+            @ok="ui.fD" class="q-ml-xs">
             <q-tooltip class="bg-white text-primary">{{$t('SHre')}}</q-tooltip>
           </btn-cond>
         </q-toolbar>
@@ -45,7 +46,8 @@ import BtnCond from './BtnCond.vue'
 import SdNb from './SdNb.vue'
 
 const ui = stores.ui
-const idc = ui.getIdc(); onUnmounted(() => ui.closeVue(idc))
+const myidc = ui.getIdc('ShowHtml'); 
+onUnmounted(() => ui.closeVue(myidc))
 
 const props = defineProps({
   text: String,

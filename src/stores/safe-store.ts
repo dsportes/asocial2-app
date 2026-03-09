@@ -739,7 +739,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   type SafeCodes = { // paramétres de l'opération $UpdCodesSafe
     id: string // identifiant aléatoire.
-    pseudo: string // pseudo / trigramme crypté par la clé K du _safe_.
     hp0: string // index unique, `SH(p0)`.
     hr0: string // index unique, `SH(r0)`.
     hhp1: string // SHA de `SH(p1)`.
@@ -749,6 +748,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   interface Safe extends SafeCodes { // paramétres de l'opération $CreateSafe
+    pseudo: string // crypté par K et en base64
     hhk: string // SHA de `SH(K)`.
     C: string // clé publique de cryptage.
     DK: string // clé privée de décryptage, cryptée par la clé K
@@ -765,7 +765,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const updSafeCodes = async (
-    pseudo: string,
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
@@ -776,7 +775,6 @@ export const useSafeStore = defineStore('safe', () => {
 
     const safeCodes: SafeCodes = {
       id: userId.value,
-      pseudo: u8ToB64(await ecX(pseudo), true),
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
@@ -802,7 +800,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const createSafe = async (
-    pseudo: string,
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
 
@@ -817,7 +814,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     const safe: Safe = {
       id: userId.value,
-      pseudo: u8ToB64(await ecX(pseudo), true),
+      pseudo: '',
       hp0: u8ToB64(psh0, true),
       hr0: u8ToB64(rsh0, true),
       hhp1: Crypt.shaS(psh1),
@@ -958,6 +955,7 @@ export const useSafeStore = defineStore('safe', () => {
     Va: string
     cy: string
     sign: string
+    pseudo: string
   }
 
   type UntrustDev = {
@@ -1040,6 +1038,7 @@ export const useSafeStore = defineStore('safe', () => {
     const sign = u8ToB64(asn1)
     const Va = toPem(kpsv.pub, true)
     const trustDev: TrustDev = {
+      pseudo: u8ToB64(await ecX(pseudo), true),
       userId: userId.value,
       devId: devId.value,
       sh1p: sh1p.value,

@@ -1,7 +1,7 @@
 <template> <!-- Gérer les credentials -->
-<div>
-<dialog-std2 v-model="pm" :title="$t('HPprefs_1')"
-  @close="emit('close', null)">
+<div v-if="idc">
+<dialog-std2 v-model="ui.dModels[idc].prefsmgr" :title="$t('HPprefs_1')"
+  @close="emit('close', idc)">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
       <btn-cond flat size="lg" icon="check" color="warning"
@@ -102,18 +102,16 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const chg = computed(() => session.edPref ? session.edPref.chg : false )
-const diag = computed(() => session.edPref ? session.edPref.diag : '' )
-
-const idc2 = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc2))
-const pe = computed(() => ui.dModels[idc2].edprf)
-const pm = computed(() => 
-  ui.dModels[props.idc].prefsmgr)
-
 const props = defineProps ({
   idc: String
 })
+const myidc = ui.getIdc('PrefsMgr', props.idc)
+onUnmounted(() => ui.closeVue(myidc))
+
+const chg = computed(() => session.edPref ? session.edPref.chg : false )
+const diag = computed(() => session.edPref ? session.edPref.diag : '' )
+
+const pe = computed(() => ui.dModels[myidc].edprf)
 
 const emit = defineEmits(['close'])
 
@@ -222,7 +220,7 @@ const valNamep = async (edit) => {
   session.setEdPref(namep.value,
     edName.value === 2 ? 0 : selP.value.time,
     edName.value === 2 ? {} : obj)
-  ui.oD(idc2, 'edprf')
+  ui.oD(myidc, 'edprf')
 }
 
 const edValid = () => {

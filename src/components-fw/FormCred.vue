@@ -1,5 +1,6 @@
 <template>
-<dialog-std1 v-model="ui.dModels[idc].formcred" :title="title" hdrclass='wmd'>
+<dialog-std1 v-model="ui.dModels[idc].formcred" 
+  :title="title" hdrclass='wmd' @close="emit('close', idc)">
   <template #hdr>
     <div class="row justify-between q-px-md q-mb-md">
       <btn-cond flat icon="close" color="none"
@@ -67,6 +68,8 @@ const props = defineProps({
   infou: Boolean,
   infos: Boolean
 })
+
+const emit = defineEmits(['close'])
 
 const optsRoles = ref([])
 for (const r of config.K.roles) optsRoles.value.push({ value: r, label : $t('ROLE' + r)})

@@ -2,12 +2,12 @@
 <div class="row full-width items-center">
   <btn-bubble v-if="bubble !== ''" class="col-auto q-mr-sm" :size="large ? 'lg' : 'md'" 
     :text="disable && disbubble ? disbubble : bubble"/>
-  <div :class="'col ' + (large ? 'titre-lg ' : 'titre-md ') + (disable || !fnopen ? ' disabled' : ' cursor-pointer')"
+  <div :class="'col ' + (large ? 'titre-lg ' : 'titre-md ') + (disable ? ' disabled' : ' cursor-pointer')"
     @click="fno">{{title}}
   </div>
-  <q-btn v-if="fnopen" class="col-auto" flat 
+  <q-btn v-if="hasopen" class="col-auto" flat 
     :icon="icon || 'chevron_right'" :size="large ? 'lg' : 'md'" padding="none"
-    :disable="disable" @click="fnopen()" :color="color || 'none'"/>
+    :disable="disable" @click="fno" :color="color || 'none'"/>
 </div>
 </template>
 
@@ -20,7 +20,7 @@ import { sty } from '../src-fw/util'
 const props = defineProps({
   icon: String,
   disable: Boolean,
-  fnopen: Function,
+  hasopen: Boolean,
   title: String, // titre de la bar
   bubble: String,  // texte de la bulle d'aide
   disbubble: String, // texte de la bulle d'aide QUAND disable
@@ -29,9 +29,11 @@ const props = defineProps({
 })
 
 const fno = () => {
-  if (!props.disable && props.fnopen) 
-    props.fnopen()
+  if (!props.disable && props.hasopen) 
+    emit('open', 'BarOpen1')
 }
+
+const emit = defineEmits(['open'])
 
 const ui = stores.ui
 </script>

@@ -1,5 +1,6 @@
 <template>
-<dialog-std2 v-model="mu" :title="$t('HPmanusers')" @close="emit('close', null)">
+<dialog-std2 v-model="ui.dModels[idc].manusers" 
+  :title="$t('HPmanusers')" @close="emit('close', idc)">
 <template #hdr>
   <div>
     <div class="row items-center q-mx-md full-size">
@@ -106,7 +107,7 @@
       <div v-if="statusSafe.lm !== -1">
         <div class='titre-lg q-mb-sm'>{{$t('HPsafest_1')}}</div>
         <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
-          icon="open_in_new" :fnopen="openChgCodes"/>
+          icon="open_in_new" hasopen @open="openChgCodes"/>
         <div v-if="safe.lm < statusSafe.lm" class='q-ml-sm titre-md'>
           {{$t('HPsafest_2gt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
         </div>
@@ -135,7 +136,7 @@
       <div v-else>
         <div class='titre-lg q-mb-sm'>{{$t('HPsafest_3')}}</div>
         <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
-          icon="open_in_new" :fnopen="openChgCodes"/>
+          icon="open_in_new" hasopen @open="openChgCodes"/>
         <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
           {{$t('HPsafest_5p')}}
         </div>
@@ -158,7 +159,7 @@
   </div>
 
   <!-- Confirmation de validation -->
-  <q-dialog v-model="ui.dModels[idc].valcf" persistent>
+  <q-dialog v-model="ui.dModels[myidc].valcf" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
     <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
     <div class="q-my-sm titre-lg text-bold text-center">
@@ -176,7 +177,7 @@
   </q-dialog>
 
   <!-- Confirmation du resetAll -->
-  <q-dialog v-model="ui.dModels[idc].resetAll" persistent>
+  <q-dialog v-model="ui.dModels[myidc].resetAll" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
       <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
       <div class="q-my-md titre-lg text-bold text-italic text-center">{{$t('HPskull')}}</div>
@@ -188,7 +189,7 @@
   </q-dialog>
 
   <!-- Changement des codes du backup-->
-  <safe-cr v-if="sc" :idc="idc" :onValidate="chgCodes" :mode="2"/>
+  <safe-cr :idc="myidc" @done="chgCodes" :mode="2"/>
 
 </div>
 </div>
@@ -219,16 +220,11 @@ import { $t, sty, edvol, dhcool, u8ToB64, readFile, fileDescr, coolBye } from '.
 const ui = stores.ui
 const sf = stores.safe
 
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
-
-const sc = computed(() => ui.dModels[idc].createsafe)
-
 const props = defineProps({
   idc: String
 })
-
-const mu = computed(() => ui.dModels[props.idc].manusers)
+const myidc = ui.getIdc('ManagedUsers', props.idc)
+onUnmounted(() => ui.closeVue(myidc))
 
 const emit = defineEmits(['close'])
 
@@ -239,7 +235,7 @@ watch(tab, (v) => {
 })
 
 const opCfReset = () => {
-  ui.oD(idc, 'resetAll')
+  ui.oD(myidc, 'resetAll')
 }
 
 const resetAllLocal = async () => {
@@ -248,7 +244,7 @@ const resetAllLocal = async () => {
 }
 
 const valcf = () => {
-  ui.oD(idc, 'valcf')
+  ui.oD(myidc, 'valcf')
 }
 
 const size: Ref<number[]> = ref(0)
@@ -428,7 +424,7 @@ const importBackup = async () => {
 }
 
 const openChgCodes = () => {
-  ui.oD(idc, 'createsafe')
+  ui.oD(myidc, 'createsafe')
 }
 
 const chgCodes = async (arg) => {

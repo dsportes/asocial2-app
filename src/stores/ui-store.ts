@@ -61,10 +61,13 @@ export const useUiStore = defineStore('ui', () => {
   const dModels = ref({ '0': {} }) // liste des noms de dialogue par idc
   const idc = ref(1)
 
-  const getIdc = () : string=> {
+  const getIdc = (src, from) : string=> {
+    if (!src)
+      console.log('zarbi')
     idc.value++
-    const idcx = '' + idc.value
+    const idcx = src + '_' + idc.value
     dModels.value[idcx] = {}
+    console.log('Load vue:' + idcx + (from ? ' from:' + from: '' ))
     return idcx
   }
 
@@ -88,6 +91,7 @@ export const useUiStore = defineStore('ui', () => {
     dStack.value.forEach(e => { if (e[0] !== idc) ds.push(e)})
     dStack.value = ds
     delete dModels.value[idc]
+    console.log('Close vue:', idc)
   }
 
   const isOpenD = (idc: string, name: string) =>

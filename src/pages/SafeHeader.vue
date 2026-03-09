@@ -17,16 +17,16 @@
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.backToAuth"/>
     <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
-      @ok="ui.oD('0', 'credsmgr')"/>
+      @ok="ui.oD(myidc, 'credsmgr')"/>
   </div>
-  <creds-mgr idc="0"/>
+  <creds-mgr :idc="myidc"/>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
-import { onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
@@ -38,6 +38,9 @@ const sf = stores.safe
 const config = stores.config
 const session = stores.session
 const ui = stores.ui
+
+const myidc = ui.getIdc('SafeHeader')
+onUnmounted(() => ui.closeVue(myidc))
 
 </script>
 

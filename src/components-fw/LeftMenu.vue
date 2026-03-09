@@ -53,7 +53,7 @@ const ui = stores.ui
 // const config = stores.config
 const session = stores.session
 
-const idc = ui.getIdc()
+const idc = ui.getIdc('LeftMenu')
 onUnmounted(() => ui.closeVue(idc))
 
 const backToOpenSession = async () => {

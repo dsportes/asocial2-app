@@ -1,10 +1,10 @@
 <template>
 <div class="row full-width items-center">
   <div :class="'text-' + (center ? 'center' : 'right') + ' col cursor-pointer titre-md' + (disable ? ' disabled' : '')"
-    @click="fnopen()">{{title}}</div>
-  <q-btn v-if="fnopen" class="col-auto" flat :size="size || 'md'"
+    @click="emit('open', 'BarOpen')">{{title}}</div>
+  <q-btn class="col-auto" flat size="20px"
     :icon="icon || 'chevron_right'" padding="none"
-    :disable="disable" @click="fnopen()" :color="color || 'none'"/>
+    :disable="disable" @ok="emit('open', 'BarOpen')" :color="color || 'none'"/>
   <btn-bubble v-if="bubble !== ''" class="q-ml-md col-auto" :size="size || 'md'"
     :text="disable && disbubble ? disbubble : bubble"/>
 </div>
@@ -20,13 +20,14 @@ const props = defineProps({
   icon: String,
   center: Boolean,
   disable: Boolean,
-  fnopen: Function,
   title: String, // titre de la bar
   bubble: String,  // texte de la bulle d'aide
   disbubble: String, // texte de la bulle d'aide QUAND disable
   size: String,
   color: String
 })
+
+const emit = defineEmits(['open'])
 
 const ui = stores.ui
 </script>

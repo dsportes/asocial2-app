@@ -45,9 +45,6 @@ const ui = stores.ui
 const dataSt = stores.data
 const session = stores.session
 
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
-
 /* scripts de test *************************************************/
 const hasBtn1 = computed(() => session.pref.obj.btn1)
 

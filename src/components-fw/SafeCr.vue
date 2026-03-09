@@ -1,5 +1,6 @@
 <template> <!-- Création d'un safe / Changement des codes -->
-<dialog-std2 v-model="sc" :title="$t('HPenreg_' + mode)">
+<dialog-std2 v-model="ui.dModels[idc].createsafe" :title="$t('SCRenreg_' + mode)"
+  @close="emit('close', idc)">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">
     <btn-cond flat size="lg" icon="check" :label="$t('validate')" 
@@ -11,11 +12,8 @@
 <div class="column items-center">
 <div class="wmd">
 
-  <div v-if="diag !== ''" class="diag">{{diag}}</div>
-  <div v-if="mode !== 2" class="row items-center q-my-sm">
-    <div class="titre-md">{{$t('HPtrig')}}</div>
-    <input-ps class="q-ml-sm" v-model="trig" size="tr" prefix="PStrig"/>
-  </div>
+  <div v-if="diag !== ''" class="diag q-mb-sm">{{diag}}</div>
+
   <q-expansion-item v-for="x in 4" v-model="exp[x-1]" dense group="gp0p1"
     class='q-mb-xs'
     header-class="tbs"
@@ -24,7 +22,7 @@
       <div class="column">
         <div class="row q-gutter-sm">
           <q-icon size="md" :name="icons[errors[x - 1]]"/>
-          <div class='titre-lg'>{{$t('HPcode_' + x)}}</div>
+          <div class='titre-lg'>{{$t('SCRcode_' + x)}}</div>
         </div>
       </div>
     </template>
@@ -50,18 +48,15 @@ import stores from '../stores/all'
 const icons = ['check', 'question_mark', 'warning']
 
 const props = defineProps ({
-  mode: Number, // 0: create 1: chg codes 2: chg codes backup
-  onValidate: Function,
-  idc: String
+  idc: String,
+  mode: Number // 0: create 1: chg codes 2: chg codes backup
 })
 
-const sc = computed(() => ui.dModels[props.idc].createsafe)
+const emit = defineEmits(['close', 'done'])
 
 const sf = stores.safe
 const ui = stores.ui
 const cfg = stores.config
-
-const trig = reactive( { inp: '', err: '' } )
 
 const exp = reactive([false, false, false, false])
 const codes = reactive([null, null, null, null])
@@ -79,11 +74,10 @@ const initCodes = () => {
 const eq = (n1, n2) => equ8(codes[n1].sh, codes[n2].sh)
 
 const diag = computed(() => {
-  if (trig.err && props.mode !== 2) return $t('HPerr_1')
-  if (codes[0].sh0 === null) return $t('HPerr_2')
-  if (!eq(0, 1)) return $t('HPerr_3')
-  if (codes[2].sh0 === null) return $t('HPerr_4')
-  if (!eq(2, 3)) return $t('HPerr_5')
+  if (codes[0].sh0 === null) return $t('SCRerr_2')
+  if (!eq(0, 1)) return $t('SCRerr_3')
+  if (codes[2].sh0 === null) return $t('SCRerr_4')
+  if (!eq(2, 3)) return $t('SCRerr_5')
   return ''
 })
 
@@ -106,21 +100,22 @@ const checkCodes = () => {
 const createSafe = async () => {
   const ca = codes[0]
   const cr = codes[2]
+  const arg = {
+    cash0: ca.sh0, cash1: ca.sh1, cash: ca.sh, crsh0: cr.sh0, crsh1: cr.sh1, crsh: cr.sh
+  }
+
   if (props.mode === 2) {
-    const arg = {
-      cash0: ca.sh0, cash1: ca.sh1, cash: ca.sh, crsh0: cr.sh0, crsh1: cr.sh1, crsh: cr.sh
-    }
-    await props.onValidate(arg)
+    emit('done', arg)
     ui.fD()
   } else {
     const status = props.mode === 0 ?
-      await sf.createSafe(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
-      await sf.updSafeCodes(trig.inp, ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
+      await sf.createSafe(ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
+      await sf.updSafeCodes(ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh)
     if (status >= 0) {
-      await ui.diagDisplay($t('HPcsret_' + props.mode + status))
+      await ui.diagDisplay($t('SCRcsret_' + props.mode + status))
       if (status === 0) {
         ui.fD()
-        await props.onValidate()
+        emit('done', arg)
       }
     }
   }

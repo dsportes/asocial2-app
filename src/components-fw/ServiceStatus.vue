@@ -140,9 +140,6 @@ const config = stores.config
 const session = stores.session
 const sf = stores.safe
 
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
-
 const services = Array.from(Object.keys(config.K.SERVICES))
 
 type Elt = {

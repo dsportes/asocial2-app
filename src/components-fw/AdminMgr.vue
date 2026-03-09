@@ -1,6 +1,7 @@
 <template>
-<dialog-std2 v-model="adm" :title="$t('HPadmin_label')" tbclass="tbs"
-  @close="emit('close', null)">
+<dialog-std2 v-model="ui.dModels[idc].adminmgr" 
+  :title="$t('HPadmin_label')" tbclass="tbs"
+  @close="emit('close', idc)">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">
       <q-tab name="admins" :label="$t('HPtab_adm')"
@@ -95,9 +96,6 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 const config = stores.config
-
-const pe = computed(() => ui.dModels[idc2].edprf)
-const adm = computed(() => ui.dModels[props.idc].adminmgr)
 
 const tab = ref('contact')
 watch(tab, (t) => {

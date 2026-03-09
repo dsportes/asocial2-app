@@ -33,7 +33,7 @@
           <q-item-section class="fs-lg">{{$t('darkclear')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'theme')">
+        <q-item clickable dense v-close-popup @click="ui.oD(myidc, 'theme')">
           <q-item-section avatar><q-avatar size="xl" icon="palette"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('theme')}}</q-item-section>
         </q-item>
@@ -58,7 +58,7 @@
           <q-item-section class="fs-lg">{{$t('servicestatus')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="ui.oD(idc, 'pings')">
+        <q-item clickable dense v-close-popup @click="ui.oD(myidc, 'pings')">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
         </q-item>
@@ -131,7 +131,7 @@
   <q-dialog v-model="session.opDialog" maximized persistent>
     <div v-if="session.opSpinner >= 2" class="column items-center q-ma-lg">
       <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-        <div :class="sty() + 'cursor-pointer stop'" @click="ui.oD(idc, 'confirmstopop')">
+        <div :class="sty() + 'cursor-pointer stop'" @click="ui.oD(myidc, 'confirmstopop')">
           <div class="row items-center justify-between q-pa-sm" style="width:20rem">
             <div class="col column items-center">
               <div class="text-bold titre-md">{{$t('MLAopc')}}</div>
@@ -150,7 +150,7 @@
   </q-dialog>
 
   <!-- Confirmation d'interruption de l'opération en cours -->
-  <q-dialog v-model="ui.dModels[idc].confirmstopop">
+  <q-dialog v-model="ui.dModels[myidc].confirmstopop">
     <q-card>
       <q-card-section class="q-pa-md fs-md text-center">
         {{$t('MLAcf', [$t('op_' + session.opEncours.opName)])}}</q-card-section>
@@ -162,7 +162,7 @@
   </q-dialog>
 
   <!-- Affichage des thèmes clair / foncé -->
-  <q-dialog v-model="ui.dModels[idc].theme" persistent>
+  <q-dialog v-model="ui.dModels[myidc].theme" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
         <btn-cond icon="close" color="warning" @ok="ui.fD"/>
@@ -286,7 +286,7 @@
   </q-dialog>
 
   <!-- Outils techniques -->
-  <dialog-std1 v-if="ui.dModels[idc].pings" v-model="ui.dModels[idc].pings" vh="80"
+  <dialog-std1 v-model="ui.dModels[myidc].pings" vh="80"
     :title="$t('tech')" hdrclass='wmd' help="pings">
     <template #hdr>
       <div class="row items-center wmd full-width">
@@ -348,7 +348,7 @@
   </dialog-std1>
 
   <!-- Maj préférences -->
-  <dialog-std1 v-model="ui.dModels[idc].edprf"
+  <dialog-std1 v-model="ui.dModels[myidc].edprf"
     :title="$t('HPprefs_ed')" hdrclass='wmd'>
     <template #hdr>
       <div class="row q-ma-xs items-center justify-between">
@@ -405,8 +405,9 @@ const config = stores.config
 const session = stores.session
 const sf = stores.safe
 const ui = stores.ui
-const idc = ui.getIdc()
-onUnmounted(() => ui.closeVue(idc))
+
+const myidc = ui.getIdc('SettingButton')
+onUnmounted(() => ui.closeVue(myidc))
 
 const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
@@ -446,7 +447,7 @@ const edDiag = computed(() => session.edPref.diag )
 const openPrefs = () => {
   const ep = session.pref
   session.setEdPref(ep.code, ep.time, decode(encode(ep.obj)))
-  ui.oD(idc, 'edprf')
+  ui.oD(myidc, 'edprf')
 }
 
 const edValid = async () => {
@@ -474,6 +475,14 @@ const validPs = async () => {
   cr.b64 = u8ToB64(sh, true)
   cr.shaps = Crypt.sha(sh, false)
   cr.shaSps = Crypt.shaS(sh)
+}
+
+const genSV = async () => {
+  const { pub, priv } = await Crypt.getSVKeyPair()
+  cr.pems = JSON.stringify([
+    toPem(pub, true),
+    toPem(priv)
+  ], null, '\t')
 }
 
 const svcurl = ref('')

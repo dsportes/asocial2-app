@@ -355,17 +355,7 @@ bla bla
   HPerr_5: 'Code d\'accès secondaire: vérification échouée',
   HPtrig: 'Pseudo, nom ... : {0}',
   HPps: 'Phrase secrète : {0}',
-  // HPca: 'Code d\'accès principal',
-  // HPcr: 'Code d\'accès secondaire',
-  HPcsret_00: 'Enregistrement effectué avec succès.',
-  HPcsret_01: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès principal".',
-  HPcsret_02: 'Echec de l\'enregistrement: changer le "pseudo du code d\'accès secondaire".',
-  HPcsret_09: 'BUG - Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
-  HPcsret_10: 'Mise à jour des codes d\'accès effectuée avec succès.',
-  HPcsret_11: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
-  HPcsret_12: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès principal".',
-  HPcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo du code d\'accès secondaire".',
-  HPcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
+
   HPopsret_0: 'Authentification réussie.',
   HPopsret_1: 'Authentification en échec: code d\'accès invalide.',
   HPopsret_2: 'Authentification en échec: code d\'accès invalide.',
@@ -825,10 +815,29 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
 - le mode AVION en l'absence d'accès à Internet n'est pas disponible.
 - en contrepartie, la session n'a laissé aucune trace de son exécution sur le terminal.
 `,
-
   SESconfig: 'Configuer des sessions',
 
-  SFTtit: 'Toutes les opérations de gestion de vos données "confidentielles"',
+  SCRenreg_1: 'Modification de mes codes d\'accès',
+  SCRenreg_2: 'Modification des codes d\'accès du "backup"',
+  SCRcode_1: 'Déclaration de l\'accès principal',
+  SCRcode_2: 'Vérification de l\'accès principal',
+  SCRcode_3: 'Déclaration de l\'accès secondaire',
+  SCRcode_4: 'Vérification de l\'accès secondaire',
+  SCRerr_2: 'Accès principal absent ou invalide',
+  SCRerr_3: 'Accès principal: vérification échouée',
+  SCRerr_4: 'Accès secondaire absent ou invalide',
+  SCRerr_5: 'Accès secondaire: vérification échouée',
+  SCRcsret_00: 'Enregistrement effectué avec succès.',
+  SCRcsret_01: 'Echec de l\'enregistrement: changer le "pseudo" de l\'accès principal".',
+  SCRcsret_02: 'Echec de l\'enregistrement: changer le "pseudo" de l\'accès secondaire".',
+  SCRcsret_09: 'BUG - Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
+  SCRcsret_10: 'Mise à jour des codes d\'accès effectuée avec succès.',
+  SCRcsret_11: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
+  SCRcsret_12: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès principal".',
+  SCRcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès secondaire".',
+  SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
+
+  SFTtit: 'Toutes les opérations de gestion de vos données "de sécurité"',
 
   INVtit: 'J\'ai une invitation: 2 codes et une "phrase secrète"',
 
