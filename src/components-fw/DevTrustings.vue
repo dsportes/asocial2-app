@@ -1,10 +1,10 @@
 <template>
   <!-- Gérer les terminaux de confiance -->
-  <q-dialog v-model="ui.dModels[idc].trustings" persistent>
+  <q-dialog v-model="me" persistent>
     <q-card :class="sty('md')">
       <q-toolbar>
         <btn-cond color="none" size="lg" icon="chevron_left" flat
-          @ok="delTrustSet.clear(); ui.fD(); emit('close', idc)"/>
+          @ok="ui.fD"/>
         <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
         <btn-bubble :text="$t('HPtrustings_2')"/>
       </q-toolbar>
@@ -30,7 +30,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD(); emit('close', idc)"/>
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
         <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning"
           :disable="delTrustSet.size === 0" @ok="delTrustings"/>
       </q-card-actions>
@@ -39,7 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+// @ts-ignore
+import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -47,14 +48,17 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import { $t, sty, dkli } from '../src-fw/util'
 
 const ui = stores.ui
-const session = stores.session
 const sf = stores.safe
 
-const props = defineProps({
-  idc: String
-})
-
-const emit = defineEmits(['close'])
+const props = defineProps({ idc: String })
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].trustings)
+watch(() => me.value, (v: boolean) => { if (v) init(); 
+  else { cleanup(); emit('close', 'DevTrustings') } })
+const init = () => {}
+const cleanup = () => {
+  delTrustSet.value.clear()
+}
 
 const delTrustSet = ref(new Set())
 
@@ -69,6 +73,7 @@ const delTrustings = async () => {
   if (st === 0) {
     delTrustSet.value = null
     ui.fD()
+    emit('done', props.idc)
   } else await ui.diagDisplay($t('HPopnotpin_' + st))
 }
 </script>

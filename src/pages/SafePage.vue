@@ -4,7 +4,7 @@
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>
       <security-site v-model="sf.safeStore"/>
-      <login-block @logged="openSession"/>
+      <login-block @logged="sf.setStep(2)"/>
     </div>
 
     <div v-if="sf.tab === 'login' && sf.step === 2" class="column items-center q-pa-sm">
@@ -56,32 +56,6 @@
       </scroll-area>
 
       <safe-tools/>
-      <!--
-      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
-        :fnopen="openTrust" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
-        :fnopen="openUntrust" size="sm"/>
-
-      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-        :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
-        :fnopen="openTrustings" size="sm"/>
-
-      <bar-open :bubble="$t('HPexpsafe_2')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPexpsafe_1')" :fnopen="exportSafe"/>
-
-      <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
-        :disable="session.incognito || !session.hasNet" size="sm"
-        :title="$t('HPdelsafe_1')" :fnopen="opDelSafe"/>
-    -->
     </div>
 
     <div v-if="sf.tab === 'guest'">
@@ -135,174 +109,16 @@
     </q-card>
   </q-dialog>
 
-  <!-- Dialogue d'export du safe-->
-  <dialog-std1 v-model="ui.dModels[myidc].exportsafe" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
-    <template #hdr>
-      <div class="row items-center">
-        <q-tabs dense v-model="exptab" class="col bg-primary text-white shadow-2">
-          <q-tab name="info" :label="$t('HPexpinfo')"/>
-          <q-tab name="export" :label="$t('HPexpexport')" />
-        </q-tabs>
-        <btn-cond class="col-auto q-ma-xs" flat icon="check"
-          :disable="exptab === 'info' || cryptK.key === null || !expName"
-          :label="$t('HPbackup_0')"
-          @ok="doExportSafe"/>
-      </div>
-    </template>
-    <template #default>
-      <div v-if="exptab === 'info'" class="column q-mx-lg items-center">
-        <div class='font-mono fs-lg text-center text-bold full-width q-my-md'>
-          {{sf.userId}}</div>
-        <div class="titre-md text-italic q-my-sm">{{$t('HPexppub')}}</div>
-        <q-input class="q-pa-xs bord1 full-width" v-model="infopub" type="textarea" readonly
-          :rows="10"/>
-      </div>
-      <div v-if="exptab === 'export'" class="column q-mx-lg items-center">
-        <div class="q-my-sm full-width">
-          <div class="titre-md text-italic">{{$t('HPimport_label')}}</div>
-          <input-ps v-model="cryptK" :validatefn="valK" size="ps" prefix="HPimport"/>
-        </div>
-        <div v-if="cryptK.key === null" class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
-        <input-a v-if="session.hasNet && !selStar" class="q-my-sm full-width"
-          size="file" prefix="HPexpname" v-model="expName"
-          :disable="cryptK.key === null"
-          :validatefn="doExportSafe"/>
-      </div>
-    </template>
-  </dialog-std1>
-
-  <!-- Gérer les terminaux de confiance 
-  <q-dialog v-model="ui.dModels[myidc].trustings" persistent>
-    <q-card :class="sty('md')">
-      <q-toolbar>
-        <btn-cond color="none" size="lg" icon="chevron_left" flat
-          @ok="delTrustSet = null; ui.fD()"/>
-        <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
-        <btn-bubble :text="$t('HPtrustings_2')"/>
-      </q-toolbar>
-      <div class="full-width q-pa-sm">
-        <div v-if="sf.devName" class="row items-center q-my-sm">
-          <span class="titre-sm text-italic">{{$t('HPterminal')}}</span>
-          <span class="font-mono fs-sm text-italic q-ml-sm">{{sf.devId.substring(0, 5) + ' [' + sf.devName + ']'}}</span>
-        </div>
-        <div class="titre-md q-my-sm">{{ $t('HPtrustings_l', sf.devices.size) }}</div>
-        <scroll-area><template #default>
-          <div v-for="[id, dev] in sf.devices" :key="id" class="row">
-            <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'"
-              :color="delTrustSet.has(id) ? 'primary' : 'warning'"
-              @ok="delTrustIt(id)"/>
-            <div :class="'col-2 font-mono ellipsis' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
-              {{ id.substring(0, 5) }}</div>
-            <div :class="'col-9 font-mono' + (delTrustSet.has(id) ? ' text-strike' : '') + (id === sf.devId ? ' text-bold' : '')">
-              {{ dev.devName }}</div>
-          </div>
-        </template></scroll-area>
-      </div>
-
-      <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning"
-          :disable="delTrustSet.size === 0" @ok="delTrustings"/>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-  -->
-
-  <!-- Accorder ma confiance à ce terminal
-  <q-dialog v-model="ui.dModels[myidc].trustit" persistent>
-    <q-card :class="sty('md')">
-      <div class="q-mt-lg row items-start">
-        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
-          {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
-        </div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
-          v-model="devName" prefix="PSdevname" size="dev"/>
-      </div>
-
-      <div class="q-mb-lg q-mt-md row items-start">
-        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
-          v-model="newPIN" size="pin" prefix="PSpin"/>
-      </div>
-
-      <div class="q-mb-lg q-mt-md row items-start">
-        <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
-          v-model="newPseudo" size="tr" prefix="PStrig"/>
-      </div>
-
-      <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPtrust_1')" color="warning"
-          :disable="trusterr" @ok="setTrust"/>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-  -->
-
-  <!-- Retirer ma confiance à ce terminal 
-  <q-dialog v-model="ui.dModels[myidc].untrustit" persistent>
-    <q-card :class="sty('md')">
-      <div class="q-mt-md q-mb-sm titre-lg text-italic">
-        {{$t('HPutnbs', sf.mySessions.size, {count: sf.mySessions.size})}}
-      </div>
-      <div class="column q-mb-md">
-        <div class="titre-md">{{$t('HPutd_1')}}</div>
-        <div class="q-ml-md titre-md">{{$t('HPutd_2')}}</div>
-        <div class="q-ml-md titre-md">{{$t('HPutd_3')}}</div>
-      </div>
-
-      <div v-if="sf.mySessions.size" class="q-mb-sm q-pa-xs row">
-        <div class="col-3 q-pr-md text-right titre-md text-italic">{{$t('HPutc1')}}</div>
-        <div class="col-9 titre-md text-italic">{{$t('HPutc2')}}</div>
-      </div>
-      <div v-if="sf.mySessions.size" class="q-my-sm q-mx-md slist q-pa-xs">
-        <scroll-area><template #default>
-          <div v-for="[id,s] in sf.mySessions" :key="id" class="q-my-xs row">
-            <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
-            <div class="col-9 fs-md">{{s.about}}</div>
-          </div>
-        </template></scroll-area>
-      </div>
-
-      <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>-->
-
-  <!-- Confirmation de destruction du safe -->
-  <q-dialog v-model="ui.dModels[myidc].delsafe" persistent>
-    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-    <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
-    <div class="q-my-sm titre-lg text-bold text-center">
-        {{$t('HPskull_9')}}
-      </div>
-      <div class="q-my-sm titre-md text-bold text-italic text-center">
-        {{$t('HPskull_8')}}
-      </div>
-      <div class="row full-width justify-between items-center">
-        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
-        <btn-confirm actif :confirm="delSafe"/>
-      </div>
-    </q-card>
-  </q-dialog>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
-import { saveAs } from 'file-saver'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
+import { decode } from '@msgpack/msgpack'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
-import P0P1 from '../components-fw/P0P1.vue'
-import InputPs from '../components-fw/InputPs.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import SecuritySite from '../components-fw/SecuritySite.vue'
@@ -311,23 +127,17 @@ import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
-import BarOpen1 from '../components-fw/BarOpen1.vue'
 
 import stores from '../stores/all'
 import { TSession, Profile } from '../stores/safe-store'
 import { $t, sty, dkli, dhcool } from '../src-fw/util'
-import { Crypt } from '../src-fw/crypt'
-// import anonymousW from '../assets/anonymous_white.png'
-// import anonymousB from '../assets/anonymous_black.png'
+
 // @ts-ignore
 import databaseW from '../assets/database_white.png'
 // @ts-ignore
 import databaseB from '../assets/database_black.png'
 
 // const pincode = '📌' // U+1F4CC : pushpin - icon: push_pin
-
-const encoder = new TextEncoder()
 
 const ui = stores.ui
 const sf = stores.safe
@@ -347,177 +157,7 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const opDelSafe = () => {
-  ui.oD(myidc, 'delsafe')
-}
-
-const delSafe = async () => {
-  const status = await sf.delSafe()
-  if (status === 0) {
-    await ui.diagDisplay($t('HPcsret_9'))
-    ui.fD()
-    sf.backToAuth()
-  } else {
-    await ui.diagDisplay($t('HPopsret_' + status))
-  }
-}
-
-const expName = ref('')
-const cryptK = reactive( { inp: '', err: '', key: null } )
-const bin = ref(null)
-const exptab = ref('info')
-const infopub = ref('')
-
-const setInfopub = () => {
-  infopub.value = JSON.stringify([sf.auth.C, sf.auth.V], null, '\t')
-}
-
-watch(exptab, (v) => {
-  setInfopub()
-})
-
-const exportSafe = async () => {
-  setInfopub()
-  cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
-  bin.value = encode(await sf.getBinSafe())
-  if (!bin.value) {
-    await ui.diagDisplay($t('HPexportsafe_ko'))
-    return
-  }
-  ui.oD(myidc, 'exportsafe')
-}
-
-const valK = async () => {
-  cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
-}
-
-const doExportSafe = async () => {
-  if (!expName.value) return
-  const buf: Uint8Array = await Crypt.crypt(cryptK.key, bin.value)
-  const nf = expName.value + (!expName.value.endsWith('.bin') ? '.bin' : '')
-  // @ts-ignore
-  const blob = new Blob([buf], { type: 'application/octet-stream'})
-  saveAs(blob, nf)
-  await ui.diagDisplay($t('HPexport_ok', [nf]))
-  bin.value = null
-  ui.fD()
-}
-
-/*
-const newDev = ref(false)
-const devName = reactive({ inp: '', err: '' })
-const newPIN = reactive({ inp: '', err: '' })
-const newPseudo = reactive({ inp: '', err: '' })
-
-const mySessions: Ref<TSession> = ref(new Map())
-const trustingMe = computed(() => sf.myTrusting )
-*/
-
 const sOfP = (profId: string) => sf.sessionOfProfId(profId)
-
-const openSession = async () => {
-  sf.setStep(2)
-}
-/*
-const dup = computed(() => {
-  let b = false
-  sf.trustings.forEach(e => {
-    if (e.userId !== sf.userId && e.pseudo === newPseudo.inp) b = true
-  })
-  return b
-})
-
-watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
-
-const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
-
-const openTrust = async () => {
-  const t = sf.myTrusting
-  newDev.value = sf.devId === ''
-  newPIN.inp = ''
-  devName.inp = newDev.value ? '' : sf.devName
-  newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
-  ui.oD(myidc, 'trustit')
-}
-*/
-const openUntrust = async () => {
-  await sf.getMySessions()
-  ui.oD(myidc, 'untrustit')
-}
-/*
-const delTrustSet = ref()
-
-const openTrustings = () => {
-  delTrustSet.value = new Set()
-  ui.oD(myidc, 'trustings')
-}
-
-const delTrustIt = (id) => {
-  if (delTrustSet.value.has(id)) delTrustSet.value.delete(id)
-  else delTrustSet.value.add(id)
-}
-
-const delTrustings = async () => {
-  console.log('delTrust')
-  const st = await sf.setUntrustAll(delTrustSet.value)
-  if (st === 0) {
-    delTrustSet.value = null
-    ui.fD()
-  } else await ui.diagDisplay($t('HPopnotpin_' + st))
-}
-
-const setTrust = async () => {
-  try {
-    const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
-    if (status < 0) return
-    ui.fD()
-    await ui.diagDisplay($t('HPsttrust_' + status))
-    await openSession()
-  } catch (e) {
-    await ui.diagDisplay($t('exui', [e.label, e.message]))
-  }
-}
-  */
-
-const setUntrust = async () => {
-  try {
-    const status = await sf.setUntrust()
-    if (status < 0) return
-    ui.fD()
-    await ui.diagDisplay($t('HPstuntrust_' + status))
-    await openSession()
-  } catch (e) {
-    await ui.diagDisplay($t('exui', [e.label, e.message]))
-  }
-}
-
-const manUsers = () => {
-  ui.oD(myidc, 'manusers')
-}
-
-const openCM = () => {
-  ui.oD(myidc, 'credsmgr')
-}
-
-const openPM = () => {
-  ui.oD(myidc, 'prefsmgr')
-}
-
-const createMode = ref()
-
-const createSafe = () => {
-  createMode.value = true
-  ui.oD('0', 'createsafe')
-}
-
-const openChgCodes = () => {
-  createMode.value = false
-  ui.oD('0', 'createsafe')
-}
-
-const closeManusers = () => {
-  ui.fD()
-}
 
 const resetdb = ref(false)
 const unpinme = ref(false)
@@ -531,7 +171,7 @@ watch(resetdb, async (ap) => {
   if (ap === true) await ui.diagDisplay($t('HPresetdb_1'))
 })
 
-const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
+// const nvSP = computed(() => sf.selectedSession || sf.selectedProfile)
 const selSessionAb = ref('')
 const selSessionAbBefore = ref('')
 
@@ -547,7 +187,7 @@ const valAbPs = async () => {
   }
 }
 
-const selSession = (s, dial: boolean) => {
+const selSession = (s, dial?: boolean) => {
   resetdb.value = false
   unpinme.value = false
   sf.selectedSession = s
@@ -568,7 +208,7 @@ const selSession = (s, dial: boolean) => {
   if (dial) ui.oD(myidc, 'optstart')
 }
 
-const selProfile = (profile: Profile, dial: boolean) => {
+const selProfile = (profile: Profile, dial?: boolean) => {
   pinme.value = false
   sf.selectedSession = null
   sf.selectedProfile = profile
@@ -680,6 +320,7 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
   session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
 }
 
+/*
 const validateSessionV = () => {
   sf.userId = null
   sf.keyK = null
@@ -687,6 +328,7 @@ const validateSessionV = () => {
   session.updatePref('', 0, {})
   session.setStartContext('', '', new Map())
 }
+*/
 
 </script>
 

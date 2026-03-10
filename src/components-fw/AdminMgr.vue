@@ -1,7 +1,6 @@
 <template>
-<dialog-std2 v-model="ui.dModels[idc].adminmgr" 
-  :title="$t('HPadmin_label')" tbclass="tbs"
-  @close="emit('close', idc)">
+<dialog-std2 v-model="me" 
+  :title="$t('HPadmin_label')" tbclass="tbs">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">
       <q-tab name="admins" :label="$t('HPtab_adm')"
@@ -68,34 +67,31 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-import { LocPref } from '../stores/safe-store'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
 import InputA from '../components-fw/InputA.vue'
-import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
-import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, dkli, dhcool, b64ToU8, u8ToB64 } from '../src-fw/util'
+import { $t, dkli } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
-import { AuthRecord } from '../src-fw/credential'
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
-
-const props = defineProps ({
-  idc: String
-})
-
-const emit = defineEmits(['close'])
 
 const sf = stores.safe
 const ui = stores.ui
-const session = stores.session
 const config = stores.config
+
+const props = defineProps({ 
+  idc: String,
+  admins: Boolean
+})
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].adminmgr)
+watch(() => me.value, (v: boolean) => { if (v) init(); 
+  else { cleanup(); emit('close', props.idc) } })
+const init = () => {
+  tab.value = props.admins ? 'admins': 'contact'
+}
+const cleanup = () => {}
 
 const tab = ref('contact')
 watch(tab, (t) => {
@@ -182,22 +178,23 @@ const nbChg = computed(() => {
 })
 
 const validate = async () => {
-  if (tab.value === 'ctc') {
-    await setContact()
-    return
+  if (tab.value === 'ctc') await setContact()
+  else {
+    const lst = []
+    for(const [k, elt] of lstAdmins.value)
+      if (elt.st !== 2) lst.push(k)
+    await sf.setAdmins(lst)
+    await ui.diagDisplay($t('recorded'))
+    resetAdm()
   }
-  const lst = []
-  for(const [k, elt] of lstAdmins.value)
-    if (elt.st !== 2) lst.push(k)
-  await sf.setAdmins(lst)
-  await ui.diagDisplay($t('recorded'))
-  resetAdm()
+  emit('done', 'AdminMgr')
 }
 
 const setContact = async () => {
   await sf.setContact(ctc.value)
   await ui.diagDisplay($t('recorded'))
   resetCtc()
+  emit('done', 'AdminMgr')
 }
 
 </script>

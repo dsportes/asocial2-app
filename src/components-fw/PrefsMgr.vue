@@ -1,7 +1,6 @@
 <template> <!-- Gérer les credentials -->
 <div v-if="idc">
-<dialog-std2 v-model="ui.dModels[idc].prefsmgr" :title="$t('HPprefs_1')"
-  @close="emit('close', idc)">
+<dialog-std2 v-model="me" :title="$t('HPprefs_1')">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
       <btn-cond flat size="lg" icon="check" color="warning"
@@ -75,7 +74,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
+import { ref, Ref, computed, onUnmounted, watch } from 'vue'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { LocPref } from '../stores/safe-store'
@@ -86,53 +85,32 @@ import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, dkli, dhcool, b64ToU8, u8ToB64 } from '../src-fw/util'
+import { $t, dkli, dhcool } from '../src-fw/util'
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
-
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-
-const encoder = new TextEncoder()
-const decoder = new TextDecoder()
 
 const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const props = defineProps ({
-  idc: String
-})
+const props = defineProps ({ idc: String })
 const myidc = ui.getIdc('PrefsMgr', props.idc)
 onUnmounted(() => ui.closeVue(myidc))
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].prefsmgr)
+watch(() => me.value, (v: boolean) => { 
+  if (v) init(); else { cleanup(); emit('close', myidc) } })
 
-const chg = computed(() => session.edPref ? session.edPref.chg : false )
 const diag = computed(() => session.edPref ? session.edPref.diag : '' )
-
 const pe = computed(() => ui.dModels[myidc].edprf)
-
-const emit = defineEmits(['close'])
-
 const myPrefs: Ref<Map<string, [number, Uint8Array]>> = ref(sf.mySafePrefs)
-// const myPrefs: RefMap<string, [number, Uint8Array]> = ref(new Map())
 const myPrefsOrig: Ref<Map<string, [number, Uint8Array]>> = ref(new Map())
 watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
 
-/*
-const test = {
-  'mobile': [ Date.now() - 3600000, encode({ lang: 'FR' })],
-  'ecran large': [ Date.now() - 7200000, encode({ btn1: false, btn2: true })],
-  'mode expert': [ Date.now() - 7200000, encode({ btn1: false, title: 'bla bla' })]
+const init = () => {
+  for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
 }
-for (const code in test) {
-  const [time, obj] = test[code]
-  myPrefs.value.set(code, [time, obj])
-}
-*/
-
-for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
+const cleanup = () => {}
 
 const updatedPrefs: Ref<Map<string, LocPref>> = ref(new Map())
 const deletedCodes = ref(new Set<string>())
@@ -241,6 +219,7 @@ const edValid = () => {
 
 const validate = async () => {
   await sf.updatePrefs(updatedPrefs.value, Array.from(deletedCodes.value))
+  emit('done', myidc)
 }
 
 </script>

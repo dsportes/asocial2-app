@@ -656,9 +656,13 @@ bla bla
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
   HPadmin_add: 'M\'ajouter en tant qu\'Administrateur',
-  HPadmin_label: 'Gérer mes rôles d\'Adiministrateur et mon pseudo de contact',
-  HPadmin_bub: `# Gérer mes rôles d\'Adiminstrateur Technique et mon pseudo / phrase de contact
+  HPadmin_label: 'Gérer mon pseudo / phrase de contact',
+  HPadmin_bub: `# Gérer mon pseudo / phrase de contact
 bla bla
+`,
+  HPadminA_label: 'Gérer mes rôles d\'Adiministrateur',
+  HPadminA_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
+  bla bla
 `,
   HPadmin_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
   HPadmin_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
@@ -838,6 +842,12 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
   SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
 
   SFTtit: 'Toutes les opérations de gestion de vos données "de sécurité"',
+  SFTus: 'Identifiant utilisateur:',
+  SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',
+  SFTnops: 'Terminal NON certifié par l\'utilisateur (pas de pseudo local.',
+  SFTct: 'Phrase de contact:',
+  SFTnoct: 'Aucune phrase de contact déclarée acteullement.',
+  SFTadmin: 'Administrateur Technique de:',
 
   INVtit: 'J\'ai une invitation: 2 codes et une "phrase secrète"',
 

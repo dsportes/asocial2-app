@@ -1,7 +1,6 @@
 <template> <!-- Gérer les credentials -->
 <div>
-<dialog-std2 v-model="ui.dModels[idc].credsmgr" :title="$t('HPcredsmgr_1')"
-  @close="emit('close', idc)">
+<dialog-std2 v-model="me" :title="$t('HPcredsmgr_1')">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
@@ -187,28 +186,25 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
-// @ts-ignore
-import { saveAs } from 'file-saver'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
 import CredRow from '../components-fw/CredRow.vue'
 import PsRow from './PsRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import InputPs from '../components-fw/InputPs.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, dkli, readFile, fileDescr, isSameSet, cloneSet } from '../src-fw/util'
+import { $t, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
-import { Credential, testCred } from '../src-fw/credential'
+import { Credential } from '../src-fw/credential'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
 
 type LocalPS = { // session
   id: string
-  comment: string
+  about: string
   exav: boolean, // existait avant
   exap: boolean, // existe après
   chgcr: boolean, // a changé de liste de creds
@@ -223,36 +219,30 @@ type LocalCred = {
   psIds: Set<string> // Set des ids des sessions le référençant
 }
 
-const encoder = new TextEncoder()
-const decoder = new TextDecoder()
-
-/*
-const importOpts = [
-  { label: $t('HPimport_clear'), value: 1 },
-  { label: $t('HPimport_crypt'), value: 2 },
-  { label: $t('HPimport_txt'), value: 3 }
-]
-
-const exportOpts = [
-  { label: $t('HPexport_clear'), value: 1 },
-  { label: $t('HPexport_crypt'), value: 2 }
-]
-*/
-
 const sf = stores.safe
 const ui = stores.ui
 
-const props = defineProps({
-  idc: String
-})
-const myidc = ui.getIdc('CredsMgr', props.idc)
+const props = defineProps({ idc: String })
+const myidc = ui.getIdc('CredsMgr')
 onUnmounted(() => ui.closeVue(myidc))
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].credsmgr)
+watch(() => me.value, (v: boolean) => { 
+  if (v) init(); else { cleanup(); emit('close', myidc) } })
 
-const emit = defineEmits(['close'])
+const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
+const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
+const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
+const origCreds = computed(() => sf.step === 2 ? sf.mySafeCreds : new Map())
 
-const cl = () => {
-  emit('close', myidc)
+const init = () => {
+  /* Chargement des credentials */
+  for(const [xid, c] of origCreds.value)
+    mlocCreds.value.set(xid, { cred: c.clone(), st: 0, psIds: new Set() })
+  loading()
 }
+
+const cleanup = () => {}
 
 const tab = ref('bysessions')
 
@@ -262,16 +252,6 @@ watch(tab, (t: string) => {
   else if (t === 'bysessions' && localPS.value)
     selPS(localPS.value)
 })
-
-const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
-const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
-const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
-
-const origCreds = computed(() => sf.step === 2 ? sf.mySafeCreds : new Map())
-// const origCreds = ref(testCred()) // simulation pour test
-/* Chargement des credentials */
-for(const [xid, c] of origCreds.value)
-  mlocCreds.value.set(xid, { cred: c.clone(), st: 0, psIds: new Set() })
 
 const buildXref = () => {
   for(const [,lc] of mlocCreds.value) lc.psIds.clear()
@@ -304,8 +284,6 @@ const loading = () => {
   }
   buildXref()
 }
-
-loading()
 
 const localCred = ref(null)
 const origCred = ref(null)
@@ -566,7 +544,7 @@ const validate = () => {
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
-  ui.oD(idc2, 'report')
+  ui.oD(myidc, 'report')
 }
 
 const clr1 = (i) => {

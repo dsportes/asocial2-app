@@ -1,5 +1,5 @@
 <template> <!-- Création d'un safe / Changement des codes -->
-<dialog-std2 v-model="ui.dModels[idc].createsafe" :title="$t('SCRenreg_' + mode)"
+<dialog-std2 v-model="me" :title="$t('SCRenreg_' + mode)"
   @close="emit('close', idc)">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">
@@ -36,27 +36,34 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onUnmounted, watch } from 'vue'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
-import InputPs from '../components-fw/InputPs.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
-import { $t, sty, equ8 } from '../src-fw/util'
+import { $t, equ8 } from '../src-fw/util'
 import stores from '../stores/all'
 
 const icons = ['check', 'question_mark', 'warning']
+
+const sf = stores.safe
+const ui = stores.ui
 
 const props = defineProps ({
   idc: String,
   mode: Number // 0: create 1: chg codes 2: chg codes backup
 })
-
+const myidc = ui.getIdc('SafeCr')
+onUnmounted(() => ui.closeVue(myidc))
 const emit = defineEmits(['close', 'done'])
-
-const sf = stores.safe
-const ui = stores.ui
-const cfg = stores.config
+const me = computed(() => ui.dModels[props.idc].createsafe)
+watch(() => me.value, (v: boolean) => { 
+  if (v) init(); else { cleanup(); emit('close', myidc) } })
+  
+const init = () => {
+  initCodes()
+  checkCodes()
+}
+const cleanup = () => {}
 
 const exp = reactive([false, false, false, false])
 const codes = reactive([null, null, null, null])
@@ -120,9 +127,6 @@ const createSafe = async () => {
     }
   }
 }
-
-initCodes()
-checkCodes()
 
 </script>
 

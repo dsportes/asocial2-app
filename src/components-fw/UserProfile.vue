@@ -37,7 +37,7 @@
   UPsessionid: 'ID de synchronisation de la session',
   UPadmins: 'Administrateur technique de :',
 */
-
+// @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'

@@ -2,7 +2,7 @@
 <div>
   <btn-cond icon="open_in_new" flat :label="label" 
     @ok="ui.oD(myidc, 'zoomit')"/>
-  <q-dialog v-model="ui.dModels[myidc].zoomit" persistent>
+  <q-dialog v-model="me" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar>
         <btn-cond icon="close" color="none"  flat @ok="ui.fD()"/>
@@ -19,7 +19,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, watch } from 'vue'
+// @ts-ignore
+import { ref, computed, onUnmounted, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { sty } from '../src-fw/util'
@@ -33,12 +34,22 @@ const props = defineProps({
 
 watch(() => props.text, (v) => { loc.value = v || ''})
 
-const loc = ref(props.text || '')
-const rx = ref(props.rows || 5)
+const loc = ref('')
+const rx = ref(5)
 
 const ui = stores.ui
 const myidc = ui.getIdc('TextZoom')
 onUnmounted(() => ui.closeVue(myidc))
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[myidc].zoomit)
+watch(() => me.value, (v: boolean) => { 
+  if (v) init(); else { cleanup(); emit('close', myidc) } })
+
+const init = () => {
+  loc.value = props.text || ''
+  rx.value = props.rows || 5
+}
+const cleanup = () => {}
 
 const zoom = () => {
   rx.value += 10

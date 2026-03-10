@@ -1,6 +1,6 @@
 <template>
   <!-- Retirer ma confiance à ce terminal -->
-  <q-dialog v-model="ui.dModels[idc].untrustit" persistent>
+  <q-dialog v-model="me" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-md q-mb-sm titre-lg text-italic">
         {{$t('HPutnbs', sf.mySessions.size, {count: sf.mySessions.size})}}
@@ -28,7 +28,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD(); emit('close', idc)"/>
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD()"/>
         <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
       </q-card-actions>
     </q-card>
@@ -36,31 +36,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+// @ts-ignore
+import { watch, computed } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import { $t, sty } from '../src-fw/util'
 
 const ui = stores.ui
-const session = stores.session
 const sf = stores.safe
 
-const props = defineProps({
-  idc: String
-})
-
+const props = defineProps({ idc: String })
 const emit = defineEmits(['close', 'done'])
-
-const mySessions: Ref<TSession> = ref(new Map())
+const me = computed(() => ui.dModels[props.idc].untrustit)
+watch(() => me.value, (v: boolean) => { if (v) init()
+  else { cleanup(); emit('close', 'DevUntrustit') } })
+const init = () => {}
+const cleanup = () => {}
 
 const setUntrust = async () => {
   try {
     const status = await sf.setUntrust()
     if (status < 0) return
-    ui.fD()
     await ui.diagDisplay($t('HPstuntrust_' + status))
-    emit('done', idc)
+    emit('done', 'DevUntrustit')
+    ui.fD()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

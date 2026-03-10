@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="ui.dModels[idc].trustit" persistent>
+  <q-dialog v-model="me" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-lg row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
@@ -22,7 +22,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD(); emit('close', idc)"/>
+        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
         <btn-cond flat :label="$t('HPtrust_1')" color="warning"
           :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref, computed, watch, reactive } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -38,19 +39,30 @@ import InputPs from '../components-fw/InputPs.vue'
 import { $t, sty } from '../src-fw/util'
 
 const ui = stores.ui
-const session = stores.session
 const sf = stores.safe
 
-const props = defineProps({
-  idc: String
-})
-
+const props = defineProps({ idc: String })
 const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].trustit)
+watch(() => me.value, (v: boolean) => { if (v) init(); else { cleanup(); emit('close', props.idc) } })
 
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
+
+const init = () => {
+  // console.log('Init DevTrustit')
+  const t = sf.myTrusting
+  newDev.value = sf.devId === ''
+  newPIN.inp = ''
+  devName.inp = newDev.value ? '' : sf.devName
+  newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
+}
+
+const cleanup = () => {
+  // console.log('Cleanup DevTrustit')
+}
 
 const dup = computed(() => {
   let b = false
@@ -64,23 +76,13 @@ watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
 
 const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
 
-const init = () => {
-  const t = sf.myTrusting
-  newDev.value = sf.devId === ''
-  newPIN.inp = ''
-  devName.inp = newDev.value ? '' : sf.devName
-  newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
-}
-
-init()
-
 const setTrust = async () => {
   try {
     const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
     if (status < 0) return
-    ui.fD()
     await ui.diagDisplay($t('HPsttrust_' + status))
-    emit('done', idc)
+    emit('done', props.idc)
+    ui.fD()
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

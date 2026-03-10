@@ -1,5 +1,5 @@
 <template>
-<dialog-std2 v-model="ui.dModels[idc].manusers" 
+<dialog-std2 v-model="me" 
   :title="$t('HPmanusers')" @close="emit('close', idc)">
 <template #hdr>
   <div>
@@ -199,13 +199,13 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, onUnmounted, onMounted, reactive, watch } from 'vue'
+import { ref, computed, Ref, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
+// import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen1 from '../components-fw/BarOpen1.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import P0P1 from '../components-fw/P0P1.vue'
@@ -225,8 +225,19 @@ const props = defineProps({
 })
 const myidc = ui.getIdc('ManagedUsers', props.idc)
 onUnmounted(() => ui.closeVue(myidc))
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[props.idc].manusers)
+watch(() => me.value, async (v: boolean) => { 
+  if (v) await init(); else { cleanup(); emit('close', myidc) } })
 
-const emit = defineEmits(['close'])
+const init = async () => {
+  const [sy, sz, sn] = await sf.synthUsers()
+  synthU.value = sy
+  size.value = sz
+  usersNo.value = sn
+  tDel2.value.clear()
+}
+const cleanup = () => {}
 
 const tab = ref('user')
 
@@ -234,9 +245,11 @@ watch(tab, (v) => {
   if (v === 'safe') reset()
 })
 
+/*
 const opCfReset = () => {
   ui.oD(myidc, 'resetAll')
 }
+*/
 
 const resetAllLocal = async () => {
   await sf.resetAllLocal()
@@ -251,14 +264,6 @@ const size: Ref<number[]> = ref(0)
 const nbc = computed(() => size.value ? size.value.length : 0 )
 const synthU = ref(0)
 const usersNo: Ref<Map<string, string>> = ref()
-
-onMounted(async () => {
-  const [sy, sz, sn] = await sf.synthUsers()
-  synthU.value = sy
-  size.value = sz
-  usersNo.value = sn
-  tDel2.value.clear()
-})
 
 const delSize: Ref<number[]> = ref(new Array(nbc.value).fill(0))
 
@@ -328,7 +333,6 @@ const close = async () => {
   if (tDel2.value && tDel2.value.size)
     for(const id of tDel2.value) await sf.delTrusting(id)
   ui.fD()
-  emit('close', null)
 }
 
 const fileList = ref(null)
