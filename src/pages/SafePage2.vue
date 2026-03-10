@@ -118,7 +118,6 @@ import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import SecuritySite from '../components-fw/SecuritySite.vue'
@@ -130,7 +129,7 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 
 import stores from '../stores/all'
 import { TSession, Profile } from '../stores/safe-store'
-import { $t, sty, dkli, dhcool } from '../src-fw/util'
+import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
 
 // @ts-ignore
 import databaseW from '../assets/database_white.png'

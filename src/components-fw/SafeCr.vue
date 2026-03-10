@@ -10,7 +10,7 @@
 
 <template #default>
 <div class="column items-center">
-<div class="wmd">
+<div style="width:30rem !important">
 
   <div v-if="diag !== ''" class="diag q-mb-sm">{{diag}}</div>
 
@@ -21,12 +21,12 @@
     <template v-slot:header>
       <div class="column">
         <div class="row q-gutter-sm">
-          <q-icon size="md" :name="icons[errors[x - 1]]"/>
+          <q-icon size="20px" :name="icons[errors[x - 1]]"/>
           <div class='titre-lg'>{{$t('SCRcode_' + x)}}</div>
         </div>
       </div>
     </template>
-    <p0-p1 class="q-pl-xl q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
+    <p0-p1 class="q-mt-xs" title="" :ctx="{ s: x }" @ok="setCode"/>
   </q-expansion-item>
 </div>
 </div>
@@ -58,7 +58,7 @@ const emit = defineEmits(['close', 'done'])
 const me = computed(() => ui.dModels[props.idc].createsafe)
 watch(() => me.value, (v: boolean) => { 
   if (v) init(); else { cleanup(); emit('close', myidc) } })
-  
+
 const init = () => {
   initCodes()
   checkCodes()

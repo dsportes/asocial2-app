@@ -12,10 +12,11 @@
     </div>
   </q-header>
   <q-page-container>
-    <div v-if="sf.step === 0" class="column q-pa-sm">
-      <btn-cond  class="q-mb-sm"
-        flat icon="exit_to_app" color="warning"
-        :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
+    <btn-cond  v-if="sf.step === 0" class="q-mb-sm q-pa-sm"
+      flat icon="exit_to_app" color="warning"
+      :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
+    <safe-tools v-if="sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
+    <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="hasManagedOrgs" class="q-mb-sm"
         flat icon="img:icons/superman.jpg" color="warning" :label="$t('PanelManager')"
         @ok="openManager"/>
@@ -46,6 +47,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ManagedOrgs from '../components-fw/ManagedOrgs.vue'
+import SafeTools from '../components-fw/SafeTools.vue'
 import { $t, sty } from '../src-fw/util'
 
 const sf = stores.safe

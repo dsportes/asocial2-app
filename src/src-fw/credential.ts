@@ -48,6 +48,8 @@ export class Credential {
 
   fromObj (obj: Object) : Credential {
     for (const p of Credential.props) this[p] = obj[p] || null
+    if (!this.id)
+      this.id = this.getId()
     return this
   }
 

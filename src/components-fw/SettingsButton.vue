@@ -82,7 +82,7 @@
 
         <q-separator />
 
-        <div class="q-pa-xs">
+        <div class="q-pa-xs column items-center">
           <div class="row">
             <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('app')}}</div>
             <div class="font-mono text-bold">{{config.K.APPNAME}}</div>
@@ -91,10 +91,14 @@
             <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('build')}}</div>
             <div class="font-mono text-bold">{{config.K.BUILD}}</div>
           </div>
+          <btn-cond label="Import Safe" size="sm" flat icon="warning"
+            color="warning" @ok="ui.oD(myidc, 'exportsafe')"/>
         </div>
       </q-list>
     </q-menu>
   </q-btn>
+
+  <safe-export :idc="myidc" tab="restore" @done="doneRestore"/>
 
   <!-- Contrôle de l'autorisation des notifications-->
   <q-dialog v-model="session.permDialog" persistent>
@@ -375,7 +379,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, onUnmounted, computed, reactive, watch } from 'vue'
+import { ref, onUnmounted, computed, reactive, watch } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
@@ -387,18 +391,14 @@ import HelpButton from './HelpButton.vue'
 import BtnCond from './BtnCond.vue'
 import PermissionDialog from './PermissionDialog.vue'
 import DialogStd1 from './DialogStd1.vue'
-import DialogStd0 from './DialogStd0.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
-import { $t, sty, reloadPage, sleep, coolBye, dhcool, u8ToB64 } from '../src-fw/util'
-import { GetSvcOpStatus } from '../src-fw/operations'
+import SafeExport from '../components-fw/SafeExport.vue'
+import { $t, sty, reloadPage, dhcool, u8ToB64, coolBye } from '../src-fw/util'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
-import { Credential, CredObj } from '../src-fw/credential'
-import { $SetOpUrl } from '../src-fw/operation'
 
 const i18n = useI18n()
 const config = stores.config
@@ -413,6 +413,10 @@ const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
   if (ok)
     ui.backToOpenSession()
+}
+
+const doneRestore = () => {
+  coolBye()
 }
 
 const openUP = () => {

@@ -280,27 +280,6 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  /*
-  const purgeIDBS = async (l: TSession[]) => {
-    if (stores.session.incognito) return
-    const x = localStorage.getItem('$DBLIST') || ''
-    const dbl = x.split(' ')
-    for (const s of l) {
-      try {
-        await Dexie.delete(s.dbName)
-        await sleep(300)
-        const n = dbl.indexOf(s.dbName)
-        if (n !== -1) dbl.splice(n, 1)
-        console.log(s.dbName + ' deleted')
-      } catch (e) {
-        console.log(s.dbName + ' deletion FAILED: ', e.message())
-      }
-      localStorage.setItem('$DBLIST', dbl.join(' '))
-      await delTSession(s, true)
-    }
-  }
-  */
-
   const recordIDB = (dbName: string) => {
     if (stores.session.incognito) return
     const x = localStorage.getItem('$DBLIST') || ''
@@ -325,15 +304,14 @@ export const useSafeStore = defineStore('safe', () => {
       selectedSession.value = null
       selectedProfile.value = null
     }
-    if (s === 1)
+    if (s === 1) {
+      openMode.value = 0
+      auth.value = null
+      userId.value = null
+      keyK.value = null
       await loadTrustings()
+    }
     locstep.value = s
-  }
-
-  const backToAuth = () => {
-    userId.value = null
-    keyK.value = null
-    setStep(1)
   }
 
   const mySafeStore = ref('')
@@ -557,10 +535,11 @@ export const useSafeStore = defineStore('safe', () => {
       else try {
         const obj = decode(await Crypt.decrypt(keyK.value, x))
         const c: Credential = new Credential().fromObj(obj)
-        if (msvc[c.svc]) {
+        if (msvc[c.svc] && xid === c.id) {
           m.set(c.id, c)
           if (c.skey) storeSkey(c)
-        } else delcreds.push(xid)
+        } else 
+          delcreds.push(xid)
       } catch (e) {
         console.log(e)
       }
@@ -1571,7 +1550,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    tab, step, setStep, backToAuth,
+    tab, step, setStep,
     mySafeStore, pingSite, userId, userName, keyK,
     selectedProfile, selectedSession,
     openMode, incognito,

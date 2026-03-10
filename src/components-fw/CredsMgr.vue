@@ -230,12 +230,17 @@ const me = computed(() => ui.dModels[props.idc].credsmgr)
 watch(() => me.value, (v: boolean) => { 
   if (v) init(); else { cleanup(); emit('close', myidc) } })
 
-const mlocCreds: Ref<Map<string, LocalCred>> = ref(new Map<string, LocalCred>())
-const mlocPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
+const mlocCreds: Ref<Map<string, LocalCred>> = ref()
+const mlocPS: Ref<Map<string, LocalPS>> = ref()
 const morigPS: Ref<Map<string, LocalPS>> = ref(new Map<string, LocalPS>())
-const origCreds = computed(() => sf.step === 2 ? sf.mySafeCreds : new Map())
+const origCreds: Ref<Map<string, Credential>> = ref()
 
 const init = () => {
+  mlocCreds.value = new Map<string, LocalCred>()
+  mlocPS.value = new Map<string, LocalPS>()
+  morigPS.value = new Map<string, LocalPS>()
+  origCreds.value = sf.mySafeCreds
+
   /* Chargement des credentials */
   for(const [xid, c] of origCreds.value)
     mlocCreds.value.set(xid, { cred: c.clone(), st: 0, psIds: new Set() })

@@ -1,6 +1,6 @@
 <template>
 <div class="column">
-  <div class="row q-gutter-sm">
+  <div class="row q-gutter-sm q-pa-sm">
     <div class="titre-md text-italic">{{ $t('APservices') }}</div>
     <div v-for="[k,svcOp] of svcOps" :key="k"
       @click=setSvcOp(svcOp)
@@ -9,13 +9,13 @@
       {{svcOp.svc + ' ' + svcOp.op}}
     </div>
   </div>
-  <q-expansion-item switch-toggle-side expand-separator dense
+  <q-expansion-item class="q-mt-sm" switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('svcStatus')">
-    <service-status/>
+    <service-status class="q-pa-sm"/>
   </q-expansion-item>
   <q-expansion-item switch-toggle-side expand-separator dense
     header-class="full-width tbs" :label="$t('APnewManager')">
-    <div class="column items-center">
+    <div class="column items-center q-pa-sm">
       <div class="q-my-md wmd full-width column items-center">
         <input-a class="col q-mr-sm" prefix="orgcode"
             v-model="areq.org.inp" size="org"/>
@@ -56,19 +56,15 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
-// @ts-ignore
-// import { encode, decode } from '@msgpack/msgpack'
+import { ref, Ref, computed, reactive } from 'vue'
 import stores from '../stores/all'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
 import { GrantNewManager, ListManagers } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import { Crypt, toPem, fromPem } from '../src-fw/crypt'
 /*
 import { saveAs } from 'file-saver'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
@@ -86,7 +82,7 @@ import BarOpen1 from '../components-fw/BarOpen1.vue'
 // import databaseW from '../assets/database_white.png'
 // import databaseB from '../assets/database_black.png'
 // @ts-ignore
-import superman from '../assets/superman.jpg'
+// import superman from '../assets/superman.jpg'
 
 const encoder = new TextEncoder()
 
@@ -95,7 +91,7 @@ const sf = stores.safe
 const session = stores.session
 const config = stores.config
 
-const services = Array.from(Object.keys(config.K.SERVICES))
+// const services = Array.from(Object.keys(config.K.SERVICES))
 
 type Elt = {
   svc: string
@@ -135,6 +131,7 @@ const setSvcOp = (svcOp) => {
   $OP.value = svcOp.op
 }
 
+/*
 const neworg = reactive({ neworg: '', db: '', st: '', val: false })
 
 const resetNewOrg = () => {
@@ -151,6 +148,7 @@ const cfNewOrg = async () => {
     await ui.diagDisplay($t('APko', [neworg.neworg]))
   }
 }
+*/
 
 const diagReq = computed(() => {
   if (areq.targetUser.err) return $t('APdiagtarget')

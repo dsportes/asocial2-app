@@ -291,21 +291,21 @@ export default {
   OUI: _Je confirme_
   NON: _Je refuse_
 `,
-  HPchgcodes_1: 'Changement des codes d\'authentification',
-  HPchgcodes_2: `### Changement des codes d'authentification
+  HPchgcodes_1: 'Changer les codes d\'authentification',
+  HPchgcodes_2: `### Changer les codes d'authentification
   bla bla
 `,
   HPchgcodes_2d: `### Changement des codes d'authentification
 Pour changer les codes d'authentification, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
 `,
-  HPtrust_1: 'Ce terminal N\'A PAS ma confiance, je veux la lui accorder',
-  HPtrust_2: `### Accorder sa confiance au terminal
+  HPtrust_1: 'Ce terminal N\'EST PAS certifié, le certifier',
+  HPtrust_2: `### Certifier ce terminal
 bla bla
 `,
-  HPtrust_2d: `### Accorder / retirer sa confiance à un terminal, changer son code PIN
+  HPtrust_2d: `### Accorder / retirer sa certification à un terminal, changer son code PIN
 Pour ces opérations, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
 `,
-  HPuntrust_1: 'Ce terminal a ma confiance, je veux la lui retirer',
+  HPuntrust_1: 'Retirer la certification de ce terminal',
   HPuntrust_2: `### Retirer sa confiance au terminal
 bla bla
 `,
@@ -313,11 +313,11 @@ bla bla
   HPtrustings_2: `# Afficher / gérer mes terminaux de confiance
   bla bla
 `,
-  HPtrustings_l: 'Aucun terminal n\'est déclaré de confiance | ' +
-  'Un terminal est déclaré de confiance | ' +
-  '{count} terminaux sont déclarés de confiance',
+  HPtrustings_l: 'Aucun terminal n\'est certifié | ' +
+  'Un terminal est certifié | ' +
+  '{count} terminaux sont certifiés',
   HPtrustings_del: 'Retirer la confiance en ces ({0}) terminaux',
-  HPchgpin_1: 'Ce terminal a ma confiance, je veux changer son code PIN',
+  HPchgpin_1: 'Terminal certifié, changer son code PIN / pseudo',
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
 `,
@@ -842,12 +842,18 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
   SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
 
   SFTtit: 'Toutes les opérations de gestion de vos données "de sécurité"',
+  SFTtits: 'Opérations "de sécurité"',
   SFTus: 'Identifiant utilisateur:',
   SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',
   SFTnops: 'Terminal NON certifié par l\'utilisateur (pas de pseudo local.',
   SFTct: 'Phrase de contact:',
   SFTnoct: 'Aucune phrase de contact déclarée acteullement.',
   SFTadmin: 'Administrateur Technique de:',
+  SFTopaf: 'Ces opérations requièrent une authentification "forte" (pas par code PIN)',
+  SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',
+
+  EXPexport: 'Sauvegarder',
+  EXPrestore: 'Restaurer',
 
   INVtit: 'J\'ai une invitation: 2 codes et une "phrase secrète"',
 

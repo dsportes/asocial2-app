@@ -212,7 +212,6 @@ import P0P1 from '../components-fw/P0P1.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
 
 import stores from '../stores/all'
-import type { TSession } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
 import { SafeOperation } from '../src-fw/operation'
 import { $t, sty, edvol, dhcool, u8ToB64, readFile, fileDescr, coolBye } from '../src-fw/util'
@@ -240,10 +239,6 @@ const init = async () => {
 const cleanup = () => {}
 
 const tab = ref('user')
-
-watch(tab, (v) => {
-  if (v === 'safe') reset()
-})
 
 /*
 const opCfReset = () => {
@@ -335,6 +330,7 @@ const close = async () => {
   ui.fD()
 }
 
+/*
 const fileList = ref(null)
 const fd = ref({ name: '', size: 0 })
 const cryptK = reactive( { inp: '', err: '', key: null } )
@@ -434,14 +430,7 @@ const openChgCodes = () => {
 const chgCodes = async (arg) => {
   console.log('chgCodes')
   // const arg = cash0: ca.sh0, cash1: ca.sh1, cash: ca.sh, crsh0: cr.sh0, crsh1: cr.sh1, crsh: cr.sh
-  /*
-    hp0: u8ToB64(psh0, true),
-    hr0: u8ToB64(rsh0, true),
-    hhp1: Crypt.shaS(psh1),
-    hhr1: Crypt.shaS(rsh1),
-    Ka: await Crypt.crypt(psh, keyK.value),
-    Kr: await Crypt.crypt(rsh, keyK.value)
-  */
+
   const s = safe.value
   s.hp0 = u8ToB64(arg.cash0, true)
   s.hr0 = u8ToB64(arg.crsh0, true)
@@ -451,7 +440,7 @@ const chgCodes = async (arg) => {
   s.Kr = await Crypt.crypt(arg.crsh, keyK.value)
   await getStatus(s.id, s.hp0, s.hr0)
 }
-
+*/
 </script>
 
 <style lang="scss" scoped>

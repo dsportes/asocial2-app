@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'

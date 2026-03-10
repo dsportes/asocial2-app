@@ -74,13 +74,12 @@ import stores from './stores/all'
 import { set$t, sty, b64ToU8 } from './src-fw/util'
 
 import LeftMenu from './components-fw/LeftMenu.vue'
-import SafePage from './pages/SafePage.vue'
 import SafeHeader from './pages/SafeHeader.vue'
+
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
 import TestPage from './pages/TestPage.vue'
-
-import ScrollArea from './components-fw/ScrollArea.vue'
+import SafePage from './pages/SafePage2.vue'
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import BtnCond from './components-fw/BtnCond.vue'

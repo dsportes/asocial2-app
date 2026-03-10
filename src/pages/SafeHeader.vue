@@ -15,7 +15,7 @@
   <div v-if="sf.tab === 'login' && sf.step === 2" 
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
-      @ok="sf.backToAuth"/>
+      @ok="sf.setStep(1)"/>
     <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
       @ok="ui.oD(myidc, 'credsmgr')"/>
   </div>
@@ -26,6 +26,7 @@
 <script setup lang="ts">
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
+// @ts-ignore
 import { ref, computed, onUnmounted } from 'vue'
 import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'

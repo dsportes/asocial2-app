@@ -1,10 +1,13 @@
 <template>
 <div>
-  <btn-cond :label="$t('SFTtit')" flat color="none"
+  <btn-cond v-if="short" :label="$t('SFTtits')" flat color="warning"
+    icon="settings"
+    @ok="ui.oD(myidc, 'safetools')"/>
+  <btn-cond v-else :label="$t('SFTtit')" flat color="none"
     @ok="ui.oD(myidc, 'safetools')"/>
 
   <dialog-std0 v-model="ui.dModels[myidc].safetools" :title="$t('SFTtit')"
-    vh="75" @close="emit('close', myidc)">
+    vh="90" @close="emit('close', myidc)">
     <template #default>
       <div class="row q-gutter-sm q-my-xs items-end">
         <div class="titre-md text-italic">{{ $t('SFTus') }}</div>
@@ -26,27 +29,6 @@
         :text="infopub" :rows="15"/>
 
       <q-separator color="orange" class="q-my-xs"/>
-
-      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
-        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
-        @open="ui.oD(myidc, 'createsafe')" size="sm"/>
-
-      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-        :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
-        @open="ui.oD(myidc, 'trustings')"/>
-
-      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
-        @open="ui.oD(myidc, 'trust')" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
-        @open="ui.oD(myidc, 'trustit')" size="sm"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
-        @open="openUntrust" size="sm"/>
 
       <bar-open :bubble="$t('SESconfig')" :disbubble="$t('SESconfig')"
         :title="$t('SESconfig')"
@@ -73,13 +55,45 @@
         :title="$t('HPmanusers')" 
         @open="ui.oD(myidc, 'manusers')"/>
 
+      <q-separator color="orange" class="q-mx-lg q-my-xs"/>
+      <div class="titre-md text-italic">{{ $t('SFTopaf') }}</div>
+
+      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
+        :title="$t('HPtrustings_1')"
+        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+        @open="ui.oD(myidc, 'trustings')"/>
+
+      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
+        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
+        @open="ui.oD(myidc, 'createsafe')"/>
+
+      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
+        @open="ui.oD(myidc, 'trustit')"/>
+
+      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
+        @open="ui.oD(myidc, 'trustit')"/>
+
+      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
+        :title="$t('HPtrustings_1')"
+        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+        @open="ui.oD(myidc, 'trustings')"/>
+
+      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
+        @open="openUntrust"/>
+
+      <q-separator color="orange" class="q-mx-lg q-my-xs"/>
+      <div class="titre-md text-italic text-bold text-warning">{{ $t('SFTopal') }}</div>
+
       <bar-open :bubble="$t('HPexpsafe_2')"
-        :disable="session.incognito || !session.hasNet"
+        :disable="session.incognito || !session.hasNet || sf.openMode > 2"
         :title="$t('HPexpsafe_1')" 
         @open="ui.oD(myidc, 'exportsafe')"/>
 
       <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
-        :disable="session.incognito || !session.hasNet"
+        :disable="session.incognito || !session.hasNet || sf.openMode > 2"
         :title="$t('HPdelsafe_1')" 
         @open="ui.oD(myidc, 'delsafe')"/>
       
@@ -136,12 +150,13 @@ import DevTrustit from '../components-fw/DevTrustit.vue'
 import DevUntrustit from '../components-fw/DevUntrustit.vue'
 import SafeExport from '../components-fw/SafeExport.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, sty } from '../src-fw/util'
+import { $t, sty, coolBye } from '../src-fw/util'
 
 const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
 
+const props = defineProps({ short: Boolean })
 const myidc = ui.getIdc('SafeTools')
 onUnmounted(() => ui.closeVue(myidc))
 const emit = defineEmits(['close', 'done'])
@@ -170,7 +185,7 @@ const delSafe = async () => {
   if (status === 0) {
     await ui.diagDisplay($t('HPcsret_9'))
     ui.fD()
-    sf.backToAuth()
+    coolBye()
   } else {
     await ui.diagDisplay($t('HPopsret_' + status))
   }

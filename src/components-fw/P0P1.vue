@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from 'vue'
-import stores from '../stores/all'
+// @ts-ignore
+import { reactive } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import { Crypt } from '../src-fw/crypt'

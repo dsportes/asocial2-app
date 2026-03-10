@@ -79,7 +79,7 @@
     </div>
   </div>
 
-  <dialog-std0 v-if="ui.dModels[idc].orgconfig" v-model="ui.dModels[idc].orgconfig"
+  <dialog-std0 v-model="me"
     :title="$t('APorgconfig')">
     <template #default>
       <div class="column full-width">
@@ -126,7 +126,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onUnmounted } from 'vue'
+// @ts-ignore
+import { ref, Ref, reactive, computed, onUnmounted, watch } from 'vue'
 import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
 import BtnCond from './BtnCond.vue'
@@ -137,8 +138,19 @@ import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
 
 const ui = stores.ui
 const config = stores.config
-const session = stores.session
 const sf = stores.safe
+
+const props = defineProps({ short: Boolean })
+const myidc = ui.getIdc('ServiceStatus')
+onUnmounted(() => ui.closeVue(myidc))
+const emit = defineEmits(['close', 'done'])
+const me = computed(() => ui.dModels[myidc].orgconfig)
+watch(() => me.value, (v: boolean) => { if (v) init()
+  else { cleanup(); emit('close', myidc) } })
+const init = () => {
+  reset()
+}
+const cleanup = () => {}
 
 const services = Array.from(Object.keys(config.K.SERVICES))
 
@@ -181,8 +193,6 @@ const reset = () => {
     }
   }
 }
-
-reset()
 
 const maySetSt = computed(() => svcOps.value.has(SVC.value + '.' + $OP.value))
 
@@ -243,7 +253,7 @@ const openOrgConfig = async () => {
     oc.ac = ret
     oc.dbn = oc.ac.db || ''
     oc.stn = oc.ac.st
-    ui.oD(idc, 'orgconfig')
+    ui.oD(myidc, 'orgconfig')
   }
 }
 
