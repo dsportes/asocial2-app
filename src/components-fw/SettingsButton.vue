@@ -443,8 +443,8 @@ ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
 
-const cfReloadPage = () => { ui.oD('0', 'confirmQuit') }
-const cfCoolBye = () => { ui.oD('0', 'confirmQuit') }
+const cfReloadPage = () => { ui.confirmQuit() }
+const cfCoolBye = () => { ui.confirmQuit() }
 
 const edDiag = computed(() => session.edPref.diag )
 

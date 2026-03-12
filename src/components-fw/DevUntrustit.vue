@@ -1,5 +1,5 @@
+<!-- Dialogue de retrait de certification du terminal -->
 <template>
-  <!-- Retirer ma confiance à ce terminal -->
   <q-dialog v-model="me" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-md q-mb-sm titre-lg text-italic">
@@ -46,6 +46,16 @@ import { $t, sty } from '../src-fw/util'
 const ui = stores.ui
 const sf = stores.safe
 
+const myModule = 'DevUntrustit'
+const emit = defineEmits(['close', 'done'])
+const model = defineModel()
+// const dialogs = reactive({})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v) => {
+  if(!v) emit('close', true)
+})
+
 const props = defineProps({ idc: String })
 const emit = defineEmits(['close', 'done'])
 const me = computed(() => ui.dModels[props.idc].untrustit)
@@ -59,8 +69,8 @@ const setUntrust = async () => {
     const status = await sf.setUntrust()
     if (status < 0) return
     await ui.diagDisplay($t('HPstuntrust_' + status))
-    emit('done', 'DevUntrustit')
-    ui.fD()
+    emit('done', true)
+    model.value = false
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

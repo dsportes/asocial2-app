@@ -34,7 +34,7 @@
     </div>
 
     <div v-if="tab === 'restore'" class="full-width">
-      <bar-open1 :title="$t('HPimpsafe_1')" :bubble="$t('HPimpsafe_2')"/>
+      <bar-open passive :title="$t('HPimpsafe_1')" :bubbleleft="$t('HPimpsafe_2')"/>
       <div class="titre-md text-italic q-mt-sm">{{$t('HPimport_label')}}</div>
       <input-ps v-model="cryptK" prefix="HPimport" size="ps"
         :validatefn="valK"/>
@@ -51,7 +51,7 @@
       <div v-if="statusSafe" class="q-my-sm bord q-pa-sm">
         <div v-if="statusSafe.lm !== -1">
           <div class='titre-lg q-mb-sm'>{{$t('HPsafest_1')}}</div>
-          <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
+          <bar-open class="q-my-sm" :title="$t('HPsafest_6')" :bubbleleft="$t('HPsafest_7')"
             icon="open_in_new" hasopen @open="openChgCodes"/>
           <div v-if="safe.lm < statusSafe.lm" class='q-ml-sm titre-md'>
             {{$t('HPsafest_2gt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
@@ -74,13 +74,13 @@
           <div v-else>
             <div class="column items-center q-gutter-sm q-my-sm">
               <btn-cond :label="$t('HPsafest_r')" @ok="cfImp = true"/>
-              <btn-confirm :actif="cfImp" :confirm="importBackup"/>
+              <btn-confirm :actif="cfImp" @confirm="importBackup"/>
             </div>
           </div>
         </div>
         <div v-else>
           <div class='titre-lg q-mb-sm'>{{$t('HPsafest_3')}}</div>
-          <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
+          <bar-open class="q-my-sm" :title="$t('HPsafest_6')" :bubbleleft="$t('HPsafest_7')"
             icon="open_in_new" hasopen @open="openChgCodes"/>
           <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
             {{$t('HPsafest_5p')}}
@@ -94,7 +94,7 @@
           <div v-else>
             <div class="column items-center q-gutter-sm q-my-sm">
               <btn-cond :label="$t('HPsafest_i')" @ok="cfImp = true"/>
-              <btn-confirm :actif="cfImp" :confirm="importBackup"/>
+              <btn-confirm :actif="cfImp" @confirm="importBackup"/>
             </div>
           </div>
         </div>
@@ -105,19 +105,6 @@
 
     </template>
   </dialog-std1>
-
-  <!-- Confirmation du resetAll 
-  <q-dialog v-model="ui.dModels[myidc].resetAll" persistent>
-    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-      <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
-      <div class="q-my-md titre-lg text-bold text-italic text-center">{{$t('HPskull')}}</div>
-      <div class="row full-width justify-between items-center">
-        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
-        <btn-confirm actif :confirm="resetAllLocal"/>
-      </div>
-    </q-card>
-  </q-dialog>
-  -->
 
   <!-- Changement des codes du backup-->
   <safe-cr :idc="myidc" @done="chgCodes" :mode="2"/>
@@ -134,7 +121,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { saveAs } from 'file-saver'
 import stores from '../stores/all'
 import DialogStd1 from '../components-fw/DialogStd1.vue'
-import BarOpen1 from '../components-fw/BarOpen1.vue'
+import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'

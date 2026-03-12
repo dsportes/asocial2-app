@@ -1,10 +1,10 @@
+<!-- Dialogue de gestion des terminaux de confiance -->
 <template>
-  <!-- Gérer les terminaux de confiance -->
-  <q-dialog v-model="me" persistent>
+  <q-dialog v-model="model" persistent>
     <q-card :class="sty('md')">
       <q-toolbar>
         <btn-cond color="none" size="lg" icon="chevron_left" flat
-          @ok="ui.fD"/>
+          @ok="model = false"/>
         <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
         <btn-bubble :text="$t('HPtrustings_2')"/>
       </q-toolbar>
@@ -30,7 +30,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
         <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning"
           :disable="delTrustSet.size === 0" @ok="delTrustings"/>
       </q-card-actions>
@@ -50,15 +50,15 @@ import { $t, sty, dkli } from '../src-fw/util'
 const ui = stores.ui
 const sf = stores.safe
 
-const props = defineProps({ idc: String })
+const myModule = 'DevTrustings'
 const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].trustings)
-watch(() => me.value, (v: boolean) => { if (v) init(); 
-  else { cleanup(); emit('close', 'DevTrustings') } })
-const init = () => {}
-const cleanup = () => {
-  delTrustSet.value.clear()
-}
+const model = defineModel()
+// const dialogs = reactive({})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v) => {
+  if(!v) { delTrustSet.value.clear(); emit('close', true) }
+})
 
 const delTrustSet = ref(new Set())
 
@@ -72,8 +72,8 @@ const delTrustings = async () => {
   const st = await sf.setUntrustAll(delTrustSet.value)
   if (st === 0) {
     delTrustSet.value = null
-    ui.fD()
-    emit('done', props.idc)
+    model.value = true
+    emit('done', true)
   } else await ui.diagDisplay($t('HPopnotpin_' + st))
 }
 </script>

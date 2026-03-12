@@ -1,6 +1,12 @@
+<!-- Dialogue sur APP de déconnexion. 
+Model: ui.appDialogs.ConfirmQuit
+3 choix:
+- quit (coolBye), 
+- reload (relaodPage), 
+- continuer (simple fermeture du dialogue).
+-->
 <template>
-  <!-- Choix de déconnexion. Déconnexion, reconnexion, continuer -->
-  <q-dialog v-model="ui.dModels['0'].confirmQuit" persistent>
+  <q-dialog v-model="ui.appDialogs.ConfirmQuit" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('quitConfirm')}}</q-toolbar-title>
@@ -9,7 +15,8 @@
       <q-card-actions vertical align="center" class="titre-md q-gutter-sm">
         <btn-cond flat icon="logout" color="warning" :label="$t('quitQuit')" @ok="bye"/>
         <btn-cond flat icon="refresh" color="warning" :label="$t('quitReload')" @ok="reload"/>
-        <btn-cond flat icon="arrow_forward" color="primary" :label="$t('quitCont')" @ok="ui.fD"/>
+        <btn-cond flat icon="arrow_forward" color="primary" :label="$t('quitCont')" 
+          @ok="ui.dialogs.ConfirmQuit = false"/>
       </q-card-actions>
     </q-card>
   </q-dialog>

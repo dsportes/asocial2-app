@@ -1,6 +1,11 @@
-<template> <!-- Gérer les credentials -->
+<!-- Dialogue de gestion des credentials et sessions
+- Events:
+  - close
+  - done: après mise à jour
+-->
+<template>
 <div>
-<dialog-std2 v-model="me" :title="$t('HPcredsmgr_1')">
+<dialog-std2 v-model="model" :title="$t('HPcredsmgr_1')">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
@@ -139,10 +144,11 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-model="ui.dModels[myidc].report" :title="$t('HPcfupd')" hdrclass='wmd'>
+<dialog-std1 v-model="report" :title="$t('HPcfupd')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="chevron_left" @ok="ui.fD" :label="$t('giveup')"/>
+      <btn-cond flat size="lg" icon="chevron_left" @ok="report = false" 
+        :label="$t('giveup')"/>
       <btn-cond v-if="!nothingtodo" flat size="lg" icon="check" @ok="confValidate"
         color="warning" :label="$t('iconfirm')"/>
     </div>
@@ -222,13 +228,16 @@ type LocalCred = {
 const sf = stores.safe
 const ui = stores.ui
 
-const props = defineProps({ idc: String })
-const myidc = ui.getIdc('CredsMgr')
-onUnmounted(() => ui.closeVue(myidc))
+const myModule = 'CredsMgr'
+const model = defineModel()
 const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].credsmgr)
-watch(() => me.value, (v: boolean) => { 
-  if (v) init(); else { cleanup(); emit('close', myidc) } })
+const dialogs = reactive({report: false})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v: boolean) => {
+  if(v) init()
+  else emit('close', true)
+})
 
 const mlocCreds: Ref<Map<string, LocalCred>> = ref()
 const mlocPS: Ref<Map<string, LocalPS>> = ref()
@@ -549,7 +558,7 @@ const validate = () => {
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
-  ui.oD(myidc, 'report')
+  dialogs.report = true
 }
 
 const clr1 = (i) => {
@@ -568,8 +577,7 @@ const confValidate = async () => {
       report.mcreds, report.delcreds, report.mprofs, report.delprofs)
     if (status < 0) return
     await ui.diagDisplay($t('HPsfop_' + status))
-    ui.fD()
-    emit('close', null)
+    model.value = false
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

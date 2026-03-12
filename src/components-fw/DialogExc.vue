@@ -1,5 +1,6 @@
+<!-- Dialogue APP de récupéation des exceptions au retour des opérations-->
 <template>
-  <q-dialog v-model="ui.dModels['0'].dialogExc" persistent>
+  <q-dialog v-model="ui.appDialogs.DialogExc" persistent>
     <q-card :class="sty('md')">
       <q-toolbar class="tbs">
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX_' + major)}}</q-toolbar-title>
@@ -54,11 +55,11 @@ const html = computed(() => {
 const abort = computed(() => major.value === 10)
 
 async function bye () {
-  ui.oD('0', 'confirmQuit')
+  ui.confirmQuit()
 }
 
 async function reload () {
-  ui.oD('0', 'confirmQuit')
+  ui.confirmQuit()
 }
 
 function cont () {

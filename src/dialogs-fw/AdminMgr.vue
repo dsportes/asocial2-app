@@ -1,5 +1,5 @@
 <template>
-<dialog-std2 v-model="me" 
+<dialog-std2 v-model="model" 
   :title="$t('HPadmin_label')" tbclass="tbs">
   <template #hdr>
     <q-tabs v-model="tab" dense class="primary text-white">
@@ -79,19 +79,18 @@ import stores from '../stores/all'
 const sf = stores.safe
 const ui = stores.ui
 const config = stores.config
+const model = defineModel()
 
 const props = defineProps({ 
-  idc: String,
   admins: Boolean
 })
-const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].adminmgr)
-watch(() => me.value, (v: boolean) => { if (v) init(); 
-  else { cleanup(); emit('close', props.idc) } })
+const emit = defineEmits(['done'])
+watch(model, (v: boolean) => { if (v) init() })
 const init = () => {
   tab.value = props.admins ? 'admins': 'contact'
+  resetAdm()
+  resetCtc()
 }
-const cleanup = () => {}
 
 const tab = ref('contact')
 watch(tab, (t) => {
@@ -132,9 +131,6 @@ const resetCtc = () => {
   ctcav.value = sf.auth.contact
   ctc.value = ctcav.value || ''
 }
-
-resetAdm()
-resetCtc()
 
 const ic = (elt) => elt.st === 1 ? 'add_circle' : (elt.st === 1 ? 'delete' : '')
 

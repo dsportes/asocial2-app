@@ -1,3 +1,6 @@
+<!-- Bouton demandant confirmation pat frappe d'un nombre aléatoire affiché
+- event 'confirm' quand confimé
+-->
 <template>
   <q-input style="width:14rem" :class="'bord999' + (actif ? 2 : 1)"
     dense outlined
@@ -11,10 +14,11 @@ import { ref, watch } from 'vue'
 import { Crypt } from '../src-fw/crypt'
 
 const props = defineProps({
-  actif: Boolean,
+  actif: Boolean, // condition mettant le bouton en activité, générant le nombre
   confirm: Function
 })
 
+const emit = defineEmits(['confirm'])
 const text = ref('')
 const code = ref('' + Crypt.random(1))
 
@@ -26,7 +30,7 @@ watch(() => props.actif, (ap, av) => {
 watch(text, (ap, av) => {
   if (ap === code.value) {
     text.value = ''
-    props.confirm()
+    emit('confirm', true)
   }
 })
 </script>

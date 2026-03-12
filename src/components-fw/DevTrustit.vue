@@ -1,5 +1,6 @@
+<!-- Dialogue de certification du terminal -->
 <template>
-  <q-dialog v-model="me" persistent>
+  <q-dialog v-model="model" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-lg row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
@@ -41,10 +42,16 @@ import { $t, sty } from '../src-fw/util'
 const ui = stores.ui
 const sf = stores.safe
 
-const props = defineProps({ idc: String })
+const myModule = 'DevTrustit'
 const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].trustit)
-watch(() => me.value, (v: boolean) => { if (v) init(); else { cleanup(); emit('close', props.idc) } })
+const model = defineModel()
+// const dialogs = reactive({})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v) => {
+  if(v) init()
+  else emit('close', true)
+})
 
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
@@ -52,16 +59,11 @@ const newPIN = reactive({ inp: '', err: '' })
 const newPseudo = reactive({ inp: '', err: '' })
 
 const init = () => {
-  // console.log('Init DevTrustit')
   const t = sf.myTrusting
   newDev.value = sf.devId === ''
   newPIN.inp = ''
   devName.inp = newDev.value ? '' : sf.devName
   newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
-}
-
-const cleanup = () => {
-  // console.log('Cleanup DevTrustit')
 }
 
 const dup = computed(() => {

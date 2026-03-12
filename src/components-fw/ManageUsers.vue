@@ -21,7 +21,7 @@
 <div class="wmd full-width">
 
   <div v-if="tab === 'user'">
-    <bar-open1 :title="$t('HPmanu_1')" :bubble="$t('HPunpin_1')"/>
+    <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPunpin_1')"/>
 
     <q-separator class="q-mt-xs q-mb-sm"/>
 
@@ -89,7 +89,7 @@
   </div>
 
   <div v-if="tab === 'safe'" class="full-width">
-    <bar-open1 :title="$t('HPimpsafe_1')" :bubble="$t('HPimpsafe_2')"/>
+    <bar-open passive :title="$t('HPimpsafe_1')" :bubbleleft="$t('HPimpsafe_2')"/>
     <div class="titre-md text-italic q-mt-sm">{{$t('HPimport_label')}}</div>
     <input-ps v-model="cryptK" prefix="HPimport" size="ps"
       :validatefn="valK"/>
@@ -106,8 +106,6 @@
     <div v-if="statusSafe" class="q-my-sm bord q-pa-sm">
       <div v-if="statusSafe.lm !== -1">
         <div class='titre-lg q-mb-sm'>{{$t('HPsafest_1')}}</div>
-        <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
-          icon="open_in_new" hasopen @open="openChgCodes"/>
         <div v-if="safe.lm < statusSafe.lm" class='q-ml-sm titre-md'>
           {{$t('HPsafest_2gt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
         </div>
@@ -129,14 +127,12 @@
         <div v-else>
           <div class="column items-center q-gutter-sm q-my-sm">
             <btn-cond :label="$t('HPsafest_r')" @ok="cfImp = true"/>
-            <btn-confirm :actif="cfImp" :confirm="importBackup"/>
+            <btn-confirm :actif="cfImp" @confirm="importBackup"/>
           </div>
         </div>
       </div>
       <div v-else>
         <div class='titre-lg q-mb-sm'>{{$t('HPsafest_3')}}</div>
-        <bar-open1 class="q-my-sm" :title="$t('HPsafest_6')" :bubble="$t('HPsafest_7')"
-          icon="open_in_new" hasopen @open="openChgCodes"/>
         <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
           {{$t('HPsafest_5p')}}
         </div>
@@ -149,7 +145,7 @@
         <div v-else>
           <div class="column items-center q-gutter-sm q-my-sm">
             <btn-cond :label="$t('HPsafest_i')" @ok="cfImp = true"/>
-            <btn-confirm :actif="cfImp" :confirm="importBackup"/>
+            <btn-confirm :actif="cfImp" @confirm="importBackup"/>
           </div>
         </div>
       </div>
@@ -171,7 +167,7 @@
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
         <btn-confirm :actif="nbdel2 !== 0 || (sDel && sDel.size)"
-          :confirm="close"/>
+          @confirm="close"/>
       </div>
     </q-card>
   </q-dialog>
@@ -183,7 +179,7 @@
       <div class="q-my-md titre-lg text-bold text-italic text-center">{{$t('HPskull')}}</div>
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
-        <btn-confirm actif :confirm="resetAllLocal"/>
+        <btn-confirm actif @confirm="resetAllLocal"/>
       </div>
     </q-card>
   </q-dialog>
@@ -206,7 +202,7 @@ import DialogStd2 from '../components-fw/DialogStd2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 // import HelpButton from '../components-fw/HelpButton.vue'
-import BarOpen1 from '../components-fw/BarOpen1.vue'
+import BarOpen from '../components-fw/BarOpen.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import SafeCr from '../components-fw/SafeCr.vue'
@@ -239,12 +235,6 @@ const init = async () => {
 const cleanup = () => {}
 
 const tab = ref('user')
-
-/*
-const opCfReset = () => {
-  ui.oD(myidc, 'resetAll')
-}
-*/
 
 const resetAllLocal = async () => {
   await sf.resetAllLocal()
@@ -330,117 +320,6 @@ const close = async () => {
   ui.fD()
 }
 
-/*
-const fileList = ref(null)
-const fd = ref({ name: '', size: 0 })
-const cryptK = reactive( { inp: '', err: '', key: null } )
-const diag = ref('')
-const bin = ref(null)
-const safe = ref(null)
-const statusSafe = ref(null)
-const cfImp = ref(false)
-const keyK = ref(null)
-const impSafeStore = ref('')
-
-const reset = () => {
-  impSafeStore.value = ''
-  fileList.value = null
-  fd.value = { name: '', size: 0 }
-  cryptK.inp = ''; cryptK.err = ''; cryptK.key = null
-  diag.value = ''
-  bin.value = null
-  safe.value = null
-  cfImp.value = false
-  keyK.value = null
-  statusSafe.value = null
-}
-
-const valK = async () => {
-  if (cryptK.err === '') cryptK.key = await Crypt.strongHash(cryptK.inp, true, true)
-  else cryptK.key = null
-}
-
-watch(fileList, async (file: any) : Promise<void> => {
-  if (file) await downloadFile(await readFile(file, true))
-})
-
-const downloadFile = async (f) => {
-  try {
-    bin.value = await Crypt.decrypt(cryptK.key, f.u8)
-    safe.value = decode(bin.value)
-  } catch (e) {
-    bin.value = null
-    safe.value = null
-    diag.value = $t('HPimport_bf2')
-  }
-  fileList.value = null
-}
-
-const authPS = async (args) => {
-  const _id = safe.value.id
-  const _hp0 = safe.value.hp0
-  const _Ka = safe.value.Ka
-  const _hr0 = safe.value.hr0
-  const sh = args.sh
-  const sh0 = args.sh0
-  const hp0 = u8ToB64(sh0, true)
-  const _hhp1 = safe.value.hhp1
-  const sh1 = args.sh1
-  const hhp1 = Crypt.shaS(sh1)
-  diag.value = (_hp0 !== hp0 || _hhp1 !== hhp1)  ? $t('HPimpsafe_4') : ''
-  if (!diag.value) {
-    keyK.value = await Crypt.decrypt(sh, _Ka)
-    await getStatus(_id, _hp0, _hr0)
-  }
-}
-
-const getStatus = async (id, hp0, hr0) => {
-  cfImp.value = false
-  const op = new SafeOperation('$StatusSafe', sf.myStore)
-  try {
-    op.args = { id, hp0, hr0 }
-    const ret = await op.post()
-    statusSafe.value = ret.statusSafe
-    // statusSafe.value = { lm: -1, xp: false, xr: false }
-  } catch (e) {
-    op.ko(e)
-  }
-  console.log('status : ' + JSON.stringify(statusSafe.value))
-}
-
-const importBackup = async () => {
-  console.log('importBackup')
-  const op = new SafeOperation('$RestoreSafe', sf.mySafeStore)
-  let ret
-  try {
-    op.args = { safe: safe.value }
-    ret = await op.post()
-    await ui.diagDisplay($t('HPcsret_2' + ret.status))
-    reset()
-  } catch (e) {
-    op.ko(e)
-    return -1
-  }
-}
-
-const openChgCodes = () => {
-  ui.oD(myidc, 'createsafe')
-}
-
-const chgCodes = async (arg) => {
-  console.log('chgCodes')
-  // const arg = cash0: ca.sh0, cash1: ca.sh1, cash: ca.sh, crsh0: cr.sh0, crsh1: cr.sh1, crsh: cr.sh
-
-  const s = safe.value
-  s.hp0 = u8ToB64(arg.cash0, true)
-  s.hr0 = u8ToB64(arg.crsh0, true)
-  s.hhp1 = Crypt.shaS(arg.cash1)
-  s.hhr1 = Crypt.shaS(arg.crsh1)
-  s.Ka = await Crypt.crypt(arg.cash, keyK.value)
-  s.Kr = await Crypt.crypt(arg.crsh, keyK.value)
-  await getStatus(s.id, s.hp0, s.hr0)
-}
-*/
 </script>
 
 <style lang="scss" scoped>

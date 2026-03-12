@@ -1,7 +1,7 @@
 <template>
 <div class="bord1 q-pa-xs box">
   <div class="row full-width q-mb-xs">
-    <btn-bubble class="col-auto" size="md" :text="$t(pfx + '_bub')"/>
+    <btn-bubble class="col-auto" :text="$t(pfx + '_bub')"/>
     <div class="col-7 q-ml-md titre-md text-bold text-italic ellipsis">{{$t(pfx + '_label')}}</div>
     <div class="col column items-end">
       <div v-if="err" class="msg3 ellipsis">{{$t('SECsite_msg' + err)}}</div>

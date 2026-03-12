@@ -1,3 +1,6 @@
+<!-- Bouton normalisé
+ - event: 'ok' (pas 'click')
+-->
 <template>
 <span>
   <q-btn v-if="stop"
@@ -47,7 +50,7 @@ const props = defineProps({
   icon: String, // defaut aucune
   size: String, // defaut 'md'
   label: String, // defaut 'ok'
-  tp: String, // tooltip: dfeaut aucun
+  tp: String, // tooltip: defaut aucun
   ctx: Object, // defaut null. Retransmis sur l'événement ok
   cond: String, // code condition dans stores.session
   disable: Boolean,

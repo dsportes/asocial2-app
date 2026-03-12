@@ -23,6 +23,16 @@
 
   <q-page-container class="font-def">
     <transition name="anim1">
+      <q-page v-if="ui.page === 'p1'" class="column">
+        <p1/>
+      </q-page>
+    </transition> 
+    <transition name="anim1">
+      <q-page v-if="ui.page === 'p2'" class="column">
+        <p2/>
+      </q-page>
+    </transition>    
+    <transition name="anim1">
       <q-page v-if="ui.page === 'home'" class="column">
         <safe-page class="q-mt-sm"/>
       </q-page>
@@ -45,8 +55,8 @@
   </q-page-container>
 
   <got-it v-if="ui.dModels['0'].diag"/>
-  <confirm-quit v-if="ui.dModels['0'].confirmQuit"/>
-  <dialog-exc v-if="ui.dModels['0'].dialogExc"/>
+  <confirm-quit/>
+  <dialog-exc/>
   <dialog-help v-if="ui.dModels['0'].dialogHelp"/>
   <q-dialog v-if="ui.dModels['0'].servicestatus" v-model="ui.dModels['0'].servicestatus"
     full-height persistent>
@@ -63,6 +73,9 @@
 </template>
 
 <script setup lang="ts">
+import P1 from './tests/P1.vue'
+import P2 from './tests/P2.vue'
+
 // @ts-ignore
 import { watchEffect, onMounted } from 'vue'
 // @ts-ignore
@@ -84,7 +97,7 @@ import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import BtnCond from './components-fw/BtnCond.vue'
 import GotIt from './components-fw/GotIt.vue'
-import ConfirmQuit from './components-fw/ConfirmQuit.vue'
+import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import DialogExc from './components-fw/DialogExc.vue'
 import DialogHelp from './components-fw/DialogHelp.vue'
 import ServiceStatus from './components-fw/ServiceStatus.vue'

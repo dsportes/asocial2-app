@@ -1,3 +1,4 @@
+<!-- Affiche le détail d'une ligne Credential -->
 <template>
 <div>
   <div class="column font-mono fs-md full-width">

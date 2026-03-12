@@ -136,6 +136,8 @@ export default {
   MLAcf3: 'Non, je la laisse se poursuivre',
   MLAcf4: 'Oui, je veux l\'interrompre (si possible)',
 
+  PAGEp1: 'Page TEST #1',
+  PAGEp2: 'Page TEST #2',
   PAGEhome: 'Connexion',
   PAGEadmin: 'Administration Technique',
   PAGEapp: 'Auteurs et relecteurs',

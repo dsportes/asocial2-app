@@ -19,7 +19,7 @@
     <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
       @ok="ui.oD(myidc, 'credsmgr')"/>
   </div>
-  <creds-mgr :idc="myidc"/>
+  <creds-mgr v-model=""/>
 </div>
 </template>
 

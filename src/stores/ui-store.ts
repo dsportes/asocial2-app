@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
@@ -97,15 +97,17 @@ export const useUiStore = defineStore('ui', () => {
   const isOpenD = (idc: string, name: string) =>
     idc && dModels.value[idc] && dModels.value[idc][name]
 
+  // ********************************************
+
   // Gestion de l'affichage des exceptions
   const excResolve = ref(null)
   const exc = ref(null) // Exception trappée : en attente de décision de l'utilisateu
 
   const displayExc = async (e, background?: boolean) => {
-    if (isOpenD('0', 'dialogExc')) return
+    if (appDialogs.DialogExc) return
     exc.value = e
     if (background) exc.value.background = true
-    oD('0', 'dialogExc')
+    appDialogs.DialogExc = true
     return new Promise((resolve) => {
       excResolve.value = resolve
     })
@@ -113,7 +115,7 @@ export const useUiStore = defineStore('ui', () => {
 
   const hideExc = () => {
     exc.value = null
-    fD()
+    appDialogs.DialogExc = false
     const f = excResolve.value
     if (f) f()
     excResolve.value = null
@@ -166,12 +168,19 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   // Gestion des pages
-  const page = ref('home')
+  const page = ref('p1')
 
   const setPage = (p: string) => {
     page.value = ''
     setTimeout(() => { page.value = p }, 350)
   }
+
+  // dialogues permanents rattachés à App.vue
+  const appDialogs = reactive({
+    ConfirmQuit: false,
+    DialogExc: false
+  })
+  const confirmQuit = () => { appDialogs.ConfirmQuit = false }
 
   const reopenSession = ref(0)
 
@@ -191,6 +200,7 @@ export const useUiStore = defineStore('ui', () => {
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     dModels, getIdc, oD, fD, closeVue, isOpenD,
+    appDialogs, confirmQuit, 
     exc, displayExc, hideExc,
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
