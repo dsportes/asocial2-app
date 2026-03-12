@@ -1,3 +1,7 @@
+<!-- Input de sélection d'un Site de sécurité (host de safes)
+Vérifie sa disponibilité par un "ping", sauf pour le Site générique.
+Résultat en v-model.
+-->
 <template>
 <div class="bord1 q-pa-xs box">
   <div class="row full-width q-mb-xs">
@@ -9,7 +13,7 @@
     </div>
   </div>
   <input-a prefix="SECsitech" class="full-width q-mt-xs q-pl-lg" 
-    :validatefn="checkSite" :initval="def" :list="vals"
+    @validate="checkSite" :initval="def" :list="vals"
     v-model="site"/>
 </div>
 </template>
@@ -67,9 +71,6 @@ const checkSite = async () => {
     err.value = 1
   }
 }
-
-
-
 
 </script>
 

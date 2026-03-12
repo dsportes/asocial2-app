@@ -1,6 +1,6 @@
 <!-- Dialogue de retrait de certification du terminal -->
 <template>
-  <q-dialog v-model="me" persistent>
+  <q-dialog v-model="model" persistent>
     <q-card :class="sty('md')">
       <div class="q-mt-md q-mb-sm titre-lg text-italic">
         {{$t('HPutnbs', sf.mySessions.size, {count: sf.mySessions.size})}}
@@ -28,7 +28,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD()"/>
+        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
         <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
       </q-card-actions>
     </q-card>
@@ -38,10 +38,12 @@
 <script setup lang="ts">
 // @ts-ignore
 import { watch, computed } from 'vue'
+
 import stores from '../stores/all'
+import { $t, sty } from '../src-fw/util'
+
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import { $t, sty } from '../src-fw/util'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -55,14 +57,6 @@ const model = defineModel()
 watch(model, (v) => {
   if(!v) emit('close', true)
 })
-
-const props = defineProps({ idc: String })
-const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].untrustit)
-watch(() => me.value, (v: boolean) => { if (v) init()
-  else { cleanup(); emit('close', 'DevUntrustit') } })
-const init = () => {}
-const cleanup = () => {}
 
 const setUntrust = async () => {
   try {

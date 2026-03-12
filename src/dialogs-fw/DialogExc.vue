@@ -29,7 +29,8 @@ import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
 import { sty, $t } from '../src-fw/util'
-import BtnCond from './BtnCond.vue'
+
+import BtnCond from '../components-fw/BtnCond.vue'
 
 /* code
 public code: number

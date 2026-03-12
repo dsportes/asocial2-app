@@ -1,3 +1,9 @@
+<!-- Boîte de saisie d'un couple P0 (pseudo) / P1 (phrase)
+Event 'ok' émis quand saisie OK: { sh0, sh1, sh }
+  - sh0: await Crypt.strongHash(p0.inp, true, true),
+  - sh1: await Crypt.strongHash(p1.inp, true, true),
+  - sh: await Crypt.strongHash(p0.inp + p1.inp, false, true),
+-->
 <template>
 <div class="column full-width">
   <q-toolbar v-if="title" class="full-width tbs" dense>
@@ -6,10 +12,10 @@
   </q-toolbar>
 
   <input-ps class="q-mb-sm" v-model="p0" size="p0" prefix="PSpseudo"
-    :validatefn="validate" :valctrl="valctrl"/>
+    @validate="validate" :valctrl="valctrl"/>
 
   <input-ps class="q-mb-sm" v-model="p1" size="p1" prefix="PSphrase"
-    :validatefn="validate" :valctrl="valctrl"/>
+    @validate="validate" :valctrl="valctrl"/>
 </div>
 </template>
 
@@ -21,8 +27,7 @@ import InputPs from '../components-fw/InputPs.vue'
 import { Crypt } from '../src-fw/crypt'
 
 const props = defineProps({
-  title: String,
-  ctx: Object
+  title: String
 })
 
 const emit = defineEmits(['ok'])
@@ -39,8 +44,7 @@ const validate = async () => {
   emit('ok', { 
     sh0: await Crypt.strongHash(p0.inp, true, true),
     sh1: await Crypt.strongHash(p1.inp, true, true),
-    sh: await Crypt.strongHash(p0.inp + p1.inp, false, true),
-    ctx: props.ctx || null 
+    sh: await Crypt.strongHash(p0.inp + p1.inp, false, true)
   })
 }
 

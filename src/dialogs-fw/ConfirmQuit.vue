@@ -23,11 +23,11 @@ Model: ui.appDialogs.ConfirmQuit
 </template>
 
 <script setup>
-// import { ref, computed } from 'vue'
-import HelpButton from './HelpButton.vue'
 import stores from '../stores/all'
 import { sty, coolBye, reloadPage } from '../src-fw/util'
-import BtnCond from './BtnCond.vue'
+
+import BtnCond from '../components-fw/BtnCond.vue'
+import HelpButton from '../components-fw/HelpButton.vue'
 
 const ui = stores.ui
 

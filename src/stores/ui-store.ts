@@ -54,48 +54,8 @@ export const useUiStore = defineStore('ui', () => {
     // console.log(screenWidth.value, screenHeight.value)
   }
 
+  // Sasie en mode password ou text
   const visibility = ref(true)
-
-  // Gestion du stack des dialogues ouverts *************************************
-  const dStack = ref([]) // [[idc, name] ...]
-  const dModels = ref({ '0': {} }) // liste des noms de dialogue par idc
-  const idc = ref(1)
-
-  const getIdc = (src, from) : string=> {
-    if (!src)
-      console.log('zarbi')
-    idc.value++
-    const idcx = src + '_' + idc.value
-    dModels.value[idcx] = {}
-    console.log('Load vue:' + idcx + (from ? ' from:' + from: '' ))
-    return idcx
-  }
-
-  const oD = (idc: string, name: string) => { // nom du dialogue, son index
-    if (!dModels.value[idc]) dModels.value[idc] = {}
-    dModels.value[idc][name] = true
-    dStack.value.push([idc, name])
-  }
-
-  const fD = () => {
-    if (dStack.value.length > 0) {
-      const [idc, name] = dStack.value.pop()
-      const x = dModels.value[idc]
-      if (x) x[name] = false
-    }
-  }
-
-  const closeVue = (idc: string) => {
-    if (idc === '0') return
-    const ds = []
-    dStack.value.forEach(e => { if (e[0] !== idc) ds.push(e)})
-    dStack.value = ds
-    delete dModels.value[idc]
-    console.log('Close vue:', idc)
-  }
-
-  const isOpenD = (idc: string, name: string) =>
-    idc && dModels.value[idc] && dModels.value[idc][name]
 
   // ********************************************
 
@@ -125,12 +85,12 @@ export const useUiStore = defineStore('ui', () => {
   const diag = ref(null)
   const diagConfirm = ref()
   const diagResolve = ref(null)
-  async function diagDisplay (text: string, confirm?: boolean) {
+  const diagDisplay = async (text: string, confirm?: boolean) => {
     return new Promise((resolve) => {
       diagConfirm.value = confirm || false
       diag.value = text
       diagResolve.value = resolve
-      oD('0', 'diag')
+      appDialogs.GotIt = true
     })
   }
 
@@ -151,24 +111,23 @@ export const useUiStore = defineStore('ui', () => {
 
   const helpstack = ref([])
 
-  const fermerHelp = () => { fD(); helpstack.value.length = 0 }
+  const fermerHelp = () => { 
+    appDialogs.DialogHelp = false
+    helpstack.value.length = 0 
+  }
 
   const pushhelp = (page) => {
-    if (helpstack.value.length === 0) oD('0', 'dialogHelp')
+    if (helpstack.value.length === 0) appDialogs.DialogHelp = true
     helpstack.value.push(page)
   }
 
   const pophelp = () => {
-    if (helpstack.value.length === 1) {
-      fD()
-      helpstack.value.length = 0
-    } else {
-      helpstack.value.splice(helpstack.value.length - 1, 1)
-    }
+    if (helpstack.value.length === 1) fermerHelp
+    else helpstack.value.splice(helpstack.value.length - 1, 1)
   }
 
   // Gestion des pages
-  const page = ref('p1')
+  const page = ref('safeHome')
 
   const setPage = (p: string) => {
     page.value = ''
@@ -178,7 +137,10 @@ export const useUiStore = defineStore('ui', () => {
   // dialogues permanents rattachés à App.vue
   const appDialogs = reactive({
     ConfirmQuit: false,
-    DialogExc: false
+    DialogExc: false,
+    DialogHelp: false,
+    GotIt: false,
+    ServiceStatus: false
   })
   const confirmQuit = () => { appDialogs.ConfirmQuit = false }
 
@@ -199,7 +161,6 @@ export const useUiStore = defineStore('ui', () => {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
-    dModels, getIdc, oD, fD, closeVue, isOpenD,
     appDialogs, confirmQuit, 
     exc, displayExc, hideExc,
     diag, diagResolve, diagConfirm, diagDisplay,

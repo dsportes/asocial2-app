@@ -1,6 +1,8 @@
+<!-- Panel d'authentification par code PIN 
+Event émis: logged
+-->
 <template>
 <div>
-  <!-- Authentification par code PIN -->
   <div v-if="sf.users.length" class="q-my-md">
     <bar-open v-if="sf.users.length === 1" :bubble="$t('LOGauthbypin_2')" center
       :title="$t('LOGauthbypin_1a', [sf.users[0].pseudo])"/>
@@ -16,7 +18,7 @@
     </div>
     <div v-if="selectedUser" :class="sty('sm')">
       <div class="full-width q-pa-sm">
-        <input-ps v-model="pin" prefix="PSpin" size="pin" :validatefn="authPIN"/>
+        <input-ps v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
     </div>
     <q-separator color="orange" class="q-mt-lg"/>
@@ -73,7 +75,6 @@ const authPIN = async () => {
 }
 
 </script>
-
 
 <style lang="scss" scoped>
 @import '../css/app.scss';

@@ -1,3 +1,5 @@
+<!-- omponet scoll-area standard avec scroll bars custom
+-->
 <template>
   <q-scroll-area :style="'height: ' + sz + ';'"
     :barStyle="barStyle" :thumbStyle="thumbStyle"
@@ -29,5 +31,4 @@ const sz = computed(() => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 </style>

@@ -1,3 +1,6 @@
+<!-- Barre de menu à gauche (component)
+Contrôlé par ui.leftMenu
+-->
 <template>
 <q-layout container view="hHh lpR fFf">
   <q-header :class="sty()">
@@ -35,28 +38,31 @@
     </div>
   </q-page-container>
 
-  <managed-orgs v-if="ui.dModels[idc].managedorgs" :idc="idc"/>
+  <managed-orgs v-model="dialogs.ManagedOrgs"/>
 </q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
+import { $t, sty } from '../src-fw/util'
+
 import HelpButton from '../components-fw/HelpButton.vue'
 import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import ManagedOrgs from '../components-fw/ManagedOrgs.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
-import { $t, sty } from '../src-fw/util'
+
+import ManagedOrgs from '../dialogs-fw/ManagedOrgs.vue'
 
 const sf = stores.safe
 const ui = stores.ui
 // const config = stores.config
 const session = stores.session
 
-const idc = ui.getIdc('LeftMenu')
-onUnmounted(() => ui.closeVue(idc))
+const dialogs = reactive({
+  ManagedOrgs: false
+})
 
 const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
@@ -85,8 +91,8 @@ const openAdmin = (svc) => {
 }
 
 const openManager = () => {
+  dialogs.ManagedOrgs = true
   ui.closeMenu()
-  ui.oD(idc, 'managedorgs')
 }
 
 </script>

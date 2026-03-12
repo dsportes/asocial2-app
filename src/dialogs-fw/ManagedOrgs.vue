@@ -1,5 +1,9 @@
+<!-- Affiche la liste des managers pour:
+- le Service sélectionné,
+- l'organisation sélectionnée. 
+-->
 <template>
-<dialog-std0 v-model="ui.dModels[idc].managedorgs" :title="$t('PanelManager')">
+<dialog-std0 v-model="model" :title="$t('PanelManager')">
   <template #hdr>
     <div class="row full-width q-my-sm q-px-xs items-center">
       <q-select class="col-5" dense filled v-model="SVC"
@@ -30,26 +34,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
+
 import stores from '../stores/all'
-import BtnCond from '../components-fw/BtnCond.vue'
-import DialogStd0 from '../components-fw/DialogStd0.vue'
 import { ListManagers } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
+
+import BtnCond from '../components-fw/BtnCond.vue'
+
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 
 const ui = stores.ui
 const sf = stores.safe
 
-const props = defineProps({
-  idc: Number
-})
+const model = defineModel()
 
-const managedOrgs: Map<string, Set<string>> = sf.managedOrgs()
-const services = Array.from(managedOrgs.keys())
+const services = ref([])
+const SVC = ref('')
+const orgs = ref([])
+const org = ref('')
 
-const SVC = ref(services[0])
-const orgs = computed(() => Array.from(managedOrgs.get(SVC.value)) )
-const org = ref(orgs.value[0])
+const init = () => {
+  const managedOrgs: Map<string, Set<string>> = sf.managedOrgs() || new Map()
+  services.value = Array.from(managedOrgs.keys())
+  SVC.value = services.value.length ? services.value[0] : ''
+  orgs.value = Array.from(managedOrgs.get(SVC.value) || [])
+  org.value = orgs.value.length ? orgs.value[0] : ''
+}
+
+init()
 
 const lstMgr = ref([])
 

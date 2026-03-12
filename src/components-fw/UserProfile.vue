@@ -1,30 +1,27 @@
+<!-- Boîte d'affichage du profil courant de l'utilisateur -->
 <template>
-<dialog-std0 :title="$t('UPtitle')" v-model="ui.dModels['0'].userprofile">
-<template #default>
+<div>
   <div class="q-pa-sm column q-gutter-sm">
-    <div class="row full-width items-center q-mt-md">
-      <div class="col-6 text-right text-italic q-pr-md">{{$t('UPid')}}</div>
-      <div class="col-6 font-mono fs-lg text-bold">{{sf.userId}}</div>
+    <div class="row q-gutter-sm q-my-xs items-end">
+      <div class="titre-md text-italic">{{ $t('SFTus') }}</div>
+      <div class="fs-lg font-mono">{{ sf.userId }}</div>
     </div>
-    <div class="row full-width items-start">
-      <div class="col-6 text-right text-italic q-pr-md">{{$t('UPpseudo')}}</div>
-      <div class="col-6 font-mono text-bold">{{sf.userName || $t('UPnone')}}</div>
+    <div class="row q-gutter-sm q-my-xs items-end">
+      <div class="titre-md text-italic">{{ $t('SFT' + (sf.userName !== '' ? 'ps' : 'nops')) }}</div>
+      <div v-if="sf.userName !== ''" class="font-mono">{{ sf.userName }}</div>
     </div>
-    <div class="row full-width items-start">
-      <div class="col-6 text-right text-italic q-pr-md">{{$t('UPcontact')}}</div>
-      <div class="col-6 font-mono text-bold">{{sf.auth.contact || $t('UPnone')}}</div>
+    <div class="row q-gutter-sm q-my-xs items-end">
+      <div class="titre-md text-italic">{{ $t('SFT' + (sf.auth.contact !== '' ? 'ct' : 'noct')) }}</div>
+      <div v-if="sf.auth.contact !== ''" class="font-mono">{{ sf.auth.contact }}</div>
     </div>
-    <div v-if="admins" class="row full-width items-start">
-      <div class="col-6 text-right text-italic q-pr-md">{{$t('UPadmins')}}</div>
-      <div class="col-6 font-mono text-bold">{{admins}}</div>
+    <div v-if="sf.auth.admins" class="row q-gutter-sm q-my-xs items-end">
+      <div class="titre-md text-italic">{{ $t('SFTadmin')}}</div>
+      <div class="font-mono">{{ sf.auth.admins }}</div>
     </div>
-    <div class="row full-width items-start">
-      <div class="col-6 text-right text-italic q-pr-md">{{$t('UPsessionid')}}</div>
-      <div class="col-6 font-mono text-bold">{{session.sessionId}}</div>
-    </div>
+    <text-zoom class="q-my-xs" :label="$t('HPexppub')" 
+      :text="infopub" :rows="15"/>
   </div>
-</template>
-</dialog-std0>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -38,15 +35,18 @@
   UPadmins: 'Administrateur technique de :',
 */
 // @ts-ignore
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import DialogStd0 from '../components-fw/DialogStd0.vue'
+
+import TextZoom from '../components-fw/TextZoom.vue'
 
 const sf = stores.safe
-// const config = stores.config
 const session = stores.session
 const ui = stores.ui
+
+const infopub = computed(() => JSON.stringify([sf.auth.C, sf.auth.V], null, '\t'))
 
 const admins = ref('')
 

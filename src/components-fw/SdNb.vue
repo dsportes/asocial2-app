@@ -1,3 +1,5 @@
+<!-- Compoent d'affichage d'un MD : clair ou  sombre
+-->
 <template>
 <div>
   <sd-noir v-if="$q.dark.isActive" :text="text"/>

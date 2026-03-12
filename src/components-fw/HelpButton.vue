@@ -1,3 +1,4 @@
+<!-- Bouton commandant l'ouverture de l'aide en ligne -->
 <template>
   <btn-cond icon="help" @ok="stores.ui.openHelp(page)" color="none"/>
 </template>

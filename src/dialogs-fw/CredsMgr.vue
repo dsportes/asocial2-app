@@ -53,7 +53,7 @@
 
           <input-a v-if="localCred.st !== 2" class="q-mb-md"
             size="comment" prefix="HPcrab" :initval="initAbCr"
-            v-model="loccommentCr" :validatefn="valAbCr"/>
+            v-model="loccommentCr" @validate="valAbCr"/>
 
           <!-- credential supprimé -->
           <div v-if="localCred.st === 2">
@@ -104,7 +104,7 @@
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
         <input-a size="sn" prefix="HPpsab" :initval="initAbPs"
-          v-model="locAboutPs" :validatefn="valAbPs"/>
+          v-model="locAboutPs" @validate="valAbPs"/>
 
         <div class="row justify-end q-my-sm">
           <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
@@ -144,10 +144,11 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-model="report" :title="$t('HPcfupd')" hdrclass='wmd'>
+<dialog-std1 v-model="dialogs.reportIt" :title="$t('HPcfupd')" hdrclass='wmd'>
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
-      <btn-cond flat size="lg" icon="chevron_left" @ok="report = false" 
+      <btn-cond flat size="lg" icon="chevron_left" 
+        @ok="dialogs.reportIt = false" 
         :label="$t('giveup')"/>
       <btn-cond v-if="!nothingtodo" flat size="lg" icon="check" @ok="confValidate"
         color="warning" :label="$t('iconfirm')"/>
@@ -191,22 +192,24 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
-import DialogStd2 from '../components-fw/DialogStd2.vue'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
-import CredRow from '../components-fw/CredRow.vue'
-import PsRow from './PsRow.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
-import InputA from '../components-fw/InputA.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
-// import HelpButton from '../components-fw/HelpButton.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
-import TextZoom from '../components-fw/TextZoom.vue'
+import { ref, Ref, computed, reactive, watch } from 'vue'
+
 import { $t, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential } from '../src-fw/credential'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
+
+import CredRow from '../components-fw/CredRow.vue'
+import PsRow from '../components-fw/PsRow.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import InputA from '../components-fw/InputA.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
+import BarOpen from '../components-fw/BarOpen.vue'
+import TextZoom from '../components-fw/TextZoom.vue'
+
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
+import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
 type LocalPS = { // session
   id: string
@@ -231,7 +234,9 @@ const ui = stores.ui
 const myModule = 'CredsMgr'
 const model = defineModel()
 const emit = defineEmits(['close', 'done'])
-const dialogs = reactive({report: false})
+const dialogs = reactive({
+  reportIt: false
+})
 // onMounted(() => console.log(myModule, "mounted"))
 // onUnmounted(() => console.log(myModule, "unMounted"))
 watch(model, (v: boolean) => {
@@ -558,7 +563,7 @@ const validate = () => {
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
-  dialogs.report = true
+  dialogs.reportIt = true
 }
 
 const clr1 = (i) => {

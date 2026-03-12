@@ -1,6 +1,9 @@
-<template> <!-- Création d'un safe / Changement des codes -->
-<dialog-std2 v-model="me" :title="$t('SCRenreg_' + mode)"
-  @close="emit('close', idc)">
+<!-- Dialogue de création d'un safe / changement des codes 
+Events: close done
+-->
+<template>
+<dialog-std2 v-model="model" :title="$t('SCRenreg_' + mode)"
+  @close="emit('close', true)">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">
     <btn-cond flat size="lg" icon="check" :label="$t('validate')" 
@@ -37,33 +40,37 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, reactive, onUnmounted, watch } from 'vue'
-import DialogStd2 from '../components-fw/DialogStd2.vue'
+
+import stores from '../stores/all'
+import { $t, equ8 } from '../src-fw/util'
+
 import BtnCond from '../components-fw/BtnCond.vue'
 import P0P1 from '../components-fw/P0P1.vue'
-import { $t, equ8 } from '../src-fw/util'
-import stores from '../stores/all'
+
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const icons = ['check', 'question_mark', 'warning']
 
 const sf = stores.safe
 const ui = stores.ui
 
+const myModule = 'SafeCr'
+const model = defineModel()
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v) => {
+  if(v) init()
+  else emit('close', true)
+})
+
 const props = defineProps ({
-  idc: String,
   mode: Number // 0: create 1: chg codes 2: chg codes backup
 })
-const myidc = ui.getIdc('SafeCr')
-onUnmounted(() => ui.closeVue(myidc))
-const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].createsafe)
-watch(() => me.value, (v: boolean) => { 
-  if (v) init(); else { cleanup(); emit('close', myidc) } })
 
 const init = () => {
   initCodes()
   checkCodes()
 }
-const cleanup = () => {}
 
 const exp = reactive([false, false, false, false])
 const codes = reactive([null, null, null, null])
@@ -113,7 +120,7 @@ const createSafe = async () => {
 
   if (props.mode === 2) {
     emit('done', arg)
-    ui.fD()
+    model.value = false
   } else {
     const status = props.mode === 0 ?
       await sf.createSafe(ca.sh0, ca.sh1, ca.sh, cr.sh0, cr.sh1, cr.sh) :
@@ -121,7 +128,7 @@ const createSafe = async () => {
     if (status >= 0) {
       await ui.diagDisplay($t('SCRcsret_' + props.mode + status))
       if (status === 0) {
-        ui.fD()
+        model.value = false
         emit('done', arg)
       }
     }

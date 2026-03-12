@@ -23,7 +23,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
         <btn-cond flat :label="$t('HPtrust_1')" color="warning"
           :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
@@ -34,10 +34,12 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, watch, reactive } from 'vue'
+
 import stores from '../stores/all'
+import { $t, sty } from '../src-fw/util'
+
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import { $t, sty } from '../src-fw/util'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -83,8 +85,8 @@ const setTrust = async () => {
     const status = await sf.setTrust(devName.inp, newPIN.inp, newPseudo.inp)
     if (status < 0) return
     await ui.diagDisplay($t('HPsttrust_' + status))
-    emit('done', props.idc)
-    ui.fD()
+    emit('done', true)
+    model.value = false
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

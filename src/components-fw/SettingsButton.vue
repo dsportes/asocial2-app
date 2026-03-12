@@ -1,3 +1,5 @@
+<!-- Bouton d'ouverture du menu droit "settings"
+-->
 <template>
 <div>
   <q-btn v-if="session.opSignal" flat dense color="purple-7" class="bg-white" icon="wifi"/>
@@ -5,9 +7,9 @@
     <q-menu>
       <q-list style="min-width: 300px;">
 
-        <q-item v-if="session.newVersionReady" clickable dense v-close-popup
-          class="bg-negative text-white"
-          @click="session.newVersionDialog = true">
+        <q-item v-if="session.newVersionReady" @click="session.newVersionDialog = true"
+          clickable dense v-close-popup
+          class="bg-negative text-white">
           <q-item-section avatar><q-avatar size="xl" icon="system_update"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('RLtit1')}}</q-item-section>
         </q-item>
@@ -28,37 +30,38 @@
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="darkClear">
+        <q-item clickable dense v-close-popup @click="ui.setDark(!ui.isDark)">
           <q-item-section avatar><q-avatar size="xl" icon="contrast"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('darkclear')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="ui.oD(myidc, 'theme')">
+        <q-item clickable dense v-close-popup @click="dialogs.theme = true">
           <q-item-section avatar><q-avatar size="xl" icon="palette"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('theme')}}</q-item-section>
         </q-item>
 
         <q-separator v-if="stores.safe.step === 0"/>
 
-        <q-item  v-if="stores.safe.step !== 1"
-          clickable dense v-close-popup @click="openUP">
+        <q-item  v-if="stores.safe.step !== 1" @click="dialogs.userProfile = true"
+          clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="img:icons/anonymous_white.png"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('UPtitle')}}</q-item-section>
         </q-item>
 
-        <q-item  v-if="stores.safe.step === 0" clickable dense v-close-popup @click="openPrefs">
+        <q-item  v-if="stores.safe.step === 0" @click="dialogs.edprf = true"
+          clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="settings"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('settings')}}</q-item-section>
         </q-item>
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="ui.oD('0', 'servicestatus')">
+        <q-item clickable dense v-close-popup @click="ui.appDialogs.ServiceStatus = true">
           <q-item-section avatar><q-avatar size="xl" icon="cloud"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('servicestatus')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="ui.oD(myidc, 'pings')">
+        <q-item clickable dense v-close-popup @click="dialogs.pings = true">
           <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
         </q-item>
@@ -70,12 +73,12 @@
           <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="cfReloadPage">
+        <q-item clickable dense v-close-popup @click="ui.confirmQuit">
           <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('restartApp')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="cfCoolBye">
+        <q-item clickable dense v-close-popup @click="ui.confirmQuit">
           <q-item-section avatar><q-avatar size="xl" icon="close"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('closeApp')}}</q-item-section>
         </q-item>
@@ -92,17 +95,17 @@
             <div class="font-mono text-bold">{{config.K.BUILD}}</div>
           </div>
           <btn-cond label="Import Safe" size="sm" flat icon="warning"
-            color="warning" @ok="ui.oD(myidc, 'exportsafe')"/>
+            color="warning" @ok="dialogs.SafeExport = true"/>
         </div>
       </q-list>
     </q-menu>
   </q-btn>
 
-  <safe-export :idc="myidc" tab="restore" @done="doneRestore"/>
+  <safe-export v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
 
   <!-- Contrôle de l'autorisation des notifications-->
   <q-dialog v-model="session.permDialog" persistent>
-    <permission-dialog/>
+    <permission-box/>
   </q-dialog>
 
   <!-- Information / option d'installation d'une nouvelle version -->
@@ -135,7 +138,7 @@
   <q-dialog v-model="session.opDialog" maximized persistent>
     <div v-if="session.opSpinner >= 2" class="column items-center q-ma-lg">
       <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-        <div :class="sty() + 'cursor-pointer stop'" @click="ui.oD(myidc, 'confirmstopop')">
+        <div :class="sty() + 'cursor-pointer stop'" @click="dialogs.confirmStopop = true">
           <div class="row items-center justify-between q-pa-sm" style="width:20rem">
             <div class="col column items-center">
               <div class="text-bold titre-md">{{$t('MLAopc')}}</div>
@@ -154,22 +157,24 @@
   </q-dialog>
 
   <!-- Confirmation d'interruption de l'opération en cours -->
-  <q-dialog v-model="ui.dModels[myidc].confirmstopop">
+  <q-dialog v-model="dialogs.confirmStopop">
     <q-card>
       <q-card-section class="q-pa-md fs-md text-center">
         {{$t('MLAcf', [$t('op_' + session.opEncours.opName)])}}</q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
-        <btn-cond flat :label="$t('MLAcf3')" @ok="ui.fD"/>
-        <btn-cond flat :label="$t('MLAcf4')" @ok="ui.fD(); session.opEncours.abort()"/>
+        <btn-cond flat :label="$t('MLAcf3')" 
+          @ok="dialogs.confirmStopop = false"/>
+        <btn-cond flat :label="$t('MLAcf4')" 
+          @ok="dialogs.confirmStopop = false; session.opEncours.abort()"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
 
   <!-- Affichage des thèmes clair / foncé -->
-  <q-dialog v-model="ui.dModels[myidc].theme" persistent>
+  <q-dialog v-model="dialogs.theme" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbp">
-        <btn-cond icon="close" color="warning" @ok="ui.fD"/>
+        <btn-cond icon="close" color="warning" @ok="dialogs.theme = false"/>
         <q-toolbar-title>{{$t('theme')}}</q-toolbar-title>
         <help-button page="reloadApp"/>
       </q-toolbar>
@@ -290,7 +295,7 @@
   </q-dialog>
 
   <!-- Outils techniques -->
-  <dialog-std1 v-model="ui.dModels[myidc].pings" vh="80"
+  <dialog-std1 v-model="dialogs.pings" vh="80"
     :title="$t('tech')" hdrclass='wmd' help="pings">
     <template #hdr>
       <div class="row items-center wmd full-width">
@@ -303,7 +308,7 @@
     <template #default>
       <div v-if="tab === 'crypto'" class="q-pa-xs">
         <input-ps class="q-mt-md q-mb-sm" v-model="ps" size="p1"
-          prefix="SBphrase" :validatefn="validPs"/>
+          prefix="SBphrase" @validate="validPs"/>
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sh')}}</div>
         <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.b64" />
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sha')}}</div>
@@ -352,7 +357,7 @@
   </dialog-std1>
 
   <!-- Maj préférences -->
-  <dialog-std1 v-model="ui.dModels[myidc].edprf"
+  <dialog-std1 v-model="dialogs.edprf"
     :title="$t('HPprefs_ed')" hdrclass='wmd'>
     <template #hdr>
       <div class="row q-ma-xs items-center justify-between">
@@ -372,8 +377,12 @@
     </template>
   </dialog-std1>
 
-  <user-profile v-if="ui.dModels['0'].userprofile"/>
-
+  <!-- Profil de l'utilisateur -->
+  <dialog-std0 :title="$t('UPtitle')" v-model="dialogs.userProfile">
+    <template #default>
+      <user-profile/>
+    </template>
+  </dialog-std0>
 </div>
 </template>
 
@@ -387,18 +396,22 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { LocPref } from '../stores/safe-store'
-import HelpButton from './HelpButton.vue'
-import BtnCond from './BtnCond.vue'
-import PermissionDialog from './PermissionDialog.vue'
-import DialogStd1 from './DialogStd1.vue'
-import PrefEditor from '../components/PrefEditor.vue'
+import { localeOption } from '../stores/config-store'
+import { Crypt, toPem } from '../src-fw/crypt'
+import { $t, sty, reloadPage, dhcool, u8ToB64, coolBye } from '../src-fw/util'
+
+import HelpButton from '../components-fw/HelpButton.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import PermissionBox from '../components-fw/PermissionBox.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
-import SafeExport from '../components-fw/SafeExport.vue'
-import { $t, sty, reloadPage, dhcool, u8ToB64, coolBye } from '../src-fw/util'
-import { localeOption } from '../stores/config-store'
-import { Crypt, toPem } from '../src-fw/crypt'
+
+import SafeExport from '../dialogs-fw/SafeExport.vue'
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
+
+import PrefEditor from '../components/PrefEditor.vue'
 
 const i18n = useI18n()
 const config = stores.config
@@ -406,21 +419,19 @@ const session = stores.session
 const sf = stores.safe
 const ui = stores.ui
 
-const myidc = ui.getIdc('SettingButton')
-onUnmounted(() => ui.closeVue(myidc))
+const dialogs = reactive({
+  SafeExport: false,
+  theme: false,
+  edprf: false,
+  ping: false,
+  confirmStopop: false,
+  userProfile: false
+})
 
 const backToOpenSession = async () => {
   const ok = await ui.diagDisplay($t('HPbackopen'), true)
   if (ok)
     ui.backToOpenSession()
-}
-
-const doneRestore = () => {
-  coolBye()
-}
-
-const openUP = () => {
-  ui.oD('0', 'userprofile')
 }
 
 const tab = ref('cred')
@@ -435,27 +446,19 @@ const choix = (lg: localeOption) : void => {
   config.setLocale(lg.value)
 }
 
-function darkClear () {
-  ui.setDark(!ui.isDark)
-}
-
 ui.setDark(true)
 
 const styd = (c: string) => 'background:' + config.K.theme[c][0]
-
-const cfReloadPage = () => { ui.confirmQuit() }
-const cfCoolBye = () => { ui.confirmQuit() }
 
 const edDiag = computed(() => session.edPref.diag )
 
 const openPrefs = () => {
   const ep = session.pref
   session.setEdPref(ep.code, ep.time, decode(encode(ep.obj)))
-  ui.oD(myidc, 'edprf')
+  dialogs.edprf = true
 }
 
 const edValid = async () => {
-  ui.fD()
   const edP = session.edPref
   if (!edP.chg) return
   const p: LocPref  = {
@@ -469,6 +472,7 @@ const edValid = async () => {
     m.set(p.code, p)
     await stores.safe.updatePrefs(m, [])
   }
+  dialogs.edpref = false
 }
 
 const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '' })

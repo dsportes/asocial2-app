@@ -65,16 +65,16 @@
   </div>
 
   <!-- Dialogue d'options de lancement -->
-  <q-dialog v-model="ui.dModels[myidc].optstart" persistent>
+  <q-dialog v-model="dialogs.optstart" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
-        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.fD"/>
+        <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="dialogs.optstart = false"/>
         <q-toolbar-title class="titre-lg text-right q-mx-xs">{{$t('HPoptstart')}}</q-toolbar-title>
       </q-toolbar>
       <div class="full-width q-pa-sm">
         <input-a v-if="session.hasNet && !selStar" class="q-my-sm"
           size="about" prefix="HPpsab" :initval="selSessionAbBefore"
-          v-model="selSessionAb" :validatefn="valAbPs"/>
+          v-model="selSessionAb" @validate="valAbPs"/>
         <div v-else class="q-my-sm font-mono text-bold">{{selSessionAb}}</div>
 
         <div v-if="sf.selectedSession">
@@ -99,10 +99,11 @@
 
         <div class="row q-my-md q-gutter-sm">
           <div class="text-italic text-bold">{{$t('HPstartpref')}}</div>
-          <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionD('', 0, null)"/>
+          <btn-cond no-caps :label="$t('HPpref_1')" 
+            @ok="dialogs.optstart = false; validateSession('', 0, null)"/>
           <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
             :label="code" padding="none xs"
-            @ok="validateSessionD(code, time, obj)"/>
+            @ok="dialogs.optstart = false; validateSession(code, time, obj)"/>
         </div>
 
       </div>
@@ -114,9 +115,14 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
+
+import stores from '../stores/all'
+import { TSession, Profile } from '../stores/safe-store'
+import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
+
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
@@ -126,10 +132,6 @@ import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
-
-import stores from '../stores/all'
-import { TSession, Profile } from '../stores/safe-store'
-import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
 
 // @ts-ignore
 import databaseW from '../assets/database_white.png'
@@ -143,12 +145,14 @@ const sf = stores.safe
 const session = stores.session
 const cfg = stores.config
 
+const dialogs = reactive({
+  optstart: false
+})
+/*
 watch(() => sf.safeStore, (v) => {
   console.log('Safe Store >>> [' + v + ']')
 })
-
-const myidc = ui.getIdc('SafePage')
-onUnmounted(() => ui.closeVue(myidc))
+*/
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -204,7 +208,7 @@ const selSession = (s, dial?: boolean) => {
       selSessionAbBefore.value = s.about
     }
   }
-  if (dial) ui.oD(myidc, 'optstart')
+  if (dial) dialogs.optstart = true
 }
 
 const selProfile = (profile: Profile, dial?: boolean) => {
@@ -213,7 +217,7 @@ const selProfile = (profile: Profile, dial?: boolean) => {
   sf.selectedProfile = profile
   selSessionAb.value = profile.profId === '*' ? $t('HPpstar') : profile.about
   selSessionAbBefore.value = selSessionAb.value
-  if (dial) ui.oD(myidc, 'optstart')
+  if (dial) dialogs.optstart = true
 }
 
 const selStar = computed(() =>
@@ -239,11 +243,6 @@ const validateSessionS = async (s, prefCode, prefTime, prefObj) => {
 
 const validateSessionP = async (p, prefCode, prefTime, prefObj) => {
   selProfile(p)
-  await validateSession(prefCode, prefTime, prefObj)
-}
-
-const validateSessionD = async (prefCode, prefTime, prefObj) => {
-  ui.fD()
   await validateSession(prefCode, prefTime, prefObj)
 }
 

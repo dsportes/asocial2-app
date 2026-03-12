@@ -17,9 +17,9 @@
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
     <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
-      @ok="ui.oD(myidc, 'credsmgr')"/>
+      @ok="dialogs.CredsMgr = false"/>
   </div>
-  <creds-mgr v-model=""/>
+  <creds-mgr v-model="dialogs.CredsMgr"/>
 </div>
 </template>
 
@@ -27,12 +27,15 @@
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, reactive } from 'vue'
+
 import stores from '../stores/all'
+
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import CredsMgr from '../components-fw/CredsMgr.vue'
+
+import CredsMgr from '../dialogs-fw/CredsMgr.vue'
 
 const $t = useI18n().t
 const sf = stores.safe
@@ -40,8 +43,9 @@ const config = stores.config
 const session = stores.session
 const ui = stores.ui
 
-const myidc = ui.getIdc('SafeHeader')
-onUnmounted(() => ui.closeVue(myidc))
+const dialogs = reactive({
+  CredsMgr: false
+})
 
 </script>
 

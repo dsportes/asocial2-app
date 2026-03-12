@@ -1,3 +1,5 @@
+<!-- Compoent d'affichage d'un MD : sombre
+-->
 <template>
   <vue-showdown class="markdown-body2" :markdown="text" :key="text" flavor="github" :options="{ emoji: true }" />
 </template>

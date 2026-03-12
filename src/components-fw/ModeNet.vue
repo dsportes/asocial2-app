@@ -1,4 +1,5 @@
-<template> <!-- Mode net ou non -->
+<!-- Component de fixation du mode net ou non -->
+<template>
 <div class="row justify-between items-center q-my-sm">
   <q-toggle class="col q-pr-md" v-model="session.noNet" dense color="negative"
     :label="$t('LOGnet_' + (session.noNet ? '2' : '1'))" />

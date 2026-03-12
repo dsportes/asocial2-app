@@ -1,5 +1,5 @@
 <!-- Bouton d'ouverture d'un panneau permettant d'ouvrir
- tous les dialogues de gestion des "dsonnées de sécurité".
+tous les dialogues de gestion des "dsonnées de sécurité".
 -->
 <template>
 <div>
@@ -10,27 +10,9 @@
     @ok="dialogs.SafeTools = true"/>
 
   <dialog-std0 v-model="dialogs.SafeTools" :title="$t('SFTtit')"
-    vh="90" @close="emit('close', myidc)">
+    vh="90" @close="emit('close', true)">
     <template #default>
-      <div class="row q-gutter-sm q-my-xs items-end">
-        <div class="titre-md text-italic">{{ $t('SFTus') }}</div>
-        <div class="fs-lg font-mono">{{ sf.userId }}</div>
-      </div>
-      <div class="row q-gutter-sm q-my-xs items-end">
-        <div class="titre-md text-italic">{{ $t('SFT' + (sf.userName !== '' ? 'ps' : 'nops')) }}</div>
-        <div v-if="sf.userName !== ''" class="font-mono">{{ sf.userName }}</div>
-      </div>
-      <div class="row q-gutter-sm q-my-xs items-end">
-        <div class="titre-md text-italic">{{ $t('SFT' + (sf.auth.contact !== '' ? 'ct' : 'noct')) }}</div>
-        <div v-if="sf.auth.contact !== ''" class="font-mono">{{ sf.auth.contact }}</div>
-      </div>
-      <div v-if="sf.auth.admins" class="row q-gutter-sm q-my-xs items-end">
-        <div class="titre-md text-italic">{{ $t('SFTadmin')}}</div>
-        <div class="font-mono">{{ sf.auth.admins }}</div>
-      </div>
-      <text-zoom class="q-my-xs" :label="$t('HPexppub')" 
-        :text="infopub" :rows="15"/>
-
+      <user-profile/>
       <q-separator color="orange" class="q-my-xs"/>
 
       <bar-open :bubble="$t('SESconfig')" :disbubble="$t('SESconfig')"
@@ -56,7 +38,7 @@
       <bar-open :bubble="$t('HPmanuinfo')"
         :disable="session.incognito || !session.hasNet"
         :title="$t('HPmanusers')" 
-        @open="dialogs.ManageUsers = true/>
+        @open="dialogs.ManageUsers = true"/>
 
       <q-separator color="orange" class="q-mx-lg q-my-xs"/>
       <div class="titre-md text-italic">{{ $t('SFTopaf') }}</div>
@@ -110,7 +92,7 @@
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
   <!-- Confirmation de destruction du safe -->
-  <q-dialog v-model="dialogs.Delsafe" persistent>
+  <q-dialog v-model="dialogs.delSafe" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
     <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
     <div class="q-my-sm titre-lg text-bold text-center">
@@ -120,7 +102,7 @@
         {{$t('HPskull_8')}}
       </div>
       <div class="row full-width justify-between items-center">
-        <btn-cond :label="$t('giveup')" @ok="ui.fD()"/>
+        <btn-cond :label="$t('giveup')" @ok="dialogs.delSafe = false"/>
         <btn-confirm actif @confirm="delSafe"/>
       </div>
     </q-card>
@@ -131,7 +113,7 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, computed, onUnmounted, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty, coolBye } from '../src-fw/util'
@@ -139,7 +121,7 @@ import { $t, sty, coolBye } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
-import TextZoom from '../components-fw/TextZoom.vue'
+import UserProfile from '../components-fw/UserProfile.vue'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
@@ -156,7 +138,10 @@ const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
 
-const props = defineProps({ short: Boolean })
+const emit = defineEmits(['close'])
+const props = defineProps({ 
+  short: Boolean 
+})
 const dialogs = reactive({
   SafeTools: false,
   PrefsMgr: false,
@@ -168,7 +153,7 @@ const dialogs = reactive({
   DevTrustit: false,
   DevUntrustit: false,
   SafeExport: false,
-  Delsafe: false
+  delSafe: false
 })
 
 const trustingMe = computed(() => sf.myTrusting )
@@ -178,8 +163,6 @@ const openUntrust = async () => {
   await sf.getMySessions()
   dialogs.DevTrustit = true
 }
-
-const infopub = computed(() => JSON.stringify([sf.auth.C, sf.auth.V], null, '\t'))
 
 const fnc = (st) => {
   dialogs.SafeTools = false

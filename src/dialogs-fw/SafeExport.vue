@@ -1,7 +1,9 @@
+<!-- Dialogue d'export du safe
+Events: close done
+-->
 <template>
 <div>
-  <!-- Dialogue d'export du safe-->
-  <dialog-std1 v-model="me" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
+  <dialog-std1 v-model="model" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
     <template #hdr>
       <div class="row items-center q-gutter-sm">
         <q-tabs v-model="tab" class="col bg-grey-9 q-mb-md" dense>
@@ -24,20 +26,20 @@
     <div v-if="tab === 'export'" class="column q-mx-lg items-center">
       <div class="q-my-sm full-width">
         <div class="titre-md text-italic">{{$t('HPimport_label')}}</div>
-        <input-ps v-model="cryptK" :validatefn="valK" size="ps" prefix="HPimport"/>
+        <input-ps v-model="cryptK" @validate="valK" size="ps" prefix="HPimport"/>
       </div>
       <div v-if="cryptK.key === null" class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
       <input-a v-if="session.hasNet" class="q-my-sm full-width"
         size="file" prefix="HPexpname" v-model="expName"
         :disable="cryptK.key === null"
-        :validatefn="doExportSafe"/>
+        @validate="doExportSafe"/>
     </div>
 
     <div v-if="tab === 'restore'" class="full-width">
       <bar-open passive :title="$t('HPimpsafe_1')" :bubbleleft="$t('HPimpsafe_2')"/>
       <div class="titre-md text-italic q-mt-sm">{{$t('HPimport_label')}}</div>
       <input-ps v-model="cryptK" prefix="HPimport" size="ps"
-        :validatefn="valK"/>
+        @validate="valK"/>
 
       <q-file v-if="cryptK.key !== null"
         class="q-my-md full-width" dense filled v-model="fileList"
@@ -81,7 +83,7 @@
         <div v-else>
           <div class='titre-lg q-mb-sm'>{{$t('HPsafest_3')}}</div>
           <bar-open class="q-my-sm" :title="$t('HPsafest_6')" :bubbleleft="$t('HPsafest_7')"
-            icon="open_in_new" hasopen @open="openChgCodes"/>
+            icon="open_in_new" hasopen @open="dialogs.SafeCr = true"/>
           <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
             {{$t('HPsafest_5p')}}
           </div>
@@ -107,7 +109,7 @@
   </dialog-std1>
 
   <!-- Changement des codes du backup-->
-  <safe-cr :idc="myidc" @done="chgCodes" :mode="2"/>
+  <safe-cr v-model="dialogs.SafeCr" @done="chgCodes" :mode="2"/>
 </div>
 </template>
 
@@ -119,30 +121,42 @@ import { ref, reactive, computed, onUnmounted, watch } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { saveAs } from 'file-saver'
+
 import stores from '../stores/all'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
+import { Crypt } from '../src-fw/crypt'
+import { SafeOperation } from '../src-fw/operation'
+import { $t, b64ToU8, dhcool, u8ToB64, readFile, coolBye } from '../src-fw/util'
+
 import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
-import SafeCr from '../components-fw/SafeCr.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputPs from '../components-fw/InputPs.vue'
-import { Crypt } from '../src-fw/crypt'
-import { SafeOperation } from '../src-fw/operation'
-import { $t, b64ToU8, dhcool, u8ToB64, readFile, coolBye } from '../src-fw/util'
+
+import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
+import SafeCr from '../dialogs-fw/SafeCr.vue'
 
 const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
 
-const props = defineProps({ idc: String, tab: String })
-const myidc = ui.getIdc('SafeExport')
-onUnmounted(() => ui.closeVue(myidc))
+const myModule = 'SafeExport'
+const model = defineModel()
 const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].exportsafe)
-watch(() => me.value, async (v: boolean) => { if (v) await init()
-  else { cleanup(); emit('close', myidc) } })
+const dialogs = reactive({
+  SafeCr: false
+})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, async (v) => {
+  if(v) await init()
+  else emit('close', true)
+})
+
+const props = defineProps({
+  tab: String 
+})
 
 const tab = ref('export')
 watch(tab, async () => { await init() })
@@ -156,12 +170,10 @@ const init = async () => {
     bin.value = encode(await sf.getBinSafe())
     if (!bin.value) {
       await ui.diagDisplay($t('HPexportsafe_ko'))
-      ui.fD()
+      model.value = false
     }
   }
 }
-
-const cleanup = () => {}
 
 const expName = ref('')
 const cryptK = reactive( { inp: '', err: '', key: null } )
@@ -177,7 +189,7 @@ const doExportSafe = async () => {
   saveAs(blob, nf)
   await ui.diagDisplay($t('HPexport_ok', [nf]))
   bin.value = null
-  ui.fD()
+  model.value = false
 }
 
 const fileList = ref(null)
@@ -269,10 +281,6 @@ const importBackup = async () => {
     op.ko(e)
     return -1
   }
-}
-
-const openChgCodes = () => {
-  ui.oD(myidc, 'createsafe')
 }
 
 const chgCodes = async (arg) => {

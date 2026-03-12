@@ -1,6 +1,6 @@
+<!-- Dialogue APP de gestion de l'aide en ligne -->
 <template>
-  <!-- -->
-<q-dialog v-model="ui.dModels['0'].dialogHelp" position="left" persistent>
+<q-dialog v-model="ui.appDialogs.DialogHelp" position="left" persistent>
 <q-layout container view="hHh lpR fFf" :class="sty('xl')">
   <q-header elevated>
     <q-toolbar class="tbs">
@@ -21,7 +21,7 @@
           :href="docsurl + '/index.html'" target="_blank">
           {{$t('HLPdg')}}</a>
       </q-toolbar-title>
-      <btn-cond color="secondary" :label="$t('readme')" @ok="ovreadme"/>
+      <btn-cond color="secondary" :label="$t('readme')" @ok="dialogs.Readme = true"/>
     </q-toolbar>
   </q-header>
 
@@ -91,14 +91,14 @@
   </q-page-container>
 
   <!-- Affichage du README de la version courante de l'application -->
-  <q-dialog v-model="ui.dModels['0'].readme" persistent>
+  <q-dialog v-model="dialogs.Readme" persistent>
     <q-card :class="sty('md') + 'q-pa-sm'">
       <q-card-section>
         <div class="titre-md">{{$t('HLPrm1')}}</div>
         <sd-nb :text="Help.readme" class="q-my-sm rd"/>
       </q-card-section>
       <q-card-actions align="center" class="q-my-sm">
-        <btn-cond flat :label="$t('gotit')" size="lg" @ok="ui.fD"/>
+        <btn-cond flat :label="$t('gotit')" size="lg" @ok="dialogs.Readme = false"/>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -108,17 +108,19 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 
 import stores from '../stores/all'
 import { sty, $t } from '../src-fw/util'
 import { Help } from '../src-fw/help'
 
-import BtnCond from './BtnCond.vue'
-import ShowHtml from './ShowHtml.vue'
-import SdNb from './SdNb.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import ShowHtml from '../components-fw/ShowHtml.vue'
+import SdNb from '../components-fw/SdNb.vue'
 
 const ui = stores.ui
+
+const dialogs = reactive({ Readme: false })
 
 const config = stores.config
 const docsurl = config.K.docsurls[config.locale] || 'http://localhost:8080/fr'
@@ -161,8 +163,6 @@ function parents (n) { // nom d'une page ou section
   }
   return r
 }
-
-function ovreadme () { ui.oD('0', 'readme') }
 
 const tree = ref(null)
 const expandAll = ref(false)

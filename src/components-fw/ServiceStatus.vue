@@ -1,3 +1,5 @@
+<!-- Boîte de gestion des status des services
+-->
 <template>
 <div>
   <div v-if="sf.auth && sf.auth.admins">
@@ -79,7 +81,7 @@
     </div>
   </div>
 
-  <dialog-std0 v-model="me"
+  <dialog-std0 v-model="dialogs.orgConfig"
     :title="$t('APorgconfig')">
     <template #default>
       <div class="column full-width">
@@ -130,27 +132,24 @@
 import { ref, Ref, reactive, computed, onUnmounted, watch } from 'vue'
 import stores from '../stores/all'
 import { sty, dhcool } from '../src-fw/util'
-import BtnCond from './BtnCond.vue'
-import InputA from './InputA.vue'
-import DialogStd0 from './DialogStd0.vue'
 import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
   GetOrgConfig, SetOrgConfig } from '../src-fw/operations'
+
+import BtnCond from '../components-fw/BtnCond.vue'
+import InputA from '../components-fw/InputA.vue'
+
+import DialogStd0 from '../dialogs-fw//DialogStd0.vue'
 
 const ui = stores.ui
 const config = stores.config
 const sf = stores.safe
 
-const props = defineProps({ short: Boolean })
-const myidc = ui.getIdc('ServiceStatus')
-onUnmounted(() => ui.closeVue(myidc))
-const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[myidc].orgconfig)
-watch(() => me.value, (v: boolean) => { if (v) init()
-  else { cleanup(); emit('close', myidc) } })
-const init = () => {
-  reset()
-}
-const cleanup = () => {}
+const props = defineProps({ 
+  short: Boolean 
+})
+const dialogs = reactive({
+  orgConfig: false
+})
 
 const services = Array.from(Object.keys(config.K.SERVICES))
 
@@ -193,6 +192,8 @@ const reset = () => {
     }
   }
 }
+
+reset()
 
 const maySetSt = computed(() => svcOps.value.has(SVC.value + '.' + $OP.value))
 
@@ -253,7 +254,7 @@ const openOrgConfig = async () => {
     oc.ac = ret
     oc.dbn = oc.ac.db || ''
     oc.stn = oc.ac.st
-    ui.oD(myidc, 'orgconfig')
+    dialogs.orgConfig = true
   }
 }
 

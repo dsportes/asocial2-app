@@ -51,7 +51,7 @@
 
     <div v-if="tab === 'contact'" class="pwsm q-pa-xs column items-center">
       <input-a class="q-my-md full-width" prefix="HPctc" :initval="ctcav"
-        v-model="ctc" :validatefn="setContact" size="contact"
+        v-model="ctc" @validate="setContact" size="contact"
         :valctrl="chCtc"/>
       <btn-cond class="q-my-md" :label="$t('HPctc_del')"
         icon="delete" color="warning"
@@ -66,15 +66,17 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, reactive, onUnmounted, watch } from 'vue'
-import DialogStd2 from '../components-fw/DialogStd2.vue'
-import InputA from '../components-fw/InputA.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
-// import HelpButton from '../components-fw/HelpButton.vue'
+import { ref, Ref, computed, reactive, watch } from 'vue'
+
 import { $t, dkli } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import stores from '../stores/all'
+
+import InputA from '../components-fw/InputA.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
+
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const sf = stores.safe
 const ui = stores.ui

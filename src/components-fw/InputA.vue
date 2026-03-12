@@ -1,7 +1,8 @@
+<!-- Input stanadrdisé A -->
 <template>
 <div class="row">
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
-  <q-input class="col" v-model="m" counter dense
+  <q-input class="col" v-model="model" counter dense
     :disable="_disable"
     filled
     input-class="font-mono"
@@ -16,10 +17,10 @@
       <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
       <btn-cond round size="md" icon="close" @ok="m = ''"
-        :disable="_disable || !m || m.length === 0" color="none"/>
+        :disable="_disable || !model || model.length === 0" color="none"/>
       <btn-cond round v-if="hasInitVal"
         size="md" icon="undo" @ok="undo" :disable="_disable || !chg" color="none"/>
-      <btn-cond v-if="validatefn" size="md" icon="check" round
+      <btn-cond v-if="!noval" size="md" icon="check" round
         :disable="!mayVal" color="warning" @ok="val" />
       <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
         color="warning"
@@ -29,7 +30,7 @@
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
             <q-btn dense flat no-caps v-for="x in list" :key="x" :label="x"
-              @click="m = x"/>
+              @click="model = x"/>
           </div>
         </q-menu>
       </q-btn>
@@ -66,13 +67,12 @@ La propriété optionnelle "initval" donne la valeur initiale avant saisie:
 quand elle est fixée, un bouton "undo" permet de réinitialiser la valeur du model à sa valeur initiale.
 Cette propriété est dynamique et réévaluée si sa valeur change.
 
-La fonction optionnelle "validatefn" permet au bouton "check" ou à l'appui sur la touche "Entrée"
-d'être invoquée.
-La validation n'est invoquée que si,
+SAUF si 'noval', l'appui sur le bouton "check" ou la touche "Entrée" émet l'event 'validate'.
+Event émis ssi,
 - le model n'est "disable",
 - il n'y a pas d'erreur syntaxique,
-- la valeur a changé par rapport à "initval" (si elle a été donnée),
-- enfin si le résultat de l'appel de la fonction "valctrl" (si elle a été donnée) est true.
+- le résultat de l'appel de la fonction "valctrl" (si elle a été donnée) est true.
+- valeur: true si éditée (changée), false sinon
 
 Quand une fonction "valctrl" est donnée en propriété, elle donne au composant parent le moyen de
 contrôler si la valeur en cours de sasie est "validable" ou non en fonction du contexte
@@ -100,14 +100,15 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 const ui = stores.ui
 const config = stores.config
 
-const m = defineModel() // Dans le script accessible par m.value
+const model = defineModel() // Dans le script accessible par model.value
+const emit = defineEmits(['validate'])
 
 const props = defineProps({
   size: String, // obligatoire
   prefix: String, // obligatoire
   initval: String,
   disable: Boolean,
-  validatefn: Function,
+  noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
   objerr: Object,
   valctrl: Function,
   list: Array
@@ -126,7 +127,7 @@ const bubble = computed(() => {
 })
 const star = config.K.phrasestar.has(props.size)
 const disval = ref(false)
-const mayStar = computed(() => m.value.length > 2 && m.value.endsWith('*'))
+const mayStar = computed(() => model.value.length > 2 && model.value.endsWith('*'))
 const mayVal = computed(() =>
   !_disable.value && err.value === '' && chg.value && !disval.value)
 
@@ -142,9 +143,8 @@ const fill = (v) => {
 }
 
 const diffval = () => {
-  setTimeout(() => {
-    if (mayVal.value)
-      val()
+  if (!props.noval && mayVal.value) setTimeout(() => {
+    val()
   }, 50)
 }
 
@@ -170,14 +170,14 @@ watch(() => props.disable, () => {
   init()
 })
 
-const chg = computed(() => _initval.value !== null ? _initval.value !== m.value : true)
+const chg = computed(() => _initval.value !== null ? _initval.value !== model.value : true)
 const hint = computed(() => $t('minmax', sz.value) + (!err.value ? $t('pressret') : ''))
 
 const xe = () => {
-  if (reg && !reg.test(m.value)) return 'badform'
-  if (m.value.length < sz.value[0]) return 'tooshort'
-  if (m.value.length > sz.value[1]) return 'toolong'
-  if (props.size === 'isotime' && isNaN(Date.parse(m.value))) return 'badform'
+  if (reg && !reg.test(model.value)) return 'badform'
+  if (model.value.length < sz.value[0]) return 'tooshort'
+  if (model.value.length > sz.value[1]) return 'toolong'
+  if (props.size === 'isotime' && isNaN(Date.parse(model.value))) return 'badform'
   return ''
 }
 
@@ -187,16 +187,16 @@ const setx = () => {
   if (props.objerr) props.objerr.err = err.value
   disval.value = props.valctrl && !props.valctrl()
 }
-watch(m, (v) => { setx() })
+watch(model, (v) => { setx() })
 setx()
 
 const undo = () => {
-  if (_initval.value !== null) m.value = _initval.value
+  if (_initval.value !== null) model.value = _initval.value
 }
 
 const val = () => {
-  if (props.validatefn && !_disable.value && err.value === '')
-    props.validatefn()
+  if (!_disable.value && err.value === '')
+    emit ('validate', chg.value)
 }
 
 </script>

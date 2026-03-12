@@ -1,6 +1,6 @@
+<!-- Dialogue APP affichant un message demandant confirmation 'j'ai lu' -->
 <template>
-<!-- Affiche d'un message demandant confirmation 'j'ai lu' -->
-  <q-dialog v-model="ui.dModels['0'].diag" persistent>
+  <q-dialog v-model="ui.appDialogs.GotIt" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('important')}}</q-toolbar-title>
@@ -21,16 +21,15 @@
 </template>
 
 <script setup lang="ts">
-// import { ref, computed } from 'vue'
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
-import BtnCond from './BtnCond.vue'
-import SdNb from './SdNb.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import SdNb from '../components-fw/SdNb.vue'
 
 const ui = stores.ui
 
 const gotit = (b: boolean) => { 
-  ui.fD()
+  ui.appDialogs.GotIt = false
   const f = ui.diagResolve
   if (f) f(b)
 } 

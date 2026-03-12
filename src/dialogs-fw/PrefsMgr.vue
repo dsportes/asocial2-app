@@ -1,6 +1,9 @@
-<template> <!-- Gérer les credentials -->
-<div v-if="idc">
-<dialog-std2 v-model="me" :title="$t('HPprefs_1')">
+<!-- Dialogue de gestion des préférences.
+Events: close done
+-->
+<template>
+<div>
+<dialog-std2 v-model="model" :title="$t('HPprefs_1')">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
       <btn-cond flat size="lg" icon="check" color="warning"
@@ -42,14 +45,14 @@
 
     <input-a v-if="edName !== 0" class="q-my-md full-width"
       size="pref" prefix="HPprefcode" :initval="selP ? selP.code : ''"
-      v-model="namep" :validatefn="valNamep"/>
+      v-model="namep" @validate="valNamep"/>
 
   </div>
   </div>
 </template>
 </dialog-std2>
 
-<dialog-std1 v-if="pe" v-model="pe"
+<dialog-std1 v-model="dialogs.edprf" @close="dialogs.edprf = false"
   :title="$t('HPprefs_ed')" hdrclass='wmd'>
   <template #hdr>
     <div class="row q-ma-xs items-center justify-between">
@@ -74,35 +77,42 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onUnmounted, watch } from 'vue'
+import { ref, Ref, reactive, computed, watch } from 'vue'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+
 import { LocPref } from '../stores/safe-store'
-import DialogStd2 from '../components-fw/DialogStd2.vue'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
+import { $t, dkli, dhcool } from '../src-fw/util'
+import stores from '../stores/all'
+
 import InputA from '../components-fw/InputA.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-// import HelpButton from '../components-fw/HelpButton.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { $t, dkli, dhcool } from '../src-fw/util'
-import stores from '../stores/all'
+
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
+import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
 const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const props = defineProps ({ idc: String })
-const myidc = ui.getIdc('PrefsMgr', props.idc)
-onUnmounted(() => ui.closeVue(myidc))
+const myModule = 'PrefsMgr'
+const model = defineModel()
 const emit = defineEmits(['close', 'done'])
-const me = computed(() => ui.dModels[props.idc].prefsmgr)
-watch(() => me.value, (v: boolean) => { 
-  if (v) init(); else { cleanup(); emit('close', myidc) } })
+const dialogs = reactive({
+  edprf: false
+})
+// onMounted(() => console.log(myModule, "mounted"))
+// onUnmounted(() => console.log(myModule, "unMounted"))
+watch(model, (v) => {
+  if(v) init()
+  else  { emit('close', true) }
+})
 
 const diag = computed(() => session.edPref ? session.edPref.diag : '' )
-const pe = computed(() => ui.dModels[myidc].edprf)
+
 const myPrefs: Ref<Map<string, [number, Uint8Array]>> = ref(sf.mySafePrefs)
 const myPrefsOrig: Ref<Map<string, [number, Uint8Array]>> = ref(new Map())
 watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
@@ -110,7 +120,6 @@ watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
 const init = () => {
   for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
 }
-const cleanup = () => {}
 
 const updatedPrefs: Ref<Map<string, LocPref>> = ref(new Map())
 const deletedCodes = ref(new Set<string>())
@@ -198,11 +207,10 @@ const valNamep = async (edit) => {
   session.setEdPref(namep.value,
     edName.value === 2 ? 0 : selP.value.time,
     edName.value === 2 ? {} : obj)
-  ui.oD(myidc, 'edprf')
+  dialogs.edprf = true
 }
 
 const edValid = () => {
-  ui.fD()
   const edP = session.edPref
   const chgn = edName.value === 2 || namep.value !== selP.value.code
   edName.value = 0
@@ -215,11 +223,12 @@ const edValid = () => {
   updatedPrefs.value.set(p.code, p)
   myPrefs.value.set(p.code, [p.time, p.obj])
   selP.value = p
+  dialogs.edprf = false
 }
 
 const validate = async () => {
   await sf.updatePrefs(updatedPrefs.value, Array.from(deletedCodes.value))
-  emit('done', myidc)
+  emit('done', true)
 }
 
 </script>

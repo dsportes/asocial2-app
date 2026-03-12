@@ -1,3 +1,4 @@
+<!-- Boîte d'affichage des permissions du browser -->
 <template>
 <q-card :class="sty('sm')">
   <q-toolbar class="tbp">

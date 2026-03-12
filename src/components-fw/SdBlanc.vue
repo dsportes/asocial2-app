@@ -1,3 +1,5 @@
+<!-- Compoent d'affichage d'un MD : clair
+-->
 <template>
   <vue-showdown class="markdown-body" :markdown="text" :key="text" flavor="github" :options="{ emoji: true }" />
 </template>

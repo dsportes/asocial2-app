@@ -1,4 +1,5 @@
-<template> <!-- Mode incognito ou non -->
+<!-- Component de fixation du mode incognito ou non -->
+<template>
 <div class="row self-start full-width justify-between items-center q-my-sm">
   <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
     :label="$t('SESincognito_' + (session.incognito ? '2' : '1'))"/>

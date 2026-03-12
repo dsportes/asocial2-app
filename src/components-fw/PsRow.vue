@@ -1,3 +1,4 @@
+<!-- Affichage d'une ligne "session" (profile de session)-->
 <template>
 <div class="row font-mono fs-md">
   <q-icon v-if="ps.exav && !ps.exap" class="col-1" name="delete" size="24px" :color="colorPS"/>

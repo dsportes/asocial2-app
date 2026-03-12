@@ -28,15 +28,20 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
+import { computed } from 'vue'
+
 import stores from '../stores/all'
-import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
 import { sty } from '../src-fw/util'
 
+import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
+
+const emit = defineEmits(['open'])
 const props = defineProps({
   icon: String,
   large: Boolean, // true si large
-  passive: Boolean // si true, le cursor n'est PAS pointer, pas devent 'open' émis, pas de chevron à droite
+  passive: Boolean, // si true, le cursor n'est PAS pointer, pas devent 'open' émis, pas de chevron à droite
   center: Boolean, //
   disable: Boolean,
   title: String, // titre de la bar
@@ -49,13 +54,12 @@ const props = defineProps({
 })
 
 const clt = computed(() => 'col' 
-  + (center ? ' text-center' : ' text-right') 
-  + (disable ? ' disabled' : '')
-  + (!passive ? ' cursor-pointer' : '')
-  + (large ? ' titre-lg' : ' titre-md')
+  + (props.center ? ' text-center' : ' text-right') 
+  + (props.disable ? ' disabled' : '')
+  + (!props.passive ? ' cursor-pointer' : '')
+  + (props.large ? ' titre-lg' : ' titre-md')
 )
 
-const emit = defineEmits(['open'])
 const open = () => {
   if (!props.passive) emit('open', true)
 }
