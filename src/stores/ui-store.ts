@@ -10,6 +10,7 @@ import stores from './all'
 import { Help } from '../src-fw/help'
 
 const large = 900
+const HOME = 'safeHome'
 
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
@@ -127,7 +128,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   // Gestion des pages
-  const page = ref('safeHome')
+  const page = ref(HOME)
 
   const setPage = (p: string) => {
     page.value = ''
@@ -150,7 +151,7 @@ export const useUiStore = defineStore('ui', () => {
     stores.session.endSession()
     page.value = ''
     setTimeout(() => {
-      page.value = 'home'
+      page.value = HOME
       setTimeout( () => {
         reopenSession.value++
       }, 100)

@@ -2,33 +2,26 @@
 Event émis: logged
 -->
 <template>
-<div>
-  <div v-if="sf.users.length" class="q-my-md">
-    <bar-open v-if="sf.users.length === 1" :bubble="$t('LOGauthbypin_2')" center
-      :title="$t('LOGauthbypin_1a', [sf.users[0].pseudo])"/>
-    <bar-open v-else :bubble="$t('LOGauthbypin_2')" center
-      :title="$t('LOGauthbypin_1b', [sf.users.length])"/>
-    <div v-if="sf.users.length > 1"
-      class="row full-width justify-center items-center q-gutter-sm">
-      <btn-cond v-for="u in sf.users" :key="u.userId" padding="none xs"
-        :label="u.pseudo" no-caps
-        :size="u === selectedUser ? 'lg' : 'md'"
-        :color="u === selectedUser ? 'warning' : 'primary'"
-        @ok="selectUser(u)"/>
+<div class="q-ma-xs q-pa-xs">
+  <div v-if="sf.users.length">
+    <div class="row full-width items-center q-my-sm">
+      <btn-bubble :text="$t('LOGauthbypin_bub')"/>
+      <div class="text-italic titre-md q-ml-sm">{{$t('LOGauthbypin_label')}}</div>
+      <div v-for="u in sf.users" :key="u.userId"
+        :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
+        @click="selectUser(u)">{{u.pseudo}}</div>
     </div>
     <div v-if="selectedUser" :class="sty('sm')">
       <div class="full-width q-pa-sm">
         <input-ps v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
     </div>
-    <q-separator color="orange" class="q-mt-lg"/>
   </div>
 
   <!-- Authentification "forte" -->
   <div class="full-width">
-    <bar-open :bubble="$t('LOGauthstrong_2')" center 
-      :title="$t('LOGauthstrong_1')" class="q-mb-sm"/>
-    <p0-p1 @ok="authPS" class="full-width"/>
+    <bar-title prefix="LOGauthstrong" class="q-my-sm text-italic"/>
+    <p0-p1 @ok="authPS" class="full-width q-pl-lg"/>
   </div>
 </div>
 </template>
@@ -39,9 +32,10 @@ import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import P0P1 from '../components-fw/P0P1.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
+import BarTitle from '../components-fw/BarTitle.vue'
 
 const sf = stores.safe
 const ui = stores.ui
@@ -78,4 +72,5 @@ const authPIN = async () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.select:hover { background: $grey-7 !important } 
 </style>

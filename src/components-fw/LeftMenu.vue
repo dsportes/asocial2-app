@@ -6,25 +6,29 @@ Contrôlé par ui.leftMenu
   <q-header :class="sty()">
     <q-toolbar class="tbs">
       <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="ui.closeMenu()"/>
-      <q-toolbar-title class="titre-md text-center q-mx-sm">{{sf.userName || sf.userId}}</q-toolbar-title>
+      <q-toolbar-title class="titre-md text-center q-mx-sm">
+        {{sf.userName || sf.userId || $t('guest')}}
+      </q-toolbar-title>
       <help-button page="help"/>
     </q-toolbar>
-    <div class="column items-center">
+    <div v-if="sf.userId" class="column items-center">
       <input-A  class="q-ma-sm" prefix="orgcode"
         v-model="session.currentOrg" size="org"/>
     </div>
   </q-header>
   <q-page-container>
     <btn-cond  v-if="sf.step === 0" class="q-mb-sm q-pa-sm"
-      flat icon="exit_to_app" color="warning"
-      :label="$t('endsession')" @ok="ui.closeMenu(); backToOpenSession()"/>
-    <safe-tools v-if="sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
+      flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
+      @ok="ui.closeMenu(); backToOpenSession()"/>
+    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
-      <btn-cond v-if="hasManagedOrgs" class="q-mb-sm"
-        flat icon="img:icons/superman.jpg" color="warning" :label="$t('PanelManager')"
+      <btn-cond v-if="sf.userId && hasManagedOrgs" class="q-mb-sm"
+        flat icon="img:icons/superman.jpg" 
+        color="warning" :label="$t('PanelManager')"
         @ok="openManager"/>
-      <btn-cond v-if="sf.auth.admins" class="q-mb-sm"
-        flat icon="img:icons/superman.jpg" color="warning" :label="$t('PAGEadmin')"
+      <btn-cond v-if="sf.userId && sf.auth.admins" class="q-mb-sm"
+        flat icon="img:icons/superman.jpg" 
+        color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
@@ -33,7 +37,7 @@ Contrôlé par ui.leftMenu
         flat :label="$t('PAGEtest')"
         @ok="ui.closeMenu(); ui.setPage('test')"/>
       <div class="q-my-lg q-pa-sm">
-        <div v-for="n in 50" :key="n">Drawer {{ n }} / 50</div>
+        <div v-for="n in 10" :key="n">Drawer {{ n }} / 50</div>
       </div>
     </div>
   </q-page-container>

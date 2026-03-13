@@ -653,7 +653,7 @@ bla bla
   HPtransmit_label: 'Cible de la transmission (TEST)',
   HPexpinfo: 'Information',
   HPexpexport: 'Export',
-  HPexppub: 'Clés publiques',
+
   HPexporgid: 'ID localisée pour une organisation',
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
@@ -727,7 +727,7 @@ bla bla
   UPsessionid: 'ID de synchronisation de la session',
   UPadmins: 'Administrateur technique de',
  
-  SECsite_std: 'Site standard',
+  SECsite_std: 'standard',
   SECsite_msg1: 'INACCESSIBLE',
   SECsite_msg2: 'ATTENTE VERIF',
   SECsitech_label: 'Choisir / saisir le site',
@@ -763,7 +763,8 @@ Une liste de _sites connus de l'application_ est proposée avec un **libellé** 
 Pour désigner un site non répertorié, l'utilisateur est convié à donner son URL. 
 `,
 
-  LOGauthbypin_2: `# Authentification par code PIN
+LOGauthbypin_label: 'Login par code PIN possible pour:',
+LOGauthbypin_bub: `# Authentification par code PIN
 Si vous avez **certifié** ce terminal, votre code PIN suffit à vous authentifier.
 
 Cliquer dans la liste sur vos initiales données lors de la certification.
@@ -775,8 +776,8 @@ S'il n'y est pas, c'est que la certification a été retirée à ce terminal.
 `,
   LOGauthbypin_1a: 'Je suis l\'utilisateur [{0}] certifié sur ce terminal',
   LOGauthbypin_1b: 'Je suis un des {0} utilisateurs certifiés sur ce terminal...',
-  LOGauthstrong_1: 'Authentification "forte"',
-  LOGauthstrong_2: `# Authentification "forte"
+  LOGauthstrong_label: 'Login par authentification "forte"',
+  LOGauthstrong_bub: `# Authentification "forte"
 bla bla
 `,
   LOGbypin_1: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
@@ -807,6 +808,7 @@ Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centr
 
 `,
 
+  SEStit: 'Données de sécurité sur site',
   SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
   SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   SESmodes: `## Modes NORMAL et INCOGNITO
@@ -823,6 +825,12 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
 `,
   SESconfig: 'Configuer des sessions',
 
+  SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
+  SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
+  SCRsec_bub: `### Ne pas utiliser pas de code "de secours" est un choix
+... qui suppose de ne jamais oublier son code principal.
+**En pratique le code de secours (pseudo / phrase) sera fixé égal au code principal.**`,
+  SCRenreg_0: 'Création de mon compte',
   SCRenreg_1: 'Modification de mes codes d\'accès',
   SCRenreg_2: 'Modification des codes d\'accès du "backup"',
   SCRcode_1: 'Déclaration de l\'accès principal',
@@ -853,11 +861,39 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
   SFTadmin: 'Administrateur Technique de:',
   SFTopaf: 'Ces opérations requièrent une authentification "forte" (pas par code PIN)',
   SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',
+  SFTexppub: 'Clés publiques',
+  SFTguest: 'Mode "invité", pas d\'utilisateur authentifié.',
 
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',
 
-  INVtit: 'J\'ai une invitation: 2 codes et une "phrase secrète"',
+  INVtit_1_label: 'Déposer une demande d\'invitation',
+  INVtit_1_bub: `## Déposer une demande d'invitation
+bla bla
+`,
+
+  INVtit_2_label: 'Suivre mes demandes d\'invitation',
+  INVtit_2_bub: `## Suivre mes demandes d'invitation
+bla bla
+`,
+  INVtit_3_label: 'Ouvrir l\'application en mode "visiteur"',
+  INVtit_3_bub: `## Mode _VISITEUR_
+bla bla
+`,
+  INVtit_4_label: 'Ouvrir l\'application en mode "calculette" (SANS réseau)',
+  INVtit_4_bub: `## Mode _CALCULETTE_
+bla bla
+`,
+  INVco_1: 'Je n\'ai pas de compte',
+  INVco_2: 'J\'ai un compte',
+  INVco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',
+  INVco_cr: 'Je créé mon compte',
+  INVnc_bub: `## Disposer d'un compte est nécessaire... 
+pour déposer et suivre des demandes d'invitation. 
+Un **coffre fort** est créé pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
+- qui est le seul à connaître la clé qui **crypte** son contenu,
+- le _coffre_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
+`,
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',

@@ -3,7 +3,7 @@
 <div class="row justify-between items-center q-my-sm">
   <q-toggle class="col q-pr-md" v-model="session.noNet" dense color="negative"
     :label="$t('LOGnet_' + (session.noNet ? '2' : '1'))" />
-  <btn-bubble class="col-auto self-start" size="sm"
+  <btn-bubble class="col-auto self-start"
     :text="$t('LOGnet_3')"/>
 </div>
 </template>

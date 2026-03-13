@@ -12,22 +12,23 @@ Event 'ok' émis quand saisie OK: { sh0, sh1, sh }
   </q-toolbar>
 
   <input-ps class="q-mb-sm" v-model="p0" size="p0" prefix="PSpseudo"
-    @validate="validate" :valctrl="valctrl"/>
+    @validate="validate" :objctrl="objctrl" @change="check"/>
 
   <input-ps class="q-mb-sm" v-model="p1" size="p1" prefix="PSphrase"
-    @validate="validate" :valctrl="valctrl"/>
+    @validate="validate" :objctrl="objctrl" @change="check"/>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputPs from '../components-fw/InputPs.vue'
 import { Crypt } from '../src-fw/crypt'
 
 const props = defineProps({
-  title: String
+  title: String,
+  ctx: Object
 })
 
 const emit = defineEmits(['ok'])
@@ -35,9 +36,9 @@ const emit = defineEmits(['ok'])
 const p0 = reactive( { inp: '', err: '' } )
 const p1 = reactive( { inp: '', err: '' } )
 
-/* retourne true si la fonction validate peut être appelée */
-const valctrl = (() => {
-  return p0.err === '' && p1.err === '' 
+const objctrl = ref({ ok: false })
+const check = (() => {
+  objctrl.value.ok = p0.err === '' && p1.err === '' 
 })
 
 const validate = async () => {
@@ -45,7 +46,7 @@ const validate = async () => {
     sh0: await Crypt.strongHash(p0.inp, true, true),
     sh1: await Crypt.strongHash(p1.inp, true, true),
     sh: await Crypt.strongHash(p0.inp + p1.inp, false, true)
-  })
+  }, props.ctx || null)
 }
 
 </script>

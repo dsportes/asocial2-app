@@ -3,7 +3,7 @@
 <div class="row self-start full-width justify-between items-center q-my-sm">
   <q-toggle class="col q-pr-md" v-model="session.incognito" dense color="negative"
     :label="$t('SESincognito_' + (session.incognito ? '2' : '1'))"/>
-  <btn-bubble class="col-auto self-start" size="sm"
+  <btn-bubble class="col-auto self-start"
     :text="$t('SESmodes')"/>
 </div>
 </template>

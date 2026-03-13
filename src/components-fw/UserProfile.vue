@@ -1,7 +1,7 @@
 <!-- Boîte d'affichage du profil courant de l'utilisateur -->
 <template>
 <div>
-  <div class="q-pa-sm column q-gutter-sm">
+  <div v-if="sf.userId" class="q-pa-sm column q-gutter-sm">
     <div class="row q-gutter-sm q-my-xs items-end">
       <div class="titre-md text-italic">{{ $t('SFTus') }}</div>
       <div class="fs-lg font-mono">{{ sf.userId }}</div>
@@ -18,9 +18,10 @@
       <div class="titre-md text-italic">{{ $t('SFTadmin')}}</div>
       <div class="font-mono">{{ sf.auth.admins }}</div>
     </div>
-    <text-zoom class="q-my-xs" :label="$t('HPexppub')" 
+    <text-zoom class="q-my-xs" :label="$t('SFTexppub')" 
       :text="infopub" :rows="15"/>
   </div>
+  <div v-else class="titre-md text-italic">{{$t('SFTguest')}}</div>
 </div>
 </template>
 
@@ -50,7 +51,7 @@ const infopub = computed(() => JSON.stringify([sf.auth.C, sf.auth.V], null, '\t'
 
 const admins = ref('')
 
-if (sf.auth.admins) {
+if (sf.userId && sf.auth.admins) {
   let x = sf.auth.admins
   x.replaceAll('/', ' ')
   admins.value = x

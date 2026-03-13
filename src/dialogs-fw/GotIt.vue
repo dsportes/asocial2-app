@@ -8,9 +8,9 @@
       <!--div class="fs-md q-ma-sm text-center q-mt-md" v-html="ui.diag"></div-->
       <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag"/>
       <div v-if="ui.diagConfirm" class="row q-my-md q-mx-sm justify-between">
-        <btn-cond flat icon="close" color="warning"
+        <btn-cond flat icon="close" color="warning" size="lg"
           :label="$t('ireject')" @ok="gotit(false)"/>
-        <btn-cond flat icon="check" :label="$t('iconfirm')"
+        <btn-cond flat icon="check" :label="$t('iconfirm')" size="lg"
           @ok="gotit(true)"/>
       </div>
       <div v-else class="row q-my-md q-mx-sm justify-end"> 

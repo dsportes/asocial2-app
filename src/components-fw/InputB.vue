@@ -2,7 +2,7 @@
 <template>
 <div class="row">
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
-  <q-input class="col" v-model="model" counter dense
+  <q-input class="col" v-model="model.inp" counter dense
     :disable="_disable"
     filled
     input-class="font-mono"
@@ -10,32 +10,32 @@
     :label="$t(prefix + '_label')"
     :placeholder="ph"
     bottom-slots
-    :error="err !== ''"
+    :error="model.err !== ''"
     :hint="hint"
     @keydown.enter.prevent="val">
     <template v-slot:append>
       <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
       <btn-cond round size="md" icon="close" @ok="model = ''"
-        :disable="_disable || !model || model.length === 0" color="none"/>
+        :disable="_disable || model.inp.length === 0" color="none"/>
       <btn-cond round v-if="hasInitVal"
         size="md" icon="undo" @ok="undo" :disable="_disable || !chg" color="none"/>
       <btn-cond v-if="!noval" size="md" icon="check" round
         :disable="!mayVal" color="warning" @ok="val" />
       <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
         color="warning"
-        @ok="model = fill(model)"/>
+        @ok="model.inp = fill(model.inp)"/>
       <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
         dense padding="none" color="primary">
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
             <q-btn dense flat no-caps v-for="x in list" :key="x" :label="x"
-              @click="model = x"/>
+              @click="model.inp = x"/>
           </div>
         </q-menu>
       </q-btn>
     </template>
-    <template v-slot:error>{{$t(err)}}</template>
+    <template v-slot:error>{{$t(model.err)}}</template>
   </q-input>
 </div>
 </template>
@@ -113,7 +113,6 @@ const props = defineProps({
   initval: String,
   disable: Boolean,
   noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
-  objerr: Object,
   objctrl: Object,
   list: Array
 })
@@ -131,7 +130,7 @@ const bubble = computed(() => {
 })
 const star = config.K.phrasestar.has(props.size)
 const disval = ref(false)
-const mayStar = computed(() => model.value.length > 2 && model.value.endsWith('*'))
+const mayStar = computed(() => model.value.inp.length > 2 && model.value.inp.endsWith('*'))
 const mayVal = ref(false)
 
 const ph = computed(() => {
@@ -167,32 +166,31 @@ watch(() => props.disable, () => {
   init()
 })
 
-const chg = computed(() => _initval.value !== null ? _initval.value !== model.value : true)
-const hint = computed(() => $t('minmax', sz.value) + (!err.value ? $t('pressret') : ''))
+const chg = computed(() => _initval.value !== null ? _initval.value !== model.value.inp : true)
+const hint = computed(() => $t('minmax', sz.value) + (!model.value.err ? $t('pressret') : ''))
 
 const xe = () => {
-  if (reg && !reg.test(model.value)) return 'badform'
-  if (model.value.length < sz.value[0]) return 'tooshort'
-  if (model.value.length > sz.value[1]) return 'toolong'
-  if (props.size === 'isotime' && isNaN(Date.parse(model.value))) return 'badform'
+  if (reg && !reg.test(model.value.inp)) return 'badform'
+  if (model.value.inp.length < sz.value[0]) return 'tooshort'
+  if (model.value.inp.length > sz.value[1]) return 'toolong'
+  if (props.size === 'isotime' && isNaN(Date.parse(model.value.inp))) return 'badform'
   return ''
 }
 
-const err = ref()
 const setx = () => {
-  err.value = xe()
-  if (props.objerr) props.objerr.err = err.value
-  // emit('change', model)
-  checkG()
+  model.value.err = xe()
+  emit('change', true)
 }
 const checkG = () => {
-  mayVal.value = !_disable.value && err.value === '' && (!props.objctrl || props.objctrl.ok)
+  mayVal.value = !_disable.value && model.value.err === '' && (!props.objctrl || props.objctrl.ok)
 }
-watch(model, (v) => { setx() })
-if (props.objctrl) 
-  watch(() => props.objctrl.ok, (v) => {
-    checkG()
-  })
+watch(() => model.value.inp, (v) => { 
+  setx()
+  checkG()
+})
+if (props.objctrl) watch(() => props.objctrl.ok, (v) => {
+  checkG()
+})
 setx()
 
 const undo = () => {

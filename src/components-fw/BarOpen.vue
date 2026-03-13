@@ -5,10 +5,8 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 - envoie l'event 'open', si pas 'passive' en cas de click sur le titre ou icon.
 -->
 <template>
-<div class="row full-width items-center">
-  <btn-bubble v-if="bubbleleft !== ''" 
-    class="col-auto q-mr-sm" 
-    :size="large ? 'lg' : 'md'" 
+<div class="row full-width items-center select">
+  <btn-bubble v-if="bubbleleft" class="col-auto q-mr-sm" 
     :text="disable && disbubbleleft ? disbubbleleft : bubbleleft"/>
 
   <div :class="clt" @click="open">{{title}}</div>
@@ -20,9 +18,7 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
     :disable="disable" 
     :color="color || 'none'"/>
 
-  <btn-bubble v-if="bubble !== ''" 
-    class="col-auto q-ml-md" 
-    :size="large ? 'lg' : 'md'"
+  <btn-bubble v-if="bubble" class="col-auto q-ml-md" 
     :text="disable && disbubble ? disbubble : bubble"/>
 </div>
 </template>
@@ -68,4 +64,5 @@ const ui = stores.ui
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.select:hover { background-color: rgba(127, 127, 127, 0.3)}
 </style>

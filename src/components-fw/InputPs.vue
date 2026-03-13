@@ -2,30 +2,28 @@
 Event: validate 
 -->
 <template>
-  <input-a v-model="model.inp" :size="size"
-    :prefix="prefix" :disable="disable"
-    :objerr="model"
-    :valctrl="valctrl"
-    @validate="onVal"/>
+  <input-b v-model="model" 
+    :size="size"
+    :prefix="prefix" 
+    :disable="disable"
+    :objctrl="objctrl"
+    @validate="emit('validate', true)"
+    @change="emit('change', true)"/>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 // import { ref, computed, watch } from 'vue'
-import InputA from '../components-fw/InputA.vue'
+import InputB from '../components-fw/InputB.vue'
 
 const model = defineModel()
-const emit = defineEmits(['validate'])
-
-const onVal = (v) => {
-  emit('validate', v)
-}
+const emit = defineEmits(['validate', 'change'])
 
 const props = defineProps({
   size: String,
   prefix: String,
   disable: Boolean,
-  valctrl: Function
+  objctrl: Object
 })
 
 </script>

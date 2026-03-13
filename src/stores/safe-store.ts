@@ -584,7 +584,7 @@ export const useSafeStore = defineStore('safe', () => {
   // Set des organisations managées par svc
   const managedOrgs = () : Map<string, Set<string>> => {
     const svcOrgs = new Map()
-    for (const [,c] of mySafeCreds.value) {
+    if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
       if (c.role === 'Org.manager') {
         let e = svcOrgs.get(c.svc)
         if (!e) { e = new Set(); svcOrgs.set(c.svc, e) }

@@ -58,8 +58,36 @@
       <safe-tools/>
     </div>
 
-    <div v-if="sf.tab === 'guest'">
-      <div class="titre-lg text-italic text-center q-my-md">{{$t('INVtit')}}</div>
+    <div v-if="sf.tab === 'guest'" class="q-pa-xs">
+      <q-expansion-item v-model="g1m" group="g1" 
+        :class="g1m ? 'bord2' : ''">
+        <template v-slot:header>
+          <bar-title prefix="INVtit_1" large/>
+        </template>
+        <div v-if="g1m" class="q-ml-sm">
+          <login-create class="full-width" 
+            v-model="g1m"
+            @done="manInvits(true)"/>
+        </div>
+      </q-expansion-item>
+
+      <q-expansion-item v-model="g2m" group="g1"
+        :class="g2m ? 'bord2' : ''">
+        <template v-slot:header>
+          <bar-title prefix="INVtit_2" large/>
+        </template>
+        <div v-if="g2m" class="q-ml-sm">
+          <login-create class="full-width" hasaccount
+            v-model="g2m"
+            @done="manInvits(false)"/>
+        </div>
+      </q-expansion-item>
+
+      <bar-open class="q-mt-md q-mb-xs full-width" :bubbleleft="$t('INVtit_3_bub')"
+        :title="$t('INVtit_3_label')" @open="opGuest"/>
+
+      <bar-open class="q-my-xs full-width" :bubbleleft="$t('INVtit_4_bub')"
+        :title="$t('INVtit_4_label')" @open="opCalc"/>
 
     </div>
   </div>
@@ -80,19 +108,19 @@
         <div v-if="sf.selectedSession">
           <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
             <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
-            <btn-bubble class="col-auto self-start" size="sm"
+            <btn-bubble class="col-auto self-start"
               :text="$t('HPunpin_1')"/>
           </div>
           <div v-if="!unpinme" class="q-my-sm row justify-between items-center">
             <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
-            <btn-bubble class="col-auto self-start" size="sm"
+            <btn-bubble class="col-auto self-start"
               :text="$t('HPresetdb_1')"/>
           </div>
         </div>
         <div v-else>
           <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
             <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
-            <btn-bubble class="col-auto self-start" size="sm"
+            <btn-bubble class="col-auto self-start"
               :text="$t('HPpin_1')"/>
           </div>
         </div>
@@ -132,6 +160,9 @@ import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import BarOpen from '../components-fw/BarOpen.vue'
+import BarTitle from '../components-fw/BarTitle.vue'
+import LoginCreate from '../components-fw/LoginCreate.vue'
 
 // @ts-ignore
 import databaseW from '../assets/database_white.png'
@@ -318,42 +349,31 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
   session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
 }
 
-/*
-const validateSessionV = () => {
-  sf.userId = null
-  sf.keyK = null
+const g1m = ref(false)
+const g2m = ref(false)
+
+const manInvits = (request) => {
+  console.log('Invitations ...')
+}
+
+const opGuest = () => {
+  session.noNet = false
   sf.setStep(0)
-  session.updatePref('', 0, {})
   session.setStartContext('', '', new Map())
 }
-*/
+
+const opCalc = () => {
+  session.noNet = true
+  sf.setStep(0)
+  session.setStartContext('', '', new Map())
+}
 
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.bordx1 { border: 2px solid transparent; }
-.bordx2 { border: 2px solid $warning; }
-
+.bordv { border-left: 1px solid $grey-8; }
 .q-toolbar__title { font-size: medium !important;}
-.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
 .bord2 { border: 1px solid $warning; }
-.diag { background: yellow; font-weight: bold; color: black; padding: 2px;
-  border: 2px solid $negative; border-radius: 7px; width:100%; }
-.bbot, .slist { border-bottom: 1px solid $grey-5 !important; }
-.btop, .slist { border-top: 1px solid $grey-5 !important; }
-
-.tablr { border-left: 2px solid; border-right: 2px solid; }
-.tabb { border-bottom-right-radius: 7px; border-bottom-left-radius: 7px; border-bottom: 2px solid; }
-.tab1 { border-color: $primary !important; }
-.tab2 { border-color: $secondary !important; }
-.tab3 { border-color: $grey-7 !important; }
-
-.exp0 { margin: 0 1px; border: 1px solid $primary; }
-.exp1 { margin: 0 1px; border: 1px solid $secondary; }
-.exp2 { margin: 0 1px; border: 1px solid $purple; }
-.exp3 { margin: 0 1px; border: 1px solid $grey-9; }
-
-.select:hover { background-color: $yellow-2; color: black; }
 
 </style>

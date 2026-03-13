@@ -1,11 +1,9 @@
 <!-- Bouton : affiche une bulle d'aide de texte MD sur click -->
 <template>
-  <q-btn 
-    icon="question_mark" 
+  <q-icon class="cursor-pointer"
+    name="question_mark" 
     :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
-    round 
-    :size="size || 'md'" 
-    padding="none">
+    size="20px">
     <q-popup-proxy ref="qpp" 
       transition-show="flip-up" 
       transition-hide="flip-down"
@@ -16,7 +14,7 @@
         <sd-blanc v-else :text="text"/>
       </q-banner>
     </q-popup-proxy>
-  </q-btn>
+  </q-icon>
 </template>
 
 <script setup lang="ts">
@@ -28,8 +26,7 @@ import SdBlanc from './SdBlanc.vue'
 const $q = useQuasar()
 
 const props = defineProps({ 
-  text: String, // texte MD à afficher
-  size: String // fac: 'md' par défaut
+  text: String // texte MD à afficher
 })
 
 const qpp = ref(null)
