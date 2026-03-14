@@ -13,7 +13,7 @@ Event émis: logged
     </div>
     <div v-if="selectedUser" :class="sty('sm')">
       <div class="full-width q-pa-sm">
-        <input-ps v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
+        <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
     </div>
   </div>
@@ -33,7 +33,7 @@ import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
-import InputPs from '../components-fw/InputPs.vue'
+import InputB from '../components-fw/InputB.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 

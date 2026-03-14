@@ -14,6 +14,11 @@ export const K = {
     std: 'http://localhost:8080/safe/'
   },
 
+  DOC_URLS: {
+    fr: "https://asocialapps.github.io/frdocs/",
+    en: "https://asocialapps.github.io/frdocs/",
+  },
+
   FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
 
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'

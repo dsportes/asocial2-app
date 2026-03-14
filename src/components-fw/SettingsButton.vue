@@ -307,7 +307,7 @@
     </template>
     <template #default>
       <div v-if="tab === 'crypto'" class="q-pa-xs">
-        <input-ps class="q-mt-md q-mb-sm" v-model="ps" size="p1"
+        <input-b class="q-mt-md q-mb-sm" v-model="ps" size="p1"
           prefix="SBphrase" @validate="validPs"/>
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sh')}}</div>
         <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.b64" />
@@ -329,15 +329,15 @@
         <div v-if="sf.step === 1" class="msg2 q-my-md self-center">{{$t('SBnotauth')}}</div>
         <div v-else class="column">
           <div class="row q-mb-md">
-            <input-A class="col-6" prefix="service" v-model="SVC" size="svc"
+            <input-a class="col-6" prefix="service" v-model="SVC" size="svc"
               :list="Array.from(Object.keys(config.K.SERVICES))"/>
-            <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
+            <input-a class="col-6" prefix="operator" v-model="$OP" size="oper"
               :list="config.K.FAVORITE_OPERATORS"/>
           </div>
 
           <q-separator color="orange" class="q-my-md"/>
 
-          <input-A class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
+          <input-a class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
           <btn-cond color="warning" :label="$t('url_set')" class="self-end"
             @ok="setSvcUrl" :disable="!SVC || !$OP || !svcurl"/>
 
@@ -404,7 +404,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import PermissionBox from '../components-fw/PermissionBox.vue'
 import InputA from '../components-fw/InputA.vue'
-import InputPs from '../components-fw/InputPs.vue'
+import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 
 import SafeExport from '../dialogs-fw/SafeExport.vue'

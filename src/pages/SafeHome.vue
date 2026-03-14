@@ -58,7 +58,7 @@
       <safe-tools/>
     </div>
 
-    <div v-if="sf.tab === 'guest'" class="q-pa-xs">
+    <div v-if="sf.tab === 'guest' && sf.step === 1" class="q-pa-xs">
       <q-expansion-item v-model="g1m" group="g1" 
         :class="g1m ? 'bord2' : ''">
         <template v-slot:header>
@@ -67,7 +67,7 @@
         <div v-if="g1m" class="q-ml-sm">
           <login-create class="full-width" 
             v-model="g1m"
-            @done="manInvits(true)"/>
+            @done="sf.tab3 = 'newr'; sf.setStep(3)"/>
         </div>
       </q-expansion-item>
 
@@ -79,7 +79,7 @@
         <div v-if="g2m" class="q-ml-sm">
           <login-create class="full-width" hasaccount
             v-model="g2m"
-            @done="manInvits(false)"/>
+            @done="sf.tab3 = 'scan'; sf.setStep(3)"/>
         </div>
       </q-expansion-item>
 
@@ -90,6 +90,14 @@
         :title="$t('INVtit_4_label')" @open="opCalc"/>
 
     </div>
+  </div>
+
+  <div v-if="sf.tab3 === 'newr' && sf.step === 3" class="q-pa-xs">
+
+  </div>
+
+  <div v-if="sf.tab3 === 'scan' && sf.step === 3" class="q-pa-xs">
+
   </div>
 
   <!-- Dialogue d'options de lancement -->
@@ -179,11 +187,6 @@ const cfg = stores.config
 const dialogs = reactive({
   optstart: false
 })
-/*
-watch(() => sf.safeStore, (v) => {
-  console.log('Safe Store >>> [' + v + ']')
-})
-*/
 
 const database = computed(() => ui.isDark ? databaseW : databaseB)
 
@@ -196,6 +199,8 @@ const sOfP = (profId: string) => sf.sessionOfProfId(profId)
 const resetdb = ref(false)
 const unpinme = ref(false)
 const pinme= ref(false)
+const g1m = ref(false)
+const g2m = ref(false)
 
 watch(unpinme, async (ap) => {
   if (ap === true) await ui.diagDisplay($t('HPresetdb_1'))
@@ -347,13 +352,6 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
   if (prefCode) session.updatePref(prefCode, prefTime, decode(prefObj))
   else session.updatePref('', 0, {})
   session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
-}
-
-const g1m = ref(false)
-const g2m = ref(false)
-
-const manInvits = (request) => {
-  console.log('Invitations ...')
 }
 
 const opGuest = () => {

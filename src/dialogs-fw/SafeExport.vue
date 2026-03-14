@@ -26,7 +26,7 @@ Events: close done
     <div v-if="tab === 'export'" class="column q-mx-lg items-center">
       <div class="q-my-sm full-width">
         <div class="titre-md text-italic">{{$t('HPimport_label')}}</div>
-        <input-ps v-model="cryptK" @validate="valK" size="ps" prefix="HPimport"/>
+        <input-b v-model="cryptK" @validate="valK" size="ps" prefix="HPimport"/>
       </div>
       <div v-if="cryptK.key === null" class="q-my-xs msg2">{{$t('HPimport_bf0')}}</div>
       <input-a v-if="session.hasNet" class="q-my-sm full-width"
@@ -38,7 +38,7 @@ Events: close done
     <div v-if="tab === 'restore'" class="full-width">
       <bar-open passive :title="$t('HPimpsafe_1')" :bubbleleft="$t('HPimpsafe_2')"/>
       <div class="titre-md text-italic q-mt-sm">{{$t('HPimport_label')}}</div>
-      <input-ps v-model="cryptK" prefix="HPimport" size="ps"
+      <input-b v-model="cryptK" prefix="HPimport" size="ps"
         @validate="valK"/>
 
       <q-file v-if="cryptK.key !== null"
@@ -132,7 +132,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputA from '../components-fw/InputA.vue'
-import InputPs from '../components-fw/InputPs.vue'
+import InputB from '../components-fw/InputB.vue'
 
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'

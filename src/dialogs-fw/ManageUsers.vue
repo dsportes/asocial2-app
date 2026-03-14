@@ -121,9 +121,7 @@ import { $t, sty, edvol, dhcool, u8ToB64, readFile, fileDescr, coolBye } from '.
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
-// import HelpButton from '../components-fw/HelpButton.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
-import InputPs from '../components-fw/InputPs.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'

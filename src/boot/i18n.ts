@@ -9,6 +9,7 @@ import { useConfigStore } from '../stores/config-store'
 
 export type MessageLanguages = keyof typeof messages;
 // Type-define 'en-US' as the master schema for the resource
+// @ts-ignore
 export type MessageSchema = typeof messages['en-EN'];
 
 // See https://vue-i18n.intlify.dev/guide/advanced/typescript.html#global-resource-schema-type-definition
@@ -31,6 +32,7 @@ export default defineBoot(({ app }) => {
   const i18n = createI18n<{ message: MessageSchema }, MessageLanguages>({
     locale: config.locale,
     legacy: false,
+    warnHtmlMessage: false, // disable warning HTML in message
     messages,
   });
   // Set i18n instance on app

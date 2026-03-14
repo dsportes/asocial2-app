@@ -4,15 +4,19 @@
     <btn-cond label="WP" disable :color="session.wpReady ? 'green' : 'red'">
       <q-tooltip>{{session.sessionInfo}}</q-tooltip>
     </btn-cond>
-    <q-toolbar-title class="titre-md q-mx-md">{{$t('app_label')}}</q-toolbar-title>
+    <q-toolbar-title class="titre-md q-mx-md">
+      {{sf.step === 3 ? $t('SFHreq') : $t('app_label')}}
+    </q-toolbar-title>
     <settings-button class="q-ml-sm"/>
     <help-button class="q-ml-xs" page="DOCpg"/>
   </q-toolbar>
-  <q-tabs dense v-model="sf.tab" class="full-width bg-primary text-white shadow-2">
+
+  <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" class="full-width bg-primary text-white shadow-2">
     <q-tab name="login" icon="img:icons/anonymous_white.png" :label="$t('login')" />
     <q-tab name="guest" icon="img:icons/flowers.png" :label="$t('guest')" />
   </q-tabs>
-  <div v-if="sf.tab === 'login' && sf.step === 2" 
+
+  <div v-if="sf.step === 2" 
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
@@ -20,6 +24,14 @@
       @ok="dialogs.CredsMgr = false"/>
   </div>
   <creds-mgr v-model="dialogs.CredsMgr"/>
+
+  <div v-if="sf.step === 3"> 
+    <q-tabs dense v-model="sf.tab3" 
+      class="full-width bg-primary text-white shadow-2">
+      <q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" />
+      <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
+    </q-tabs>
+  </div>
 </div>
 </template>
 

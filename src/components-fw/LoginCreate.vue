@@ -10,14 +10,14 @@
   <security-site  v-if="flag.f2 || flag.f1" v-model="sf.safeStore"/>
 
   <login-block v-if="flag.f2" class="full-width q-pl-sm" 
-    @logged="done"/>
+    @logged="emit('done', true)"/>
 
   <div v-if="flag.f1" class="q-mb-sm q-ml-sm">
     <btn-cond v-if="flag.f1" :label="$t('INVco_cr')" 
       @ok="dialogs.create = true"/>
   </div>
 
-  <safe-cr v-model="dialogs.create" :mode="0" @done="done"/>
+  <safe-cr v-model="dialogs.create" :mode="0" @done="emit('done', true)"/>
 </div>
 </template>
 
@@ -64,11 +64,6 @@ watch(() => flag.f1, (v) => {
 watch(() => flag.f2, (v) => {
   if (v) flag.f1 = false
 })
-
-const done = () => {
-  todo.value = false
-  emit('done', true)
-}
 
 </script>
 

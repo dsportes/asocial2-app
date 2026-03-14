@@ -1,4 +1,6 @@
-<!-- Input stanadrdisé A -->
+<!-- Input stanadrdisé A 
+Commentaires dans Input-B.
+-->
 <template>
 <div class="row">
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
@@ -43,59 +45,6 @@
 </template>
 
 <script setup lang="ts">
-/*
-Ce composant étend la capacité du <q-input> avec:
-- un contrôle syntaxique
-- l'appel d'une fonction de validation.
-
-Le contrôle syntaxique est piloté par la propriété "size" qui désigne
-une entrée déclarée dans "constants.sizes" qui est un array de 2 ou 3 termes:
-- [0] : taille minimale,
-- [1] : taille maximale,
-- [2] : facultativement le nom d'une expression régulière déclarée dans "constants.regexp".
-  En cas de présence le texte est vérifié selon cette expression.
-Il en résulte le texte de l'erreur "err" qui peut être "badform" "tooshort" "toolong" ou "" (pas d'erreur).
-L'existence d'une erreur bloque l'appel de la fonction de validation.
-Le composant parent peut accéder à tout instant:
-- à la valeur courante saisi (puisque c'est le "model"),
-- au code l'erreur courante dans la propriété "err" d'un objet passé sur la propriété "objerr":
-de cette façon le parent peut, s'il le souhaite, gérer à tout instant si le texte saisi est correct syntaxiquement ou non.
-
-Si la propriété optionnelle "disable" est fixée, <input-A> interdit la saisie.
-Cette propriété est dynamique et réévaluée si sa valeur change, typiquement quand le
-composant affiche la valeur courante d'une liste qui est balayée.
-
-La propriété optionnelle "initval" donne la valeur initiale avant saisie:
-quand elle est fixée, un bouton "undo" permet de réinitialiser la valeur du model à sa valeur initiale.
-Cette propriété est dynamique et réévaluée si sa valeur change.
-
-SAUF si 'noval', l'appui sur le bouton "check" ou la touche "Entrée" émet l'event 'validate'.
-Event émis ssi,
-- le model n'est "disable",
-- il n'y a pas d'erreur syntaxique,
-- le résultat de l'appel de la fonction "valctrl" (si elle a été donnée) est true.
-- valeur: true si éditée (changée), false sinon
-
-Quand un objet "objctrl" est donnée en propriété, il donne au composant parent le moyen de
-contrôler si la valeur en cours de saisie est "validable" ou non en fonction du contexte
-détenu par la parent et non pas seulment sur la seule valeur intrinséque du model.
-Cet objet a UNE propriété "ok" : si true, la valeur en cours de saisie est
-validable en fonction du contexte d'appel.
-Cet objet n'est checké que si le model n'est pas disable et n'a pas d'eereur syntaxique.
-
-Events:
-- "change" : à chaque 
-Les libellés sont contrôlés par "prefix". Soit XXpfx ce préfixe,
-- le dictionnaire linguistique peut avoir plusieurs entrées,
-- XXpfx_label donne le label affiché,
-- XXpfx_ph si existant donne la valeur du placeholder affiché quand le model est vide,
-- XXpfx_bub si existant donne le texte de la "bulle d'aide".
-
-En l'absence de XXpfx, le texte de la bulle d'aide est:
-- si size a indiqué un nom d'expression régulière ("b64" par exemple) le texte est REGexp_b64.
-- sinon c'est REGexp_all qui indique accepter toutes les valeurs.
-*/
-
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'

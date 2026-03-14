@@ -673,6 +673,11 @@ bla bla
   HPctc_ph: 'Les framboises sont bleues cet hiver',
   HPctc_del: 'Supprimer le pseudo / phrase de contact',
 
+  // SafeHome
+  SFHnewr: 'Nouvelle demande',
+  SFHscan: 'Lister et gérer',
+  SFHreq: 'Demandes d\'invitations',
+
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
   DHCauja: 'aujourd\'hui',
@@ -817,11 +822,14 @@ une session bénéficie du stockage en mémoire _cache_ (cryptée) des documents
 - ouverture plus rapide et plus économe du réseau et du temps de calcul.
 - ouverture en **MODE AVION** possible en l'absence d'accès à Internet.
 
-#### En mode INCOGNITO, 
+#### En mode INCOGNITO,
+<img src="images/flowers.png" style="background-color:white">
 une session ignore complètement l'existence d'une mémoire _cache_ locale de documents.
 - son chargement est plus long et plus coûteux.
 - le mode AVION en l'absence d'accès à Internet n'est pas disponible.
 - en contrepartie, la session n'a laissé aucune trace de son exécution sur le terminal.
+
+Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 `,
   SESconfig: 'Configuer des sessions',
 
@@ -857,7 +865,7 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
   SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',
   SFTnops: 'Terminal NON certifié par l\'utilisateur (pas de pseudo local.',
   SFTct: 'Phrase de contact:',
-  SFTnoct: 'Aucune phrase de contact déclarée acteullement.',
+  SFTnoct: 'Aucune phrase de contact déclarée actuellement.',
   SFTadmin: 'Administrateur Technique de:',
   SFTopaf: 'Ces opérations requièrent une authentification "forte" (pas par code PIN)',
   SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',

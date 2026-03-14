@@ -6,19 +6,19 @@
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">
           {{$t(newDev ? 'HPsetdev' : 'HPchgdev')}}
         </div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
+        <input-b class="col-6 q-pl-sm" style="max-width:16rem"
           v-model="devName" prefix="PSdevname" size="dev"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPIN')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
+        <input-b class="col-6 q-pl-sm" style="max-width:16rem"
           v-model="newPIN" size="pin" prefix="PSpin"/>
       </div>
 
       <div class="q-mb-lg q-mt-md row items-start">
         <div class="col-6 q-mt-xs q-pr-sm text-right text-italic">{{$t('HPsetPseudo')}}</div>
-        <input-ps class="col-6 q-pl-sm" style="max-width:16rem"
+        <input-b class="col-6 q-pl-sm" style="max-width:16rem"
           v-model="newPseudo" size="tr" prefix="PStrig"/>
       </div>
 
@@ -39,7 +39,7 @@ import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import InputPs from '../components-fw/InputPs.vue'
+import InputB from '../components-fw/InputB.vue'
 
 const ui = stores.ui
 const sf = stores.safe

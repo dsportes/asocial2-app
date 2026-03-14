@@ -294,7 +294,8 @@ export const useSafeStore = defineStore('safe', () => {
   - permet un affichage complet, y compris pour les données relatives
     aux autres applications que celle qui s'exécute.
   **********************************************************************/
-  const tab = ref('login')
+  const tab = ref('login') // ou  'guest'
+  const tab3 = ref('newr') // ou 'scan'
   const locstep = ref(1)
   const step = computed(() => locstep.value)
 
@@ -1550,7 +1551,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    tab, step, setStep,
+    tab, tab3, step, setStep,
     mySafeStore, pingSite, userId, userName, keyK,
     selectedProfile, selectedSession,
     openMode, incognito,
