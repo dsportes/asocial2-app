@@ -147,7 +147,6 @@ const bubble = computed(() => {
 
 const mayStar = computed(() => 
   star && !props.disable && model.value.inp.length > 2 && model.value.inp.endsWith('*'))
-const mayVal = ref(false)
 
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
@@ -165,7 +164,7 @@ const chg = computed(() => !props.disable && hasInitVal.value && props.initval.v
 const hint = computed(() => 
   $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))
 const undo = () => {
-  if (_initval.value !== null) model.value = _initval.value }
+  if (props.initVal) model.value = props.initVal }
 
 const xe = () => {
   if (reg && !reg.test(model.value.inp)) return 'badform'

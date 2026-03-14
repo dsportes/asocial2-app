@@ -5,14 +5,14 @@
     <admin-header v-if="ui.page === 'admin'"/>
 
     <q-toolbar v-if="ui.page !== 'safeHome' && ui.page !== 'admin' " class="full-width tbp">
-      <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
+      <btn-cond class="q-mr-xs" color="none" flat icon="menu"
         @ok="ui.openMenu"/>
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
       <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
-      <help-button class="q-ml-xs" page="DOCpg"/>
+      <help-button class="" page="DOCpg"/>
     </q-toolbar>
   </q-header>
 

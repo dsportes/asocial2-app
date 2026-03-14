@@ -8,7 +8,7 @@
       {{sf.step === 3 ? $t('SFHreq') : $t('app_label')}}
     </q-toolbar-title>
     <settings-button class="q-ml-sm"/>
-    <help-button class="q-ml-xs" page="DOCpg"/>
+    <help-button class="" page="DOCpg"/>
   </q-toolbar>
 
   <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" class="full-width bg-primary text-white shadow-2">

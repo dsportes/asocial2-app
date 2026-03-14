@@ -1,13 +1,13 @@
 <template>
 <div class="column">
   <q-toolbar class="full-width tbp">
-    <btn-cond class="q-ml-md q-mr-xs" color="none" flat icon="menu"
+    <btn-cond class="q-mr-xs" color="none" flat icon="menu"
       @ok="ui.openMenu"/>
 
     <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEadmin')}}</q-toolbar-title>
 
     <settings-button class="q-ml-sm"/>
-    <help-button class="q-ml-xs q-mr-md" page="DOCpg"/>
+    <help-button class="" page="DOCpg"/>
   </q-toolbar>
 
 </div>

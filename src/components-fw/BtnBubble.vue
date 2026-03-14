@@ -24,18 +24,20 @@ L'image doit figurer dans public/images
     <q-popup-proxy ref="qpp" 
       transition-show="flip-up" 
       transition-hide="flip-down"
-      breakpoint="400">
-      <q-banner :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pa-xs q-mb-xl'" 
+      breakpoint="200px">
+      <div :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pa-xs q-mb-xl'" 
         @click="hide">
         <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
         <sd-blanc v-else :text="text2()"/>
-      </q-banner>
+      </div>
     </q-popup-proxy>
   </q-icon>
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref } from 'vue'
+// @ts-ignore
 import { useQuasar } from 'quasar'
 
 import stores from '../stores/all'

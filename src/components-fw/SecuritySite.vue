@@ -23,18 +23,18 @@ Résultat en v-model.
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref, watch } from 'vue'
 import stores from '../stores/all'
 import InputA from '../components-fw/InputA.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
-import { $t, hasMessage } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 
 const sf = stores.safe
 const config = stores.config
 
 const exp = ref(false)
 const def = $t('SECsite_std')
-const std = config.K.MASTERDIR_URL
 const urls = config.K.SAFE_URLS
 const sites = Array.from(Object.keys(urls)).sort()
 const vals = ref([def, ...sites])

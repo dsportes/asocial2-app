@@ -21,10 +21,11 @@
             v-model="areq.org" size="org"/>
         <q-separator color="orange" class="q-my-sm"/>
 
-        <input-b class="q-my-xs full-width" prefix="HPstore"
-          v-model="areq.safeStore"/>
+        <security-site class="q-my-xs full-width" v-model="areq.safeStore.inp"/>
+        <!--input-b class="q-my-xs full-width" prefix="HPstore"
+          v-model="areq.safeStore"/-->
         <input-b class="q-my-xs full-width" prefix="FCtarget" size="p0"
-          :v-model="areq.targetUser"/>
+          v-model="areq.targetUser"/>
         <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
         <btn-cond class="col-auto" :label="$t('APgrantmgr')" icon="check"
           :disable="diagReq !== ''" @ok="grantManager"/>
@@ -32,6 +33,7 @@
 
         <btn-cond class="q-my-sm" flat :label="$t('APlstmgr')" 
           :disable="!areq.org.inp" @ok="dolist"/>
+
         <scroll-area class="full-width bord1">
           <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
             <div class="row">
@@ -65,15 +67,13 @@ import InputB from '../components-fw/InputB.vue'
 import { GrantNewManager, ListManagers } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-
-const encoder = new TextEncoder()
+import SecuritySite from '../components-fw/SecuritySite.vue'
 
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
-const config = stores.config
 
-// const services = Array.from(Object.keys(config.K.SERVICES))
+// const services = Array.from(Object.keys(stores.config.K.SERVICES))
 
 type Elt = {
   svc: string
@@ -113,25 +113,6 @@ const setSvcOp = (svcOp) => {
   $OP.value = svcOp.op
 }
 
-/*
-const neworg = reactive({ neworg: '', db: '', st: '', val: false })
-
-const resetNewOrg = () => {
-  neworg.neworg = ''; neworg.db = ''; neworg.st = ''; neoworg.val = false
-}
-
-const cfNewOrg = async () => {
-  // run (svc: string, neworg: string, st: number, db: string)
-  const cr = await new NewOrg().run(session.SVC, neworg.neworg, neworg.st, neworg.db)
-  if (cr >= 0 ) {
-    await ui.diagDisplay($t('APcr_' + cr, [neworg.neworg]))
-    resetNewOrg()
-  } else {
-    await ui.diagDisplay($t('APko', [neworg.neworg]))
-  }
-}
-*/
-
 const diagReq = computed(() => {
   if (areq.targetUser.err) return $t('APdiagtarget')
   return ''
@@ -144,9 +125,9 @@ const areq = reactive({
 })
 
 const resetAreq = () => {
-  areq.targetUser = { inp: '', err: ''}
-  areq.safeStore =  { inp: '', err: ''}
-  areq.org = { inp: '', err: '' }
+  areq.targetUser.inp = ''; areq.targetUser.err = ''
+  areq.safeStore.inp = ''; areq.safeStore.err = ''
+  areq.org.inp = ''; areq.org.err = ''
 }
 
 const grantManager = async () => {
