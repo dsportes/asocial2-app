@@ -3,7 +3,7 @@
 <div class="row">
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
   <q-input class="col" v-model="model.inp" counter dense
-    :disable="_disable"
+    :disable="disable"
     filled
     input-class="font-mono"
     :type="ui.visibility ? 'text' : 'password'"
@@ -17,13 +17,15 @@
       <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
       <btn-cond round size="md" icon="close" @ok="model = ''"
-        :disable="_disable || model.inp.length === 0" color="none"/>
-      <btn-cond round v-if="hasInitVal"
-        size="md" icon="undo" @ok="undo" :disable="_disable || !chg" color="none"/>
-      <btn-cond v-if="!noval" size="md" icon="check" round
-        :disable="!mayVal" color="warning" @ok="val" />
-      <btn-cond v-if="star && mayStar && !_disable" size="md" icon="star"
-        color="warning"
+        :disable="disable || model.inp.length === 0" color="none"/>
+      <btn-cond v-if="hasInitVal && !disable && chg"
+        size="md" icon="undo" color="none" round 
+        @ok="undo" />
+      <btn-cond v-if="!nv && !disable && model.err === ''" 
+        size="md" icon="check" color="warning" round
+        @ok="emit('validate', true)" />
+      <btn-cond v-if="mayStar" 
+        size="md" icon="star" color="warning" round
         @ok="model.inp = fill(model.inp)"/>
       <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
         dense padding="none" color="primary">
@@ -113,12 +115,22 @@ const props = defineProps({
   initval: String,
   disable: Boolean,
   noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
-  objctrl: Object,
-  list: Array
+  list: Array,
+  fncheck: Function
+})
+
+const star = config.K.phrasestar.has(props.size)
+
+const nv = ref(props.noval || false)
+
+watch(() => props.noval, (v) => {
+  nv.value = v
 })
 
 const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
+
 const reg = sz.value.length > 2 ? config.K.regexp[sz.value[2]] || null : null
+
 const bubble = computed(() => {
   let b = props.prefix + '_bub'
   if (hasMessage(b)) return b
@@ -128,9 +140,9 @@ const bubble = computed(() => {
   }
   return 'REGexp_all'
 })
-const star = config.K.phrasestar.has(props.size)
-const disval = ref(false)
-const mayStar = computed(() => model.value.inp.length > 2 && model.value.inp.endsWith('*'))
+
+const mayStar = computed(() => 
+  star && !props.disable && model.value.inp.length > 2 && model.value.inp.endsWith('*'))
 const mayVal = ref(false)
 
 const ph = computed(() => {
@@ -144,62 +156,30 @@ const fill = (v) => {
   return s
 }
 
-const _disable = ref()
-const _initval = ref()
-const hasInitVal = computed(() => {
-  if (typeof(_initval.value) === 'undefined') return false
-  if (_initval.value === null) return false
-  return true
-})
-
-const init = () => {
-  _disable.value = typeof(props.disable) !== 'undefined' ? props.disable : false
-  _initval.value = typeof(props.initval) !== 'undefined' ?
-    (props.initval ? props.initval : null) : null
-}
-
-init()
-watch(() => props.initval, () => {
-  init()
-})
-watch(() => props.disable, () => {
-  init()
-})
-
-const chg = computed(() => _initval.value !== null ? _initval.value !== model.value.inp : true)
-const hint = computed(() => $t('minmax', sz.value) + (!model.value.err ? $t('pressret') : ''))
+const hasInitVal = computed(() => props.initval && props.initval.length )
+const chg = computed(() => !props.disable && hasInitVal.value && props.initval.value !== model.value.inp)
+const hint = computed(() => 
+  $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))
+const undo = () => {
+  if (_initval.value !== null) model.value = _initval.value }
 
 const xe = () => {
   if (reg && !reg.test(model.value.inp)) return 'badform'
   if (model.value.inp.length < sz.value[0]) return 'tooshort'
   if (model.value.inp.length > sz.value[1]) return 'toolong'
   if (props.size === 'isotime' && isNaN(Date.parse(model.value.inp))) return 'badform'
-  return ''
+  return props.fncheck ?  props.fncheck(model.value.inp) : ''
 }
 
-const setx = () => {
-  model.value.err = xe()
-  emit('change', true)
-}
-const checkG = () => {
-  mayVal.value = !_disable.value && model.value.err === '' && (!props.objctrl || props.objctrl.ok)
-}
 watch(() => model.value.inp, (v) => { 
-  setx()
-  checkG()
+  model.value.err = xe()
+  if (model.value.err === '' && !props.disable) emit('change', true)
 })
-if (props.objctrl) watch(() => props.objctrl.ok, (v) => {
-  checkG()
-})
-setx()
-
-const undo = () => {
-  if (_initval.value !== null) model.value = _initval.value
-}
+model.value.err = xe()
 
 const val = () => {
-  if (!_disable.value && mayVal.value)
-    emit ('validate', chg.value)
+  if (!nv.value && !props.disable && model.value.err === '')
+    emit ('validate', true)
 }
 
 </script>

@@ -1,12 +1,11 @@
 <!-- Input d'une phrase secrète.
-Event: validate 
+Event: validate change
 -->
 <template>
   <input-b v-model="model" 
     :size="size"
     :prefix="prefix" 
     :disable="disable"
-    :objctrl="objctrl"
     @validate="emit('validate', true)"
     @change="emit('change', true)"/>
 </template>
@@ -22,8 +21,7 @@ const emit = defineEmits(['validate', 'change'])
 const props = defineProps({
   size: String,
   prefix: String,
-  disable: Boolean,
-  objctrl: Object
+  disable: Boolean
 })
 
 </script>

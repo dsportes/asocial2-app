@@ -17,14 +17,14 @@
     header-class="full-width tbs" :label="$t('APnewManager')">
     <div class="column items-center q-pa-sm">
       <div class="q-my-md wmd full-width column items-center">
-        <input-a class="col q-mr-sm" prefix="orgcode"
-            v-model="areq.org.inp" size="org"/>
+        <input-b class="col q-mr-sm" prefix="orgcode"
+            v-model="areq.org" size="org"/>
         <q-separator color="orange" class="q-my-sm"/>
 
-        <input-a class="q-my-xs full-width" prefix="HPstore"
-          :objerr="areq.safeStore" v-model="areq.safeStore.inp"/>
-        <input-a class="q-my-xs full-width" prefix="FCtarget" size="p0"
-          :objerr="areq.targetUser" v-model="areq.targetUser.inp"/>
+        <input-b class="q-my-xs full-width" prefix="HPstore"
+          v-model="areq.safeStore"/>
+        <input-b class="q-my-xs full-width" prefix="FCtarget" size="p0"
+          :v-model="areq.targetUser"/>
         <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
         <btn-cond class="col-auto" :label="$t('APgrantmgr')" icon="check"
           :disable="diagReq !== ''" @ok="grantManager"/>
@@ -61,28 +61,10 @@ import stores from '../stores/all'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import InputA from '../components-fw/InputA.vue'
+import InputB from '../components-fw/InputB.vue'
 import { GrantNewManager, ListManagers } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-/*
-import { saveAs } from 'file-saver'
-import DialogStd1 from '../components-fw/DialogStd1.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
-import InputPs from '../components-fw/InputPs.vue'
-
-import HelpButton from '../components-fw/HelpButton.vue'
-import ChooseIt from '../components-fw/ChooseIt.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
-import BarOpen1 from '../components-fw/BarOpen1.vue'
-*/
-// import anonymousW from '../assets/anonymous_white.png'
-// import anonymousB from '../assets/anonymous_black.png'
-// import databaseW from '../assets/database_white.png'
-// import databaseB from '../assets/database_black.png'
-// @ts-ignore
-// import superman from '../assets/superman.jpg'
 
 const encoder = new TextEncoder()
 
@@ -158,13 +140,13 @@ const diagReq = computed(() => {
 const areq = reactive({
   targetUser: { inp: '', err: ''},
   safeStore: { inp: '', err: ''},
-  org: { inp: session.currentOrg || '' }
+  org: { inp: session.currentOrg || '', err: '' }
 })
 
 const resetAreq = () => {
   areq.targetUser = { inp: '', err: ''}
   areq.safeStore =  { inp: '', err: ''}
-  areq.org = { inp: '' }
+  areq.org = { inp: '', err: '' }
 }
 
 const grantManager = async () => {
