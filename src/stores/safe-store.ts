@@ -96,6 +96,11 @@ Chaque row décrit une _session épinglée_:
 Il existe une base de données IDB de nom `app_x` où `x` est le hash court de `userId + '/' + profId`: elle contient les **documents en cache** de cette session.
 */
 
+const dlv = (time: number) : boolean => {
+  const d = Math.floor(Date.now() / 86400000)
+  return  Math.floor(time / 86400) < (d - 7)
+}
+
 export type LocPref = {
   code: string
   time: number
@@ -106,6 +111,36 @@ export type Profile = {
   profId: string
   about: string
   crIds: string[]
+}
+
+/*
+- `svc`: service
+- `org`: organisation
+- `invitId` : ID de l'invitation
+- `majeur`
+- `mineur`
+- `time`: date-heure de création. Ceci détermine aussi sa date d'auto-destruction.
+- `status`: 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
+- `comment`: texte libre écrit par U à la création (rien que pour lui).
+*/
+export type Invit = {
+  svc: string
+  org: string
+  invitId: string
+  time: number
+  major: string
+  minor: string
+  status: number
+  comment: string
+}
+
+export type AddInvit = {
+  userId: string
+  shk: string
+  invitId: string
+  status: number
+  time: number
+  invit: string // Objet invit sérialisé crypté en base64
 }
 
 const encoder = new TextEncoder()
@@ -397,6 +432,10 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const skeys : Ref<Map<string, Uint8Array>> = ref(null)
 
+  /* Section "invits"
+  */
+  const mySafeInvits: Ref<Map<string, Invit>> = ref(null)
+
   const skey = (svc: string, org: string, role: string, docId?: string) :Uint8Array => {
     return skeys.get(svc + '/' + org + '/' + role + '/' + (docId || ''))
   }
@@ -451,6 +490,7 @@ export const useSafeStore = defineStore('safe', () => {
     await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
     await loadProfiles(safe) // profiles
+    await loadInvits(safe) // invits
   }
 
   const loadDevices = async (safe: Safe) : Promise<void> => {
@@ -580,6 +620,30 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds.value = m
     if (mcreds.size || delcreds.length)
       await updateCreds(mcreds, delcreds, null, null, true)
+  }
+
+  /* safe.invits: Object : invitId : { status, time, data }
+  */
+  const loadInvits = async (safe: Safe) : Promise<void> => {
+    if (!safe.invits) {
+      mySafeInvits.value = new Map()
+      return
+    }
+    const msvc = stores.config.K.SERVICES
+    const m = new Map<string, Invit>()
+     
+    for (const xid in safe.invits) {
+      const x = safe.invits[xid]
+       if (!dlv(x.time)) try {
+        const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.invits[x.data]))) as Invit
+        inv.status = x.status
+        if (msvc[inv.svc])
+          m.set(inv.invitId, inv)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+    mySafeInvits.value = m
   }
 
   // Set des organisations managées par svc
@@ -742,6 +806,7 @@ export const useSafeStore = defineStore('safe', () => {
     creds: Object
     profiles: Object
     prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+    invits: Object // une propriété par invitation
   }
 
   const updSafeCodes = async (
@@ -816,7 +881,8 @@ export const useSafeStore = defineStore('safe', () => {
       devices: null,
       creds: null,
       profiles: null,
-      prefs: null
+      prefs: null,
+      invits: null
     }
 
     let op = new SafeOperation('$SetPubKeys', '')
@@ -964,6 +1030,56 @@ export const useSafeStore = defineStore('safe', () => {
     shk: string
     profId: string
     about: string
+  }
+
+  type StatusInvit = {
+    targetId: string
+    invitId: string
+    status: number
+  }
+
+  const createInvit = async (invit: Invit) => {
+    const add : AddInvit = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      invitId: invit.invitId,
+      time: invit.time,
+      status: invit.status,
+      invit: u8ToB64(await Crypt.crypt(encode(invit), keyK.value), true)
+    }
+    const op = new SafeOperation('$AddInvit', mySafeStore.value)
+    let ret
+    try {
+      op.args = {addInvit: add}
+      ret = await op.post()
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  const statusInvit = async (invitId: string, status: number) => {
+        const now = Date.now()
+    const sti : StatusInvit = {
+      targetId: userId.value,
+      invitId: invitId,
+      status
+    }
+    const op = new SafeOperation('$StatusInvit', mySafeStore.value)
+    let ret
+    try {
+      op.args = {statusInvit: sti}
+      ret = await op.post()
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
   }
 
   /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
@@ -1565,6 +1681,7 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds, getCreds, skey, managedOrgs,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
+    createInvit, statusInvit,
     auth,
     devices,
     getAllSessions,

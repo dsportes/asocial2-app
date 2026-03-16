@@ -764,8 +764,13 @@ Des utilisateurs, ou toutes formes de collectifs d'utilisateurs, peuvent toutefo
 - dont les données résident, cryptées, dans la base de données de leur choix.
 - dont ils assument eux-mêmes la gestion (sécurité, disponibilité, etc.).
 
+<img src="images/flowers.png" style="background-color:white">
+
 Une liste de _sites connus de l'application_ est proposée avec un **libellé** qui facilite la sélection par l'utilisateur.
 Pour désigner un site non répertorié, l'utilisateur est convié à donner son URL. 
+
+Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
+
 `,
 
 LOGauthbypin_label: 'Login par code PIN possible pour:',
@@ -902,6 +907,8 @@ Un **coffre fort** est créé pour mémoriser en toute sécurité les données "
 - qui est le seul à connaître la clé qui **crypte** son contenu,
 - le _coffre_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
 `,
+  INVcrok: 'Demande d\'invitation enregistrée.',
+  INVcrko: 'Echec de l\'enregistrement de la dDemande d\'invitation.',
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',

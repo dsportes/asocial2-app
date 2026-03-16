@@ -1,6 +1,7 @@
 import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
 import { u8ToB64, b64ToU8 } from './util'
 import stores from '../stores/all'
+import { Invit } from '../stores/safe-store'
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
 import { Operation } from './operation'
@@ -175,6 +176,75 @@ export class AuthRecord {
         if (!this.signatures) this.signatures = {}
         this.signatures[c.role + '/' + (c.docId || '')] = sign
       }
+    }
+  }
+
+}
+
+type MajorDescr = {
+  hasKey: boolean,
+  label: string,
+  hasMinor: boolean
+}
+
+/* ### Document `Invitation` dans la base du service
+*/
+export class Invitation {
+  org: string // organisation
+  invitId: string // ID de l'invitation
+  major: string //code majeur 
+  minor: string // code mineur
+  time: number // date-heure de création. Ceci détermine aussi sa date d'auto-destruction.
+  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
+  userId: string // ID de U (demandeur)
+  safeStore: string // URL du store hébergeant le safe de U
+  skeyK: Uint8Array // clé symétrique générée par U, cryptée par sa clé K. Requise ou non selon le `major`.
+  pemU: string // clé publique C de U.
+  txtm: string // texte de motivation de la demande d'invitation (en clair).
+  txtx: string // quand déclinée, texte d'explication de U (en clair).
+  label: string // pour les codes `major` qui en exige un, _label_ en clair à faire figurer dans le document à créer.
+  // Données fixées par le sponsor**
+  pemS: string // clé publique du sponsor traitant l'invitation.
+  txti: string | Uint8Array // texte de réponse du sponsor, crypté par pemS / U.
+      // - si acceptation: termes explicatifs des conditions.
+      // - si rejet: justificatif textuel de rejet par le sponsor.
+  role: string // rôle du credential associé (et classe du document associé).
+  docId: string // `docId` du credential associé (et du document associé le cas échéant).
+  cond: any // données à faire figurer en `cond` du credential.
+  etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
+
+  async init (
+      org: string, 
+      major: string,
+      minor: string,
+      txtm: string,
+      label: string
+    ) : Promise<Invitation> {
+    this.org = org
+    this.invitId = Crypt.rnd(8)
+    this.status = 1
+    this.major = major
+    this.minor = minor || ''
+    this.time = Math.floor(Date.now() / 1000)
+    this.label = label || ''
+    this.txtm = txtm || ''
+    const sf = stores.safe
+    const majorDescr = stores.config.K.MAJORS[this.major] as MajorDescr
+    this.userId = sf.userId
+    this.safeStore = sf.safeStore
+    this.skeyK = majorDescr.hasKey ? await Crypt.crypt(sf.keyK, Crypt.random(32)) : null
+    return this
+  }
+
+  toInvit (svc: string, comment: string) : Invit {
+    return {
+      svc, comment,
+      org: this.org,
+      invitId: this.invitId,
+      time: this.time,
+      major: this.major,
+      minor: this.minor,
+      status: this.status
     }
   }
 

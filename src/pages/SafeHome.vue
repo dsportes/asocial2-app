@@ -93,11 +93,11 @@
   </div>
 
   <div v-if="sf.tab3 === 'newr' && sf.step === 3" class="q-pa-xs">
-
+    <invit-newrequest/>
   </div>
 
   <div v-if="sf.tab3 === 'scan' && sf.step === 3" class="q-pa-xs">
-
+    <invit-scanrequests/>
   </div>
 
   <!-- Dialogue d'options de lancement -->
@@ -171,6 +171,8 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
+import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
+import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
 
 // @ts-ignore
 import databaseW from '../assets/database_white.png'

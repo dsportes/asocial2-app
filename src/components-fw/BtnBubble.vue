@@ -17,35 +17,29 @@ Les liens vers les images sont de cette forme:
 L'image doit figurer dans public/images
 -->
 <template>
-  <q-icon class="cursor-pointer"
-    name="question_mark" 
-    :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
-    size="20px">
-    <q-popup-proxy ref="qpp" 
-      transition-show="flip-up" 
-      transition-hide="flip-down"
-      breakpoint="200px">
-      <div :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pa-xs q-mb-xl'" 
-        @click="hide">
-        <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
-        <sd-blanc v-else :text="text2()"/>
-      </div>
-    </q-popup-proxy>
-  </q-icon>
+<q-icon class="cursor-pointer"
+  name="question_mark" 
+  :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
+  size="20px">
+  <q-menu auto-close>
+    <q-scroll-area style="height: 300px; max-height:70vh; width: 400px; max-width:90vw"
+      :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pt-xs q-px-xs q-pb-xl'"
+      :barStyle="barStyle" :thumbStyle="thumbStyle">
+      <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
+      <sd-blanc v-else :text="text2()"/>
+    </q-scroll-area>
+  </q-menu>
+</q-icon>
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
-import { ref } from 'vue'
-// @ts-ignore
-import { useQuasar } from 'quasar'
-
 import stores from '../stores/all'
 
 import SdNoir from './SdNoir.vue'
 import SdBlanc from './SdBlanc.vue'
 
-const $q = useQuasar()
+const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
+const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 
 const config = stores.config
 const url = config.K.DOC_URLS[config.locale]
@@ -58,11 +52,6 @@ const text2 = () => {
   return props.text.replaceAll('href="$$/', 'href="' + url)
 }
 
-const qpp = ref(null)
-
-function hide () {
-  qpp.value.hide()
-}
 </script>
 
 <style lang="scss" scoped>

@@ -1,9 +1,10 @@
 import { Operation, SafeOperation } from './operation'
-import { sleep } from './util'
+// import { sleep } from '../src-fw/util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
-import { Subscription } from'./document'
-import { Credential, CredRequest } from './credential'
+import { Subscription } from'../src-fw/document'
+import { Credential, Invitation } from '../src-fw/credential'
+import { Invit } from '../stores/safe-store'
 
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
@@ -239,6 +240,29 @@ export class ListManagers extends Operation {
     } catch(e) {
       this.ko(e)
       return null
+    }
+  }
+}
+
+export class CreateInvit extends Operation {
+  constructor (SVC: string) { super('CreateInvit', SVC) }
+
+  async run (
+    org: string, 
+    major: string,
+    minor: string,
+    txtm: string,
+    label: string,
+    comment: string,
+  ) : Promise<Invit> {
+    try {
+      const invitation = new Invitation()
+      await invitation.init(org, major, minor, txtm, label)
+      this.args = { org, invitation}
+      const res = await this.post()
+      return res.status === 0 ? invitation.toInvit(this.SVC, comment) : null
+    } catch(e) {
+      this.ko(e)
     }
   }
 }
