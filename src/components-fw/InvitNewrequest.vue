@@ -106,13 +106,10 @@ const create = async () => {
   const op = new CreateInvit(SVC.value)
   const invit = await op.run(org.inp, major.value.value, minor.inp, 
     txtm.value, label.inp, comment.value)
-  console.log('retour')
-  /*
   if (invit)
     status = await sf.createInvit(invit)
-  await ui.diagDisplay(status ? $t('INCRko') : $t('INVcrok'))
+  await ui.diagDisplay(status ? $t('INVcrko') : $t('INVcrok'))
   if (!status) reset()
-  */
 }
 </script>
 

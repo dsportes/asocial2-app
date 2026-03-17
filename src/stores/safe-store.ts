@@ -635,7 +635,7 @@ export const useSafeStore = defineStore('safe', () => {
     for (const xid in safe.invits) {
       const x = safe.invits[xid]
        if (!dlv(x.time)) try {
-        const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.invits[x.data]))) as Invit
+        const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
         inv.status = x.status
         if (msvc[inv.svc])
           m.set(inv.invitId, inv)
@@ -1045,7 +1045,7 @@ export const useSafeStore = defineStore('safe', () => {
       invitId: invit.invitId,
       time: invit.time,
       status: invit.status,
-      invit: u8ToB64(await Crypt.crypt(encode(invit), keyK.value), true)
+      invit: u8ToB64(await Crypt.crypt(keyK.value, encode(invit)), true)
     }
     const op = new SafeOperation('$AddInvit', mySafeStore.value)
     let ret

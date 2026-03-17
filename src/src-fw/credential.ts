@@ -225,7 +225,7 @@ export class Invitation {
     this.status = 1
     this.major = major
     this.minor = minor || ''
-    this.time = Math.floor(Date.now() / 60000)
+    this.time = Math.floor(Date.now() / 1000)
     this.label = label || ''
     this.txtm = txtm || ''
     const sf = stores.safe
