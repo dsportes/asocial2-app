@@ -42,7 +42,7 @@
 
   <div class="row full-width justify-between">
     <btn-cond icon="undo" flat :label="$t('reset')" @ok="reset"/>
-    <btn-cond icon="check" color="primary" @okX="create" 
+    <btn-cond icon="check" color="primary" @ok="create" 
       :label="$t('INVrec')"
       :disable="!completed"/>
   </div>
@@ -106,10 +106,13 @@ const create = async () => {
   const op = new CreateInvit(SVC.value)
   const invit = await op.run(org.inp, major.value.value, minor.inp, 
     txtm.value, label.inp, comment.value)
+  console.log('retour')
+  /*
   if (invit)
     status = await sf.createInvit(invit)
   await ui.diagDisplay(status ? $t('INCRko') : $t('INVcrok'))
   if (!status) reset()
+  */
 }
 </script>
 

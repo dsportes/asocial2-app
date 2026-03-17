@@ -194,7 +194,7 @@ export class Invitation {
   invitId: string // ID de l'invitation
   major: string //code majeur 
   minor: string // code mineur
-  time: number // date-heure de création. Ceci détermine aussi sa date d'auto-destruction.
+  time: number // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
   status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
   userId: string // ID de U (demandeur)
   safeStore: string // URL du store hébergeant le safe de U
@@ -225,7 +225,7 @@ export class Invitation {
     this.status = 1
     this.major = major
     this.minor = minor || ''
-    this.time = Math.floor(Date.now() / 1000)
+    this.time = Math.floor(Date.now() / 60000)
     this.label = label || ''
     this.txtm = txtm || ''
     const sf = stores.safe
@@ -233,7 +233,18 @@ export class Invitation {
     this.userId = sf.userId
     this.safeStore = sf.safeStore
     this.skeyK = majorDescr.hasKey ? await Crypt.crypt(sf.keyK, Crypt.random(32)) : null
+    this.pemU = sf.auth.C
     return this
+  }
+
+  static props = ['invitId', 'major', 'minor', 'time', 'status', 'userId', 'safeStore',
+    'skeyK', 'pemU', 'txtm', 'label']
+
+  toObj () : Object {
+    const x = {}
+    for (const p of Invitation.props) x[p] = this[p] || null
+    x['ttl'] = Math.floor(this.time / 60)
+    return x
   }
 
   toInvit (svc: string, comment: string) : Invit {

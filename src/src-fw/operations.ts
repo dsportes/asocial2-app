@@ -258,9 +258,9 @@ export class CreateInvit extends Operation {
     try {
       const invitation = new Invitation()
       await invitation.init(org, major, minor, txtm, label)
-      this.args = { org, invitation}
+      this.args = { org, invObj: invitation.toObj()  }
       const res = await this.post()
-      return res.status === 0 ? invitation.toInvit(this.SVC, comment) : null
+      return invitation.toInvit(this.SVC, comment)
     } catch(e) {
       this.ko(e)
     }

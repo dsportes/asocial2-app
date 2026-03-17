@@ -967,6 +967,7 @@ bla bla
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
   EX_3003: 'BUG probable: retour d\'opération [{0}] MASTERDIR: {1}',
+  EX_3004: 'BUG probable: classe de document [{0}] non déclarée dans config.documentClasses',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau

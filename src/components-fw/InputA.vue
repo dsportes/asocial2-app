@@ -114,7 +114,7 @@ const undo = () => {
   if (props.initval) model.value = props.initval }
 
 const xe = () => {
-  if (reg && !reg.test(model.value)) return 'badform'
+  if (reg && model.value.inp.length && !reg.test(model.value.inp)) return 'badform'
   if (model.value.length < sz.value[0]) return 'tooshort'
   if (model.value.length > sz.value[1]) return 'toolong'
   if (props.size === 'isotime' && isNaN(Date.parse(model.value))) return 'badform'
