@@ -5,8 +5,9 @@ Résultat en v-model.
 <template>
 <q-expansion-item dense v-model="exp">
   <template v-slot:header>
-    <div class='row full-width items-start' style="position:relative;top:4px;">
-      <btn-bubble class="q-mr-sm" :text="$t(pfx + '_bub')"/>
+    <div class="row full-width items-start">
+      <btn-bubble class="q-mr-sm" :text="$t(pfx + '_bub')" 
+        style="position:relative;top:-4px;"/>
       <div class="titre-sm text-italic">{{$t('SEStit')}}</div>
       <div class='font-mono fs-sm text-bold text-italic q-mx-sm'
         style="position:relative; top:-2px">{{ site }}</div>

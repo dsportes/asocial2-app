@@ -129,9 +129,9 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, reactive, computed, onUnmounted, watch } from 'vue'
+import { ref, Ref, reactive, computed } from 'vue'
 import stores from '../stores/all'
-import { sty, dhcool } from '../src-fw/util'
+import { dhcool } from '../src-fw/util'
 import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
   GetOrgConfig, SetOrgConfig } from '../src-fw/operations'
 

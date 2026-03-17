@@ -7,7 +7,7 @@
       <login-block @logged="sf.setStep(2)"/>
     </div>
 
-    <div v-if="sf.tab === 'login' && sf.step === 2" class="column items-center q-pa-sm">
+    <div v-if="sf.step === 2" class="column items-center q-pa-sm">
       <mode-incognito/>
 
       <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>

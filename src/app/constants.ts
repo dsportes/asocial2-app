@@ -50,20 +50,28 @@ export const K = {
     entid: [0, 60],
     isotime: [24, 24],
     svc: [3, 8, 'svc'],
-    contact: [16, 24]
+    contact: [16, 24],
+    minor: [0, 12, 'an2']
   },
 
   regexp: {
     b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
     num: new RegExp('^[0-9]*$'),
     an1: new RegExp('^[a-z][0-9a-z]*$'),
+    an2: new RegExp('^[a-zA-Z][0-9a-zA-Z]*$'),
     oper: new RegExp('^[$][0-9A-Z]*$'),
     svc: new RegExp('^[A-Z][0-9A-Z]*$')
   },
 
-  phrasestar: new Set(['ps', 'p1', 'contact']),
+  phrasestar: { ps: 2, p1: 2, contact: 2},
 
   roles: new Set(['manager', 'auteur', 'lecteur', 'groupe']),
+
+  majorInvits: {
+    writer: { hasKey: true, hasLabel: true, hasMinor: true },
+    reader: { hasKey: false, hasLabel: true, hasMinor: true },
+    cedit: { hasKey: false, hasLabel: false, hasMinor: false }
+  },
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

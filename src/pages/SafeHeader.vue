@@ -11,7 +11,8 @@
     <help-button class="" page="DOCpg"/>
   </q-toolbar>
 
-  <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" class="full-width bg-primary text-white shadow-2">
+  <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" breakpoint="2000px"
+    class="full-width bg-primary text-white shadow-2">
     <q-tab name="login" icon="img:icons/anonymous_white.png" :label="$t('login')" />
     <q-tab name="guest" icon="img:icons/flowers.png" :label="$t('guest')" />
   </q-tabs>
@@ -31,6 +32,12 @@
       <q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" />
       <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
     </q-tabs>
+    <div class="row justify-between q-ma-xs items-center">
+      <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
+        @ok="sf.setStep(1)"/>
+      <btn-cond icon="chevron_right" color="none" :label="$t('LOGsession')"
+        @ok="sf.setStep(2)"/>
+    </div>
   </div>
 </div>
 </template>

@@ -17,19 +17,20 @@ Les liens vers les images sont de cette forme:
 L'image doit figurer dans public/images
 -->
 <template>
-<q-icon class="cursor-pointer"
-  name="question_mark" 
-  :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
-  size="20px">
-  <q-menu auto-close>
-    <q-scroll-area style="height: 300px; max-height:70vh; width: 400px; max-width:90vw"
-      :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pt-xs q-px-xs q-pb-xl'"
-      :barStyle="barStyle" :thumbStyle="thumbStyle">
-      <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
-      <sd-blanc v-else :text="text2()"/>
-    </q-scroll-area>
-  </q-menu>
-</q-icon>
+  <q-icon flat class="cursor-pointer"
+    name="question_mark" 
+    :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
+    size="20px">
+    <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
+      style="height: 300px; max-height:70vh; width: 400px; max-width:90vw">
+      <q-scroll-area style="height: 300px;"
+        :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pt-xs q-px-xs q-pb-xl'"
+        :barStyle="barStyle" :thumbStyle="thumbStyle">
+        <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
+        <sd-blanc v-else :text="text2()"/>
+      </q-scroll-area>
+    </q-menu>
+  </q-icon>
 </template>
 
 <script setup lang="ts">

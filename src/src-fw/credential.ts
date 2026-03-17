@@ -183,7 +183,7 @@ export class AuthRecord {
 
 type MajorDescr = {
   hasKey: boolean,
-  label: string,
+  hasLabel: boolean,
   hasMinor: boolean
 }
 
@@ -229,7 +229,7 @@ export class Invitation {
     this.label = label || ''
     this.txtm = txtm || ''
     const sf = stores.safe
-    const majorDescr = stores.config.K.MAJORS[this.major] as MajorDescr
+    const majorDescr = stores.config.K.majorInvits[this.major] as MajorDescr
     this.userId = sf.userId
     this.safeStore = sf.safeStore
     this.skeyK = majorDescr.hasKey ? await Crypt.crypt(sf.keyK, Crypt.random(32)) : null

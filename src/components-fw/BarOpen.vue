@@ -28,9 +28,7 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 import { computed } from 'vue'
 
 import stores from '../stores/all'
-import { sty } from '../src-fw/util'
 
-import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const emit = defineEmits(['open'])

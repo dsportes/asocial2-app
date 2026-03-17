@@ -72,7 +72,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
     <template v-slot:append>
       <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
-      <btn-cond round size="md" icon="close" @ok="model = ''"
+      <btn-cond round size="md" icon="close" @ok="model.inp = ''"
         :disable="disable || model.inp.length === 0" color="none"/>
       <btn-cond v-if="hasInitVal && !disable && chg"
         size="md" icon="undo" color="none" round 
@@ -123,7 +123,7 @@ const props = defineProps({
   fncheck: Function
 })
 
-const star = config.K.phrasestar.has(props.size)
+const star = config.K.phrasestar[props.size] || 0
 
 const nv = ref(props.noval || false)
 
@@ -146,7 +146,7 @@ const bubble = computed(() => {
 })
 
 const mayStar = computed(() => 
-  star && !props.disable && model.value.inp.length > 2 && model.value.inp.endsWith('*'))
+  star && !props.disable && model.value.inp.length > star && model.value.inp.endsWith('*'))
 
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
@@ -167,7 +167,7 @@ const undo = () => {
   if (props.initVal) model.value = props.initVal }
 
 const xe = () => {
-  if (reg && !reg.test(model.value.inp)) return 'badform'
+  if (reg && model.value.inp.length && !reg.test(model.value.inp)) return 'badform'
   if (model.value.inp.length < sz.value[0]) return 'tooshort'
   if (model.value.inp.length > sz.value[1]) return 'toolong'
   if (props.size === 'isotime' && isNaN(Date.parse(model.value.inp))) return 'badform'

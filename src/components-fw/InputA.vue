@@ -68,7 +68,7 @@ const props = defineProps({
   fncheck: Function
 })
 
-const star = config.K.phrasestar.has(props.size)
+const star = config.K.phrasestar[props.size] || 0
 
 const nv = ref(props.noval || false)
 
@@ -93,8 +93,7 @@ const bubble = computed(() => {
 })
 
 const mayStar = computed(() => 
-  star && !props.disable && model.value.length > 2 && model.value.endsWith('*'))
-const mayVal = ref(false)
+  star && !props.disable && model.value.length > star && model.value.endsWith('*'))
 
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
@@ -112,7 +111,7 @@ const chg = computed(() => !props.disable && hasInitVal.value && props.initval.v
 const hint = computed(() => 
   $t('minmax', sz.value) + (!err.value && !nv.value ? $t('pressret') : ''))
 const undo = () => {
-  if (_initval.value !== null) model.value = _initval.value }
+  if (props.initval) model.value = props.initval }
 
 const xe = () => {
   if (reg && !reg.test(model.value)) return 'badform'

@@ -796,6 +796,7 @@ bla bla
   LOGbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
   LOGbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, le TERMINAL A PERDU SA CERTIFICATION.',
   LOGback: 'Retour au Login',
+  LOGsession: 'Ouvrir une session',
   LOGnet_1: 'Accès à Internet',
   LOGnet_2: 'Mode AVION: pas d\'accès à Internet',
   LOGnet_3: `## Ouverture de session AVEC ou SANS Internet
@@ -884,7 +885,6 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   INVtit_1_bub: `## Déposer une demande d'invitation
 bla bla
 `,
-
   INVtit_2_label: 'Suivre mes demandes d\'invitation',
   INVtit_2_bub: `## Suivre mes demandes d'invitation
 bla bla
@@ -909,6 +909,26 @@ Un **coffre fort** est créé pour mémoriser en toute sécurité les données "
 `,
   INVcrok: 'Demande d\'invitation enregistrée.',
   INVcrko: 'Echec de l\'enregistrement de la dDemande d\'invitation.',
+  INVmajor_c: 'Code majeur',
+  INVmajor_label: 'Quelle invitation sollicitez-vous ?',
+  INVmajor_bub: `## Quelle invitation sollicitez-vous ?
+bla bla
+`,
+  INVcomment_c_label: 'Commentaire',
+  INVcomment_label: 'Commentaire strictement personnel',
+  INVcomment_bub: `### Commentaire strictement personnel
+bla bla
+`,
+  INVmotiv_label: 'Qui suis-je, ma motivation (10c au moins) ...',
+  INVmotiv_bub: `### Qui suis-je, ma motivation ...
+bla bla
+`,
+  INVminor_c_label: 'Code "sponsoring"',
+  INVminor_label: 'Spécifiquement pour quel "sponsor" ?',
+  INVminor_bub: `## Spécifiquement pour quel "sponsor" ?
+bla bla
+`,
+  INVrec: 'Enregistrer la demande',
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
@@ -995,5 +1015,20 @@ Un **coffre fort** est créé pour mémoriser en toute sécurité les données "
   pickfile: 'Choisir un fichier local',
   blabla: 'bla bla', // Test surcharge traductions
   blabla1: 'bla1 bla1', // Test surcharge traductions
-  titre: 'Test très simple - compteur: {0}'
+  titre: 'Test très simple - compteur: {0}',
+
+  INV_writer: 'Rédacteur',
+  INVwriter: 'Nom d\'auteur',
+  INVwriter_label: 'Nom d\'auteur',
+  INVwriter_bub: `### Nom d'auteur
+bla bla
+`,
+  INV_reader: 'Relecteur',
+  INVreader: 'Pseudo de relecteur',
+  INVreader_label: 'Pseudo de relecteur',
+  INVreader_bub: `### Pseudo de relecteur
+bla bla
+`,
+  INV_cedit: 'Membre du comité éditorial',
+
 }

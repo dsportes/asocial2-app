@@ -11,8 +11,8 @@ Event émis: logged
         :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
         @click="selectUser(u)">{{u.pseudo}}</div>
     </div>
-    <div v-if="selectedUser" :class="sty('sm')">
-      <div class="full-width q-pa-sm">
+    <div v-if="selectedUser" class="wsm">
+      <div class="q-pa-sm">
         <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
     </div>
