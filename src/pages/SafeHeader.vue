@@ -22,7 +22,7 @@
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
     <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
-      @ok="dialogs.CredsMgr = false"/>
+      @ok="dialogs.CredsMgr = true"/>
   </div>
   <creds-mgr v-model="dialogs.CredsMgr"/>
 

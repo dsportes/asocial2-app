@@ -7,6 +7,7 @@ export default {
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
   ok: 'OK',
+  me: 'moi',
   guest: 'Invité',
   login: 'Login',
   later: 'Plus tard',
@@ -183,6 +184,8 @@ export default {
   op_SetSvcOrgStatus: 'Met à jour le status d\'une organisation pour un service.',
   op_GetOrgConfig: 'Récupération de la configuration d\'une organisation',
   op_SetOrgConfig: 'Enregistrement de la configuration d\'une organisation',
+  op_CreateInvit: 'Création d\'une demande d\'invitation',
+  op_ListInvits: 'Liste des invitations',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -881,6 +884,36 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',
 
+  MNOtab1: 'Managers des organisations',
+  MNOtab2: 'Traiter les invitations',
+  MNOtit1: 'Liste des managers de l\'organisation',
+  MNOtit2: 'Traitement des invitations en attente',
+  MNOcred: 'Droit d\'accès insuffisant ("manager" ou "sponsor" requis)',
+  MNOnoinvits: 'Pas d\'invitation trouvée',
+  MNOsearch0: '(pas de recherche en cours)',
+  MNOsearch1: 'Recherche en cours ...',
+  MNOmajor_label: 'Classe d\'invitation recherchée',
+  MNOmajor_bub: `### Classe d\'invitation recherchée
+bla bla
+`,
+
+  INVtitlst: 'Liste',
+  INVx_minor: 'Code mineur:',
+  INVx_user: 'ID du demandeur:',
+  INVx_me: 'Je suis le sponsor ayant traité la demande',
+  INVx_txtm: 'Texte de motivation de la demande d\'invitation',
+  INVx_txtx: 'Pourquoi le demandeur a finalement décliné l\'invitation validée',
+  INVx_txti: 'Ma réponse à la demande',
+  INVx_cred: 'Droit d\'accès associé (rôle / cible):',
+  INVbtn_val: 'Valider',
+  INVbtn_rej: 'Rejeter',
+  INVst_1: 'déposée',
+  INVst_2: 'validée',
+  INVst_3: 'refusée',
+  INVst_4: 'acceptée',
+  INvst_5: 'déclinée',
+  INVbtn1: 'Demande d\'invitation',
+  INVbtn2: 'Suivre mes invitations',
   INVtit_1_label: 'Déposer une demande d\'invitation',
   INVtit_1_bub: `## Déposer une demande d'invitation
 bla bla

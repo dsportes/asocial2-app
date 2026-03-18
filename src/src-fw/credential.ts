@@ -3,8 +3,8 @@ import { u8ToB64, b64ToU8 } from './util'
 import stores from '../stores/all'
 import { Invit } from '../stores/safe-store'
 // @ts-ignore
-import { encode } from '@msgpack/msgpack'
-import { Operation } from './operation'
+import { decode } from '@msgpack/msgpack'
+// import { Operation } from './operation'
 
 const encoder = new TextEncoder()
 
@@ -159,7 +159,7 @@ export class AuthRecord {
 
   async signUser () {
     const sf = stores.safe
-    this.userSign = await Crypt.sign(fromPem(sf.auth.S), this.challenge)
+    this.userSign = sf.auth && sf.auth.S ? await Crypt.sign(fromPem(sf.auth.S), this.challenge) : null
   }
 
   get toObj() {
@@ -212,6 +212,7 @@ export class Invitation {
   docId: string // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
   etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
+  me ? :boolean // user est le traitant de la demande
 
   async init (
       org: string, 
@@ -234,6 +235,39 @@ export class Invitation {
     this.safeStore = sf.safeStore
     this.skeyK = majorDescr.hasKey ? await Crypt.crypt(sf.keyK, Crypt.random(32)) : null
     this.pemU = sf.auth.C
+    return this
+  }
+
+  async fromList (bin : Uint8Array, org: string) : Promise<Invitation> {
+    const x = decode(bin)
+    this.org = org
+    this.invitId = x.invitId
+    this.status = x.status
+    this.major = x.major
+    this.minor = x.minor || ''
+    this.time = x.time
+    this.label = x.label || ''
+    this.txtm = x.txtm || ''
+    const sf = stores.safe
+    this.userId = x.userId
+    this.safeStore = x.safeStore
+    this.skeyK = null
+    this.me = x.pemS === sf.auth.C
+    if (this.me && this.status > 1) { // user est le traitant de la demande
+      const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
+      this.txti = await Crypt.decrypt(aes, x.txti)
+    } else this.txti = ''
+    if (this.status === 2 || this.status >= 4) {
+      this.role = x.role
+      this.docId = x.docId
+      this.cond = x.cond
+      this.etc = x.etc
+    } else {
+      this.role = null
+      this.docId = null
+      this.cond = null
+      this.etc = null
+    }
     return this
   }
 

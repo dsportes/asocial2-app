@@ -33,6 +33,12 @@ Contrôlé par ui.leftMenu
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
+      <btn-cond class="q-mb-sm" icon="add_circle"
+        flat :label="$t('INVbtn1')"
+        @ok="ui.closeMenu(); dialogs.NewInvit = true"/>
+      <btn-cond class="q-mb-sm" icon="search"
+        flat :label="$t('INVbtn2')"
+        @ok="ui.closeMenu(); dialogs.ScanInvit = true"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
         flat :label="$t('PAGEtest')"
         @ok="ui.closeMenu(); ui.setPage('test')"/>
@@ -43,6 +49,20 @@ Contrôlé par ui.leftMenu
   </q-page-container>
 
   <managed-orgs v-model="dialogs.ManagedOrgs"/>
+
+  <dialog-std2 v-model="dialogs.NewInvit" 
+    :title="$t('INVtit_1_label')" tbclass="tbs">
+    <template #default>
+      <invit-newrequest/>
+    </template>
+  </dialog-std2>
+
+  <dialog-std2 v-model="dialogs.ScanInvit" 
+    :title="$t('INVtit_2_label')" tbclass="tbs">
+    <template #default>
+      <invit-scanrequests/>
+    </template>
+  </dialog-std2>
 </q-layout>
 </template>
 
@@ -56,7 +76,10 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
+import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
+import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
 
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import ManagedOrgs from '../dialogs-fw/ManagedOrgs.vue'
 
 const sf = stores.safe
@@ -65,7 +88,7 @@ const ui = stores.ui
 const session = stores.session
 
 const dialogs = reactive({
-  ManagedOrgs: false
+  ManagedOrgs: false, NewInvit: false, ScanInvit: false
 })
 
 const backToOpenSession = async () => {

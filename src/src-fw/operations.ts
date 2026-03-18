@@ -1,10 +1,27 @@
-import { Operation, SafeOperation } from './operation'
-// import { sleep } from '../src-fw/util'
+// @ts-ignore
+// import { decode } from '@msgpack/msgpack'
+
+import { Operation } from './operation'
+import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/document'
 import { Credential, Invitation } from '../src-fw/credential'
 import { Invit } from '../stores/safe-store'
+
+export class Bug extends Operation {
+  constructor (SVC: string) { super('Bug', SVC) }
+
+  async run (org: string) : Promise<void> {
+    try {
+      this.args = { org }
+      const res = await this.post(true)
+      return res
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
 
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
@@ -261,6 +278,31 @@ export class CreateInvit extends Operation {
       this.args = { org, invObj: invitation.toObj()  }
       const res = await this.post()
       return invitation.toInvit(this.SVC, comment)
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export class ListInvits extends Operation {
+  constructor (SVC: string) { super('ListInvits', SVC) }
+
+  async run ( org: string, major: string, mgr?: boolean ) : Promise<Invitation[]> {
+    try {
+      this.args = { org, major, }
+      if (mgr)
+        this.sign('Org.manager')
+      const res = await this.post()
+      if (res.status) {
+        await stores.ui.diagDisplay($t('MNOcred'))
+        return []
+      }
+      const lst: Invitation[] = []
+      for(const x of res.list) {
+        const inv = new Invitation()
+        lst.push(await inv.fromList(x, org))
+      }
+      return lst
     } catch(e) {
       this.ko(e)
     }

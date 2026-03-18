@@ -1,5 +1,6 @@
 <template>
 <div class="column items-center">
+  <!--btn-cond label="BUG" @ok="bug"/-->
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>
@@ -173,6 +174,7 @@ import BarTitle from '../components-fw/BarTitle.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
 import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
 import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
+// import { Bug } from '../src-fw/operations'
 
 // @ts-ignore
 import databaseW from '../assets/database_white.png'
@@ -367,6 +369,11 @@ const opCalc = () => {
   sf.setStep(0)
   session.setStartContext('', '', new Map())
 }
+
+/* const bug = async () => {
+  await new Bug('AS2').run('doda')
+  console.log('bug done')
+} */
 
 </script>
 
