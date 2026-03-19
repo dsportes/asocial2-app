@@ -897,6 +897,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 bla bla
 `,
 
+  INVtitzoom: 'Invitation "{0}"',
   INVtitlst: 'Liste',
   INVx_time: 'Date-heure de dépôt:',
   INVx_status: 'Status:',

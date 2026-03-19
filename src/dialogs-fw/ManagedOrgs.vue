@@ -3,7 +3,7 @@
 - l'organisation sélectionnée. 
 -->
 <template>
-<dialog-std2 v-model="model" :title="$t('PanelManager')" tbclass="tbs">
+<dialog-std2 v-model="model" :title="$t('PanelManager')" tbclass="tbp">
   <template #hdr>
     <q-tabs dense v-model="tab" breakpoint="2000px"
       class="full-width bg-primary text-white shadow-2">
@@ -20,7 +20,7 @@
         :options="orgs" emit-value :label="$t('org')"/>
       <btn-cond class="col-1 text-right" round icon="check" @ok="doList"/>
     </div>
-    <div v-if="tab==='invits'"class="q-mx-md">
+    <div v-if="tab==='invits'"class="q-mx-xs">
       <bar-title prefix="MNOmajor"/>
       <div class="row items-center">
         <q-select class="col q-mr-md"
@@ -31,21 +31,11 @@
           :disable="org === '' || major === ''"
           @ok="getInvits"/>
       </div>
-      <q-toolbar v-if="zoomed" class="q-mt-sm tbp">
-        <btn-cond color="warning" size="md" icon="chevron_left"
-          @ok="zoomed = false" :label="$t('INVtitlst')"/>
-        <q-toolbar-title class="fs-md">
-          <div class="row">
-            <div class="font-mono">{{$t('INVst_' + selInv.status)}}</div>
-            <div class="q-ml-sm">{{dhcool(selInv.time * 1000)}}</div>
-          </div>
-        </q-toolbar-title>
-        <btn-cond v-if="selInv.status === 1" :label="$t('INVbtn_val')"
-          class="q-mr-xs" icon="check" @ok="validate"/>
-        <btn-cond v-if="selInv.status === 1" :label="$t('INVbtn_rej')"
-          icon="close" @ok="reject" color="warning"/>
-      </q-toolbar>
-      <q-separator v-else color="orange" class="q-mt-sm"/>
+      <q-separator color="orange" class="q-my-sm"/>
+      <invit-hdr v-if="zoomed" class="q-mb-sm"
+        :invit="selInv" :sponsor="isSponsor" back="INVtitlst"
+        @back="zoomed = false"
+        @validate="validate" @reject="reject" @accept="accept" @decline="decline" />
     </div>
   </template>
 
@@ -79,12 +69,13 @@
     </div>
 
     <div v-for="(inv, idx) in invits" :key="inv.invitId" :class="dkli(idx) + ' q-pa-xs'">
-      <invit-line :invit="inv" :selinvit="selInvit" @zoom="zoom(inv)"/>
+      <invit-line :invit="inv" :selinvit="selInv" @zoom="zoom(inv)"/>
     </div>
   </div>
 
-  <div v-if="tab === 'invits' && zoomed" class=" full-width q-pa-xs">
-
+  <div v-if="tab === 'invits' && zoomed" class="full-width q-pa-xs">
+    <invit-zoom :invit="selInv" />
+  </div>
 
 </template>
 </dialog-std2>
@@ -100,6 +91,8 @@ import { $t, dkli, dhcool, sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InvitLine from '../components-fw/InvitLine.vue'
+import InvitZoom from '../components-fw/InvitZoom.vue'
+import InvitHdr from '../components-fw/InvitHdr.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
@@ -121,19 +114,23 @@ const majOpts = ref([])
 for (const m of majors) 
   majOpts.value.push({ value: m, label: $t('INV_' + m)})
 
+const managedOrgs: Ref<Map<string, Set<string>>> = ref()
+
 const init = () => {
-  const managedOrgs: Map<string, Set<string>> = sf.managedOrgs() || new Map()
-  services.value = Array.from(managedOrgs.keys())
+  managedOrgs.value = sf.managedOrgs() || new Map()
+  services.value = Array.from(managedOrgs.value.keys())
   SVC.value = services.value.length ? services.value[0] : ''
-  orgs.value = Array.from(managedOrgs.get(SVC.value) || [])
+  orgs.value = Array.from(managedOrgs.value.get(SVC.value) || [])
   org.value = orgs.value.length ? orgs.value[0] : ''
   major.value = ''
 }
 
-const lstMgr = ref([])
+const isSponsor = computed(() => {
+  const e = managedOrgs.value.get(SVC.value)
+  return e && e.has(org.value)
+})
 
-const clinv = (inv) => (selInv.value && (inv.invitId = selInv.value.invitId) ? 'current' : 'nocurrent') +
- ' column q-py-xs full-width select cursor-pointer'
+const lstMgr = ref([])
 
 const doList = async () => {
   lstMgr.value = []
@@ -152,14 +149,11 @@ const init2 = () => {
   search.value = 0
   selInv.value = null
   zoomed.value = false
-  zoomed.value = false
+  invits.value = []
 }
 
-watch(major, (v) => {
-  search.value = 0
-  selInv.value = null
-  zoomed.value = false
-})
+watch([major, SVC, org], (v) => { init2() })
+
 const getInvits = async () => {
   search.value = 1
   invits.value = []
@@ -169,17 +163,28 @@ const getInvits = async () => {
   selInv.value = null
   zoomed.value = false
 }
+
 const zoom = (inv) => {
   selInv.value = inv
   zoomed.value = true
 }
 
-const validate = () => {
-
+const validate = () => { // SP valide l'invitation selInv
+  console.log('validate')
 }
 
-const reject = () => {
-  
+const reject = (txt: string) => { // SP rejete l'invitation selInv
+// txt: justificatif
+  console.log('reject', txt)
+}
+
+const accept = () => { // U accepte l'invitation selInv
+  console.log('accept')
+}
+
+const decline = (txt: string) => { // U décline l'invitation selInv
+// txt: justificatif
+  console.log('decline', txt)
 }
 
 init()
@@ -188,7 +193,4 @@ init2()
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.select:hover { background-color: $yellow-2; color: black; }
-.current { border: 1px solid $warning }
-.nocurrent { border: 1px solid transparent }
 </style>

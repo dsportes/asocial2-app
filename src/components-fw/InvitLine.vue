@@ -1,5 +1,5 @@
 <template>
-  <div :class="clinv()" @click="emit('zoom', invit)">
+  <div :class="clinv" @click="emit('zoom', invit)">
     <div class="row full-width">
       <div class="col-2 font-mono">{{$t('INVst_' + invit.status)}}</div>
       <div class="col-4">{{dhcool(invit.time * 1000)}}</div>
@@ -16,7 +16,10 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { ref, watch } from 'vue'
+
+import { $t, dhcool } from '../src-fw/util'
 
 const emit = defineEmits(['zoom'])
 const props = defineProps({
@@ -27,10 +30,12 @@ const props = defineProps({
 const clinv = ref()
 
 const setCl = () => { clinv.value = (props.selinvit && 
-  (invit.invitId === props.selinvit.invitId) ? 'current' : 'nocurrent') +
+  (props.invit.invitId === props.selinvit.invitId) ? 'current' : 'nocurrent') +
  ' column q-py-xs full-width select cursor-pointer' }
 
-watch(() => props.selinvit, setCl())
+watch(() => props.selinvit, () => {
+  setCl()
+})
 
 setCl()
 
