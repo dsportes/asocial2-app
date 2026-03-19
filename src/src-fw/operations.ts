@@ -308,3 +308,20 @@ export class ListInvits extends Operation {
     }
   }
 }
+
+/* Lecture d'une invitation par son ID par son propriétaire */
+export class GetInvit extends Operation {
+  constructor (SVC: string) { super('GetInvit', SVC) }
+
+  async run ( org: string, invitId: string ) : Promise<Invitation[]> {
+    try {
+      this.args = { org, invitId }
+      const res = await this.post()
+      if (!res.status) return res.invitation
+      await stores.ui.diagDisplay($t('INVbadid_' + res.status))
+      return null
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}

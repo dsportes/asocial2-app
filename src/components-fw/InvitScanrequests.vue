@@ -19,11 +19,6 @@ import BtnCond from '../components-fw/BtnCond.vue'
 const ui = stores.ui
 const sf = stores.safe
 
-const model = defineModel()
-const emit = defineEmits(['close', 'done'])
-const props = defineProps({
-  p1: String
-})
 
 </script>
 

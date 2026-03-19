@@ -38,6 +38,12 @@
       <btn-cond icon="chevron_right" color="none" :label="$t('LOGsession')"
         @ok="sf.setStep(2)"/>
     </div>
+    <invit-hdr v-if="ui.invitScan.zoomed"
+      :invit="ui.invitScan.invit" back="INVtitlst"
+      @back="ui.invitScanfn('back')"
+      @accept="ui.invitScanfn('accept')"
+      @decline="ui.invitScanfn('decline')"
+    />
   </div>
 </div>
 </template>
@@ -53,6 +59,7 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import InvitHdr from '../components-fw/InvitHdr.vue'
 
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
 

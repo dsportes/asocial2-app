@@ -59,6 +59,14 @@ Contrôlé par ui.leftMenu
 
   <dialog-std2 v-model="dialogs.ScanInvit" 
     :title="$t('INVtit_2_label')" tbclass="tbs">
+    <template #hdr>
+      <invit-hdr v-if="ui.invitScan.zoomed"
+        :invit="ui.invitScan.invit" back="INVtitlst"
+        @back="ui.invitScanfn('back')"
+        @accept="ui.invitScanfn('accept')"
+        @decline="ui.invitScanfn('decline')"
+      />
+    </template>
     <template #default>
       <invit-scanrequests/>
     </template>
@@ -78,6 +86,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
 import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
+import InvitHdr from '../components-fw/InvitHdr.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import ManagedOrgs from '../dialogs-fw/ManagedOrgs.vue'

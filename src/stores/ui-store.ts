@@ -158,6 +158,18 @@ export const useUiStore = defineStore('ui', () => {
     }, 350)
   }
 
+  const invitScan = reactive({
+    zoomed: false,
+    invit: null,
+    fnback: null,
+    fndecline: null,
+    fnaccept: null
+  })
+  const invitScanFn = (fn:string) => {
+    const f = invitScan['fn' + fn]
+    if (f) f()
+  }
+
   return {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
@@ -167,6 +179,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
+    invitScan, invitScanFn,
     reopenSession
   }
 })

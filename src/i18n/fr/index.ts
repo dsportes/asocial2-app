@@ -186,6 +186,7 @@ export default {
   op_SetOrgConfig: 'Enregistrement de la configuration d\'une organisation',
   op_CreateInvit: 'Création d\'une demande d\'invitation',
   op_ListInvits: 'Liste des invitations',
+  op_GetInvit: 'Lecture d\'une invitation par son ID par son propriétaire',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -897,6 +898,8 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 bla bla
 `,
 
+  INVbadid_1: 'BUG probable: tentative de lecture d\'une invitation inconnue.',
+  INVbadid_2: 'BUG probable: tentative de lecture d\'une invitation dont vous n\'êtes pas le demandeur.',
   INVtitzoom: 'Invitation "{0}"',
   INVtitlst: 'Liste',
   INVx_time: 'Date-heure de dépôt:',
