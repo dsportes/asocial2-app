@@ -212,7 +212,8 @@ export class Invitation {
   docId: string // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
   etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
-  me ? :boolean // user est le traitant de la demande
+  isSP ?:boolean // user est le SPONSOR TRAITANT de la demande
+  isU ?: boolean // user est le user DEMANDEUR
 
   async init (
       org: string, 
@@ -252,8 +253,9 @@ export class Invitation {
     this.userId = x.userId
     this.safeStore = x.safeStore
     this.skeyK = null
-    this.me = x.pemS === sf.auth.C
-    if (this.me && this.status > 1) { // user est le traitant de la demande
+    this.isSP = x.pemS === sf.auth.C
+    this.isU = x.userId === sf.userId
+    if (this.isSP && this.status > 1) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
       this.txti = await Crypt.decrypt(aes, x.txti)
     } else this.txti = ''

@@ -78,66 +78,13 @@
       {{$t('MNOnoinvits')}}
     </div>
 
-    <div v-for="(inv, idx) in invits" :key="inv.invitId" 
-      :class="dkli(idx) + ' q-pa-xs'">
-      <div :class="clinv(inv)" @click="zoom(inv)">
-        <div class="row full-width">
-          <div class="col-2 font-mono">{{$t('INVst_' + inv.status)}}</div>
-          <div class="col-4">{{dhcool(inv.time * 1000)}}</div>
-          <div class="col-3 text-center">{{ inv.minor || '-'}}</div>
-          <div class="col-3 text-center">{{ inv.label || '-na-'}}</div>
-        </div>
-        <div class="row full-width">
-          <div class="col-2"></div>
-          <div class="col-10 text-italic ellipsis">
-            {{ inv.txtx || inv.txtm }}
-          </div>
-        </div>
-      </div>
+    <div v-for="(inv, idx) in invits" :key="inv.invitId" :class="dkli(idx) + ' q-pa-xs'">
+      <invit-line :invit="inv" :selinvit="selInvit" @zoom="zoom(inv)"/>
     </div>
   </div>
 
   <div v-if="tab === 'invits' && zoomed" class=" full-width q-pa-xs">
-    <div v-if="selInv.minor" class="q-mt-sm row items-center">
-      <div class='titre-md text-italic q-mr-md'>{{$t('INVx_minor')}}</div>
-      <div class='font-mono'>{{selInv.minor}}</div>
-    </div>
 
-    <div class="q-mt-sm row items-center">
-      <div class='titre-md text-italic q-mr-md'>{{$t('INVx_user')}}</div>
-      <div class='font-mono'>
-        <span>{{selInv.userId}}</span>
-        <span v-if="selInv.safeStore" class="q-ml-md">[{{selInv.safeStore}}]</span>
-      </div>
-    </div>
-
-    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtm')}}</div>
-    <q-input class="q-pa-xs bord1" v-model="selInv.txtm" type="textarea"
-      readonly borderless :rows="5"/>
-
-    <div v-if="selInv.me">
-      <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_me')}}</div>
-      <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txti')}}</div>
-      <q-input class="q-pa-xs bord1" v-model="selInv.txti" type="textarea"
-        readonly borderless :rows="5"/>
-    </div>
-
-    <div v-if="selInv.status === 5">
-      <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtx')}}</div>
-      <q-input class="q-pa-xs bord1" v-model="selInv.txtx" type="textarea"
-        readonly borderless :rows="5"/>
-    </div>
-
-    <div v-if="selInv.status === 2 || selInv.status >= 4"
-      class="q-mt-sm row items-center">
-      <div class='titre-md text-italic q-mr-md'>{{$t('INVx_cred')}}</div>
-      <div class='font-mono'>
-        <span>{{selInv.role}}</span>
-        <span v-if="selInv.docId" class="q-ml-md">[{{selInv.docId}}]</span>
-      </div>
-    </div>
-
-  </div>
 
 </template>
 </dialog-std2>
@@ -152,6 +99,7 @@ import { $t, dkli, dhcool, sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
+import InvitLine from '../components-fw/InvitLine.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
