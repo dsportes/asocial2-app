@@ -16,7 +16,7 @@
     <btn-cond v-for="[k,svcOp] of svcOps" :key="k"
       @ok="ui.adminPage.SVC = svcOp.svc; ui.adminPage.$OP = svcOp.op"
       :color="svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'warning' : 'primary'"
-      :label="'[' + $t('services_' + svcOp.svc) + ']' + svcOp.op"/>
+      :label="'[' + $t('services_' + svcOp.svc) + '] / ' + svcOp.op"/>
     <!--btn-cond label="ASSO2$BLUE" @ok="ui.adminPage.SVC='ASSO2'; ui.adminPage.$OP='$BLUE'"/-->
   </div>
 

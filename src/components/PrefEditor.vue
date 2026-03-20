@@ -3,7 +3,9 @@
     <div class="column full-width">
       <div class="row justify-around">
         <div class="column">
-          <q-select class="q-mt-md" filled v-model="lang" label="Lang"
+          <q-select dense options-dense filled clearable
+            transition-show="flip-up" transition-hide="flip-down"
+            class="q-mt-md" v-model="lang" label="Lang"
             :options="opts" style="width: 150px">
           </q-select>
           <div class="titre-md q-mb-md">{{$t('lang')}}</div>

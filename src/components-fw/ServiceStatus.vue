@@ -2,17 +2,21 @@
 -->
 <template>
 <div>
-  <div v-if="!fromadmin" class="row q-my-sm q-px-xs">
-    <q-select class="col-5" dense filled v-model="SVC"
+  <service-op v-if="!fromadmin" class="q-my-sm q-px-xs" v-model="svcop"/>
+
+  <!--div v-if="!fromadmin" class="row q-my-sm q-px-xs">
+    <q-select class="col-5" dense options-dense filled clearable
+      transition-show="flip-up" transition-hide="flip-down"
+      v-model="SVC"
       :options="Array.from(services)" emit-value :label="$t('service')"/>
     <div class="col-1"/>
     <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
       :list="config.K.FAVORITE_OPERATORS"/>
-  </div>
+  </div-->
 
   <div class="row q-px-sm">
     <div class="col-5 column items-center q-pr-sm">
-      <btn-cond :label="$t('service_status')" :disable="!$OP"
+      <btn-cond :label="$t('service_status')" :disable="!svcop.$OP"
         @ok="svcOpStatus"/>
     </div>
     <div v-if="resping !== null" class="col-7">
@@ -40,9 +44,9 @@
   <div class="row q-px-sm">
     <div class="col-5 column items-center q-pr-sm">
       <input-A class="full-with" prefix="orgcode" v-model="org" size="org"/>
-      <btn-cond :label="$t('org_status')" :disable="!$OP || !org"
+      <btn-cond :label="$t('org_status')" :disable="!svcop.$OP || !org"
         @ok="svcOrgStatus"/>
-      <btn-cond :label="$t('APorgconfig')" :disable="!$OP || !org || !maySetSt" class="q-mt-sm"
+      <btn-cond :label="$t('APorgconfig')" :disable="!svcop.$OP || !org || !maySetSt" class="q-mt-sm"
         icon="open_in_new" @ok="openOrgConfig"/>
     </div>
     <div v-if="resping2 !== null" class="col-7">
@@ -73,11 +77,11 @@
       <div class="column full-width">
         <div class="row">
           <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_svc')}}</div>
-          <div class="col-6 font-mono text-bold">{{SVC}}</div>
+          <div class="col-6 font-mono text-bold">{{svcop.SVC}}</div>
         </div>
         <div class="row">
           <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_op')}}</div>
-          <div class="col-6 font-mono text-bold">{{$OP}}</div>
+          <div class="col-6 font-mono text-bold">{{svcop.$OP}}</div>
         </div>
         <div class="row">
           <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_org')}}</div>
@@ -93,10 +97,14 @@
         </div>
 
         <div class="row q-my-md q-px-xs">
-          <q-select class="col-5" dense filled v-model="oc.dbn"
+          <q-select class="col-5" dense options-dense filled clearable
+            transition-show="flip-up" transition-hide="flip-down" 
+            v-model="oc.dbn"
             :options="oc.ac.dbs" emit-value :label="$t('APoc_dbs')"/>
           <div class="col-2"/>
-          <q-select class="col-5" dense filled v-model="oc.stn"
+          <q-select class="col-5" dense options-dense filled clearable
+            transition-show="flip-up" transition-hide="flip-down" 
+            v-model="oc.stn"
             :options="oc.ac.sts" emit-value :label="$t('APoc_sts')"/>
         </div>
 
@@ -123,6 +131,7 @@ import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
+import ServiceOp from '../components-fw/ServiceOp.vue'
 
 import DialogStd0 from '../dialogs-fw//DialogStd0.vue'
 
@@ -136,8 +145,8 @@ const props = defineProps({
   fromadmin: Boolean
 })
 if (props.fromadmin) watch(() => [props.svc, props.op], () => {
-  SVC.value = props.svc
-  $OP.value = props.op
+  svcop.SVC = props.svc
+  svcop.$OP = props.op
 })
 
 const dialogs = reactive({
@@ -153,8 +162,11 @@ type Elt = {
 const svcOps: Ref<Map<string, Elt>> = ref(new Map())
 const services2: Ref<string> = ref(new Set())
 
-const SVC = ref(props.svc || '')
-const $OP = ref(props.op || '')
+const svcop = reactive({
+  SVC: props.svc || '',
+  $OP: props.op || ''
+})
+
 const org = ref('')
 
 const resping = ref(null)
@@ -163,8 +175,8 @@ const newComment = ref('')
 
 const reset = () => {
   org.value = ''
-  $OP.value = ''
-  SVC.value = ''
+  svcop.$OP = ''
+  svcop.SVC = ''
   resping.value = null
   resping2.value = null
   newComment.value = ''
@@ -173,33 +185,22 @@ const reset = () => {
   const x = sf.auth && sf.auth.admins ? sf.auth.admins : ''
   if (x) {
     const y = x.split('/')
-    let b = true
     for (const k of y) {
       const z = k.split('.')
       svcOps.value.set(k, { svc: z[0], op: z[1]})
       services2.value.add(z[0])
-      if (b) {
-        SVC.value = z[0]
-        $OP.value = z[1]
-      }
     }
   }
 }
 
 reset()
 
-const maySetSt = computed(() => svcOps.value.has(SVC.value + '.' + $OP.value))
-
-const setSvcOp = (svcOp) => {
-  SVC.value = svcOp.svc
-  $OP.value = svcOp.op
-  org.value = ''
-}
+const maySetSt = computed(() => svcOps.value.has(svcop.SVC + '.' + svcop.$OP))
 
 const svcOpStatus = async () => {
   resping.value = null
   try {
-    resping.value = await new GetSvcOpStatus(SVC.value, $OP.value).run()
+    resping.value = await new GetSvcOpStatus(svcop.SVC, svcop.$OP).run()
   } catch (e) { }
 }
 
@@ -207,7 +208,7 @@ const svcOrgStatus = async () => {
   await svcOpStatus()
   resping2.value = null
   try {
-    resping2.value = await new GetSvcOrgStatus(SVC.value, org.value).run()
+    resping2.value = await new GetSvcOrgStatus(svcop.SVC, org.value).run()
   } catch (e) { }
 }
 
@@ -217,7 +218,7 @@ const svcOrgStatus = async () => {
   ADMINISTRATEUR
 */
 async function setSvcOpStatus (stx) : Promise<void> {
-  const op = new SetSvcOpStatus(SVC.value, $OP.value)
+  const op = new SetSvcOpStatus(svcop.SVC, svcop.$OP)
   const res = await op.run(stx, newComment.value)
   // res.svcOpStatus contient le status mis à jour
   // await svcOpStatus()
@@ -230,7 +231,7 @@ async function setSvcOpStatus (stx) : Promise<void> {
   ADMINISTRATEUR
 */
 async function setSvcOrgStatus (stx) : Promise<void> {
-  const op = new SetSvcOrgStatus(SVC.value, org.value)
+  const op = new SetSvcOrgStatus(svcop.SVC, org.value)
   const res = await op.run(stx, newComment.value)
   // res.svcOrgStatus contient le status mis à jour
   await svcOrgStatus()
@@ -242,7 +243,7 @@ const oc = reactive({ ac : {db: '', st: '', dbs: [], sts: []}, dbn: '', stn: '' 
 const nch = computed(() => oc.ac.db === oc.dbn && oc.ac.st === oc.stn)
 
 const openOrgConfig = async () => {
-  const ret = await new GetOrgConfig(SVC.value, org.value).run()
+  const ret = await new GetOrgConfig(svcop.SVC, org.value).run()
   if (ret) {
     oc.ac = ret
     oc.dbn = oc.ac.db || ''
@@ -252,13 +253,13 @@ const openOrgConfig = async () => {
 }
 
 const setOrgConfig = async () => {
-  const { db, st } = await new SetOrgConfig(SVC.value, org.value).run(oc.dbn, oc.stn)
+  const { db, st } = await new SetOrgConfig(svcop.SVC, org.value).run(oc.dbn, oc.stn)
   oc.ac.db = db
   oc.ac.st = st
 }
 
 const delOrgConfig = async () => {
-  const ret = await new SetOrgConfig(SVC.value, org.value).run()
+  const ret = await new SetOrgConfig(svcop.SVC, org.value).run()
 }
 
 </script>

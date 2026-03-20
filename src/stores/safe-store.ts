@@ -646,17 +646,35 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeInvits.value = m
   }
 
-  // Set des organisations managées par svc
-  const managedOrgs = () : Map<string, Set<string>> => {
-    const svcOrgs = new Map()
-    if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
-      if (c.role === 'Org.manager') {
-        let e = svcOrgs.get(c.svc)
-        if (!e) { e = new Set(); svcOrgs.set(c.svc, e) }
-        e.add(c.org)
+  // options des organisations managées
+  const managedOrgs = () => {
+    const lst = []
+    if (mySafeCreds.value) {
+      const svcOrgs: Map<string, Set<string>> = new Map()
+      for (const [,c] of mySafeCreds.value) {
+        if (c.role === 'Org.manager') {
+          let e = svcOrgs.get(c.svc)
+          if (!e) { e = new Set(); svcOrgs.set(c.svc, e) }
+          e.add(c.org)
+        }
+      }
+      if (svcOrgs.size) {
+        for(const svc of svcOrgs.keys()) {
+          const s = svcOrgs.get(svc)
+          const t = $t('services_' + svc)
+          const l = Array.from(s.values()).sort()
+          for(const org of l)
+            lst.push( { label: t + ' [' + org + ']', svc: svc, org })
+        }
       }
     }
-    return svcOrgs
+    return lst
+  }
+
+  const isManager = (svc, org) : boolean => {
+    for (const [,c] of mySafeCreds.value) 
+      if (c.role === 'Org.manager' && c.org === org && c.svc === svc) return true
+    return false
   }
 
   const getCreds = (profile: Profile) : Map<string, Credential> => {
@@ -1583,19 +1601,6 @@ export const useSafeStore = defineStore('safe', () => {
     await loadTrustings()
   })
 
-  watch(() => stores.ui.reopenSession, async (v) => {
-    const session = stores.session
-    if (v) {
-      await loadTrustings()
-      if ((session.hasNet && session.incognito) || !userId.value) {
-        await setStep(1)
-      } else {
-        if (session.hasNet) await reloadSafe()
-        if (!session.incognito) await setStep(2)
-      }
-    }
-  })
-
   /* targetId est soit id, soit hp0, soit hr0
   retourne [userId, pemC, pemV]
   */
@@ -1678,7 +1683,7 @@ export const useSafeStore = defineStore('safe', () => {
     newTrusting, newTSession,
     trustings, setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
-    mySafeCreds, getCreds, skey, managedOrgs,
+    mySafeCreds, getCreds, skey, managedOrgs, isManager,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
     createInvit, statusInvit,

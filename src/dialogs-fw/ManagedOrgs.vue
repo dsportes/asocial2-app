@@ -16,29 +16,25 @@ Affiche:
     <div class="titre-md text-italic text-center full-width">
       {{$t('MNOtit' + (tab === 'managers' ? '1' : '2'))}}</div>
 
-    <div class="row full-width q-my-xs q-px-xs items-center">
-      <q-select class="col-5" dense filled v-model="SVC"
-        :options="services" emit-value :label="$t('service')"/>
-      <div class="col-1"/>
-      <q-select class="col-5" dense filled v-model="org"
-        :options="orgs" emit-value :label="$t('org')"/>
-      <btn-cond class="col-1 text-right" round icon="check" @ok="doList"/>
+    <div class="full-width q-my-md q-px-sm">
+      <q-select dense options-dense filled clearable
+        transition-show="flip-up" transition-hide="flip-down"
+        v-model="svcOrg"
+        :options="sf.managedOrgs()" :label="$t('MNOorgs')"/>
     </div>
-    
+
     <div v-if="tab==='invits'"class="q-mx-xs">
       <bar-title prefix="MNOmajor"/>
-      <div class="row items-center">
-        <q-select class="col q-mr-md"
-          dense filled v-model="major" style="margin-left:20px"
-          :disable="org === ''"
-          :options="majOpts" :label="$t('INVmajor_c')"/>
-        <btn-cond class="col-auto" icon="search" color="primary" round
-          :disable="org === '' || major === ''"
-          @ok="getInvits"/>
-      </div>
+      <q-select class="col q-mr-md" style="margin-left:20px"
+        dense filled options-dense clearable
+        v-model="major" 
+        :disable="org === ''"
+        :options="majOpts" :label="$t('INVmajor_c')"/>
+
       <q-separator color="orange" class="q-my-sm"/>
+
       <invit-hdr v-if="zoomed" class="q-mb-sm"
-        :invit="selInv" :sponsor="isSponsor" back="INVtitlst"
+        :invit="selInv" :sponsor="sf.isManager(SVC, org)" back="INVtitlst"
         @back="zoomed = false"
         @validate="validate" @reject="reject" @accept="accept" @decline="decline" />
     </div>
@@ -88,11 +84,11 @@ Affiche:
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import stores from '../stores/all'
 import { ListManagers, ListInvits } from '../src-fw/operations'
-import { $t, dkli, dhcool, sty } from '../src-fw/util'
+import { $t, dkli, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -108,11 +104,10 @@ const config = stores.config
 
 const model = defineModel()
 
-const services = ref([])
+const svcOrg = ref()
 const SVC = ref('')
-const orgs = ref([])
 const org = ref('')
-const major = ref('')
+const major = ref(null)
 const tab = ref('invits') // managers
 
 const majors = Array.from(Object.keys(config.K.majorInvits))
@@ -120,23 +115,14 @@ const majOpts = ref([])
 for (const m of majors) 
   majOpts.value.push({ value: m, label: $t('INV_' + m)})
 
-const managedOrgs: Ref<Map<string, Set<string>>> = ref()
-
-const init = () => {
-  managedOrgs.value = sf.managedOrgs() || new Map()
-  services.value = Array.from(managedOrgs.value.keys())
-  SVC.value = services.value.length ? services.value[0] : ''
-  orgs.value = Array.from(managedOrgs.value.get(SVC.value) || [])
-  org.value = orgs.value.length ? orgs.value[0] : ''
-  major.value = ''
-}
-
-const isSponsor = computed(() => {
-  const e = managedOrgs.value.get(SVC.value)
-  return e && e.has(org.value)
-})
-
 const lstMgr = ref([])
+
+watch(svcOrg, async (x) => {
+  SVC.value = x ? x.svc : ''
+  org.value = x ? x.org : ''
+  if (x) await doList()
+  else lstMgr.value = []
+})
 
 const doList = async () => {
   lstMgr.value = []
@@ -151,14 +137,20 @@ const search = ref(0) // 0: repos 1:en recherche 2:recherche faite
 const selInv = ref()
 const zoomed = ref(false)
 
-const init2 = () => {
+const init = () => {
+  major.value = null
   search.value = 0
   selInv.value = null
   zoomed.value = false
   invits.value = []
 }
 
-watch([major, SVC, org], (v) => { init2() })
+watch([SVC, org], (v) => { init() })
+
+watch(() => major.value, async (v) => {
+  if (v) await getInvits()
+  else init()
+})
 
 const getInvits = async () => {
   search.value = 1
@@ -194,7 +186,6 @@ const decline = (txt: string) => { // U décline l'invitation selInv
 }
 
 init()
-init2()
 </script>
 
 <style lang="scss" scoped>

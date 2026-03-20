@@ -1,20 +1,16 @@
 <!-- Mon component
 -->
 <template>
-<div class="column pwsm items-center q-pa-xs">
-<!--div class="pwsm q-pa-xs"-->
-  <div class="row full-width items-start">
-    <q-select class="col-5" dense filled v-model="SVC"
-      :options="Array.from(services)" emit-value :label="$t('service')"/>
-    <div class="col-1"/>
-    <input-b class="col-6 self-end"
-      prefix="orgcode" v-model="org" size="org" noval/>
-  </div>
+<div class="column items-center">
+<div class="pwsm q-pa-xs">
+  <service-org v-model="svcorg" class="full-width q-mt-sm"/>
   
-  <div :class="'q-my-md full-width ' + (org.err ? 'disabled' : '')">
+  <div :class="'q-my-md full-width ' + (svcorg.org.err ? 'disabled' : '')">
   <bar-title prefix="INVmajor"/>
-  <q-select dense filled v-model="major" style="margin-left:20px"
-    :disable="org.err !== ''"
+  <q-select v-model="major" style="margin-left:20px"
+    dense options-dense
+    transition-show="flip-up" transition-hide="flip-down"
+    :disable="svcorg.org.err !== ''"
     :options="majOpts" :label="$t('INVmajor_c')"/>
   </div>
 
@@ -48,7 +44,7 @@
   </div>
 
 </div>
-<!--/div-->
+</div>
 </template>
 
 <script setup lang="ts">
@@ -63,20 +59,22 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InputB from '../components-fw/InputB.vue'
 import InputA from '../components-fw/InputA.vue'
+import ServiceOrg from '../components-fw/ServiceOrg.vue'
 
 const mintxtm = 10
 const ui = stores.ui
 const sf = stores.safe
 const config = stores.config
 
-const services = Array.from(Object.keys(config.K.SERVICES))
 const majors = Array.from(Object.keys(config.K.majorInvits))
 const majOpts = ref([])
 for (const m of majors) 
   majOpts.value.push({ value: m, label: $t('INV_' + m)})
 
-const SVC = ref()
-const org = reactive({ inp: '', err: 'tooshort' })
+const svcorg = reactive({
+  org: { inp: '', err: 'tooshort' },
+  SVC: ''
+})
 const major = ref()
 const minor = reactive({ inp: '', err: 'tooshort' })
 const label = reactive({ inp: '', err: 'tooshort' })
@@ -84,15 +82,15 @@ const txtm = ref('')
 const comment = ref('')
 
 const completed = computed(() => 
-  org.err === '' && major.value.value && label.err === '' && txtm.value.length > mintxtm
+  svcorg.org.err === '' && major.value.value && label.err === '' && txtm.value.length > mintxtm
 )
 
 const majdescr = computed(() => config.K.majorInvits[major.value.value])
 
 const reset = () => {
-  SVC.value = services[0]
+  svcorg.SVC = ''
   major.value = majors[0]
-  org.inp = ''; org.err = 'tooshort'
+  svcorg.org.inp = ''; svcorg.org.err = 'tooshort'
   major.value = ''; 
   minor.inp = ''; minor.err = 'tooshort'
   label.inp = ''; label.err = 'tooshort'
@@ -103,7 +101,7 @@ reset()
 
 const create = async () => {
   let status = -1
-  const op = new CreateInvit(SVC.value, org.inp)
+  const op = new CreateInvit(svcorg.SVC, svcorg.org.inp)
   const invit = await op.run(major.value.value, minor.inp, 
     txtm.value, label.inp, comment.value)
   if (invit)

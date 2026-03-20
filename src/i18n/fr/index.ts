@@ -220,7 +220,7 @@ export default {
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
-  APservices: 'Vous êtes "Administrateur Technique" du (des) [service / opérateur] : ',
+  APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewOrg: 'Création d\'une nouvelle organisation',
   APdbcode_label: 'Code de config de la DB',
   APdbcode_ph: 'sqlite_a',
@@ -891,6 +891,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',
 
+  MNOorgs: 'Service / organisation "managés"',
   MNOtab1: 'Managers des organisations',
   MNOtab2: 'Traiter les invitations',
   MNOtit1: 'Liste des managers de l\'organisation',

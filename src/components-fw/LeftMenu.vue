@@ -11,15 +11,15 @@ Contrôlé par ui.leftMenu
       </q-toolbar-title>
       <help-button page="help"/>
     </q-toolbar>
-    <div v-if="sf.userId" class="column items-center">
+    <!--div v-if="sf.userId" class="column items-center">
       <input-A  class="q-ma-sm" prefix="orgcode"
         v-model="session.currentOrg" size="org"/>
-    </div>
+    </div-->
   </q-header>
   <q-page-container>
     <btn-cond  v-if="sf.step === 0" class="q-mb-sm q-pa-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
-      @ok="ui.closeMenu(); backToOpenSession()"/>
+      @ok="ui.closeMenu(); ui.backToOpenSession()"/>
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="sf.userId && hasManagedOrgs" class="q-mb-sm"
@@ -76,12 +76,12 @@ Contrôlé par ui.leftMenu
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 
 import HelpButton from '../components-fw/HelpButton.vue'
-import InputA from '../components-fw/InputA.vue'
+// import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
@@ -100,23 +100,9 @@ const dialogs = reactive({
   ManagedOrgs: false, NewInvit: false, ScanInvit: false
 })
 
-const backToOpenSession = async () => {
-  const ok = await ui.diagDisplay($t('HPbackopen'), true)
-  if (ok)
-    ui.backToOpenSession()
-}
+//watch(() => ui.leftmenu, (v) => { onOpen() })
 
-watch(() => ui.leftmenu, (v) => { 
-  onOpen() 
-})
-
-const hasManagedOrgs = ref(false)
-
-const onOpen = () => {
-  const m = sf.managedOrgs()
-  hasManagedOrgs.value = m.size !== 0
-}
-onOpen()
+const hasManagedOrgs = computed(() => sf.managedOrgs().length !== 0)
 
 const openAdmin = (svc) => {
   ui.closeMenu()

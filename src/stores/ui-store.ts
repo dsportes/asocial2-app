@@ -1,8 +1,6 @@
 // @ts-ignore
 import { ref, computed, reactive } from 'vue'
 // @ts-ignore
-import type { Ref } from 'vue'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { setCssVar } from 'quasar'
@@ -144,18 +142,18 @@ export const useUiStore = defineStore('ui', () => {
   })
   const confirmQuit = () => { appDialogs.ConfirmQuit = false }
 
-  const reopenSession = ref(0)
+  // const reopenSession = ref(0)
 
   const backToOpenSession = () => {
     stores.session.endSession()
     page.value = ''
     setTimeout(() => {
       page.value = HOME
-      setTimeout( () => {
-        reopenSession.value++
-      }, 100)
-    }, 350)
+      stores.safe.setStep(1)
+      // setTimeout( () => { reopenSession.value++ }, 100)
+    }, 50)
   }
+
 
   const invitScan = reactive({
     zoomed: false,
@@ -184,8 +182,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    invitScan, invitScanFn, adminPage,
-    reopenSession
+    invitScan, invitScanFn, adminPage
   }
 })
 

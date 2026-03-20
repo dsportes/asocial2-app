@@ -12,16 +12,10 @@
 <template #default>
   <div class="column items-center">
     <div class="pwsm q-pa-xs column items-center">
+      <service-op v-model="svcop" class="full-width q-my-sm q-px-xs"/>
 
-      <div class="row full-width q-my-sm q-px-xs">
-        <q-select class="col-5" dense filled v-model="SVC"
-          :options="services" emit-value :label="$t('service')"/>
-        <div class="col-1"/>
-        <input-a class="col-6" prefix="operator" v-model="$OP" size="oper"
-          :list="config.K.FAVORITE_OPERATORS"/>
-      </div>
       <btn-cond class="q-mt-md" icon='add_circle' :label="$t('HPadminA_add')"
-        :disable="!SVC || !$OP" @ok="addElt"/>
+        :disable="!svcop.SVC || !svcop.$OP" @ok="addElt"/>
 
       <q-separator color="orange" class="q-my-sm"/>
 
@@ -50,13 +44,13 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, watch } from 'vue'
+import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, dkli } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 import stores from '../stores/all'
 
-import InputA from '../components-fw/InputA.vue'
+import ServiceOp from '../components-fw/ServiceOp.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
@@ -64,7 +58,6 @@ import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const sf = stores.safe
 const ui = stores.ui
-const config = stores.config
 const model = defineModel()
 
 const emit = defineEmits(['done'])
@@ -75,16 +68,14 @@ const init = () => {
 
 const disval = () => nbChg.value === 0
 
-const services = Array.from(Object.keys(config.K.SERVICES))
-
 type Elt = {
   st: number // O:inchangé 1:ajouté 2:supprimé
   svc: string
   op: string
 }
 
-const SVC = ref('')
-const $OP = ref('')
+const svcop = reactive({ SVC: '', $OP: '' })
+// watch(svcop, (v) => { console.log(v.SVC) })
 const lstAdmins: Ref<Map<string, Elt>> = ref(new Map())
 
 const resetAdm = () => {
@@ -100,10 +91,10 @@ const resetAdm = () => {
 const ic = (elt) => elt.st === 1 ? 'add_circle' : (elt.st === 1 ? 'delete' : '')
 
 const addElt = async () => {
-  const k = SVC.value + '.' + $OP.value
+  const k = svcop.SVC + '.' + svcop.$OP
   const elt = lstAdmins.value.get(k)
   if (elt && elt.st === 1) return
-  const op = new Operation('SvcOpIsAdmin', SVC.value, '', $OP.value)
+  const op = new Operation('SvcOpIsAdmin', svcop.SVC, '', svcop.$OP)
   try {
     /* const u = */ await op.getBaseUrl()
   } catch(e) {
@@ -113,11 +104,11 @@ const addElt = async () => {
   const ret = await op.post()
   if (!ret.isadmin) {
     if (elt) elt.st = 2
-    ui.diagDisplay($t('HPadminA_ko', [$OP.value, SVC.value]))
+    ui.diagDisplay($t('HPadminA_ko', [svcop.$OP, svcop.SVC]))
     return
   }
   if (elt) elt.st = 0
-  else lstAdmins.value.set(k, { st: 1, svc: SVC.value, op: $OP.value})
+  else lstAdmins.value.set(k, { st: 1, svc: svcop.SVC, op: svcop.$OP})
 }
 
 const delElt = (elt) => {

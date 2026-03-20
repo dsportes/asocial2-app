@@ -68,7 +68,7 @@
 
         <q-separator/>
 
-        <q-item clickable dense v-close-popup @click="backToOpenSession()">
+        <q-item clickable dense v-close-popup @click="ui.backToOpenSession()">
           <q-item-section avatar><q-avatar size="xl" icon="exit_to_app"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
         </q-item>
@@ -441,12 +441,6 @@ const dialogs = reactive({
   confirmStopop: false,
   userProfile: false
 })
-
-const backToOpenSession = async () => {
-  const ok = await ui.diagDisplay($t('HPbackopen'), true)
-  if (ok)
-    ui.backToOpenSession()
-}
 
 const tab = ref('cred')
 watch(tab, (t) => {
