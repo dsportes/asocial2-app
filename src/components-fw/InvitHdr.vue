@@ -20,7 +20,7 @@
       @ok="emit('validate', true)"/>
   </q-toolbar>
 
-  <dialog-std0 v-model="dialogs.reject" :title="$t('INVac_rej_1')"
+  <dialog-std0 v-model="dialogs.reject" :title="$t('INVac_rej_1')" vue="InvitHdr"
     @close="txt = ''">
     <template #hdr>
       <div class="row justify-between">
@@ -36,7 +36,7 @@
     </template>
   </dialog-std0>
 
-  <dialog-std0 v-model="dialogs.decline" :title="$t('INVac_dec_1')"
+  <dialog-std0 v-model="dialogs.decline" :title="$t('INVac_dec_1')" vue="InvitHdr"
     @close="txt = ''">
     <template #hdr>
       <div class="row justify-between">

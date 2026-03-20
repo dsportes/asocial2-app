@@ -9,7 +9,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <btn-cond v-else :label="$t('SFTtit')" flat color="none"
     @ok="dialogs.SafeTools = true"/>
 
-  <dialog-std0 v-model="dialogs.SafeTools" :title="$t('SFTtit')"
+  <dialog-std0 v-model="dialogs.SafeTools" :title="$t('SFTtit')" vue="SafeTools"
     vh="90" @close="emit('close', true)">
     <template #default>
       <user-profile/>
@@ -23,12 +23,12 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       <bar-open :bubble="$t('HPadminA_bub')" :disbubble="$t('HPadminA_bub')"
         :title="$t('HPadminA_label')"
         :disable="!session.hasNet"
-        @open="admins = true; dialogs.AdminMgr = true"/>
+        @open="dialogs.AdminMgr = true"/>
 
-      <bar-open :bubble="$t('HPadmin_bub')" :disbubble="$t('HPadmin_bub')"
-        :title="$t('HPadmin_label')"
+      <bar-open :bubble="$t('HPadminC_bub')" :disbubble="$t('HPadminC_bub')"
+        :title="$t('HPadminC_label')"
         :disable="!session.hasNet"
-        @open="admins = false; dialogs.AdminMgr = true"/>
+        @open="dialogs.ContactMgr = true"/>
 
       <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
         :title="$t('HPprefs_1')"
@@ -83,7 +83,8 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <!-- Enregistrement / Changement des codes -->
   <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
   <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
-  <admin-mgr v-model="dialogs.AdminMgr" admins @close="fnc"/>
+  <admin-mgr v-model="dialogs.AdminMgr" @close="fnc"/>
+  <contact-mgr v-model="dialogs.ContactMgr" @close="fnc"/>
   <manage-users v-model="dialogs.ManageUsers" @close="fnc" />
   <safe-cr v-model="dialogs.SafeCr" :mode="1" @close="fnc"/>
   <dev-trustings v-model="dialogs.DevTrustings" @close="fnc"/>
@@ -126,6 +127,7 @@ import UserProfile from '../components-fw/UserProfile.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import AdminMgr from '../dialogs-fw/AdminMgr.vue'
+import ContactMgr from '../dialogs-fw/ContactMgr.vue'
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'
@@ -146,6 +148,7 @@ const dialogs = reactive({
   SafeTools: false,
   PrefsMgr: false,
   AdminMgr: false,
+  ContactMgr: false,
   CredsMgr: false,
   ManageUsers: false,
   SafeCr: false,
@@ -157,7 +160,6 @@ const dialogs = reactive({
 })
 
 const trustingMe = computed(() => sf.myTrusting )
-const admins = ref(false)
 
 const openUntrust = async () => {
   await sf.getMySessions()

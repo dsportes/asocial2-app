@@ -15,11 +15,11 @@ Résultat en v-model.
       <q-icon v-else name="check_circle" class="text-green-5" size="20px"/>
     </div>
   </template>
-  <q-card class="q-ma-sm q-pa-xs shadow-8 " square>
+  <div class="q-ml-md q-mr-xs q-my-sm bordl bordb">
     <input-a prefix="SECsitech" 
       @validate="checkSite" :initval="def" :list="vals"
       v-model="site"/>
-  </q-card>
+  </div>
 </q-expansion-item>
 </template>
 
@@ -85,5 +85,6 @@ const checkSite = async () => {
 <style lang="scss" scoped>
 @import '../css/app.scss';
 .bordb { border-bottom: 1px solid $grey-5 }
+.bordl { border-left: 1px solid $grey-5 }
 .box { max-height:6.2rem; overflow:hidden }
 </style>

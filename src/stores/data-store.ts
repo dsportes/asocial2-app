@@ -435,7 +435,7 @@ export const useDataStore = defineStore('data', () => {
       setTimeout(async () => {
         sts.order = 0
         // syncOp
-        await new Sync().run(sts)
+        await new Sync('', sts.org).run(sts)
         syncQueue.value.delete(sts.org + '/' + sts.def)
         sts = nextToSync()
       }, 1)
@@ -470,13 +470,13 @@ export const useDataStore = defineStore('data', () => {
     for(const [org, eorg] of allSubs) {
       for(const [clazz, subs] of eorg) {
         if (subs.vdef0) {
-          await new Sync().run({ org, def: clazz, v: subs.vdef0[1]})
+          await new Sync('', org).run({ org: org, def: clazz, v: subs.vdef0[1]})
         }
         if (subs.vdef1.size) for(const [pk, versions] of subs.vdef1) {
-          await new Sync().run({ org, def: clazz + '/' + pk, v: versions[1]})
+          await new Sync('', org).run({ org: org, def: clazz + '/' + pk, v: versions[1]})
         }
         if (subs.vdef2.size) for(const [nv, versions] of subs.vdef2) {
-          await new Sync().run({ org, def: clazz + '/' + nv, v: versions[1]})
+          await new Sync('', org).run({ org: org, def: clazz + '/' + nv, v: versions[1]})
         }
       }
     }

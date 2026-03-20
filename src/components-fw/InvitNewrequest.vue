@@ -103,8 +103,8 @@ reset()
 
 const create = async () => {
   let status = -1
-  const op = new CreateInvit(SVC.value)
-  const invit = await op.run(org.inp, major.value.value, minor.inp, 
+  const op = new CreateInvit(SVC.value, org.inp)
+  const invit = await op.run(major.value.value, minor.inp, 
     txtm.value, label.inp, comment.value)
   if (invit)
     status = await sf.createInvit(invit)

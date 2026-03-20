@@ -88,7 +88,7 @@ export class Subscription {
         delta[def] = msg
         if (msg === false) delete this.defs[def]; else this.defs[def] = msg
       }
-      await new UpdateSubscription().run(org, this._title, this._url, delta)
+      await new UpdateSubscription('', org).run(this._title, this._url, delta)
     }
   }
 
@@ -99,7 +99,7 @@ export class Subscription {
     const config = stores.config
     this.url = url || config.location
     this.title = title || (config.K.APPNAME + ' - ' + org)
-    await new SetSubscription().run(org, this, longLife)
+    await new SetSubscription('', org).run(this, longLife)
   }
 
   serial () : Uint8Array { return encode({title: this.title, defs: this.defs}) }

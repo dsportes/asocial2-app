@@ -50,14 +50,14 @@ Contrôlé par ui.leftMenu
 
   <managed-orgs v-model="dialogs.ManagedOrgs"/>
 
-  <dialog-std2 v-model="dialogs.NewInvit" 
+  <dialog-std2 v-model="dialogs.NewInvit" vue="InvitNewrequest"
     :title="$t('INVtit_1_label')" tbclass="tbs">
     <template #default>
       <invit-newrequest/>
     </template>
   </dialog-std2>
 
-  <dialog-std2 v-model="dialogs.ScanInvit" 
+  <dialog-std2 v-model="dialogs.ScanInvit" vue="InvitScanrequests"
     :title="$t('INVtit_2_label')" tbclass="tbs">
     <template #hdr>
       <invit-hdr v-if="ui.invitScan.zoomed"

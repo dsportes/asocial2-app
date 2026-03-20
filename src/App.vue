@@ -13,6 +13,7 @@
       <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
       <help-button class="" page="DOCpg"/>
+      <div style="color:transparent;width:3px">*<q-tooltip>{{ ui.page }}</q-tooltip></div>
     </q-toolbar>
   </q-header>
 
@@ -60,17 +61,6 @@
   <confirm-quit/>
   <dialog-exc/>
   <dialog-help/>
-  <q-dialog v-model="ui.appDialogs.ServiceStatus"
-    full-height persistent>
-    <q-card :class="sty('sm')">
-      <q-toolbar class="tbs">
-        <btn-cond flat :label="$t('gotit')" icon="check" color="none" 
-          @ok="ui.appDialogs.ServiceStatus = false"/>
-        <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
-      </q-toolbar>
-      <service-status/>
-    </q-card>
-  </q-dialog>
 
 </q-layout>
 </template>

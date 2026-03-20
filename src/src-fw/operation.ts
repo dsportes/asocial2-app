@@ -53,8 +53,11 @@ export class Operation {
     return res.urlOp
   }
 
-  constructor (opName: string, SVC?: string, background?: boolean) {
+  constructor (opName: string, SVC?: string, org?: string, $OP?: string, background?: boolean) {
     this.opName = opName
+    this.args = {}
+    if (org) this.args.org = org
+    else if ($OP) this.args.$OP = $OP
     this.background = background || false
     this.SVC = SVC || stores.config.K.DEFAULT_SERVICE
     if (!stores.config.K.SERVICES[this.SVC])

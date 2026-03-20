@@ -3,6 +3,9 @@
 
 export default {
   app_label: 'Rédacteurs et relecteurs',
+  services_AS2: 'Rédacteurs et relecteurs',
+  services_ASSO2: 'Gestion des associations',
+
   lang: 'La langue est le Français',
   home: 'Accueil de l\'application {0}',
   darkclear: 'Foncé / clair',
@@ -61,7 +64,9 @@ export default {
   svcStatus_9: 'DOWN - dernière mise à jour: {0}',
   svcStatus_maj: 'Mise à jour du status',
   svcStatus_label: 'Commentaire ...',
-  svcStatus: 'Status des services',
+  svcStatus: 'Status du service',
+  svcStatus_no: 'Service / opérateur non sélectionné',
+  svcStatus_no2: 'Service non sélectionné',
   up: 'UP',
   down: 'DOWN',
   readonly: 'LECTURE SEULE',
@@ -225,6 +230,7 @@ export default {
   APcr_0: 'Organisation [{0}] mise à jour.',
   APko: 'Echec de la création / mise à jour de l\'organisation [{0}].',
   APnewManager: 'Attribution du rôle "manager" à un utilisateur',
+  APnewManager_2: 'Rôles "manager"',
   APnouser: 'Utilisateur inconnu pour ce pseudo',
   APdiagorg: 'Le code de l\'organisation est incorrect ou manquant',
   APdiagtarget: 'Le pseudo de l\'utilisateur cible est incorrect ou manquant',
@@ -661,17 +667,17 @@ bla bla
   HPexporgid: 'ID localisée pour une organisation',
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
-  HPadmin_add: 'M\'ajouter en tant qu\'Administrateur',
-  HPadmin_label: 'Gérer mon pseudo / phrase de contact',
-  HPadmin_bub: `# Gérer mon pseudo / phrase de contact
+  HPadminC_label: 'Gérer mon pseudo / phrase de contact',
+  HPadminC_bub: `# Gérer mon pseudo / phrase de contact
 bla bla
 `,
   HPadminA_label: 'Gérer mes rôles d\'Adiministrateur',
   HPadminA_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
   bla bla
 `,
-  HPadmin_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
-  HPadmin_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
+  HPadminA_add: 'M\'ajouter en tant qu\'Administrateur',
+  HPadminA_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
+  HPadminA_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
   HPadminkosvc: 'Ce service n\'est assuré par cet opérateur.',
   HPctc_label: 'Pseudo / phrase de contact',
   HPctc_ph: 'Les framboises sont bleues cet hiver',
@@ -869,7 +875,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   SCRcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès secondaire".',
   SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
 
-  SFTtit: 'Toutes les opérations de gestion de vos données "de sécurité"',
+  SFTtit: 'Opérations de gestion de vos données "de sécurité"',
   SFTtits: 'Opérations "de sécurité"',
   SFTus: 'Identifiant utilisateur:',
   SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',

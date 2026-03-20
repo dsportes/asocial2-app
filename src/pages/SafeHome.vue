@@ -371,7 +371,7 @@ const opCalc = () => {
 }
 
 /* const bug = async () => {
-  await new Bug('AS2').run('doda')
+  await new Bug('AS2', 'doda').run()
   console.log('bug done')
 } */
 

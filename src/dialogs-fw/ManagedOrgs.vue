@@ -1,9 +1,12 @@
-<!-- Affiche la liste des managers pour:
+<!-- Pour:
 - le Service sélectionné,
 - l'organisation sélectionnée. 
+Affiche: 
+- la liste des managers
+- les invitations en cours
 -->
 <template>
-<dialog-std2 v-model="model" :title="$t('PanelManager')" tbclass="tbp">
+<dialog-std2 v-model="model" :title="$t('PanelManager')" tbclass="tbp"  vue="ManagedOrgs">
   <template #hdr>
     <q-tabs dense v-model="tab" breakpoint="2000px"
       class="full-width bg-primary text-white shadow-2">
@@ -12,6 +15,7 @@
     </q-tabs>
     <div class="titre-md text-italic text-center full-width">
       {{$t('MNOtit' + (tab === 'managers' ? '1' : '2'))}}</div>
+
     <div class="row full-width q-my-xs q-px-xs items-center">
       <q-select class="col-5" dense filled v-model="SVC"
         :options="services" emit-value :label="$t('service')"/>
@@ -20,6 +24,7 @@
         :options="orgs" emit-value :label="$t('org')"/>
       <btn-cond class="col-1 text-right" round icon="check" @ok="doList"/>
     </div>
+    
     <div v-if="tab==='invits'"class="q-mx-xs">
       <bar-title prefix="MNOmajor"/>
       <div class="row items-center">
@@ -82,7 +87,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
+// @ts-ignore
+import { ref, computed, Ref, watch } from 'vue'
 
 import stores from '../stores/all'
 import { ListManagers, ListInvits } from '../src-fw/operations'
@@ -134,7 +140,7 @@ const lstMgr = ref([])
 
 const doList = async () => {
   lstMgr.value = []
-  const [s, l] = await new ListManagers(SVC.value).run(org.value, true)
+  const [s, l] = await new ListManagers(SVC.value, org.value).run(true)
   if (s) 
     await ui.diagDisplay($t('APmgrnolst'))
   lstMgr.value = l || []
@@ -157,8 +163,8 @@ watch([major, SVC, org], (v) => { init2() })
 const getInvits = async () => {
   search.value = 1
   invits.value = []
-  const op = new ListInvits(SVC.value)
-  invits.value = await op.run(org.value, major.value.value, true)
+  const op = new ListInvits(SVC.value, org.value)
+  invits.value = await op.run(major.value.value, true)
   search.value = 2
   selInv.value = null
   zoomed.value = false

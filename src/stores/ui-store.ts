@@ -140,8 +140,7 @@ export const useUiStore = defineStore('ui', () => {
     ConfirmQuit: false,
     DialogExc: false,
     DialogHelp: false,
-    GotIt: false,
-    ServiceStatus: false
+    GotIt: false
   })
   const confirmQuit = () => { appDialogs.ConfirmQuit = false }
 
@@ -170,6 +169,12 @@ export const useUiStore = defineStore('ui', () => {
     if (f) f()
   }
 
+  const adminPage = reactive({
+    tab: '', // svcstatus managers
+    SVC: '',
+    $OP: ''
+  })
+
   return {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
@@ -179,7 +184,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    invitScan, invitScanFn,
+    invitScan, invitScanFn, adminPage,
     reopenSession
   }
 })

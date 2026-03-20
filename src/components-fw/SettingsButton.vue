@@ -56,7 +56,7 @@
 
         <q-separator />
 
-        <q-item clickable dense v-close-popup @click="ui.appDialogs.ServiceStatus = true">
+        <q-item clickable dense v-close-popup @click="dialogs.ServiceStatus = true">
           <q-item-section avatar><q-avatar size="xl" icon="cloud"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('servicestatus')}}</q-item-section>
         </q-item>
@@ -102,6 +102,18 @@
   </q-btn>
 
   <safe-export v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
+
+  <q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
+    full-height persistent>
+    <q-card :class="sty('sm')">
+      <q-toolbar class="tbs">
+        <btn-cond flat :label="$t('gotit')" icon="check" color="none" 
+          @ok="dialogs.ServiceStatus = false"/>
+        <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
+      </q-toolbar>
+      <service-status/>
+    </q-card>
+  </q-dialog>
 
   <!-- Contrôle de l'autorisation des notifications-->
   <q-dialog v-model="session.permDialog" persistent>
@@ -295,7 +307,7 @@
   </q-dialog>
 
   <!-- Outils techniques -->
-  <dialog-std1 v-model="dialogs.pings" vh="80"
+  <dialog-std1 v-model="dialogs.pings" vh="80" vue="SettingsButton"
     :title="$t('tech')" hdrclass='wmd' help="pings">
     <template #hdr>
       <div class="row items-center wmd full-width">
@@ -357,7 +369,7 @@
   </dialog-std1>
 
   <!-- Maj préférences -->
-  <dialog-std1 v-model="dialogs.edprf"
+  <dialog-std1 v-model="dialogs.edprf" vue="SettingsButton"
     :title="$t('HPprefs_ed')" hdrclass='wmd'>
     <template #hdr>
       <div class="row q-ma-xs items-center justify-between">
@@ -378,7 +390,7 @@
   </dialog-std1>
 
   <!-- Profil de l'utilisateur -->
-  <dialog-std0 :title="$t('UPtitle')" v-model="dialogs.userProfile">
+  <dialog-std0 :title="$t('UPtitle')" v-model="dialogs.userProfile" vue="SettingsButton">
     <template #default>
       <user-profile/>
     </template>
@@ -388,7 +400,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, onUnmounted, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
@@ -406,6 +418,7 @@ import PermissionBox from '../components-fw/PermissionBox.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
+import ServiceStatus from '../components-fw/ServiceStatus.vue'
 
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
@@ -421,6 +434,7 @@ const ui = stores.ui
 
 const dialogs = reactive({
   SafeExport: false,
+  ServiceStatus: false,
   theme: false,
   edprf: false,
   ping: false,

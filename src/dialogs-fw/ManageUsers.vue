@@ -2,7 +2,7 @@
 Event: close
 -->
 <template>
-<dialog-std2 v-model="model" :title="$t('HPmanusers')"
+<dialog-std2 v-model="model" :title="$t('HPmanusers')"  vue="ManageUsers"
   @close="emit('close', true)">
 <template #hdr>
   <div>
@@ -111,32 +111,23 @@ Event: close
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, onUnmounted, reactive, watch } from 'vue'
-// @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { ref, computed, Ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
-import { SafeOperation } from '../src-fw/operation'
-import { $t, sty, edvol, dhcool, u8ToB64, readFile, fileDescr, coolBye } from '../src-fw/util'
+import { $t, sty, edvol, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
-import P0P1 from '../components-fw/P0P1.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-import SafeCr from '../dialogs-fw/SafeCr.vue'
 
-const ui = stores.ui
 const sf = stores.safe
 
-const myModule = 'ManageUsers1'
+const emit = defineEmits(['close'])
 const model = defineModel()
 const dialogs = reactive({
   valcf: false
 })
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
 watch(model, async (v) => {
   if(v) await init()
   else emit('close', true)
@@ -229,8 +220,4 @@ const close = async () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.q-toolbar__title { font-size: medium !important;}
-.blanc { height:100%; width:100%; background: white !important }
-.select:hover { background-color: $yellow-2; color: black; }
-.bord { border: 1px solid $warning; border-radius: 7px; }
 </style>

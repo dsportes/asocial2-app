@@ -10,11 +10,10 @@ import { Credential, Invitation } from '../src-fw/credential'
 import { Invit } from '../stores/safe-store'
 
 export class Bug extends Operation {
-  constructor (SVC: string) { super('Bug', SVC) }
+  constructor (SVC: string, org: string) { super('Bug', SVC, org) }
 
-  async run (org: string) : Promise<void> {
+  async run () : Promise<void> {
     try {
-      this.args = { org }
       const res = await this.post(true)
       return res
     } catch(e) {
@@ -24,11 +23,10 @@ export class Bug extends Operation {
 }
 
 export class  SvcOpIsAdmin extends Operation {
-  constructor (SVC: string) { super('SvcOpIsAdmin', SVC) }
+  constructor (SVC: string, $OP: string) { super('SvcOpIsAdmin', SVC, '', $OP) }
 
-  async run ($OP: string) {
+  async run () {
     try {
-      this.args = { $OP }
       const res = await this.post()
       return res['isadmin']
     } catch(e) {
@@ -39,11 +37,10 @@ export class  SvcOpIsAdmin extends Operation {
 }
 
 export class  GetSvcOpStatus extends Operation {
-  constructor (SVC: string) { super('GetSvcOpStatus', SVC) }
+  constructor (SVC: string, $OP: string) { super('GetSvcOpStatus', SVC, '', $OP) }
 
-  async run ($OP: string) {
+  async run () {
     try {
-      this.args = { $OP }
       const res = await this.post(true)
       return res['svcStatus']
     } catch(e) {
@@ -54,11 +51,10 @@ export class  GetSvcOpStatus extends Operation {
 }
 
 export class  GetSvcOrgStatus extends Operation {
-  constructor (SVC: string) { super('GetSvcOrgStatus', SVC) }
+  constructor (SVC: string, org: string) { super('GetSvcOrgStatus', SVC, org) }
 
-  async run (org: string) {
+  async run () {
     try {
-      this.args = { org }
       const res = await this.post(true)
       return res['orgStatus']
     } catch(e) {
@@ -69,11 +65,12 @@ export class  GetSvcOrgStatus extends Operation {
 }
 
 export class SetSvcOpStatus extends Operation {
-  constructor (SVC: string) { super('SetSvcOpStatus', SVC) }
+  constructor (SVC: string, $OP: string) { super('SetSvcOpStatus', SVC, '', $OP) }
 
-  async run ($OP: string, st: number, txt: string) {
+  async run (st: number, txt: string) {
     try {
-      this.args = { $OP, st, txt: txt || ''}
+      this.args.st = st
+      this.args.txt = txt || ''
       const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
@@ -83,11 +80,12 @@ export class SetSvcOpStatus extends Operation {
 }
 
 export class SetSvcOrgStatus extends Operation {
-  constructor (SVC: string) { super('SetSvcOrgStatus', SVC) }
+  constructor (SVC: string, org: string) { super('SetSvcOrgStatus', SVC, org) }
 
-  async run (org: string, st: number, txt: string) {
+  async run (st: number, txt: string) {
     try {
-      this.args = { org, st, txt: txt || ''}
+      this.args.st = st
+      this.args.txt = txt || ''
       const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
@@ -97,11 +95,10 @@ export class SetSvcOrgStatus extends Operation {
 }
 
 export class GetOrgConfig extends Operation {
-  constructor (SVC: string) { super('GetOrgConfig', SVC) }
+  constructor (SVC: string, org: string) { super('GetOrgConfig', SVC, org) }
 
-  async run (org: string) {
+  async run () {
     try {
-      this.args = { org}
       const res = await this.post()
       return res['orgconfig']
     } catch(e) {
@@ -111,11 +108,12 @@ export class GetOrgConfig extends Operation {
 }
 
 export class SetOrgConfig extends Operation {
-  constructor (SVC: string) { super('SetOrgConfig', SVC) }
+  constructor (SVC: string, org: string) { super('SetOrgConfig', SVC, org) }
 
-  async run (org: string, db: string, st: string ) {
+  async run (db?: string, st?: string ) {
     try {
-      this.args = { org, db, st}
+      this.args.db = db || ''
+      this.args.st = st || ''
       const res = await this.post()
       return res['orgconfig']
     } catch(e) {
@@ -129,12 +127,13 @@ export class SetOrgConfig extends Operation {
 - Créé une nouvelle si l'argument subscription n'est pas null
 */
 export class SetSubscription extends Operation {
-  constructor (SVC: string) { super('SetSubscription', SVC) }
+  constructor (SVC: string, org: string) { super('SetSubscription', SVC, org) }
 
-  async run (org: string, subscription: Subscription, longLife: boolean ) {
+  async run (subscription: Subscription, longLife: boolean ) {
     try {
       // const subJSON = stores.session.subJSON
-      this.args = { org, subscription, longLife }
+      this.args.subscription = subscription
+      this.args.longLife = longLife 
       const res = await this.post()
     } catch(e) {
       this.ko(e)
@@ -145,19 +144,20 @@ export class SetSubscription extends Operation {
 /* UpdateSubscription enregistre la mise à jour d'une souscription d'une session
 */
 export class UpdateSubscription extends Operation {
-  constructor (SVC: string) { super('UpdateSubscription'), SVC }
+  constructor (SVC: string, org: string) { super('UpdateSubscription', SVC, org) }
 
-  async run (org: string, title: string, url: string, defs: Object ) {
+  async run (title: string, url: string, defs: Object ) {
     try {
       // const subJSON = stores.session.subJSON
-      this.args = { org, title, url, defs }
+      this.args.title = title
+      this.args.url = url
+      this.args.defs = defs
       const res = await this.post()
     } catch(e) {
       this.ko(e)
     }
   }
 }
-
 
 /* Sync : synchronise les souscriptions citées *************************
 - toSync = subsToSync[]
@@ -175,18 +175,18 @@ Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des docum
   - data: data du document s'il est dans la collection
 */
 export class Sync extends Operation {
-  constructor (SVC: string) { super('Sync', SVC) }
+  constructor (SVC: string, org: string) { super('Sync', SVC, org) }
 
   async run (subsToSync: subsToSync) {
     try {
-      const org = subsToSync.org
+      // const org = subsToSync.org
       // const type = subsToSync.def.split('/').length - 1
       const dataSt = stores.data
-      this.args = { org, toSync: [subsToSync] }
+      this.args.toSync = [subsToSync]
       const res = await this.post()
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
-      await dataSt.retSync(opTime, org, subsToSync.def, x)
+      await dataSt.retSync(opTime, this.org, subsToSync.def, x)
     } catch(e) {
       this.ko(e)
     }
@@ -197,21 +197,21 @@ export class Sync extends Operation {
 créé son Credential et le stocke "en attente" dans son safe
 */
 export class GrantNewManager extends Operation {
-  constructor (SVC: string) { super('GrantNewManager', SVC) }
+  constructor (SVC: string, org: string) { super('GrantNewManager', SVC, org) }
 
-  async run(safeStore: string, targetId: string, pubC: string, org: string, info: string) {
+  async run(safeStore: string, targetId: string, pubC: string, info: string) {
     try {
       const sf = stores.safe
       const [ cred, credRequest] =
         await Credential.buildCreds(
-          this.SVC, org, targetId, 'Org.manager', '', null, '', 0)
+          this.SVC, this.org, targetId, 'Org.manager', '', null, '', 0)
       credRequest.cond = { info: info}
 
       // écriture du credential dans le store de la cible
       await sf.transmitCred(safeStore, targetId, pubC, cred)
 
       // enregistrement du credential dans le service
-      this.args = { org, credRequest }
+      this.args.credRequest = credRequest
       await this.post()
       return true
     } catch(e) {
@@ -243,11 +243,10 @@ export type ListMgrs = {
 }
 
 export class ListManagers extends Operation {
-  constructor (SVC: string) { super('ListManagers', SVC) }
+  constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
 
-  async run (org: string, mgr?: boolean) : Promise<ListMgrs[]>{
+  async run (mgr?: boolean) : Promise<ListMgrs[]>{
     try {
-      this.args = { org }
       if (mgr)
         this.sign('Org.manager')
       const res = await this.post()
@@ -262,10 +261,9 @@ export class ListManagers extends Operation {
 }
 
 export class CreateInvit extends Operation {
-  constructor (SVC: string) { super('CreateInvit', SVC) }
+  constructor (SVC: string, org: string) { super('CreateInvit', SVC, org) }
 
   async run (
-    org: string, 
     major: string,
     minor: string,
     txtm: string,
@@ -274,8 +272,8 @@ export class CreateInvit extends Operation {
   ) : Promise<Invit> {
     try {
       const invitation = new Invitation()
-      await invitation.init(org, major, minor, txtm, label)
-      this.args = { org, invObj: invitation.toObj()  }
+      await invitation.init(this.org, major, minor, txtm, label)
+      this.args.invObj = invitation.toObj()
       const res = await this.post()
       return invitation.toInvit(this.SVC, comment)
     } catch(e) {
@@ -285,11 +283,11 @@ export class CreateInvit extends Operation {
 }
 
 export class ListInvits extends Operation {
-  constructor (SVC: string) { super('ListInvits', SVC) }
+  constructor (SVC: string, org: string) { super('ListInvits', SVC, org) }
 
-  async run ( org: string, major: string, mgr?: boolean ) : Promise<Invitation[]> {
+  async run ( major: string, mgr?: boolean ) : Promise<Invitation[]> {
     try {
-      this.args = { org, major, }
+      this.args.major = major
       if (mgr)
         this.sign('Org.manager')
       const res = await this.post()
@@ -300,7 +298,7 @@ export class ListInvits extends Operation {
       const lst: Invitation[] = []
       for(const x of res.list) {
         const inv = new Invitation()
-        lst.push(await inv.fromList(x, org))
+        lst.push(await inv.fromList(x, this.org))
       }
       return lst
     } catch(e) {
@@ -311,11 +309,11 @@ export class ListInvits extends Operation {
 
 /* Lecture d'une invitation par son ID par son propriétaire */
 export class GetInvit extends Operation {
-  constructor (SVC: string) { super('GetInvit', SVC) }
+  constructor (SVC: string, org: string) { super('GetInvit', SVC, org) }
 
-  async run ( org: string, invitId: string ) : Promise<Invitation[]> {
+  async run ( invitId: string ) : Promise<Invitation[]> {
     try {
-      this.args = { org, invitId }
+      this.args.invitId = invitId
       const res = await this.post()
       if (!res.status) return res.invitation
       await stores.ui.diagDisplay($t('INVbadid_' + res.status))

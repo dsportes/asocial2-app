@@ -2,7 +2,7 @@
 Events: close done
 -->
 <template>
-<dialog-std2 v-model="model" :title="$t('SCRenreg_' + mode)"
+<dialog-std2 v-model="model" :title="$t('SCRenreg_' + mode)" vue="SafeCr"
   @close="emit('close', true)">
 <template #hdr>
   <div class="row justify-end q-px-xs q-mb-md">

@@ -10,6 +10,7 @@
           @ok="model = false"/>
         <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
         <help-button v-if="help" :page="help"/>
+        <div v-if="vue" style="color:transparent;width:3px">*<q-tooltip>{{ vue }}</q-tooltip></div>
       </q-toolbar>
       <slot name="hdr"/>
     </q-header>
@@ -38,6 +39,7 @@ watch(model, (v) => {
 })
 
 const props = defineProps({
+  vue: String,
   title: String, // titre de la top bar
   help: String,  // code de loa page d'aide s'il y en a une
   hdrclass: String,

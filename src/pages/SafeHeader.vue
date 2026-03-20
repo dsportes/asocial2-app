@@ -9,6 +9,7 @@
     </q-toolbar-title>
     <settings-button class="q-ml-sm"/>
     <help-button class="" page="DOCpg"/>
+    <div style="color:transparent;width:3px">*<q-tooltip>SafePage</q-tooltip></div>
   </q-toolbar>
 
   <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" breakpoint="2000px"

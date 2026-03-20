@@ -3,7 +3,7 @@ Events: close done
 -->
 <template>
 <div>
-  <dialog-std1 v-model="model" :title="$t('HPexpsafe_1')" hdrclass='wmd'>
+  <dialog-std1 v-model="model" :title="$t('HPexpsafe_1')" hdrclass='wmd' vue="SafeExport">
     <template #hdr>
       <div class="row items-center q-gutter-sm">
         <q-tabs v-model="tab" class="col bg-grey-9 q-mb-md" dense>

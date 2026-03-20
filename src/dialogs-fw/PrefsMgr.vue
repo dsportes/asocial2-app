@@ -3,7 +3,7 @@ Events: close done
 -->
 <template>
 <div>
-<dialog-std2 v-model="model" :title="$t('HPprefs_1')">
+<dialog-std2 v-model="model" :title="$t('HPprefs_1')" vue="PrefsMgr">
   <template #hdr>
     <div class="row justify-end q-px-xs q-mb-sm">
       <btn-cond flat size="lg" icon="check" color="warning"
@@ -53,7 +53,7 @@ Events: close done
 </dialog-std2>
 
 <dialog-std1 v-model="dialogs.edprf" @close="dialogs.edprf = false"
-  :title="$t('HPprefs_ed')" hdrclass='wmd'>
+  :title="$t('HPprefs_ed')" hdrclass='wmd' vue="PrefsMgr">
   <template #hdr>
     <div class="row q-ma-xs items-center justify-between">
       <div class="row col">

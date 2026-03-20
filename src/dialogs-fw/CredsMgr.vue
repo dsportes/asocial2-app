@@ -5,7 +5,7 @@
 -->
 <template>
 <div>
-<dialog-std2 v-model="model" :title="$t('HPcredsmgr_1')">
+<dialog-std2 v-model="model" :title="$t('HPcredsmgr_1')" vue="CredsMgr">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
       <q-tabs class="col tbp" v-model="tab" dense>
@@ -144,7 +144,7 @@
 </template>
 </dialog-std2>
 
-<dialog-std1 v-model="dialogs.reportIt" :title="$t('HPcfupd')" hdrclass='wmd'>
+<dialog-std1 v-model="dialogs.reportIt" :title="$t('HPcfupd')" hdrclass='wmd' vue="CredsMgr">
   <template #hdr>
     <div class="row justify-between q-px-xs q-mb-md">
       <btn-cond flat size="lg" icon="chevron_left" 
