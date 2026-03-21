@@ -62,9 +62,11 @@ Contrôlé par ui.leftMenu
     <template #hdr>
       <invit-hdr v-if="ui.invitScan.zoomed"
         :invit="ui.invitScan.invit" back="INVtitlst"
-        @back="ui.invitScanfn('back')"
-        @accept="ui.invitScanfn('accept')"
-        @decline="ui.invitScanfn('decline')"
+        @back="ui.invitScanfn['back']"
+        @accept="ui.invitScanfn['accept']"
+        @decline="ui.invitScanfn['decline']"
+        @cancel="ui.invitScanfn['camcel']"
+        @nav="ui.invitScanfn['nav']"
       />
     </template>
     <template #default>

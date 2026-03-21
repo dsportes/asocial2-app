@@ -157,10 +157,15 @@ export const useUiStore = defineStore('ui', () => {
 
   const invitScan = reactive({
     zoomed: false,
-    invit: null,
+    invit: null, // Invitation (service)
+    inv: null, // Invit (safe)
+    idx: 0,
+    nb: 0,
     fnback: null,
     fndecline: null,
-    fnaccept: null
+    fnaccept: null,
+    fncancel: null,
+    fnnav: null
   })
   const invitScanFn = (fn:string) => {
     const f = invitScan['fn' + fn]
