@@ -1,15 +1,15 @@
 <template>
-  <div :class="clinv" @click="emit('zoom', invit)">
+  <div :class="clinv" @click="emit('zoom', model)">
     <div class="row full-width">
-      <div class="col-2 font-mono">{{$t('INVst_' + invit.status)}}</div>
-      <div class="col-4">{{dhcool(invit.time * 1000)}}</div>
-      <div class="col-3 text-center">{{ invit.minor || '-'}}</div>
-      <div class="col-3 text-center">{{ invit.label || '(na)'}}</div>
+      <div class="col-2 font-mono">{{$t('INVst_' + model.status)}}</div>
+      <div class="col-4">{{dhcool(model.time * 1000)}}</div>
+      <div class="col-3 text-center">{{ model.minor || '-'}}</div>
+      <div class="col-3 text-center">{{ model.label || '(na)'}}</div>
     </div>
     <div class="row full-width">
       <div class="col-2"></div>
       <div class="col-10 text-italic ellipsis">
-        {{ invit.txtx || invit.txtm }}
+        {{ model.txtx || model.txtm }}
       </div>
     </div>
   </div>
@@ -22,18 +22,18 @@ import { ref, watch } from 'vue'
 import { $t, dhcool } from '../src-fw/util'
 
 const emit = defineEmits(['zoom'])
+const model = defineModel()
+
 const props = defineProps({
-  invit: Object,
-  selinvit: Object
+  selected: Boolean
 })
 
 const clinv = ref()
 
-const setCl = () => { clinv.value = (props.selinvit && 
-  (props.invit.invitId === props.selinvit.invitId) ? 'current' : 'nocurrent') +
- ' column q-py-xs full-width select cursor-pointer' }
+const setCl = () => { clinv.value = (props.selected ? 'current' : 'nocurrent') +
+ ' column q-py-xs full-width select cursor-pointer'}
 
-watch(() => props.selinvit, () => {
+watch(() => props.selected, () => {
   setCl()
 })
 

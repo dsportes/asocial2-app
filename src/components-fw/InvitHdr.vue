@@ -1,23 +1,31 @@
 <template>
 <div>
-  <q-toolbar class="tbp">
-    <btn-cond v-if="back" color="warning" size="md" icon="chevron_left"
-      @ok="emit('back', true)" :label="$t(back)"/>
-    <q-toolbar-title class="titre-sm">
-      {{$t('INVtitzoom', [$t('INV_' + invit.major)])}}
-    </q-toolbar-title>
-    <btn-cond v-if="invit.isU && invit.status === 2" 
-      :label="$t('INVac_de')" icon="close" color="warning" class='q-mr-xs'
-      @ok="dialogs.decline = true"/>
-    <btn-cond v-if="invit.isU && invit.status === 2" 
-      :label="$t('INVac_ac')" icon="check" class='q-mr-xs'
-      @ok="emit('accept', true)"/>
-    <btn-cond v-if="sponsor && invit.status === 1" 
-      :label="$t('INVac_re')" icon="close" color="warning" class='q-mr-xs'
-      @ok="dialogs.reject = true"/>
-    <btn-cond v-if="sponsor && invit.status === 1" 
-      :label="$t('INVac_va')" icon="check" 
-      @ok="emit('validate', true)"/>
+  <q-toolbar class="tbs dense row items-center">
+    <nav-bar v-model="model" class="col-auto q-ma-xs" hasback
+      @back="model.zoomed = false"
+      @navigate="nav"/>
+    <div v-if="model.invit" class="col row">
+      <div class="col titre-sm">
+        {{$t('INVtitzoom', [$t('INV_' + model.invit.major)])}}
+      </div>
+      <btn-cond v-if="model.invit.isU && model.invit.status === 1" 
+        :label="$t('INVac_an')" icon="delete" class='col-auto q-mr-xs'
+        @ok="fn('cancel')"/>
+      <btn-cond v-if="model.invit.isU && model.invit.status === 2" 
+        :label="$t('INVac_de')" icon="close" color="warning" class='col-auto q-mr-xs'
+        @ok="dialogs.decline = true"/>
+
+      <btn-cond v-if="model.invit.isU && model.invit.status === 2" 
+        :label="$t('INVac_ac')" icon="check" class='col-auto q-mr-xs'
+        @ok="fn('accept')"/>
+      <btn-cond v-if="model.invit.status === 1" 
+        :label="$t('INVac_re')" icon="close" color="warning" class='col-auto q-mr-xs'
+        @ok="dialogs.reject = true"/>
+      <btn-cond v-if="model.invit.status === 1" 
+        :label="$t('INVac_va')" icon="check" class="col-auto "
+        @ok="fn('validate')"/>
+    </div>
+    <div v-else class="col titre-md text-italic diag">{{$t('INVnotfound')}}</div>
   </q-toolbar>
 
   <dialog-std0 v-model="dialogs.reject" :title="$t('INVac_rej_1')" vue="InvitHdr"
@@ -27,7 +35,7 @@
         <div class="titre-md text-italic">{{$t('INVac_rej_2', [min])}}</div>
         <btn-cond color="warning" :label="$t('INVac_re')"
           :disable="txt.length < min"
-          @ok="dialogs.reject = false; emit('reject', txt)"/>
+          @ok="dialogs.reject = false; fn('reject', txt)"/>
       </div>
     </template>
     <template #default>
@@ -43,7 +51,7 @@
         <div class="titre-md text-italic">{{$t('INVac_dec_2', [min])}}</div>
         <btn-cond color="warning" :label="$t('INVac_de')"
           :disable="txt.length < min"
-          @ok="dialogs.decline = false; emit('decline', txt)"/>
+          @ok="dialogs.decline = false; fn('decline', txt)"/>
       </div>
     </template>
     <template #default>
@@ -56,23 +64,30 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
+
+import stores from '../stores/all'
 
 import { $t, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
+import NavBar from '../components-fw/NavBar.vue'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 
 const min = 10
 
-const emit = defineEmits(['back', 'reject', 'decline', 'accept', 'validate'])
+const model = defineModel()
 
-const props = defineProps({
-  invit: Object, // Objet Invitation
-  back: String, // si bouton "back", code i18n de son label
-  sponsor: Boolean // true si le user est un SPONSOR qui PEUT valider / refuse
-})
+const nav = (n) => {
+  const f = model.value['fnnav']
+  if (f) f(n)
+}
+
+const fn = (n) => {
+  const f = model.value['fn' + n]
+  if (f) f()
+}
 
 const dialogs = reactive({ reject: false, decline: false })
 

@@ -33,10 +33,8 @@ Affiche:
 
       <q-separator color="orange" class="q-my-sm"/>
 
-      <invit-hdr v-if="zoomed" class="q-mb-sm"
-        :invit="selInv" :sponsor="sf.isManager(SVC, org)" back="INVtitlst"
-        @back="zoomed = false"
-        @validate="validate" @reject="reject" @accept="accept" @decline="decline" />
+      <invit-hdr v-if="ui.currentInvit.zoomed" class="q-mb-sm" 
+        v-model="ui.currentInvit"/>
     </div>
   </template>
 
@@ -57,7 +55,7 @@ Affiche:
     </div>
   </div>
 
-  <div v-if="tab === 'invits' && !zoomed" class="full-width q-pa-xs">
+  <div v-if="tab === 'invits' && !ui.currentInvit.zoomed" class="full-width q-pa-xs">
     <div v-if="search === 0" class="titre-md text-italic q-my-md text-center full-width">
       {{$t('MNOsearch0')}}
     </div>
@@ -70,12 +68,12 @@ Affiche:
     </div>
 
     <div v-for="(inv, idx) in invits" :key="inv.invitId" :class="dkli(idx) + ' q-pa-xs'">
-      <invit-line :invit="inv" :selinvit="selInv" @zoom="zoom(inv)"/>
+      <invit-line v-model="invits[idx]" :selected="isCurrent(inv)" @zoom="zoom(inv, idx)"/>
     </div>
   </div>
 
-  <div v-if="tab === 'invits' && zoomed" class="full-width q-pa-xs">
-    <invit-zoom :invit="selInv" />
+  <div v-if="tab === 'invits' && ui.currentInvit.zoomed" class="full-width q-pa-xs">
+    <invit-zoom v-model="ui.currentInvit.invit" />
   </div>
 
 </template>
@@ -134,37 +132,38 @@ const doList = async () => {
 
 const invits = ref()
 const search = ref(0) // 0: repos 1:en recherche 2:recherche faite
-const selInv = ref()
-const zoomed = ref(false)
+
+const isCurrent = (inv) => ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
 
 const init = () => {
   major.value = null
   search.value = 0
-  selInv.value = null
-  zoomed.value = false
   invits.value = []
 }
 
-watch([SVC, org], (v) => { init() })
+init()
 
-watch(() => major.value, async (v) => {
-  if (v) await getInvits()
-  else init()
-})
-
-const getInvits = async () => {
-  search.value = 1
-  invits.value = []
-  const op = new ListInvits(SVC.value, org.value)
-  invits.value = await op.run(major.value.value, true)
-  search.value = 2
-  selInv.value = null
-  zoomed.value = false
-}
-
-const zoom = (inv) => {
-  selInv.value = inv
-  zoomed.value = true
+const nav = (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+  const u = ui.currentInvit
+  switch (n) {
+    case 1 : { 
+      if (u.idx < invits.value.length - 1) u.idx++
+      break
+    }
+    case 2 : { 
+      if (u.idx > 0) u.idx--
+      break
+    }
+    case 3 : { 
+      if (u.idx !== 0) u.idx = 0
+      break
+    }
+    case 4 : { 
+      if (u.idx < invits.value.length - 1) u.idx = invits.value.length - 1
+      break
+    }
+  }
+  u.invit = invits.value[u.idx]
 }
 
 const validate = () => { // SP valide l'invitation selInv
@@ -185,7 +184,42 @@ const decline = (txt: string) => { // U décline l'invitation selInv
   console.log('decline', txt)
 }
 
-init()
+const init2 = () => {
+  const u = ui.currentInvit
+  u.zoomed = false
+  u.nb = invits.value.length
+  u.fndecline = decline
+  u.fnaccept = accept
+  u.fnreject = reject
+  u.fnvalidate = validate
+  u.fnnav = nav
+  u.invit = null
+  u.inv = null
+}
+
+watch([SVC, org], (v) => { init(); init2() })
+
+watch(() => major.value, async (v) => {
+  if (v) await getInvits()
+  else init()
+})
+
+const getInvits = async () => {
+  search.value = 1
+  invits.value = []
+  const op = new ListInvits(SVC.value, org.value)
+  invits.value = await op.run(major.value.value, true)
+  search.value = 2
+  init2()
+}
+
+const zoom = (inv, idx) => {
+  const u = ui.currentInvit
+  u.zoomed = true
+  u.invit = inv
+  u.idx = idx
+}
+
 </script>
 
 <style lang="scss" scoped>

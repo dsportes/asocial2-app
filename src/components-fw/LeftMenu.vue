@@ -60,14 +60,7 @@ Contrôlé par ui.leftMenu
   <dialog-std2 v-model="dialogs.ScanInvit" vue="InvitScanrequests"
     :title="$t('INVtit_2_label')" tbclass="tbs">
     <template #hdr>
-      <invit-hdr v-if="ui.invitScan.zoomed"
-        :invit="ui.invitScan.invit" back="INVtitlst"
-        @back="ui.invitScanfn['back']"
-        @accept="ui.invitScanfn['accept']"
-        @decline="ui.invitScanfn['decline']"
-        @cancel="ui.invitScanfn['camcel']"
-        @nav="ui.invitScanfn['nav']"
-      />
+      <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
     </template>
     <template #default>
       <invit-scanrequests/>

@@ -253,9 +253,9 @@ export class Invitation {
     this.userId = x.userId
     this.safeStore = x.safeStore
     this.skeyK = null
-    this.isSP = x.pemS === sf.auth.C
+    this.isSP = x.status > 1 && x.pemS === sf.auth.C
     this.isU = x.userId === sf.userId
-    if (this.isSP && this.status > 1) { // user est le traitant de la demande
+    if (this.isSP) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
       this.txti = await Crypt.decrypt(aes, x.txti)
     } else this.txti = ''

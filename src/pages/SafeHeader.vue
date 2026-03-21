@@ -39,12 +39,7 @@
       <btn-cond icon="chevron_right" color="none" :label="$t('LOGsession')"
         @ok="sf.setStep(2)"/>
     </div>
-    <invit-hdr v-if="ui.invitScan.zoomed"
-      :invit="ui.invitScan.invit" back="INVtitlst"
-      @back="ui.invitScanfn('back')"
-      @accept="ui.invitScanfn('accept')"
-      @decline="ui.invitScanfn('decline')"
-    />
+    <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
   </div>
 </div>
 </template>

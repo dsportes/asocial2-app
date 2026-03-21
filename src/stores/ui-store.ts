@@ -154,8 +154,7 @@ export const useUiStore = defineStore('ui', () => {
     }, 50)
   }
 
-
-  const invitScan = reactive({
+  const currentInvit = reactive({
     zoomed: false,
     invit: null, // Invitation (service)
     inv: null, // Invit (safe)
@@ -167,10 +166,6 @@ export const useUiStore = defineStore('ui', () => {
     fncancel: null,
     fnnav: null
   })
-  const invitScanFn = (fn:string) => {
-    const f = invitScan['fn' + fn]
-    if (f) f()
-  }
 
   const adminPage = reactive({
     tab: '', // svcstatus managers
@@ -187,7 +182,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    invitScan, invitScanFn, adminPage
+    currentInvit, adminPage
   }
 })
 

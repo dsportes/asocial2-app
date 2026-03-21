@@ -930,6 +930,8 @@ bla bla
   INVac_de: 'Décliner',
   INVac_va: 'Valider',
   INVac_re: 'Rejeter',
+  INVac_an: 'Annuler',
+  INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
   INVac_rej_1: 'Rejet de l\'invitation',
   INVac_rej_2: 'Justification (au moins {0} signes)',
   INVac_dec_1: 'Décliner l\'invitation proposée',

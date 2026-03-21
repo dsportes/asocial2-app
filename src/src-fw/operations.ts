@@ -311,11 +311,15 @@ export class ListInvits extends Operation {
 export class GetInvit extends Operation {
   constructor (SVC: string, org: string) { super('GetInvit', SVC, org) }
 
-  async run ( invitId: string ) : Promise<Invitation[]> {
+  async run ( invitId: string ) : Promise<Invitation> {
     try {
       this.args.invitId = invitId
       const res = await this.post()
-      if (!res.status) return res.invitation
+      if (!res.status) {
+        const inv = new Invitation()
+        await inv.fromList(res.invitation, this.org)
+        return inv
+      }
       await stores.ui.diagDisplay($t('INVbadid_' + res.status))
       return null
     } catch(e) {
