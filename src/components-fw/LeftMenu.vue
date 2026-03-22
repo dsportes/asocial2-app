@@ -19,7 +19,7 @@ Contrôlé par ui.leftMenu
   <q-page-container>
     <btn-cond  v-if="sf.step === 0" class="q-mb-sm q-pa-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
-      @ok="ui.closeMenu(); ui.backToOpenSession()"/>
+      @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="sf.userId && hasManagedOrgs" class="q-mb-sm"
@@ -66,6 +66,12 @@ Contrôlé par ui.leftMenu
       <invit-scanrequests/>
     </template>
   </dialog-std2>
+
+  <choose-it v-model="dialogs.SessionClose"
+    prefix="HPbackopen" options="pw" 
+    @giveup="dialogs.SessionClose = false"
+    @option="sessionClose"/>
+
 </q-layout>
 </template>
 
@@ -78,6 +84,7 @@ import { $t, sty } from '../src-fw/util'
 import HelpButton from '../components-fw/HelpButton.vue'
 // import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
 import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
@@ -92,8 +99,12 @@ const ui = stores.ui
 const session = stores.session
 
 const dialogs = reactive({
-  ManagedOrgs: false, NewInvit: false, ScanInvit: false
+  ManagedOrgs: false, NewInvit: false, ScanInvit: false, SessionClose: false
 })
+
+const sessionClose = (n) => {
+  if (n === 1) ui.backToOpenSession()
+}
 
 //watch(() => ui.leftmenu, (v) => { onOpen() })
 

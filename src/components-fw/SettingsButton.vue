@@ -68,7 +68,7 @@
 
         <q-separator/>
 
-        <q-item clickable dense v-close-popup @click="ui.backToOpenSession()">
+        <q-item clickable dense v-close-popup @click="dialogs.SessionClose = true">
           <q-item-section avatar><q-avatar size="xl" icon="exit_to_app"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
         </q-item>
@@ -395,6 +395,11 @@
       <user-profile/>
     </template>
   </dialog-std0>
+
+  <choose-it v-model="dialogs.SessionClose"
+    prefix="HPbackopen" options="pw" 
+    @giveup="dialogs.SessionClose = false"
+    @option="sessionClose"/>
 </div>
 </template>
 
@@ -423,6 +428,7 @@ import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
+import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 import PrefEditor from '../components/PrefEditor.vue'
 
@@ -439,8 +445,13 @@ const dialogs = reactive({
   edprf: false,
   ping: false,
   confirmStopop: false,
-  userProfile: false
+  userProfile: false,
+  SessionClose: false
 })
+
+const sessionClose = (n) => {
+  if (n === 1) ui.backToOpenSession()
+}
 
 const tab = ref('cred')
 watch(tab, (t) => {

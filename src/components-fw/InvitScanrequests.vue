@@ -79,19 +79,7 @@ const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:las
     }
   }
   const inv = invits.value[u.idx] 
-  await selInv(inv, idx)
-}
-
-const decline = () => {
-  
-}
-
-const accept = () => {
-  
-}
-
-const cancel = () => {
-  
+  await selInv(inv, u.idx)
 }
 
 const invits: InvitS[] = computed(() => Array.from(sf.mySafeInvits.values()) )
@@ -107,9 +95,6 @@ const init = () => {
   u.inv = null
   u.idx = 0
   u.nb = sf.mySafeInvits.size
-  u.fnaccept = accept
-  u.fndecline = decline
-  u.fncancel = cancel
   u.fnnav = nav
 }
 

@@ -59,15 +59,13 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { watch } from 'vue'
+// import { watch } from 'vue'
 
 import { $t, dhcool } from '../src-fw/util'
 
 const model = defineModel()
 
-watch(model, (v) => {
-  console.log(v.userId)
-})
+// watch(model, (v) => { console.log(v.userId) })
 
 </script>
 

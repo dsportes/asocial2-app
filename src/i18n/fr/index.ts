@@ -298,11 +298,14 @@ export default {
   bla bla
   `,
 
-  HPbackopen: `**Voulez-vous terminer cette session et retourner au choix d'une autre à ouvrir ?**
-
-  OUI: _Je confirme_
-  NON: _Je refuse_
+  HPbackopen_txt: `### Confirmation de clôture de cette session.
+- en cas de confirmation la session sera fermée et la page de "login" s'affichera.
+- sinon ce dialogue s'effacera et la session se poursuivra normalement.
 `,
+  HPbackopen_tit: 'Fin de session ?',
+  HPbackopen_0: 'Je laisse ma session se poursuivre',
+  HPbackopen_1: "Je ferme ma session",
+
   HPchgcodes_1: 'Changer les codes d\'authentification',
   HPchgcodes_2: `### Changer les codes d'authentification
   bla bla
@@ -986,7 +989,18 @@ bla bla
 bla bla
 `,
   INVrec: 'Enregistrer la demande',
+  INVcancelCf_txt: `### Supprimer cette demande d'invitation.
+En cas de confirmation,
+- cette demande apparaitra comme **Annulée** pendant quelques jours,
+- ne pourra pas être réactivé ni traitée par un _sponsor_, 
+- puis disparitra définitivement.
 
+Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par un _sponsor_ qui l'acceptera et la traitera ou la rejetera.
+`,
+  INVcancelCf_tit: 'Supprimer la demande ?',
+  INVcancelCf_0: 'Je laisse ma demande vivante',
+  INVcancelCf_1: 'Je supprime ma demande d\'invitation',
+  
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',

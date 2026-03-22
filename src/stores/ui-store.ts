@@ -160,10 +160,6 @@ export const useUiStore = defineStore('ui', () => {
     inv: null, // Invit (safe)
     idx: 0,
     nb: 0,
-    fnback: null,
-    fndecline: null,
-    fnaccept: null,
-    fncancel: null,
     fnnav: null
   })
 
