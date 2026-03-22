@@ -299,7 +299,7 @@ export class ListInvits extends Operation {
       const lst: Invitation[] = []
       for(const x of res.list) {
         const inv = new Invitation()
-        lst.push(await inv.fromList(x, this.org))
+        lst.push(await inv.fromList(x, this.org) as Invitation)
       }
       return lst
     } catch(e) {

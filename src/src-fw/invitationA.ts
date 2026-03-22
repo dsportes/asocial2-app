@@ -121,10 +121,10 @@ export class InvitationA {
   }
 
   /* Retourne un message d'erreur disant pourquoi l'utilisateur
-  ne peut pas "valider / rejeter" l'invitatio,
-  bref n'est pas un SPONSOR acceptable
+  ne peut pas "valider / rejeter" l'invitation en status 1.
+  Bref pourquoi il n'est pas un SPONSOR acceptable
   */
-  async mayValidate () : Promise<string> {
+  async msgVal () : Promise<string> {
     return ''
   }
 

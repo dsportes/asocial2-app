@@ -911,6 +911,8 @@ bla bla
   INVbadid_1: 'BUG probable: tentative de lecture d\'une invitation inconnue.',
   INVbadid_2: 'BUG probable: tentative de lecture d\'une invitation dont vous n\'êtes pas le demandeur.',
   INVtitzoom: 'Invitation "{0}"',
+  INVdetail: 'Détail de l\'invitation',
+  INVtitval: 'Validation de l\'invitation "{0}"',
   INVtitlst: 'Liste',
   INVx_time: 'Date-heure de dépôt:',
   INVx_status: 'Status:',
@@ -1000,7 +1002,7 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   INVcancelCf_tit: 'Supprimer la demande ?',
   INVcancelCf_0: 'Je laisse ma demande vivante',
   INVcancelCf_1: 'Je supprime ma demande d\'invitation',
-  
+
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
   EX_2: 'Données saisies non conformes',
