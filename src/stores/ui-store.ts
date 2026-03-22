@@ -160,7 +160,8 @@ export const useUiStore = defineStore('ui', () => {
     inv: null, // Invit (safe)
     idx: 0,
     nb: 0,
-    fnnav: null
+    fnnav: null,
+    fnOnUpdate: null
   })
 
   const adminPage = reactive({

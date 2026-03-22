@@ -82,23 +82,39 @@ const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:las
   await selInv(inv, u.idx)
 }
 
-const invits: InvitS[] = computed(() => Array.from(sf.mySafeInvits.values()) )
+// const invits: InvitS[] = computed(() => Array.from(sf.mySafeInvits.values()) )
+const invits: Ref<InvitS[]> = ref(Array.from(sf.mySafeInvits.values()) )
 
 const isCurrent = (inv) => 
   ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
 const clinv = (inv, idx) => dkli(idx) + (isCurrent(inv) ? ' current ' : ' nocurrent ')
 
-const init = () => {
+/* Invitation mise à jour : 
+- récupère l'ID de l'invitation courante - acId
+- recharge la liste du Safe
+- recherche dans la liste rafraichie l'indice de l'invitation d'ID acId
+- resélectionne cette invitation à son nouvel indice et rezoom
+- si l'invitation a disparu, rezoom sur le premier de la liste
+  ou pas rezooml du tout si la liste rafraichie est vide.
+*/
+const onUpdate = () => {
   const u = ui.currentInvit
+  const acId = ui.currentInvit.invit.invitId
   u.zoomed = false
-  u.invit = null
-  u.inv = null
-  u.idx = 0
-  u.nb = sf.mySafeInvits.size
-  u.fnnav = nav
+  setTimeout(async () => {
+    invits.value = Array.from(sf.mySafeInvits.values())
+    let idx = -1
+    let inv = null
+    for(let i = 0; i < invits.value.length; i++) {
+      inv = invits.value[i]
+      if (inv.invitId === acId) { idx = i; break}
+    }
+    if (idx !== -1) await selInv(inv, idx)
+    else if (invits.value.length) {
+      await selInv(invits.value[0], 0)
+    }
+  }, 500)
 }
-
-init()
 
 const selInv = async (inv, idx) => {
   // Get de l'invit par le service
@@ -113,6 +129,19 @@ const selInv = async (inv, idx) => {
   if (invit)
     u.invit = invit
 }
+
+const init = () => {
+  const u = ui.currentInvit
+  u.zoomed = false
+  u.invit = null
+  u.inv = null
+  u.idx = 0
+  u.nb = sf.mySafeInvits.size
+  u.fnnav = nav
+  u.fnOnUpdate = onUpdate
+}
+
+init()
 
 </script>
 

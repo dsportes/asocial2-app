@@ -37,7 +37,10 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
 const model = defineModel()
-const dialogs = reactive({D2: false, D3:false})
+
+const emit = defineEmits(['done'])
+
+// const dialogs = reactive({D2: false, D3:false})
 
 const props = defineProps({
   invit: Object
@@ -48,6 +51,7 @@ const locInvit = ref(props.invit)
 const validate = async () => {
   await props.invit.validate()
   model.value = false
+  emit('done', true)
 }
 
 </script>

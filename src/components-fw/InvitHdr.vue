@@ -16,6 +16,7 @@
       <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 1" 
         :label="$t('INVac_an')" icon="delete" class='col-auto q-ml-xs'
         @ok="dialogs.cancel = true"/>
+
       <!-- UN sponsor peut VALIDER et transformer la demande en invitation 
         QUI est un SPONSOR autorisé à traiter la demande dépend de l'application 
         Au mlieu de valider il peut aussi REJETER la demande -->
@@ -25,13 +26,14 @@
       <btn-cond v-if="model.invit && model.invit.status === 1 && !msgVal" 
         :label="$t('INVac_re')" icon="close" color="warning" class='col-auto q-ml-xs'
         @ok="dialogs.reject = true"/>
+
       <!-- L'utilisateur peut ACCEPTER ou DECLINER une invitation validée par un sponsor -->
       <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 2" 
         :label="$t('INVac_de')" icon="close" color="warning" class='col-auto q-ml-xs'
         @ok="dialogs.decline = true"/>
       <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 2" 
         :label="$t('INVac_ac')" icon="check" class='col-auto q-ml-xs'
-        @ok="model.invit.accept"/>
+        @ok="doAccept"/>
 
     </q-toolbar>
     <div v-if="msgVal" class="titre-md msg">
@@ -46,7 +48,7 @@
         <div class="titre-md text-italic">{{$t('INVac_rej_2', [min])}}</div>
         <btn-cond color="warning" :label="$t('INVac_re')"
           :disable="txt.length < min"
-          @ok="dialogs.reject = false; model.invit.reject(txt)"/>
+          @ok="doReject"/>
       </div>
     </template>
     <template #default>
@@ -62,7 +64,7 @@
         <div class="titre-md text-italic">{{$t('INVac_dec_2', [min])}}</div>
         <btn-cond color="warning" :label="$t('INVac_de')"
           :disable="txt.length < min"
-          @ok="dialogs.decline = false; model.invit.decline(txt)"/>
+          @ok="doDecline"/>
       </div>
     </template>
     <template #default>
@@ -71,7 +73,8 @@
     </template>
   </dialog-std0>
 
-  <invit-validation v-model="dialogs.validate" :invit="model.invit"/>
+  <invit-validation v-model="dialogs.validate" :invit="model.invit"
+    @done="validateDone" @close="dialogs.validate = false"/>
 
   <choose-it v-model="dialogs.cancel"
     prefix="INVcancelCf" options="pw" 
@@ -108,22 +111,13 @@ const doMsgVal = async () => {
     await model.value.invit.msgVal() : ''
 }
 
-onMounted(async () => {
-  await doMsgVal()
-})
+onMounted(async () => { await doMsgVal() })
 
-watch(() => ui.currentInvit.invit, async () => {
-  await doMsgVal()
-})
+watch(() => model.value.invit, async () => { await doMsgVal() })
 
 const nav = (n) => {
   const f = model.value['fnnav']
   if (f) f(n)
-}
-
-const reject = async () => {
-  console.log(model.value.invit.invitId, 'reject dans InvitHdr')
-  dialogs.reject = true
 }
 
 const dialogs = reactive({ 
@@ -132,8 +126,41 @@ const dialogs = reactive({
 
 const txt = ref('')
 
+// Validation de cancel
 const cancelCf = async (n) => {
-  if (n === 1) await model.value.invit.cancel()
+  if (n === 1) {
+    await model.value.invit.cancel()
+    onUpdate()
+  }
+}
+
+// Validation de reject
+const doReject = async () => {
+  dialogs.reject = false; 
+  await model.value.invit.reject(txt.value)
+  onUpdate()
+}
+
+// Validation du decline
+const doDecline = async () => {
+  dialogs.decline = false
+  await model.value.invit.decline(txt.value)
+  onUpdate()
+}
+
+// Validation de accept
+const doAccept = async () => {
+  await model.value.invit.accept()
+  onUpdate()
+}
+
+const validateDone = async () => {
+  onUpdate()
+}
+
+const onUpdate = () => {
+  const f = model.value.fnOnUpdate
+  if (f) f()
 }
 
 </script>

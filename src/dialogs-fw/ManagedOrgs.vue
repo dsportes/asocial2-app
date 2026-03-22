@@ -166,35 +166,33 @@ const nav = (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   u.invit = invits.value[u.idx]
 }
 
-const validate = () => { // SP valide l'invitation selInv
-  console.log('validate')
-}
-
-const reject = (txt: string) => { // SP rejete l'invitation selInv
-// txt: justificatif
-  console.log('reject', txt)
-}
-
-const accept = () => { // U accepte l'invitation selInv
-  console.log('accept')
-}
-
-const decline = (txt: string) => { // U décline l'invitation selInv
-// txt: justificatif
-  console.log('decline', txt)
-}
-
-const init2 = () => {
+const zoom = (inv, idx) => {
   const u = ui.currentInvit
+  u.zoomed = true
+  u.invit = inv
+  u.idx = idx
+}
+
+// Invitation mise à jour : rafraichir la liste
+const onUpdate = () => {
+  console.log('onUpdate dans ManagedOrgs')
+  const u = ui.currentInvit
+  const acId = ui.currentInvit.invit.invitId
   u.zoomed = false
-  u.nb = invits.value.length
-  u.fndecline = decline
-  u.fnaccept = accept
-  u.fnreject = reject
-  u.fnvalidate = validate
-  u.fnnav = nav
-  u.invit = null
-  u.inv = null
+  setTimeout(async () => {
+    const op = new ListInvits(SVC.value, org.value)
+    invits.value = await op.run(major.value.value, true)
+    let idx = -1
+    let inv = null
+    for(let i = 0; i < invits.value.length; i++) {
+      inv = invits.value[i]
+      if (inv.invitId === acId) { idx = i; break}
+    }
+    if (idx !== -1) zoom(inv, idx)
+    else if (invits.value.length) {
+      zoom(invits.value[0], 0)
+    }
+  }, 500)
 }
 
 watch([SVC, org], (v) => { init(); init2() })
@@ -213,11 +211,14 @@ const getInvits = async () => {
   init2()
 }
 
-const zoom = (inv, idx) => {
+const init2 = () => {
   const u = ui.currentInvit
-  u.zoomed = true
-  u.invit = inv
-  u.idx = idx
+  u.zoomed = false
+  u.nb = invits.value.length
+  u.fnOnUpdate = onUpdate
+  u.fnnav = nav
+  u.invit = null
+  u.inv = null
 }
 
 </script>
