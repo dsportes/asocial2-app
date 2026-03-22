@@ -12,6 +12,11 @@ type MajorDescr = {
   hasMinor: boolean
 }
 
+export type MsgVal = {
+  ok: boolean,
+  txt: string
+}
+
 /* ### Document `Invitation` dans la base du service
 */
 export class InvitationA {
@@ -37,8 +42,10 @@ export class InvitationA {
   docId: string // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
   etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
+
   isSP ?:boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
+  SVC ?: string // service d'ou l'invitation a été lue
 
   async init (
       org: string, 
@@ -64,9 +71,10 @@ export class InvitationA {
     return this
   }
 
-  async fromList (bin : Uint8Array, org: string) : Promise<InvitationA> {
+  async fromList (bin : Uint8Array, org: string, SVC: string) : Promise<InvitationA> {
     const x = decode(bin)
     this.org = org
+    this.SVC = SVC
     this.invitId = x.invitId
     this.status = x.status
     this.major = x.major
@@ -124,8 +132,8 @@ export class InvitationA {
   ne peut pas "valider / rejeter" l'invitation en status 1.
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
-  async msgVal () : Promise<string> {
-    return ''
+  async msgVal () : Promise<MsgVal> {
+    return { ok: true, txt: 'OK' }
   }
 
   async validate () {

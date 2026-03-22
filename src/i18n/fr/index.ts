@@ -1002,6 +1002,11 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   INVcancelCf_tit: 'Supprimer la demande ?',
   INVcancelCf_0: 'Je laisse ma demande vivante',
   INVcancelCf_1: 'Je supprime ma demande d\'invitation',
+  INVsponsor_0: 'Vous n\'avez pas les droits requis pour traiter cette demande d\'invitation.',
+  INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
+  INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
+  INVsponsor_3: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
+
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
@@ -1104,5 +1109,11 @@ bla bla
 bla bla
 `,
   INV_cedit: 'Membre du comité éditorial',
+  INVsponsoring: `### Qui peut traiter une demande d'invitation ?
+Un utilisateur est un "sponsor" valide pour une demande quand,
+- c'est un "manager" de l'organisation: il est _sponsor universel_.
+- il a un droit d'accès **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
+- il a un droit d'accès **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
+`,
 
 }

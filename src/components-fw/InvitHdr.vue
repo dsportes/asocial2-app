@@ -20,10 +20,10 @@
       <!-- UN sponsor peut VALIDER et transformer la demande en invitation 
         QUI est un SPONSOR autorisé à traiter la demande dépend de l'application 
         Au mlieu de valider il peut aussi REJETER la demande -->
-      <btn-cond v-if="model.invit && model.invit.status === 1 && !msgVal" 
+      <btn-cond v-if="model.invit && model.invit.status === 1 && msgVal.ok" 
         :label="$t('INVac_va')" icon="check" class="col-auto  q-ml-xs"
         @ok="dialogs.validate = true"/>
-      <btn-cond v-if="model.invit && model.invit.status === 1 && !msgVal" 
+      <btn-cond v-if="model.invit && model.invit.status === 1 && msgVal.ok" 
         :label="$t('INVac_re')" icon="close" color="warning" class='col-auto q-ml-xs'
         @ok="dialogs.reject = true"/>
 
@@ -36,8 +36,12 @@
         @ok="doAccept"/>
 
     </q-toolbar>
-    <div v-if="msgVal" class="titre-md msg">
-      {{msgVal}}
+
+    <div v-if="model.invit && model.invit.status === 1" class="row items-start">
+      <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
+      <div :class="msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
+        {{msgVal.txt}}
+      </div>
     </div>
   </div>
 
@@ -92,6 +96,7 @@ import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import NavBar from '../components-fw/NavBar.vue'
 
@@ -104,11 +109,11 @@ const ui = stores.ui
 
 const model = defineModel()
 
-const msgVal = ref('')
+const msgVal = ref({ ok: true, txt: 'OK' })
 
 const doMsgVal = async () => {
-  msgVal.value = model.value.invit && model.value.invit.status === 1 ?
-    await model.value.invit.msgVal() : ''
+  if (model.value.invit && model.value.invit.status === 1)
+    msgVal.value = await model.value.invit.msgVal()
 }
 
 onMounted(async () => { await doMsgVal() })

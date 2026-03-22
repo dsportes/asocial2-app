@@ -299,7 +299,7 @@ export class ListInvits extends Operation {
       const lst: Invitation[] = []
       for(const x of res.list) {
         const inv = new Invitation()
-        lst.push(await inv.fromList(x, this.org) as Invitation)
+        lst.push(await inv.fromList(x, this.args.org, this.SVC) as Invitation)
       }
       return lst
     } catch(e) {
@@ -318,7 +318,7 @@ export class GetInvit extends Operation {
       const res = await this.post()
       if (!res.status) {
         const inv = new Invitation()
-        await inv.fromList(res.invitation, this.org)
+        await inv.fromList(res.invitation, this.args.org, this.SVC)
         return inv
       }
       await stores.ui.diagDisplay($t('INVbadid_' + res.status))
