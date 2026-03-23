@@ -38,7 +38,7 @@ import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, sty, dkli, dhcool } from '../src-fw/util'
 
-import { GetInvit } from '../src-fw/operations'
+import { InvitGet } from '../src-fw/operations'
 
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -118,7 +118,7 @@ const onUpdate = () => {
 
 const selInv = async (inv, idx) => {
   // Get de l'invit par le service
-  const op = new GetInvit(inv.svc, inv.org)
+  const op = new InvitGet(inv.svc, inv.org)
   let id = inv.invitId  // test // 
   if (id.endsWith('$')) id = id.substring(0, id.length - 1)
   const invit = await op.run(id)

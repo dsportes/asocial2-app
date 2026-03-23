@@ -261,8 +261,8 @@ export class ListManagers extends Operation {
   }
 }
 
-export class CreateInvit extends Operation {
-  constructor (SVC: string, org: string) { super('CreateInvit', SVC, org) }
+export class InvitCreate extends Operation {
+  constructor (SVC: string, org: string) { super('InvitCreate', SVC, org) }
 
   async run (
     major: string,
@@ -283,8 +283,8 @@ export class CreateInvit extends Operation {
   }
 }
 
-export class ListInvits extends Operation {
-  constructor (SVC: string, org: string) { super('ListInvits', SVC, org) }
+export class InvitList extends Operation {
+  constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
 
   async run ( major: string, mgr?: boolean ) : Promise<Invitation[]> {
     try {
@@ -309,8 +309,8 @@ export class ListInvits extends Operation {
 }
 
 /* Lecture d'une invitation par son ID par son propriétaire */
-export class GetInvit extends Operation {
-  constructor (SVC: string, org: string) { super('GetInvit', SVC, org) }
+export class InvitGet extends Operation {
+  constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }
 
   async run ( invitId: string ) : Promise<Invitation> {
     try {

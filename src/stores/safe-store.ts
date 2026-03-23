@@ -1058,7 +1058,7 @@ export const useSafeStore = defineStore('safe', () => {
     status: number
   }
 
-  const createInvit = async (invit: Invit) => {
+  const invitCreate = async (invit: Invit) => {
     const add : AddInvit = {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, false) as string,
@@ -1688,7 +1688,7 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds, getCreds, skey, managedOrgs, isManager,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
-    createInvit, statusInvit, mySafeInvits,
+    invitCreate, statusInvit, mySafeInvits,
     auth,
     devices,
     getAllSessions,

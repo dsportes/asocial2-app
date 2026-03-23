@@ -189,9 +189,9 @@ export default {
   op_SetSvcOrgStatus: 'Met à jour le status d\'une organisation pour un service.',
   op_GetOrgConfig: 'Récupération de la configuration d\'une organisation',
   op_SetOrgConfig: 'Enregistrement de la configuration d\'une organisation',
-  op_CreateInvit: 'Création d\'une demande d\'invitation',
-  op_ListInvits: 'Liste des invitations',
-  op_GetInvit: 'Lecture d\'une invitation par son ID par son propriétaire',
+  op_InvitCreate: 'Création d\'une demande d\'invitation',
+  op_InvitList: 'Liste des invitations',
+  op_InvitGet: 'Lecture d\'une invitation par son ID par son propriétaire',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',

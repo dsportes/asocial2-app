@@ -25,7 +25,7 @@ export class InvitationA {
   major: string //code majeur 
   minor: string // code mineur
   time: number // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
-  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
+  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée, 6: annulée
   userId: string // ID de U (demandeur)
   safeStore: string // URL du store hébergeant le safe de U
   skeyK: Uint8Array // clé symétrique générée par U, cryptée par sa clé K. Requise ou non selon le `major`.
@@ -43,7 +43,7 @@ export class InvitationA {
   cond: any // données à faire figurer en `cond` du credential.
   etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
 
-  isSP ?:boolean // user est le SPONSOR TRAITANT de la demande
+  isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
   SVC ?: string // service d'ou l'invitation a été lue
 

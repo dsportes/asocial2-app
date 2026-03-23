@@ -85,7 +85,7 @@ Affiche:
 import { ref, watch } from 'vue'
 
 import stores from '../stores/all'
-import { ListManagers, ListInvits } from '../src-fw/operations'
+import { ListManagers, InvitList } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -180,7 +180,7 @@ const onUpdate = () => {
   const acId = ui.currentInvit.invit.invitId
   u.zoomed = false
   setTimeout(async () => {
-    const op = new ListInvits(SVC.value, org.value)
+    const op = new InvitList(SVC.value, org.value)
     invits.value = await op.run(major.value.value, true)
     let idx = -1
     let inv = null
@@ -205,7 +205,7 @@ watch(() => major.value, async (v) => {
 const getInvits = async () => {
   search.value = 1
   invits.value = []
-  const op = new ListInvits(SVC.value, org.value)
+  const op = new InvitList(SVC.value, org.value)
   invits.value = await op.run(major.value.value, true)
   search.value = 2
   init2()
