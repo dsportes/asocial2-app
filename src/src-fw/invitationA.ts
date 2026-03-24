@@ -4,7 +4,19 @@ import { decode } from '@msgpack/msgpack'
 import { Crypt, fromPem } from './crypt'
 import stores from '../stores/all'
 import { Invit } from '../stores/safe-store'
-// import { Operation } from './operation'
+import { Operation } from '../src-fw/operation'
+import { $t } from '../src-fw/util'
+
+const encoder = new TextEncoder()
+
+export type Accept = {
+  role: string // rôle du credential associé (et classe du document associé).
+  docId: string // `docId` du credential associé (et du document associé le cas échéant).
+  cond: any // données à faire figurer en `cond` du credential.
+  etc: any // autres données nécessaires pour créer le document associé. 
+    // U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui)
+    // ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
+}
 
 type MajorDescr = {
   hasKey: boolean,
@@ -36,8 +48,8 @@ export class InvitationA {
   // Données fixées par le sponsor**
   pemS: string // clé publique du sponsor traitant l'invitation.
   txti: string | Uint8Array // texte de réponse du sponsor, crypté par pemS / U.
-      // - si acceptation: termes explicatifs des conditions.
-      // - si rejet: justificatif textuel de rejet par le sponsor.
+    // - si acceptation: termes explicatifs des conditions.
+    // - si rejet: justificatif textuel de rejet par le sponsor.
   role: string // rôle du credential associé (et classe du document associé).
   docId: string // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
@@ -136,16 +148,70 @@ export class InvitationA {
     return { ok: true, txt: 'OK' }
   }
 
-  async validate () {
-    console.log(this.invitId, 'validate')
+  /* Méthode "abstraite": systématiquement surchargée pour 
+  s'adapter au traitement spécifique de chaque "major" par un sponsor.
+  Génère:
+  - l'objet Accept à stocker dans l'invitation,
+  - params.txti : le texte de résumé de la proposition d'invitation
+  */
+  async setAccept (params: Object) : Promise<Accept> {
+    return null
+  }
+
+  async accept (params: Object) {
+    console.log(this.invitId, 'accept')
+    const sf = stores.safe
+    console.log(this.invitId, 'reject')
+    const op = new Operation('InvitAR', this.SVC, this.org)
+    try {
+      op.args.accept = await this.setAccept(params)
+      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
+      op.args.txti = await Crypt.crypt(aes, encoder.encode(params['txti']))
+      op.args.invitId = this.invitId
+      const res = await op.post()
+      if (res.status)
+        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
   async reject (txt: string) {
+    const sf = stores.safe
     console.log(this.invitId, 'reject')
+    const op = new Operation('InvitAR', this.SVC, this.org)
+    try {
+      this.pemS = sf.auth.D
+      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(this.pemS))
+      op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
+      op.args.invitId = this.invitId
+      const res = await op.post()
+      if (res.status)
+        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
-  async accept () {
-    console.log(this.invitId, 'accept')
+  /* Méthode "abstraite" : surchargée en fonction du 
+  "major" de l'invitation. Par exemple:
+  - enregistrement d'un credential résultant de l'invitation
+  */
+  async postValidate () {
+  }
+
+  async validate () {
+    console.log(this.invitId, 'validate')
+    const sf = stores.safe
+    const op = new Operation('InvitValidate', this.SVC, this.org)
+    try {
+      op.args.invitId = this.invitId
+      const res = await op.post()
+      if (res.status)
+        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
   async decline () {

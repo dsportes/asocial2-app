@@ -907,9 +907,11 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   MNOmajor_bub: `### Classe d\'invitation recherchée
 bla bla
 `,
+  INVopret_1: '(BUG probable) - L\'invitation est inconnue.',
+  INVopret_2: '(BUG probable) - Vous n\'avez aucun des droits d\'accès l\'autorisant.',
+  INVopret_3: '(BUG probable) - Opération réservée à l\'utilisateur ayant demandé l\'invitation.',
+  INVopret_4: '(BUG probable) - L\'invitation n\'est pas dans un état qui permette cette opération.',
 
-  INVbadid_1: 'BUG probable: tentative de lecture d\'une invitation inconnue.',
-  INVbadid_2: 'BUG probable: tentative de lecture d\'une invitation dont vous n\'êtes pas le demandeur.',
   INVtitzoom: 'Invitation "{0}"',
   INVdetail: 'Détail de l\'invitation',
   INVtitval: 'Validation de l\'invitation "{0}"',

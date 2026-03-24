@@ -321,7 +321,7 @@ export class InvitGet extends Operation {
         await inv.fromList(res.invitation, this.args.org, this.SVC)
         return inv
       }
-      await stores.ui.diagDisplay($t('INVbadid_' + res.status))
+      await stores.ui.diagDisplay($t('INVopret_' + res.status))
       return null
     } catch(e) {
       this.ko(e)
