@@ -1081,8 +1081,10 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const statusInvit = async (invitId: string, status: number) => {
-        const now = Date.now()
+  /* Change le status d'une invitation pour LE user U dans SON safeStore.
+  */
+  const statusInvit = async (invitId: string, status: number ) => {
+    const now = Date.now()
     const sti : StatusInvit = {
       targetId: userId.value,
       invitId: invitId,
