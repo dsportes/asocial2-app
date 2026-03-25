@@ -29,6 +29,8 @@ export type CredRequest = {
   cond: Object
 }
 
+/* Credential en Safe
+*/
 export class Credential {
   static props = [ 'id', 'svc', 'org', 'role', 'docId', 'time', 'pems', 'skey', 'comment' ]
 

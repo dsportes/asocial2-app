@@ -273,7 +273,7 @@ export class InvitCreate extends Operation {
   ) : Promise<Invit> {
     try {
       const invitation = new Invitation()
-      await invitation.init(this.org, major, minor, txtm, label)
+      await invitation.init(this.args.org, major, minor, txtm, label)
       this.args.invObj = invitation.toObj()
       const res = await this.post()
       return invitation.toInvit(this.SVC, comment)

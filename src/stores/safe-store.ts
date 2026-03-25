@@ -639,7 +639,7 @@ export const useSafeStore = defineStore('safe', () => {
         inv.status = x.status
         if (msvc[inv.svc]) {
           m.set(inv.invitId, inv)
-          m.set(inv.invitId + '$', inv) // test
+          // m.set(inv.invitId + '$', inv) // test
         }
       } catch (e) {
         console.log(e)
@@ -1510,7 +1510,7 @@ export const useSafeStore = defineStore('safe', () => {
       profiles,
       delprofs: delprofs || [],
       nosafe: nocompile || false
-     }
+    }
     const op = new SafeOperation('$UpdateCreds', mySafeStore.value)
     let ret
     try {

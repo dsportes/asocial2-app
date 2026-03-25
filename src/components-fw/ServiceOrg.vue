@@ -5,6 +5,7 @@
   <service-select class="col-5" v-model="model.SVC"/>
   <div class="col-1"/>
   <input-b class="col-6 self-end"
+    :disable="!model.SVC"
     prefix="orgcode" v-model="model.org" size="org" noval/>
 </div>
 </template>

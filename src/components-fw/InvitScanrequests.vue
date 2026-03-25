@@ -119,9 +119,7 @@ const onUpdate = () => {
 const selInv = async (inv, idx) => {
   // Get de l'invit par le service
   const op = new InvitGet(inv.svc, inv.org)
-  let id = inv.invitId  // test // 
-  if (id.endsWith('$')) id = id.substring(0, id.length - 1)
-  const invit = await op.run(id)
+  const invit = await op.run(inv.invitId)
   const u = ui.currentInvit
   u.inv = inv
   u.zoomed = true

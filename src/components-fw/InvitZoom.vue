@@ -28,6 +28,11 @@
     <span v-if="model.safeStore" class="q-ml-md font-mono">[{{model.safeStore}}]</span>
   </div>
 
+  <div v-if="model.label" class="q-mt-sm row items-center">
+    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_label')}}</div>
+    <div class='font-mono'>{{model.label}}</div>
+  </div>
+
   <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtm')}}</div>
   <q-input class="q-pa-xs bord1" v-model="model.txtm" type="textarea"
     readonly borderless :rows="5"/>

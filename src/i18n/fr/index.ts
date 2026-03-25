@@ -2,8 +2,8 @@
 // so you can safely delete all default props below
 
 export default {
-  app_label: 'Rédacteurs et relecteurs',
-  services_AS2: 'Rédacteurs et relecteurs',
+  app_label: 'Auteurs et relecteurs',
+  services_AS2: 'Auteurs et relecteurs',
   services_ASSO2: 'Gestion des associations',
 
   lang: 'La langue est le Français',
@@ -921,6 +921,7 @@ bla bla
   INVx_major: 'Type majeur:',
   INVx_minor: 'Type mineur:',
   INVx_user: 'ID du demandeur:',
+  INVx_label: 'Label associé:',
   INVx_me: 'Je suis le sponsor ayant traité la demande',
   INVx_txtm: 'Texte de motivation de la demande d\'invitation',
   INVx_txtx: 'Pourquoi le demandeur a finalement décliné l\'invitation validée',
@@ -1098,16 +1099,16 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   blabla1: 'bla1 bla1', // Test surcharge traductions
   titre: 'Test très simple - compteur: {0}',
 
-  INV_writer: 'Rédacteur',
-  INVwriter: 'Nom d\'auteur',
-  INVwriter_label: 'Nom d\'auteur',
-  INVwriter_bub: `### Nom d'auteur
+  INV_auteur: 'Auteur',
+  INVauteur: 'Nom d\'auteur',
+  INVauteur_label: 'Nom d\'auteur',
+  INVauteur_bub: `### Nom d'auteur
 bla bla
 `,
-  INV_reader: 'Relecteur',
-  INVreader: 'Pseudo de relecteur',
-  INVreader_label: 'Pseudo de relecteur',
-  INVreader_bub: `### Pseudo de relecteur
+  INV_relecteur: 'Relecteur',
+  INVrelecteur: 'Pseudo de relecteur',
+  INVrelecteur_label: 'Pseudo de relecteur',
+  INVrelecteur_bub: `### Pseudo de relecteur
 bla bla
 `,
   INV_cedit: 'Membre du comité éditorial',

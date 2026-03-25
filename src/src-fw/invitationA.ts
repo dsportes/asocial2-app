@@ -161,7 +161,6 @@ export class InvitationA {
   async accept (params: Object) {
     console.log(this.invitId, 'accept')
     const sf = stores.safe
-    console.log(this.invitId, 'reject')
     const op = new Operation('InvitAR', this.SVC, this.org)
     try {
       op.args.accept = await this.setAccept(params)
@@ -181,8 +180,7 @@ export class InvitationA {
     console.log(this.invitId, 'reject')
     const op = new Operation('InvitAR', this.SVC, this.org)
     try {
-      this.pemS = sf.auth.D
-      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(this.pemS))
+      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
       op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
       const res = await op.post()
@@ -214,12 +212,31 @@ export class InvitationA {
     }
   }
 
-  async decline () {
+  async decline (txtx: string) {
     console.log(this.invitId, 'decline')
+    const op = new Operation('InvitDC', this.SVC, this.org)
+    try {
+      op.args.invitId = this.invitId
+      op.args.txtx = txtx
+      const res = await op.post()
+      if (res.status)
+        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
   async cancel () {
     console.log(this.invitId, 'cancel')
+    const op = new Operation('InvitDC', this.SVC, this.org)
+    try {
+      op.args.invitId = this.invitId
+      const res = await op.post()
+      if (res.status)
+        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
 }

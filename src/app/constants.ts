@@ -68,8 +68,8 @@ export const K = {
   roles: new Set(['manager', 'auteur', 'lecteur', 'groupe']),
 
   majorInvits: {
-    writer: { hasKey: true, hasLabel: true, hasMinor: true },
-    reader: { hasKey: false, hasLabel: true, hasMinor: true },
+    auteur: { hasKey: true, hasLabel: true, hasMinor: true },
+    relecteur: { hasKey: false, hasLabel: true, hasMinor: true },
     cedit: { hasKey: false, hasLabel: false, hasMinor: false }
   },
 

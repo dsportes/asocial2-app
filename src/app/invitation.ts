@@ -52,7 +52,7 @@ export class Invitation extends InvitationA {
   */
   async setAccept (params: Object) : Promise<Accept> {
     switch (this.major) {
-      case 'writer' : return this.setAccept_writer(params)
+      case 'auteur' : return this.setAccept_auteur(params)
     }
   }
 
@@ -62,11 +62,11 @@ export class Invitation extends InvitationA {
   */
   async postValidate () {
     switch (this.major) {
-      case 'writer' : await this.postValidate_writer()
+      case 'auteur' : await this.postValidate_auteur()
     }
   }
 
-  async setAccept_writer (params: Object) : Promise<Accept> {
+  async setAccept_auteur (params: Object) : Promise<Accept> {
     const a: Accept = {
       role: 'Auteur',
       docId: Crypt.rnd(16),
@@ -76,12 +76,15 @@ export class Invitation extends InvitationA {
     return a
   }
 
-  async postValidate_writer () : Promise<void> {
-    /* Enregistrement du Credential sur "auteur"
+  async postValidate_auteur () : Promise<void> {
+    /* Enregistrement du Credential Safe sur "Auteur"
     Op 'accept' du sponsor avait généré:
     - role: 'Auteur'
     - docId: l'id de l'auteur
-    - etc.credPemS : la clé de signature du credential d'accès à l'auteur
+    - etc.credA
+      - pemS : la clé de signature du credential d'accès à l'auteur
+      - id: id du credential
+      - time: du credential
     Op 'InvitValidate' vient d'enregistrer:
     - un document 'Auteur' 
       - docId: ci-dessus
@@ -89,16 +92,16 @@ export class Invitation extends InvitationA {
     - un Credential sur cet auteur avec un pemV
       - issu de la génération du couple pemS et pemV 
     */
-    const c = new Credential()
+    const c = new Credential() // Credential "Safe"
     c.svc = this.SVC
     c.org = this.org
-    c.pems = keyToB64(this.etc.credPemS)  
+    c.pems = keyToB64(this.etc.credA.pemS)  
     c.role = this.role
     c.docId = this.docId
     c.name = this.label
     c.skey = ''
-    c.time = this.etc.credTime
-    c.id = this.etc.credId
+    c.time = this.etc.credA.time
+    c.id = this.etc.credA.id
     const mcreds: Map<string, Credential> = new Map()
     mcreds.set(c.id, c)
     const status = await stores.safe.updateCreds(mcreds, null, null, null)
