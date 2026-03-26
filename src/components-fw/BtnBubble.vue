@@ -23,35 +23,17 @@ L'image doit figurer dans public/images
     size="20px">
     <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
       style="height: 300px; max-height:70vh; width: 400px; max-width:90vw">
-      <q-scroll-area style="height: 300px;"
-        :class="($q.dark.isActive ? 'clear' : 'dark') + ' q-pt-xs q-px-xs q-pb-xl'"
-        :barStyle="barStyle" :thumbStyle="thumbStyle">
-        <sd-noir v-if="!$q.dark.isActive" :text="text2()"/>
-        <sd-blanc v-else :text="text2()"/>
-      </q-scroll-area>
+      <scroll-md height="300px" :text="text" inverse />
     </q-menu>
   </q-icon>
 </template>
 
 <script setup lang="ts">
-import stores from '../stores/all'
-
-import SdNoir from './SdNoir.vue'
-import SdBlanc from './SdBlanc.vue'
-
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-
-const config = stores.config
-const url = config.K.DOC_URLS[config.locale]
+import ScrollMd from '../components-fw/ScrollMd.vue'
 
 const props = defineProps({ 
   text: String // texte MD à afficher
 })
-
-const text2 = () => {
-  return props.text.replaceAll('href="$$/', 'href="' + url)
-}
 
 </script>
 

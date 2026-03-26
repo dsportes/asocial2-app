@@ -158,14 +158,14 @@ export class InvitationA {
     return null
   }
 
-  async accept (params: Object) {
+  async accept ( accept: Accept, txt: string ) {
     console.log(this.invitId, 'accept')
     const sf = stores.safe
     const op = new Operation('InvitAR', this.SVC, this.org)
     try {
-      op.args.accept = await this.setAccept(params)
+      op.args.accept = accept
       const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
-      op.args.txti = await Crypt.crypt(aes, encoder.encode(params['txti']))
+      op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
       const res = await op.post()
       if (res.status)
@@ -205,8 +205,8 @@ export class InvitationA {
     try {
       op.args.invitId = this.invitId
       const res = await op.post()
-      if (res.status)
-        await stores.ui.diagDisplay($t('INVopret_' + res.status))
+      if (res.status) await stores.ui.diagDisplay($t('INVopret_' + res.status))
+      else await this.postValidate()
     } catch(e) {
       op.ko(e)
     }

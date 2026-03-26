@@ -1009,7 +1009,8 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
   INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
   INVsponsor_3: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
-
+  INVverif: "Vérifier avant de valider",
+  INVtxti: "Texte résumant la proposition d\'invitation à valider par l\'utilisateur (ou à décliner)",
 
   EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
   EX_1: 'Données saisies non conformes',
@@ -1117,6 +1118,23 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.
 - il a un droit d'accès **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
 - il a un droit d'accès **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
+`,
+  INVauteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
+  INVauteur_1: 'Pas de droit d\'accès de "sponsoring"',
+  INVauteur_2: 'Droit d\'accès de "sponsoring" générale "Auteur"',
+  INVauteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
+  INVauteur_categ_label: 'Catégorie d\'auteurs',
+  INVauteur_t1: `### Auteur en création:
+- nom: **{0}**
+
+`,
+  INVauteur_t2: `### Droit de _Sponsoring_ accordé pour traitement de:
+- toute demande de création d'auteur.
+
+`,
+  INVauteur_t3: `### Droit de _Sponsoring_ accordé pour traitement de:
+- création d'un auteur de catagorie **{0}**.
+
 `,
 
 }

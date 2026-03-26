@@ -1,11 +1,10 @@
 
 import stores from '../stores/all'
-import { InvitationA, MsgVal, Accept } from '../src-fw/invitationA'
+import { InvitationA, MsgVal } from '../src-fw/invitationA'
 import { Credential } from '../src-fw/credential'
 import { $t } from '../src-fw/util'
 
-import { Crypt, keyToB64 } from '../src-fw/crypt'
-import { Operation } from '../src-fw/operation'
+import { keyToB64 } from '../src-fw/crypt'
 
 const encoder = new TextEncoder()
 
@@ -44,18 +43,6 @@ export class Invitation extends InvitationA {
     return credOk || { ok: false, txt: $t('INVsponsor_0') }
   }
 
-  /* Méthode "abstraite": systématiquement surchargée pour 
-  s'adapter au traitement spécifique de chaque "major" par un sponsor.
-  Génère:
-  - l'objet Accept à stocker dans l'invitation,
-  - params.txti : le texte de résumé de la proposition d'invitation
-  */
-  async setAccept (params: Object) : Promise<Accept> {
-    switch (this.major) {
-      case 'auteur' : return this.setAccept_auteur(params)
-    }
-  }
-
   /* Méthode "abstraite" : surchargée en fonction du 
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
@@ -64,16 +51,6 @@ export class Invitation extends InvitationA {
     switch (this.major) {
       case 'auteur' : await this.postValidate_auteur()
     }
-  }
-
-  async setAccept_auteur (params: Object) : Promise<Accept> {
-    const a: Accept = {
-      role: 'Auteur',
-      docId: Crypt.rnd(16),
-      cond: {},
-      etc: {}
-    }
-    return a
   }
 
   async postValidate_auteur () : Promise<void> {
@@ -90,20 +67,40 @@ export class Invitation extends InvitationA {
       - docId: ci-dessus
       - nom: label saisi dans la demande.
     - un Credential sur cet auteur avec un pemV
-      - issu de la génération du couple pemS et pemV 
+      - issu de la génération du couple pemS et pemV
+    - optionnellement un credential "Sponsor" décrit dans etc.credS
+     qui accorde à U un droit de Sponsor pour traiter les demandes
+     d'autres auteurs.
     */
-    const c = new Credential() // Credential "Safe"
-    c.svc = this.SVC
-    c.org = this.org
-    c.pems = keyToB64(this.etc.credA.pemS)  
-    c.role = this.role
-    c.docId = this.docId
-    c.name = this.label
-    c.skey = ''
-    c.time = this.etc.credA.time
-    c.id = this.etc.credA.id
     const mcreds: Map<string, Credential> = new Map()
-    mcreds.set(c.id, c)
+    if (this.etc.credA) {
+      const c = new Credential() // Credential "Safe"
+      c.svc = this.SVC
+      c.org = this.org
+      c.pems = keyToB64(this.etc.credA.pemS)  
+      c.role = this.role
+      c.docId = this.docId
+      c.name = this.label
+      c.skey = ''
+      c.time = this.etc.credA.time
+      c.id = this.etc.credA.id
+      mcreds.set(c.id, c)
+    }
+
+    if (this.etc.credS) {
+      const c = new Credential() // Credential "Safe"
+      c.svc = this.SVC
+      c.org = this.org
+      c.pems = keyToB64(this.etc.credS.pemS)  
+      c.role = 'Sponsor'
+      c.docId = this.etc.credS.docId
+      c.name = this.label
+      c.skey = ''
+      c.time = this.etc.credS.time
+      c.id = this.etc.credS.id
+      mcreds.set(c.id, c)
+    }
+
     const status = await stores.safe.updateCreds(mcreds, null, null, null)
     if (status !== 0)
       await stores.ui.diagDisplay($t('HPsfop_' + status))
