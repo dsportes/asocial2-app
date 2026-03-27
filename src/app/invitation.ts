@@ -27,20 +27,21 @@ export class Invitation extends InvitationA {
     est un sponsor valide (à condition bien sur que l'invitation ait un minor).
   */
   async msgVal () : Promise<MsgVal> {
-    let credOk : { ok: boolean, txt: string}
+    let credOk : MsgVal
     const creds : Map<string, Credential> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
       if (c.org !== this.org || c.svc !== this.SVC) continue
       if (c.role === 'Org.manager') 
-        return { ok: true, txt: $t('INVsponsor_1') }
+        return { ok: true, txt: $t('INVsponsor_1'), role: 'Org.manager', docId: '' }
       if (c.role === 'Sponsor.') {
         if (c.docId === this.major)
-          return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + this.major)]) }
+          return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + this.major)]), role: 'Sponsor.', docId: c.docId }
         if (c.docId === this.major + '.' + this.minor)
-          credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + this.major) + ' / ' + this.minor]) }
+          credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + this.major) + ' / ' + this.minor]),
+            role: 'Sponsor.', docId: c.docId }
       }
     } 
-    return credOk || { ok: false, txt: $t('INVsponsor_0') }
+    return credOk || { ok: false, txt: $t('INVsponsor_0'), role: null, docId: null }
   }
 
   /* Méthode "abstraite" : surchargée en fonction du 
@@ -92,7 +93,7 @@ export class Invitation extends InvitationA {
       c.svc = this.SVC
       c.org = this.org
       c.pems = keyToB64(this.etc.credS.pemS)  
-      c.role = 'Sponsor'
+      c.role = 'Sponsor.'
       c.docId = this.etc.credS.docId
       c.name = this.label
       c.skey = ''

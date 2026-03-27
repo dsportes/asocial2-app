@@ -34,20 +34,24 @@
   </div>
 
   <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtm')}}</div>
-  <q-input class="q-pa-xs bord1" v-model="model.txtm" type="textarea"
-    readonly borderless :rows="5"/>
+  <!--q-input class="q-pa-xs bord1" v-model="model.txtm" type="textarea"
+    readonly borderless :rows="5"/-->
+  <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtm" />
+
 
   <div v-if="model.status > 1 && (model.isSP || model.isU)">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_me')}}</div>
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txti')}}</div>
-    <q-input class="q-pa-xs bord1" v-model="model.txti" type="textarea"
-      readonly borderless :rows="5"/>
+    <!--q-input class="q-pa-xs bord1" v-model="model.txti" type="textarea"
+      readonly borderless :rows="5"/-->
+    <scroll-md class="full-width bord1 q-pa-xs" height="200px" :text="model.txti" />
   </div>
 
   <div v-if="model.status === 5">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtx')}}</div>
-    <q-input class="q-pa-xs bord1" v-model="model.txtx" type="textarea"
-      readonly borderless :rows="5"/>
+    <!--q-input class="q-pa-xs bord1" v-model="model.txtx" type="textarea"
+      readonly borderless :rows="5"/-->
+    <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtx" />
   </div>
 
   <div v-if="(model.status === 2 || model.status >= 4) && (model.isSP || model.isU)"
@@ -67,6 +71,7 @@
 // import { watch } from 'vue'
 
 import { $t, dhcool } from '../src-fw/util'
+import ScrollMd from '../components-fw/ScrollMd.vue'
 
 const model = defineModel()
 

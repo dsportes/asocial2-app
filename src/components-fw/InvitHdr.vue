@@ -109,7 +109,7 @@ const ui = stores.ui
 
 const model = defineModel()
 
-const msgVal = ref({ ok: true, txt: 'OK' })
+const msgVal = ref({ ok: false, txt: 'KO' })
 
 const doMsgVal = async () => {
   if (model.value.invit && model.value.invit.status === 1)
@@ -141,7 +141,7 @@ const doConfirmCancel = async (n) => {
 
 const doReject = async () => {
   dialogs.reject = false; 
-  await model.value.invit.reject(txt.value)
+  await model.value.invit.reject(txt.value, msgVal.value)
   onUpdate()
 }
 
@@ -153,7 +153,7 @@ const doDecline = async () => {
 
 // Retour du "done" du dialogue spécifique accept
 const doAccept = async (accept: Accept) => {
-  await model.value.invit.accept(accept)
+  await model.value.invit.accept(accept, msgVal.value)
   dialogs.accept = false
   onUpdate()
 }

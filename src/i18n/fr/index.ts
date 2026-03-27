@@ -192,6 +192,10 @@ export default {
   op_InvitCreate: 'Création d\'une demande d\'invitation',
   op_InvitList: 'Liste des invitations',
   op_InvitGet: 'Lecture d\'une invitation par son ID par son propriétaire',
+  op_InvitAR: 'Acceptation ou rejet d\'une invitation',
+  op_InvitValidate: 'Validation d\'une invitation',
+  op_InvitDC: 'Annulation ou refus d\'une invitation',
+
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -930,9 +934,9 @@ bla bla
   INVbtn_val: 'Valider',
   INVbtn_rej: 'Rejeter',
   INVst_1: 'déposée',
-  INVst_2: 'validée',
+  INVst_2: 'acceptée',
   INVst_3: 'refusée',
-  INVst_4: 'acceptée',
+  INVst_4: 'validée',
   INvst_5: 'déclinée',
   INVac_ac: 'Accepter',
   INVac_de: 'Décliner',
@@ -1126,6 +1130,7 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
   INVauteur_categ_label: 'Catégorie d\'auteurs',
   INVauteur_t1: `### Auteur en création:
 - nom: **{0}**
+- ID: _{1}_
 
 `,
   INVauteur_t2: `### Droit de _Sponsoring_ accordé pour traitement de:

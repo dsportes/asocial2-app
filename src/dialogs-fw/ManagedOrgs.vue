@@ -62,7 +62,7 @@ Affiche:
     <div v-if="search === 1" class="titre-md text-italic q-my-md text-center full-width">
       {{$t('MNOsearch1')}}
     </div>
-    <div v-if="search === 2 && !invits.length" 
+    <div v-if="search === 2 && (!invits || !invits.length)" 
       class="titre-md text-italic text-warning text-bold q-my-md text-center full-width">
       {{$t('MNOnoinvits')}}
     </div>

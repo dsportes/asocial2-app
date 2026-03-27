@@ -5,8 +5,8 @@
   <template #hdr>
     <div class="row justify-end items-center">
       <btn-cond icon="check" :label="$t('validate')"
-        :disable="txt !== ''"
-        @ok="emit('done', accept, txti )"/>
+        :disable="txt === ''"
+        @ok="emit('done', [accept, txt] )"/>
     </div>
   </template>
   <template #default>
@@ -45,6 +45,7 @@ import { ref, reactive, watch } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
+import { Crypt } from '../src-fw/crypt'
 
 import InvitZoom from '../components-fw/InvitZoom.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -83,7 +84,7 @@ const optionsSP = [
 
 const genTxtAuteur = () => {
   const t = []
-  t.push($t('INVauteur_t1', [inv.value.label]))
+  t.push($t('INVauteur_t1', [inv.value.label, accept.docId]))
   if (accept.etc.option === 2) t.push($t('INVauteur_t2'))
   if (accept.etc.option === 3) t.push($t('INVauteur_t3', [accept.etc.categ]))
   txt.value = t.join('\n')
@@ -92,6 +93,8 @@ const genTxtAuteur = () => {
 const reset = () => {
   if (inv.value.major === 'auteur') {
     txt.value = ''
+    accept.role = 'Auteur.'
+    accept.docId = Crypt.rnd(24)
     accept.etc.option = optionsSP[0]
     accept.etc.categ = ''
   }

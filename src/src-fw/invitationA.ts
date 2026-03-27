@@ -8,6 +8,7 @@ import { Operation } from '../src-fw/operation'
 import { $t } from '../src-fw/util'
 
 const encoder = new TextEncoder()
+const decoder = new TextDecoder()
 
 export type Accept = {
   role: string // rôle du credential associé (et classe du document associé).
@@ -26,7 +27,9 @@ type MajorDescr = {
 
 export type MsgVal = {
   ok: boolean,
-  txt: string
+  txt: string,
+  role: string,
+  docId: string
 }
 
 /* ### Document `Invitation` dans la base du service
@@ -98,11 +101,16 @@ export class InvitationA {
     this.userId = x.userId
     this.safeStore = x.safeStore
     this.skeyK = null
+    this.pemU = x.pemU
+    this.pemS = x.pemS
     this.isSP = x.status > 1 && x.pemS === sf.auth.C
     this.isU = x.userId === sf.userId
     if (this.isSP) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
-      this.txti = await Crypt.decrypt(aes, x.txti)
+      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
+    } else if (this.isU) { // user est le demandeur U
+      const aes = await Crypt.getAESKey(fromPem(x.pemS, true), fromPem(sf.auth.D))
+      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
     } else this.txti = ''
     if (this.status === 2 || this.status >= 4) {
       this.role = x.role
@@ -145,7 +153,7 @@ export class InvitationA {
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
   async msgVal () : Promise<MsgVal> {
-    return { ok: true, txt: 'OK' }
+    return { ok: false, txt: 'KO', role: null, docId: '' }
   }
 
   /* Méthode "abstraite": systématiquement surchargée pour 
@@ -158,7 +166,7 @@ export class InvitationA {
     return null
   }
 
-  async accept ( accept: Accept, txt: string ) {
+  async accept ( [accept, txt], msgVal: MsgVal ) {
     console.log(this.invitId, 'accept')
     const sf = stores.safe
     const op = new Operation('InvitAR', this.SVC, this.org)
@@ -167,6 +175,7 @@ export class InvitationA {
       const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
       op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
+      op.sign(msgVal.role, msgVal.docId)
       const res = await op.post()
       if (res.status)
         await stores.ui.diagDisplay($t('INVopret_' + res.status))
@@ -175,7 +184,7 @@ export class InvitationA {
     }
   }
 
-  async reject (txt: string) {
+  async reject (txt: string, msgVal: MsgVal) {
     const sf = stores.safe
     console.log(this.invitId, 'reject')
     const op = new Operation('InvitAR', this.SVC, this.org)
@@ -183,6 +192,7 @@ export class InvitationA {
       const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
       op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
+      op.sign(msgVal.role, msgVal.docId)
       const res = await op.post()
       if (res.status)
         await stores.ui.diagDisplay($t('INVopret_' + res.status))
