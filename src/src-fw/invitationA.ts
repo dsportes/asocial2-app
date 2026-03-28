@@ -87,6 +87,7 @@ export class InvitationA {
   }
 
   async fromList (bin : Uint8Array, org: string, SVC: string) : Promise<InvitationA> {
+    const sf = stores.safe
     const x = decode(bin)
     this.org = org
     this.SVC = SVC
@@ -97,7 +98,7 @@ export class InvitationA {
     this.time = x.time
     this.label = x.label || ''
     this.txtm = x.txtm || ''
-    const sf = stores.safe
+    this.txtx = x.txtx || ''
     this.userId = x.userId
     this.safeStore = x.safeStore
     this.skeyK = null
@@ -108,7 +109,7 @@ export class InvitationA {
     if (this.isSP) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
       this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
-    } else if (this.isU && x.status > 1) { // user est le demandeur U
+    } else if (this.isU && (x.status > 1 && x.status < 6)) { // user est le demandeur U
       const aes = await Crypt.getAESKey(fromPem(x.pemS, true), fromPem(sf.auth.D))
       this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
     } else this.txti = ''

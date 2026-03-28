@@ -21,7 +21,7 @@ for(const svc of Object.keys(config.K.SERVICES))
 const model = defineModel()
 
 const svcloc = ref(opts.value[0])
-model.value = opts.value[0]
+model.value = opts.value[0].svc
 watch(svcloc, (v) => {
   model.value = svcloc.value ? svcloc.value.svc : ''
 })

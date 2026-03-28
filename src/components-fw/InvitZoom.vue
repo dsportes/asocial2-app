@@ -8,7 +8,19 @@
   
   <div class="row q-mt-sm items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_status')}}</div>
-    <div class='font-mono'>{{$t('INVst_' + model.status)}}</div>
+    <div class="row items-center">
+      <q-icon v-if="model.status <= 2"
+        name="hourglass_empty" size="24px" color="primary"/>
+      <q-icon v-if="model.status === 2"
+        name="check_circle" size="24px" color="none"/>
+      <q-icon v-if="model.status === 4"
+        name="check_circle" size="24px" color="green-5"/>
+      <q-icon v-if="model.status === 6"
+        name="close" size="24px" color="warning"/>
+      <q-icon v-if="model.status === 3 || model.status === 5"
+        name="close" size="24px" color="negative"/>
+      <div class="font-mono">{{$t('INVst_' + model.status)}}</div>
+    </div>
   </div>
 
   <div v-if="model.minor" class="q-mt-sm row items-center">
@@ -39,18 +51,14 @@
   <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtm" />
 
 
-  <div v-if="model.status > 1 && (model.isSP || model.isU)">
+  <div v-if="model.status > 1 && model.status !== 6 && (model.isSP || model.isU)">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_me')}}</div>
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txti')}}</div>
-    <!--q-input class="q-pa-xs bord1" v-model="model.txti" type="textarea"
-      readonly borderless :rows="5"/-->
     <scroll-md class="full-width bord1 q-pa-xs" height="200px" :text="model.txti" />
   </div>
 
   <div v-if="model.status === 5">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtx')}}</div>
-    <!--q-input class="q-pa-xs bord1" v-model="model.txtx" type="textarea"
-      readonly borderless :rows="5"/-->
     <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtx" />
   </div>
 

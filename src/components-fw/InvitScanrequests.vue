@@ -10,8 +10,20 @@
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + inv.svc)}}</div>
         <div class="col-3 ellipsis text-right text-bold">{{$t('INV_' + inv.major)}}</div>
-        <div class="col-3 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
-        <div class="col-2 text-right text-bold">{{$t('INVst_' + inv.status)}}</div>
+        <div class="col-2 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
+        <div class="col-3 row items-center justify-end ellipsis">
+          <q-icon v-if="inv.status <= 2"
+            name="hourglass_empty" size="24px" color="primary"/>
+          <q-icon v-if="inv.status === 2"
+            name="check_circle" size="24px" color="none"/>
+          <q-icon v-if="inv.status === 4"
+            name="check_circle" size="24px" color="green-5"/>
+          <q-icon v-if="inv.status === 6"
+            name="close" size="24px" color="warning"/>
+          <q-icon v-if="inv.status === 3 || inv.status === 5"
+            name="close" size="24px" color="negative"/>
+          <div class="font-mono">{{$t('INVst_' + inv.status)}}</div>
+        </div>
       </div>
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{inv.org}}</div>

@@ -15,7 +15,7 @@
       <!-- L'utilisateur peut ANNULER sa demande-->
       <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 1" 
         :label="$t('INVac_an')" icon="delete" class='col-auto q-ml-xs'
-        @ok="dialogs.cancel = true"/>
+        @ok="dialogs.confirmcancel = true"/>
 
       <!-- UN sponsor peut ACCEPTER et transformer la demande en invitation 
         QUI est un SPONSOR autorisé à traiter la demande dépend de l'application 

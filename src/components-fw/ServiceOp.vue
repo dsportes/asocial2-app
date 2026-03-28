@@ -10,6 +10,8 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
+// import { watch } from 'vue'
 
 import stores from '../stores/all'
 import InputA from '../components-fw/InputA.vue'
@@ -18,6 +20,11 @@ import ServiceSelect from '../components-fw/ServiceSelect.vue'
 const config = stores.config
 
 const model = defineModel()
+/*
+watch(() => model.value.SVC, (v) => {
+  console.log(v)
+})
+*/
 
 </script>
 

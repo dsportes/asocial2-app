@@ -18,7 +18,7 @@ L'image doit figurer dans public/images
 -->
 <template>
   <q-scroll-area :style="'height :' + (height || '300px') + ';'"
-    :class="(!dark ? 'clear' : 'dark') + ' q-pt-xs q-px-xs q-pb-xl'"
+    :class="(!dark ? 'clear' : 'dark') + ' q-pt-xs q-pb-xl'"
     :barStyle="barStyle" :thumbStyle="thumbStyle">
     <sd-noir v-if="dark" :text="text2()"/>
     <sd-blanc v-else :text="text2()"/>
@@ -47,7 +47,7 @@ const props = defineProps({
 })
 
 const text2 = () => {
-  return props.text.replaceAll('href="$$/', 'href="' + url)
+  return props.text ? props.text.replaceAll('href="$$/', 'href="' + url) : ''
 }
 
 const dark = ref(ui.$q.dark.isActive && !props.inverse)

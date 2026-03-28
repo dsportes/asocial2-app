@@ -10,16 +10,17 @@
     </div>
   </template>
   <template #default>
-    <div class="column full-width items-center">
-      <q-expansion-item class="q-my-xs pwsm" 
+    <div class="wloc q-px-sm column items-center">
+    <div> <!-- SI SI ça ne sert en théorie à rien mais en fait SI -->
+      <q-expansion-item class="q-my-xs full-width" 
         header-class="tbp" dense :label="$t('INVdetail')">
-        <div class="q-my-xs pwsm">
+        <div class="q-my-xs full-width">
           <invit-zoom class="q-ml-lg" v-model="inv"/>
           <q-separator color="orange" class="q-my-sm"/>
         </div>
       </q-expansion-item>
 
-      <div v-if="inv.major === 'auteur'" class="q-my-xs pwsm column items-center">
+      <div v-if="inv.major === 'auteur'" class="q-my-xs full-width column items-center">
         <div class="titre-lg text-italic q-my-sm">{{$t('INVauteur_tit')}}</div>
         <q-option-group :options="optionsSP" type="radio" dense
           v-model="accept.etc.option"/>
@@ -33,7 +34,8 @@
       <q-separator color="orange" class="q-my-sm"/>
 
       <div class="titre-lg text-italic q-mb-sm">{{$t('INVtxti')}}</div>
-      <scroll-md class="full-width bord1 q-pa-xs" height="200px" :text="txt" />
+      <scroll-md class="bord1 q-py-xs" height="200px" :text="txt" />
+    </div>
     </div>
   </template>
 </dialog-std1>
@@ -106,4 +108,5 @@ reset()
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.wloc { min-width: 250px; }
 </style>
