@@ -108,7 +108,7 @@ export class InvitationA {
     if (this.isSP) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
       this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
-    } else if (this.isU) { // user est le demandeur U
+    } else if (this.isU && x.status > 1) { // user est le demandeur U
       const aes = await Crypt.getAESKey(fromPem(x.pemS, true), fromPem(sf.auth.D))
       this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
     } else this.txti = ''
@@ -166,7 +166,7 @@ export class InvitationA {
     return null
   }
 
-  async accept ( [accept, txt], msgVal: MsgVal ) {
+  async accept ( accept: Accept, txt: string, msgVal: MsgVal ) {
     console.log(this.invitId, 'accept')
     const sf = stores.safe
     const op = new Operation('InvitAR', this.SVC, this.org)
@@ -205,21 +205,7 @@ export class InvitationA {
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
   */
-  async postValidate () {
-  }
-
   async validate () {
-    console.log(this.invitId, 'validate')
-    const sf = stores.safe
-    const op = new Operation('InvitValidate', this.SVC, this.org)
-    try {
-      op.args.invitId = this.invitId
-      const res = await op.post()
-      if (res.status) await stores.ui.diagDisplay($t('INVopret_' + res.status))
-      else await this.postValidate()
-    } catch(e) {
-      op.ko(e)
-    }
   }
 
   async decline (txtx: string) {

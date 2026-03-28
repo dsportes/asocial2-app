@@ -34,6 +34,10 @@ export type CredRequest = {
 export class Credential {
   static props = [ 'id', 'svc', 'org', 'role', 'docId', 'time', 'pems', 'skey', 'comment' ]
 
+  static getId (svc: string, org: string, docId: string, role: string) { 
+    return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId || ''))
+  }
+
   id: string // ID du credential.
   svc: string // code du service
   org: string // le code de l'organisation.

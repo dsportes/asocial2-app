@@ -3,10 +3,17 @@ import stores from '../stores/all'
 import { InvitationA, MsgVal } from '../src-fw/invitationA'
 import { Credential } from '../src-fw/credential'
 import { $t } from '../src-fw/util'
+import { Operation } from '../src-fw/operation'
 
-import { keyToB64 } from '../src-fw/crypt'
+import { Crypt, keyToB64, toPem } from '../src-fw/crypt'
 
 const encoder = new TextEncoder()
+
+type InvVal = {
+  pemvA: string, // pemV pour le credential d'accès à l'auteur
+  pemvS: string, // pemV pour le credential Sponsor (s'il y a lieu)
+  time: number // time de l'application pour ces deux credentials
+}
 
 export class Invitation extends InvitationA {
   static rnd: number = 0
@@ -48,63 +55,83 @@ export class Invitation extends InvitationA {
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
   */
-  async postValidate () {
+  async validate () {
+    console.log(this.invitId, this.major, 'validate')
     switch (this.major) {
-      case 'auteur' : await this.postValidate_auteur()
+      case 'auteur' : { await this.validate_auteur(); return }
     }
   }
 
-  async postValidate_auteur () : Promise<void> {
-    /* Enregistrement du Credential Safe sur "Auteur"
-    Op 'accept' du sponsor avait généré:
-    - role: 'Auteur'
-    - docId: l'id de l'auteur
-    - etc.credA
-      - pemS : la clé de signature du credential d'accès à l'auteur
-      - id: id du credential
-      - time: du credential
-    Op 'InvitValidate' vient d'enregistrer:
-    - un document 'Auteur' 
-      - docId: ci-dessus
-      - nom: label saisi dans la demande.
-    - un Credential sur cet auteur avec un pemV
-      - issu de la génération du couple pemS et pemV
-    - optionnellement un credential "Sponsor" décrit dans etc.credS
-     qui accorde à U un droit de Sponsor pour traiter les demandes
-     d'autres auteurs.
+  async validate_auteur () : Promise<void> {
+    /* 
+    Post: invVal avec les pemvA, pemvS, time des credentials
+    Puis, eEnregistrement,
+      - du Credential Safe sur "Auteur"
+      - optionnellement du credential "Sponsor".
     */
-    const mcreds: Map<string, Credential> = new Map()
-    if (this.etc.credA) {
-      const c = new Credential() // Credential "Safe"
-      c.svc = this.SVC
-      c.org = this.org
-      c.pems = keyToB64(this.etc.credA.pemS)  
-      c.role = this.role
-      c.docId = this.docId
-      c.name = this.label
-      c.skey = ''
-      c.time = this.etc.credA.time
-      c.id = this.etc.credA.id
-      mcreds.set(c.id, c)
-    }
+    const op = new Operation('InvitValidate', this.SVC, this.org)
+    try {
+      let privA, privS
+      const invVal: InvVal = {
+        time: Date.now(),
+        pemvA: '',
+        pemvS: ''
+      }
+      {
+        const { pub, priv } = await Crypt.getSVKeyPair()
+        invVal.pemvA = toPem(pub, true)
+        privA = priv
+      }
+      if (this.etc.option > 1) {
+        const { pub, priv } = await Crypt.getSVKeyPair()
+        invVal.pemvS = toPem(pub, true)
+        privS = priv
+      }
+      op.args.invitId = this.invitId
+      op.args.invVal = invVal
+      const res = await op.post()
+      if (res.status) await stores.ui.diagDisplay($t('INVopret_' + res.status))
+      else { 
 
-    if (this.etc.credS) {
-      const c = new Credential() // Credential "Safe"
-      c.svc = this.SVC
-      c.org = this.org
-      c.pems = keyToB64(this.etc.credS.pemS)  
-      c.role = 'Sponsor.'
-      c.docId = this.etc.credS.docId
-      c.name = this.label
-      c.skey = ''
-      c.time = this.etc.credS.time
-      c.id = this.etc.credS.id
-      mcreds.set(c.id, c)
-    }
+        // Enregistrement du ou des credential "Safe"
+        const mcreds: Map<string, Credential> = new Map()
+        {
+          const c = new Credential() // Credential "Safe"
+          c.svc = this.SVC
+          c.org = this.org
+          c.pems = privA  
+          c.role = this.role
+          c.docId = this.docId
+          c.name = this.label
+          c.skey = ''
+          c.time = invVal.time
+          c.id = c.getId()
+          mcreds.set(c.id, c)
+        }
 
-    const status = await stores.safe.updateCreds(mcreds, null, null, null)
-    if (status !== 0)
-      await stores.ui.diagDisplay($t('HPsfop_' + status))
+        if (this.etc.option > 1) {
+          const docId = 'Auteur' + (this.etc.option === 2 ? '' : ('.' + this.etc.categ))
+          const c = new Credential() // Credential "Safe"
+          c.svc = this.SVC
+          c.org = this.org
+          c.pems = privS  
+          c.role = 'Sponsor.'
+          c.docId = docId
+          c.name = this.label
+          c.skey = ''
+          c.time = invVal.time
+          c.id = c.getId()
+          mcreds.set(c.id, c)
+        }
+
+        const status = await stores.safe.updateCreds(mcreds, null, null, null)
+        if (status !== 0)
+          await stores.ui.diagDisplay($t('HPsfop_' + status))
+      }
+
+    } catch(e) {
+      op.ko(e)
+    }
   }
 
 }

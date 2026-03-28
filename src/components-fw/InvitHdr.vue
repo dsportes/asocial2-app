@@ -152,8 +152,8 @@ const doDecline = async () => {
 }
 
 // Retour du "done" du dialogue spécifique accept
-const doAccept = async (accept: Accept) => {
-  await model.value.invit.accept(accept, msgVal.value)
+const doAccept = async (arg) => { // [accept, txt]
+  await model.value.invit.accept(arg[0], arg[1], msgVal.value)
   dialogs.accept = false
   onUpdate()
 }
