@@ -141,6 +141,7 @@ export default {
   PAGEhome: 'Connexion',
   PAGEadmin: 'Administration Technique',
   PAGEapp: 'Auteurs et relecteurs',
+  PAGEdemands: 'Demandes: création, suivi, réponse',
   PAGEtest: 'Page des tests',
 
   PanelManager: 'Management des organisations',
@@ -248,7 +249,7 @@ export default {
   APoc_del: 'SUPPRIMER la configuration',
   APnolimit: '(illimité)',
   APlstmgr: 'Rafraîchir la liste des managers',
-  APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "mangers" de l\'organisation.',
+  APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "managers" de l\'organisation.',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
@@ -688,6 +689,14 @@ bla bla
   SFHnewr: 'Nouvelle demande',
   SFHscan: 'Lister et gérer',
   SFHreq: 'Demandes d\'invitations',
+  SFHvisit_label: 'Ouvrir l\'application en mode "visiteur"',
+  SFHvisit_bub: `## Mode _VISITEUR_
+bla bla
+`,
+  SFHcalc_label: 'Ouvrir l\'application en mode "calculette" (SANS réseau)',
+  SFHcalc_bub: `## Mode _CALCULETTE_
+bla bla
+`,
 
   // util dhcool
   DHCaujah: 'aujourd\'hui à {0}',
@@ -943,24 +952,29 @@ bla bla
   INVac_rej_2: 'Justification (au moins {0} signes)',
   INVac_dec_1: 'Décliner l\'invitation proposée',
   INVac_dec_2: 'Justification (au moins {0} signes)',
+
   INVbtn1: 'Demande d\'invitation',
   INVbtn2: 'Suivre mes invitations',
-  INVtit_1_label: 'Déposer une demande d\'invitation',
-  INVtit_1_bub: `## Déposer une demande d'invitation
+
+  INVnosponsmgr: 'Vous n\'avez pas de droits pour traiter aucune demande',
+
+  INVtit_1: 'Créer',
+  INVtit_1_label: 'Déposer une nouvelle demande',
+  INVtit_1_bub: `## Déposer une nouvelle demande...
+- d'invitation, de création d'une entité, de droit d'accès ...
 bla bla
 `,
-  INVtit_2_label: 'Suivre mes demandes d\'invitation',
+  INVtit_2: 'Lister',
+  INVtit_2_label: 'Suivre mes demandes récentes',
   INVtit_2_bub: `## Suivre mes demandes d'invitation
 bla bla
 `,
-  INVtit_3_label: 'Ouvrir l\'application en mode "visiteur"',
-  INVtit_3_bub: `## Mode _VISITEUR_
+  INVtit_3: 'Traiter',
+  INVtit_3_label: 'Traiter les demandes en attente',
+  INVtit_3_bub: `## Traiter les demandes en attente
 bla bla
 `,
-  INVtit_4_label: 'Ouvrir l\'application en mode "calculette" (SANS réseau)',
-  INVtit_4_bub: `## Mode _CALCULETTE_
-bla bla
-`,
+
   INVco_1: 'Je n\'ai pas de compte',
   INVco_2: 'J\'ai un compte',
   INVco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',

@@ -84,11 +84,11 @@
         </div>
       </q-expansion-item>
 
-      <bar-open class="q-mt-md q-mb-xs full-width" :bubbleleft="$t('INVtit_3_bub')"
-        :title="$t('INVtit_3_label')" @open="opGuest"/>
+      <bar-open class="q-mt-md q-mb-xs full-width" :bubbleleft="$t('SFHvisit_bub')"
+        :title="$t('SFHvisit_label')" @open="opGuest"/>
 
-      <bar-open class="q-my-xs full-width" :bubbleleft="$t('INVtit_4_bub')"
-        :title="$t('INVtit_4_label')" @open="opCalc"/>
+      <bar-open class="q-my-xs full-width" :bubbleleft="$t('SFHcalc_bub')"
+        :title="$t('SFHcalc_label')" @open="opCalc"/>
 
     </div>
   </div>

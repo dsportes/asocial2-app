@@ -144,6 +144,11 @@ const props = defineProps({
   op: String,
   fromadmin: Boolean
 })
+const svcop = reactive({
+  SVC: props.svc || '',
+  $OP: props.op || ''
+})
+
 if (props.fromadmin) watch(() => [props.svc, props.op], () => {
   svcop.SVC = props.svc
   svcop.$OP = props.op
@@ -162,11 +167,6 @@ type Elt = {
 const svcOps: Ref<Map<string, Elt>> = ref(new Map())
 const services2: Ref<string> = ref(new Set())
 
-const svcop = reactive({
-  SVC: props.svc || '',
-  $OP: props.op || ''
-})
-
 const org = ref('')
 
 const resping = ref(null)
@@ -175,8 +175,6 @@ const newComment = ref('')
 
 const reset = () => {
   org.value = ''
-  svcop.$OP = ''
-  svcop.SVC = ''
   resping.value = null
   resping2.value = null
   newComment.value = ''

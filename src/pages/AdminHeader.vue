@@ -22,7 +22,7 @@
 
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
-    <q-tab name="svcstatus" icon="cloud" :label="$t('svcStatus')" />
+    <q-tab v-if="sf.auth.admins" name="svcstatus" icon="cloud" :label="$t('svcStatus')" />
     <q-tab name="managers" icon="img:icons/superman.jpg" :label="$t('APnewManager_2')" />
   </q-tabs>
 </div>

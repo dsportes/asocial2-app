@@ -22,14 +22,20 @@ Contrôlé par ui.leftMenu
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
-      <btn-cond v-if="sf.userId && hasManagedOrgs" class="q-mb-sm"
+      <!--v-if="sf.userId && hasManagedOrgs"
+      <btn-cond  class="q-mb-sm"
         flat icon="img:icons/superman.jpg" 
         color="warning" :label="$t('PanelManager')"
         @ok="openManager"/>
-      <btn-cond v-if="sf.userId && sf.auth.admins" class="q-mb-sm"
+        -->
+      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
+        class="q-mb-sm"
         flat icon="img:icons/superman.jpg" 
         color="warning" :label="$t('PAGEadmin')"
         @ok="openAdmin"/>
+      <btn-cond class="q-mb-sm"
+        flat color="primary" :label="$t('PAGEdemands')"
+        @ok="openDemands"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
@@ -48,7 +54,7 @@ Contrôlé par ui.leftMenu
     </div>
   </q-page-container>
 
-  <managed-orgs v-model="dialogs.ManagedOrgs"/>
+  <!--managed-orgs v-model="dialogs.ManagedOrgs"/-->
 
   <dialog-std2 v-model="dialogs.NewInvit" vue="InvitNewrequest"
     :title="$t('INVtit_1_label')" tbclass="tbs">
@@ -118,10 +124,20 @@ const openAdmin = (svc) => {
   session.org = ''
 }
 
+const openDemands = (svc) => {
+  ui.closeMenu()
+  ui.setPage('demands')
+  ui.demandsPage.SVC = ''
+  ui.demandsPage.org = ''
+  ui.demandsPage.tab = 'list'
+}
+
+/*
 const openManager = () => {
   dialogs.ManagedOrgs = true
   ui.closeMenu()
 }
+*/
 
 </script>
 

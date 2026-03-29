@@ -3,8 +3,9 @@
   <q-header>
     <safe-header v-if="ui.page === 'safeHome'"/>
     <admin-header v-if="ui.page === 'admin'"/>
+    <demands-header v-if="ui.page === 'demands'"/>
 
-    <q-toolbar v-if="ui.page !== 'safeHome' && ui.page !== 'admin' " class="full-width tbp">
+    <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
       <btn-cond class="q-mr-xs" color="none" flat icon="menu"
         @ok="ui.openMenu"/>
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
@@ -46,6 +47,11 @@
       </q-page>
     </transition>
     <transition name="anim1">
+      <q-page v-if="ui.page === 'demands'" class="column">
+        <demands-page class="q-mt-sm"/>
+      </q-page>
+    </transition>
+    <transition name="anim1">
       <q-page v-if="ui.page === 'test'" class="column">
         <test-page class="q-mt-sm"/>
       </q-page>
@@ -84,11 +90,14 @@ import SafeHome from './pages/SafeHome.vue'
 
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
+
+import DemandsPage from './pages/DemandsPage.vue'
+import DemandsHeader from './pages/DemandsHeader.vue'
+
 import TestPage from './pages/TestPage.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
-import ServiceStatus from './components-fw/ServiceStatus.vue'
 import LeftMenu from './components-fw/LeftMenu.vue'
 import BtnCond from './components-fw/BtnCond.vue'
 
@@ -97,8 +106,9 @@ import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
-const decoder = new TextDecoder()
-const encoder = new TextEncoder()
+// const decoder = new TextDecoder()
+// const encoder = new TextEncoder()
+const hdrPages = new Set(['admin', 'demands', 'safeHome'])
 
 const config = stores.config
 const session = stores.session
@@ -131,5 +141,5 @@ watchEffect(() => {
 .anim1-leave-active { transition: all 0.3s;}
 .anim1-enter-from { opacity:0; transform: translateX(50%);}
 .anim1-leave-to { opacity:0; transform: translateX(-50%);}
-.cls { position: absolute; right: -20px; top: 0; z-index: 50;}
+
 </style>

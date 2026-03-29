@@ -154,6 +154,18 @@ export const useUiStore = defineStore('ui', () => {
     }, 50)
   }
 
+  const adminPage = reactive({
+    tab: '', // svcstatus managers
+    SVC: '',
+    $OP: ''
+  })
+
+  const demandsPage = reactive({
+    tab: '', // new, list, process
+    major: '',
+    svcOrg: { SVC: '', org: ''}
+  })
+
   const currentInvit = reactive({
     zoomed: false,
     invit: null, // Invitation (service)
@@ -162,12 +174,6 @@ export const useUiStore = defineStore('ui', () => {
     nb: 0,
     fnnav: null,
     fnOnUpdate: null
-  })
-
-  const adminPage = reactive({
-    tab: '', // svcstatus managers
-    SVC: '',
-    $OP: ''
   })
 
   return {
@@ -179,7 +185,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    currentInvit, adminPage
+    currentInvit, adminPage, demandsPage
   }
 })
 

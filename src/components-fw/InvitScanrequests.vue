@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
+import { Ref, ref, computed, watch } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty, dkli, dhcool } from '../src-fw/util'
