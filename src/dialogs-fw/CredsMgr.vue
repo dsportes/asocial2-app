@@ -39,7 +39,7 @@
               <div v-if="origCred.name" class="fs-md q-mr-md">{{origCred.name}}</div>
               <div class="font-mono fs-sm">[{{origCred.docId}}]</div>
             </div>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [origCred.svc, origCred.org, $t(origCred.$trole)])}}</div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [$t('services_' + origCred.svc), origCred.org, $t(origCred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="origCred.toJson"/>
           </div>
           <div v-else class="q-my-md">
@@ -47,7 +47,7 @@
               <div v-if="localCred.cred.name" class="fs-md q-mr-md">{{localCred.cred.name}}</div>
               <div class="font-mono fs-sm">[{{localCred.cred.docId}}]</div>
             </div>
-            <div class="q-my-xs">{{$t('HPcreddet_0', [localCred.cred.svc, localCred.cred.org, $t(localCred.cred.$trole)])}}</div>
+            <div class="q-my-xs">{{$t('HPcreddet_0', [$t('services_' + localCred.cred.svc), localCred.cred.org, $t(localCred.cred.$trole)])}}</div>
             <text-zoom :label="$t('HPcreddis')" :text="localCred.cred.toJson"/>
           </div>
 

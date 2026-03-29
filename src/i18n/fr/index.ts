@@ -130,12 +130,6 @@ export default {
   REGexp_all: `Tous les caractères sont autorisés y compris les espaces
   `,
 
-  ROLE: 'Rôle',
-  ROLEOrg_manager: 'Manager général de l\'organisation',
-  ROLEauteur: 'Auteur d\'articles',
-  ROLElecteur: 'Relecteur d\'articles',
-  ROLEgroupe: 'Groupe de relecteurs',
-
   MLAopc: 'Opération en cours',
   MLAint: 'Cliquer ici pour l\'interrompre',
   MLAcf: 'Voulez-vous vraiment interrompre l\'opération en cours "{0}"',
@@ -1140,6 +1134,22 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
 `,
   INVauteur_t3: `### Droit de _Sponsoring_ accordé pour traitement de:
 - création d'un auteur de catagorie **{0}**.
+
+`,
+
+  ROLE: 'Rôle',
+  ROLEOrg_manager: 'Manager de l\'organisation',
+  ROLEOrg_manager_bub: `### Manager de l\'organisation
+`,
+  ROLEAuteur_: 'Auteur d\'articles',
+  ROLEAuteur__bub: `### Auteur d\'articles
+`,
+  ROLERelecteur_: 'Relecteur d\'articles',
+  ROLEGroupe: 'Groupe de relecteurs',
+  ROLESponsor_: 'Sponsor traitant les demandes d\'invitation',
+  ROLESponsor__bub: `### Sponsor traitant les demandes d\'invitation
+bla bla
+blu blu
 
 `,
 

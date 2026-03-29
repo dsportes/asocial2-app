@@ -5,19 +5,24 @@
     <div class="row font-mono fs-md items-center">
       <q-icon v-if="st === 2" class="col-1" name="delete" size="24px"  color="warning"/>
       <q-icon v-if="st === 0 || st === 3" class="col-1" name="check" size="12px"  color="none"/>
-      <div :class="'col-1 ellipsis q-px-xs' + cl">{{cred.svc}}</div>
-      <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.id.substring(0, 8)}}</div>
-      <div :class="'col-2 ellipsis q-px-xs' + cl">{{cred.org}}</div>
+      <div :class="'col-2 ellipsis q-px-xs' + cl">{{$t('services_' + cred.svc)}}</div>
+      <!--
       <div :class="'col-5 ellipsis q-pr-xs' + cl">{{$t(cred.$trole)}}</div>
+      -->
+      <div class="col-7 ellipsis">
+        <btn-bubbletxt :text="$t(cred.$trole)" :bub="$t(cred.$trole + '_bub')"/>
+      </div>
+      <div :class="'col-2 ellipsis q-pl-md' + cl">{{cred.id.substring(0, 8)}}</div>
     </div>
     <div v-if="cred.docId" class="row font-mono fs-md">
-      <div class="col-2"></div>
-      <div :class="'col-10 mh' + (st === 3 ? ' text-warning text-italic' : ' text-italic') + cl">
-        {{(cred.name || '') + ' [' + cred.docId.substring(0, 8) + ']'}}</div>
+      <div class="col-1"></div>
+      <div :class="'col-2 ellipsis q-pr-xs' + cl">{{cred.org}}</div>
+      <div :class="'col-9 text-italic ellipsis' + (st === 3 ? ' text-warning' : '') + cl">
+        {{(cred.name || '') + ' [' + cred.docId + ']'}}</div>
     </div>
     <div v-if="cred.comment" class="row font-mono fs-md">
-      <div class="col-2"></div>
-      <div :class="'col-10 mh' + (st === 3 ? ' text-warning text-italic' : ' text-italic') + cl">
+      <div class="col-1"></div>
+      <div :class="'col-11 mh text-italic' + (st === 3 ? ' text-warning' : '') + cl">
         {{cred.comment}}</div>
     </div>
   </div>
@@ -28,6 +33,7 @@
 // @ts-ignore
 import { computed} from 'vue'
 import { Credential } from '../src-fw/credential'
+import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 
 const props = defineProps({
   cred: Credential,
