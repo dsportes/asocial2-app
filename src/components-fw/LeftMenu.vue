@@ -17,61 +17,28 @@ Contrôlé par ui.leftMenu
     </div-->
   </q-header>
   <q-page-container>
-    <btn-cond  v-if="sf.step === 0" class="q-mb-sm q-pa-sm"
+    <btn-cond  v-if="sf.step === 0" class="q-my-sm q-pa-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
-      <!--v-if="sf.userId && hasManagedOrgs"
-      <btn-cond  class="q-mb-sm"
-        flat icon="img:icons/superman.jpg" 
-        color="warning" :label="$t('PanelManager')"
-        @ok="openManager"/>
-        -->
       <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
-        class="q-mb-sm"
-        flat icon="img:icons/superman.jpg" 
-        color="warning" :label="$t('PAGEadmin')"
+        class="q-mb-sm" flat color="warning" :label="$t('PAGEadmin')"
+        icon="img:icons/superman.jpg" 
         @ok="openAdmin"/>
-      <btn-cond class="q-mb-sm"
-        flat color="primary" :label="$t('PAGEdemands')"
+      <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEdemands')"
         @ok="openDemands"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
-      <btn-cond class="q-mb-sm" icon="add_circle"
-        flat :label="$t('INVbtn1')"
-        @ok="ui.closeMenu(); dialogs.NewInvit = true"/>
-      <btn-cond class="q-mb-sm" icon="search"
-        flat :label="$t('INVbtn2')"
-        @ok="ui.closeMenu(); dialogs.ScanInvit = true"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
         flat :label="$t('PAGEtest')"
         @ok="ui.closeMenu(); ui.setPage('test')"/>
-      <div class="q-my-lg q-pa-sm">
+      <!--div class="q-my-lg q-pa-sm">
         <div v-for="n in 10" :key="n">Drawer {{ n }} / 50</div>
-      </div>
+      </div-->
     </div>
   </q-page-container>
-
-  <!--managed-orgs v-model="dialogs.ManagedOrgs"/-->
-
-  <dialog-std2 v-model="dialogs.NewInvit" vue="InvitNewrequest"
-    :title="$t('INVtit_1_label')" tbclass="tbs">
-    <template #default>
-      <invit-newrequest/>
-    </template>
-  </dialog-std2>
-
-  <dialog-std2 v-model="dialogs.ScanInvit" vue="InvitScanrequests"
-    :title="$t('INVtit_2_label')" tbclass="tbs">
-    <template #hdr>
-      <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
-    </template>
-    <template #default>
-      <invit-scanrequests/>
-    </template>
-  </dialog-std2>
 
   <choose-it v-model="dialogs.SessionClose"
     prefix="HPbackopen" options="pw" 
@@ -92,27 +59,18 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
-import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
-import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
-import InvitHdr from '../components-fw/InvitHdr.vue'
-
-import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-import ManagedOrgs from '../dialogs-fw/ManagedOrgs.vue'
 
 const sf = stores.safe
 const ui = stores.ui
-// const config = stores.config
 const session = stores.session
 
 const dialogs = reactive({
-  ManagedOrgs: false, NewInvit: false, ScanInvit: false, SessionClose: false
+  SessionClose: false
 })
 
 const sessionClose = (n) => {
   if (n === 1) ui.backToOpenSession()
 }
-
-//watch(() => ui.leftmenu, (v) => { onOpen() })
 
 const hasManagedOrgs = computed(() => sf.managedOrgs().length !== 0)
 
@@ -131,13 +89,6 @@ const openDemands = (svc) => {
   ui.demandsPage.org = ''
   ui.demandsPage.tab = 'list'
 }
-
-/*
-const openManager = () => {
-  dialogs.ManagedOrgs = true
-  ui.closeMenu()
-}
-*/
 
 </script>
 

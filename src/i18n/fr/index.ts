@@ -27,8 +27,7 @@ export default {
   cred: 'Credential',
   pings: 'Ping, etc.',
   service_label: 'Code su service',
-  service_status: 'Status du service',
-  org_status: 'Status organisation',
+  status: 'Status',
   url_label: 'URL du service',
   url_ph: 'https://srv1.monservice.com',
   url_set: 'Déclarer l\'URL du service',
@@ -64,7 +63,7 @@ export default {
   svcStatus_9: 'DOWN - dernière mise à jour: {0}',
   svcStatus_maj: 'Mise à jour du status',
   svcStatus_label: 'Commentaire ...',
-  svcStatus: 'Status du service',
+  svcorg: 'Service & Organisation',
   svcStatus_no: 'Service / opérateur non sélectionné',
   svcStatus_no2: 'Service non sélectionné',
   up: 'UP',
@@ -74,6 +73,7 @@ export default {
   deplier: 'Déplier',
   replier: 'Replier',
   org: 'Organisation',
+  service: 'Service',
   url: 'URL du serveur pour cette organisation: {0}',
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
@@ -91,7 +91,6 @@ export default {
   st_2: 'modifié',
   st_3: 'supprimé',
   settings: 'Préférences',
-  service: 'Service',
   endsession: 'Clore la session',
   servicestatus: 'Status des services',
   recorded: 'Enregistrement effectué avec succès.',
@@ -248,6 +247,7 @@ export default {
   APoc_cfg: 'Mettre à jour la configuration',
   APoc_del: 'SUPPRIMER la configuration',
   APnolimit: '(illimité)',
+  APdeclmgr: 'Déclaration d\'un nouveau "manager"',
   APlstmgr: 'Rafraîchir la liste des managers',
   APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "managers" de l\'organisation.',
 
@@ -596,6 +596,13 @@ A propos du status ...
   HPcredsdet_2: `# Détail d'un droit d'accès enregistré
 A propos du status ...
 `,
+  HPcredcl_tit: 'Des mises à jour n\'ont pas été validées. Fermer quand même ?',
+  HPcredcl_txt: `### Des mises à jour n\'ont pas été validées. 
+  Si vous fermez ce dialogue, **elles seront perdues**.
+  Fermer quand même ?
+  `,
+  HPcredcl_0: 'Je ne ferme pas ce dialogue',
+  HPcredcl_1: "J\'assume et ferme ce dialogue",
   HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
   HPpsno: 'Aucune session sélectionnée dans la liste',
   HPcreddet_0: 'Service: [{0}] - Organisation:[{1}] - Rôle: {2}',
@@ -857,7 +864,7 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 `,
-  SESconfig: 'Configuer des sessions',
+  SESconfig: 'Droits d\'accès et sessions épinglées',
 
   SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
   SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
@@ -885,7 +892,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   SCRcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès secondaire".',
   SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
 
-  SFTtit: 'Opérations de gestion de vos données "de sécurité"',
+  SFTtit: 'Gérer vos données "de sécurité"',
   SFTtits: 'Opérations "de sécurité"',
   SFTus: 'Identifiant utilisateur:',
   SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',

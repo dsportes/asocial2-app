@@ -5,10 +5,12 @@
 -->
 <template>
 <div>
-<dialog-std2 v-model="model" :title="$t('HPcredsmgr_1')" vue="CredsMgr">
+<dialog-std2 v-model="model" :title="$t('HPcredsmgr_1')" vue="CredsMgr"
+  noclose @close="checkClose">
   <template #hdr>
     <div class="row q-px-xs q-mb-md items-center">
-      <q-tabs class="col tbp" v-model="tab" dense>
+      <q-tabs v-model="tab" breakpoint="2000px" dense
+        class="col tbp shadow-2">
         <q-tab name="bysessions" :label="$t('HPtab_s')" />
         <q-tab name="bycreds" :label="$t('HPtab_c')" />
       </q-tabs>
@@ -21,7 +23,7 @@
 <template #default>
 
   <div class="column items-center">
-    <div v-if="tab === 'bycreds'" class="full-width q-pa-sm">
+    <div v-if="tab === 'bycreds'" class="pwmd q-pa-sm">
 
       <bar-open :title="$t('HPcredslst_1')" :bubble="$t('HPcredslst_2')"/>
       <scroll-area><template #default>
@@ -52,8 +54,7 @@
           </div>
 
           <input-a v-if="localCred.st !== 2" class="q-mb-md"
-            size="comment" prefix="HPcrab" :initval="initAbCr"
-            v-model="loccommentCr" @validate="valAbCr"/>
+            size="comment" prefix="HPcrab" :initval="initAbCr" noval v-model="loccommentCr"/>
 
           <!-- credential supprimé -->
           <div v-if="localCred.st === 2">
@@ -86,7 +87,7 @@
       </div>
     </div>
 
-    <div v-if="tab === 'bysessions'" class="full-width q-pa-sm">
+    <div v-if="tab === 'bysessions'" class="pwmd q-pa-sm">
       <div class="column q-my-sm q-gutter-xs">
         <div class="titre-md text-bold text-italic">{{ $t('HPnewps_0') }}</div>
         <btn-cond class="q-ml-xl" flat :label="$t('HPnewps_1')" @ok="new1"/>
@@ -103,8 +104,7 @@
 
       <div v-if="!localPS" class="q-mt-md titre-md text-italic text-right">{{$t('HPpsno')}}</div>
       <div v-else class="column">
-        <input-a size="sn" prefix="HPpsab" :initval="initAbPs"
-          v-model="locAboutPs" @validate="valAbPs"/>
+        <input-a size="sn" prefix="HPpsab" :initval="initAbPs" noval v-model="locAboutPs"/>
 
         <div class="row justify-end q-my-sm">
           <btn-cond class="q-mr-xs" icon="undo" :label="$t('restore')" @ok="undoPS"/>
@@ -187,6 +187,11 @@
     </div>
   </template>
 </dialog-std1>
+
+<choose-it v-model="dialogs.close"
+  prefix="HPcredcl" options="pw" 
+  @giveup="chooseBack(0)"
+  @option="chooseBack"/>
 </div>
 </template>
 
@@ -210,6 +215,7 @@ import TextZoom from '../components-fw/TextZoom.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
+import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 type LocalPS = { // session
   id: string
@@ -235,13 +241,11 @@ const myModule = 'CredsMgr'
 const model = defineModel()
 const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
-  reportIt: false
+  reportIt: false, close: false
 })
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
+
 watch(model, (v: boolean) => {
   if(v) init()
-  else emit('close', true)
 })
 
 const mlocCreds: Ref<Map<string, LocalCred>> = ref()
@@ -254,6 +258,10 @@ const init = () => {
   mlocPS.value = new Map<string, LocalPS>()
   morigPS.value = new Map<string, LocalPS>()
   origCreds.value = sf.mySafeCreds
+  localPS.value = null
+  locAboutPs.value = ''
+  localCred.value = null
+  loccommentCr.value = ''
 
   /* Chargement des credentials */
   for(const [xid, c] of origCreds.value)
@@ -263,7 +271,7 @@ const init = () => {
 
 const cleanup = () => {}
 
-const tab = ref('bysessions')
+const tab = ref('bycreds') // bysessions
 
 watch(tab, (t: string) => {
   if (t === 'bycreds' && localCred.value)
@@ -328,16 +336,17 @@ const selCred = (lc: LocalCred) => {
 
 const initAbCr = computed(() => origCred.value ? origCred.value.comment || '' : '')
 
-const valAbCr = () => {
-  const st = localCred.value.st
-  if (origCred.value.comment === loccommentCr.value) {
-    localCred.value.st = 0
-    localCred.value.cred.comment = origCred.value.comment
-  } else {
-    localCred.value.st = 3
-    localCred.value.cred.comment = loccommentCr.value
+watch(loccommentCr, (v) => {
+  if (localCred.value) {
+    if (origCred.value.comment === loccommentCr.value) {
+      localCred.value.st = 0
+      localCred.value.cred.comment = origCred.value.comment
+    } else {
+      localCred.value.st = 3
+      localCred.value.cred.comment = loccommentCr.value
+    }
   }
-}
+})
 
 const doAction2 = () => { // REMETTRE dans la liste le cred qui y avait été enlevé
   localCred.value.st = 0
@@ -406,11 +415,13 @@ const selPS = (ps: LocalPS) => {
 
 const initAbPs = computed(() => localPS.value.about )
 
-const valAbPs = async () => {
-  localPS.value.about = locAboutPs.value
-  localPS.value.chgab = true
-  mlocPS.value.set(localPS.value.id, localPS.value)
-}
+watch(locAboutPs, (v) => {
+  if (localPS.value && (localPS.value.about !== v)) {
+    localPS.value.about = locAboutPs.value
+    localPS.value.chgab = true
+    mlocPS.value.set(localPS.value.id, localPS.value)
+  }
+})
 
 const delPS = () => {
   if (localPS.value.exav) {
@@ -521,7 +532,21 @@ const report: Report = reactive({
 
 const nothingtodo = ref(true)
 
-const validate = () => {
+const checkClose = () => {
+  nothingtodo.value = true
+  validate(true)
+  if (nothingtodo.value) 
+    model.value = false
+  else dialogs.close = true
+}
+
+const chooseBack = (n) => {
+  dialogs.close = false
+  if (n === 1)
+    model.value = false
+}
+
+const validate = (noreport) => {
   report.mcreds = new Map<string, Credential>()
   report.delcreds = []
   report.mprofs = new Map<string, Profile>()
@@ -531,13 +556,13 @@ const validate = () => {
   report.stcr = [ new Set(), new Set(), new Set(), new Set()]
   report.stps = [ null, new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
 
-  for(const [xid, lc] of mlocCreds.value) {
+  if (mlocCreds.value) for(const [xid, lc] of mlocCreds.value) {
     report.stcr[lc.st].add(lc.cred.comment)
     if (lc.st === 2) report.delcreds.push(xid)
     if (lc.st === 3) report.mcreds.set(xid, lc.cred)
   }
 
-  for(const [profId, x] of mlocPS.value) {
+  if (mlocPS.value) for(const [profId, x] of mlocPS.value) {
     const y = morigPS.value.get(profId)
     const maj = (x.exav || x.exap) && (x.chgab || x.chgcr)
     const cre = (!x.exav && x.exap)
@@ -563,7 +588,8 @@ const validate = () => {
   }
   nothingtodo.value = !report.mcreds.size && !report.delcreds.length
     && !report.mprofs.size && !report.delprofs.length
-  dialogs.reportIt = true
+  if (!noreport)
+    dialogs.reportIt = true
 }
 
 const clr1 = (i) => {
@@ -582,6 +608,7 @@ const confValidate = async () => {
       report.mcreds, report.delcreds, report.mprofs, report.delprofs)
     if (status < 0) return
     await ui.diagDisplay($t('HPsfop_' + status))
+    dialogs.reportIt = false
     model.value = false
   } catch (e) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))

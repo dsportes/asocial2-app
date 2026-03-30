@@ -1,35 +1,28 @@
 <template>
-<div>
+<div class="column items-center q-pa-xs">
 
-  <div v-if="ui.adminPage.tab === 'svcstatus'" class="q-pa-sm">
-    <service-status v-if="locSVC && locOp"
-      fromadmin :svc="locSVC" :op="locOp"/>
-    <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
+  <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
+    <div v-if="sf.auth.admins">
+      <service-status v-if="svcop.SVC && svcop.$OP" :svc="svcop.SVC" :op="svcop.$OP"/>
+      <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
+    </div>
+    <div v-else>
+      <service-op class="q-mb-md" v-model="svcop"/>
+      <q-separator color="orange" class="q-my-sm"/>
+      <service-status v-if="svcop.SVC && svcop.$OP" :svc="svcop.SVC" :op="svcop.$OP"/>
+    </div>
   </div>
 
-  <div v-if="ui.adminPage.tab === 'managers'" class="column items-center q-pa-sm">
+  <div v-if="ui.adminPage.tab === 'managers'" class="pwsm">
 
-    <div v-if="sf.auth.admins">
+    <div v-if="sf.auth.admins" class="q-my-md">
       <div v-if="!ui.adminPage.SVC" class="titre-md text-italic">{{ $t('svcStatus_no2') }}</div>
-      <div v-else class="q-my-md wmd full-width column">
-        <input-b class="q-mr-sm wsm" prefix="orgcode" v-model="areq.org" size="org"
+      <div v-else class="q-my-md full-width column">
+        <input-b prefix="orgcode" v-model="areq.org" size="org"
           @validate="doOrgOk"/>
-
-        <div v-if="areq.orgOk" class="column items-center">
-          <security-site class="q-my-sm" v-model="areq.safeStore.inp"/>
-
-          <input-b class="q-my-xs full-width" prefix="FCtarget" size="p0"
-            v-model="areq.targetUser"/>
-          <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
-          <btn-cond class="col-auto" :label="$t('APgrantmgr')" icon="check"
-            :disable="diagReq !== ''" @ok="grantManager"/>
-
-          <btn-cond class="q-my-sm" flat :label="$t('APlstmgr')" 
-            :disable="!areq.org.inp" @ok="dolist"/>
-        </div>
       </div>
     </div>
-    <div v-else class="full-width q-my-md q-px-sm">
+    <div v-else class="q-my-md">
       <q-select v-if="hasManagedOrgs" 
         dense class="full-width" options-dense filled clearable
         transition-show="flip-up" transition-hide="flip-down"
@@ -41,7 +34,9 @@
       class="full-width bord1">
       <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
         <div class="row">
-          <btn-cond class="col-1" icon="delete" color="warning" @ok="revoke(m)"/>
+          <btn-cond class="col-1" icon="delete" color="warning"
+            :disable="!sf.auth.admins"
+            @ok="revoke(m)"/>
           <div class="col-3 font-mono ellipsis">{{m.userId}}</div>
           <div class="col-4">{{dhcool(m.time)}}</div>
           <div class="col-4">{{m.limit ? dhcool(m.limit) : $t('APnolimit')}}</div>
@@ -52,6 +47,22 @@
         </div>
       </div>
     </scroll-area>
+
+    <div v-if="sf.auth.admins && areq.orgOk" class="q-my-md">
+      <q-separator color="orange"/>
+      <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
+      <security-site class="q-my-sm" v-model="areq.safeStore.inp"/>
+
+      <input-b class="full-width" prefix="FCtarget" size="p0"
+        v-model="areq.targetUser"/>
+      <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
+      <div class="column items-center">
+        <btn-cond :label="$t('APgrantmgr')" icon="check"
+          :disable="diagReq !== ''" @ok="grantManager"/>
+        <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')" 
+          :disable="!areq.org.inp" @ok="dolist"/>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -70,6 +81,7 @@ import { GrantNewManager, ListManagers } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import SecuritySite from '../components-fw/SecuritySite.vue'
+import ServiceOp from '../components-fw/ServiceOp.vue'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -79,18 +91,21 @@ const hasManagedOrgs = computed(() => sf.managedOrgs().length !== 0)
 const sorgs = ref()
 const svcOrg = ref()
 const lstMgr = ref([])
-const locOp = ref(ui.adminPage.$OP)
-const locSVC = ref(ui.adminPage.SVC)
+
+const svcop = reactive({
+  SVC: ui.adminPage.SVC,
+  $OP: ui.adminPage.$OP
+})
+watch(() => [ui.adminPage.SVC, ui.adminPage.$OP], () => {
+  svcop.$OP = ui.adminPage.$OP
+  svcop.SVC = ui.adminPage.SVC
+})
+
 const areq = reactive({
   targetUser: { inp: '', err: ''},
   safeStore: { inp: '', err: ''},
   org: { inp: session.currentOrg || '', err: '' },
   orgOk: false
-})
-
-watch(() => [ui.adminPage.SVC, ui.adminPage.$OP], () => {
-  locOp.value = ui.adminPage.$OP
-  locSVC.value = ui.adminPage.SVC
 })
 
 watch(() => areq.org.inp, async (x) => {
@@ -105,7 +120,7 @@ const doOrgOk = async () => {
 
 const dolist = async () => {
   lstMgr.value = []
-  const [s, l] = await new ListManagers(ui.adminPage.SVC, areq.org.inp).run()
+  const [s, l] = await new ListManagers(svcop.SVC, areq.org.inp).run()
   if (s) 
     await ui.diagDisplay($t('APmgrnolst'))
   lstMgr.value = l || []
@@ -149,7 +164,7 @@ const grantManager = async () => {
     return
   }
   const [targetId, pubc, pubV] = p
-  const ok = await new GrantNewManager(ui.adminPage.SVC, areq.org.inp)
+  const ok = await new GrantNewManager(svcop.SVC, areq.org.inp)
     .run(safeStore, targetId, pubc, areq.targetUser.inp)
   if (!ok) await ui.diagDisplay($t('APkomanager'))
   else {
@@ -160,8 +175,9 @@ const grantManager = async () => {
 }
 
 const revoke = async (userId) => {
-
+  // TODO
 }
+
 </script>
 
 <style lang="scss" scoped>

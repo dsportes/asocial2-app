@@ -111,7 +111,8 @@
           @ok="dialogs.ServiceStatus = false"/>
         <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
       </q-toolbar>
-      <service-status/>
+      <service-op class="q-mt-sm q-mb-lg q-px-xs" v-model="svcop"/>
+      <service-status v-if="svcop.SVC && svcop.$OP" :svc="svcop.SVC" :op="svcop.$OP"/>
     </q-card>
   </q-dialog>
 
@@ -424,6 +425,7 @@ import InputA from '../components-fw/InputA.vue'
 import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
+import ServiceOp from '../components-fw/ServiceOp.vue'
 
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
@@ -447,6 +449,11 @@ const dialogs = reactive({
   confirmStopop: false,
   userProfile: false,
   SessionClose: false
+})
+
+const svcop = reactive({
+  SVC: '',
+  $OP: ''
 })
 
 const sessionClose = (n) => {

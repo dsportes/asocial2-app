@@ -2,24 +2,12 @@
 -->
 <template>
 <div>
-  <service-op v-if="!fromadmin" class="q-my-sm q-px-xs" v-model="svcop"/>
+  <div class="titre-lg text-italic q-mb-md text-center">{{$t('service')}}</div>
 
-  <!--div v-if="!fromadmin" class="row q-my-sm q-px-xs">
-    <q-select class="col-5" dense options-dense filled clearable
-      transition-show="flip-up" transition-hide="flip-down"
-      v-model="SVC"
-      :options="Array.from(services)" emit-value :label="$t('service')"/>
-    <div class="col-1"/>
-    <input-A class="col-6" prefix="operator" v-model="$OP" size="oper"
-      :list="config.K.FAVORITE_OPERATORS"/>
-  </div-->
-
-  <div class="row q-px-sm">
-    <div class="col-5 column items-center q-pr-sm">
-      <btn-cond :label="$t('service_status')" :disable="!svcop.$OP"
-        @ok="svcOpStatus"/>
-    </div>
-    <div v-if="resping !== null" class="col-7">
+  <div class="row justify-between">
+    <btn-cond class="col-auto q-pr-sm" :label="$t('status')" 
+      :disable="!svcop.$OP" @ok="svcOpStatus"/>
+    <div v-if="resping !== null" class="col">
       <div>{{$t('svcStatus_now', [dhcool(resping.now)])}}</div>
       <div :class="resping.st === 9 ? 'text-warning text-bold' : ''">
         {{$t('svcStatus_' + resping.st, [dhcool(resping.at)])}}</div>
@@ -27,9 +15,7 @@
     </div>
   </div>
 
-  <q-separator color="orange" class="q-my-sm"/>
-
-  <div v-if="maySetSt">
+  <div v-if="maySetSt" class="q-mt-sm">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
     <input-a prefix="svcStatus" v-model="newComment"/>
     <div class="q--mt-sm row justify-end q-gutter-sm">
@@ -38,30 +24,35 @@
       <btn-cond color="warning" :label="$t('down')" padding="none sm"
         @ok="setSvcOpStatus(9)"/>
     </div>
-    <q-separator color="orange" class="q-my-sm"/>
   </div>
 
-  <div class="row q-px-sm">
-    <div class="col-5 column items-center q-pr-sm">
-      <input-A class="full-with" prefix="orgcode" v-model="org" size="org"/>
-      <btn-cond :label="$t('org_status')" :disable="!svcop.$OP || !org"
-        @ok="svcOrgStatus"/>
-      <btn-cond :label="$t('APorgconfig')" :disable="!svcop.$OP || !org || !maySetSt" class="q-mt-sm"
-        icon="open_in_new" @ok="openOrgConfig"/>
-    </div>
-    <div v-if="resping2 !== null" class="col-7">
+  <q-separator color="orange" class="q-my-sm"/>
+
+  <div class="titre-lg text-italic q-mb-md text-center">{{$t('org')}}</div>
+
+  <input-A class="full-width q-mb-md" prefix="orgcode" v-model="org" size="org"
+    @validate="orgOk = true"/>
+
+  <btn-cond v-if="maySetSt" :label="$t('APorgconfig')"
+    :disable="!orgOk"
+    icon="open_in_new" @ok="openOrgConfig"/>
+
+  <div class="row justify-between q-my-sm">
+    <btn-cond class="col-auto q-pr-sm" :label="$t('status')" 
+      :disable="!svcop.$OP || !org" @ok="svcOrgStatus"/>
+    <div v-if="resping2 !== null" class="col">
       <div>{{$t('svcStatus_now', [dhcool(resping2.now)])}}</div>
       <div>{{$t('svcStatus_' + resping2.st, [dhcool(resping2.at)])}}</div>
       <div>{{resping2.txt || $t('nocomment')}}</div>
     </div>
   </div>
 
-  <q-separator color="orange" class="q-my-sm q-mx-lg"/>
-
-  <div v-if="maySetSt" class="column q-mx-lg">
+  <div v-if="maySetSt && orgOk" class="column q-mt-sm q-gutter-sm">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
+
     <input-a prefix="svcStatus" v-model="newComment"/>
-    <div class="q--mt-sm row justify-end q-gutter-sm">
+
+    <div class="row justify-end q-gutter-sm">
       <btn-cond color="primary" :label="$t('up')" padding="none sm"
         @ok="setSvcOrgStatus(1)"/>
       <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
@@ -139,17 +130,15 @@ const config = stores.config
 const sf = stores.safe
 
 const props = defineProps({ 
-  short: Boolean,
   svc: String,
   op: String,
-  fromadmin: Boolean
 })
+
 const svcop = reactive({
   SVC: props.svc || '',
   $OP: props.op || ''
 })
-
-if (props.fromadmin) watch(() => [props.svc, props.op], () => {
+watch(() => [props.svc, props.op], () => {
   svcop.SVC = props.svc
   svcop.$OP = props.op
 })
@@ -168,6 +157,10 @@ const svcOps: Ref<Map<string, Elt>> = ref(new Map())
 const services2: Ref<string> = ref(new Set())
 
 const org = ref('')
+const orgOk = ref(false)
+watch(org, (v) => {
+  orgOk.value = false
+})
 
 const resping = ref(null)
 const resping2 = ref(null)
@@ -219,7 +212,7 @@ async function setSvcOpStatus (stx) : Promise<void> {
   const op = new SetSvcOpStatus(svcop.SVC, svcop.$OP)
   const res = await op.run(stx, newComment.value)
   // res.svcOpStatus contient le status mis à jour
-  // await svcOpStatus()
+  await svcOpStatus()
   newComment.value = ''
 }
 
