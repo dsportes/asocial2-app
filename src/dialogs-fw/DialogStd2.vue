@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { watch } from 'vue'
+// import { watch } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
@@ -33,9 +33,6 @@ import HelpButton from '../components-fw/HelpButton.vue'
 
 const model = defineModel()
 const emit = defineEmits(['close'])
-watch(model, (v) => {
-  // if(!v) emit('close', true)
-})
 
 const props = defineProps({
   vue: String,
@@ -46,7 +43,7 @@ const props = defineProps({
 })
 
 const onClose = () => { 
-  if (!props.noclose) model = false
+  if (!props.noclose) model.value = false
   emit('close', true)
 }
 

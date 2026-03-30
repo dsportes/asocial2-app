@@ -19,7 +19,7 @@
   </q-header>
 
   <q-drawer v-if="sf.step === 0" v-model="ui.leftMenu" :class="sty()"
-    show-if-above overlay :width="300" :breakpoint="700" elevated >
+    show-if-above overlay :width="350" :breakpoint="700" elevated >
     <left-menu/>
   </q-drawer>
 

@@ -113,6 +113,14 @@ export type Profile = {
   crIds: string[]
 }
 
+export type Sponsoring = {
+  id?: string
+  svc: string
+  org: string
+  major: string
+  minor: string
+}
+
 /*
 - `svc`: service
 - `org`: organisation
@@ -646,6 +654,38 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     mySafeInvits.value = m
+  }
+
+  const sponsorings = () : Sponsoring[]  => {
+    const lst: Sponsoring[] = []
+    if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
+      if (c.role === 'Org.manager')
+        lst.push({ svc: c.svc, org: c.org, major: '', minor: ''})
+      else if (c.role === 'Sponsor.') {
+        const i = c.docId.indexOf('.')
+        if (i === -1)
+          lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: ''})
+        else
+          lst.push({ svc: c.svc, org: c.org, 
+            major: c.docId.substring(0, i) || '', 
+            minor: c.docId.substring(i + 1) || ''})
+      }
+    }
+    for(const s of lst)
+      s.id = s.svc + '/' + s.org + '/' + s.major + '/' + s.minor
+
+    lst.sort((a, b) => {
+      if (a.svc > b.svc) return 1
+      if (a.svc < b.svc) return -1
+      if (a.org > b.org) return 1
+      if (a.org < b.org) return -1
+      if (a.major > b.major) return 1
+      if (a.major < b.major) return -1
+      if (a.minor > b.minor) return 1
+      if (a.minor < b.minor) return -1
+      return 0
+    })
+    return lst
   }
 
   // options des organisations managées
@@ -1687,7 +1727,7 @@ export const useSafeStore = defineStore('safe', () => {
     newTrusting, newTSession,
     trustings, setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
-    mySafeCreds, getCreds, skey, managedOrgs, isManager,
+    mySafeCreds, getCreds, skey, managedOrgs, isManager, sponsorings,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
     invitCreate, statusInvit, mySafeInvits,

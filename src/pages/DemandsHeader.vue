@@ -33,21 +33,27 @@
   <div v-if="ui.demandsPage.tab === 'process'" :class="sty()">
     <bar-title prefix="INVtit_3"/>
 
-    <div v-if="sorgs.length">
-      <bar-title prefix="MNOmajor"/>
-      <div class="full-width q-my-md q-px-sm">
-        <q-select dense options-dense filled clearable
-          transition-show="flip-up" transition-hide="flip-down"
-          v-model="ui.demandsPage.svcOrg"
-          :options="sorgs" :label="$t('MNOorgs')"/>
+    <div v-if="sponsorings.length">
+      <div class="titre-md text-italic text-center q-mt-sm">{{ $t('INVspons_on') }}</div>
+      <scroll-area class="full-width" size="sm"><template #default>
+        <div v-for="(sp, idx) in sponsorings" :key="sp.id" 
+          :class="dkli(idx) + ' row q-my-xs cursor-pointer select' + (spons && spons.id === sp.id ? ' cur' : '')"
+          @click="selSp(sp)">
+          <div class="col-3 font-mono ellipsis text-center">{{$t('services_' + sp.svc)}}</div>
+          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.org}}</div>
+          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.major || '[manager]'}}</div>
+          <div class="col-3 font-mono ellipsis text-center">{{sp.minor || (sp.major ? '*' : '')}}</div>
+        </div>
+      </template #default></scroll-area>
+      <div v-if="selM" class="column items-center">
+        <q-select class="q-my-md" style="width:300px"
+          dense filled options-dense clearable
+          v-model="majOpt"
+          :options="majOpts" :label="$t('INVmajor_c')"/>
       </div>
-      <q-select class="col q-mr-md" style="margin-left:20px"
-        dense filled options-dense clearable
-        v-model="ui.demandsPage.major" 
-        :disable="ui.demandsPage.svcOrg.org === ''"
-        :options="majOpts" :label="$t('INVmajor_c')"/>
     </div>
-    <div v-else class="titre-md text-italic text-center q-mt-sm">{{ $t('INVnosponsmgr') }}</div>
+    <div v-else class="titre-md text-italic text-center q-mt-sm">{{ $t('INVspons_no') }}</div>
+
     <div v-if="ui.currentInvit.zoomed">
       <q-separator color="orange" class="q-my-sm"/>
       <invit-hdr  v-model="ui.currentInvit"/>
@@ -58,15 +64,16 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
-import { $t, sty } from '../src-fw/util'
+import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -79,10 +86,43 @@ for (const m of majors)
   majOpts.value.push({ value: m, label: $t('INV_' + m)})
 
 const sorgs = ref()
+const sponsorings = ref()
+const spons = ref()
+const majOpt = ref()
+const selM = ref(false)
+
+const selSp = (sp) => {
+  spons.value = sp
+  if (!sp.major) { // Cas d'un "manager": faire choisir "major"
+    majOpt.value = null
+    selM.value = true
+  } else { //cas d'un "sponsor" avec un major et peut-être un minor
+    selM.value = false
+    ui.demandsPage.spons = sp
+  }
+}
+
+watch(majOpt, (v) => {
+  if (v) {
+    ui.demandsPage.svcOrg.SVC = spons.value.svc
+    ui.demandsPage.svcOrg.org = spons.value.org    
+    ui.demandsPage.major = v.value
+    ui.demandsPage.time = Date.now()
+    ui.demandsPage.spons = null
+    selM.value = false
+  }
+})
 
 const reset = () => {
+  ui.demandsPage.spons = null
   sorgs.value = sf.managedOrgs()
-  if (sorgs.value.length) ui.demandsPage.svcOrg = sorgs.value.length
+  if (sorgs.value.length) {
+    ui.demandsPage.svcOrg.SVC = sorgs.value[0].svc
+    ui.demandsPage.svcOrg.org = sorgs.value[0].org
+  }
+  sponsorings.value = sf.sponsorings()
+  spons.value = null
+  selM.value = false
 }
 
 reset()
@@ -91,4 +131,6 @@ reset()
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.select:hover { background-color: $yellow-2 !important; color: black !important; }
+.cur { color: $warning !important; font-style: italic; font-weight: bold; }
 </style>

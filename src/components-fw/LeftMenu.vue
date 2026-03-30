@@ -17,16 +17,17 @@ Contrôlé par ui.leftMenu
     </div-->
   </q-header>
   <q-page-container>
-    <btn-cond  v-if="sf.step === 0" class="q-my-sm q-pa-sm"
+    <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
-    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-pa-sm"/>
+    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
         class="q-mb-sm" flat color="warning" :label="$t('PAGEadmin')"
         icon="img:icons/superman.jpg" 
         @ok="openAdmin"/>
       <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEdemands')"
+        :icon="'img:icons/request_' + (ui.isDark ? 'white.png' : 'black.png')"
         @ok="openDemands"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"

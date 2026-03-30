@@ -73,7 +73,7 @@ for (const m of majors)
 
 const svcorg = reactive({
   org: { inp: '', err: 'tooshort' },
-  SVC: { svc: ''}
+  SVC: ''
 })
 const major = ref()
 const minor = reactive({ inp: '', err: 'tooshort' })

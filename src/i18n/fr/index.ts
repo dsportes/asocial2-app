@@ -963,7 +963,8 @@ bla bla
   INVbtn1: 'Demande d\'invitation',
   INVbtn2: 'Suivre mes invitations',
 
-  INVnosponsmgr: 'Vous n\'avez pas de droits pour traiter aucune demande',
+  INVspons_no: 'Vous n\'avez pas de droit pour traiter aucune demande',
+  INVspons_on: 'Demandes que vous avez le droit de traiter',
 
   INVtit_1: 'Créer',
   INVtit_1_label: 'Déposer une nouvelle demande',

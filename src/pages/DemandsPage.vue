@@ -8,17 +8,17 @@
     <invit-scanrequests/>
   </div>
 
-  <div v-if="ui.demandsPage.tab === 'process'" class="full-width q-pa-sm">
-    <div v-if="!ui.currentInvit.zoomed">
+  <div v-if="ui.demandsPage.tab === 'process'" class="column items-center q-pa-sm">
+    <div v-if="!ui.currentInvit.zoomed" class="pwmd">
       <div v-if="search === 0 && ui.demandsPage.svcOrg.SVC" 
-        class="titre-md text-italic q-my-md text-center full-width">
+        class="titre-md text-italic q-my-xs text-center full-width">
         {{$t('MNOsearch0')}}
       </div>
-      <div v-if="search === 1" class="titre-md text-italic q-my-md text-center full-width">
+      <div v-if="search === 1" class="titre-md text-italic q-my-xs text-center full-width">
         {{$t('MNOsearch1')}}
       </div>
       <div v-if="search === 2 && (!invits || !invits.length)" 
-        class="titre-md text-italic text-warning text-bold q-my-md text-center full-width">
+        class="titre-md text-italic text-warning text-bold q-my-xs text-center full-width">
         {{$t('MNOnoinvits')}}
       </div>
 
@@ -26,7 +26,7 @@
         <invit-line v-model="invits[idx]" :selected="isCurrent(inv)" @zoom="zoom(inv, idx)"/>
       </div>
     </div>
-    <div v-else class="wmd">
+    <div v-else class="pwmd">
       <invit-zoom v-if="ui.currentInvit.invit" v-model="ui.currentInvit.invit"/>
       <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
     </div>
@@ -56,7 +56,6 @@ const search = ref(0) // 0: repos 1:en recherche 2:recherche faite
 const isCurrent = (inv) => ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
 
 const init = () => {
-  ui.demandsPage.major = ''
   search.value = 0
   invits.value = []
 }
@@ -114,20 +113,37 @@ const onUpdate = () => {
   }, 500)
 }
 
-watch(() => [ui.demandsPage.svcOrg.SVC, ui.demandsPage.svcOrg.org], 
-  (v) => { init(); init2() })
+watch(() => ui.demandsPage.time, async (v) => { 
+    init()
+    if (ui.demandsPage.major) {
+      init2()
+      await getInvits()
+    }
+})
 
-watch(() => ui.demandsPage.major, async (v) => {
-  if (v) await getInvits()
+const getInvits = async () => { // "manager"
+  search.value = 1
+  invits.value = []
+  console.log('InvitList manager')
+  const svcOrg = ui.demandsPage.svcOrg
+  const op = new InvitList(svcOrg.SVC, svcOrg.org)
+  invits.value = await op.run(ui.demandsPage.major, true)
+  search.value = 2
+  init2()
+}
+
+watch(() => ui.demandsPage.spons, async (v) => {
+  if (v) await getInvits2(v)
   else init()
 })
 
-const getInvits = async () => {
+const getInvits2 = async (v) => { // "sponsor"
   search.value = 1
   invits.value = []
-  const svcOrg = ui.demandsPage.svcOrg
-  const op = new InvitList(svcOrg.SVC, svcOrg.org)
-  invits.value = await op.run(ui.demandsPage.major.value, true)
+  console.log('InvitList sponsor')
+  // TODO
+  // const op = new InvitList(v.svc, v.org)
+  // invits.value = await op.run(v.major, true)
   search.value = 2
   init2()
 }

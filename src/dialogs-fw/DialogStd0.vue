@@ -7,7 +7,7 @@
     <q-header :class="sty()">
       <q-toolbar class="tbs">
         <btn-cond color="none" size="lg" icon="chevron_left" flat 
-          @ok="model = false"/>
+          @ok="onClose"/>
         <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
         <help-button v-if="help" :page="help"/>
         <div v-if="vue" style="color:transparent;width:3px">*<q-tooltip>{{ vue }}</q-tooltip></div>
@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { watch } from 'vue'
+// import { watch } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
@@ -34,17 +34,20 @@ import HelpButton from '../components-fw/HelpButton.vue'
 
 const model = defineModel()
 const emit = defineEmits(['close'])
-watch(model, (v) => {
-  if(!v) emit('close', true)
-})
 
 const props = defineProps({
   vue: String,
   title: String, // titre de la top bar
   help: String,  // code de loa page d'aide s'il y en a une
   hdrclass: String,
+  noclose: Boolean,
   vh: String
 })
+
+const onClose = () => { 
+  if (!props.noclose) model.value = false
+  emit('close', true)
+}
 
 const ui = stores.ui
 
