@@ -119,6 +119,7 @@ export type Sponsoring = {
   org: string
   major: string
   minor: string
+  isSp: boolean
 }
 
 /*
@@ -660,15 +661,16 @@ export const useSafeStore = defineStore('safe', () => {
     const lst: Sponsoring[] = []
     if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
       if (c.role === 'Org.manager')
-        lst.push({ svc: c.svc, org: c.org, major: '', minor: ''})
+        lst.push({ svc: c.svc, org: c.org, major: '', minor: '', isSp: false})
       else if (c.role === 'Sponsor.') {
         const i = c.docId.indexOf('.')
         if (i === -1)
-          lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: ''})
+          lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
         else
           lst.push({ svc: c.svc, org: c.org, 
             major: c.docId.substring(0, i) || '', 
-            minor: c.docId.substring(i + 1) || ''})
+            minor: c.docId.substring(i + 1) || '',
+            isSp: true })
       }
     }
     for(const s of lst)

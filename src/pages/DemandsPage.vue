@@ -40,6 +40,7 @@
 import { ref, watch } from 'vue'
 
 import stores from '../stores/all'
+import { Sponsoring } from '../stores/safe-store'
 import { InvitList } from '../src-fw/operations'
 import { $t, dkli } from '../src-fw/util'
 
@@ -50,35 +51,22 @@ import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
 
 const ui = stores.ui
 
-const invits = ref()
+const invits = ref([])
 const search = ref(0) // 0: repos 1:en recherche 2:recherche faite
-
-const isCurrent = (inv) => ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
-
-const init = () => {
+const reset = () => {
   search.value = 0
   invits.value = []
 }
 
+const isCurrent = (inv) => ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
+
 const nav = (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const u = ui.currentInvit
   switch (n) {
-    case 1 : { 
-      if (u.idx < invits.value.length - 1) u.idx++
-      break
-    }
-    case 2 : { 
-      if (u.idx > 0) u.idx--
-      break
-    }
-    case 3 : { 
-      if (u.idx !== 0) u.idx = 0
-      break
-    }
-    case 4 : { 
-      if (u.idx < invits.value.length - 1) u.idx = invits.value.length - 1
-      break
-    }
+    case 1 : { if (u.idx < invits.value.length - 1) u.idx++; break }
+    case 2 : { if (u.idx > 0) u.idx--; break }
+    case 3 : { if (u.idx !== 0) u.idx = 0; break }
+    case 4 : { if (u.idx < invits.value.length - 1) u.idx = invits.value.length - 1; break }
   }
   u.invit = invits.value[u.idx]
 }
@@ -93,62 +81,41 @@ const zoom = (inv, idx) => {
 // Invitation mise à jour : rafraichir la liste
 const onUpdate = () => {
   console.log('onUpdate dans DemandsPage/process')
-  const u = ui.currentInvit
-  const acId = u.invit.invitId
-  u.zoomed = false
+  ui.currentInvit.zoomed = false
   setTimeout(async () => {
-    const svcOrg = ui.demandsPage.svcOrg
-    const op = new InvitList(svcOrg.SVC, svcOrg.org)
-    invits.value = await op.run(ui.demandsPage.major.value, true)
-    let idx = -1
-    let inv = null
-    for(let i = 0; i < invits.value.length; i++) {
-      inv = invits.value[i]
-      if (inv.invitId === acId) { idx = i; break}
-    }
-    if (idx !== -1) zoom(inv, idx)
-    else if (invits.value.length) {
-      zoom(invits.value[0], 0)
-    }
-  }, 500)
+    await getInvits2(ui.demandsPage.spons)
+  }, 100)
 }
 
-watch(() => ui.demandsPage.time, async (v) => { 
-    init()
-    if (ui.demandsPage.major) {
-      init2()
-      await getInvits()
-    }
+// Recalage du courant/zoomé de la liste sur sa nouvelle position après refresh
+const getInvits2 = async (sp: Sponsoring) => {
+  const acId = ui.currentInvit.invit.invitId
+  const op = new InvitList(sp.svc, sp.org)
+  invits.value = await op.run(sp.major, sp.minor, sp.isSp)
+  let idx = -1
+  let inv = null
+  for(let i = 0; i < invits.value.length; i++) {
+    inv = invits.value[i]
+    if (inv.invitId === acId) { idx = i; break}
+  }
+  if (idx !== -1) zoom(inv, idx)
+  else if (invits.value.length) {
+    zoom(invits.value[0], 0)
+  }
+}
+
+watch(() => ui.demandsPage.time, async () => {
+  if (ui.demandsPage.spons) await getInvits(ui.demandsPage.spons)
+  else reset()
 })
 
-const getInvits = async () => { // "manager"
+// Réinit d'un parcours de la liste récupérée (aucun n'est courant/zoomé)
+const getInvits = async (sp: Sponsoring) => {
   search.value = 1
   invits.value = []
-  console.log('InvitList manager')
-  const svcOrg = ui.demandsPage.svcOrg
-  const op = new InvitList(svcOrg.SVC, svcOrg.org)
-  invits.value = await op.run(ui.demandsPage.major, true)
+  const op = new InvitList(sp.svc, sp.org)
+  invits.value = await op.run(sp.major, sp.minor, sp.isSp)
   search.value = 2
-  init2()
-}
-
-watch(() => ui.demandsPage.spons, async (v) => {
-  if (v) await getInvits2(v)
-  else init()
-})
-
-const getInvits2 = async (v) => { // "sponsor"
-  search.value = 1
-  invits.value = []
-  console.log('InvitList sponsor')
-  // TODO
-  // const op = new InvitList(v.svc, v.org)
-  // invits.value = await op.run(v.major, true)
-  search.value = 2
-  init2()
-}
-
-const init2 = () => {
   const u = ui.currentInvit
   u.zoomed = false
   u.nb = invits.value.length
@@ -157,8 +124,6 @@ const init2 = () => {
   u.invit = null
   u.inv = null
 }
-
-init()
 
 </script>
 

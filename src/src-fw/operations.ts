@@ -286,11 +286,18 @@ export class InvitCreate extends Operation {
 export class InvitList extends Operation {
   constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
 
-  async run ( major: string, mgr?: boolean ) : Promise<Invitation[]> {
+  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[]> {
     try {
       this.args.major = major
-      if (mgr)
-        this.sign('Org.manager')
+      this.args.minor = minor
+      this.args.isSp = isSp
+      if (!isSp) this.sign('Org.manager')
+      else { // sponsor
+        // On tente toujours le "major" seul
+        this.sign('Sponsor.', major) 
+        // Le cas échéant on tente le major.minor
+        if (minor !== '') this.sign('Sponsor.', major + '.' + minor)
+      }
       const res = await this.post()
       if (res.status) {
         await stores.ui.diagDisplay($t('MNOcred'))

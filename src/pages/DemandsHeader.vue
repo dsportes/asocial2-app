@@ -93,23 +93,22 @@ const selM = ref(false)
 
 const selSp = (sp) => {
   spons.value = sp
-  if (!sp.major) { // Cas d'un "manager": faire choisir "major"
+  if (sp.isSp) { // Cas d'un "manager": faire choisir "major"
     majOpt.value = null
     selM.value = true
   } else { //cas d'un "sponsor" avec un major et peut-être un minor
     selM.value = false
     ui.demandsPage.spons = sp
+    ui.demandsPage.time = Date.now()
   }
 }
 
 watch(majOpt, (v) => {
   if (v) {
-    ui.demandsPage.svcOrg.SVC = spons.value.svc
-    ui.demandsPage.svcOrg.org = spons.value.org    
-    ui.demandsPage.major = v.value
-    ui.demandsPage.time = Date.now()
-    ui.demandsPage.spons = null
+    spons.value.major = v.value
+    ui.demandsPage.spons = spons.value
     selM.value = false
+    ui.demandsPage.time = Date.now()
   }
 })
 
