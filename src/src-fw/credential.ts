@@ -174,7 +174,8 @@ export class AuthRecord {
     for(const [id, c] of session.creds) {
       if (c.svc === svc && c.org === org
         && c.role === role && (docId ? c.docId === docId : true)) {
-        const sign = new Uint8Array(await Crypt.sign(keyFromB64(c.pems), this.challenge))
+        const x = await Crypt.sign(keyFromB64(c.pems), this.challenge)
+        const sign = new Uint8Array(x)
         if (!this.signatures) this.signatures = {}
         this.signatures[c.role + '/' + (c.docId || '')] = sign
       }

@@ -10,7 +10,7 @@
 
   <div v-if="ui.demandsPage.tab === 'process'" class="column items-center q-pa-sm">
     <div v-if="!ui.currentInvit.zoomed" class="pwmd">
-      <div v-if="search === 0 && ui.demandsPage.svcOrg.SVC" 
+      <div v-if="search === 0" 
         class="titre-md text-italic q-my-xs text-center full-width">
         {{$t('MNOsearch0')}}
       </div>

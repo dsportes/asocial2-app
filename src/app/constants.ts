@@ -65,12 +65,10 @@ export const K = {
 
   phrasestar: { ps: 2, p1: 2, contact: 2},
 
-  roles: new Set(['manager', 'auteur', 'lecteur', 'groupe']),
-
   majorInvits: {
-    auteur: { hasKey: true, hasLabel: true, hasMinor: true },
-    relecteur: { hasKey: false, hasLabel: true, hasMinor: true },
-    cedit: { hasKey: false, hasLabel: false, hasMinor: false }
+    Auteur: { hasKey: true, hasLabel: true, hasMinor: true },
+    Relecteur: { hasKey: false, hasLabel: true, hasMinor: true },
+    Cedit: { hasKey: false, hasLabel: false, hasMinor: false }
   },
 
   theme: {

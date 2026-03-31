@@ -20,6 +20,7 @@
       <q-separator color="orange" class="q-my-sm"/>
 
       <div class="q-my-md text-center titre-md">{{$t('HPadminA_lst')}}</div>
+      <div class="q-my-md text-center titre-md text-italic text-warning">{{$t('HPadminA_val')}}</div>
       <scroll-area class='pwsm'><template #default>
         <div :class="dkli(idx) + ' row items-center'" v-for="([code, elt], idx) of lstAdmins" :key="code">
           <div class="col-1">

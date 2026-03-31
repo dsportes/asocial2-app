@@ -216,7 +216,7 @@ async function setSvcOpStatus (stx) : Promise<void> {
   newComment.value = ''
 }
 
-/* SetSvcOrgStatus fixe le status de l'otganisation pour le service: { st, at, txt }
+/* SetSvcOrgStatus fixe le status de l'organisation pour le service: { st, at, txt }
   st: code 9: DOWN, 1: UP
   txt: texte explicatif éventuel de l'administrateur
   ADMINISTRATEUR

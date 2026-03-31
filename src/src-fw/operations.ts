@@ -38,7 +38,7 @@ export class  SvcOpIsAdmin extends Operation {
 }
 
 export class  GetSvcOpStatus extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetSvcOpStatus', SVC, '', $OP) }
+  constructor (SVC: string, $OP: string) { super('GetSvcOpStatus$', SVC, '', $OP) }
 
   async run () {
     try {
@@ -66,7 +66,7 @@ export class  GetSvcOrgStatus extends Operation {
 }
 
 export class SetSvcOpStatus extends Operation {
-  constructor (SVC: string, $OP: string) { super('SetSvcOpStatus', SVC, '', $OP) }
+  constructor (SVC: string, $OP: string) { super('SetSvcOpStatus$', SVC, '', $OP) }
 
   async run (st: number, txt: string) {
     try {
@@ -96,7 +96,7 @@ export class SetSvcOrgStatus extends Operation {
 }
 
 export class GetOrgConfig extends Operation {
-  constructor (SVC: string, org: string) { super('GetOrgConfig', SVC, org) }
+  constructor (SVC: string, org: string) { super('GetOrgConfig$', SVC, org) }
 
   async run () {
     try {
@@ -109,7 +109,7 @@ export class GetOrgConfig extends Operation {
 }
 
 export class SetOrgConfig extends Operation {
-  constructor (SVC: string, org: string) { super('SetOrgConfig', SVC, org) }
+  constructor (SVC: string, org: string) { super('SetOrgConfig$', SVC, org) }
 
   async run (db?: string, st?: string ) {
     try {

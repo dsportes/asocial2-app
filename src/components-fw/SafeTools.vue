@@ -54,11 +54,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
         :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
-        @open="dialogs.DevTruistit = true"/>
+        @open="dialogs.DevTrustit = true"/>
 
       <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
         :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
-        @open="dialogs.DevTruistit = true"/>
+        @open="dialogs.DevTrustit = true"/>
 
       <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
         :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
@@ -88,8 +88,8 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <manage-users v-model="dialogs.ManageUsers" @close="fnc" />
   <safe-cr v-model="dialogs.SafeCr" :mode="1" @close="fnc"/>
   <dev-trustings v-model="dialogs.DevTrustings" @close="fnc"/>
-  <dev-trustit v-model="dialogs.TrustIt" @close="fnc" @done="fnc"/>
-  <dev-untrustit v-model="dialogs.UntrustIt" @close="fnc" @done="fnc"/>
+  <dev-trustit v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
+  <dev-untrustit v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
   <!-- Confirmation de destruction du safe -->
@@ -163,7 +163,7 @@ const trustingMe = computed(() => sf.myTrusting )
 
 const openUntrust = async () => {
   await sf.getMySessions()
-  dialogs.DevTrustit = true
+  dialogs.DevUntrustit = true
 }
 
 const fnc = (st) => {

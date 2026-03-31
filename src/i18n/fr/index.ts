@@ -218,6 +218,7 @@ export default {
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
+  APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewOrg: 'Création d\'une nouvelle organisation',
   APdbcode_label: 'Code de config de la DB',
@@ -687,6 +688,7 @@ bla bla
   HPadminA_add: 'M\'ajouter en tant qu\'Administrateur',
   HPadminA_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
   HPadminA_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
+  HPadminA_val: 'NE PAS OUBLIER DE VALIDER après avoir ajouté ou retiré des items dans la liste.',
   HPadminkosvc: 'Ce service n\'est assuré par cet opérateur.',
   HPctc_label: 'Pseudo / phrase de contact',
   HPctc_ph: 'Les framboises sont bleues cet hiver',
@@ -1121,19 +1123,20 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   blabla1: 'bla1 bla1', // Test surcharge traductions
   titre: 'Test très simple - compteur: {0}',
 
-  INV_auteur: 'Auteur',
-  INVauteur: 'Nom d\'auteur',
-  INVauteur_label: 'Nom d\'auteur',
-  INVauteur_bub: `### Nom d'auteur
+  INV_Auteur: 'Auteur',
+  INV_Auteur_label: 'Nom d\'auteur',
+  INV_Auteur_bub: `### Nom d'auteur
 bla bla
 `,
-  INV_relecteur: 'Relecteur',
-  INVrelecteur: 'Pseudo de relecteur',
-  INVrelecteur_label: 'Pseudo de relecteur',
-  INVrelecteur_bub: `### Pseudo de relecteur
+  INV_Relecteur: 'Relecteur',
+  INV_Relecteur_label: 'Pseudo de relecteur',
+  INV_Relecteur_bub: `### Pseudo de relecteur
 bla bla
 `,
-  INV_cedit: 'Membre du comité éditorial',
+  INV_Cedit: 'Membre du comité éditorial',
+  INV_Cedit_label: 'Membre du comité éditorial',
+  INV_Cedit_bub: 'Membre du comité éditorial',
+
   INVsponsoring: `### Qui peut traiter une demande d'invitation ?
 Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.

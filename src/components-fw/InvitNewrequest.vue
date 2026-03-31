@@ -21,8 +21,8 @@
     </div>
 
     <div v-if="majdescr.hasLabel" class="q-my-md full-width" >
-      <bar-title :prefix="'INV' + major.value"/>
-      <input-b :prefix="'INV' + major.value" v-model="label" size="about" noval/>
+      <bar-title :prefix="'INV_' + major.value"/>
+      <input-b :prefix="'INV_' + major.value" v-model="label" size="about" noval/>
     </div>
 
     <div :class="'q-my-md full-width' + (label.err ? 'disabled' : '')">

@@ -80,12 +80,12 @@ export class Invitation extends InvitationA {
       {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvA = toPem(pub, true)
-        privA = priv
+        privA = keyToB64(priv)
       }
       if (this.etc.option > 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvS = toPem(pub, true)
-        privS = priv
+        privS = keyToB64(priv)
       }
       op.args.invitId = this.invitId
       op.args.invVal = invVal
