@@ -1615,6 +1615,37 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  type RevokeCreds = {
+    userId: string
+    shk: string
+    ids: string[] 
+  }
+
+  const autoRevokeCreds = async (ids: string[]) => {
+    const revokeCreds: RevokeCreds = {
+      ids,
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+     }
+
+    const op = new SafeOperation('$AutoRevokeCreds', mySafeStore.value)
+    let ret
+    try {
+      op.args = {revokeCreds}
+      ret = await op.post()
+    } catch(e) {
+      op.ko(e);
+      return -1
+    }
+    if (ret.status === 0)
+      try {
+        await compileSafe(ret.safe)
+      } catch (e) {
+        console.log(e)
+      }
+    return ret.status
+  }
+
   type TransmitCred = {
     targetId: string // id ou p0 ou r0 ou contact de U cible du credential
     credid: string // id du credential
@@ -1729,7 +1760,7 @@ export const useSafeStore = defineStore('safe', () => {
     newTrusting, newTSession,
     trustings, setTrusting, delTrusting, myTrusting,
     setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
-    mySafeCreds, getCreds, skey, managedOrgs, isManager, sponsorings,
+    mySafeCreds, getCreds, autoRevokeCreds, skey, managedOrgs, isManager, sponsorings,
     mySafeProfiles, profileOfProfId,
     mySafePrefs,
     invitCreate, statusInvit, mySafeInvits,

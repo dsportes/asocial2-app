@@ -23,8 +23,8 @@ Commentaires dans Input-B.
       <btn-cond v-if="hasInitVal && !disable && chg"
         size="md" icon="undo" color="none" round 
         @ok="undo" />
-      <btn-cond v-if="!nv && !disable && err === ''" 
-        size="md" icon="check" color="warning" round
+      <btn-cond v-if="!nv" size="md" label="OK"
+        :disable="disable || model.err !== ''"
         @ok="emit('validate', true)" />
       <btn-cond v-if="mayStar" 
         size="md" icon="star" color="warning" round

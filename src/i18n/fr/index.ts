@@ -66,6 +66,7 @@ export default {
   svcorg: 'Service & Organisation',
   svcStatus_no: 'Service / opérateur non sélectionné',
   svcStatus_no2: 'Service non sélectionné',
+  svcStatus_no3: 'Vous n\'êtes "manager" d\'aucune organisation.',
   up: 'UP',
   down: 'DOWN',
   readonly: 'LECTURE SEULE',
@@ -94,6 +95,8 @@ export default {
   endsession: 'Clore la session',
   servicestatus: 'Status des services',
   recorded: 'Enregistrement effectué avec succès.',
+  mtime: 'Dernière mise à jour',
+  ltime: 'Valide jusqu\'à',
 
   minmax: 'De {0} à {1} signes. ',
   tooshort: 'Texte trop court',
@@ -189,7 +192,7 @@ export default {
   op_InvitAR: 'Acceptation ou rejet d\'une invitation',
   op_InvitValidate: 'Validation d\'une invitation',
   op_InvitDC: 'Annulation ou refus d\'une invitation',
-
+  op_RevokeCred: 'Révocation d\'un droit d\'accès',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -235,6 +238,8 @@ export default {
   APdiagtarget: 'Le pseudo de l\'utilisateur cible est incorrect ou manquant',
   APkomanager: 'Echec de l\'enregistrement d\'un nouveau "manager".',
   APokmanager: 'Succès de l\'enregistrement d\'un nouveau "manager".',
+  APrevok: 'Révocation effectuée',
+  APrevko: 'La révocation semble avoir déjà été faite',
   APgrantmgr: 'Déclarer',
   APorgconfig: 'Configurer',
   APoc_svc: 'Service',
@@ -251,6 +256,20 @@ export default {
   APdeclmgr: 'Déclaration d\'un nouveau "manager"',
   APlstmgr: 'Rafraîchir la liste des managers',
   APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "managers" de l\'organisation.',
+  APrevcfa_txt: `### Révoquer mon rôle de "manager" de cette organisation ...
+M'empêchera de répondre aux demandes de création, d'invitation, de _sponsoring_ ...
+Si je suis le dernier **manager**, la vie de l'organisation peut en être gravement perturbée.
+`,
+  APrevcfa_tit: 'Révoquer mon rôle de "manager" ?',
+  APrevcfa_0: 'Je renonce me révoquer',
+  APrevcfa_1: 'Je confirme ma révocation',
+  APrevcf_txt: `### Révoquer le rôle de "manager" à cet utilisateur
+L'empêchera de répondre aux demandes de création, d'invitation, de _sponsoring_ ...
+Si c'est le dernier **manager**, la vie de l'organisation peut en être gravement perturbée.
+`,
+  APrevcf_tit: 'Révoquer ce rôle "manager" ?',
+  APrevcf_0: 'Je renonce à la révocation',
+  APrevcf_1: 'Je confirme la révocation',
 
   PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
   PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
@@ -923,6 +942,8 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   MNOmajor_bub: `### Classe d\'invitation recherchée
 bla bla
 `,
+  MNOinvalid: 'Un administrateur a révoqué certains de vos droits de "manager": ils vont être "nettoyés.',
+
   INVopret_1: '(BUG probable) - L\'invitation est inconnue.',
   INVopret_2: '(BUG probable) - Vous n\'avez aucun des droits d\'accès l\'autorisant.',
   INVopret_3: '(BUG probable) - Opération réservée à l\'utilisateur ayant demandé l\'invitation.',

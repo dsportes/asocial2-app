@@ -205,7 +205,7 @@ export class GrantNewManager extends Operation {
       const sf = stores.safe
       const [ cred, credRequest] =
         await Credential.buildCreds(
-          this.SVC, this.org, targetId, 'Org.manager', '', null, '', 0)
+          this.SVC, this.args.org, targetId, 'Org.manager', '', null, '', 0)
       credRequest.cond = { info: info}
 
       // écriture du credential dans le store de la cible
@@ -222,14 +222,14 @@ export class GrantNewManager extends Operation {
   }
 }
 
-// TODO
-export class RevokeManager extends Operation {
-  constructor (SVC: string) { super('RevokeManager', SVC) }
+export class RevokeCred extends Operation {
+  constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
 
-  async run (svc: string, revoke: string, hpems: string) {
+  async run (userId: string, role: string, docId: string) { 
     try {
-      this.args = { revoke, hpems}
+      this.args.revokeReq = { userId, role, docId }
       const res = await this.post()
+      return res.status
     } catch(e) {
       this.ko(e)
     }
@@ -248,8 +248,7 @@ export class ListManagers extends Operation {
 
   async run (mgr?: boolean) : Promise<ListMgrs[]>{
     try {
-      if (mgr)
-        this.sign('Org.manager')
+      // if (mgr) this.sign('Org.manager')
       const res = await this.post()
       const l = res['list'] as ListMgrs[]
       const s = res['status']

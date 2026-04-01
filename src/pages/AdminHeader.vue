@@ -14,7 +14,7 @@
   <div v-if="svcOps.size" :class="sty() + ' row q-gutter-sm q-pa-sm'">
     <div class="titre-md text-italic">{{ $t('APservices') }}</div>
     <btn-cond v-for="[k,svcOp] of svcOps" :key="k"
-      @ok="ui.adminPage.SVC = svcOp.svc; ui.adminPage.$OP = svcOp.op"
+      @ok="setSvcOp(svcOp)"
       :color="svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'warning' : 'primary'"
       :label="'[' + $t('services_' + svcOp.svc) + '] / ' + svcOp.op"/>
     <!--btn-cond label="ASSO2$BLUE" @ok="ui.adminPage.SVC='ASSO2'; ui.adminPage.$OP='$BLUE'"/-->
@@ -46,6 +46,11 @@ type Elt = {
   op: string
 }
 const svcOps: Ref<Map<string, Elt>> = ref(new Map())
+
+const setSvcOp = (svcOp) => {
+  ui.adminPage.SVC = svcOp.svc
+  ui.adminPage.$OP = svcOp.op
+}
 
 const reset = () => {
   ui.adminPage.$OP = ''

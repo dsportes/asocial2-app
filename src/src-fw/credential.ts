@@ -20,6 +20,7 @@ export type CredObj = {
 }
 
 export type CredRequest = {
+  id: string
   userId: string
   role: string
   docId: string
@@ -114,6 +115,7 @@ export class Credential {
     c.time = Date.now()
     c.id = c.getId()
     const cr: CredRequest = {
+      id: c.id,
       userId: targetId,
       pemv: keyToB64(pub),
       role,

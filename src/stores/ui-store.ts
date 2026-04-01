@@ -155,7 +155,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   const adminPage = reactive({
-    tab: '', // svcstatus managers
+    tab: 'svcstatus', // svcstatus managers
     SVC: '',
     $OP: ''
   })
