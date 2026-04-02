@@ -27,7 +27,7 @@ export type CredRequest = {
   time: number
   pemv: string
   limit: number
-  cond: Object
+  cond: any
 }
 
 /* Credential en Safe
@@ -39,18 +39,19 @@ export class Credential {
     return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId || ''))
   }
 
-  id: string // ID du credential.
-  svc: string // code du service
-  org: string // le code de l'organisation.
-  role: string // docClass.role : un des codes de rôle connu du service.
-  docId: string // identifiant du document cible du credential.
-  time: number // epoch en seconde de génération
-  pems: string // clé PRIVEE de signature, le texte de 400c.
-  name: string // libellé / label etc. lisible de docId
-  skey: string // clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
-  comment: string // un texte court libre de l'utilisateur.
+  id: string = '' // ID du credential.
+  svc: string = '' // code du service
+  org: string = '' // le code de l'organisation.
+  role: string = '' // docClass.role : un des codes de rôle connu du service.
+  docId: string = '' // identifiant du document cible du credential.
+  time: number = 0 // epoch en seconde de génération
+  pems: string = '' // clé PRIVEE de signature, le texte de 400c.
+  name: string = '' // libellé / label etc. lisible de docId
+  skey: string = ''// clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
+  comment: string = '' // un texte court libre de l'utilisateur.
 
   fromObj (obj: Object) : Credential {
+    // @ts-ignore
     for (const p of Credential.props) this[p] = obj[p] || null
     if (!this.id)
       this.id = this.getId()
@@ -99,7 +100,7 @@ export class Credential {
     targetId: string, // target U
     role: string,
     docId: string,
-    skey: Uint8Array,
+    skey: Uint8Array | null,
     name: string,
     limit: number
   ) : Promise<[Credential, CredRequest]> {
@@ -140,14 +141,14 @@ en arguments un objet de classe `AuthRecord`, construit par l'application et aya
   donnant la signature du challenge par la clé privée de signature du credential.
 */
 export class AuthRecord {
-  svc: string
-  args: Object
+  svc: string = ''
+  args: Object = ''
   userId: string
   sessionId: string
   time: number
-  userSign: Uint8Array
+  userSign: Uint8Array | null
   // Object par role / entid : [token]
-  signatures: Object
+  signatures: Object | null
 
   get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }
 

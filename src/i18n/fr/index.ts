@@ -1165,9 +1165,12 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
 - il a un droit d'accès **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
 `,
   INVauteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
-  INVauteur_1: 'Pas de droit d\'accès de "sponsoring"',
+  INVauteur_1: 'SANS création de droit d\'accès de "sponsoring"',
   INVauteur_2: 'Droit d\'accès de "sponsoring" générale "Auteur"',
   INVauteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
+  INVauteur_4: 'Création d\'un nouvel auteur',
+  INVauteur_5: 'SANS nouvel auteur',
+  INVauteur_e: 'Une acceptation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens: dans ce cas LA REJETER.',
   INVauteur_categ_label: 'Catégorie d\'auteurs',
   INVauteur_t1: `### Auteur en création:
 - nom: **{0}**

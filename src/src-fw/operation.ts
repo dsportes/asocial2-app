@@ -21,16 +21,16 @@ export class Operation {
 
   opName: string
   args: OpArgs | any
-  controller: AbortController
-  aborted: boolean
+  controller: AbortController | null = null
+  aborted: boolean = false
   background: boolean
   authRecord: AuthRecord
-  $OP: string
-  org: string
+  $OP: string = ''
+  org: string = ''
   SVC: string
-  url: string
+  url: string = ''
 
-  async $GetSvcOpUrl () : Promise<string> {
+  async $GetSvcOpUrl () : Promise<string | null> {
     const sf = stores.safe
     let u = Operation.svcOpUrl.get(this.SVC + '/' + this.args.$OP)
     if (u) return u
@@ -73,7 +73,7 @@ export class Operation {
   }
 
   async getBaseUrl () : Promise<string> {
-    let u: string
+    let u: string | null
     if (this.args.$OP) {
       u = await this.$GetSvcOpUrl()
       if (!u)
@@ -141,7 +141,7 @@ export class Operation {
       const txt = new TextDecoder().decode(buf)
       throw new AppExc({ code:11001, label: 'Unexpected from server',
         args:[response.status, (u || '?'), txt]})
-    } catch (e) {
+    } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
@@ -151,7 +151,7 @@ export class Operation {
     }
   }
 
-  async ko (e: AppExc) {
+  async ko (e: any) {
     await stores.ui.displayExc(e, this.background)
   }
 }
@@ -206,7 +206,7 @@ export class SafeOperation extends Operation {
       const txt = new TextDecoder().decode(buf)
       throw new AppExc({ code:11001, label: 'Unexpected from server',
         args:[response.status, (this.url || '?'), txt]})
-    } catch (e) {
+    } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e

@@ -5,7 +5,7 @@ import { Credential } from '../src-fw/credential'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
-import { Crypt, keyToB64, toPem } from '../src-fw/crypt'
+import { Crypt, keyToB64, keyFromB64 } from '../src-fw/crypt'
 
 const encoder = new TextEncoder()
 
@@ -34,7 +34,7 @@ export class Invitation extends InvitationA {
     est un sponsor valide (à condition bien sur que l'invitation ait un minor).
   */
   async msgVal () : Promise<MsgVal> {
-    let credOk : MsgVal
+    let credOk : MsgVal = { ok: false, txt: '', role: '', docId: ''}
     const creds : Map<string, Credential> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
       if (c.org !== this.org || c.svc !== this.SVC) continue
@@ -43,7 +43,7 @@ export class Invitation extends InvitationA {
       if (c.role === 'Sponsor.') {
         if (c.docId === this.major)
           return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + this.major)]), role: 'Sponsor.', docId: c.docId }
-        if (c.docId === this.major + '.' + this.minor)
+        if (c.docId === this.major + '/' + this.minor)
           credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + this.major) + ' / ' + this.minor]),
             role: 'Sponsor.', docId: c.docId }
       }
@@ -58,7 +58,7 @@ export class Invitation extends InvitationA {
   async validate () {
     console.log(this.invitId, this.major, 'validate')
     switch (this.major) {
-      case 'auteur' : { await this.validate_auteur(); return }
+      case 'Auteur' : { await this.validate_auteur(); return }
     }
   }
 
@@ -71,20 +71,20 @@ export class Invitation extends InvitationA {
     */
     const op = new Operation('InvitValidate', this.SVC, this.org)
     try {
-      let privA, privS
+      let privA: string = '', privS: string = ''
       const invVal: InvVal = {
         time: Date.now(),
         pemvA: '',
         pemvS: ''
       }
-      {
+      if (this.etc.newA === 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
-        invVal.pemvA = toPem(pub, true)
+        invVal.pemvA = keyToB64(pub)
         privA = keyToB64(priv)
       }
       if (this.etc.option > 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
-        invVal.pemvS = toPem(pub, true)
+        invVal.pemvS = keyToB64(pub)
         privS = keyToB64(priv)
       }
       op.args.invitId = this.invitId
@@ -95,11 +95,11 @@ export class Invitation extends InvitationA {
 
         // Enregistrement du ou des credential "Safe"
         const mcreds: Map<string, Credential> = new Map()
-        {
+        if (this.etc.newA === 1) {
           const c = new Credential() // Credential "Safe"
-          c.svc = this.SVC
+          c.svc = this.SVC || ''
           c.org = this.org
-          c.pems = privA  
+          c.pems = privA
           c.role = this.role
           c.docId = this.docId
           c.name = this.label
@@ -110,11 +110,11 @@ export class Invitation extends InvitationA {
         }
 
         if (this.etc.option > 1) {
-          const docId = 'Auteur' + (this.etc.option === 2 ? '' : ('.' + this.etc.categ))
+          const docId = 'Auteur' + (this.etc.option === 2 ? '' : ('/' + this.etc.categ))
           const c = new Credential() // Credential "Safe"
-          c.svc = this.SVC
+          c.svc = this.SVC || ''
           c.org = this.org
-          c.pems = privS  
+          c.pems = privS || ''
           c.role = 'Sponsor.'
           c.docId = docId
           c.name = this.label

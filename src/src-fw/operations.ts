@@ -246,7 +246,7 @@ export type ListMgrs = {
 export class ListManagers extends Operation {
   constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
 
-  async run (mgr?: boolean) : Promise<ListMgrs[]>{
+  async run (mgr?: boolean) : Promise<ListMgrs[] | undefined>{
     try {
       // if (mgr) this.sign('Org.manager')
       const res = await this.post()
@@ -255,7 +255,6 @@ export class ListManagers extends Operation {
       return [s, l]
     } catch(e) {
       this.ko(e)
-      return null
     }
   }
 }
@@ -269,7 +268,7 @@ export class InvitCreate extends Operation {
     txtm: string,
     label: string,
     comment: string,
-  ) : Promise<Invit> {
+  ) : Promise<Invit | undefined> {
     try {
       const invitation = new Invitation()
       await invitation.init(this.args.org, major, minor, txtm, label)
@@ -285,7 +284,7 @@ export class InvitCreate extends Operation {
 export class InvitList extends Operation {
   constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
 
-  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[]> {
+  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[] | undefined> {
     try {
       this.args.major = major
       this.args.minor = minor
@@ -295,7 +294,7 @@ export class InvitList extends Operation {
         // On tente toujours le "major" seul
         this.sign('Sponsor.', major) 
         // Le cas échéant on tente le major.minor
-        if (minor !== '') this.sign('Sponsor.', major + '.' + minor)
+        if (minor !== '') this.sign('Sponsor.', major + '/' + minor)
       }
       const res = await this.post()
       if (res.status) {
@@ -318,7 +317,7 @@ export class InvitList extends Operation {
 export class InvitGet extends Operation {
   constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }
 
-  async run ( invitId: string ) : Promise<Invitation> {
+  async run ( invitId: string ) : Promise<Invitation | null> {
     try {
       this.args.invitId = invitId
       const res = await this.post()
@@ -331,6 +330,7 @@ export class InvitGet extends Operation {
       return null
     } catch(e) {
       this.ko(e)
+      return null
     }
   }
 }

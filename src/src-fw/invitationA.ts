@@ -35,26 +35,26 @@ export type MsgVal = {
 /* ### Document `Invitation` dans la base du service
 */
 export class InvitationA {
-  org: string // organisation
-  invitId: string // ID de l'invitation
-  major: string //code majeur 
-  minor: string // code mineur
-  time: number // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
-  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée, 6: annulée
-  userId: string // ID de U (demandeur)
-  safeStore: string // URL du store hébergeant le safe de U
-  skeyK: Uint8Array // clé symétrique générée par U, cryptée par sa clé K. Requise ou non selon le `major`.
-  pemU: string // clé publique C de U.
-  txtm: string // texte de motivation de la demande d'invitation (en clair).
-  txtx: string // quand déclinée, texte d'explication de U (en clair).
-  label: string // pour les codes `major` qui en exige un, _label_ en clair à faire figurer dans le document à créer.
+  org: string = ''// organisation
+  invitId: string = '' // ID de l'invitation
+  major: string = '' //code majeur 
+  minor: string = '' // code mineur
+  time: number = 0 // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
+  status: number = 0 // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée, 6: annulée
+  userId: string = '' // ID de U (demandeur)
+  safeStore: string = '' // URL du store hébergeant le safe de U
+  skeyK: Uint8Array | null = null // clé symétrique générée par U, cryptée par sa clé K. Requise ou non selon le `major`.
+  pemU: string = '' // clé publique C de U.
+  txtm: string = '' // texte de motivation de la demande d'invitation (en clair).
+  txtx: string = '' // quand déclinée, texte d'explication de U (en clair).
+  label: string = '' // pour les codes `major` qui en exige un, _label_ en clair à faire figurer dans le document à créer.
   // Données fixées par le sponsor**
-  pemS: string // clé publique du sponsor traitant l'invitation.
-  txti: string | Uint8Array // texte de réponse du sponsor, crypté par pemS / U.
+  pemS: string = '' // clé publique du sponsor traitant l'invitation.
+  txti: string | Uint8Array = ''// texte de réponse du sponsor, crypté par pemS / U.
     // - si acceptation: termes explicatifs des conditions.
     // - si rejet: justificatif textuel de rejet par le sponsor.
-  role: string // rôle du credential associé (et classe du document associé).
-  docId: string // `docId` du credential associé (et du document associé le cas échéant).
+  role: string = '' // rôle du credential associé (et classe du document associé).
+  docId: string = '' // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
   etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
 
@@ -108,10 +108,10 @@ export class InvitationA {
     this.isU = x.userId === sf.userId
     if (this.isSP) { // user est le traitant de la demande
       const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
-      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
+      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti) as AllowSharedBufferSource)
     } else if (this.isU && (x.status > 1 && x.status < 6)) { // user est le demandeur U
       const aes = await Crypt.getAESKey(fromPem(x.pemS, true), fromPem(sf.auth.D))
-      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti))
+      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti) as AllowSharedBufferSource)
     } else this.txti = ''
     if (this.status === 2 || this.status >= 4) {
       this.role = x.role
@@ -119,8 +119,8 @@ export class InvitationA {
       this.cond = x.cond
       this.etc = x.etc
     } else {
-      this.role = null
-      this.docId = null
+      this.role = ''
+      this.docId = ''
       this.cond = null
       this.etc = null
     }
@@ -154,7 +154,7 @@ export class InvitationA {
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
   async msgVal () : Promise<MsgVal> {
-    return { ok: false, txt: 'KO', role: null, docId: '' }
+    return { ok: false, txt: 'KO', role: '', docId: '' }
   }
 
   /* Méthode "abstraite": systématiquement surchargée pour 
@@ -163,7 +163,7 @@ export class InvitationA {
   - l'objet Accept à stocker dans l'invitation,
   - params.txti : le texte de résumé de la proposition d'invitation
   */
-  async setAccept (params: Object) : Promise<Accept> {
+  async setAccept (params: Object) : Promise<Accept | null> {
     return null
   }
 

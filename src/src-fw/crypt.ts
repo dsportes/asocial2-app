@@ -29,7 +29,7 @@ const SALTS = new Array(256)
   }
 }
 
-const byteToHex = [];
+const byteToHex : any[] = [];
 
 for (let n = 0; n <= 0xff; ++n) {
     const hexOctet = n.toString(16).padStart(2, "0")
@@ -39,6 +39,7 @@ for (let n = 0; n <= 0xff; ++n) {
 export function arrayBuffertohex (arrayBuffer: ArrayBuffer) : string {
     const buff = new Uint8Array(arrayBuffer)
     const hexOctets = [] // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
+    // @ts-expect-error
     for (let i = 0; i < buff.length; ++i) hexOctets.push(byteToHex[buff[i]])
     return hexOctets.join("")
 }
@@ -56,6 +57,7 @@ export function u8ToHex (u8: Uint8Array) : string{
 }
 
 function ab2str(buf: ArrayBuffer) : string {
+  // @ts-expect-error
   return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
@@ -79,7 +81,7 @@ export function keyToB64(key: ArrayBuffer) : string {
   return window.btoa(ab2str(key))
 }
 
-export function keyFromB64 (key: string) {
+export function keyFromB64 (key: string) : ArrayBuffer {
   return str2ab(window.atob(key))
 }
 
@@ -108,7 +110,7 @@ export class Crypt {
   // static alg = 'rsa'
   static alg = 'ecdsa'
 
-  static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
+  static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array | null> {
     try {
       const iv = crypto.getRandomValues(new Uint8Array(12))
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['encrypt'])
@@ -123,8 +125,9 @@ export class Crypt {
     }
   }
 
-  static async decrypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array> {
+  static async decrypt (cle: Uint8Array, buf: Uint8Array | null) : Promise<Uint8Array | null> {
     try {
+      if (buf === null) return null
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['decrypt'])
       const iv = buf.subarray(0, 12) as BufferSource
       const enc = buf.subarray(12) as BufferSource
@@ -331,6 +334,6 @@ export async function testECDH () {
   const aesApp = await Crypt.getAESKey(fromPem(srvPub, true), appPair.priv)
   console.log('aesApp: ', u8ToB64(aesApp))
   const x3 = await Crypt.decrypt(aesApp, x1)
-  const x2 = decoder.decode(x3)
+  const x2 = decoder.decode(x3 || undefined)
   console.log(x2)
 }

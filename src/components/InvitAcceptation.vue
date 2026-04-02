@@ -20,10 +20,14 @@
         </div>
       </q-expansion-item>
 
-      <div v-if="inv.major === 'auteur'" class="q-my-xs full-width column items-center">
+      <div v-if="inv.major === 'Auteur'" class="q-my-xs full-width column items-center">
         <div class="titre-lg text-italic q-my-sm">{{$t('INVauteur_tit')}}</div>
-        <q-option-group :options="optionsSP" type="radio" dense
+        <q-option-group class="full-width q-my-sm" :options="optionsA" type="radio" dense
+          v-model="accept.etc.newA"/>
+        <q-option-group class="full-width q-my-sm" :options="optionsSP" type="radio" dense
           v-model="accept.etc.option"/>
+        <div v-if="(!accept.etc.option || accept.etc.option === 1) && (!accept.etc.newA || accept.etc.newA === 2)"
+          class="msg">{{$t('INVauteur_e')}}</div>
         <input-a v-if="accept.etc.option === 3" class="q-my-sm"
           prefix="INVauteur_categ" size="minor" noval
           v-model="accept.etc.categ"/>
@@ -78,6 +82,10 @@ const inv = ref(props.invit)
 watch(() => props.invit, (v) => { inv.value = v; reset() })
 
 // Auteur
+const optionsA = [
+  { label: $t('INVauteur_4'), value: 1 },
+  { label: $t('INVauteur_5'), value: 2 }
+]
 const optionsSP = [
   { label: $t('INVauteur_1'), value: 1 },
   { label: $t('INVauteur_2'), value: 2 },
@@ -93,11 +101,12 @@ const genTxtAuteur = () => {
 }
 
 const reset = () => {
-  if (inv.value.major === 'auteur') {
+  if (inv.value.major === 'Auteur') {
     txt.value = ''
     accept.role = 'Auteur.'
     accept.docId = Crypt.rnd(24)
     accept.etc.option = optionsSP[0]
+    accept.etc.newA = optionsA[0]
     accept.etc.categ = ''
   }
 }

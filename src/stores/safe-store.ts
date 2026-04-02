@@ -663,7 +663,7 @@ export const useSafeStore = defineStore('safe', () => {
       if (c.role === 'Org.manager')
         lst.push({ svc: c.svc, org: c.org, major: '', minor: '', isSp: false})
       else if (c.role === 'Sponsor.') {
-        const i = c.docId.indexOf('.')
+        const i = c.docId.indexOf('/')
         if (i === -1)
           lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
         else
