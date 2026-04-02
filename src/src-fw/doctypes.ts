@@ -55,9 +55,9 @@ export function isDocName (n: string) { return regdoc.test(n)}
 export class DocType {
   static ndt = 1
   static docTypes = new Map<string, DocType>()
-  static errors = []
+  static errors: string[] = []
 
-  static get (n: string) : DocType {
+  static get (n: string) : DocType | undefined {
     return DocType.docTypes.get(n)
   }
 
@@ -66,6 +66,7 @@ export class DocType {
     if (clazz === 'Org') return '1'
     const dt = DocType.get(clazz)
     const x = []
+    // @ts-expect-error
     if (dt && src) dt.pk.forEach(p => { x.push(src[p] || '') })
     const p = x.join('/')
     return nohash ? p : Crypt.shaS(p)
@@ -75,22 +76,24 @@ export class DocType {
   pkValue (src: Object, nohash?: boolean) : string {
     if (!this.pk.length) return '1'
     const x = []
+    // @ts-expect-error
     if (src) this.pk.forEach(p => { x.push(src[p] || '') })
     const p = x.join('/')
     return nohash ? p : Crypt.shaS(p)
   }
 
   /* Retourne la valeur d'une collection name d'une "source" ayant les propriétés citées */
-  getColl (src: Object, name: string) : string[] {
+  getColl (src: Object, name: string) : string[] | null{
     const c = this.hasColls ? this.colls.get(name) : null
     if (!c) return null
     if (c.list) {
-      const x = []
+      const x : string[] = []
       const p = src[name] as string[]
       if (p) p.forEach(v => { if (v) x.push(Crypt.shaS(v))})
       return x
     }
     const x = []
+    // @ts-expect-error
     c.key.forEach(p => { x.push(src[p] || '') })
     return [Crypt.shaS(x.join('/'))]
   }
@@ -106,7 +109,7 @@ export class DocType {
       case propType.FLOAT : { return v || 0 }
       case propType.HASH : { return Crypt.shaS(v || '') }
       case propType.LIST : {         
-        const x = []
+        const x : string[] = []
         if (v as string[]) (v as string[]).forEach(t => { if (t) x.push(Crypt.shaS(t))})
         return x
       }
@@ -124,10 +127,10 @@ export class DocType {
 
   readonly n: number
   readonly name: string
-  readonly sync : boolean
-  readonly pk: props
-  readonly colls : Map<string, collection>
-  readonly indexes: Map<string, idx>
+  readonly sync : boolean = false
+  readonly pk: props = []
+  readonly colls : Map<string, collection> = new Map()
+  readonly indexes: Map<string, idx> = new Map()
 
   err: string
 
@@ -147,8 +150,8 @@ export class DocType {
 
   constructor (
     h: docHeader, 
-    colls: Map<string, collection>, 
-    indexes: Map<string, idx>) {
+    colls: Map<string, collection> | null, 
+    indexes: Map<string, idx> | null) {
 
     this.n = DocType.ndt++
     this.err = ''

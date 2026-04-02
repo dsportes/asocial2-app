@@ -24,7 +24,7 @@ type docRecord = {
 }
 
 export class IDB {
-  static idb: IDB
+  static idb: IDB | null
 
   db : any
   keyK: Uint8Array
@@ -59,13 +59,13 @@ export class IDB {
       await Dexie.delete(name)
       await sleep(100)
       if (mondebug) console.log('RAZ db')
-    } catch (e) {
+    } catch (e: any) {
       if (mondebug) console.log(e.toString())
     }
     IDB.idb = null
   }
 
-  static EX (e: Error, n: number) { 
+  static EX (e: any, n: number) { 
     const ex = new AppExc({code: 1200 + n, label: 'IDB error', args: [e.message] })
     if (e && e.stack) ex.stack = e.stack
     return ex
@@ -76,11 +76,11 @@ export class IDB {
     return u8ToB64(x)
   }
 
-  async cryptRecord (bin: Uint8Array | Object): Promise<Uint8Array> {
+  async cryptRecord (bin: Uint8Array | Object): Promise<Uint8Array | null> {
     return await Crypt.crypt(typeof bin !== 'object' ? bin : encode(bin), this.keyK)
   }
 
-  async decryptRecord (bin: any, raw?: boolean): Promise<Object | Uint8Array> {
+  async decryptRecord (bin: any, raw?: boolean): Promise<Object | Uint8Array | null> {
     const x = await Crypt.decrypt(bin, this.keyK)
     return raw ? x : decode(x)
   }
@@ -90,7 +90,7 @@ export class IDB {
   async getState (name: string) : Promise<Object> {
     try {
       const r = await this.db.singletons.get(name)
-      return r ? await this.decryptRecord(r.bin) : { }
+      return r ? (await this.decryptRecord(r.bin) as Object) : { }
     } catch (e) {
       throw IDB.EX(e, 2)
     }
@@ -183,6 +183,7 @@ export class IDB {
       const cbinDocs = new Map<string, Uint8Array>()
       const binPks = new Map<string, string>()
       for(const [pk, binDoc] of binDocs) {
+        // @ts-expect-error
         cbinDocs.set(pk, await this.cryptRecord(binDoc))
         binPks.set(pk, await this.cryptId(pk))
       }
@@ -213,6 +214,7 @@ export class IDB {
       const bin = await this.cryptRecord(subscription.serial())
       const binSubs = new Map<string, Uint8Array>()
       for(const [clazz, subs] of msubs)
+        // @ts-expect-error
         if (subs) binSubs.set(clazz, await this.cryptRecord(subs.serial()))
       await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
         await this.db.subscriptions.put({ org, bin })
@@ -238,7 +240,7 @@ export class IDB {
   */
   async updSubs (org: string, clazz: string, subs: Subs) : Promise<void> {
     try {
-      if (subs.hasRefs) {
+      if (subs.hasRefs()) {
         const binSubs = await this.cryptRecord(subs.serial())
         await this.db.subs.put({ org, clazz, binSubs })
       } else 

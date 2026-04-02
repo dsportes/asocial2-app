@@ -167,12 +167,12 @@ const STORES = {
 
 /* Classes et types */
 class Trusting {
-  userId: string
-  pseudo: string
-  cx: string
-  Ka: string
-  Kr: string
-  Kp: string
+  userId: string = ''
+  pseudo: string = ''
+  cx: string = ''
+  Ka: string = ''
+  Kr: string = ''
+  Kp: string = ''
 
   constructor (obj: Object) {
     for(const f of Object.keys(obj)) this[f] = obj[f]
@@ -186,15 +186,15 @@ class Trusting {
 }
 
 export class TSession {
-  app: string // code de l'application
-  userId: string // id de l'utilisateur
-  profId: string // id du profil - si '*' "tous les droits"
-  about: string // copie de about du profil (utile en mode Avion)
-  size: number[] // tailles des données / fichiers stockés en local dans IDB
-  time: number // date-heure de dernière ouverture sur ce terminal
-  prefCode: string // code de la "préférence" utilisée la dernière fois
-  prefTime: number // date-heure de dernière mise à jour
-  prefObj:  Uint8Array // objet de "préférence" utilisé la dernière fois (utile en mode Avion)
+  app: string = '' // code de l'application
+  userId: string = '' // id de l'utilisateur
+  profId: string = '' // id du profil - si '*' "tous les droits"
+  about: string = '' // copie de about du profil (utile en mode Avion)
+  size: number[] = []// tailles des données / fichiers stockés en local dans IDB
+  time: number = 0 // date-heure de dernière ouverture sur ce terminal
+  prefCode: string = '' // code de la "préférence" utilisée la dernière fois
+  prefTime: number = 0 // date-heure de dernière mise à jour
+  prefObj: Uint8Array | null = null // objet de "préférence" utilisé la dernière fois (utile en mode Avion)
 
   constructor (obj: Object) {
     for(const f of Object.keys(obj)) this[f] = obj[f]
@@ -228,7 +228,7 @@ type Device = {
   nbe: number
 }
 
-function EX (e: Error, n: number) {
+function EX (e: any, n: number) {
   const ex = new AppExc({code: 1200 + n, label: 'IDBS error', args: [e.message] })
   if (e && e.stack) ex.stack = e.stack
   return ex
@@ -256,7 +256,7 @@ export const useSafeStore = defineStore('safe', () => {
       db.value.version(1).stores(STORES)
       await loadTrustings()
       console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
-    } catch (e) {
+    } catch (e: any) {
       if (db.value) {
         await db.value.close()
         db.value = null
@@ -475,8 +475,8 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const compileSafe = async (safe: Safe) => {
     await loadTrustings()
-    const pemD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)))
-    const pemS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)))
+    const pemD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)) as AllowSharedBufferSource)
+    const pemS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)) as AllowSharedBufferSource)
     auth.value = {
       pseudo: await dcX(b64ToU8(safe.pseudo)),
       hp0: safe.hp0,
@@ -574,10 +574,10 @@ export const useSafeStore = defineStore('safe', () => {
       return
     }
     const mcreds: Map<string, Credential> = new Map<string, Credential>()
-    const delcreds = []
+    const delcreds : string[] = []
     const msvc = stores.config.K.SERVICES
     const m = new Map<string, Credential>()
-    const waiting = []
+    const waiting : Uint8Array[] = []
      
     for (const xid in safe.creds) {
       const x = b64ToU8(safe.creds[xid])
@@ -692,7 +692,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   // options des organisations managées
   const managedOrgs = () => {
-    const lst = []
+    const lst : { label, svc, org }[] = []
     if (mySafeCreds.value) {
       const svcOrgs: Map<string, Set<string>> = new Map()
       for (const [,c] of mySafeCreds.value) {
@@ -704,7 +704,7 @@ export const useSafeStore = defineStore('safe', () => {
       }
       if (svcOrgs.size) {
         for(const svc of svcOrgs.keys()) {
-          const s = svcOrgs.get(svc)
+          const s = svcOrgs.get(svc) || []
           const t = $t('services_' + svc)
           const l = Array.from(s.values()).sort()
           for(const org of l)
@@ -744,7 +744,7 @@ export const useSafeStore = defineStore('safe', () => {
         const s : TSession = new TSession(obj)
         if (s.userId === userId.value && s.app ===  app) {
           s.about = await dcX(b64ToU8(s.about))
-          const profile: Profile = mpf.get(s.profId)
+          const profile: Profile | undefined = mpf.get(s.profId)
           if (profile && s.about !== profile.about) {
             s.about = profile.about
             toSave.set(s.idOf, s)
@@ -814,7 +814,7 @@ export const useSafeStore = defineStore('safe', () => {
           await Dexie.delete(s.dbName)
           await sleep(300)
           console.log(s.dbName + ' deleted')
-        } catch (e) {
+        } catch (e: any) {
           console.log(s.dbName + ' deletion FAILED: ', e.message())
         }
       } catch (e) {
@@ -835,7 +835,7 @@ export const useSafeStore = defineStore('safe', () => {
           await Dexie.delete(s.dbName)
           await sleep(300)
           console.log(s.dbName + ' deleted')
-        } catch (e) {
+        } catch (e: any) {
           console.log(s.dbName + ' deletion FAILED: ', e.message())
         }
     } catch (e) {
@@ -864,11 +864,11 @@ export const useSafeStore = defineStore('safe', () => {
     hct: string // SH du contact en b64
     admins: string // cryptage de l'encode de la liste des couples SVC.$OP dont l'utilisateur est administrateur
 
-    devices: Object
-    creds: Object
-    profiles: Object
-    prefs: Object // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
-    invits: Object // une propriété par invitation
+    devices: Object | null
+    creds: Object | null
+    profiles: Object | null
+    prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+    invits: Object | null// une propriété par invitation
   }
 
   const updSafeCodes = async (
@@ -1334,7 +1334,7 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const getBinSafe = async () : Promise<Uint8Array>=> {
+  const getBinSafe = async () : Promise<Uint8Array | null> => {
     const op = new SafeOperation('$GetBinSafe', mySafeStore.value)
     let ret
     try {
@@ -1514,22 +1514,22 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shk: string
-    creds: Object // clé: xid, valeur: Objet Credential sérialisé crypté
+    creds: Object | null // clé: xid, valeur: Objet Credential sérialisé crypté
     delcreds: string[] // liste des xid à supprimer
-    profiles: Object // clé: profId, valeur: Objet Profile sérialisé crypté
+    profiles: Object | null // clé: profId, valeur: Objet Profile sérialisé crypté
     delprofs: string[] // liste des profIds à supprimer
     nosafe: boolean // ne pas retourner le safe mis à jour
   }
 
   const updateCreds = async (
-      mcreds: Map<string, Credential>,
-      delcreds: string[],
-      mprofiles: Map<string, Profile>,
-      delprofs: string[],
+      mcreds: Map<string, Credential> | null,
+      delcreds: string[] | null,
+      mprofiles: Map<string, Profile> | null,
+      delprofs: string[] | null,
       nocompile?: boolean
       ) => {
-    let creds = {}
-    let profiles = {}
+    let creds : Object | null = {}
+    let profiles : Object | null = {}
 
     if (mcreds && mcreds.size) for(const [xid, c] of mcreds) {
       const obj = c.toObj
@@ -1575,7 +1575,7 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shk: string
-    prefs: Object // clé: crId, valeur: Objet Credential sérialisé crypté
+    prefs: Object | null // clé: crId, valeur: Objet Credential sérialisé crypté
     delprefs: string[] // liste des crIds à supprimer
   }
 
@@ -1583,7 +1583,7 @@ export const useSafeStore = defineStore('safe', () => {
       mprefs: Map<string, LocPref>,
       delprefs: string[]
       ) => {
-    let prefs = {}
+    let prefs : Object | null = {}
 
     if (mprefs && mprefs.size) for(const [,p] of mprefs) {
       prefs[p.code] = u8ToB64(encode([p.time, p.obj]), true)
@@ -1682,7 +1682,7 @@ export const useSafeStore = defineStore('safe', () => {
   retourne [userId, pemC, pemV]
   */
   const getPublicKeys = async (safeStore: string, targetId)
-    : Promise<[string, string, string]> => {
+    : Promise<[string, string, string] | null> => {
     const p = pubKeys.value.get(targetId)
     if (p) return [targetId, p[0], p[1]]
     const op = new SafeOperation('$GetPublicKeys', safeStore)

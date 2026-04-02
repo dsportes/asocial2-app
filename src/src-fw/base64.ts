@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable no-var */
 'use strict'
 /*

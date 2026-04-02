@@ -14,7 +14,7 @@ export let $t: any
 export let i18n: any
 export function set$t (_$t, _i18n) { $t = _$t; i18n = _i18n }
 
-export function gzipT (data: Uint8Array) : Uint8Array { return gzip(data) }
+export function gzipT (data: Uint8Array) : Uint8Array | undefined { return gzip(data) }
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
 
@@ -27,11 +27,11 @@ export function hasMessage (code: string) : boolean {
   return false
 }
 
-let audioContext = null
+let audioContext: AudioContext | null = null
 export async function beep (son: string) {
   if (!audioContext) audioContext = new AudioContext()
   const b64 = son.substring(son.indexOf(',') + 1)
-  const buf = b64ToU8(b64).buffer
+  const buf = b64ToU8(b64).buffer as ArrayBuffer
   const b = await audioContext.decodeAudioData(buf) // (arrayBuffer)
   const source = audioContext.createBufferSource() // creates a sound source
   source.buffer = b // tell the source which sound to play
@@ -269,14 +269,14 @@ export function objToB64 (obj: any, url?: boolean) : string {
   return u8ToB64(u8, url)
 }
 
-export function u8ToB64 (u8: Uint8Array, url?: boolean) : string {
+export function u8ToB64 (u8: Uint8Array | null, url?: boolean) : string {
   if (!u8) return ''
   const s = fromByteArray(u8)
   return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
 
 export function b64ToU8 (b64: string) : Uint8Array {
-  if (!b64) return null
+  if (!b64) return new Uint8Array([])
   const diff = b64.length % 4
   let x = b64
   if (diff) {

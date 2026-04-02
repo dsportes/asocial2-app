@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import stores from '../stores/all'
 import { IDB } from './idb'
 import { Subscription } from'./document'

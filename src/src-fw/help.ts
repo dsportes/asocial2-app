@@ -36,7 +36,7 @@ export class Help {
       if (typeof p === 'string') {
         if (this.pages.has(p)) console.log('Doublon page help: ' + p)
         else {
-          this.pages.set(p, null)
+          this.pages.set(p, '')
           this.tree.push({ id: p, children: [], type: 1 })
         }
       } else {
@@ -52,7 +52,7 @@ export class Help {
       return
     }
     this.pages.set(page[0], parentId)
-    const ch = []
+    const ch : any[] = []
     page.forEach((p, i) => {
       if (i) {
         if (typeof p === 'string') {

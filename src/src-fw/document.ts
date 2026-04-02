@@ -22,8 +22,8 @@ export class Subscription {
   subJSON?: string //  token web-push
   url?: string // url de l'application à ouvrir par le terminal sur web-push
 
-  _title: string = null // maj
-  _url: string = null
+  _title: string = '' // maj
+  _url: string = ''
   _defs: Map<string, string | boolean> = new Map() // maj
   _newDefs: Set<string> = new Set()
   _delDefs: Set<string> = new Set()
@@ -78,7 +78,7 @@ export class Subscription {
         if (subs) // sinon n'existait déjà plus
           msubs.set(clazz, subs.hasRefs ? subs : null)
       }
-      await IDB.idb.updateSubscription(org, this, msubs)
+      if (IDB.idb) await IDB.idb.updateSubscription(org, this, msubs)
     }
 
     // Maj de la souscription sur le serveur
@@ -110,7 +110,7 @@ export class Subscription {
 Souscription élementaire d'une classe de documents pour une organisation
 ********************************************************************/
 export class Subs {
-  vdef0 : versions // versions de la collection de tous les documents de la classe
+  vdef0 : versions | null // versions de la collection de tous les documents de la classe
   vdef1 : Map<string, versions> // versions pour chaque pk
   vdef2 : Map<string, versions> // pour chaque collection colName/colValue
 
@@ -130,7 +130,7 @@ export class Subs {
   }
 
   serial () : Uint8Array {
-    const s = { vdef0: null, vdef1: {}, vdef2: {} }
+    const s : any = { vdef0: null, vdef1: {}, vdef2: {} }
     if (this.vdef0) s.vdef0 = this.vdef0
     for(const [k, v] of this.vdef1) s.vdef1[k] = v
     for(const [k, v] of this.vdef2) s.vdef2[k] = v
@@ -142,11 +142,11 @@ export class Subs {
 
 // Document stocké en store-data
 export class Document {
-  _clazz: string
-  _dt: DocType
-  _pk: string
-  deleted?: boolean
-  v: number
+  _clazz: string = ''
+  _dt: DocType | null = null
+  _pk: string = ''
+  deleted?: boolean = false
+  v: number = 0
 
   propertyAsSet (name: string) : Set<string> {
     const v = this[name]
@@ -164,10 +164,10 @@ export class Document {
     const dt = DocType.get(clazz)
     const doc: Document = new cl() as Document
     doc._clazz = clazz
-    doc._dt = DocType.get(clazz)
+    doc._dt = DocType.get(clazz) || null
     const d = data ? decode(data) : {}
     for(const f in d) doc[f] = d[f]
-    doc._pk = d._pk || doc._dt.pkValue(doc)
+    doc._pk = d._pk || (doc._dt ? doc._dt.pkValue(doc) : '')
     await doc.compile()
     return doc
   }

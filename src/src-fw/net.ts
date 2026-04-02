@@ -10,7 +10,7 @@ export async function getData (url: string) : Promise<Uint8Array> {
     })
     if (response.status === 200) return await response.bytes()
     throw new AppExc({ code: response.status, label: response.statusText, args: ['getData'] })
-  } catch (e) {
+  } catch (e: any) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     throw e
   }
@@ -25,7 +25,7 @@ export async function putData (url: string, data: Uint8Array) : Promise<void> {
     })
     if (response.status !== 200)
       throw new AppExc({ code: response.status, label: response.statusText, args: ['putData'] })
-  } catch (e) {
+  } catch (e: any) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     throw e
   }

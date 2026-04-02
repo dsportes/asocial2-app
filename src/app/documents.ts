@@ -2,19 +2,19 @@
 import { Document } from '../src-fw/document'
 
 class Article extends Document {
-  compile () {}
+  async compile () {}
 }
 
 class Auteur extends Document {
-  compile () {}
+  async compile () {}
 }
 
 class Chat extends Document {
-  compile () {}
+  async compile () {}
 }
 
 class Sujet extends Document {
-  compile () {}
+  async compile () {}
 }
 
 Document.setClasses({ Article, Auteur, Chat, Sujet })
