@@ -5,7 +5,7 @@ import { Credential } from '../src-fw/credential'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
-import { Crypt, keyToB64, keyFromB64 } from '../src-fw/crypt'
+import { Crypt, keyToB64 } from '../src-fw/crypt'
 
 const encoder = new TextEncoder()
 
@@ -65,7 +65,7 @@ export class Invitation extends InvitationA {
   async validate_auteur () : Promise<void> {
     /* 
     Post: invVal avec les pemvA, pemvS, time des credentials
-    Puis, eEnregistrement,
+    Puis, enregistrement,
       - du Credential Safe sur "Auteur"
       - optionnellement du credential "Sponsor".
     */

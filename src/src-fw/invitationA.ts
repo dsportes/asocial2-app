@@ -56,7 +56,7 @@ export class InvitationA {
   role: string = '' // rôle du credential associé (et classe du document associé).
   docId: string = '' // `docId` du credential associé (et du document associé le cas échéant).
   cond: any // données à faire figurer en `cond` du credential.
-  etc: any // autres données nécessaires pour créer le document associé. U n'a pas à connaître ni interpréter `etc` (_opaque_ pour lui) et qui ne sert qu'à l'opération de création de l'objet / enregistrement du credential.
+  etc: any // autres données nécessaires pour créer le document associé. 
 
   isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
