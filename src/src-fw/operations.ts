@@ -334,3 +334,36 @@ export class InvitGet extends Operation {
     }
   }
 }
+
+export type SCred = {
+  id: string
+  role: string
+  docId: string
+  time: number
+  limit: number
+  cond: any
+}
+
+export class ListUserCreds extends Operation {
+  constructor (SVC: string, org: string) { super('ListUserCreds', SVC, org) }
+
+  async run ( ) : Promise<Map<string, Credential>> {
+    const lp = [ 'id', 'role', 'docId', 'limit', 'cond' ]
+
+    const m = new Map<string, Credential>()
+    try {
+      const res = await this.post()
+      for(const x of res.list as SCred[]) {
+        const c = new Credential()
+        for(const p of lp) c[p] = x[p]
+        c.timeSvc = x.time
+        c.from = 2
+        m.set(x.id, c)
+      }
+      return m
+    } catch(e) {
+      this.ko(e)
+      return m
+    }
+  }
+}

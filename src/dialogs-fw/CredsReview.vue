@@ -8,17 +8,12 @@
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
     tbclass="tbs" noclose @close="checkClose">
     <template #hdr>
-      <q-toolbar v-if="step === 1" dense color="none">
-        <q-toolbar-title class="titre-md text-center">{{ $t('CRRstep_1') }}</q-toolbar-title>
-      </q-toolbar>
-      <div v-if="step === 1" class="row justify-between q-pa-xs items-center">
-        <btn-bubble :text="$t('CRRstep_1_bub')" class="col-auto"/>
-        <div class="wmd col-auto row items-center full-width">
-          <service-org v-model="svcorg" class="col"/>
-          <btn-cond class="q-ml-md col-auto"round icon="add" size="md"
-            :disable="svcorg.org.err !== ''"
-            @ok="addSvcorg"/>
-        </div>
+      <bar-title v-if="step === 1" prefix="CRRstep_1" :class="'full-width ' + sty()"/>
+      <div v-if="step === 1" class="wmd row items-center full-width">
+        <service-org v-model="svcorg" class="col"/>
+        <btn-cond class="q-ml-md col-auto"round icon="add" size="md"
+          :disable="svcorg.org.err !== ''"
+          @ok="addSvcorg"/>
       </div>
       <q-separator v-if="step === 1" class="q-my-sm" color="orange"/>
 
@@ -34,12 +29,12 @@
     <template #default>
       <div v-if="step === 1" class="full-width column items-center">
         <div class="pwsm q-mt-md q-pa-xs">
-          <div v-for="x in smso" :key="x.svc + '/' + x.org" class="row items-center">
+          <div v-for="(x, idx) in smso" :key="x.svc + '/' + x.org" class="row items-center">
             <div class="col-1">
               <btn-cond v-if="x.n === 0" icon="delete" color="warning" size="sm" round
                 @ok="delSvcOrg(x)"/>
             </div>
-            <div :class="'col-11 row cursor-pointer select q-my-xs ' + dkli() + curSty(x)"
+            <div :class="'col-11 row cursor-pointer select q-my-xs ' + dkli(idx) + curSty(x)"
               @click="selectSo(x)">
               <div class="col-1 font-mono">{{ x.n }}</div>
               <div class="col-6 ellipsis q-pr-md">{{ $t('services_' + x.svc) }}</div>
@@ -51,6 +46,11 @@
 
       <div v-if="step === 2"class="full-width column items-center">
         <div class="pwsm q-pa-xs">
+          <div v-for="(c, idx) in fusion" :key="c.id"
+            :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)"
+            @click="selectCr(c)">
+            <cred-row2 :cred="c"/>
+          </div>
         </div>
       </div>
 
@@ -63,13 +63,15 @@
 // @ts-ignore
 import { ref, Ref, computed, reactive, watch } from 'vue'
 
-import { $t, dkli } from '../src-fw/util'
+import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential } from '../src-fw/credential'
+import { ListUserCreds } from '../src-fw/operations'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
+import BarTitle from '../components-fw/BarTitle.vue'
 import ServiceOrg from '../components-fw/ServiceOrg.vue'
+import CredRow2 from '../components-fw/CredRow2.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
@@ -117,14 +119,12 @@ type svcOrgN = {
 const mso: Ref<Map<string, svcOrgN>> = ref()
 const smso : Ref<svcOrgN[]> = ref()
 const curso: Ref<svcOrgN> = ref()
+const curcr: Ref<Credential> = ref()
 
 const curSty = (x: svcOrgN) =>
   !curso.value ? ' nocurrent' : (curso.value.svc === x.svc && curso.value.org === x.org ? ' current' : ' nocurrent')
-
-const selectSo = (x: svcOrgN) => {
- curso.value = x
- step.value = 2
-}
+const curSty2 = (x: Credential) =>
+  !curcr.value ? ' nocurrent' : (curcr.value.id === x.id ? ' current' : ' nocurrent')
 
 const addedSo: Ref<Set<string>> = ref(new Set())
 
@@ -170,6 +170,39 @@ const delSvcOrg = (so: svcOrgN) => {
   sortMso()
   if (curso.value && curso.value.svc === so.svc && curso.value.org === so.org)
     curso.value = null
+}
+
+const selectSo = async (x: svcOrgN) => {
+ curso.value = x
+ step.value = 2
+ await reset2()
+}
+
+const fusion: Ref<Credential[]> = ref()
+
+const reset2 = async () => {
+  const lp = [ 'id', 'role', 'docId', 'time', 'comment' ]
+
+  const op = new ListUserCreds(curso.value.svc, curso.value.org)
+  const m :Map<string, Credential> = await op.run() as Map<string, Credential>
+  for(const [id, rc] of mcreds.value) {
+    if (rc.svc !== curso.value.svc || rc.org !== curso.value.org) continue
+    let c = m.get(id)
+    if (!c) {
+      c = new Credential()
+      c.from = 1
+      m.set(id, c)
+    } else c.from = 3
+    for(const p of lp) c[p] = rc[p]
+  }
+  const l = Array.from(m.values())
+  l.sort((a: Credential, b: Credential) => 
+    a.role < b.role ? -1 : (a.role > b.role ? 1 : a.docId < b.docId ? -1 : (a.docId > b.docId ? 1 : 0)))
+  fusion.value = l
+}
+
+const selectCr = (c) => {
+  curcr.value = c
 }
 
 reset()

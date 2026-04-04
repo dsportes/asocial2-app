@@ -193,6 +193,7 @@ export default {
   op_InvitValidate: 'Validation d\'une invitation',
   op_InvitDC: 'Annulation ou refus d\'une invitation',
   op_RevokeCred: 'Révocation d\'un droit d\'accès',
+  op_ListUserCreds: 'Liste des credentials de l\'utilisateur',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -891,7 +892,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
   CRRtit_bub: `### Revue des droits d\'accès par service / organisation
 bla bla 
 `,
-  CRRstep_1: 'Sélection d\'un "service / organisation"',
+  CRRstep_1_label: 'Sélection d\'un "service / organisation"',
   CRRstep_1_bub: `### Sélection d\'un "service / organisation"
 Vous pouvez ajouter un couple service / organisation n'ayant pas actuellement de droits d'accès enregistrés dans vos données de sécurité.
 

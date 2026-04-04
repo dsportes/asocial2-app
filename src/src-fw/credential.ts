@@ -50,6 +50,11 @@ export class Credential {
   skey: string = ''// clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
   comment: string = '' // un texte court libre de l'utilisateur.
 
+  timeSvc ?: number
+  cond ?: any
+  limit ?: number
+  from ?: number // 1: safe 2:service 3:safe+service
+  
   fromObj (obj: Object) : Credential {
     // @ts-ignore
     for (const p of Credential.props) this[p] = obj[p] || null
