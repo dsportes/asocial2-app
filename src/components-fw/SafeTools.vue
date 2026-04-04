@@ -15,6 +15,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       <user-profile/>
       <q-separator color="orange" class="q-my-xs"/>
 
+      <bar-open :bubble="$t('CRRtit_bub')" :disbubble="$t('CRRtit_bub')"
+        :title="$t('CRRtit_label')"
+        :disable="!session.hasNet"
+        @open="dialogs.CredsReview = true"/>
+
       <bar-open :bubble="$t('SESconfig')" :disbubble="$t('SESconfig')"
         :title="$t('SESconfig')"
         :disable="!session.hasNet"
@@ -80,7 +85,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
     </template>
   </dialog-std0>
 
-  <!-- Enregistrement / Changement des codes -->
+  <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
   <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
   <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
   <admin-mgr v-model="dialogs.AdminMgr" @close="fnc"/>
@@ -114,7 +119,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, reactive, computed } from 'vue'
+import { reactive, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty, coolBye } from '../src-fw/util'
@@ -129,6 +134,7 @@ import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import AdminMgr from '../dialogs-fw/AdminMgr.vue'
 import ContactMgr from '../dialogs-fw/ContactMgr.vue'
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
+import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'
 import DevTrustings from '../dialogs-fw/DevTrustings.vue'
@@ -150,6 +156,7 @@ const dialogs = reactive({
   AdminMgr: false,
   ContactMgr: false,
   CredsMgr: false,
+  CredsReview: false,
   ManageUsers: false,
   SafeCr: false,
   DevTrustings: false,

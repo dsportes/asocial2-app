@@ -1,4 +1,4 @@
-<!-- Saisie du couple Service / Opérateuur
+<!-- Saisie du couple Service / Organisation
 -->
 <template>
 <div class="row">

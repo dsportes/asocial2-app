@@ -89,6 +89,10 @@
 .bg-msg, .msg, .msg2 { background: var(--q-msgbg) !important }
 .msg3 { font-size: 0.9rem; font-weight: bold; padding: 1px; background: var(--q-negative); color: white}
 
+.select:hover { background-color: $yellow-2 !important; color: black !important; }
+.current { border: 1px solid $warning }
+.nocurrent { border: 1px solid transparent }
+
 /* surcharges de quasar */
 .q-toolbar { padding: 0 !important; min-height: 0 !important }
 .q-item__section--avatar { min-width: 0 !important; }

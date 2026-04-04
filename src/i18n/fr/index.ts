@@ -887,6 +887,18 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 `,
   SESconfig: 'Droits d\'accès et sessions épinglées',
 
+  CRRtit_label: 'Revue des droits d\'accès par service / organisation',
+  CRRtit_bub: `### Revue des droits d\'accès par service / organisation
+bla bla 
+`,
+  CRRstep_1: 'Sélection d\'un "service / organisation"',
+  CRRstep_1_bub: `### Sélection d\'un "service / organisation"
+Vous pouvez ajouter un couple service / organisation n'ayant pas actuellement de droits d'accès enregistrés dans vos données de sécurité.
+
+Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
+`,
+  CRRstep_2: 'Droits d\'accès enregistrés pour {0} / {1}',
+
   SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
   SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
   SCRsec_bub: `### Ne pas utiliser pas de code "de secours" est un choix

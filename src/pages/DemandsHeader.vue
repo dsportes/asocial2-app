@@ -115,12 +115,6 @@ watch(majOpt, (v) => {
 const reset = () => {
   ui.demandsPage.spons = null
   sorgs.value = sf.managedOrgs()
-  /*
-  if (sorgs.value.length) {
-    ui.demandsPage.svcOrg.SVC = sorgs.value[0].svc
-    ui.demandsPage.svcOrg.org = sorgs.value[0].org
-  }
-  */
   sponsorings.value = sf.sponsorings()
   spons.value = null
   selM.value = false

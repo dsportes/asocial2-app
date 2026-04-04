@@ -133,7 +133,7 @@ watch(lstMgr, async (l) => {
   const me = sf.userId
   const s = new Set()
   for (const x of sorgs.value) s.add(x.org)
-  const lx = []
+  const lx : string[] = []
   for (const x of l) if (x.limit && x.userId === me) {
     if (!arDone.value.has(x.id)) { 
       lx.push(x.id)
@@ -160,7 +160,7 @@ const dolist = async () => {
   lstMgr.value = []
   const op = sf.auth.admins ? new ListManagers(ui.adminPage.SVC, org.inp)
     : new ListManagers(svcOrg.value.svc, svcOrg.value.org)
-  const [s, l] = await op.run(true)
+  const [s, l] = await op.run(true) as [string, any]
   if (s) await ui.diagDisplay($t('APmgrnolst'))
   lstMgr.value = l || []
 }

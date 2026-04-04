@@ -554,7 +554,7 @@ const validate = (noreport) => {
   report.emptyPS = new Set()
   report.psWithOrphans = new Set()
   report.stcr = [ new Set(), new Set(), new Set(), new Set()]
-  report.stps = [ null, new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
+  report.stps = [ new Set(), new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
 
   if (mlocCreds.value) for(const [xid, lc] of mlocCreds.value) {
     report.stcr[lc.st].add(lc.cred.comment)
@@ -610,7 +610,7 @@ const confValidate = async () => {
     await ui.diagDisplay($t('HPsfop_' + status))
     dialogs.reportIt = false
     model.value = false
-  } catch (e) {
+  } catch (e: any) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }
