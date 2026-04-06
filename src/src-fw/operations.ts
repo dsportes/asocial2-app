@@ -6,7 +6,7 @@ import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/document'
-import { Credential } from '../src-fw/credential'
+import { CredSafe } from '../src-fw/credential'
 import { Invitation } from '../app/invitation'
 import { Invit } from '../stores/safe-store'
 

@@ -1,39 +1,14 @@
 import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
-import { u8ToB64 } from './util'
+// import { u8ToB64 } from './util'
 import stores from '../stores/all'
+import { Credential } from '../src-fw/documents'
 
 const encoder = new TextEncoder()
 
-/* Quand destiné à la construction d'un credential,
-- id et hpems ne sont pas utilisé mais reconstruit
-*/
-export type CredObj = {
-  xid: string // ID "absolu" hash court de `[svc, role, org, entid, hpems]`.
-  svc: string // code du service
-  about: string // un texte court _à propos_ du `entid`.
-  role: string // un des codes de rôle connu du service.
-  org: string // le code de l'organisation.
-  entid: string // identifiant d'une entité interprétable pour le service.
-  entkey: string // clé AES spécifique de l'entité, cryptée par la clé K de l'utilisateur et mise en base 64.
-  pems: string // clé PRIVEE de signature, le texte de 400c.
-  hpems: string // hash court de `pems`.
-}
-
-export type CredRequest = {
-  id: string
-  userId: string
-  role: string
-  docId: string
-  time: number
-  pemv: string
-  limit: number
-  cond: any
-}
-
 /* Credential en Safe
 */
-export class Credential {
-  static props = [ 'id', 'svc', 'org', 'role', 'docId', 'time', 'pems', 'skey', 'comment' ]
+export class CredSafe {
+  static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'pems', 'comment' ]
 
   static getId (svc: string, org: string, docId: string, role: string) { 
     return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId || ''))
@@ -45,27 +20,31 @@ export class Credential {
   role: string = '' // docClass.role : un des codes de rôle connu du service.
   docId: string = '' // identifiant du document cible du credential.
   time: number = 0 // epoch en seconde de génération
-  pems: string = '' // clé PRIVEE de signature, le texte de 400c.
-  name: string = '' // libellé / label etc. lisible de docId
-  skey: string = ''// clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
-  comment: string = '' // un texte court libre de l'utilisateur.
 
-  timeSvc ?: number
-  cond ?: any
-  limit ?: number
-  from ?: number // 1: safe 2:service 3:safe+service
+  pems: string = '' // clé PRIVEE de signature, le texte de 400c.
+  comment: string = '' // un texte court libre de l'utilisateur.
   
-  fromObj (obj: Object) : Credential {
-    // @ts-ignore
-    for (const p of Credential.props) this[p] = obj[p] || null
-    if (!this.id)
-      this.id = this.getId()
+  constructor (obj?: Object) {
+    if (obj) {
+      for (const p of CredSafe.lp1) this[p] = obj[p] || null
+      this.setId()
+    }
+  }
+
+  setId () : CredSafe{ 
+    this.id = CredSafe.getId(this.svc, this.org, this.role, this.docId)
     return this
   }
 
+  get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
+
+  get getPk () : string { return Crypt.shaS(encoder.encode(
+    stores.safe.userId + '/' + this.role + '/' + this.docId)) }
+
   get toObj () : Object {
     const obj = {}
-    for (const p of Credential.props) obj[p] = this[p] || null
+    for (const p of CredSafe.lp1) obj[p] = this[p] || null
+    obj['id'] = this.id
     return obj
   }
 
@@ -79,23 +58,9 @@ export class Credential {
     return i === -1 ? this.role : this.role.substring(0, i)
   }
 
-  get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
+  clone () : CredSafe { return new CredSafe(this.toObj) }
 
-  get idStr () { return this.svc + '/' + this.org + '/' + this.role + '/' + (this.docId || '') }
-
-  get pkStr () { return stores.safe.userId + '/' + this.role + '/' + (this.docId || '') }
-
-  getId () { return Crypt.shaS(encoder.encode(this.idStr))}
-
-  getPk () { return Crypt.shaS(encoder.encode(this.pkStr)) }
-
-  clone () : Credential {
-    return new Credential().fromObj(this.toObj)
-  }
-
-  get toJson () :string {
-    return JSON.stringify(this.toObj, null, '\t')
-  }
+  get toJson () : string { return JSON.stringify(this.toObj, null, '\t') }
 
   setComment (s: string) { this.comment = s }
 
@@ -105,32 +70,13 @@ export class Credential {
     targetId: string, // target U
     role: string,
     docId: string,
-    skey: Uint8Array | null,
-    name: string,
-    limit: number
-  ) : Promise<[Credential, CredRequest]> {
+    comment: string,
+    limit: number,
+  ) : Promise<[CredSafe, Credential]> {
     const { pub, priv } = await Crypt.getSVKeyPair()
-    const c = new Credential()
-    c.svc = svc
-    c.org = org
-    c.pems = keyToB64(priv)
-    c.role = role
-    c.docId = docId || ''
-    c.name = name || ''
-    c.skey = skey ? u8ToB64(skey) : ''
-    c.time = Date.now()
-    c.id = c.getId()
-    const cr: CredRequest = {
-      id: c.id,
-      userId: targetId,
-      pemv: keyToB64(pub),
-      role,
-      docId: docId || '',
-      time: c.time,
-      limit: limit || 0,
-      cond: null
-    }
-    return [c, cr]
+    const cs = new CredSafe({ svc, org, role, docId, pems: keyToB64(priv), comment })
+    const c = Credential.fromCredSafe(cs, targetId, keyToB64(pub), limit)
+    return [cs, c]
   }
 }
 
@@ -152,7 +98,7 @@ export class AuthRecord {
   sessionId: string
   time: number
   userSign: Uint8Array | null
-  // Object par role / entid : [token]
+  // Object par role / docId : [token]
   signatures: Object | null
 
   get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }

@@ -13,7 +13,7 @@ import stores from './all'
 import { AppExc, $t, sleep, u8ToB64, b64ToU8, equ8 } from '../src-fw/util'
 import { SafeOperation } from '../src-fw/operation'
 import { Crypt, toPem, fromPem } from '../src-fw/crypt'
-import { Credential } from '../src-fw/credential'
+import { CredSafe } from '../src-fw/credential'
 
 /*
 ### Safes stockés dans un directory
@@ -122,25 +122,15 @@ export type Sponsoring = {
   isSp: boolean
 }
 
-/*
-- `svc`: service
-- `org`: organisation
-- `invitId` : ID de l'invitation
-- `majeur`
-- `mineur`
-- `time`: date-heure de création. Ceci détermine aussi sa date d'auto-destruction.
-- `status`: 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
-- `comment`: texte libre écrit par U à la création (rien que pour lui).
-*/
 export type Invit = {
   svc: string
   org: string
-  invitId: string
-  time: number
+  invitId: string // ID de l'invitation
+  time: number // date-heure de création (détermine aussi celle d'auto-destruction).
   major: string
   minor: string
-  status: number
-  comment: string
+  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
+  comment: string // texte libre écrit par U à la création (rien que pour lui).
 }
 
 export type AddInvit = {
@@ -429,25 +419,13 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
-  /* Section "creds"
-  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes:
-  - `about` : code / texte court donné par l'utilisateur pour qualifier le _credential_. Par exemple `Compte Bob sur circuits courts`.
-  - `data`: sérialisation du détail du _credential_:
+  /* Section "creds": organisée avec une **sous-section par application** regroupant une liste d'items: 
+  Chaque item est **crypté par la clé K** de _safe_ (dans data).
   */
   const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
 
-  /* Section construite skeys
-  Clé AES skey pour chaque idStr de Credential (svc / org / role / docId)
-  */
-  const skeys : Ref<Map<string, Uint8Array>> = ref(null)
-
-  /* Section "invits"
-  */
+  /* Section "invits" */
   const mySafeInvits: Ref<Map<string, Invit>> = ref(null)
-
-  const skey = (svc: string, org: string, role: string, docId?: string) :Uint8Array => {
-    return skeys.get(svc + '/' + org + '/' + role + '/' + (docId || ''))
-  }
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -561,98 +539,34 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeProfiles.value = m
   }
 
-  const storeSkey = (c: Credential, del?: boolean) => {
-    const x = b64ToU8(c.skey)
-    if (del) skeys.value.delete(c.id)
-    skeys.value.set(c.id, x)
-  }
-
   const loadCreds = async (safe: Safe) : Promise<void> => {
-    if (!safe.creds) {
-      mySafeCreds.value = new Map()
-      skeys.value = new Map()
-      return
-    }
-    const mcreds: Map<string, Credential> = new Map<string, Credential>()
-    const delcreds : string[] = []
+    const m = new Map<string, CredSafe>()
     const msvc = stores.config.K.SERVICES
-    const m = new Map<string, Credential>()
-    const waiting : Uint8Array[] = []
-     
-    for (const xid in safe.creds) {
-      const x = b64ToU8(safe.creds[xid])
-      if (xid.startsWith('$')) waiting.push(x)
-      else try {
-        const obj = decode(await Crypt.decrypt(keyK.value, x))
-        const c: Credential = new Credential().fromObj(obj)
-        if (msvc[c.svc] && xid === c.id) {
-          m.set(c.id, c)
-          if (c.skey) storeSkey(c)
-        } else 
-          delcreds.push(xid)
+    if (safe.creds) for (const xid in safe.creds)
+      try {
+        const obj = decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.creds[xid])))
+        const c: CredSafe = new CredSafe(obj)
+        if (msvc[c.svc]) m.set(c.id, c)
       } catch (e) {
         console.log(e)
       }
-    }
-        
-    if (waiting.length) for (const x of waiting) {
-      // Credential transmis par un autre user émetteur
-      // [obj credential crypté, pub: clé publique C de l'émetteur ]
-      const [crobj, pubC] = decode(x)
-      const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-      const dc = await Crypt.decrypt(aes, b64ToU8(crobj))
-      const obj = decode(dc)
-      const c: Credential = new Credential().fromObj(obj)
-      if (msvc[c.svc]) {
-        const c1 = m.get(c.id)
-        if (c1) { // Existait AVANT - mais pas forcément plus récent
-          if (c.time > c1.time) {
-            if (c.pems) { // existe toujours - MAJ ou re-création
-              c.comment = c.comment || c1.comment
-              m.set(c.id, c)
-              mcreds.set(c.id, c)
-              if (c.skey) storeSkey(c)
-            } else { // suppression "logique" (plus de PEMS)
-              m.delete(c.id)
-              delcreds.push(c.id)
-            }
-          } // else // plus ancien - Ignorer
-        } else { // n'existait pas - tout nouveau
-          m.set(c.id, c)
-          mcreds.set(c.id, c)
-          if (c.skey) storeSkey(c)
-        }
-      }
-      delcreds.push('$' + c.id)
-    }
-    
     mySafeCreds.value = m
-    if (mcreds.size || delcreds.length)
-      await updateCreds(mcreds, delcreds, null, null, true)
   }
 
-  /* safe.invits: Object : invitId : { status, time, data }
-  */
+  /* safe.invits: Object : invitId : { status, time, data } */
   const loadInvits = async (safe: Safe) : Promise<void> => {
-    if (!safe.invits) {
-      mySafeInvits.value = new Map()
-      return
-    }
-    const msvc = stores.config.K.SERVICES
     const m = new Map<string, Invit>()
-     
-    for (const xid in safe.invits) {
+    const msvc = stores.config.K.SERVICES
+    if (safe.invits) for (const xid in safe.invits) {
       const x = safe.invits[xid]
-       if (!dlv(x.time)) try {
-        const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
-        inv.status = x.status
-        if (msvc[inv.svc]) {
-          m.set(inv.invitId, inv)
-          // m.set(inv.invitId + '$', inv) // test
+       if (!dlv(x.time)) 
+        try {
+          const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
+          inv.status = x.status
+          if (msvc[inv.svc]) m.set(inv.invitId, inv)
+        } catch (e) {
+          console.log(e)
         }
-      } catch (e) {
-        console.log(e)
-      }
     }
     mySafeInvits.value = m
   }
@@ -721,6 +635,7 @@ export const useSafeStore = defineStore('safe', () => {
     return false
   }
 
+  // Retourne la Map des CredSafe dont l'id est citée dans le profile
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
     if (!stores.session.hasNet || !profile) return x
