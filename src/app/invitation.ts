@@ -1,7 +1,7 @@
 
 import stores from '../stores/all'
 import { InvitationA, MsgVal } from '../src-fw/invitationA'
-import { Credential } from '../src-fw/credential'
+import { Credential } from '../src-fw/credsafe'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 

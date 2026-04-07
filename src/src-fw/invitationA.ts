@@ -1,7 +1,7 @@
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 
-import { Crypt, fromPem } from './crypt'
+import { Crypt, keyToB64, keyFromB64 } from './crypt'
 import stores from '../stores/all'
 import { Invit } from '../stores/safe-store'
 import { Operation } from '../src-fw/operation'
@@ -35,109 +35,109 @@ export type MsgVal = {
 /* ### Document `Invitation` dans la base du service
 */
 export class InvitationA {
+  // Toujours présentes, dès la création de l'invitation
   org: string = ''// organisation
-  invitId: string = '' // ID de l'invitation
+  invitId: string = '' // ID de l'invitation générée aléatoirement à sa création
   major: string = '' //code majeur 
   minor: string = '' // code mineur
   time: number = 0 // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
-  status: number = 0 // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée, 6: annulée
+  status: number = 0 // traduit l'état d'avancement dans le temps SEULE PROPRIETE NON immuable
+  /*
+  - (1) : demande déposée par U,
+  - (2) : proposition faite par S,
+  - (3) : proposition validée par U,
+  - (4) : demande de U annulée par U,
+  - (5) : demande de U rejetée par S,
+  - (6) : proposition de S déclinée par U.
+  */
   userId: string = '' // ID de U (demandeur)
-  safeStore: string = '' // URL du store hébergeant le safe de U
-  skeyK: Uint8Array | null = null // clé symétrique générée par U, cryptée par sa clé K. Requise ou non selon le `major`.
-  pemU: string = '' // clé publique C de U.
-  txtm: string = '' // texte de motivation de la demande d'invitation (en clair).
-  txtx: string = '' // quand déclinée, texte d'explication de U (en clair).
-  label: string = '' // pour les codes `major` qui en exige un, _label_ en clair à faire figurer dans le document à créer.
-  // Données fixées par le sponsor**
-  pemS: string = '' // clé publique du sponsor traitant l'invitation.
-  txti: string | Uint8Array = ''// texte de réponse du sponsor, crypté par pemS / U.
-    // - si acceptation: termes explicatifs des conditions.
-    // - si rejet: justificatif textuel de rejet par le sponsor.
-  role: string = '' // rôle du credential associé (et classe du document associé).
-  docId: string = '' // `docId` du credential associé (et du document associé le cas échéant).
-  cond: any // données à faire figurer en `cond` du credential.
-  etc: any // autres données nécessaires pour créer le document associé. 
+  pubu: string = '' // clé publique C de cryptage de U en base64
+
+  // Dès la "demande" (pour un cycle complet seulement)
+  req ?: string // texte en clair fourni par U pour exprimer ses souhaits / exigences / motivation.
+
+  // Dès la phase "proposition" (première en cycle court et seconde en cycle complet) ou "rejet"
+  pubs ?: string // clé publique C de cryptage du sponsor en base 64
+
+  // Dès la phase "proposition" (première en cycle court et seconde en cycle complet)
+  etc ?: any // Objet contenant toutes les données nécessaires à la validation:
+  /* 
+  Crypté par la clé AES obtenu du couple de clés `pub-U/priv-S` (ou `pub-S/pub-U`, c'est la même). 
+  Cette clé sera transmise en arguments de l'opération de validation.
+  En session de U, etc peut être décrypté : un texte humainement lisible par U (dans sa langue) 
+  est généré pour lui afficher les clauses la proposition.
+  */
+
+  txt ?: string // texte humainement lisible 
+  /*
+  - soit Phase rejet : S explicite les raisons de son refus de faire une proposition à U.
+  - soit Phase déclinaison: U explicite les raisons qui rendent les conditions (dans etc) non acceptables pour lui. 
+  - crypté par la clé AES obtenu du couple de clés `pub-U/priv-S` (ou `pub-S/pub-U`, c'est la même)
+  */
 
   isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
-  SVC ?: string // service d'ou l'invitation a été lue
+  svc ?: string // service d'ou l'invitation a été lue
+  aes ?: Uint8Array // clé AES obtenue de pubu / pubs
 
-  async init (
-      org: string, 
-      major: string,
-      minor: string,
-      txtm: string,
-      label: string
-    ) : Promise<InvitationA> {
+  async init (org: string, major: string, minor: string, req: string ) : Promise<InvitationA> {
+    const sf = stores.safe
+
     this.org = org
     this.invitId = Crypt.rnd(8)
     this.status = 1
     this.major = major
     this.minor = minor || ''
     this.time = Math.floor(Date.now() / 1000)
-    this.label = label || ''
-    this.txtm = txtm || ''
-    const sf = stores.safe
-    const majorDescr = stores.config.K.majorInvits[this.major] as MajorDescr
+    this.req = req || ''
+
     this.userId = sf.userId
-    this.safeStore = sf.safeStore
-    this.skeyK = majorDescr.hasKey ? await Crypt.crypt(sf.keyK, Crypt.random(32)) : null
-    this.pemU = sf.auth.C
+    this.pubu = keyToB64(sf.auth.C)
     return this
   }
 
-  async fromList (bin : Uint8Array, org: string, SVC: string) : Promise<InvitationA> {
+  async fromList (bin : Uint8Array, org: string, svc: string) : Promise<InvitationA> {
     const sf = stores.safe
     const x = decode(bin)
     this.org = org
-    this.SVC = SVC
+    this.svc = svc
+    this.userId = x.userId
     this.invitId = x.invitId
     this.status = x.status
     this.major = x.major
     this.minor = x.minor || ''
     this.time = x.time
-    this.label = x.label || ''
-    this.txtm = x.txtm || ''
-    this.txtx = x.txtx || ''
-    this.userId = x.userId
-    this.safeStore = x.safeStore
-    this.skeyK = null
-    this.pemU = x.pemU
-    this.pemS = x.pemS
-    this.isSP = x.status > 1 && x.pemS === sf.auth.C
+    this.req = x.req || ''
+
+    this.pubu = x.pubu
+    this.pubs = x.pubs || ''
+    this.isSP = x.status > 1 && x.pubs === keyToB64(sf.auth.C)
     this.isU = x.userId === sf.userId
-    if (this.isSP) { // user est le traitant de la demande
-      const aes = await Crypt.getAESKey(fromPem(x.pemU, true), fromPem(sf.auth.D))
-      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti) as AllowSharedBufferSource)
-    } else if (this.isU && (x.status > 1 && x.status < 6)) { // user est le demandeur U
-      const aes = await Crypt.getAESKey(fromPem(x.pemS, true), fromPem(sf.auth.D))
-      this.txti = decoder.decode(await Crypt.decrypt(aes, x.txti) as AllowSharedBufferSource)
-    } else this.txti = ''
-    if (this.status === 2 || this.status >= 4) {
-      this.role = x.role
-      this.docId = x.docId
-      this.cond = x.cond
-      this.etc = x.etc
-    } else {
-      this.role = ''
-      this.docId = ''
-      this.cond = null
-      this.etc = null
-    }
+
+    if (x.pubu && x.pubs) {
+      if (this.isSP) this.aes = await Crypt.getAESKey(keyFromB64(x.pubu), keyFromB64(sf.auth.D))
+      else this.aes = await Crypt.getAESKey(keyFromB64(x.pubs), keyFromB64(sf.auth.D))
+    } // else this.aes undefined
+
+    if (this.aes && x.txt) this.txt = decoder.decode(await Crypt.decrypt(this.aes, x.txt) as AllowSharedBufferSource)
+    else this.txt = ''
+
+    if (this.aes && x.etc) this.etc = decoder.decode(await Crypt.decrypt(this.aes, x.etc) as AllowSharedBufferSource)
+    else this.etc = null
+
     return this
   }
 
-  static props = ['invitId', 'major', 'minor', 'time', 'status', 'userId', 'safeStore',
-    'skeyK', 'pemU', 'txtm', 'label']
+  static props = ['invitId', 'major', 'minor', 'time', 'status', 'userId', 'pubu', 'req']
 
-  toObj () : Object {
+  toObj () : Object { // TODO
     const x = {}
     for (const p of InvitationA.props) x[p] = this[p] || null
     x['ttl'] = Math.floor(this.time / 60)
     return x
   }
 
-  toInvit (svc: string, comment: string) : Invit {
+  toInvit (svc: string, comment: string) : Invit { // TODO
     return {
       svc, comment,
       org: this.org,

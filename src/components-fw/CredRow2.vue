@@ -32,7 +32,7 @@
 <script setup lang="ts">
 // @ts-ignore
 import { computed} from 'vue'
-import { Credential } from '../src-fw/credential'
+import { Credential } from '../src-fw/credsafe'
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 
 const props = defineProps({

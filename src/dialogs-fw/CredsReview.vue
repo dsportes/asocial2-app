@@ -65,7 +65,7 @@ import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
-import { CredSafe } from '../src-fw/credential'
+import { CredSafe } from '../src-fw/credsafe'
 import { ListUserCreds } from '../src-fw/operations'
 
 import BtnCond from '../components-fw/BtnCond.vue'

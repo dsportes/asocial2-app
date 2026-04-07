@@ -1,17 +1,17 @@
 import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
 // import { u8ToB64 } from './util'
 import stores from '../stores/all'
-import { Credential } from '../src-fw/documents'
+import { Credential } from './documents'
 
 const encoder = new TextEncoder()
 
 /* Credential en Safe
 */
 export class CredSafe {
-  static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'pems', 'comment' ]
+  static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'comment' ]
 
   static getId (svc: string, org: string, docId: string, role: string) { 
-    return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId || ''))
+    return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId ))
   }
 
   id: string = '' // ID du credential.
@@ -21,8 +21,10 @@ export class CredSafe {
   docId: string = '' // identifiant du document cible du credential.
   time: number = 0 // epoch en seconde de génération
 
-  pems: string = '' // clé PRIVEE de signature, le texte de 400c.
-  comment: string = '' // un texte court libre de l'utilisateur.
+  privs: string = '' // clé PRIVEE de signature en base64.
+  name: string = '' // nom / pseudo / alias du docId pour information de U
+  comment: string = '' // texte court libre de l'utilisateur.
+  rec: any = null // record libre (crypté par la clé K et en base64 en _safe_).
   
   constructor (obj?: Object) {
     if (obj) {
@@ -38,8 +40,9 @@ export class CredSafe {
 
   get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
 
-  get getPk () : string { return Crypt.shaS(encoder.encode(
+  /* get getPk () : string { return Crypt.shaS(encoder.encode(
     stores.safe.userId + '/' + this.role + '/' + this.docId)) }
+  */
 
   get toObj () : Object {
     const obj = {}
@@ -48,15 +51,15 @@ export class CredSafe {
     return obj
   }
 
-  get subRole () : string {
+  /* get subRole () : string {
     const i = this.role.indexOf('.')
     return i === -1 ? '' : this.role.substring(i+ 1)
-  }
+  } */
 
-  get docClass () : string {
+  /* get docClass () : string {
     const i = this.role.indexOf('.')
     return i === -1 ? this.role : this.role.substring(0, i)
-  }
+  } */
 
   clone () : CredSafe { return new CredSafe(this.toObj) }
 
@@ -74,7 +77,7 @@ export class CredSafe {
     limit: number,
   ) : Promise<[CredSafe, Credential]> {
     const { pub, priv } = await Crypt.getSVKeyPair()
-    const cs = new CredSafe({ svc, org, role, docId, pems: keyToB64(priv), comment })
+    const cs = new CredSafe({ svc, org, role, docId, privs: keyToB64(priv), comment })
     const c = Credential.fromCredSafe(cs, targetId, keyToB64(pub), limit)
     return [cs, c]
   }

@@ -2,7 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from './util'
-import { AuthRecord } from './credential'
+import { AuthRecord } from './credsafe'
 import stores from '../stores/all'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 

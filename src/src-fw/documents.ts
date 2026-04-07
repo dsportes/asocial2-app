@@ -1,5 +1,5 @@
 import { Document } from '../src-fw/document'
-import { CredSafe } from '../src-fw/credential'
+import { CredSafe } from './credsafe'
 // import stores from '../stores/all'
 
 /* Document Credential stocké en DB du service/org

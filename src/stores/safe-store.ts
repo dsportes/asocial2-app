@@ -12,8 +12,8 @@ import { encode, decode } from '@msgpack/msgpack'
 import stores from './all'
 import { AppExc, $t, sleep, u8ToB64, b64ToU8, equ8 } from '../src-fw/util'
 import { SafeOperation } from '../src-fw/operation'
-import { Crypt, toPem, fromPem } from '../src-fw/crypt'
-import { CredSafe } from '../src-fw/credential'
+import { Crypt, keyFromB64, keyToB64 } from '../src-fw/crypt'
+import { CredSafe } from '../src-fw/credsafe'
 
 /*
 ### Safes stockés dans un directory
@@ -231,11 +231,15 @@ export const useSafeStore = defineStore('safe', () => {
 
   const pubKeys : Ref<Map<string, [String, string]>> = ref(new Map())
 
-  // Safe IDB : image en mémoire
+  /* Base locale IDB : image en mémoire ***********************************************/
   const devId = ref('') // Depuis IDB Header
   const devName = ref('') // Depuis IDB Header
   const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
   const mySessions : Ref<Map<string, TSession>> = ref()
+
+  watch(() => stores.session.incognito, async (v) => {
+    await loadTrustings()
+  })
 
   const init0 = async () : Promise<void> => {
     try {
@@ -309,6 +313,104 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       await db.value.trustings.where({id}).delete()
       trustings.value.delete(id)
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  const getMySessions = async () => {
+    const app = stores.config.appname
+    mySessions.value = new Map<string, TSession>()
+    const mpf: Map<string, Profile> = mySafeProfiles.value
+    const toSave: Map<string, TSession> = new Map()
+
+    await db.value.tsessions.each(async (r) => {
+      try {
+        const obj = decode(r.bin)
+        const s : TSession = new TSession(obj)
+        if (s.userId === userId.value && s.app ===  app) {
+          s.about = await dcX(b64ToU8(s.about))
+          const profile: Profile | undefined = mpf.get(s.profId)
+          if (profile && s.about !== profile.about) {
+            s.about = profile.about
+            toSave.set(s.idOf, s)
+          }
+        }
+        mySessions.value.set(s.idOf, s)
+      } catch (e) {
+        console.log(e)
+      }
+    })
+
+    for(const [,s] of mySessions.value) {
+      if (s.prefCode) {
+        const p = mySafePrefs.value.get(s.prefCode)
+        if (p && (s.prefTime !== p.time)) {
+          s.prefTime = p.time
+          s.prefObj = p.obj
+          toSave.set(s.idOf, s)
+        }
+      }
+    }
+    if (toSave.size)
+      for(const [,s] of toSave) await saveTSession(s)
+  }
+
+  const saveTSession = async (s: TSession) => {
+    try {
+      const id = s.idOf
+      const ab = s.about
+      s.about = u8ToB64(await ecX(s.about))
+      const bin = encode(s.toObj)
+      await db.value.tsessions.put({ id, bin })
+      s.about = ab
+      mySessions.value.set(id, s)
+    } catch (e) {
+      throw EX(e, 2)
+    }
+  }
+
+  const delTSession = async (l: TSession[]) => {
+    for (const s of l) {
+      try {
+        const id = s.idOf
+        await db.value.tsessions.where({ id }).delete()
+        mySessions.value.delete(id)
+        if (!stores.session.incognito) {
+          const x = localStorage.getItem('$DBLIST') || ''
+          const dbl = x.split(' ')
+          const n = dbl.indexOf(s.dbName)
+          if (n === -1) dbl.splice(n, 1)
+          localStorage.setItem('$DBLIST', dbl.join(' '))
+        }
+        try {
+          await Dexie.delete(s.dbName)
+          await sleep(300)
+          console.log(s.dbName + ' deleted')
+        } catch (e: any) {
+          console.log(s.dbName + ' deletion FAILED: ', e.message())
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    }
+  }
+
+  const setTSession = async (s: TSession, razdb?: boolean) => {
+    try {
+      s.time = Date.now()
+      if (razdb) s.size = TSession.initSize()
+      if (!stores.session.incognito)
+        await saveTSession(s)
+
+      recordIDB(s.dbName)
+      if (razdb) try {
+          await Dexie.delete(s.dbName)
+          await sleep(300)
+          console.log(s.dbName + ' deleted')
+        } catch (e: any) {
+          console.log(s.dbName + ' deletion FAILED: ', e.message())
+        }
     } catch (e) {
       throw EX(e, 2)
     }
@@ -392,36 +494,16 @@ export const useSafeStore = defineStore('safe', () => {
   }
   const auth: Ref<Auth> = ref(null)
 
-  /* Section "devices de confiance" *****************************************************
-  Une entrée par device identifiée par `devid`:
-  - `about` : code / texte court **crypté par la clé K du _safe_**
-    donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
-  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider
-    que ce _device_ est de confiance.
-  ****************************************************************************************/
+  /* Section "devices de confiance" une entrée par device identifiée par `devid`*/
   const devices: Ref<Map<string, Device>> = ref() // cle devid
 
-  /* Section "préférences" **************************************************************
-  Elle est organisée avec une **sous-section par application** donnant une
-  map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
-  - `code` : texte court parlant pour l'utilisateur correspondant
-    à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
-  - `time`: date-heure de dernière mise à jour
-  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
-    à l'ouverture d'une session.
-  **************************************************************************************/
+  /* Section "préférences" organisée avec une **sous-section par application** */
   const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
 
-  /* Section "profiles"
-  Elle est organisée avec une **sous-section par application** regroupant une liste d'items ayant un identifiant généré aléatoirement à sa création. Chaque item est **crypté par la clé K** de _safe_ et a les propriétés suivantes:
-  - `about`: texte significatif pour l'utilisateur **crypté par la clé K** décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
-  - `creds`: la liste des id des _credentials_ qui sont attachés à une session de ce profil lors de son ouverture.
-  */
+  /* Section "profiles" organisée avec une **sous-section par application**   */
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
-  /* Section "creds": organisée avec une **sous-section par application** regroupant une liste d'items: 
-  Chaque item est **crypté par la clé K** de _safe_ (dans data).
-  */
+  /* Section "creds": organisée avec une **sous-section par application** */
   const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
 
   /* Section "invits" */
@@ -444,17 +526,34 @@ export const useSafeStore = defineStore('safe', () => {
     return !y || y.length === 0 ? u8Empty : y
   }
 
+  const doOpSafe = async (op: SafeOperation) : Promise<number> => {
+    let ret
+    try {
+      ret = await op.post()
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (ret.status === 0)
+      try {
+       await compileSafe(ret.safe)
+      } catch (e) {
+        console.log(e)
+      }
+    return ret.status
+  }
+
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur:
     - auth, devices, prefs, profiles
-  K :
+  La clé K :
     - soit vient d'être généré dans $createSafe
     - soit a été décrypté au retour des opérations $openSafeByPR $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
     await loadTrustings()
-    const pemD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)) as AllowSharedBufferSource)
-    const pemS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)) as AllowSharedBufferSource)
+    const privD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)) as AllowSharedBufferSource)
+    const privS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)) as AllowSharedBufferSource)
     auth.value = {
       pseudo: await dcX(b64ToU8(safe.pseudo)),
       hp0: safe.hp0,
@@ -463,8 +562,8 @@ export const useSafeStore = defineStore('safe', () => {
       hhr1: safe.hhr1,
       hhk: safe.hhk,
       C: safe.C,
-      D: pemD,
-      S: pemS,
+      D: privD,
+      S: privS,
       V: safe.V,
       contact: await dcX(b64ToU8(safe.contact)),
       hct: safe.hct,
@@ -480,6 +579,13 @@ export const useSafeStore = defineStore('safe', () => {
     await loadInvits(safe) // invits
   }
 
+  /* Devices de confiance *****************************************************************
+  Une entrée par device identifiée par `devid`:
+  - `about` : code / texte court **crypté par la clé K du _safe_**
+    donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
+  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider
+    que ce _device_ est de confiance.
+  ****************************************************************************************/
   const loadDevices = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Device>()
     if (safe.devices) {
@@ -502,6 +608,15 @@ export const useSafeStore = defineStore('safe', () => {
     devices.value = m
   }
 
+  /* Prefs *****************************************************************************
+  Cette section est organisée avec une **sous-section par application** donnant une
+  map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
+  - `code` : texte court parlant pour l'utilisateur correspondant
+    à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
+  - `time`: date-heure de dernière mise à jour
+  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
+    à l'ouverture d'une session.
+  **************************************************************************************/
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
     const ls: TSession[] = []
@@ -518,6 +633,147 @@ export const useSafeStore = defineStore('safe', () => {
     mySafePrefs.value = p
   }
 
+  type UpdatePrefs = {
+    app: string
+    userId: string
+    shk: string
+    prefs: Object | null // clé: crId, valeur: Objet Credential sérialisé crypté
+    delprefs: string[] // liste des crIds à supprimer
+  }
+
+  /* Mise à jour des préférences */
+  const updatePrefs = async ( mprefs: Map<string, LocPref>, delprefs: string[] ) => {
+    let prefs : Object | null = {}
+
+    if (mprefs && mprefs.size) for(const [,p] of mprefs) {
+      prefs[p.code] = u8ToB64(encode([p.time, p.obj]), true)
+    }
+    if (Object.keys(prefs).length === 0) prefs = null
+
+    const updatePrefs: UpdatePrefs = {
+      app: stores.config.appname,
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      prefs,
+      delprefs : delprefs || []
+    }
+    const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
+    op.args = { updatePrefs }
+    return await doOpSafe(op)
+  }
+  /***************************************************************************/
+
+  /* safe.invits: Object : invitId : { status, time, data } */
+  const loadInvits = async (safe: Safe) : Promise<void> => {
+    const m = new Map<string, Invit>()
+    const msvc = stores.config.K.SERVICES
+    if (safe.invits) for (const xid in safe.invits) {
+      const x = safe.invits[xid]
+       if (!dlv(x.time)) 
+        try {
+          const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
+          inv.status = x.status
+          if (msvc[inv.svc]) m.set(inv.invitId, inv)
+        } catch (e) {
+          console.log(e)
+        }
+    }
+    mySafeInvits.value = m
+  }
+
+  /* Creds ************************************************************************
+  En safe la map safe.creds a une entrée par CredSafe:
+  - clé: shaS de (svc + '/' + org + '/' + role + '/' + docId)
+  - valeur: [ comment, data ]
+    - comment: proprité comment cryptée par la clé K de U et en base 64.
+      c'est la seule propriété qui peut être mise à jour par U ultérieurement.
+    - data: la sérialisation des autres propriétés {id svc role docId time privs name rec}
+      cryptées par la clé K de U et mis en base 64.
+  SEUL U peut créer et mettre à jour (le comment seulement) un CredSafe. 
+    - lors de la validation d'une invitation.
+  ***********************************************************************************/
+  const loadCreds = async (safe: Safe) : Promise<void> => {
+    const m = new Map<string, CredSafe>()
+    const msvc = stores.config.K.SERVICES
+    if (safe.creds) for (const xid in safe.creds)
+      try {
+        const [com, data] = decode(safe.creds[xid]) as [string, string]
+        const comment = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(com)))
+        const obj = decode(await Crypt.decrypt(keyK.value, b64ToU8(data))) as Object
+        const c: CredSafe = new CredSafe(obj)
+        if (msvc[c.svc]) {
+          c.comment = comment
+          m.set(c.id, c)
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    mySafeCreds.value = m
+  }
+
+  type SetCred = {
+    userId: string //
+    shk: string // shaS de la clé K en base 64
+    credid: string // id du credential
+    comment: string // comment crypté par K et en base 64
+    cred?: string // CredSafe sérialisé, crypté par K et en base64 (pour création)
+  }
+  /* Creation d'un Cred en safe */
+  const createCred = async ( cred : CredSafe ) => {
+    const obj = cred.toObj
+    delete obj['comment']
+    const setCred : SetCred = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      credid: cred.id,
+      comment: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(cred.comment))), 
+      cred: u8ToB64(await Crypt.crypt(keyK.value, encode(obj)))
+    }
+    const op = new SafeOperation('$CreateCred', mySafeStore.value)
+    op.args = { setCred }
+    return await doOpSafe(op)
+  }
+
+  /* Mise à jour du commentaire d'un Cred en safe */
+  const updateCredComment = async ( credid: string, comment: string ) => {
+    const setCred : SetCred = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      credid,
+      comment: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(comment)))
+    }
+    const op = new SafeOperation('$UpdateCredComment', mySafeStore.value)
+    op.args = { setCred }
+    return await doOpSafe(op)
+  }
+
+  type RevokeCreds = {
+    userId: string
+    shk: string
+    ids: string[] 
+  }
+  /* Révocation (suppression) d'un Cred en safe */
+  const autoRevokeCreds = async (ids: string[]) => {
+    const revokeCreds: RevokeCreds = {
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      ids
+    }
+    const op = new SafeOperation('$AutoRevokeCreds', mySafeStore.value)
+    op.args = {revokeCreds}
+    return await doOpSafe(op)
+  }
+  /****************************************************************************/
+
+  /* Profiles ****************************************************************
+  Section organisée avec une **sous-section par application** regroupant une liste d'items 
+  ayant un identifiant généré aléatoirement à sa création. 
+  Chaque item est sérialisé en base64 et a les propriétés suivantes:
+  - `about`: texte significatif pour l'utilisateur **crypté par la clé K** 
+    décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
+  - `creds`: liste des id des _credentials_ qui sont attachés à une session 
+    de ce profil lors de son ouverture.
+  ****************************************************************************/
   const loadProfiles = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
     const m = new Map<string, Profile>()
@@ -539,37 +795,61 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeProfiles.value = m
   }
 
-  const loadCreds = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, CredSafe>()
-    const msvc = stores.config.K.SERVICES
-    if (safe.creds) for (const xid in safe.creds)
-      try {
-        const obj = decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.creds[xid])))
-        const c: CredSafe = new CredSafe(obj)
-        if (msvc[c.svc]) m.set(c.id, c)
-      } catch (e) {
-        console.log(e)
-      }
-    mySafeCreds.value = m
+  type SetProfiles = {
+    app: string
+    userId: string
+    shk: string
+    profiles: Object | null // clé: profId, valeur: Objet Profile sérialisé crypté
+    delprofs: string[] // liste des profIds à supprimer
   }
 
-  /* safe.invits: Object : invitId : { status, time, data } */
-  const loadInvits = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Invit>()
-    const msvc = stores.config.K.SERVICES
-    if (safe.invits) for (const xid in safe.invits) {
-      const x = safe.invits[xid]
-       if (!dlv(x.time)) 
-        try {
-          const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
-          inv.status = x.status
-          if (msvc[inv.svc]) m.set(inv.invitId, inv)
-        } catch (e) {
-          console.log(e)
-        }
+  /* Création, mise jour et suppression de plusieurs profiles */
+  const updateProfiles = async (
+    mprofiles: Map<string, Profile> | null,
+    delprofs: string[] | null,
+    ) => {
+
+    let profiles : Object | null = {}
+    if (mprofiles && mprofiles.size) for(const [profId, p] of mprofiles) {
+      p.about = u8ToB64(await ecX(p.about), true)
+      profiles[profId] = u8ToB64(encode(p))
     }
-    mySafeInvits.value = m
+    if (Object.keys(profiles).length === 0) profiles = null
+    const setProfiles : SetProfiles = {
+      app: stores.config.appname,
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      profiles,
+      delprofs: delprofs || []
+    }
+    const op = new SafeOperation('$UpdateProfiles', mySafeStore.value)
+    op.args = { setProfiles }
+    return await doOpSafe(op)
   }
+
+  type SetAboutProfile = {
+    app: string,
+    userId: string
+    shk: string
+    profId: string
+    about: string
+  }
+  /* Maj de l'about d'un profile */
+  const setAboutProfile = async (profId: string, about: string) => {
+    const aboutProfile: SetAboutProfile = {
+      app: stores.config.appname,
+      userId: userId.value,
+      shk: await Crypt.strongHash(keyK.value, false, false) as string,
+      profId,
+      about: u8ToB64(await ecX(about), true)
+    }
+    const op = new SafeOperation('$SetAboutProfile', mySafeStore.value)
+    op.args = { aboutProfile }
+    return await doOpSafe(op)
+  }
+  /****************************************************************************/
+
+  /* Extractions / consultations **********************************************/
 
   const sponsorings = () : Sponsoring[]  => {
     const lst: Sponsoring[] = []
@@ -604,7 +884,7 @@ export const useSafeStore = defineStore('safe', () => {
     return lst
   }
 
-  // options des organisations managées
+  /* Options des organisations managées *****************************************/
   const managedOrgs = () => {
     const lst : { label, svc, org }[] = []
     if (mySafeCreds.value) {
@@ -629,13 +909,14 @@ export const useSafeStore = defineStore('safe', () => {
     return lst
   }
 
+  /* Retourne true si l'utilisateur est "manager" du couple svc / org ***********/
   const isManager = (svc, org) : boolean => {
     for (const [,c] of mySafeCreds.value) 
       if (c.role === 'Org.manager' && c.org === org && c.svc === svc) return true
     return false
   }
 
-  // Retourne la Map des CredSafe dont l'id est citée dans le profile
+  /* Retourne la Map des CredSafe dont l'id est citée dans le profile *************/
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
     if (!stores.session.hasNet || !profile) return x
@@ -647,44 +928,6 @@ export const useSafeStore = defineStore('safe', () => {
     return x
   }
 
-  const getMySessions = async () => {
-    const app = stores.config.appname
-    mySessions.value = new Map<string, TSession>()
-    const mpf: Map<string, Profile> = mySafeProfiles.value
-    const toSave: Map<string, TSession> = new Map()
-
-    await db.value.tsessions.each(async (r) => {
-      try {
-        const obj = decode(r.bin)
-        const s : TSession = new TSession(obj)
-        if (s.userId === userId.value && s.app ===  app) {
-          s.about = await dcX(b64ToU8(s.about))
-          const profile: Profile | undefined = mpf.get(s.profId)
-          if (profile && s.about !== profile.about) {
-            s.about = profile.about
-            toSave.set(s.idOf, s)
-          }
-        }
-        mySessions.value.set(s.idOf, s)
-      } catch (e) {
-        console.log(e)
-      }
-    })
-
-    for(const [,s] of mySessions.value) {
-      if (s.prefCode) {
-        const p = mySafePrefs.value.get(s.prefCode)
-        if (p && (s.prefTime !== p.time)) {
-          s.prefTime = p.time
-          s.prefObj = p.obj
-          toSave.set(s.idOf, s)
-        }
-      }
-    }
-    if (toSave.size)
-      for(const [,s] of toSave) await saveTSession(s)
-  }
-
   const sessionOfProfId = (profId: string) => {
     const id = TSession.id(stores.config.appname, userId.value, profId)
     return mySessions.value ? mySessions.value.get(id) || null : null
@@ -692,70 +935,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   const profileOfProfId = (profId: string) => {
     return mySafeProfiles.value.get(profId)
-  }
-
-  const saveTSession = async (s: TSession) => {
-    try {
-      const id = s.idOf
-      const ab = s.about
-      s.about = u8ToB64(await ecX(s.about))
-      const bin = encode(s.toObj)
-      await db.value.tsessions.put({ id, bin })
-      s.about = ab
-      mySessions.value.set(id, s)
-    } catch (e) {
-      throw EX(e, 2)
-    }
-  }
-
-  /* Quand nodel est donné
-  c'est une purge depuis ManageUsers, la base a déjà été supprimée
-  par purgeIDBS
-  */
-  const delTSession = async (l: TSession[]) => {
-    for (const s of l) {
-      try {
-        const id = s.idOf
-        await db.value.tsessions.where({ id }).delete()
-        mySessions.value.delete(id)
-        if (!stores.session.incognito) {
-          const x = localStorage.getItem('$DBLIST') || ''
-          const dbl = x.split(' ')
-          const n = dbl.indexOf(s.dbName)
-          if (n === -1) dbl.splice(n, 1)
-          localStorage.setItem('$DBLIST', dbl.join(' '))
-        }
-        try {
-          await Dexie.delete(s.dbName)
-          await sleep(300)
-          console.log(s.dbName + ' deleted')
-        } catch (e: any) {
-          console.log(s.dbName + ' deletion FAILED: ', e.message())
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    }
-  }
-
-  const setTSession = async (s: TSession, razdb?: boolean) => {
-    try {
-      s.time = Date.now()
-      if (razdb) s.size = TSession.initSize()
-      if (!stores.session.incognito)
-        await saveTSession(s)
-
-      recordIDB(s.dbName)
-      if (razdb) try {
-          await Dexie.delete(s.dbName)
-          await sleep(300)
-          console.log(s.dbName + ' deleted')
-        } catch (e: any) {
-          console.log(s.dbName + ' deletion FAILED: ', e.message())
-        }
-    } catch (e) {
-      throw EX(e, 2)
-    }
   }
 
   type SafeCodes = { // paramétres de l'opération $UpdCodesSafe
@@ -845,10 +1024,10 @@ export const useSafeStore = defineStore('safe', () => {
       Kr: u8ToB64(await Crypt.crypt(rsh, keyK.value), true),
 
       hhk: Crypt.shaS(shK),
-      C: toPem(kpcd.pub, true),
-      DK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(toPem(kpcd.priv))), true),
-      V: toPem(kpsv.pub, true),
-      SK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(toPem(kpsv.priv))), true),
+      C: keyToB64(kpcd.pub),
+      DK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(keyToB64(kpcd.priv))), true),
+      V: keyToB64(kpsv.pub),
+      SK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(keyToB64(kpsv.priv))), true),
       contact: '',
       hct: '',
       admins: '',
@@ -1001,14 +1180,6 @@ export const useSafeStore = defineStore('safe', () => {
     shk: string
   }
 
-  type SetAboutProfile = {
-    app: string,
-    userId: string
-    shk: string
-    profId: string
-    about: string
-  }
-
   type StatusInvit = {
     targetId: string
     invitId: string
@@ -1038,8 +1209,7 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  /* Change le status d'une invitation pour LE user U dans SON safeStore.
-  */
+  /* Change le status d'une invitation pour LE user U dans SON safeStore. */
   const statusInvit = async (invitId: string, status: number ) => {
     const now = Date.now()
     const sti : StatusInvit = {
@@ -1111,7 +1281,7 @@ export const useSafeStore = defineStore('safe', () => {
     // Peut être vérifiée par Safe en PHP
     const asn1 = Crypt.signToAsn1(signEC)
     const sign = u8ToB64(asn1)
-    const Va = toPem(kpsv.pub, true)
+    const Va = keyToB64(kpsv.pub)
     const trustDev: TrustDev = {
       pseudo: u8ToB64(await ecX(pseudo), true),
       userId: userId.value,
@@ -1265,30 +1435,6 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status ? null : ret.safe
   }
 
-  /* Faire sauvegarder par le serveur dans le safe
-  la maj de l'about du profil */
-  const setAboutProfile = async (profId: string, about: string) => {
-    const aboutProfile: SetAboutProfile = {
-      app: stores.config.appname,
-      userId: userId.value,
-      shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      profId,
-      about: u8ToB64(await ecX(about), true)
-    }
-    const op = new SafeOperation('$SetAboutProfile', mySafeStore.value)
-    let ret
-    try {
-      op.args = {aboutProfile}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e)
-      return 9
-    }
-    if (ret.status === 0)
-      await compileSafe(ret.safe)
-    return ret.status
-  }
-
   const newTrusting = (obj) => new Trusting(obj)
   const newTSession = (obj) => new TSession(obj)
 
@@ -1328,7 +1474,6 @@ export const useSafeStore = defineStore('safe', () => {
       try {
         const obj = decode(r.bin)
         const s : TSession = new TSession(obj)
-        const id = s
         if (s.userId === userId.value && s.app ===  app)
           s.about = await dcX(b64ToU8(s.about))
         m.set(s.idOf, s)
@@ -1425,174 +1570,6 @@ export const useSafeStore = defineStore('safe', () => {
     localStorage.removeItem('$DBLIST')
   }
 
-  type UpdateCreds = {
-    app: string
-    userId: string
-    shk: string
-    creds: Object | null // clé: xid, valeur: Objet Credential sérialisé crypté
-    delcreds: string[] // liste des xid à supprimer
-    profiles: Object | null // clé: profId, valeur: Objet Profile sérialisé crypté
-    delprofs: string[] // liste des profIds à supprimer
-    nosafe: boolean // ne pas retourner le safe mis à jour
-  }
-
-  const updateCreds = async (
-      mcreds: Map<string, Credential> | null,
-      delcreds: string[] | null,
-      mprofiles: Map<string, Profile> | null,
-      delprofs: string[] | null,
-      nocompile?: boolean
-      ) => {
-    let creds : Object | null = {}
-    let profiles : Object | null = {}
-
-    if (mcreds && mcreds.size) for(const [xid, c] of mcreds) {
-      const obj = c.toObj
-      creds[xid] = u8ToB64(await Crypt.crypt(keyK.value, encode(obj)), true)
-    }
-    if (Object.keys(creds).length === 0) creds = null
-
-    if (mprofiles && mprofiles.size) for(const [profId, p] of mprofiles) {
-      p.about = u8ToB64(await ecX(p.about), true)
-      profiles[profId] = u8ToB64(encode(p))
-    }
-    if (Object.keys(profiles).length === 0) profiles = null
-
-    const updateCreds: UpdateCreds = {
-      userId: userId.value,
-      app: stores.config.appname,
-      shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      creds,
-      delcreds : delcreds || [],
-      profiles,
-      delprofs: delprofs || [],
-      nosafe: nocompile || false
-    }
-    const op = new SafeOperation('$UpdateCreds', mySafeStore.value)
-    let ret
-    try {
-      op.args = {updateCreds}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e);
-      return -1
-    }
-    if (ret.status === 0 && !nocompile)
-      try {
-        await compileSafe(ret.safe)
-      } catch (e) {
-        console.log(e)
-      }
-    return ret.status
-  }
-
-  type UpdatePrefs = {
-    app: string
-    userId: string
-    shk: string
-    prefs: Object | null // clé: crId, valeur: Objet Credential sérialisé crypté
-    delprefs: string[] // liste des crIds à supprimer
-  }
-
-  const updatePrefs = async (
-      mprefs: Map<string, LocPref>,
-      delprefs: string[]
-      ) => {
-    let prefs : Object | null = {}
-
-    if (mprefs && mprefs.size) for(const [,p] of mprefs) {
-      prefs[p.code] = u8ToB64(encode([p.time, p.obj]), true)
-    }
-    if (Object.keys(prefs).length === 0) prefs = null
-
-    const updatePrefs: UpdatePrefs = {
-      userId: userId.value,
-      app: stores.config.appname,
-      shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      prefs,
-      delprefs : delprefs || []
-     }
-    const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
-    let ret
-    try {
-      op.args = {updatePrefs}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e);
-      return -1
-    }
-    if (ret.status === 0)
-      try {
-        await compileSafe(ret.safe)
-      } catch (e) {
-        console.log(e)
-      }
-    return ret.status
-  }
-
-  type RevokeCreds = {
-    userId: string
-    shk: string
-    ids: string[] 
-  }
-
-  const autoRevokeCreds = async (ids: string[]) => {
-    const revokeCreds: RevokeCreds = {
-      ids,
-      userId: userId.value,
-      shk: await Crypt.strongHash(keyK.value, false, false) as string,
-     }
-
-    const op = new SafeOperation('$AutoRevokeCreds', mySafeStore.value)
-    let ret
-    try {
-      op.args = {revokeCreds}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e);
-      return -1
-    }
-    if (ret.status === 0)
-      try {
-        await compileSafe(ret.safe)
-      } catch (e) {
-        console.log(e)
-      }
-    return ret.status
-  }
-
-  type TransmitCred = {
-    targetId: string // id ou p0 ou r0 ou contact de U cible du credential
-    credid: string // id du credential
-    crpub: string // [cryptedCred, pubc] encodé et en base64
-   }
-
-  const transmitCred = async (safeStore: string, targetId: string, pubC: string, cred: Credential) => {
-
-    const op = new SafeOperation('$TransmitCred', safeStore)
-    try {
-      const aes = await Crypt.getAESKey(fromPem(pubC, true), fromPem(auth.value.D))
-      const objt = cred.toObj
-      const cryptedCred = u8ToB64(await Crypt.crypt(aes, encode(objt)))
-      const crpub = u8ToB64(encode([cryptedCred, auth.value.C]))
-      const transmitCred : TransmitCred = {
-        targetId,
-        credid: cred.id,
-        crpub
-      }
-      op.args = {transmitCred}
-      const ret = await op.post()
-      return ret.status
-    } catch(e) {
-      op.ko(e);
-      return -1
-    }
-  }
-
-  watch(() => stores.session.incognito, async (v) => {
-    await loadTrustings()
-  })
-
   /* targetId est soit id, soit hp0, soit hr0
   retourne [userId, pemC, pemV]
   */
@@ -1624,7 +1601,7 @@ export const useSafeStore = defineStore('safe', () => {
     const params = [SVC, $OP, url]
     const time = Date.now()
     const ch = encode([time, params])
-    const sign = await Crypt.sign(fromPem(auth.value.S), ch)
+    const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
     const op = new SafeOperation('$SetOpUrl', '')
     try {
       op.args = { userId: userId.value, time, params, sign }
@@ -1641,7 +1618,7 @@ export const useSafeStore = defineStore('safe', () => {
     const params = [SVC, $OP, org]
     const time = Date.now()
     const ch = encode([time, params])
-    const sign = await Crypt.sign(fromPem(auth.value.S), ch)
+    const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
     const op = new SafeOperation(grant ? '$GrantSvcOpOrg' : '$RevokeSvcOpOrg', '')
     try {
       op.args = { userId: userId.value, time, params, sign }
@@ -1674,17 +1651,21 @@ export const useSafeStore = defineStore('safe', () => {
     resetAllLocal,
     newTrusting, newTSession,
     trustings, setTrusting, delTrusting, myTrusting,
-    setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
-    mySafeCreds, getCreds, autoRevokeCreds, skey, managedOrgs, isManager, sponsorings,
+    setTSession, delTSession, getMySessions, mySessions, sessionOfProfId, 
+    mySafeCreds, getCreds, managedOrgs, isManager, 
+    createCred, updateCredComment, autoRevokeCreds, 
     mySafeProfiles, profileOfProfId,
+    updateProfiles, setAboutProfile, 
     mySafePrefs,
+    updatePrefs,
     invitCreate, statusInvit, mySafeInvits,
+    sponsorings,
     auth,
     devices,
     getAllSessions,
-    createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe,
-    setTrust, setUntrust, setAboutProfile, updateCreds, transmitCred, getPublicKeys,
-    synthUsers, getBinSafe, setUntrustAll, delSafe, updatePrefs,
+    createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe, delSafe,
+    setTrust, setUntrust, getPublicKeys,
+    synthUsers, getBinSafe, setUntrustAll, 
     setAdmins, setContact,
     SetOpUrl, GRSvcOpOrg
   }
