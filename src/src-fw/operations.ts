@@ -4,11 +4,12 @@
 import { Operation } from './operation'
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
+import { Crypt, keyFromB64 } from '../src-fw/crypt'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/document'
-import { CredSafe } from './credsafe'
 import { Invitation } from '../app/invitation'
 import { Invit } from '../stores/safe-store'
+import { Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -194,34 +195,6 @@ export class Sync extends Operation {
   }
 }
 
-/* Enregistre un user en tant que "manager" de l'organisation
-créé son Credential et le stocke "en attente" dans son safe
-*/
-export class GrantNewManager extends Operation {
-  constructor (SVC: string, org: string) { super('GrantNewManager', SVC, org) }
-
-  async run(safeStore: string, targetId: string, pubC: string, info: string) {
-    try {
-      const sf = stores.safe
-      const [ cred, credRequest] =
-        await Credential.buildCreds(
-          this.SVC, this.args.org, targetId, 'Org.manager', '', null, '', 0)
-      credRequest.cond = { info: info}
-
-      // écriture du credential dans le store de la cible
-      await sf.transmitCred(safeStore, targetId, pubC, cred)
-
-      // enregistrement du credential dans le service
-      this.args.credRequest = credRequest
-      await this.post()
-      return true
-    } catch(e) {
-      this.ko(e)
-      return false
-    }
-  }
-}
-
 export class RevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
 
@@ -259,24 +232,64 @@ export class ListManagers extends Operation {
   }
 }
 
+/* Enregistre un user en tant que "manager" de l'organisation
+Créé une invitation (proposition directe).
+*/
+export const NewManager = async (
+  svc: string, 
+  org: string, 
+  safeStore: string, 
+  targetId: string, 
+  pubC: string, 
+  name: string) : Promise<boolean> => {
+
+  const invitId = Crypt.rnd(8)
+  const time = Math.floor(Date.now() / 1000)
+  const major = 'Org.manager'
+
+  const sf = stores.safe
+  const invit : Invit = {
+    svc: svc,
+    org: org,
+    invitId,
+    time,
+    major,
+    minor: '',
+    status: 2,
+    comment: ''
+  }
+  const aes = Crypt.getAESKey(keyFromB64(pubC), keyFromB64(sf.auth.D))
+  let status = await sf.invitCreate(invit, aes, pubC, safeStore)
+  
+  if (status !== 0) return false
+
+  const inv = new Invitation()
+  inv.invitId = invitId
+  inv.major = major
+  inv.time = time
+  inv.status = 2
+  inv.userId = targetId
+  inv.pubu = pubC
+  inv.pubs = sf.auth.C
+  inv.etc = {
+    proposedTo: name
+  }
+  const op = new InvitCreate(svc, org)
+  status = await op.run(inv)
+  return status === 0
+}
+
 export class InvitCreate extends Operation {
   constructor (SVC: string, org: string) { super('InvitCreate', SVC, org) }
 
-  async run (
-    major: string,
-    minor: string,
-    txtm: string,
-    label: string,
-    comment: string,
-  ) : Promise<Invit | undefined> {
+  async run ( invitation: Invitation ) : Promise<number> {
     try {
-      const invitation = new Invitation()
-      await invitation.init(this.args.org, major, minor, txtm, label)
       this.args.invObj = invitation.toObj()
       const res = await this.post()
-      return invitation.toInvit(this.SVC, comment)
+      return res.status
     } catch(e) {
       this.ko(e)
+      return -1
     }
   }
 }

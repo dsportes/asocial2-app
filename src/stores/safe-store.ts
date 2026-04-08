@@ -41,6 +41,7 @@ Les propriétés sont les suivantes:
 - "creds" a une sous-map par application dont chaque entrée est l'identifiant d'un credential.
 - "profiles" a une sous-map par application dont chaque entrée est l'identifiant d'un profile.
 - "prefs" a une sous-map par application dont chaque entrée est le code d'une préférence.
+- "invits" une map par invitation. Chaque entrée est cryptée par la clé K de l'utilisateur.
 
 Le texte sérialisé d'un Safe est,
 - exportable dans un fichier externe (crypté à l'export),
@@ -131,15 +132,6 @@ export type Invit = {
   minor: string
   status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
   comment: string // texte libre écrit par U à la création (rien que pour lui).
-}
-
-export type AddInvit = {
-  userId: string
-  shk: string
-  invitId: string
-  status: number
-  time: number
-  invit: string // Objet invit sérialisé crypté en base64
 }
 
 const encoder = new TextEncoder()
@@ -485,7 +477,7 @@ export const useSafeStore = defineStore('safe', () => {
     hhp1: string // SHA de `SH(p1)`.
     hhr1: string // SHA de `SH(r1)`.
     hhk: string // SHA de `SH(K)`.
-    C: string // clé publique de cryptage. PEM
+    C: string // clé publique de cryptage.
     D: string // clé privée de décryptage.
     S: string // clé privée de signature.
     V: string // clé publique de vérification.
@@ -663,7 +655,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
   /***************************************************************************/
 
-  /* safe.invits: Object : invitId : { status, time, data } */
+  /* safe.invits: Object : invitId : { status, time, pubC, data } ************/
   const loadInvits = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, Invit>()
     const msvc = stores.config.K.SERVICES
@@ -671,7 +663,9 @@ export const useSafeStore = defineStore('safe', () => {
       const x = safe.invits[xid]
        if (!dlv(x.time)) 
         try {
-          const inv: Invit = decode(await Crypt.decrypt(keyK.value, b64ToU8(x.invit))) as Invit
+          const pubC = x.pubC
+          const aes = !pubC ? keyK.value : Crypt.getAESKey(keyFromB64(pubC), keyFromB64(auth.D))
+          const inv: Invit = decode(await Crypt.decrypt(aes, b64ToU8(x.invit))) as Invit
           inv.status = x.status
           if (msvc[inv.svc]) m.set(inv.invitId, inv)
         } catch (e) {
@@ -679,6 +673,59 @@ export const useSafeStore = defineStore('safe', () => {
         }
     }
     mySafeInvits.value = m
+  }
+
+  type AddInvit = {
+    userId: string
+    invitId: string
+    status: number
+    time: number
+    invit: string // Objet invit sérialisé crypté en base64
+    shk?: string // Cas d'une création pour U par U
+    pubC ?: string // Cas d'une création pour U par X
+      //  invit est à décrypter par le couple U/X (et non keyK)
+  }
+
+  /* Creation d'une invitation. Deux cas:
+  - de U pour lui:
+    - aes, pubC: absents. invit est crypté par la clé K de U.
+  - d'un autre utilisateur X (typiquement un "sponsor"):
+    - aes est la clé de cryptage à employer pour crypter invit.
+    - pubC est la clé publique à employer par U pour décrypter avec sa propre clé privée.
+      pubC est passé en argument pour être externe à invit.
+  */
+  const invitCreate = async (invit: Invit, aes?: Uint8Array, pubC?: string, safeStore?: string) => {
+    const addInvit : AddInvit = {
+      userId: userId.value,
+      invitId: invit.invitId,
+      time: invit.time,
+      status: invit.status,
+      invit: u8ToB64(await Crypt.crypt(aes || keyK.value, encode(invit)), true)
+    }
+    if (pubC) addInvit.pubC = pubC
+    else addInvit.shk = await Crypt.strongHash(keyK.value, false, false) as string
+
+    const op = new SafeOperation('$AddInvit', safeStore || mySafeStore.value)
+    op.args = { addInvit }
+    return await doOpSafe(op)
+  }
+
+  type StatusInvit = {
+    targetId: string
+    invitId: string
+    status: number
+  }
+
+  /* Change le status d'une invitation pour LE user U dans SON safeStore. */
+  const statusInvit = async (invitId: string, status: number ) => {
+    const sti : StatusInvit = {
+      targetId: userId.value,
+      invitId: invitId,
+      status
+    }
+    const op = new SafeOperation('$StatusInvit', mySafeStore.value)
+    op.args = { statusInvit: sti }
+    return await doOpSafe(op)
   }
 
   /* Creds ************************************************************************
@@ -1047,8 +1094,8 @@ export const useSafeStore = defineStore('safe', () => {
       // Enregistrement des clés publiques dans le dépôt générique
       op.args = {
         userId: userId.value,
-        pemC: safe.C,
-        pemV: safe.V
+        pubC: safe.C,
+        pubV: safe.V
       }
       await op.post()
       pubKeys.value.set(userId.value, [safe.C, safe.V])
@@ -1071,6 +1118,32 @@ export const useSafeStore = defineStore('safe', () => {
       await compileSafe(safe)
     }
     return ret.status
+  }
+
+  /* targetId est soit id, soit hp0, soit hr0
+  retourne [userId, pemC, pemV]
+  */
+  const getPublicKeys = async (safeStore: string, targetId: string)
+    : Promise<[string, string, string]> => {
+    const p = pubKeys.value.get(targetId)
+    if (p) return [targetId, p[0], p[1]]
+    const op = new SafeOperation('$GetPublicKeys', safeStore)
+    let pubC: string, pubV: string, id: string
+    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
+    const hp0 =  u8ToB64(sh0, true)
+    try {
+      op.args = {id: hp0}
+      const ret = await op.post()
+      id = ret.userId
+      pubC = ret.pubC
+      pubV = ret.pubV
+      if (!pubC || !pubV) return ['', '', '']
+      pubKeys.value.set(id, [pubC, pubV])
+      return [id, pubC, pubV]
+    } catch(e) {
+      op.ko(e)
+      return ['', '', '']
+    }
   }
 
   const delSafe = async () => {
@@ -1178,57 +1251,6 @@ export const useSafeStore = defineStore('safe', () => {
     userId: string
     admins: string
     shk: string
-  }
-
-  type StatusInvit = {
-    targetId: string
-    invitId: string
-    status: number
-  }
-
-  const invitCreate = async (invit: Invit) => {
-    const add : AddInvit = {
-      userId: userId.value,
-      shk: await Crypt.strongHash(keyK.value, false, false) as string,
-      invitId: invit.invitId,
-      time: invit.time,
-      status: invit.status,
-      invit: u8ToB64(await Crypt.crypt(keyK.value, encode(invit)), true)
-    }
-    const op = new SafeOperation('$AddInvit', mySafeStore.value)
-    let ret
-    try {
-      op.args = {addInvit: add}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e)
-      return -1
-    }
-    if (!ret.status)
-      await compileSafe(ret.safe)
-    return ret.status
-  }
-
-  /* Change le status d'une invitation pour LE user U dans SON safeStore. */
-  const statusInvit = async (invitId: string, status: number ) => {
-    const now = Date.now()
-    const sti : StatusInvit = {
-      targetId: userId.value,
-      invitId: invitId,
-      status
-    }
-    const op = new SafeOperation('$StatusInvit', mySafeStore.value)
-    let ret
-    try {
-      op.args = {statusInvit: sti}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e)
-      return -1
-    }
-    if (!ret.status)
-      await compileSafe(ret.safe)
-    return ret.status
   }
 
   /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
@@ -1568,32 +1590,6 @@ export const useSafeStore = defineStore('safe', () => {
     for (const dbName of dbl)
       if (dbName) await Dexie.delete(dbName)
     localStorage.removeItem('$DBLIST')
-  }
-
-  /* targetId est soit id, soit hp0, soit hr0
-  retourne [userId, pemC, pemV]
-  */
-  const getPublicKeys = async (safeStore: string, targetId)
-    : Promise<[string, string, string] | null> => {
-    const p = pubKeys.value.get(targetId)
-    if (p) return [targetId, p[0], p[1]]
-    const op = new SafeOperation('$GetPublicKeys', safeStore)
-    let pubC, pubV, id
-    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
-    const hp0 =  u8ToB64(sh0, true)
-    try {
-      op.args = {id: hp0}
-      const ret = await op.post()
-      id = ret.userId
-      pubC = ret.crypt
-      pubV = ret.verify
-      if (!pubC || !pubV) return null
-      pubKeys.value.set(id, [pubC, pubV])
-      return [id, pubC, pubV]
-    } catch(e) {
-      op.ko(e);
-      return null
-    }
   }
 
   const SetOpUrl = async (SVC: string, $OP: string, url: string )

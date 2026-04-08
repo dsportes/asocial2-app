@@ -1,7 +1,7 @@
 
 import stores from '../stores/all'
 import { InvitationA, MsgVal } from '../src-fw/invitationA'
-import { Credential } from '../src-fw/credsafe'
+import { CredSafe } from '../src-fw/credsafe'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
@@ -35,9 +35,9 @@ export class Invitation extends InvitationA {
   */
   async msgVal () : Promise<MsgVal> {
     let credOk : MsgVal = { ok: false, txt: '', role: '', docId: ''}
-    const creds : Map<string, Credential> = stores.safe.mySafeCreds
+    const creds : Map<string, CredSafe> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
-      if (c.org !== this.org || c.svc !== this.SVC) continue
+      if (c.org !== this.org || c.svc !== this.svc) continue
       if (c.role === 'Org.manager') 
         return { ok: true, txt: $t('INVsponsor_1'), role: 'Org.manager', docId: '' }
       if (c.role === 'Sponsor.') {
@@ -58,8 +58,20 @@ export class Invitation extends InvitationA {
   async validate () {
     console.log(this.invitId, this.major, 'validate')
     switch (this.major) {
+      case 'Org.manager' : { await this.validate_orgManager(); return }
       case 'Auteur' : { await this.validate_auteur(); return }
     }
+  }
+
+  async validate_orgManager () : Promise<void> {
+    const op = new Operation('InvitValidate', this.svc, this.org)
+    try {
+      op.args.invitId = this.invitId
+      const res = await op.post()
+    } catch (e) {
+      op.ko(e)
+    }
+
   }
 
   async validate_auteur () : Promise<void> {
@@ -69,7 +81,7 @@ export class Invitation extends InvitationA {
       - du Credential Safe sur "Auteur"
       - optionnellement du credential "Sponsor".
     */
-    const op = new Operation('InvitValidate', this.SVC, this.org)
+    const op = new Operation('InvitValidate', this.svc, this.org)
     try {
       let privA: string = '', privS: string = ''
       const invVal: InvVal = {
@@ -94,33 +106,34 @@ export class Invitation extends InvitationA {
       else { 
 
         // Enregistrement du ou des credential "Safe"
-        const mcreds: Map<string, Credential> = new Map()
+        // static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'name', 'comment' ]
+        const mcreds: Map<string, CredSafe> = new Map()
         if (this.etc.newA === 1) {
-          const c = new Credential() // Credential "Safe"
-          c.svc = this.SVC || ''
-          c.org = this.org
-          c.pems = privA
-          c.role = this.role
-          c.docId = this.docId
-          c.name = this.label
-          c.skey = ''
-          c.time = invVal.time
-          c.id = c.getId()
+          const c = new CredSafe({ // Credential "Safe"
+            svc: op.SVC || '',
+            org: this.org,
+            privs: privA,
+            role: this.etc.role,
+            docId: this.etc.docId,
+            name: this.etc.label,
+            time: invVal.time
+          })
+          c.setId()
           mcreds.set(c.id, c)
         }
 
         if (this.etc.option > 1) {
           const docId = 'Auteur' + (this.etc.option === 2 ? '' : ('/' + this.etc.categ))
-          const c = new Credential() // Credential "Safe"
-          c.svc = this.SVC || ''
-          c.org = this.org
-          c.pems = privS || ''
-          c.role = 'Sponsor.'
-          c.docId = docId
-          c.name = this.label
-          c.skey = ''
-          c.time = invVal.time
-          c.id = c.getId()
+          const c = new CredSafe({ // Credential "Safe"
+            svc: op.SVC || '',
+            org: this.org,
+            privs: privA,
+            role: 'Sponsor.',
+            docId: this.etc.docId,
+            name: this.etc.label,
+            time: invVal.time
+          })
+          c.setId()
           mcreds.set(c.id, c)
         }
 

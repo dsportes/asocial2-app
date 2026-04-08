@@ -94,7 +94,7 @@ import stores from '../stores/all'
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
-import { GrantNewManager, ListManagers, RevokeCred } from '../src-fw/operations'
+import { NewManager, ListManagers, RevokeCred } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import SecuritySite from '../components-fw/SecuritySite.vue'
@@ -182,14 +182,14 @@ const resetAreq = () => {
 
 const grantManager = async () => {
   const safeStore = areq.safeStore.inp
-  const p = await sf.getPublicKeys(safeStore, areq.targetUser.inp)
-  if (!p) {
+  const [targetId, pubc, pubV] = await sf.getPublicKeys(safeStore, areq.targetUser.inp)
+  if (!targetId) {
     await ui.diagDisplay($t('APnouser'))
     return
   }
-  const [targetId, pubc, pubV] = p
-  const ok = await new GrantNewManager(ui.adminPage.SVC, org.inp)
-    .run(safeStore, targetId, pubc, areq.targetUser.inp)
+  const ok = await NewManager(
+    ui.adminPage.SVC, org.inp,safeStore, 
+    targetId, pubc, areq.targetUser.inp)
   if (!ok) {
     await ui.diagDisplay($t('APkomanager'))
   } else {

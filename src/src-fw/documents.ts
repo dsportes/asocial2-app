@@ -33,4 +33,6 @@ export class Credential extends Document {
   limit: number = 0 // date-heure en seconde de fin de validité (0 si toujors valide)
   cond: any = null // Objet contenant les conditions d'application
 
+  timeSvc ?: number
+  from ?: number
 }

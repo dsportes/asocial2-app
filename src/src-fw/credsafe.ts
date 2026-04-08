@@ -8,7 +8,7 @@ const encoder = new TextEncoder()
 /* Credential en Safe
 */
 export class CredSafe {
-  static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'comment' ]
+  static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'name', 'comment' ]
 
   static getId (svc: string, org: string, docId: string, role: string) { 
     return Crypt.shaS(encoder.encode(svc + '/' + org + '/' + role + '/' + docId ))

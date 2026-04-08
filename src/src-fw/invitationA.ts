@@ -36,7 +36,6 @@ export type MsgVal = {
 */
 export class InvitationA {
   // Toujours présentes, dès la création de l'invitation
-  org: string = ''// organisation
   invitId: string = '' // ID de l'invitation générée aléatoirement à sa création
   major: string = '' //code majeur 
   minor: string = '' // code mineur
@@ -78,12 +77,12 @@ export class InvitationA {
   isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
   svc ?: string // service d'ou l'invitation a été lue
+  org ?: string = ''// organisation d'ou l'invitation a été lue
   aes ?: Uint8Array // clé AES obtenue de pubu / pubs
 
-  async init (org: string, major: string, minor: string, req: string ) : Promise<InvitationA> {
+  init (major: string, minor: string, req: string ) {
     const sf = stores.safe
 
-    this.org = org
     this.invitId = Crypt.rnd(8)
     this.status = 1
     this.major = major
@@ -93,7 +92,6 @@ export class InvitationA {
 
     this.userId = sf.userId
     this.pubu = keyToB64(sf.auth.C)
-    return this
   }
 
   async fromList (bin : Uint8Array, org: string, svc: string) : Promise<InvitationA> {
@@ -137,18 +135,6 @@ export class InvitationA {
     return x
   }
 
-  toInvit (svc: string, comment: string) : Invit { // TODO
-    return {
-      svc, comment,
-      org: this.org,
-      invitId: this.invitId,
-      time: this.time,
-      major: this.major,
-      minor: this.minor,
-      status: this.status
-    }
-  }
-
   /* Retourne un message d'erreur disant pourquoi l'utilisateur
   ne peut pas "valider / rejeter" l'invitation en status 1.
   Bref pourquoi il n'est pas un SPONSOR acceptable
@@ -170,10 +156,10 @@ export class InvitationA {
   async accept ( accept: Accept, txt: string, msgVal: MsgVal ) {
     console.log(this.invitId, 'accept')
     const sf = stores.safe
-    const op = new Operation('InvitAR', this.SVC, this.org)
+    const op = new Operation('InvitAR', this.svc, this.org)
     try {
       op.args.accept = accept
-      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
+      const aes = await Crypt.getAESKey(keyFromB64(this.pubu), keyFromB64(sf.auth.D))
       op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
       op.sign(msgVal.role, msgVal.docId)
