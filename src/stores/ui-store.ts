@@ -62,10 +62,9 @@ export const useUiStore = defineStore('ui', () => {
   const excResolve = ref(null)
   const exc = ref(null) // Exception trappée : en attente de décision de l'utilisateu
 
-  const displayExc = async (e, background?: boolean) => {
+  const displayExc = async (e: any) => {
     if (appDialogs.DialogExc) return
     exc.value = e
-    if (background) exc.value.background = true
     appDialogs.DialogExc = true
     return new Promise((resolve) => {
       excResolve.value = resolve

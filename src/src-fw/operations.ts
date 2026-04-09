@@ -188,7 +188,7 @@ export class Sync extends Operation {
       const res = await this.post()
       const x = res[subsToSync.def] // data[] / data / data[]
       const opTime = res['now']
-      await dataSt.retSync(opTime, this.org, subsToSync.def, x)
+      await dataSt.retSync(opTime, this.args.org, subsToSync.def, x)
     } catch(e) {
       this.ko(e)
     }
@@ -240,8 +240,7 @@ export const NewManager = async (
   org: string, 
   safeStore: string, 
   targetId: string, 
-  pubC: string, 
-  name: string) : Promise<boolean> => {
+  pubC: string) : Promise<boolean> => {
 
   const invitId = Crypt.rnd(8)
   const time = Math.floor(Date.now() / 1000)

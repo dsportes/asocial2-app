@@ -535,7 +535,7 @@ const resetHot = () => {
 }
 
 const setGrantRevoke = async (grant: boolean) => {
-  const b = await sf.GRSvcOpOrg (grant, SVC.value, $OP.value, org.value)
+  const b = await sf.GRSvcOpOrg (SVC.value, grant ? $OP.value : null, org.value)
   if (b) await ui.diagDisplay($t('recorded'))
 }
 

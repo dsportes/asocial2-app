@@ -182,14 +182,13 @@ const resetAreq = () => {
 
 const grantManager = async () => {
   const safeStore = areq.safeStore.inp
-  const [targetId, pubc, pubV] = await sf.getPublicKeys(safeStore, areq.targetUser.inp)
-  if (!targetId) {
+  const targetId = areq.targetUser.inp
+  const cvo = await sf.getUserCVO(safeStore, targetId)
+  if (!cvo) {
     await ui.diagDisplay($t('APnouser'))
     return
   }
-  const ok = await NewManager(
-    ui.adminPage.SVC, org.inp,safeStore, 
-    targetId, pubc, areq.targetUser.inp)
+  const ok = await NewManager(ui.adminPage.SVC, org.inp, safeStore, targetId, cvo.c)
   if (!ok) {
     await ui.diagDisplay($t('APkomanager'))
   } else {

@@ -6,13 +6,17 @@ export const K = {
     AS2: { api: 1 },
     ASSO2: { api: 1 }
   },
-  DEFAULT_SERVICE: 'AS2',
+  // DEFAULT_SERVICE: 'AS2',
 
   MASTERDIR_URL: 'http://localhost:8080/safe/',
+  FAVORITE_OPS: ['$RED', '$BLUE'],
+
+  /*
   SAFE_URLS: { // Safes spécifiques "bien connus"
     dsphp: 'http://localhost:8888/safe.php?',
     std: 'http://localhost:8080/safe/'
   },
+  */
 
   DOC_URLS: {
     fr: "https://asocialapps.github.io/frdocs/",

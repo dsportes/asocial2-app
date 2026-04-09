@@ -130,7 +130,7 @@ const nbChg = computed(() => {
 })
 
 const validate = async () => {
-  const lst = []
+  const lst: string[] = []
   for(const [k, elt] of lstAdmins.value)
     if (elt.st !== 2) lst.push(k)
   await sf.setAdmins(lst)

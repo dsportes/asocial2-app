@@ -148,6 +148,12 @@ const STORES = {
 }
 
 /* Classes et types */
+export type CVO = { // Clé: userId
+  c: string // clé publique C de cryptage en base64
+  v: string // clé publique V de vérification en base64
+  o: string // code de l'opérateur hébergeant son safe
+}
+
 class Trusting {
   userId: string = ''
   pseudo: string = ''
@@ -221,7 +227,7 @@ export const useSafeStore = defineStore('safe', () => {
   const hasIDBS = computed(() => db.value !== null)
   const incognito = ref(false)
 
-  const pubKeys : Ref<Map<string, [String, string]>> = ref(new Map())
+  const cvos : Ref<Map<string, CVO>> = ref(new Map())
 
   /* Base locale IDB : image en mémoire ***********************************************/
   const devId = ref('') // Depuis IDB Header
@@ -1088,17 +1094,14 @@ export const useSafeStore = defineStore('safe', () => {
       invits: null
     }
 
-    let op = new SafeOperation('$SetPubKeys', '')
+    let op = new SafeOperation('$SetUserCVO', '')
     let ret
     try {
-      // Enregistrement des clés publiques dans le dépôt générique
-      op.args = {
-        userId: userId.value,
-        pubC: safe.C,
-        pubV: safe.V
-      }
+      // Enregistrement dans le dépôt générique
+      const cvo: CVO = { c: safe.C, v: safe.V, o: mySafeStore.value }
+      op.args = { userId: userId.value, cvo }
       await op.post()
-      pubKeys.value.set(userId.value, [safe.C, safe.V])
+      cvos.value.set(userId.value, cvo)
     } catch (e) {
       op.ko(e)
       return -1
@@ -1123,26 +1126,23 @@ export const useSafeStore = defineStore('safe', () => {
   /* targetId est soit id, soit hp0, soit hr0
   retourne [userId, pemC, pemV]
   */
-  const getPublicKeys = async (safeStore: string, targetId: string)
-    : Promise<[string, string, string]> => {
-    const p = pubKeys.value.get(targetId)
-    if (p) return [targetId, p[0], p[1]]
-    const op = new SafeOperation('$GetPublicKeys', safeStore)
-    let pubC: string, pubV: string, id: string
+  const getUserCVO = async (safeStore: string, targetId: string)
+    : Promise<CVO | null> => {
+    let cvo = cvos.value.get(targetId)
+    if (cvo) return cvo
+    const op = new SafeOperation('$GetUserCVO', safeStore)
     const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
     const hp0 =  u8ToB64(sh0, true)
     try {
       op.args = {id: hp0}
       const ret = await op.post()
-      id = ret.userId
-      pubC = ret.pubC
-      pubV = ret.pubV
-      if (!pubC || !pubV) return ['', '', '']
-      pubKeys.value.set(id, [pubC, pubV])
-      return [id, pubC, pubV]
+      cvo = ret['cvo']
+      if (!cvo) return null
+      cvos.value.set(targetId, cvo)
+      return cvo
     } catch(e) {
       op.ko(e)
-      return ['', '', '']
+      return null
     }
   }
 
@@ -1609,16 +1609,16 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const GRSvcOpOrg = async (grant: boolean, SVC: string, $OP: string, org: string )
+  const GRSvcOpOrg = async (SVC: string, $OP: string | null, org: string )
   : Promise<boolean> => {
     const params = [SVC, $OP, org]
     const time = Date.now()
     const ch = encode([time, params])
     const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
-    const op = new SafeOperation(grant ? '$GrantSvcOpOrg' : '$RevokeSvcOpOrg', '')
+    const op = new SafeOperation('$GrantSvcOpOrg', '')
     try {
       op.args = { userId: userId.value, time, params, sign }
-      const ret = await op.post()
+      await op.post()
       return true
     } catch(e) {
       op.ko(e)
@@ -1660,7 +1660,7 @@ export const useSafeStore = defineStore('safe', () => {
     devices,
     getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe, delSafe,
-    setTrust, setUntrust, getPublicKeys,
+    setTrust, setUntrust, getUserCVO,
     synthUsers, getBinSafe, setUntrustAll, 
     setAdmins, setContact,
     SetOpUrl, GRSvcOpOrg
