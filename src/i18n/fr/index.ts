@@ -1090,7 +1090,8 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   EX_1006: 'Jeton d\'accès expiré sur opération pour l\'organisation [{0}] - Tenter de la relancer.',
   EX_1007: 'Le service [{0}] n\'est pas assuré par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
   EX_1008: 'L\'organisation [{0}] n\'a pas d\'opérateur assurant le service [{1}]. Erreur de saisie (ou BUG improbable)',
-  EX_1009: 'Le service [{1}] n\'est pas géré par l\'application. Erreur de saisie (ou BUG improbable)',
+  EX_1009: 'Le service [{0}] n\'est pas géré par l\'application. Erreur de saisie (ou BUG improbable)',
+  EX_1010: 'L\'opérateur [{0}] ne gère pas les "safes" des utilisateurs. Erreur de saisie (ou BUG improbable)',
 
   EX_2001: 'BUG probable: opération sans cible organisation ou opérateur.',
   EX_2002: 'Vous n\'êtes pas enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',

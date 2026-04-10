@@ -63,7 +63,7 @@
     <div v-if="sf.auth.admins && org.ok" class="q-my-md">
       <q-separator color="orange"/>
       <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
-      <security-site class="q-my-sm" v-model="areq.safeStore.inp"/>
+      <security-site class="q-my-sm" v-model="areq.safeStore"/>
 
       <input-b class="full-width" prefix="FCtarget" size="p0" noval
         v-model="areq.targetUser"/>
@@ -119,7 +119,7 @@ const lstMgr = ref([])
 
 const areq = reactive({
   targetUser: { inp: '', err: ''},
-  safeStore: { inp: '', err: ''}
+  safeStore: ''
 })
 const org = reactive({ inp: session.currentOrg || '', err: '', ok: false })
 
@@ -176,19 +176,19 @@ const diagReq = computed(() => {
 })
 
 const resetAreq = () => {
-  areq.targetUser.inp = ''; areq.targetUser.err = ''
-  areq.safeStore.inp = ''; areq.safeStore.err = ''
+  areq.targetUser.inp = ''
+  areq.targetUser.err = ''
+  areq.safeStore = ''
 }
 
 const grantManager = async () => {
-  const safeStore = areq.safeStore.inp
   const targetId = areq.targetUser.inp
-  const cvo = await sf.getUserCVO(safeStore, targetId)
+  const cvo = await sf.getUserCVO(areq.safeStore, targetId)
   if (!cvo) {
     await ui.diagDisplay($t('APnouser'))
     return
   }
-  const ok = await NewManager(ui.adminPage.SVC, org.inp, safeStore, targetId, cvo.c)
+  const ok = await NewManager(ui.adminPage.SVC, org.inp, areq.safeStore, targetId, cvo.c)
   if (!ok) {
     await ui.diagDisplay($t('APkomanager'))
   } else {

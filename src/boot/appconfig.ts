@@ -67,5 +67,5 @@ export default defineBoot(async ({ app }) => {
   } else console.log('appconfig: ' + DocType.docTypes.size + ' document classes')
 
   Help.setPlan(plan, readme, helpPages, helpLabels)
-
+  
 })

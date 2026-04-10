@@ -36,8 +36,7 @@ const config = stores.config
 
 const exp = ref(false)
 const def = $t('SECsite_std')
-const urls = config.K.SAFE_URLS
-const sites = Array.from(Object.keys(urls)).sort()
+const sites = config.K.FAVORITE_OPERATORS.sort()
 const vals = ref([def, ...sites])
 
 const model = defineModel() // Dans le script accessible par model.value
@@ -60,7 +59,7 @@ const check = () => {
     exp.value = false
   } else {
     err.value = 2
-    if (urls[s]) checkSite()
+    checkSite()
   }
 }
 

@@ -6,24 +6,13 @@ export const K = {
     AS2: { api: 1 },
     ASSO2: { api: 1 }
   },
-  // DEFAULT_SERVICE: 'AS2',
-
   MASTERDIR_URL: 'http://localhost:8080/safe/',
-  FAVORITE_OPS: ['$RED', '$BLUE'],
-
-  /*
-  SAFE_URLS: { // Safes spécifiques "bien connus"
-    dsphp: 'http://localhost:8888/safe.php?',
-    std: 'http://localhost:8080/safe/'
-  },
-  */
+  FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
 
   DOC_URLS: {
     fr: "https://asocialapps.github.io/frdocs/",
     en: "https://asocialapps.github.io/frdocs/",
   },
-
-  FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
 
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
