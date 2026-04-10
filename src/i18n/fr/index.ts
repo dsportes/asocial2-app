@@ -1105,7 +1105,8 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
 
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
-  EX_3003: 'BUG probable: retour d\'opération [{0}] MASTERDIR: {1}',
+  EX_3003: 'BUG probable: échec de l\'opération [{0}] sur appel de l\'opération sur SAFE [{1}]. Détail : {2}',
+  EX_3005: 'BUG probable: opérateur de SAFE {1} inconnu pour l\'opération [{0}]',
   EX_3004: 'BUG probable: classe de document [{0}] non déclarée dans config.documentClasses',
   EX_10000: 'Interruption volontaire',
 

@@ -238,10 +238,12 @@ Créé une invitation (proposition directe).
 export const NewManager = async (
   svc: string, 
   org: string, 
-  safeStore: string, 
-  targetId: string, 
-  pubC: string) : Promise<boolean> => {
+  safeStore: string, // de la cible U 
+  idu: string, // id de la cible U
+  pubcu: string // de la cible U 
+  ) : Promise<boolean> => {
 
+  // Enregistrement dans le safe de U
   const invitId = Crypt.rnd(8)
   const time = Math.floor(Date.now() / 1000)
   const major = 'Org.manager'
@@ -257,25 +259,23 @@ export const NewManager = async (
     status: 2,
     comment: ''
   }
-  const aes = Crypt.getAESKey(keyFromB64(pubC), keyFromB64(sf.auth.D))
-  let status = await sf.invitCreate(invit, aes, pubC, safeStore)
-  
+  const aes = await Crypt.getAESKey(keyFromB64(pubcu), keyFromB64(sf.auth.D))
+  const status = await sf.invitCreate(invit, idu, aes, sf.auth.C, safeStore)
   if (status !== 0) return false
 
+  // Création et enregistrement de l'invitation en DB du service
   const inv = new Invitation()
   inv.invitId = invitId
   inv.major = major
   inv.time = time
   inv.status = 2
-  inv.userId = targetId
-  inv.pubu = pubC
-  inv.pubs = sf.auth.C
-  inv.etc = {
-    proposedTo: name
-  }
+  inv.userId = idu // de la cible U
+  inv.safeStore = safeStore // de la cible U
+  inv.pubu = pubcu // clé C de la cible U
+  inv.pubs = sf.auth.C // clé C du sponsor
+  inv.etc = null // Impératif
   const op = new InvitCreate(svc, org)
-  status = await op.run(inv)
-  return status === 0
+  return await op.run(inv) === 0
 }
 
 export class InvitCreate extends Operation {

@@ -148,7 +148,8 @@ const STORES = {
 }
 
 /* Classes et types */
-export type CVO = { // Clé: userId
+export type ICVO = { // Clé: userId
+  i: string // userId
   c: string // clé publique C de cryptage en base64
   v: string // clé publique V de vérification en base64
   o: string // code de l'opérateur hébergeant son safe
@@ -227,7 +228,7 @@ export const useSafeStore = defineStore('safe', () => {
   const hasIDBS = computed(() => db.value !== null)
   const incognito = ref(false)
 
-  const cvos : Ref<Map<string, CVO>> = ref(new Map())
+  const icvos : Ref<Map<string, ICVO>> = ref(new Map())
 
   /* Base locale IDB : image en mémoire ***********************************************/
   const devId = ref('') // Depuis IDB Header
@@ -524,7 +525,7 @@ export const useSafeStore = defineStore('safe', () => {
     return !y || y.length === 0 ? u8Empty : y
   }
 
-  const doOpSafe = async (op: SafeOperation) : Promise<number> => {
+  const doOpSafe = async (op: SafeOperation, nocomp?: boolean) : Promise<number> => {
     let ret
     try {
       ret = await op.post()
@@ -534,7 +535,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
     if (ret.status === 0)
       try {
-       await compileSafe(ret.safe)
+       if (!nocomp) await compileSafe(ret.safe)
       } catch (e) {
         console.log(e)
       }
@@ -670,7 +671,8 @@ export const useSafeStore = defineStore('safe', () => {
        if (!dlv(x.time)) 
         try {
           const pubC = x.pubC
-          const aes = !pubC ? keyK.value : Crypt.getAESKey(keyFromB64(pubC), keyFromB64(auth.D))
+          const aes = !pubC ? keyK.value : 
+            await Crypt.getAESKey(keyFromB64(pubC), keyFromB64(auth.D))
           const inv: Invit = decode(await Crypt.decrypt(aes, b64ToU8(x.invit))) as Invit
           inv.status = x.status
           if (msvc[inv.svc]) m.set(inv.invitId, inv)
@@ -699,10 +701,19 @@ export const useSafeStore = defineStore('safe', () => {
     - aes est la clé de cryptage à employer pour crypter invit.
     - pubC est la clé publique à employer par U pour décrypter avec sa propre clé privée.
       pubC est passé en argument pour être externe à invit.
+  Le safe n'est recompilé qu'en cas de U pour lui-même.
+  Retour: [ status, VRAIE userId]
+  Dans le cas par X, le userId passé en argument est en général un contact ou pseudo
+  mais au retour on a besoin du vrai userId.
   */
-  const invitCreate = async (invit: Invit, aes?: Uint8Array, pubC?: string, safeStore?: string) => {
+  const invitCreate = async (
+    invit: Invit, 
+    idu: string,
+    aes: Uint8Array | null, 
+    pubC: string | null, 
+    safeStore: string) : Promise<number> => { // status
     const addInvit : AddInvit = {
-      userId: userId.value,
+      userId: idu,
       invitId: invit.invitId,
       time: invit.time,
       status: invit.status,
@@ -713,7 +724,16 @@ export const useSafeStore = defineStore('safe', () => {
 
     const op = new SafeOperation('$AddInvit', safeStore || mySafeStore.value)
     op.args = { addInvit }
-    return await doOpSafe(op)
+    try {
+      const ret = await op.post()
+      if (ret.status === 0 && !pubC)
+        try { await compileSafe(ret.safe) } catch (e) {
+          console.log(e) }
+      return ret.status
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
   }
 
   type StatusInvit = {
@@ -722,10 +742,12 @@ export const useSafeStore = defineStore('safe', () => {
     status: number
   }
 
-  /* Change le status d'une invitation pour LE user U dans SON safeStore. */
-  const statusInvit = async (invitId: string, status: number ) => {
+  /* Change le status d'une invitation pour LE user U dans SON safeStore.
+  targetId est un userId. Si vide, c'est le userId de U lui-même.
+  */
+  const statusInvit = async (invitId: string, targetId: string, status: number ) : Promise<number> => {
     const sti : StatusInvit = {
-      targetId: userId.value,
+      targetId: targetId || userId.value,
       invitId: invitId,
       status
     }
@@ -1098,10 +1120,10 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       // Enregistrement dans le dépôt générique
-      const cvo: CVO = { c: safe.C, v: safe.V, o: mySafeStore.value }
-      op.args = { userId: userId.value, cvo }
+      const icvo: ICVO = { i: userId.value, c: safe.C, v: safe.V, o: mySafeStore.value }
+      op.args = { userId: userId.value, icvo }
       await op.post()
-      cvos.value.set(userId.value, cvo)
+      icvos.value.set(userId.value, icvo)
     } catch (e) {
       op.ko(e)
       return -1
@@ -1123,23 +1145,22 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  /* targetId est soit id, soit hp0, soit hr0
-  retourne [userId, pemC, pemV]
+  /* targetId est soit id, soit hp0, soit hr0, soit contact
+  retourne ICVO (id, C, V, safeStore)
   */
-  const getUserCVO = async (safeStore: string, targetId: string)
-    : Promise<CVO | null> => {
-    let cvo = cvos.value.get(targetId)
-    if (cvo) return cvo
-    const op = new SafeOperation('$GetUserCVO', safeStore)
-    const sh0 = await Crypt.strongHash(targetId, true, true) as Uint8Array
-    const hp0 =  u8ToB64(sh0, true)
+  const getUserICVO = async (safeStore: string, targetId: string)
+    : Promise<ICVO | null> => {
+    let icvo = icvos.value.get(targetId)
+    if (icvo) return icvo
+    const op = new SafeOperation('$GetUserICVO', safeStore)
     try {
-      op.args = {id: hp0}
+      op.args = { id: targetId}
       const ret = await op.post()
-      cvo = ret['cvo']
-      if (!cvo) return null
-      cvos.value.set(targetId, cvo)
-      return cvo
+      icvo = ret['icvo']
+      if (!icvo) return null
+      icvo.o = safeStore
+      icvos.value.set(icvo.i, icvo)
+      return icvo
     } catch(e) {
       op.ko(e)
       return null
@@ -1660,7 +1681,7 @@ export const useSafeStore = defineStore('safe', () => {
     devices,
     getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe, delSafe,
-    setTrust, setUntrust, getUserCVO,
+    setTrust, setUntrust, getUserICVO,
     synthUsers, getBinSafe, setUntrustAll, 
     setAdmins, setContact,
     SetOpUrl, GRSvcOpOrg

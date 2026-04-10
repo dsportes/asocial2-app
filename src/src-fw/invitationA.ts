@@ -35,6 +35,9 @@ export type MsgVal = {
 /* ### Document `Invitation` dans la base du service
 */
 export class InvitationA {
+  svc: string = '' // service d'ou l'invitation a été lue (ou préparée à la création)
+  org: string = '' // organisation d'ou l'invitation a été lue (ou préparée à la création)
+
   // Toujours présentes, dès la création de l'invitation
   invitId: string = '' // ID de l'invitation générée aléatoirement à sa création
   major: string = '' //code majeur 
@@ -50,6 +53,7 @@ export class InvitationA {
   - (6) : proposition de S déclinée par U.
   */
   userId: string = '' // ID de U (demandeur)
+  safeStore: string = '' // de la cible / demandeur U
   pubu: string = '' // clé publique C de cryptage de U en base64
 
   // Dès la "demande" (pour un cycle complet seulement)
@@ -76,8 +80,7 @@ export class InvitationA {
 
   isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
   isU ?: boolean // user est le user DEMANDEUR
-  svc ?: string // service d'ou l'invitation a été lue
-  org ?: string = ''// organisation d'ou l'invitation a été lue
+
   aes ?: Uint8Array // clé AES obtenue de pubu / pubs
 
   init (major: string, minor: string, req: string ) {

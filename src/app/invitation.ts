@@ -15,6 +15,12 @@ type InvVal = {
   time: number // time de l'application pour ces deux credentials
 }
 
+type InvitValOM = { // arguments de validation d'un Credential Org.manager
+  time: number // date-heure des credentials associés, etc.
+  pubv: string // clé publique de vérification du credential
+  name: string // nom / pseudo facultatif pour information à stocker en cond
+}
+
 export class Invitation extends InvitationA {
   static rnd: number = 0
 

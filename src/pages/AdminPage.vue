@@ -90,6 +90,7 @@
 // @ts-ignore
 import { ref, computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
+import { ICVO } from '../stores/safe-store'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -183,12 +184,12 @@ const resetAreq = () => {
 
 const grantManager = async () => {
   const targetId = areq.targetUser.inp
-  const cvo = await sf.getUserCVO(areq.safeStore, targetId)
-  if (!cvo) {
+  const icvo = await sf.getUserICVO(areq.safeStore, targetId) as ICVO
+  if (!icvo) {
     await ui.diagDisplay($t('APnouser'))
     return
   }
-  const ok = await NewManager(ui.adminPage.SVC, org.inp, areq.safeStore, targetId, cvo.c)
+  const ok = await NewManager(ui.adminPage.SVC, org.inp, areq.safeStore, icvo.i, icvo.c)
   if (!ok) {
     await ui.diagDisplay($t('APkomanager'))
   } else {
