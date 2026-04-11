@@ -6,6 +6,10 @@ import { IDB } from './idb'
 import stores from '../stores/all'
 import { UpdateSubscription, SetSubscription } from './operations'
 
+export function loading() {
+  console.log('loading src-fw/document: ', Document.sizeD())
+}
+
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
 */
@@ -142,6 +146,16 @@ export class Subs {
 
 // Document stocké en store-data
 export class Document {
+  static regDoc = new Map()
+  static sizeD () { return Document.regDoc.size }
+
+  static registerD (cl: Function) { Document.regDoc.set(cl.name, cl) }
+  static getD (name: string) { return Document.regDoc.get(name) }
+  static newD (name: string) {
+    const cl = Document.regDoc.get(name)
+    return cl ? new cl() : null
+  }
+
   _clazz: string = ''
   _dt: DocType | null = null
   _pk: string = ''
@@ -153,16 +167,10 @@ export class Document {
     return !v ? new Set() : new Set(v)
   }
 
-  static classes: Object
-  static setClasses (arg: Object) { Document.classes = arg }
-
-  static getClazz (clazz: string) : Function{ return Document.classes[clazz]}
-
   static async compile (clazz: string, data: Uint8Array) {
-    const cl = Document.classes[clazz]
-    if (!cl) return null
-    const dt = DocType.get(clazz)
-    const doc: Document = new cl() as Document
+    // const dt = DocType.get(clazz)
+    const doc: Document = Document.newD(clazz)
+    if (!doc) return null
     doc._clazz = clazz
     doc._dt = DocType.get(clazz) || null
     const d = data ? decode(data) : {}

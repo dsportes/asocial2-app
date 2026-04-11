@@ -106,6 +106,7 @@ import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
+console.log('app.vue')
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
 const hdrPages = new Set(['admin', 'demands', 'safeHome'])

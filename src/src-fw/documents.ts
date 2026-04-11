@@ -1,4 +1,4 @@
-import { Document } from '../src-fw/document'
+// import { Document } from '../src-fw/document'
 import { CredSafe } from './credsafe'
 // import stores from '../stores/all'
 
@@ -10,7 +10,7 @@ Schéma du document;
   - pk: ['userId', 'role', 'docId']
   - index: userId
 */
-export class Credential extends Document {
+export class Credential {
   async compile () {}
 
   static fromCredSafe (cs: CredSafe, userId: string, pubv: string, limit: number) : Credential {
@@ -35,3 +35,4 @@ export class Credential extends Document {
   timeSvc ?: number
   from ?: number
 }
+// Document.registerD(Credential)

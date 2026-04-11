@@ -177,9 +177,9 @@ export class InvitationA {
   async reject (txt: string, msgVal: MsgVal) {
     const sf = stores.safe
     console.log(this.invitId, 'reject')
-    const op = new Operation('InvitAR', this.SVC, this.org)
+    const op = new Operation('InvitAR', this.svc, this.org)
     try {
-      const aes = await Crypt.getAESKey(fromPem(this.pemU, true), fromPem(sf.auth.D))
+      const aes = await Crypt.getAESKey(keyFromB64(this.pubu), keyFromB64(sf.auth.D))
       op.args.txti = await Crypt.crypt(aes, encoder.encode(txt))
       op.args.invitId = this.invitId
       op.sign(msgVal.role, msgVal.docId)
@@ -200,7 +200,7 @@ export class InvitationA {
 
   async decline (txtx: string) {
     console.log(this.invitId, 'decline')
-    const op = new Operation('InvitDC', this.SVC, this.org)
+    const op = new Operation('InvitDC', this.svc, this.org)
     try {
       op.args.invitId = this.invitId
       op.args.txtx = txtx
@@ -214,7 +214,7 @@ export class InvitationA {
 
   async cancel () {
     console.log(this.invitId, 'cancel')
-    const op = new Operation('InvitDC', this.SVC, this.org)
+    const op = new Operation('InvitDC', this.svc, this.org)
     try {
       op.args.invitId = this.invitId
       const res = await op.post()

@@ -6,6 +6,7 @@ import { DocType } from '../src-fw/doctypes'
 import { K } from '../app/constants'
 import stores from '../stores/all'
 import { Help } from '../src-fw/help'
+import { loading } from '../app/documents'
 
 import readme from '../assets/README.md?raw'
 import customR from '../assets/custom.json?raw'
@@ -69,3 +70,6 @@ export default defineBoot(async ({ app }) => {
   Help.setPlan(plan, readme, helpPages, helpLabels)
   
 })
+
+loading()
+console.log('appconfig')
