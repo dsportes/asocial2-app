@@ -81,7 +81,7 @@ async function downloadFile () : Promise<void> {
     const blob = new Blob([new Uint8Array(data)], { type: fileType.value })
     const url = URL.createObjectURL(blob)
     setTimeout(() => { window.open(url, '_blank') }, 100)
-  } catch (e) {
+  } catch (e: any) {
     echo.value = 'err:' + (e.code || '???')
   }
 }
@@ -90,7 +90,7 @@ async function uploadFile () : Promise<void> {
   await getPutUrl(false)
   if (echo.value) try {
     await putData(echo.value, fd.value.u8)
-  } catch (e) {
+  } catch (e: any) {
     echo.value = 'err:' + (e.code || '???')
   }
 }
@@ -103,12 +103,12 @@ const t1 = async () => {
     const sh1 = await Crypt.strongHash(inp, true, true) as Uint8Array
     const input = u8ToB64(sh1, true)
     const shas = Crypt.shaS(sh1)
-    $Shas.args = { input }
-    const res = await this.post()
+    $Shas.args.input = input
+    const res = await $Shas.post()
     if (res.shaS === shas)
       console.log('ok')
-  } catch(e) {
-    this.ko(e)
+  } catch(e: any) {
+    $Shas.ko(e)
   }
 }
 

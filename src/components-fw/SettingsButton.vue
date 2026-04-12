@@ -343,7 +343,7 @@
         <div v-else class="column">
           <div class="row q-mb-md">
             <input-a class="col-6" prefix="service" v-model="SVC" size="svc"
-              :list="Array.from(Object.keys(config.K.SERVICES))"/>
+              :list="listSvc"/>
             <input-a class="col-6" prefix="operator" v-model="$OP" size="oper"
               :list="config.K.FAVORITE_OPERATORS"/>
           </div>
@@ -455,6 +455,9 @@ const svcop = reactive({
   SVC: '',
   $OP: ''
 })
+
+const listSvc = ref(Array.from(Object.keys(config.K.SERVICES)))
+listSvc.value.push('SAFE')
 
 const sessionClose = (n) => {
   if (n === 1) ui.backToOpenSession()

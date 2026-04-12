@@ -1116,7 +1116,7 @@ export const useSafeStore = defineStore('safe', () => {
       invits: null
     }
 
-    let op = new SafeOperation('$SetUserCVO', '')
+    let op = new SafeOperation('$SetUserICVO', '')
     let ret
     try {
       // Enregistrement dans le dépôt générique

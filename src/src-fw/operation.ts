@@ -120,7 +120,7 @@ export class Operation {
     else if ($OP) this.args.$OP = $OP
     this.background = background || false
     this.SVC = SVC
-    if (!stores.config.K.SERVICES[this.SVC])
+    if (this.SVC !== 'SAFE' && !stores.config.K.SERVICES[this.SVC])
       throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
     this.authRecord = new AuthRecord()
   }
@@ -134,7 +134,8 @@ export class Operation {
 
   async getBaseUrl () : Promise<string> {
     if (this.args.$OP) {
-      const u = await this.$GetSvcOpUrl()
+      const u = this.args.$OP === 'MASTERDIR' ? stores.config.K.MASTERDIR_URL :
+        await this.$GetSvcOpUrl()
       if (u) return u
       throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.args.$OP] })
     }
@@ -158,7 +159,8 @@ export class Operation {
     const session = stores.session
     try {
       session.opStart(this)
-      const u = await this.getBaseUrl()
+      let u = await this.getBaseUrl()
+      if (!u.endsWith('/')) u += '/'
       this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
       if (!noAuth) 
@@ -220,7 +222,7 @@ export class SafeOperation extends Operation {
   safeStore: string = ''
 
   constructor (opName: string, safeStore: string) {
-    super(opName, 'SAFE')
+    super(opName, 'SAFE', '', safeStore || 'MASTERDIR')
     this.safeStore = safeStore
   }
 

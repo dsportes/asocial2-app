@@ -225,7 +225,7 @@ const valAbPs = async () => {
     if (status !== 0)
       await ui.diagDisplay($t('HPsfop_' + status))
     else selSessionAbBefore.value = selSessionAb.value
-  } catch (e) {
+  } catch (e: any) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }
@@ -289,7 +289,7 @@ const validateSessionP = async (p, prefCode, prefTime, prefObj) => {
 const validateSession = async (prefCode, prefTime, prefObj) => {
   let sv = sf.selectedSession
   const sp = sf.selectedProfile
-  let profile: Profile = null
+  let profile: Profile | null = null
 
   if (sv) {
     // reprise d'une session épinglée
@@ -355,7 +355,8 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
   sf.setStep(0)
   if (prefCode) session.updatePref(prefCode, prefTime, decode(prefObj))
   else session.updatePref('', 0, {})
-  session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
+  if (profile)
+    session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
 }
 
 const opGuest = () => {

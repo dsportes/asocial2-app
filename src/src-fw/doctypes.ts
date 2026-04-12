@@ -195,11 +195,5 @@ export class DocType {
 
   get hasIndexes () { return this.indexes ? true : false }
 
-  static alert () {
-    if (DocType.errors.length) {
-      console.error(DocType.errors.join('\n'))
-      window.alert('appconfig: ' + DocType.errors.length + ' compile schema errors')
-    } 
-  }
 }
 

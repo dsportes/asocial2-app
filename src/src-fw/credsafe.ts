@@ -1,5 +1,4 @@
-import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
-// import { u8ToB64 } from './util'
+import { Crypt, keyFromB64, keyToB64 } from './crypt'
 import stores from '../stores/all'
 import { Credential } from '../src-fw/documents'
 
@@ -118,7 +117,7 @@ export class AuthRecord {
 
   async signUser () {
     const sf = stores.safe
-    this.userSign = sf.auth && sf.auth.S ? await Crypt.sign(fromPem(sf.auth.S), this.challenge) : null
+    this.userSign = sf.auth && sf.auth.S ? await Crypt.sign(keyFromB64(sf.auth.S), this.challenge) : null
   }
 
   get toObj() {
