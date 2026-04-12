@@ -1,9 +1,10 @@
 // @ts-ignore
-import { ref, computed } from 'vue'
-// @ts-ignore
-import type { Ref } from 'vue'
+import { ref, Ref, computed } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
+// @ts-ignore
+import customR from '../assets/custom.json?raw'
+import { K as AppK } from '../app/constants'
 
 export interface localeOption { value: string, label: string, flag: string }
 
@@ -30,12 +31,14 @@ export const useConfigStore = defineStore('config', () => {
   const services: Ref<Map<string, service>> = ref(new Map()) 
 
   const K = ref()
-  const initK = (k: any, _location: Object, custom: Object) => {
-    location.value = _location['href']
-    K.value = k
+
+  const initK = () => {
+    const custom = JSON.parse(customR)
+    location.value = window.location['href']
+    K.value = { ...AppK}
     for(const f in custom) K.value[f] = custom[f]
-    k.localeOptions.forEach(l => { localeMap.set(l.value, l) })
-    locale.value = k.localeOptions[0].value
+    K.value.localeOptions.forEach(l => { localeMap.set(l.value, l) })
+    locale.value = K.value.localeOptions[0].value
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
   }

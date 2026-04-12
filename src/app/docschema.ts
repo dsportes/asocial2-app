@@ -1,5 +1,13 @@
 import { propType, collection, idx, DocType } from '../src-fw/doctypes'
 
+export function loadingTypes (alert?: boolean) {
+  if (DocType.errors.length) {
+    console.error(DocType.errors.join('\n'))
+    if (alert) window.alert('appconfig: ' + DocType.errors.length + ' compile schema errors')
+  } else
+    console.log(DocType.docTypes.size + ' document classes found')
+}
+
 new DocType(
   { name: 'Org', sync: true, pk: ['org'] }, //header
   null, // collections
@@ -64,5 +72,3 @@ new DocType(
     ['titre', {type: propType.INTEGER} ]
   ])
 )
-
-export const docTypeErrors = DocType.errors

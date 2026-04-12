@@ -2,7 +2,7 @@
 // @ts-nocheck
 import stores from '../stores/all'
 import { IDB } from './idb'
-import { Subscription } from'./document'
+import { Subscription } from'./subscription'
 import { SetSubscription } from './operations'
 
 type age = {

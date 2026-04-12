@@ -1,14 +1,9 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { DocType } from './doctypes'
 import { IDB } from './idb'
 import stores from '../stores/all'
-import { UpdateSubscription, SetSubscription } from './operations'
-
-export function loading() {
-  console.log('loading src-fw/document: ', Document.sizeD())
-}
+import { UpdateSubscription, SetSubscription } from '../src-fw/operations'
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
@@ -142,44 +137,4 @@ export class Subs {
   }
 
   hasRefs () { return this.vdef0 === null && this.vdef1.size === 0 && this.vdef2.size === 0}
-}
-
-// Document stocké en store-data
-export class Document {
-  static regDoc = new Map()
-  static sizeD () { return Document.regDoc.size }
-
-  static registerD (cl: Function) { Document.regDoc.set(cl.name, cl) }
-  static getD (name: string) { return Document.regDoc.get(name) }
-  static newD (name: string) {
-    const cl = Document.regDoc.get(name)
-    return cl ? new cl() : null
-  }
-
-  _clazz: string = ''
-  _dt: DocType | null = null
-  _pk: string = ''
-  deleted?: boolean = false
-  v: number = 0
-
-  propertyAsSet (name: string) : Set<string> {
-    const v = this[name]
-    return !v ? new Set() : new Set(v)
-  }
-
-  static async compile (clazz: string, data: Uint8Array) {
-    // const dt = DocType.get(clazz)
-    const doc: Document = Document.newD(clazz)
-    if (!doc) return null
-    doc._clazz = clazz
-    doc._dt = DocType.get(clazz) || null
-    const d = data ? decode(data) : {}
-    for(const f in d) doc[f] = d[f]
-    doc._pk = d._pk || (doc._dt ? doc._dt.pkValue(doc) : '')
-    await doc.compile()
-    return doc
-  }
-
-  async compile() { }
-
 }

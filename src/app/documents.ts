@@ -1,26 +1,22 @@
 
-import { Document } from '../src-fw/document'
-
-export function loading() {
-  console.log('loading app/document: ', Document.sizeD())
-}
+import { DocRegistry, Document } from '../src-fw/docregistry'
 
 class Article extends Document {
   async compile () {}
 }
-Document.registerD(Article)
+DocRegistry.registerD(Article)
 
 class Auteur extends Document {
   async compile () {}
 }
-Document.registerD(Auteur)
+DocRegistry.registerD(Auteur)
 
 class Chat extends Document {
   async compile () {}
 }
-Document.registerD(Chat)
+DocRegistry.registerD(Chat)
 
 class Sujet extends Document {
   async compile () {}
 }
-Document.registerD(Sujet)
+DocRegistry.registerD(Sujet)

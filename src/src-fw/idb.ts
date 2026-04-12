@@ -6,7 +6,8 @@ import { encode, decode } from '@msgpack/msgpack'
 import stores from '../stores/all'
 import { Crypt } from './crypt'
 import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
-import { Document, Subscription, Subs } from './document'
+import { DocRegistry } from '../src-fw/docregistry'
+import { Subscription, Subs } from '../src-fw/subscription'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
@@ -162,7 +163,7 @@ export class IDB {
   async loadAllDocs (cb: Function) : Promise<void> {
     await this.db.documents.each(async ({org, id, bin }) => {
       const rec = await this.decryptRecord(bin) as docRecord
-      const doc = await Document.compile(rec.clazz, rec.data)
+      const doc = await DocRegistry.compile(rec.clazz, rec.data)
       cb(org, doc)
     })
   }

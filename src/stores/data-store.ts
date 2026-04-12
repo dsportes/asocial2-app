@@ -18,7 +18,8 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
 import { isSameSet } from '../src-fw/util'
-import { Document, Subscription, Subs, versions } from '../src-fw/document'
+import { Document, DocRegistry } from '../src-fw/docregistry'
+import { Subscription, Subs, versions } from '../src-fw/subscription'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
 
@@ -123,7 +124,7 @@ export const useDataStore = defineStore('data', () => {
   Retourne le document "stocké" (le nouveau ou l'ancien)
   ou null s'il a été supprimé
   */
-  const setDoc = (org: string, doc: Document) : docInfo => {
+  const setDoc = (org: string, doc: Document) : docInfo | null => {
     let eorg = documents.value.get(org);
     if (!eorg) {
       eorg = new Map<string, Map<string, Map<string, Document>>>()
@@ -164,7 +165,7 @@ export const useDataStore = defineStore('data', () => {
     const defs = new Set<string>()
     const eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) return defs
-    const subs: Subs = eorg.get(doc._clazz)
+    const subs: Subs | null = eorg.get(doc._clazz) || null
     if (!subs) return defs
   
     if (subs.vdef0) defs.add('0')
@@ -197,7 +198,7 @@ export const useDataStore = defineStore('data', () => {
 
   /* getDocInfo() : retourne le docInfo (doc, defs) du document dans la stucture 
   ou null s'il n'y est pas */
-  const getDocInfo = (org: string, clazz: string, pk: string) : docInfo => {
+  const getDocInfo = (org: string, clazz: string, pk: string) : docInfo | null => {
     let eorg = documents.value.get(org)
     if (!eorg) return null
     let ecl = eorg.get(clazz)
@@ -270,8 +271,8 @@ export const useDataStore = defineStore('data', () => {
   }
 
   /* getSubscription() : retourne un clone de la subscription enregistrée en vue d'édition */
-  const getSubscription = (org: string) : Subscription => {
-    const s = subscriptions.get(org)
+  const getSubscription = (org: string) : Subscription | null => {
+    const s = subscriptions.get(org) || null
     return !s ? null : Subscription.fromSerial(s.serial())
   }
 
@@ -287,7 +288,7 @@ export const useDataStore = defineStore('data', () => {
   const getSubs = (org: string, clazz: string) : Subs => {
     let eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) { eorg = new Map<string, Subs>();  allSubs.value.set(org, eorg) }
-    let subs: Subs = eorg.get(clazz)
+    let subs: Subs | null = eorg.get(clazz) || null
     if (!subs) { subs = new Subs(); eorg.set(clazz, subs)}
     return subs
   }
@@ -302,7 +303,7 @@ export const useDataStore = defineStore('data', () => {
     const s = def.split('/')
     const clazz = s[0]
     const subs: Subs = getSubs(org, clazz)
-    let versions: versions
+    let versions: versions | null = null
     let defloc: string
     switch (s.length - 1) {
       case 0 : { 
@@ -313,21 +314,21 @@ export const useDataStore = defineStore('data', () => {
       }
       case 1 : { 
         const pk = s[1]
-        versions = subs.vdef1.get(pk)
+        versions = subs.vdef1.get(pk) || null
         if (!versions) { defloc = pk; versions = [0, 0];  subs.vdef1.set(pk, versions)}
         versions[1] = v
         break 
       }
       case 2 : { 
         const nv = s[1] + '/' + s[2]
-        versions = subs.vdef2.get(nv)
+        versions = subs.vdef2.get(nv) || null
         if (!versions) { defloc = nv; versions = [0, 0];  subs.vdef2.set(nv, versions)}
         versions[1] = v
         break 
       }
     }
     updateDocInfosCl(org, clazz)
-    if (versions[1] < versions[0]) queueForSync({ org, def, v: versions[1] })
+    if (versions && (versions[1] < versions[0])) queueForSync({ org, def, v: versions[1] })
     return [clazz, subs]
   }
 
@@ -335,15 +336,15 @@ export const useDataStore = defineStore('data', () => {
   La version "locale" est conservée.
   Retourne [clazz, subs] le Subs qui contient le def
   */
-   const setDefSrv = (org: string, def: string, v: number): [string, Subs] => {
+   const setDefSrv = (org: string, def: string, v: number): [string, Subs | null] => {
     const s = def.split('/')
     const clazz = s[0]
     const eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) return [clazz, null]
-    const subs: Subs = eorg.get(clazz)
+    const subs: Subs | null = eorg.get(clazz) || null
     if (!subs) return [clazz, null]
 
-    let versions: versions
+    let versions: versions | null = null
     switch (s.length - 1) {
       case 0 : { 
         versions = subs.vdef0
@@ -353,20 +354,20 @@ export const useDataStore = defineStore('data', () => {
       }
       case 1 : { 
         const pk = s[1]
-        versions = subs.vdef1.get(pk)
+        versions = subs.vdef1.get(pk) || null
         if (!versions) return [clazz, null]
         versions[0] = v
         break 
       }
       case 2 : { 
         const nv = s[1] + '/' + s[2]
-        versions = subs.vdef2.get(nv)
+        versions = subs.vdef2.get(nv) || null
         if (!versions) return [clazz, null]
         versions[0] = v
         break 
       }
     }
-    if (versions[1] < versions[0]) queueForSync({ org, def, v: versions[1] })
+    if (versions && (versions[1] < versions[0])) queueForSync({ org, def, v: versions[1] })
     return [clazz, subs]
   }
 
@@ -375,9 +376,9 @@ export const useDataStore = defineStore('data', () => {
   et si "inutile" le supprime
   Retourne le Subs qui contenait le def
   */
-  const delDefLoc = (org: string, def: string): [string, Subs]  => {
+  const delDefLoc = (org: string, def: string): [string, Subs | null] | null => {
     const eorg = allSubs.value.get(org)
-    if (!eorg) return
+    if (!eorg) return null
     const s = def.split('/')
     const clazz = s[0]
     const subs: Subs = eorg.get(clazz)
@@ -416,10 +417,10 @@ export const useDataStore = defineStore('data', () => {
   }
 
   /* nextToSync() : retourne la prochaine synchronisation à traiter de la queue */
-  const nextToSync = () : subsToSync => {
-    let sts = null
+  const nextToSync = () : subsToSync | null => {
+    let sts : subsToSync | null = null
     for (const [, s] of syncQueue.value)
-      if (!sts || s.order < sts.order) sts = s
+      if (!sts || (s.order < (sts.order || 0))) sts = s
     return sts
   }
 
@@ -430,12 +431,15 @@ export const useDataStore = defineStore('data', () => {
   const startSyncQueue = () => {
     if (syncRunning.value) return
     syncRunning.value = true
-    let sts = nextToSync()
+    let sts : subsToSync | null = nextToSync()
     while (sts) {
       setTimeout(async () => {
+        // @ts-expect-error
         sts.order = 0
         // syncOp
+        // @ts-expect-error
         await new Sync('', sts.org).run(sts)
+        // @ts-expect-error
         syncQueue.value.delete(sts.org + '/' + sts.def)
         sts = nextToSync()
       }, 1)
@@ -490,19 +494,22 @@ export const useDataStore = defineStore('data', () => {
     const binDocs: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     const delPks: string[] = []
     if (Array.isArray(x)) for (const data of x) {
-      const doc = await Document.compile(clazz, data)
-      const docInfo: docInfo = setDoc(org, doc)
+      const doc = await DocRegistry.compile(clazz, data)
+      if (!doc) continue // impensable
+      const docInfo: docInfo | null = setDoc(org, doc)
       if (docInfo) binDocs.set(doc._pk, data) // document utile et existant
       else delPks.push(doc._pk)
     } else {
-      const doc = await Document.compile(clazz, x)
-      const docInfo: docInfo = setDoc(org, doc)
-      if (docInfo) binDocs.set(doc._pk, x) // document utile et existant
-      else delPks.push(doc._pk)
+      const doc = await DocRegistry.compile(clazz, x)
+      if (doc) { // null impensable
+        const docInfo: docInfo | null = setDoc(org, doc)
+        if (docInfo) binDocs.set(doc._pk, x) // document utile et existant
+        else delPks.push(doc._pk)
+      }
     }
 
     if (binDocs.size || delPks ) { // Maj en IDB
-      await IDB.idb.retSync(org, clazz, subs, binDocs, delPks)
+      if (IDB.idb) await IDB.idb.retSync(org, clazz, subs, binDocs, delPks)
     }
     
   }
@@ -521,7 +528,7 @@ export const useDataStore = defineStore('data', () => {
     if (defs) for(const def of defs) {
       const [clazz, subs] = setDefSrv(org, def, now)
       if (subs && session.hasIDB)
-        await IDB.idb.updSubs(org, clazz, subs) // Maj de subs en IDB
+        if (IDB.idb) await IDB.idb.updSubs(org, clazz, subs) // Maj de subs en IDB
     }
   }
 

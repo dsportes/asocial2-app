@@ -1,7 +1,7 @@
 import { Crypt, fromPem, keyFromB64, keyToB64 } from './crypt'
 // import { u8ToB64 } from './util'
 import stores from '../stores/all'
-import { Credential } from './documents'
+import { Credential } from '../src-fw/documents'
 
 const encoder = new TextEncoder()
 
