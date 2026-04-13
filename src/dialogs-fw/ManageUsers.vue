@@ -133,6 +133,8 @@ watch(model, async (v) => {
   else emit('close', true)
 })
 
+const diag = ref('')
+
 const init = async () => {
   const [sy, sz, sn] = await sf.synthUsers()
   synthU.value = sy
@@ -201,7 +203,7 @@ const delUserNo = (u) => {
 }
 
 const close = async () => {
-  const l = []
+  const l : any[] = []
   const allSessions = await sf.getAllSessions()
   if (sDel.value && sDel.value.size)
     for(const id of sDel.value) {

@@ -24,7 +24,7 @@ Commentaires dans Input-B.
         size="md" icon="undo" color="none" round 
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK"
-        :disable="disable || model.err !== ''"
+        :disable="disable || err !== ''"
         @ok="emit('validate', true)" />
       <btn-cond v-if="mayStar" 
         size="md" icon="star" color="warning" round

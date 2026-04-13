@@ -1,13 +1,6 @@
 <template>
 <dialog-std2 v-model="model" vue="AdminMgr"
   :title="$t('HPadminA_label')" tbclass="tbs">
-  <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-sm">
-      <btn-cond flat size="lg" icon="check" color="warning"
-        :label="$t('validate')" @ok="validate"
-        :disable="disval()"/>
-    </div>
-  </template>
 
 <template #default>
   <div class="column items-center">
@@ -20,20 +13,11 @@
       <q-separator color="orange" class="q-my-sm"/>
 
       <div class="q-my-md text-center titre-md">{{$t('HPadminA_lst')}}</div>
-      <div class="q-my-md text-center titre-md text-italic text-warning">{{$t('HPadminA_val')}}</div>
       <scroll-area class='pwsm'><template #default>
         <div :class="dkli(idx) + ' row items-center'" v-for="([code, elt], idx) of lstAdmins" :key="code">
-          <div class="col-1">
-            <btn-cond v-if="elt.st !== 2" icon="close" color="warning"
-              @ok="delElt(elt)"/>
-            <btn-cond v-if="elt.st === 2" icon="undo" color="primary"
-              @ok="undoElt(elt)"/>
-          </div>
-          <div class="col-1">
-            <q-icon v-if="elt.st !== 0" :name="ic(elt)" size="sm"/>
-          </div>
-          <div class="col-5 font-mono text-center">{{elt.svc}}</div>
-          <div class="col-5 font-mono text-center">{{elt.op}}</div>
+          <btn-cond class="col-1" icon="close" color="warning" @ok="delElt(elt)"/>
+          <div class="col-7 font-mono text-center q-pr-md">{{$t('services_' + elt.svc)}}</div>
+          <div class="col-4 font-mono text-center">{{elt.op}}</div>
         </div>
       </template></scroll-area>
     </div>
@@ -61,16 +45,10 @@ const sf = stores.safe
 const ui = stores.ui
 const model = defineModel()
 
-const emit = defineEmits(['done'])
-watch(model, (v: boolean) => { if (v) init() })
-const init = () => {
-  resetAdm()
-}
-
-const disval = () => nbChg.value === 0
+// const emit = defineEmits(['done'])
+watch(model, (v: boolean) => { if (v) resetAdm() })
 
 type Elt = {
-  st: number // O:inchangé 1:ajouté 2:supprimé
   svc: string
   op: string
 }
@@ -85,58 +63,47 @@ const resetAdm = () => {
   const y = sf.auth.admins.split('/')
   for(const x of y) {
     const y = x.split('.')
-    lstAdmins.value.set(x, { st:0, svc: y[0], op: y[1]})
+    lstAdmins.value.set(x, { svc: y[0], op: y[1]})
   }
 }
 
-const ic = (elt) => elt.st === 1 ? 'add_circle' : (elt.st === 1 ? 'delete' : '')
+resetAdm()
 
 const addElt = async () => {
   const k = svcop.SVC + '.' + svcop.$OP
-  const elt = lstAdmins.value.get(k)
-  if (elt && elt.st === 1) return
-  const op = new Operation('SvcOpIsAdmin', svcop.SVC, '', svcop.$OP)
+  if (lstAdmins.value.get(k)) return
+  const op = new Operation('SvcOpIsAdmin$', svcop.SVC, '', svcop.$OP)
   try {
     /* const u = */ await op.getBaseUrl()
   } catch(e) {
     await ui.diagDisplay($t('HPadminkosvc'))
     return
   }
-  const ret = await op.post()
-  if (!ret.isadmin) {
-    if (elt) elt.st = 2
-    ui.diagDisplay($t('HPadminA_ko', [svcop.$OP, svcop.SVC]))
-    return
+  try {
+    const ret = await op.post()
+    if (!ret.isadmin) {
+      ui.diagDisplay($t('HPadminA_ko', [svcop.$OP, svcop.SVC]))
+      return
+    }
+    lstAdmins.value.set(k, { svc: svcop.SVC, op: svcop.$OP})
+    await validate()
+  } catch (e: any) {
+    op.ko(e)
   }
-  if (elt) elt.st = 0
-  else lstAdmins.value.set(k, { st: 1, svc: svcop.SVC, op: svcop.$OP})
 }
 
-const delElt = (elt) => {
-  if (elt.st === 2) return
-  if (elt.st === 0) elt.st = 2
-  else lstAdmins.value.delete(elt.svc + '.' + elt.op)
+const delElt = async (elt) => {
+  lstAdmins.value.delete(elt.svc + '.' + elt.op)
+  await validate()
 }
-
-const undoElt = async (elt) => {
-  elt.st = 0
-}
-
-const nbChg = computed(() => {
-  let n = 0
-  if (lstAdmins.value) for(const [,elt] of lstAdmins.value)
-    if (elt.st !== 0) n++
-  return n
-})
 
 const validate = async () => {
   const lst: string[] = []
-  for(const [k, elt] of lstAdmins.value)
-    if (elt.st !== 2) lst.push(k)
-  await sf.setAdmins(lst)
-  await ui.diagDisplay($t('recorded'))
+  for(const [k] of lstAdmins.value) lst.push(k)
+  const status = await sf.setAdmins(lst)
+  // if (status === 0) await ui.diagDisplay($t('recorded'))
   resetAdm()
-  emit('done', 'AdminMgr')
+  // emit('done', 'AdminMgr')
 }
 
 </script>

@@ -11,7 +11,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { AppExc, $t, sleep, u8ToB64, b64ToU8, equ8 } from '../src-fw/util'
-import { SafeOperation } from '../src-fw/operation'
+import { SafeOperation, MDOperation } from '../src-fw/operation'
 import { Crypt, keyFromB64, keyToB64 } from '../src-fw/crypt'
 import { CredSafe } from '../src-fw/credsafe'
 
@@ -1116,12 +1116,13 @@ export const useSafeStore = defineStore('safe', () => {
       invits: null
     }
 
-    let op = new SafeOperation('$SetUserICVO', '')
+    let op = new MDOperation('$SetUserICVO')
     let ret
     try {
       // Enregistrement dans le dépôt générique
       const icvo: ICVO = { i: userId.value, c: safe.C, v: safe.V, o: mySafeStore.value }
-      op.args = { userId: userId.value, icvo }
+      op.args.userId = userId.value
+      op.args.icvo = icvo
       await op.post()
       icvos.value.set(userId.value, icvo)
     } catch (e) {
@@ -1416,7 +1417,7 @@ export const useSafeStore = defineStore('safe', () => {
       op.ko(e)
       return -1
     }
-    if (!ret.status)
+    if (ret.status === 0)
       await compileSafe(ret.safe)
     return ret.status
   }
@@ -1619,9 +1620,12 @@ export const useSafeStore = defineStore('safe', () => {
     const time = Date.now()
     const ch = encode([time, params])
     const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
-    const op = new SafeOperation('$SetOpUrl', '')
+    const op = new MDOperation('$SetOpUrl')
     try {
-      op.args = { userId: userId.value, time, params, sign }
+      op.args.userId = userId.value
+      op.args.time = time
+      op.args.params = params
+      op.args.sign = sign
       const ret = await op.post()
       return true
     } catch(e) {
@@ -1636,9 +1640,12 @@ export const useSafeStore = defineStore('safe', () => {
     const time = Date.now()
     const ch = encode([time, params])
     const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
-    const op = new SafeOperation('$GrantSvcOpOrg', '')
+    const op = new MDOperation('$GrantSvcOpOrg')
     try {
-      op.args = { userId: userId.value, time, params, sign }
+      op.args.userId = userId.value
+      op.args.time = time
+      op.args.params = params
+      op.args.sign = sign
       await op.post()
       return true
     } catch(e) {

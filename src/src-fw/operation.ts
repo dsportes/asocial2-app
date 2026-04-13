@@ -14,18 +14,15 @@ export type OpArgs = {
   authRecord?: Object
 }
 
-/* Opération générique ******************************************/
-export class Operation {
+class AOperation {
   // Map - clé: SVC - valeur Map de clé $OP donnat l'URL
   static services : Map<string, Map<string, string>> = new Map()
 
   static async loadServices () {
-    const os = Operation.services
-    const lsvc = Array.from(Object.keys(stores.config.K.SERVICES))
-    lsvc.push('SAFE')
-    const safeop = new SafeOperation('$GetSvcUrls', '')
-    safeop.args = { lsvc }
-    const res = await safeop.post()
+    const os = AOperation.services
+    const op = new MDOperation('$GetSvcUrls')
+    op.args.lsvc = Array.from(Object.keys(stores.config.K.SERVICES))
+    const res = await op.post()
     const urls = res.urls
     if (urls) for(const svc in urls) {
       let e = os.get(svc)
@@ -39,8 +36,8 @@ export class Operation {
   static orgs : Map<string, Map<string, string>> = new Map()
 
   static async loadOrg (org: string) : Promise<Map<string, string>> {
-    const safeop = new SafeOperation('$GetOrgSvcs', '')
-    safeop.args = { org }
+    const safeop = new MDOperation('$GetOrgSvcs')
+    safeop.args.org = org
     const res = await safeop.post()
     const svcs = res.svcs
     const e : Map<string, string> = new Map()
@@ -49,79 +46,52 @@ export class Operation {
     return e
   }
 
-  static urlOfSvcOp = (svc: string, op: string) : string => {
-    const x = Operation.services.get(svc)
-    return !x ? '' : (x.get(op) || '')
-  }
-
-  /*
-  // Map - clé: 'SVC/$OP', valeur: url]
-  static svcOpUrl: Map<string, string> = new Map()
-
-  // Map - clé: 'SVC/org', valeur: [url, opérateur]
-  static svcOrgUrl: Map<string, [string, string]> = new Map()
-  */
-
   opName: string
   url: string = ''
   controller: AbortController | null = null
   aborted: boolean = false
-  background: boolean
+  background: boolean = false
+  args: OpArgs | any = {}
 
-  args: OpArgs | any
+  constructor (opName: string) {
+    this.opName = opName
+  }
+
+  urlOfSvcOp = async (svc: string, op: string) : Promise<string> => {
+    const os = AOperation.services
+    if (os.size === 0) await AOperation.loadServices()
+    const x = os.get(svc)
+    return !x ? '' : (x.get(op) || '')
+  }
+
+  async ko (e: any) {
+    if (this.background) e.background = true
+    await stores.ui.displayExc(e)
+  }
+}
+
+/* Opération générique ******************************************/
+export class Operation extends AOperation {
+
   authRecord: AuthRecord
   SVC: string
 
-  async $GetSvcOpUrl () : Promise<string> {
-    if (!this.args.$OP || !this.SVC) return ''
-    const os = Operation.services
-    if (!Operation.services.size) await Operation.loadServices()
-    const e = os.get(this.SVC)
-    return !e ? '' : (e.get(this.args.$OP) || '')
+  async GetSvcOrgUrl () : Promise<string> {
+    let e = AOperation.orgs.get(this.args.org)
+    if (!e) e = await AOperation.loadOrg(this.args.org)
+    const $OP = e ? e.get(this.SVC) : ''
+    return !$OP ? '' : await this.urlOfSvcOp(this.SVC, $OP)
   }
-
-  async $GetSvcOrgUrl () : Promise<string> {
-    if (!this.args.org || !this.SVC) return ''
-    let e = Operation.orgs.get(this.args.org)
-    if (!e) e = await Operation.loadOrg(this.args.org)
-    const op = e.get(this.SVC)
-    return !op ? '' : Operation.urlOfSvcOp(this.SVC, op)
-  }
-
-  /*
-  async $GetSvcOpUrl2 () : Promise<string | null> {
-    const sf = stores.safe
-    let u = Operation.svcOpUrl.get(this.SVC + '/' + this.args.$OP)
-    if (u) return u
-    const safeop = new SafeOperation('$GetSvcOpUrl', sf.mySafeStore)
-    safeop.args = { SVC: this.SVC, $OP: this.args.$OP }
-    const res = await safeop.post()
-    if (!res.url) return null
-    Operation.svcOpUrl.set(this.SVC + '/' + this.args.$OP, res.url)
-    return res.url
-  }
-
-  async $GetSvcOrgUrl2 () : Promise<string> {
-    const sf = stores.safe
-    let uo = Operation.svcOrgUrl.get(this.SVC + '/' + this.args.org)
-    if (uo) return uo[0]
-    const safeop = new SafeOperation('$GetSvcOrgUrl', sf.mySafeStore)
-    safeop.args = { SVC: this.SVC, org: this.args.org }
-    const res = await safeop.post()
-    if (res.urlOp[0]) Operation.svcOrgUrl.set(this.SVC + '/' + this.args.org, res.urlOp)
-    return res.urlOp[0]
-  }
-  */
 
   constructor (opName: string, SVC: string, org?: string, $OP?: string, background?: boolean) {
-    this.opName = opName
-    this.args = {}
+    super(opName)
+    if (!SVC || (!org && !$OP))
+      throw new AppExc({code: 1007, label: 'svc / org / $OP not found', opName: this.opName, args: [] })
+
     if (org) this.args.org = org
     else if ($OP) this.args.$OP = $OP
     this.background = background || false
     this.SVC = SVC
-    if (this.SVC !== 'SAFE' && !stores.config.K.SERVICES[this.SVC])
-      throw new AppExc({code: 1009, label: 'svc unknown for application', opName: this.opName, args: [this.SVC] })
     this.authRecord = new AuthRecord()
   }
 
@@ -134,16 +104,17 @@ export class Operation {
 
   async getBaseUrl () : Promise<string> {
     if (this.args.$OP) {
-      const u = this.args.$OP === 'MASTERDIR' ? stores.config.K.MASTERDIR_URL :
-        await this.$GetSvcOpUrl()
+      const u = await this.urlOfSvcOp(this.SVC, this.args.$OP)
       if (u) return u
-      throw new AppExc({code: 1007, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.args.$OP] })
+      throw new AppExc({code: 1011, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.args.$OP] })
+    } else {
+      let e = AOperation.orgs.get(this.args.org)
+      if (!e) e = await AOperation.loadOrg(this.args.org)
+      const $OP = e ? e.get(this.SVC) : ''
+      const u = !$OP ? '' : await this.urlOfSvcOp(this.SVC, $OP)
+      if (u) return u
+      throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.args.org, this.SVC] })
     }
-    if (!this.args.org)
-      throw new AppExc({code: 2001, label: 'missing org and $OP', opName: this.opName })
-    const u = await this.$GetSvcOrgUrl()
-    if (u) return u
-    throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.args.org, this.SVC] })
   }
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
@@ -158,11 +129,13 @@ export class Operation {
     const config = stores.config
     const session = stores.session
     try {
-      session.opStart(this)
+
       let u = await this.getBaseUrl()
       if (!u.endsWith('/')) u += '/'
       this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
+
+      session.opStart(this)
       if (!noAuth) 
         await this.authRecord.signUser()
       this.args.authRecord = this.authRecord.toObj
@@ -208,34 +181,32 @@ export class Operation {
     }
   }
 
-  async ko (e: any) {
-    if (this.background) e.background = true
-    await stores.ui.displayExc(e)
-  }
 }
 
-/* Les SafeOperation n'ont pas de AuthRecord"
-Le service Safe vérifie les authentifications par les paramètres
-comme hp0, hr0, etc.
-*/
-export class SafeOperation extends Operation {
+abstract class A2Operation extends AOperation {
   safeStore: string = ''
 
-  constructor (opName: string, safeStore: string) {
-    super(opName, 'SAFE', '', safeStore || 'MASTERDIR')
-    this.safeStore = safeStore
+  urlSafeStore = async () : Promise<string> => {
+    const os = AOperation.services
+    if (os.size === 0) await AOperation.loadServices()
+    const x = os.get('SAFE')
+    const u = x?.get(this.safeStore)
+    if (!u)
+      throw new AppExc({code: 1012, label: 'safeStore url not found', opName: this.opName, args: [this.safeStore] })
+    return u
+  }
+
+  constructor (opName: string) {
+    super(opName)
   }
 
   async post () : Promise<any>{
-    const K = stores.config.K
-    const u = this.safeStore ? Operation.urlOfSvcOp('SAFE', this.safeStore) : K.MASTERDIR_URL
-    if (!u)
-      throw new AppExc({code: 1010, label: 'SAFE operator not found', opName: this.opName, args: [this.safeStore] })
-    this.url = u + this.opName
-
     const session = stores.session
     try {
       session.opStart(this)
+      if (!this.url) 
+        this.url = await this.urlSafeStore()
+      this.url += this.opName
       this.controller = new AbortController()
       this.aborted = false
 
@@ -272,3 +243,25 @@ export class SafeOperation extends Operation {
   }
 }
 
+/* Les SafeOperation n'ont pas de AuthRecord"
+Le service Safe vérifie les authentifications par les paramètres
+comme hp0, hr0, etc.
+*/
+export class SafeOperation extends A2Operation {
+
+  constructor (opName: string, safeStore: string) {
+    super(opName)
+    if (!safeStore) this.url = stores.config.K.STDSAFE_URL
+    else this.safeStore = safeStore
+  }
+
+}
+
+export class MDOperation extends A2Operation {
+
+  constructor (opName: string) {
+    super(opName)
+    this.url = stores.config.K.MASTERDIR_URL
+  }
+
+}

@@ -341,18 +341,19 @@
 
         <div v-if="sf.step === 1" class="msg2 q-my-md self-center">{{$t('SBnotauth')}}</div>
         <div v-else class="column">
-          <div class="row q-mb-md">
+          <service-op v-model="svcop"/>
+          <!--div class="row q-mb-md">
             <input-a class="col-6" prefix="service" v-model="SVC" size="svc"
               :list="listSvc"/>
             <input-a class="col-6" prefix="operator" v-model="$OP" size="oper"
               :list="config.K.FAVORITE_OPERATORS"/>
-          </div>
+          </div-->
 
           <q-separator color="orange" class="q-my-md"/>
 
           <input-a class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
           <btn-cond color="warning" :label="$t('url_set')" class="self-end"
-            @ok="setSvcUrl" :disable="!SVC || !$OP || !svcurl"/>
+            @ok="setSvcUrl" :disable="!svcop.SVC || !svcop.$OP || !svcurl"/>
 
           <q-separator color="orange" class="q-my-md"/>
 
@@ -360,9 +361,9 @@
           <input-a class="q-my-xs" prefix="orgcode" size="org" v-model="org"/>
           <div class="self-end row justify-end q-gutter-sm q-mb-md">
             <btn-cond color="warning" :label="$t('grant')"
-              @ok="setGrantRevoke(true)" :disable="!SVC || !$OP || !org"/>
+              @ok="setGrantRevoke(true)" :disable="!svcop.SVC || !svcop.$OP || !org"/>
             <btn-cond color="warning" :label="$t('revoke')"
-              @ok="setGrantRevoke(false)" :disable="!SVC || !$OP || !org"/>
+              @ok="setGrantRevoke(false)" :disable="!svcop.SVC || !svcop.$OP || !org"/>
           </div>
         </div>
       </div>
@@ -455,9 +456,17 @@ const svcop = reactive({
   SVC: '',
   $OP: ''
 })
+const svcurl = ref('')
+const user = ref('')
+const org = ref('')
 
-const listSvc = ref(Array.from(Object.keys(config.K.SERVICES)))
-listSvc.value.push('SAFE')
+const resetHot = () => {
+  svcurl.value = ''
+  svcop.SVC = ''
+  svcop.$OP = ''
+  user.value = ''
+  org.value = ''
+}
 
 const sessionClose = (n) => {
   if (n === 1) ui.backToOpenSession()
@@ -522,28 +531,13 @@ const genSV = async () => {
   ], null, '\t')
 }
 
-const svcurl = ref('')
-const SVC = ref('')
-const $OP = ref('')
-const user = ref('')
-const adminId = ref('')
-const org = ref('')
-
-const resetHot = () => {
-  svcurl.value = ''
-  SVC.value = ''
-  $OP.value = ''
-  user.value = ''
-  org.value = ''
-}
-
 const setGrantRevoke = async (grant: boolean) => {
-  const b = await sf.GRSvcOpOrg (SVC.value, grant ? $OP.value : null, org.value)
+  const b = await sf.GRSvcOpOrg (svcop.SVC, grant ? svcop.$OP : null, org.value)
   if (b) await ui.diagDisplay($t('recorded'))
 }
 
 const setSvcUrl = async () => {
-  const b = await sf.SetOpUrl (SVC.value, $OP.value, svcurl.value)
+  const b = await sf.SetOpUrl (svcop.SVC, svcop.$OP, svcurl.value)
   if (b) await ui.diagDisplay($t('recorded'))
 }
 resetHot()

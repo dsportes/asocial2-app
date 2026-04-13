@@ -31,7 +31,7 @@
   <div class="titre-lg text-italic q-mb-md text-center">{{$t('org')}}</div>
 
   <input-A class="full-width q-mb-md" prefix="orgcode" v-model="org" size="org"
-    @validate="orgOk = true"/>
+    @validate="valOrg"/>
 
   <btn-cond v-if="maySetSt" :label="$t('APorgconfig')"
     :disable="!orgOk"
@@ -39,7 +39,7 @@
 
   <div class="row justify-between q-my-sm">
     <btn-cond class="col-auto q-pr-sm" :label="$t('status')" 
-      :disable="!svcop.$OP || !org" @ok="svcOrgStatus"/>
+      :disable="!svcop.$OP || !orgOk" @ok="svcOrgStatus"/>
     <div v-if="resping2 !== null" class="col">
       <div>{{$t('svcStatus_now', [dhcool(resping2.now)])}}</div>
       <div>{{$t('svcStatus_' + resping2.st, [dhcool(resping2.at)])}}</div>
@@ -122,7 +122,6 @@ import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
-import ServiceOp from '../components-fw/ServiceOp.vue'
 
 import DialogStd0 from '../dialogs-fw//DialogStd0.vue'
 
@@ -147,8 +146,6 @@ const dialogs = reactive({
   orgConfig: false
 })
 
-const services = Array.from(Object.keys(config.K.SERVICES))
-
 type Elt = {
   svc: string
   op: string
@@ -158,6 +155,10 @@ const services2: Ref<string> = ref(new Set())
 
 const org = ref('')
 const orgOk = ref(false)
+const valOrg = () => {
+  orgOk.value = true
+}
+
 watch(org, (v) => {
   orgOk.value = false
 })

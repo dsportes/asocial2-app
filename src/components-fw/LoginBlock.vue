@@ -30,8 +30,7 @@ Event émis: logged
 // @ts-ignore
 import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
-import { $t, sty } from '../src-fw/util'
-import BtnCond from '../components-fw/BtnCond.vue'
+import { $t } from '../src-fw/util'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import InputB from '../components-fw/InputB.vue'
 import P0P1 from '../components-fw/P0P1.vue'

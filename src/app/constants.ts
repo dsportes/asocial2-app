@@ -4,9 +4,11 @@ export const K = {
 
   SERVICES: {
     AS2: { api: 1 },
-    ASSO2: { api: 1 }
+    ASSO2: { api: 1 },
+    SAFE: { api: 1 }
   },
-  MASTERDIR_URL: 'http://localhost:8080/safe/',
+  MASTERDIR_URL: 'http://localhost:8080/master/',
+  STDSAFE_URL: 'http://localhost:8080/safe/',
   FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
 
   DOC_URLS: {

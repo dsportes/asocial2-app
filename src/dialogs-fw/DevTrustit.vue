@@ -76,7 +76,7 @@ const dup = computed(() => {
   return b
 })
 
-watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = $t('PSdup') })
+watch(newPseudo, (v) => { if (!v.err && dup.value) v.err = 'PSdup' })
 
 const trusterr = computed(() => devName.err !== '' || newPIN.err !== '' || newPseudo.err !== '')
 
@@ -87,7 +87,7 @@ const setTrust = async () => {
     await ui.diagDisplay($t('HPsttrust_' + status))
     emit('done', true)
     model.value = false
-  } catch (e) {
+  } catch (e: any) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }
