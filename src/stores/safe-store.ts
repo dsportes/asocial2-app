@@ -10,7 +10,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { AppExc, $t, sleep, u8ToB64, b64ToU8, equ8 } from '../src-fw/util'
+import { AppExc, $t, sleep, u8ToB64, b64ToU8, quarter } from '../src-fw/util'
 import { SafeOperation, MDOperation } from '../src-fw/operation'
 import { Crypt, keyFromB64, keyToB64 } from '../src-fw/crypt'
 import { CredSafe } from '../src-fw/credsafe'
@@ -477,20 +477,6 @@ export const useSafeStore = defineStore('safe', () => {
     trustings.value ? Array.from(trustings.value.values()) : [])
 
   /* Section "auth" */
-  type Auth = {
-    pseudo: string
-    hp0: string // index unique, `SH(p0)`.
-    hr0: string // index unique, `SH(r0)`.
-    hhp1: string // SHA de `SH(p1)`.
-    hhr1: string // SHA de `SH(r1)`.
-    hhk: string // SHA de `SH(K)`.
-    C: string // clé publique de cryptage.
-    D: string // clé privée de décryptage.
-    S: string // clé privée de signature.
-    V: string // clé publique de vérification.
-    Ka: string // clé `K` du safe cryptée par `SH(p0, p1)`.
-    Kr: string //  clé `K` du safe cryptée par `SH(r0, r1)`.
-  }
   const auth: Ref<Auth> = ref(null)
 
   /* Section "devices de confiance" une entrée par device identifiée par `devid`*/
@@ -544,31 +530,31 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur:
-    - auth, devices, prefs, profiles
+    - auth, devices, creds, prefs, profiles, invits
   La clé K :
     - soit vient d'être généré dans $createSafe
-    - soit a été décrypté au retour des opérations $openSafeByPR $openSafeByPin
+    - soit a été décryptée au retour des opérations $openSafeByPR $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
     await loadTrustings()
-    const privD = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.DK)) as AllowSharedBufferSource)
-    const privS = decoder.decode(await Crypt.decrypt(keyK.value, b64ToU8(safe.SK)) as AllowSharedBufferSource)
+    const privD = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.D)), true)
+    const privS = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.S)), true)
     auth.value = {
-      pseudo: await dcX(b64ToU8(safe.pseudo)),
-      hp0: safe.hp0,
-      hr0: safe.hr0,
-      hhp1: safe.hhp1,
-      hhr1: safe.hhr1,
-      hhk: safe.hhk,
-      C: safe.C,
+      llq: safe.auth.llq,
+      lm: safe.auth.lm,
+      C: safe.auth.C,
       D: privD,
       S: privS,
-      V: safe.V,
-      contact: await dcX(b64ToU8(safe.contact)),
-      hct: safe.hct,
-      Ka: safe.Ka,
-      Kr: safe.Kr,
-      admins: await dcX(b64ToU8(safe.admins)),
+      V: safe.auth.V,
+      hshK: safe.auth.hshK,
+      admins: await dcX(b64ToU8(safe.auth.admins)),
+      pseudo: await dcX(b64ToU8(safe.auth.pseudo)),
+      hshp1: safe.auth.hshp1,
+      K1: safe.auth.K1,
+      hshp2: safe.auth.hshp2,
+      K2: safe.auth.K2,
+      actual: safe.auth.actual,
+      future: safe.auth.future
     } as Auth
 
     await loadDevices(safe) // devices
@@ -1022,17 +1008,47 @@ export const useSafeStore = defineStore('safe', () => {
     Kr: string //  clé `K` du safe cryptée par `SH(r0, r1)`.
   }
 
-  interface Safe extends SafeCodes { // paramétres de l'opération $CreateSafe
-    pseudo: string // crypté par K et en base64
-    hhk: string // SHA de `SH(K)`.
-    C: string // clé publique de cryptage.
-    DK: string // clé privée de décryptage, cryptée par la clé K
-    SK: string // clé privée de signature, cryptée par la clé K
-    V: string // clé publique de vérification
-    contact: string // pseudo temporaire de contact externe crypté par la clé K
-    hct: string // SH du contact en b64
-    admins: string // cryptage de l'encode de la liste des couples SVC.$OP dont l'utilisateur est administrateur
+  type MDuser = {
+    userId: string // ID de l'utilisateur`
+    hshK: string // SHA raccourci du Strong Hash de la clé K
+    hsha1: string // SHA raccourci du Strong Hash de l'alias 1 (s'il existe). En base 64.
+    hsha2: string // SHA raccourci du Strong Hash de l'alias 2 (s'il existe). En base 64.
+    C: string // clé publique de cryptage de U. En base 64.
+    V: string // clé publique de vérification de U. En base 64.
+    llq: number // _last quarter login_. Numéro du trimestre de dernier login, 0 étant le premier de l'an 2000.
+    store: string // code du store où est stocké à l'instant actuel le _safe_ de U.
+  }
 
+  type Alias = {
+    a1K: string // alias 1 crypté par la clé K (en base 64).
+    hsha1: string // SHA raccourci du Strong Hash de l'alias 1.
+    a2K: string
+    hsha2: string
+  }
+
+  type Auth = {
+    llq: number //_last login quarter_, trimestre du dernier login. Permet une _purge_ périodique des _safe_ obsolètes / fantômes.
+    lm: number // _epoch_ en secondes de dernière mise à jour.
+    C: string // clé de cryptage en clair (en base 64).
+    D: string // clé de décryptage cryptée par la clé `K` (en base 64).
+    S: string // clé de signature cryptée par la clé `K` (en base 64).
+    V: string // clé de vérification en clair (en base 64).
+    hshK: string // SHA raccourci du Strong Hash de la clé K.
+    admins: string // liste des couples `SVC1.$OP1 / SVC2.$OP2 / ...` dont l'utilisateur a _déclaré_ être l'administrateur (cryptée par sa clé K et en base 64). La véracité de la _déclaration_ est vérifiée mais l'utilisateur peut se voir retiré cette qualité par l'opérateur sans que cette liste ne change.
+    pseudo: string // dernier pseudo crypté par la clé K du _safe_ (en base 64) utilisé à la certification d'un terminal.
+
+    hshp1: string // SHA raccourci du Strong Hash de la phrase 1 (en base 64).
+    K1: string // clé K cryptée par le Strong Hash de la phrase 1.
+    hshp2: string
+    K2: string
+
+    actual: Alias
+    future: Alias | null
+  }
+
+  type Safe = {
+    userId: string
+    auth: Auth
     devices: Object | null
     creds: Object | null
     profiles: Object | null
@@ -1075,40 +1091,44 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const createSafe = async (
-    psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
-    rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
+  const createSafe = async (a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
 
     userId.value = Crypt.shaS(Crypt.random(32))
     keyK.value = Crypt.random(32)
-    const shK = await Crypt.strongHash(keyK.value, false, true)
-    sh1p.value = u8ToB64(psh1, true)
-    sh1r.value = u8ToB64(rsh1, true)
+    const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
+    const K1 = u8ToB64(await Crypt.crypt(shp1, keyK.value), true)
+    const K2 = !shp2 ? '' : u8ToB64(await Crypt.crypt(shp2, keyK.value), true)
+    const hshp1 = Crypt.shaS(shp1)
+    const hshp2 = !shp2 ? '' : Crypt.shaS(shp2)
 
     const kpcd = await Crypt.getKeyPair()
     const kpsv = await Crypt.getSVKeyPair()
+    const C = keyToB64(kpcd.pub)
+    const D = u8ToB64(await Crypt.crypt(keyK.value, new Uint8Array(kpcd.priv)), true)
+    const V = keyToB64(kpsv.pub)
+    const S = u8ToB64(await Crypt.crypt(keyK.value, new Uint8Array(kpsv.priv)), true)
+
+    const a1K = u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a1)), true)
+    const a2K = !a2 ? '' : u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a2)), true)
+    const hsha1 = Crypt.shaS(await Crypt.strongHash(encode.encode(a1), false, true))
+    const hsha2 = !a2 ? '' : Crypt.shaS(await Crypt.strongHash(encode.encode(a2), false, true))
+
+    const d = new Date()
+    const llq = quarter(d)
+
+    const auth: Auth = {
+      llq, 
+      lm: d.getTime(),
+      C, D, S, V, hshK, 
+      admins:'', pseudo: '',
+      hshp1, K1, hshp2, K2,
+      actual: { a1K, hsha1, a2K, hsha2 } as Alias,
+      future: null
+    }
 
     const safe: Safe = {
-      id: userId.value,
-      pseudo: '',
-      hp0: u8ToB64(psh0, true),
-      hr0: u8ToB64(rsh0, true),
-      hhp1: Crypt.shaS(psh1),
-      hhr1: Crypt.shaS(rsh1),
-      Ka: u8ToB64(await Crypt.crypt(psh, keyK.value), true),
-      Kr: u8ToB64(await Crypt.crypt(rsh, keyK.value), true),
-
-      hhk: Crypt.shaS(shK),
-      C: keyToB64(kpcd.pub),
-      DK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(keyToB64(kpcd.priv))), true),
-      V: keyToB64(kpsv.pub),
-      SK: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(keyToB64(kpsv.priv))), true),
-      contact: '',
-      hct: '',
-      admins: '',
-      /* ATTENTION PHP msgpack traite MAL les objects vide
-      Ils sont passés à null
-      */
+      userId: userId.value,
+      auth: auth,
       devices: null,
       creds: null,
       profiles: null,
@@ -1116,34 +1136,42 @@ export const useSafeStore = defineStore('safe', () => {
       invits: null
     }
 
-    let op = new MDOperation('$SetUserICVO')
-    let ret
+    const mdUser: MDuser = {
+      userId: userId.value,
+      hshK, hsha1, hsha2, C, V, llq,
+      store: mySafeStore.value
+    }
+
+    // Enregistrement dans le Master Directory
+    let op = new MDOperation('$mdNewUser') 
     try {
-      // Enregistrement dans le dépôt générique
-      const icvo: ICVO = { i: userId.value, c: safe.C, v: safe.V, o: mySafeStore.value }
-      op.args.userId = userId.value
-      op.args.icvo = icvo
-      await op.post()
-      icvos.value.set(userId.value, icvo)
+      op.args.mdUser = mdUser
+      const res = await op.post()
+      /* Result 'status':
+      - 0 OK.
+      - 1 alias 1 déjà utilisé
+      - 2 alias 2 déjà utilisé
+      - 3 user déjà déclaré avec des valeurs différentes
+      */
+      if (res.status) return res.status
     } catch (e) {
       op.ko(e)
       return -1
     }
 
+    // Enregistrement dans le Safe Store
     op = new SafeOperation('$CreateSafe', mySafeStore.value)
     try {
       op.args = { safe }
-      ret = await op.post()
+      const ret = await op.post()
+      if (!ret.status) return 10 + ret.status
     } catch (e) {
       op.ko(e)
       return -1
     }
 
-    if (ret.status === 0) {
-      openMode.value = 1
-      await compileSafe(safe)
-    }
-    return ret.status
+    await compileSafe(safe)
+    return 0
   }
 
   /* targetId est soit id, soit hp0, soit hr0, soit contact

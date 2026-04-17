@@ -50,6 +50,12 @@ export function edvol (vol: number) : string {
   return (v / 1000000000000000).toPrecision(3) + 'PB'
 }
 
+export function quarter (d: Date) {
+  const y = d.getUTCFullYear() % 2000
+  const q = Math.floor(d.getUTCMonth() / 4)
+  return (y * 4) + q
+}
+
 type Date3 = [number, number, number] // full year, mont, date
 let auj: Date3 = [0, 0, 0], hier: Date3 = [0, 0, 0]
 
