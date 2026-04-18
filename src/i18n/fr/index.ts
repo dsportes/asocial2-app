@@ -148,7 +148,7 @@ export default {
   PAGEtest: 'Page des tests',
 
   PanelManager: 'Management des organisations',
-  
+
   op_PingDB: 'PING de la base de données',
   op_EchoText: 'Echo du texte envoyé',
   op_$Hash: 'Test Hash PHP',
@@ -197,6 +197,18 @@ export default {
   op_$GrantSvcOpOrg: 'Autoriser / révoquer un service pour une organisation',
   op_$SetUserICVO: 'Enregistrement du compte dans le Master Directory.',
   op_$SetOpUrl: 'Enregistrement de l\'URL d\'un service.',
+
+  /* Status de retour d'une opération sur Safe / Master Directory */
+  STSF_1: 'Aucun "coffre-fort" n\'est enregistré avec cet ID',
+  STSF_2: 'Preuve de propriété "shK" non reconnue.',
+  STSF_3: 'Phrase secrète non reconnue.',
+  STSF_4: 'Terminal non certifié.',
+  STSF_5: 'Trop d\'essais d\'un code PIN erroné.',
+  STSF_6: 'Code PIN non reconnu.',
+  STSF_7: 'Invitation inconnue, status non modifiable.',
+  STSF_10: 'L\' alias 1 a déjà été déclaré par un autre utilisateur.',
+  STSF_11: 'L\' alias 2 a déjà été déclaré par un autre utilisateur.',
+  STSF_12: 'Utilisateur déjà enregistré mais avec des valeurs différentes (BUG ?)',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -621,7 +633,7 @@ A propos du status ...
 A propos du status ...
 `,
   HPcredcl_tit: 'Des mises à jour n\'ont pas été validées. Fermer quand même ?',
-  HPcredcl_txt: `### Des mises à jour n\'ont pas été validées. 
+  HPcredcl_txt: `### Des mises à jour n\'ont pas été validées.
   Si vous fermez ce dialogue, **elles seront perdues**.
   Fermer quand même ?
   `,
@@ -782,7 +794,7 @@ bla bla
   UPcontact: 'Pseudo ou phrase de contact externe',
   UPsessionid: 'ID de synchronisation de la session',
   UPadmins: 'Administrateur technique de',
- 
+
   SECsite_std: 'standard',
   SECsite_msg1: 'INACCESSIBLE',
   SECsite_msg2: 'ATTENTE VERIF',
@@ -818,7 +830,7 @@ Des utilisateurs, ou toutes formes de collectifs d'utilisateurs, peuvent toutefo
 <img src="images/flowers.png" style="background-color:white">
 
 Une liste de _sites connus de l'application_ est proposée avec un **libellé** qui facilite la sélection par l'utilisateur.
-Pour désigner un site non répertorié, l'utilisateur est convié à donner son URL. 
+Pour désigner un site non répertorié, l'utilisateur est convié à donner son URL.
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
@@ -874,7 +886,7 @@ Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centr
   SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
   SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   SESmodes: `## Modes NORMAL et INCOGNITO
-#### En mode NORMAL, 
+#### En mode NORMAL,
 une session bénéficie du stockage en mémoire _cache_ (cryptée) des documents:
 - ouverture plus rapide et plus économe du réseau et du temps de calcul.
 - ouverture en **MODE AVION** possible en l'absence d'accès à Internet.
@@ -892,7 +904,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 
   CRRtit_label: 'Revue des droits d\'accès par service / organisation',
   CRRtit_bub: `### Revue des droits d\'accès par service / organisation
-bla bla 
+bla bla
 `,
   CRRstep_1_label: 'Sélection d\'un "service / organisation"',
   CRRstep_1_bub: `### Sélection d\'un "service / organisation"
@@ -1025,8 +1037,8 @@ bla bla
   INVco_2: 'J\'ai un compte',
   INVco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',
   INVco_cr: 'Je créé mon compte',
-  INVnc_bub: `## Disposer d'un compte est nécessaire... 
-pour déposer et suivre des demandes d'invitation. 
+  INVnc_bub: `## Disposer d'un compte est nécessaire...
+pour déposer et suivre des demandes d'invitation.
 Un **coffre fort** est créé pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
 - qui est le seul à connaître la clé qui **crypte** son contenu,
 - le _coffre_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
@@ -1056,7 +1068,7 @@ bla bla
   INVcancelCf_txt: `### Supprimer cette demande d'invitation.
 En cas de confirmation,
 - cette demande apparaitra comme **Annulée** pendant quelques jours,
-- ne pourra pas être réactivé ni traitée par un _sponsor_, 
+- ne pourra pas être réactivé ni traitée par un _sponsor_,
 - puis disparitra définitivement.
 
 Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par un _sponsor_ qui l'acceptera et la traitera ou la rejetera.
@@ -1110,8 +1122,9 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   EX_3001: 'BUG probable: erreur inattendue\n{0}',
   EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
   EX_3003: 'BUG probable: échec de l\'opération [{0}] sur appel de l\'opération sur SAFE [{1}]. Détail : {2}',
-  EX_3005: 'BUG probable: opérateur de SAFE {1} inconnu pour l\'opération [{0}]',
   EX_3004: 'BUG probable: classe de document [{0}] non déclarée dans config.documentClasses',
+  EX_3005: 'BUG probable: opérateur de SAFE {1} inconnu pour l\'opération [{0}]',
+  EX_3006: 'BUG probable: changement de phrases secrètes mais aucune n\'est donnée',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau
