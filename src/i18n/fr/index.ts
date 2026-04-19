@@ -237,6 +237,68 @@ export default {
   PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
+  /* UAP : SafeCr */
+  UAPtit_u: 'Déclaration d\'un nouvel utilisateur',
+  UAPtit_a: 'Changement d\'alias',
+  UAPtit_p: 'Changement de phrase secrète',
+
+  UAPquit: 'Des saisies ont été effectuées. Voulez-vous fermer quand-même et les perdre ou reprendre la procédure?',
+  UAPquit_1: 'Fermer ce dialogue',
+  UAPquit_0: 'Poursuivre la procédure',
+  UAPdiag_0: 'OK',
+  UAPdiag_1: 'Au moins un alias est requis.',
+  UAPdiag_2: 'Deux alias au plus peuvent être déclarés.',
+  UAPdiag_3: 'Au moins une phrase secrète est requise.',
+  UAPdiag_4: 'Deux phrases secrètes au plus peuvent être déclarées.',
+  UAPdiag_5: 'Aucun changement à valider',
+
+  UAPl_a: 'Aucun alias déclaré | Alias déclaré | Alias déclarés',
+  UAPl_p: 'Aucune phrase déclarée | Phrase déclarée | Phrases déclarées',
+
+  UAPa_a: 'Ajouter un alias',
+  UAPa_p: 'Ajouter une phrase secrète',
+  UAPs_a: 'Première saisie de l\'alias',
+  UAPv_a: 'Vérification de l\'alias',
+  UAPs_p: 'Première saisie de la phrase',
+  UAPv_p: 'Vérification de la phrase',
+  UAPm1_a: 'C\'est déjà l\'alias d\'un autre utilisateur.',
+  UAPm3_a: 'Vérification échouée. Re-saisir la vérification ou la saisie initiale.',
+  UAPc_a: 'Je corrige ma saisie initiale',
+  UAPt_a: 'Je renonce à ajouter un alias',
+  UAPt_p: 'Je renonce à ajouter une phrase secrète',
+  UAPdup_a: 'Cet alias est déjà dans votre liste',
+  UAPdup_p: 'Cette phrase est déjà dans votre liste',
+
+  Alias: 'Mon alias: pseudo, email, mobile ... ',
+  Alias_label: `### Un alias peut être par exemple ...
+  - mon prénom / nom,
+  - un pseudo de mon choix,
+  - une adresse e-mail,
+  - un numéro de mobile,
+  - etc.
+
+  Sur 8 à 24 signes, sans autre contrainte.
+  L'alias ne s'affiche que ...
+  - quand vous en saisissez un,
+  - quand c'est l'un des vôtres.
+
+  L'alias n'est jamais utilisé pour une qulconque relation avec le monde réel.
+  Rien n'empêche un utilisateur de mentionner à titre d'alias une donnée d'identification d'une personne réelle ... ce qui ne dit rien sur le fait qu'il soit ou non cette personne.
+  `,
+  Alias_ph: 'Duke Ellington',
+
+  Phrase: 'Ma phrase très secrète',
+  Phrase_label: `### Une phrase très secrète est ...
+  - a au moins 24 signes,
+  - évite de répéter les mêmes,
+  - reste mnémotechnique POUR VOUS,
+  - évite les "classiques" comme 'abcd...".
+
+  Une fois ces règles respectées elle est incassable par force brute (essais itératifs systématiques).
+  `,
+  Phrase_ph: 'Les1sanglots2Longs3du4Printemps',
+
+
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewOrg: 'Création d\'une nouvelle organisation',

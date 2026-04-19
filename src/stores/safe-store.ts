@@ -553,8 +553,8 @@ export const useSafeStore = defineStore('safe', () => {
       K1: safe.auth.K1,
       hshp2: safe.auth.hshp2,
       K2: safe.auth.K2,
-      actual: safe.auth.actual,
-      future: safe.auth.future
+      actual: await compAlias(safe.auth.actual),
+      future: await compAlias(safe.auth.future)
     } as Auth
 
     await loadDevices(safe) // devices
@@ -562,6 +562,13 @@ export const useSafeStore = defineStore('safe', () => {
     await loadPrefs(safe) // prefs
     await loadProfiles(safe) // profiles
     await loadInvits(safe) // invits
+  }
+
+  const compAlias = async (a: Alias) => {
+    if (!a) return null
+    if (a.a1K) a.a1K = await dcX(b64ToU8(a.a1K))
+    if (a.a2K) a.a2K = await dcX(b64ToU8(a.a2K))
+    return a
   }
 
   /* Devices de confiance *****************************************************************
@@ -654,10 +661,10 @@ export const useSafeStore = defineStore('safe', () => {
     const msvc = stores.config.K.SERVICES
     if (safe.invits) for (const xid in safe.invits) {
       const x = safe.invits[xid]
-       if (!dlv(x.time)) 
+       if (!dlv(x.time))
         try {
           const pubC = x.pubC
-          const aes = !pubC ? keyK.value : 
+          const aes = !pubC ? keyK.value :
             await Crypt.getAESKey(keyFromB64(pubC), keyFromB64(auth.D))
           const inv: Invit = decode(await Crypt.decrypt(aes, b64ToU8(x.invit))) as Invit
           inv.status = x.status
@@ -693,10 +700,10 @@ export const useSafeStore = defineStore('safe', () => {
   mais au retour on a besoin du vrai userId.
   */
   const invitCreate = async (
-    invit: Invit, 
+    invit: Invit,
     idu: string,
-    aes: Uint8Array | null, 
-    pubC: string | null, 
+    aes: Uint8Array | null,
+    pubC: string | null,
     safeStore: string) : Promise<number> => { // status
     const addInvit : AddInvit = {
       userId: idu,
@@ -750,7 +757,7 @@ export const useSafeStore = defineStore('safe', () => {
       c'est la seule propriété qui peut être mise à jour par U ultérieurement.
     - data: la sérialisation des autres propriétés {id svc role docId time privs name rec}
       cryptées par la clé K de U et mis en base 64.
-  SEUL U peut créer et mettre à jour (le comment seulement) un CredSafe. 
+  SEUL U peut créer et mettre à jour (le comment seulement) un CredSafe.
     - lors de la validation d'une invitation.
   ***********************************************************************************/
   const loadCreds = async (safe: Safe) : Promise<void> => {
@@ -787,7 +794,7 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shk: await Crypt.strongHash(keyK.value, false, false) as string,
       credid: cred.id,
-      comment: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(cred.comment))), 
+      comment: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(cred.comment))),
       cred: u8ToB64(await Crypt.crypt(keyK.value, encode(obj)))
     }
     const op = new SafeOperation('$CreateCred', mySafeStore.value)
@@ -811,7 +818,7 @@ export const useSafeStore = defineStore('safe', () => {
   type RevokeCreds = {
     userId: string
     shk: string
-    ids: string[] 
+    ids: string[]
   }
   /* Révocation (suppression) d'un Cred en safe */
   const autoRevokeCreds = async (ids: string[]) => {
@@ -827,12 +834,12 @@ export const useSafeStore = defineStore('safe', () => {
   /****************************************************************************/
 
   /* Profiles ****************************************************************
-  Section organisée avec une **sous-section par application** regroupant une liste d'items 
-  ayant un identifiant généré aléatoirement à sa création. 
+  Section organisée avec une **sous-section par application** regroupant une liste d'items
+  ayant un identifiant généré aléatoirement à sa création.
   Chaque item est sérialisé en base64 et a les propriétés suivantes:
-  - `about`: texte significatif pour l'utilisateur **crypté par la clé K** 
+  - `about`: texte significatif pour l'utilisateur **crypté par la clé K**
     décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
-  - `creds`: liste des id des _credentials_ qui sont attachés à une session 
+  - `creds`: liste des id des _credentials_ qui sont attachés à une session
     de ce profil lors de son ouverture.
   ****************************************************************************/
   const loadProfiles = async (safe: Safe) : Promise<void> => {
@@ -922,8 +929,8 @@ export const useSafeStore = defineStore('safe', () => {
         if (i === -1)
           lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
         else
-          lst.push({ svc: c.svc, org: c.org, 
-            major: c.docId.substring(0, i) || '', 
+          lst.push({ svc: c.svc, org: c.org,
+            major: c.docId.substring(0, i) || '',
             minor: c.docId.substring(i + 1) || '',
             isSp: true })
       }
@@ -972,7 +979,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Retourne true si l'utilisateur est "manager" du couple svc / org ***********/
   const isManager = (svc, org) : boolean => {
-    for (const [,c] of mySafeCreds.value) 
+    for (const [,c] of mySafeCreds.value)
       if (c.role === 'Org.manager' && c.org === org && c.svc === svc) return true
     return false
   }
@@ -996,16 +1003,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   const profileOfProfId = (profId: string) => {
     return mySafeProfiles.value.get(profId)
-  }
-
-  type SafeCodes = { // paramétres de l'opération $UpdCodesSafe
-    id: string // identifiant aléatoire.
-    hp0: string // index unique, `SH(p0)`.
-    hr0: string // index unique, `SH(r0)`.
-    hhp1: string // SHA de `SH(p1)`.
-    hhr1: string // SHA de `SH(r1)`.
-    Ka: string // clé `K` du safe cryptée par `SH(p0, p1)`.
-    Kr: string //  clé `K` du safe cryptée par `SH(r0, r1)`.
   }
 
   type MDuser = {
@@ -1056,6 +1053,7 @@ export const useSafeStore = defineStore('safe', () => {
     invits: Object | null// une propriété par invitation
   }
 
+  /*
   const updSafeCodes = async (
     psh0: Uint8Array, psh1: Uint8Array, psh: Uint8Array,
     rsh0: Uint8Array, rsh1: Uint8Array, rsh: Uint8Array,) => {
@@ -1090,6 +1088,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
     return ret.status
   }
+*/
 
   const createSafe = async (a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
 
@@ -1117,9 +1116,9 @@ export const useSafeStore = defineStore('safe', () => {
     const llq = quarter(d)
 
     const auth: Auth = {
-      llq, 
+      llq,
       lm: d.getTime(),
-      C, D, S, V, hshK, 
+      C, D, S, V, hshK,
       admins:'', pseudo: '',
       hshp1, K1, hshp2, K2,
       actual: { a1K, hsha1, a2K, hsha2 } as Alias,
@@ -1143,7 +1142,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     // Enregistrement dans le Master Directory
-    let op = new MDOperation('$mdNewUser') 
+    let op = new MDOperation('$mdNewUser')
     try {
       op.args.mdUser = mdUser
       const res = await op.post()
@@ -1172,6 +1171,18 @@ export const useSafeStore = defineStore('safe', () => {
 
     await compileSafe(safe)
     return 0
+  }
+
+  const mdUserFree = async (alias: string) => {
+    const op = new MDOperation('$mdUserFree')
+    try {
+      op.args.mdUser = alias
+      const res = await op.post()
+      return res.aliasfree
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
   }
 
   /* targetId est soit id, soit hp0, soit hr0, soit contact
@@ -1702,12 +1713,13 @@ export const useSafeStore = defineStore('safe', () => {
     hasIDBS, init0,
     resetAllLocal,
     newTrusting, newTSession,
+    mdUserFree,
     trustings, setTrusting, delTrusting, myTrusting,
-    setTSession, delTSession, getMySessions, mySessions, sessionOfProfId, 
-    mySafeCreds, getCreds, managedOrgs, isManager, 
-    createCred, updateCredComment, autoRevokeCreds, 
+    setTSession, delTSession, getMySessions, mySessions, sessionOfProfId,
+    mySafeCreds, getCreds, managedOrgs, isManager,
+    createCred, updateCredComment, autoRevokeCreds,
     mySafeProfiles, profileOfProfId,
-    updateProfiles, setAboutProfile, 
+    updateProfiles, setAboutProfile,
     mySafePrefs,
     updatePrefs,
     invitCreate, statusInvit, mySafeInvits,
@@ -1717,7 +1729,7 @@ export const useSafeStore = defineStore('safe', () => {
     getAllSessions,
     createSafe, updSafeCodes, openSafeByPR, openSafeByPin, reloadSafe, delSafe,
     setTrust, setUntrust, getUserICVO,
-    synthUsers, getBinSafe, setUntrustAll, 
+    synthUsers, getBinSafe, setUntrustAll,
     setAdmins, setContact,
     SetOpUrl, GRSvcOpOrg
   }
