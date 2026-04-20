@@ -3,14 +3,14 @@
 
   <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
     <div v-if="sf.auth.admins">
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP" 
+      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
         :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
       <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
     </div>
     <div v-else>
       <service-op class="q-mb-md" v-model="ui.adminPage"/>
       <q-separator color="orange" class="q-my-sm"/>
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP" 
+      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
         :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
     </div>
   </div>
@@ -26,7 +26,7 @@
       </div>
     </div>
     <div v-else class="q-my-md">
-      <q-select v-if="hasManagedOrgs" 
+      <q-select v-if="hasManagedOrgs"
         dense class="full-width" options-dense filled clearable
         transition-show="flip-up" transition-hide="flip-down"
         v-model="svcOrg"
@@ -40,11 +40,11 @@
       <div class="col-4">{{$t('mtime')}}</div>
       <div class="col-4">{{$t('ltime')}}</div>
     </div>
-    <scroll-area v-if="hasManagedOrgs || sf.auth.admins" 
+    <scroll-area v-if="hasManagedOrgs || sf.auth.admins"
       class="full-width bord1">
       <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
         <div class="row">
-          <btn-cond v-if="!m.limit && (sf.auth.admins || m.userId  === sf.userId)" 
+          <btn-cond v-if="!m.limit && (sf.auth.admins || m.userId  === sf.userId)"
             class="col-1" icon="delete" color="warning"
             @ok="revoke(m)"/>
           <div v-else class="col-1"></div>
@@ -71,7 +71,7 @@
       <div class="column items-center">
         <btn-cond :label="$t('APgrantmgr')" icon="check"
           :disable="diagReq !== ''" @ok="grantManager"/>
-        <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')" 
+        <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
           :disable="!org.inp" @ok="dolist"/>
       </div>
     </div>
@@ -79,7 +79,7 @@
   </div>
 
   <choose-it v-model="dialogs.confirmrevoke"
-    :prefix="'APrevcf' + (autorev ? 'a' : '')" options="pw" 
+    :prefix="'APrevcf' + (autorev ? 'a' : '')" options="pw"
     @giveup="dialogs.confirmrevoke = false"
     @option="doConfirmRevoke"/>
 </div>
@@ -136,9 +136,9 @@ watch(lstMgr, async (l) => {
   for (const x of sorgs.value) s.add(x.org)
   const lx : string[] = []
   for (const x of l) if (x.limit && x.userId === me) {
-    if (!arDone.value.has(x.id)) { 
+    if (!arDone.value.has(x.id)) {
       lx.push(x.id)
-      arDone.value.add(x.id) 
+      arDone.value.add(x.id)
     }
   }
   if (!lx.length) return
@@ -183,6 +183,7 @@ const resetAreq = () => {
 }
 
 const grantManager = async () => {
+  // TODO mdUserGetICVS icvo
   const targetId = areq.targetUser.inp
   const icvo = await sf.getUserICVO(areq.safeStore, targetId) as ICVO
   if (!icvo) {
@@ -214,7 +215,7 @@ const doConfirmRevoke = async () => {
   if (status) {
     await ui.diagDisplay($t('APrevko'))
   } else {
-    if (autorev.value) 
+    if (autorev.value)
       sf.autoRevokeCreds([revokeC.value.id])
     await ui.diagDisplay($t('APrevok'))
     await dolist()

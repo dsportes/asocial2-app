@@ -6,7 +6,7 @@ Résultat en v-model.
 <q-expansion-item dense v-model="exp">
   <template v-slot:header>
     <div class="row full-width items-start">
-      <btn-bubble class="q-mr-sm" :text="$t(pfx + '_bub')" 
+      <btn-bubble class="q-mr-sm" :text="$t(pfx + '_bub')"
         style="position:relative;top:-4px;"/>
       <div class="titre-sm text-italic">{{$t('SEStit')}}</div>
       <div class='font-mono fs-sm text-bold text-italic q-mx-sm'
@@ -16,7 +16,7 @@ Résultat en v-model.
     </div>
   </template>
   <div class="q-ml-md q-mr-xs q-my-sm bordl bordb">
-    <input-a prefix="SECsitech" 
+    <input-a prefix="SECsitech"
       @validate="checkSite" :initval="def" :list="vals"
       v-model="site"/>
   </div>
@@ -69,9 +69,9 @@ watch(site, (v) => {
 
 const checkSite = async () => {
   const s = site.value
-  const ok = await sf.pingSite(s)
+  const ok = await sf.pingStore(s)
   if (ok) {
-    model.value = s 
+    model.value = s
     err.value = 0
     exp.value = false
   } else {

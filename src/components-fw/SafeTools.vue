@@ -42,7 +42,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('HPmanuinfo')"
         :disable="session.incognito || !session.hasNet"
-        :title="$t('HPmanusers')" 
+        :title="$t('HPmanusers')"
         @open="dialogs.ManageUsers = true"/>
 
       <q-separator color="orange" class="q-mx-lg q-my-xs"/>
@@ -50,38 +50,38 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
         :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito || sf.openMode > 2"
+        :disable="!session.hasNet || session.incognito"
         @open="dialogs.DevTrustings = true"/>
 
       <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
-        :title="$t('HPchgcodes_1')" :disable="sf.openMode > 2"
+        :title="$t('HPchgcodes_1')"
         @open="dialogs.SafeCr = true"/>
 
       <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPtrust_1')" :disable="sf.openMode > 2"
+        :title="$t('HPtrust_1')"
         @open="dialogs.DevTrustit = true"/>
 
       <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPchgpin_1')" :disable="sf.openMode > 2"
+        :title="$t('HPchgpin_1')"
         @open="dialogs.DevTrustit = true"/>
 
       <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')" :disable="sf.openMode > 2"
+        :title="$t('HPuntrust_1')"
         @open="openUntrust"/>
 
       <q-separator color="orange" class="q-mx-lg q-my-xs"/>
       <div class="titre-md text-italic text-bold text-warning">{{ $t('SFTopal') }}</div>
 
       <bar-open :bubble="$t('HPexpsafe_2')"
-        :disable="session.incognito || !session.hasNet || sf.openMode > 2"
-        :title="$t('HPexpsafe_1')" 
+        :disable="session.incognito || !session.hasNet"
+        :title="$t('HPexpsafe_1')"
         @open="dialogs.ExportSafe = true"/>
 
       <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
-        :disable="session.incognito || !session.hasNet || sf.openMode > 2"
-        :title="$t('HPdelsafe_1')" 
+        :disable="session.incognito || !session.hasNet"
+        :title="$t('HPdelsafe_1')"
         @open="dialogs.delsafe = true"/>
-      
+
     </template>
   </dialog-std0>
 
@@ -147,8 +147,8 @@ const session = stores.session
 const sf = stores.safe
 
 const emit = defineEmits(['close'])
-const props = defineProps({ 
-  short: Boolean 
+const props = defineProps({
+  short: Boolean
 })
 const dialogs = reactive({
   SafeTools: false,

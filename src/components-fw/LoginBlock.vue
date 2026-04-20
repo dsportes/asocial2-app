@@ -1,4 +1,4 @@
-<!-- Panel d'authentification par code PIN 
+<!-- Panel d'authentification par code PIN
 Event émis: logged
 -->
 <template>
@@ -55,8 +55,8 @@ const selectUser = (u) => {
   selectedUser.value = selectedUser.value === u ? null : u
 }
 
-const authPS = async (args) => {
-  const status = await sf.openSafeByPR(args.sh0, args.sh1, args.sh)
+const authPS = async (args) => { // TODO
+  const status = await sf.openSafeByAP(args.sh0, args.sh1, args.sh)
   if (status === 0) emit('logged', null)
   else if (status > 0) await ui.diagDisplay($t('HPopsret_' + status))
 }
@@ -71,5 +71,5 @@ const authPIN = async () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.select:hover { background: $grey-7 !important } 
+.select:hover { background: $grey-7 !important }
 </style>
