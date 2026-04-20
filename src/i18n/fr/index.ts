@@ -242,6 +242,8 @@ export default {
   UAPtit_a: 'Changement d\'alias',
   UAPtit_p: 'Changement de phrase secrète',
 
+  UAPok_u: 'Vous êtes déclaré comme utilisateur, un "coffre-fort" vous a été attribué.',
+
   UAPquit: 'Des saisies ont été effectuées. Voulez-vous fermer quand-même et les perdre ou reprendre la procédure?',
   UAPquit_1: 'Fermer ce dialogue',
   UAPquit_0: 'Poursuivre la procédure',
@@ -267,7 +269,8 @@ export default {
   UAPt_a: 'Je renonce à ajouter un alias',
   UAPt_p: 'Je renonce à ajouter une phrase secrète',
   UAPdup_a: 'Cet alias est déjà dans votre liste',
-  UAPdup_p: 'Cette phrase est déjà dans votre liste',
+  UAPdup_p: 'Cet phrase est déjà dans votre liste',
+  UAPdup_p1: 'Cette phrase était une des vôtres',
 
   Alias: 'Mon alias: pseudo, email, mobile ... ',
   Alias_label: `### Un alias peut être par exemple ...

@@ -60,13 +60,13 @@
     </div>
 
     <div v-if="sf.tab === 'guest' && sf.step === 1" class="q-pa-xs">
-      <q-expansion-item v-model="g1m" group="g1" 
+      <q-expansion-item v-model="g1m" group="g1"
         :class="g1m ? 'bord2' : ''">
         <template v-slot:header>
           <bar-title prefix="INVtit_1" large/>
         </template>
         <div v-if="g1m" class="q-ml-sm">
-          <login-create class="full-width" 
+          <login-create class="full-width"
             v-model="g1m"
             @done="sf.tab3 = 'newr'; sf.setStep(3)"/>
         </div>
@@ -136,7 +136,7 @@
 
         <div class="row q-my-md q-gutter-sm">
           <div class="text-italic text-bold">{{$t('HPstartpref')}}</div>
-          <btn-cond no-caps :label="$t('HPpref_1')" 
+          <btn-cond no-caps :label="$t('HPpref_1')"
             @ok="dialogs.optstart = false; validateSession('', 0, null)"/>
           <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
             :label="code" padding="none xs"
@@ -163,7 +163,7 @@ import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import SecuritySite from '../components-fw/SecuritySite.vue'
+import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'

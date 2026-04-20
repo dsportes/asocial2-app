@@ -98,7 +98,7 @@ import InputB from '../components-fw/InputB.vue'
 import { NewManager, ListManagers, RevokeCred } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import SecuritySite from '../components-fw/SecuritySite.vue'
+import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 

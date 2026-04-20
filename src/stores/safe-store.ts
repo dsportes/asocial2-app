@@ -1094,7 +1094,8 @@ export const useSafeStore = defineStore('safe', () => {
     invits: Object | null// une propriété par invitation
   }
 
-  const createSafe = async (a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
+  const createSafe = async (
+    store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
     userId.value = Crypt.shaS(Crypt.random(32))
     keyK.value = Crypt.random(32)
     const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
@@ -1141,7 +1142,7 @@ export const useSafeStore = defineStore('safe', () => {
     const mdUser: MDuser = {
       userId: userId.value,
       hshK, hsha1, hsha2, C, V, llq,
-      store: mySafeStore.value
+      store: store
     }
 
     // Enregistrement dans le Master Directory
@@ -1155,18 +1156,19 @@ export const useSafeStore = defineStore('safe', () => {
       - 2 alias 2 déjà utilisé
       - 3 user déjà déclaré avec des valeurs différentes
       */
-      if (res.status) return res.status
+      if (res.status) return res.status + 10
     } catch (e) {
       op.ko(e)
       return -1
     }
 
+    mySafeStore.value = store
     // Enregistrement dans le Safe Store
-    op = new SafeOperation('$CreateSafe', mySafeStore.value)
+    op = new SafeOperation('$CreateSafe', store)
     try {
-      op.args = { safe }
+      op.args['safe'] = safe
       const ret = await op.post()
-      if (!ret.status) return 10 + ret.status
+      if (!ret.status) return ret.status
     } catch (e) {
       op.ko(e)
       return -1

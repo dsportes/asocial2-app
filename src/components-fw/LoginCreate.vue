@@ -9,11 +9,11 @@
 
   <security-site  v-if="flag.f2 || flag.f1" v-model="sf.safeStore"/>
 
-  <login-block v-if="flag.f2" class="full-width q-pl-sm" 
+  <login-block v-if="flag.f2" class="full-width q-pl-sm"
     @logged="emit('done', true)"/>
 
   <div v-if="flag.f1" class="q-mb-sm q-ml-sm">
-    <btn-cond v-if="flag.f1" :label="$t('INVco_cr')" 
+    <btn-cond v-if="flag.f1" :label="$t('INVco_cr')"
       @ok="dialogs.create = true"/>
   </div>
 
@@ -27,7 +27,7 @@ import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 
 import LoginBlock from '../components-fw/LoginBlock.vue'
-import SecuritySite from '../components-fw/SecuritySite.vue'
+import SecuritySite from './SafestoreSelect.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
@@ -47,9 +47,9 @@ const dialogs = reactive({
   create: false
 })
 
-const flag = reactive({ 
-  f1: false, 
-  f2: props.hasaccount ? true : false 
+const flag = reactive({
+  f1: false,
+  f2: props.hasaccount ? true : false
 })
 
 watch(model, () => {

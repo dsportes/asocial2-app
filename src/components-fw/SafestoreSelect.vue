@@ -1,4 +1,4 @@
-<!-- Input de sélection d'un Site de sécurité (host de safes)
+<!-- Input de sélection d'un Safe Store.
 Vérifie sa disponibilité par un "ping", sauf pour le Site générique.
 Résultat en v-model.
 -->
@@ -17,8 +17,8 @@ Résultat en v-model.
   </template>
   <div class="q-ml-md q-mr-xs q-my-sm bordl bordb">
     <input-a prefix="SECsitech"
-      @validate="checkSite" :initval="def" :list="vals"
-      v-model="site"/>
+      @validate="checkStore" :initval="def" :list="vals"
+      v-model="store"/>
   </div>
 </q-expansion-item>
 </template>
@@ -46,29 +46,29 @@ const props = defineProps({
 })
 
 const pfx = ref(props.prefix || 'SECsite')
-const site = ref(def)
+const store = ref(def)
 const err = ref(0)
 
 model.value = ''
 
 const check = () => {
-  const s = site.value
+  const s = store.value
   if (s === def) {
     err.value = 0
     model.value = ''
     exp.value = false
   } else {
     err.value = 2
-    checkSite()
+    checkStore()
   }
 }
 
-watch(site, (v) => {
+watch(store, (v) => {
   check()
 })
 
-const checkSite = async () => {
-  const s = site.value
+const checkStore = async () => {
+  const s = store.value
   const ok = await sf.pingStore(s)
   if (ok) {
     model.value = s
@@ -85,5 +85,4 @@ const checkSite = async () => {
 @import '../css/app.scss';
 .bordb { border-bottom: 1px solid $grey-5 }
 .bordl { border-left: 1px solid $grey-5 }
-.box { max-height:6.2rem; overflow:hidden }
 </style>

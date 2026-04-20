@@ -37,6 +37,8 @@ Events: close done
 <template #default>
 <div class="column items-center">
   <q-list style="width:30rem !important" bordered class="rounded-borders">
+    <safestore-select v-if="mode === 'u'" v-model="store"/>
+
     <q-expansion-item expand-separator v-model="expandA"
       :label="$t('UAPa_a')">
       <q-card>
@@ -94,6 +96,7 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 
+import SafestoreSelect from '../components-fw/SafestoreSelect.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
@@ -117,16 +120,19 @@ const chooseBack = (n) => {
   if (!n) { model.value = false; emit('close', true) }
 }
 
+const store = ref()
+
 type al = {
   txt: string
   ac: boolean // si actuel
   del: boolean // si deleted
   hsh?: string
+  sh?: Uint8Array
 }
 
 const entry = reactive({ inp: '', err: '' })
 
-const aliases : Ref<al[]> = reactive([])
+const aliases: Ref<al[]> = reactive([])
 const expandA = ref(false)
 const freeA = ref(false)
 const errVA = ref(false)
@@ -145,13 +151,12 @@ const phrases : Ref<al[]> = reactive([])
 const expandP = ref(false)
 const errVP = ref(false)
 const initP = ref('')
-const hshP = ref('')
+const listPAC = ref(new Set<string>())
 
 const resetP = () => {
   entry.inp = ''
   entry.err = ''
   initP.value = ''
-  hshP.value = ''
   errVP.value = false
 }
 watch(expandP, (v) => { resetP() })
@@ -165,18 +170,18 @@ const init = () => {
     resetA()
   }
   if (props.mode === 'p' || props.mode === 'u') {
-    phrases.lenth = 0
-    phrases.push({txt: '', ac: true, del: false, hsh: sf.auth.hshp1 })
-    if (sf.auth.hshp2)
-      aliases.push({txt: '', ac: true, del: false, hsh: sf.auth.hshp2 })
+    listPAC.value.clear()
+    phrases.length = 0
+    listPAC.value.add(sf.auth.hshp1)
+    if (sf.auth.hshp2) listPAC.value.add(sf.auth.hshp2)
     resetP()
   }
 }
 
 const valA = async () => {
   if (!initA.value) {
-    let a = null
-    for(const x in aliases) if (x['txt'] === entry.inp) a = x
+    let a: al | null = null
+    for(const x of aliases) if (x['txt'] === entry.inp) a = x
     if (a) {
       a.del = false
       resetA()
@@ -219,23 +224,28 @@ const correcA = () => {
 }
 
 const valP = async () => {
+  const sh = await Crypt.strongHash(entry.inp, true, true) as Uint8Array
+  const hsh = Crypt.shaS(sh)
+  const ac = listPAC.value.has(hsh)
   if (!initP.value) {
-    hshP.value = Crypt.shaS(await Crypt.strongHash(entry.inp, true, true))
-    let p = null
-    for(const x in phrases) if (x['hsh'] === hshP.value) p = x
+    let p: al | null = null
+    for(const x of phrases) if (x['hsh'] === hsh) p = x
     if (p) {
+      if (!ac) await ui.diagDisplay($t('UAPdup_p'))
+      else await ui.diagDisplay($t('UAPdup_p1'))
       p.txt = entry.inp
+      p.hsh = hsh
+      p.sh = sh
       p.del = false
       resetP()
       expandP.value = false
-      await ui.diagDisplay($t('UAPdup_p'))
       return
     }
     initP.value = entry.inp
     errVP.value = false
   } else { // vérification
     if (initP.value === entry.inp) { // OK
-      phrases.push({ txt: initP.value, ac: false, del: false, hsh: hshP.value })
+      phrases.push({ txt: initP.value, ac: ac, del: false, hsh: hsh, sh: sh })
       resetP()
       expandP.value = false
       return
@@ -279,6 +289,33 @@ const enabled = computed(() => {
   if (props.mode === 'a') return alChg.value
   if (props.mode === 'p') return psChg.value
 })
+
+const validate = async () => {
+  if (props.mode === 'u') {
+    let a1 = '', a2 = ''
+    for(const al of aliases) {
+      if (al.del) continue
+      if (!a1) a1 = al
+      else if (!a2) a2 = al
+      else break
+    }
+    let shp1 = null, shp2 = null
+    for(const al of phrases) {
+      if (al.del) continue
+      if (!shp1) shp1 = al
+      else if (!shp2) shp2 = al
+      else break
+    }
+    let status = sf.createSafe(store.value, a1, a2, shp1, shp2)
+    if (status > 0) await ui.diagDisplay($t('SFST_' + status))
+    else if (status === 0) {
+      await ui.diagDisplay($t('UAPok_u'))
+      emit('done', true)
+    }
+    model.value = false
+    emit('close', true)
+  }
+}
 
 init()
 </script>
