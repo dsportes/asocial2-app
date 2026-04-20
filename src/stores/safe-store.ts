@@ -161,8 +161,8 @@ class Trusting {
   store: string = '' // safe store du user
   pseudo: string = ''
   cx: string = ''
-  Ka: string = ''
-  Kr: string = ''
+  K1: string = ''
+  K2: string = ''
   Kp: string = ''
 
   constructor (obj: Object) {
@@ -632,9 +632,9 @@ export const useSafeStore = defineStore('safe', () => {
       if (!found) // le device doit être retiré de la liste des trustings
         await delTrusting(devId.value)
       const tr = myTrusting.value as Trusting
-      if (tr && ((tr.Ka !== auth.value.Ka) || (tr.Kr !== auth.value.Kr))) {
-        tr.Ka = auth.value.Ka
-        tr.Kr = auth.value.Kr
+      if (tr && ((tr.K1 !== auth.value.K1) || (tr.K2 !== auth.value.K2))) {
+        tr.K1 = auth.value.K1
+        tr.K2 = auth.value.K2
         setTrusting(tr)
       }
     }
@@ -1239,52 +1239,63 @@ export const useSafeStore = defineStore('safe', () => {
   const delSafe = async () => {
     const op = new SafeOperation('$DelSafe', mySafeStore.value)
     try {
-      op.args = { userId: userId.value, sh1p: sh1p.value, sh1r: sh1r.value }
+      op.args['userId'] = userId.value
+      op.args['shK'] = await Crypt.strongHash(keyK.value, false, false)
       const ret = await op.post()
       return ret.status
     } catch (e) {
       op.ko(e)
+      return -1
     }
   }
 
-  // TODO
-  const openSafeByAP = async ( sh0: Uint8Array, sh1: Uint8Array, sh: Uint8Array) => {
-    const _sh0 = u8ToB64(sh0, true)
-    const _sh1 = u8ToB64(sh1, true)
-    // const hh1 = Crypt.shaS(sh1)
-    const op = new SafeOperation('$OpenSafeByPR', mySafeStore.value)
+  /* Login à un safe depuis son ID et shp:
+  - StrongHash d'une de ses phrases en base 64
+  Login a récupéré le userId et le store depuis le Master Directory et un alias
+  */
+  const openSafeByAP = async ( _userId: string, store: string, shp: string ) => {
+    const op = new SafeOperation('$OpenSafe', store)
     let ret
     try {
-      op.args = { sh0: _sh0, sh1: _sh1 }
+      op.args['userId'] = _userId
+      op.args['shp'] = shp
       ret = await op.post()
     } catch (e) {
       op.ko(e)
       return -1
     }
     if (ret.status === 0) {
+      const x = b64ToU8(shp)
+      const hshp = Crypt.shaS(x)
       userId.value = ret.safe.id
-      keyK.value = await Crypt.decrypt(sh, b64ToU8(ret.byP ? ret.safe.Ka : ret.safe.Kr))
-      if (ret.byP) { sh1p.value = _sh1; sh1r.value =  null }
-      else { sh1p.value = null; sh1r.value = _sh1 }
-      await compileSafe(ret.safe)
+      const a = ret.safe.auth as Auth
+      const K = a.hshp1 === hshp ? a.K1 : a.K2
+      try {
+        keyK.value = await Crypt.decrypt(x, b64ToU8(K))
+        await compileSafe(ret.safe)
+      } catch (e: any) {
+        ret.status = 3
+      }
     }
     return ret.status
   }
 
-  // TODO
-  const openSafeByPin = async ( pin: string, id: string) => {
-    userId.value = id
-    const t: Trusting = myTrusting.value as Trusting
-    if (!t) return 1
+  /* Login a récupéré l'item de Trustings choisi par l'utilisateur
+  en fonction de son pseudo.
+  - pin a été saisi par l'utilisateur
+  */
+  const openSafeByPin = async ( pin: string, t: Trusting) : Promise<number> => {
     const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
 
     let ret
-    const op1 = new SafeOperation('$OpenSafeByPin', mySafeStore.value)
+    let op = new SafeOperation('$OpenSafeByPin', t.store)
     try {
-      op1.args = {userId: userId.value, devId: devId.value, pincx}
-      ret = await op1.post()
+      op.args['userId'] = t.userId
+      op.args['devId'] = devId.value
+      op.args['pincx'] = pincx
+      ret = await op.post()
     } catch (e) {
-      op1.ko(e)
+      op.ko(e)
       return -1
     }
     if (ret.status !== 0) return ret.status
@@ -1297,20 +1308,26 @@ export const useSafeStore = defineStore('safe', () => {
     }
     const shK = await Crypt.strongHash(keyK.value, false, false)
 
-    let ret2
-    const op2 = new SafeOperation('$OpenSafeById', mySafeStore.value)
+    op = new SafeOperation('$GetSafe', t.store)
     try {
-      op2.args = {userId: userId.value, shK}
-      ret2 = await op2.post()
+      op.args['userId'] = t.userId
+      op.args['shK'] = shK
+      ret = await op.post()
     } catch (e) {
-      op2.ko(e)
+      op.ko(e)
       return -1
     }
-    if (ret2.status) return 2
-    await compileSafe(ret2.safe)
+    if (ret.status) return 2
+    userId.value = t.userId
+    await compileSafe(ret.safe)
     return 0
   }
 
+  /* Set d'un ou de deux alias de l'utilisateur.
+  - 1) écrit les alias en future dans safe
+  - 2) enregistre futur dans le Master Directory
+  - 3) transfert de futur dans actual dans le safe
+  */
   const setAlias = async (a1: string, a2: string) : Promise<boolean> => {
     const a1K = u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a1)), true)
     const a2K = !a2 ? '' : u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a2)), true)
@@ -1372,8 +1389,7 @@ export const useSafeStore = defineStore('safe', () => {
   type TrustDev = {
     userId: string
     devId: string
-    sh1p: string
-    sh1r: string
+    shK: string
     devName: string
     Va: string
     cy: string
@@ -1381,24 +1397,8 @@ export const useSafeStore = defineStore('safe', () => {
     pseudo: string
   }
 
-  type UntrustDev = {
-    userId: string
-    devIds: string[]
-    sh1p: string
-    sh1r: string
-  }
-
-  type SetAdmins = {
-    userId: string
-    admins: string
-    shK: string
-  }
-
-  // TODO
-  /* Cette opération (ainsi que unsetTrust) exige que l'authentification ait été faite
-  en mode LONG (pas par PIN).
-  Pour s'en assurer elle transmet au serveur sh1p / sh1r qui n'ont pu être initialisés
-  QUE par une auth longue ($CreateSafe / $UpdSafeCodes / $OpenSafeByPR)
+  /* Certifie le device courant, le nomme name et attribue le pseudo
+  de l'utilisateur.
   */
   const setTrust = async (name: string, pin: string, pseudo: string) => {
     if (!devId.value || name !== devName.value) { // put Header
@@ -1411,24 +1411,25 @@ export const useSafeStore = defineStore('safe', () => {
     const cy = Crypt.rnd(24)
     // `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN / cx / cy)`
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + cx + '/' + cy, false, true) as Uint8Array
-    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, false) as Uint8Array
     const Kp = u8ToB64(await Crypt.crypt(pincxcy, keyK.value), true)
 
     let t: Trusting = myTrusting.value
     if (!t) {
       t = new Trusting({
         userId: userId.value,
+        store: mySafeStore.value,
         pseudo: pseudo,
         cx: cx,
-        Ka: auth.value.Ka,
-        Kr: auth.value.Kr,
+        K1: auth.value.K1,
+        K2: auth.value.K2,
         Kp: Kp
       })
     } else {
       t.pseudo = pseudo
       t.cx = cx
-      t.Ka = auth.value.Ka
-      t.Kr = auth.value.Kr
+      t.K1 = auth.value.K1
+      t.K2 = auth.value.K2
       t.Kp = Kp
     }
     await setTrusting(t)
@@ -1446,43 +1447,19 @@ export const useSafeStore = defineStore('safe', () => {
     const asn1 = Crypt.signToAsn1(signEC)
     const sign = u8ToB64(asn1)
     const Va = keyToB64(kpsv.pub)
+    const shK = await Crypt.strongHash(keyK.value, false, false) as string
     const trustDev: TrustDev = {
-      pseudo: u8ToB64(await ecX(pseudo), true),
       userId: userId.value,
+      shK,
+      pseudo: u8ToB64(await ecX(pseudo), true),
       devId: devId.value,
-      sh1p: sh1p.value,
-      sh1r: sh1r.value,
       devName: u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(devName.value)), true),
       Va, cy, sign
     }
     const op = new SafeOperation('$TrustDevice', mySafeStore.value)
     let ret
     try {
-      op.args = {trustDev}
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e)
-      return -1
-    }
-    await compileSafe(ret.safe)
-    return ret.status
-  }
-
-  // TODO
-  const setUntrust = async () => {
-    const t: Trusting = myTrusting.value
-    if (!t) return 0 // était déjà untrusted
-    await delTrusting(t.userId)
-    const untrustDev: UntrustDev = {
-      userId: userId.value,
-      devIds: [devId.value],
-      sh1p: sh1p.value,
-      sh1r: sh1r.value
-    }
-    const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
-    let ret
-    try {
-      op.args = {untrustDev}
+      op.args['trustDev'] = trustDev
       ret = await op.post()
     } catch(e) {
       op.ko(e)
@@ -1491,6 +1468,40 @@ export const useSafeStore = defineStore('safe', () => {
     if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
+  }
+
+  type UntrustDev = {
+    userId: string
+    shK: string
+    devIds: string[]
+  }
+  const setUntrust = async () => {
+    const t: Trusting = myTrusting.value
+    if (!t) return 0 // était déjà untrusted
+    await delTrusting(t.userId)
+    const untrustDev: UntrustDev = {
+      userId: userId.value,
+      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      devIds: [devId.value]
+    }
+    const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
+    let ret
+    try {
+      op.args['untrustDev'] = untrustDev
+      ret = await op.post()
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+    if (!ret.status)
+      await compileSafe(ret.safe)
+    return ret.status
+  }
+
+  type SetAdmins = {
+    userId: string
+    shK: string
+    admins: string
   }
 
   const setAdmins = async (lst: string[]) => {
@@ -1505,26 +1516,24 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$SetAdmins', mySafeStore.value)
     let ret
     try {
-      op.args = {setadmins}
+      op.args['setAdmins'] = setadmins
       ret = await op.post()
     } catch(e) {
       op.ko(e)
       return -1
     }
-    if (ret.status === 0)
+    if (!ret.status)
       await compileSafe(ret.safe)
     return ret.status
   }
 
-  // TODO
   const setUntrustAll = async (sId: Set<string>) => {
     if (sId.has(devId.value))
       await delTrusting(userId.value)
     const untrustDev: UntrustDev = {
       userId: userId.value,
       devIds: Array.from(sId),
-      sh1p: sh1p.value,
-      sh1r: sh1r.value
+      shK: await Crypt.strongHash(keyK.value, false, false) as string
     }
     const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
     let ret
@@ -1540,14 +1549,12 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const reloadSafe = async () : Promise<number>=> {
-    const op = new SafeOperation('$OpenSafeById', mySafeStore.value)
+  const reloadSafe = async () : Promise<number> => {
+    const op = new SafeOperation('$GetSafe', mySafeStore.value)
     let ret
     try {
-      op.args = {
-        userId: userId.value,
-        shK: await Crypt.strongHash(keyK.value, false, false) as string
-      }
+      op.args['userId'] = userId.value
+      op.args['shK'] = await Crypt.strongHash(keyK.value, false, false) as string
       ret = await op.post()
     } catch(e) {
       op.ko(e)
@@ -1558,7 +1565,7 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  // TODO
+  /*
   const getBinSafe = async () : Promise<Uint8Array | null> => {
     const op = new SafeOperation('$GetBinSafe', mySafeStore.value)
     let ret
@@ -1574,6 +1581,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
     return ret.status ? null : ret.safe
   }
+  */
 
   type Suas = {
     n: number
@@ -1784,7 +1792,7 @@ export const useSafeStore = defineStore('safe', () => {
     createSafe, setPhraseSafe, mdUserFree, mdUserGetICVS /* ??? */, delSafe,
     openSafeByAP, openSafeByPin,
     setAlias, setTrust,setUntrust,setAdmins, setUntrustAll,
-    reloadSafe /* ??? */, getBinSafe,
+    reloadSafe /* ??? */,
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,

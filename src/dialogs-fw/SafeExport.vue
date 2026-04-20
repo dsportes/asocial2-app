@@ -8,7 +8,7 @@ Events: close done
       <div class="row items-center q-gutter-sm">
         <q-tabs v-model="tab" class="col bg-grey-9 q-mb-md" dense>
           <q-tab name="export" icon="download" :label="$t('EXPexport')" />
-          <q-tab class="text-warning bg-yellow-3" name="restore" 
+          <q-tab class="text-warning bg-yellow-3" name="restore"
             icon="warning" :label="$t('EXPrestore')" />
         </q-tabs>
         <btn-cond v-if="tab === 'export'" class="col-auto q-ma-xs" flat icon="check"
@@ -155,12 +155,13 @@ watch(model, async (v) => {
 })
 
 const props = defineProps({
-  tab: String 
+  tab: String
 })
 
 const tab = ref('export')
 watch(tab, async () => { await init() })
 
+// TODO ??? "UN" safe ou le sien courant ?
 const init = async () => {
   if (props.tab === 'restore') tab.value = 'restore'
   if (tab.value === 'restore') reset()
@@ -180,9 +181,10 @@ const cryptK = reactive( { inp: '', err: '', key: null } )
 const bin = ref(null)
 const infopub = ref('')
 
+// TODO
 const doExportSafe = async () => {
   if (!expName.value) return
-  const buf: Uint8Array = await Crypt.crypt(cryptK.key, bin.value)
+  const buf: Uint8Array = await Crypt.crypt(cryptK.key, bin.value) as Uint8Array
   const nf = expName.value + (!expName.value.endsWith('.bin') ? '.bin' : '')
   // @ts-ignore
   const blob = new Blob([buf], { type: 'application/octet-stream'})
@@ -286,9 +288,9 @@ const importBackup = async () => {
 const chgCodes = async (arg) => {
   console.log('chgCodes')
   /* const arg = {
-    cash0: ca.sh0, 
-    cash1: ca.sh1, 
-    cash: ca.sh, 
+    cash0: ca.sh0,
+    cash1: ca.sh1,
+    cash: ca.sh,
     crsh0: cr.sh0,
     crsh1: cr.sh1,
     crsh: cr.sh
