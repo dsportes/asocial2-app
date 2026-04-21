@@ -10,7 +10,7 @@ Résultat en v-model.
         style="position:relative;top:-4px;"/>
       <div class="titre-sm text-italic">{{$t('SEStit')}}</div>
       <div class='font-mono fs-sm text-bold text-italic q-mx-sm'
-        style="position:relative; top:-2px">{{ site }}</div>
+        style="position:relative; top:-2px">{{ store }}</div>
       <div v-if="err" class="msg3 ellipsis">{{$t('SECsite_msg' + err)}}</div>
       <q-icon v-else name="check_circle" class="text-green-5" size="20px"/>
     </div>

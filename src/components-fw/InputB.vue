@@ -17,8 +17,8 @@ InputB : son model est un objet { inp, err }
   - inp est la valeur à saisir.
   - err est le code courant de l'erreur courante associée.
 
-InputB permet au composant conteneur d'agir en fonction des codes d'erreurs courants des 
-composants qu'il contient et de contrôler par la propriété "noval" le droit ou 
+InputB permet au composant conteneur d'agir en fonction des codes d'erreurs courants des
+composants qu'il contient et de contrôler par la propriété "noval" le droit ou
 non à validation de tous ses composants.
 InputA est pertinent pour tous les cas où une simple saisie syntaxiquement correcte est suffisante.
 
@@ -75,14 +75,14 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
       <btn-cond round size="md" icon="close" @ok="model.inp = ''"
         :disable="disable || model.inp.length === 0" color="none"/>
       <btn-cond v-if="hasInitVal && !disable && chg"
-        size="md" icon="undo" color="none" round 
+        size="md" icon="undo" color="none" round
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK"
         :disable="disable || model.err !== ''"
         @ok="emit('validate', true)" />
-      <btn-cond v-if="mayStar" 
+      <!--btn-cond v-if="mayStar"
         size="md" icon="star" color="warning" round
-        @ok="model.inp = fill(model.inp)"/>
+        @ok="model.inp = fill(model.inp)"/-->
       <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
         dense padding="none" color="primary">
         <q-menu auto-close>
@@ -93,7 +93,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
         </q-menu>
       </q-btn>
     </template>
-    <template v-slot:error>{{$t(model.err)}}</template>
+    <template v-slot:error>{{model.err ? $t(model.err) : ''}}</template>
   </q-input>
 </div>
 </template>
@@ -145,7 +145,7 @@ const bubble = computed(() => {
   return 'REGexp_all'
 })
 
-const mayStar = computed(() => 
+const mayStar = computed(() =>
   star && !props.disable && model.value.inp.length > star && model.value.inp.endsWith('*'))
 
 const ph = computed(() => {
@@ -161,28 +161,37 @@ const fill = (v) => {
 
 const hasInitVal = computed(() => props.initval && props.initval.length )
 const chg = computed(() => !props.disable && hasInitVal.value && props.initval.value !== model.value.inp)
-const hint = computed(() => 
+const hint = computed(() =>
   $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))
 const undo = () => {
   if (props.initVal) model.value = props.initVal }
 
-const xe = () => {
-  if (reg && model.value.inp.length && !reg.test(model.value.inp)) return 'badform'
-  if (model.value.inp.length < sz.value[0]) return 'tooshort'
-  if (model.value.inp.length > sz.value[1]) return 'toolong'
-  if (props.size === 'isotime' && isNaN(Date.parse(model.value.inp))) return 'badform'
-  return props.fncheck ?  props.fncheck(model.value.inp) : ''
+const xe = (inp) => {
+  if (reg && inp.length && !reg.test(inp)) return 'badform'
+  if (inp.length < sz.value[0]) return 'tooshort'
+  if (inp.length > sz.value[1]) return 'toolong'
+  if (props.size === 'isotime' && isNaN(Date.parse(inp))) return 'badform'
+  return props.fncheck ?  props.fncheck(inp) : ''
 }
 
-watch(() => model.value.inp, (v) => { 
-  model.value.err = xe()
+watch(() => model.value.inp, (v) => {
+  model.value.err = xe(model.value.inp)
   if (model.value.err === '' && !props.disable) emit('change', true)
 })
-model.value.err = xe()
+model.value.err = xe(model.value.inp)
 
 const val = () => {
-  if (!nv.value && !props.disable && model.value.err === '')
-    emit ('validate', true)
+  if (!nv.value && !props.disable && (mayStar.value || model.value.err === '')) {
+    if (mayStar.value) {
+      const s = fill(model.value.inp)
+      const e = xe(s)
+      if (e === '') {
+        model.value.inp = s
+        model.value.err = ''
+        emit ('validate', true)
+      }
+    } else  emit ('validate', true)
+  }
 }
 
 </script>

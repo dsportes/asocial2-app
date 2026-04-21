@@ -197,6 +197,7 @@ export default {
   op_$GrantSvcOpOrg: 'Autoriser / révoquer un service pour une organisation',
   op_$SetUserICVO: 'Enregistrement du compte dans le Master Directory.',
   op_$SetOpUrl: 'Enregistrement de l\'URL d\'un service.',
+  op_$mdUserNew: 'Enregistrement d\'un nouveau safe.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucun "coffre-fort" n\'est enregistré avec cet ID',
@@ -238,7 +239,7 @@ export default {
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
   /* UAP : SafeCr */
-  UAPtit_u: 'Déclaration d\'un nouvel utilisateur',
+  UAPtit_u: 'Création de votre compte et de son "coffre-fort"',
   UAPtit_a: 'Changement d\'alias',
   UAPtit_p: 'Changement de phrase secrète',
 
@@ -259,9 +260,9 @@ export default {
 
   UAPa_a: 'Ajouter un alias',
   UAPa_p: 'Ajouter une phrase secrète',
-  UAPs_a: 'Première saisie de l\'alias',
+  UAPs_a: 'Saisie d\'un alias',
   UAPv_a: 'Vérification de l\'alias',
-  UAPs_p: 'Première saisie de la phrase',
+  UAPs_p: 'Saisie d\'une phrase secrète',
   UAPv_p: 'Vérification de la phrase',
   UAPm1_a: 'C\'est déjà l\'alias d\'un autre utilisateur.',
   UAPm3_a: 'Vérification échouée. Re-saisir la vérification ou la saisie initiale.',
@@ -272,8 +273,8 @@ export default {
   UAPdup_p: 'Cet phrase est déjà dans votre liste',
   UAPdup_p1: 'Cette phrase était une des vôtres',
 
-  Alias: 'Mon alias: pseudo, email, mobile ... ',
-  Alias_label: `### Un alias peut être par exemple ...
+  Alias_label: 'Mon alias: pseudo, email, mobile ... ',
+  Alias_bub: `### Un alias peut être par exemple ...
   - mon prénom / nom,
   - un pseudo de mon choix,
   - une adresse e-mail,
@@ -290,8 +291,8 @@ export default {
   `,
   Alias_ph: 'Duke Ellington',
 
-  Phrase: 'Ma phrase très secrète',
-  Phrase_label: `### Une phrase très secrète est ...
+  Phrase_label: 'Ma phrase très secrète',
+  Phrase_bub: `### Une phrase très secrète est ...
   - a au moins 24 signes,
   - évite de répéter les mêmes,
   - reste mnémotechnique POUR VOUS,

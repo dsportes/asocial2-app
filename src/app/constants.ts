@@ -28,7 +28,7 @@ export const K = {
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
 
   sizes: {
-    alias: [8, 24],
+    alias: [10, 24],
     p1: [24, 40],
     tr: [3, 8],
     dev: [6, 16],

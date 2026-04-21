@@ -91,7 +91,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <admin-mgr v-model="dialogs.AdminMgr" @close="fnc"/>
   <contact-mgr v-model="dialogs.ContactMgr" @close="fnc"/>
   <manage-users v-model="dialogs.ManageUsers" @close="fnc" />
-  <safe-cr v-model="dialogs.SafeCr" :mode="1" @close="fnc"/>
+  <safe-cr v-model="dialogs.SafeCr" mode="a" @close="fnc"/>
   <dev-trustings v-model="dialogs.DevTrustings" @close="fnc"/>
   <dev-trustit v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
   <dev-untrustit v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>

@@ -10,42 +10,41 @@ Events: close done
       {{ $t('UAPdiag_' + diag) }}</div>
     <btn-cond flat size="lg" icon="check" class="col-auto self-end"
       :label="$t('validate')"
-      :disable="enabled" @ok="validate"/>
+      :disable="!enabled" @ok="validate"/>
   </div>
 
   <div v-if="mode === 'a' || mode === 'u'" class="column">
-    <div class="q-mb-sm titre-md text-italic">{{ $t('UAPl_a', aliases.length) }}</div>
-    <div v-for="a in aliases" class="row q-ml-lg">
-      <btn-cond v-if="!a.del" icon="delete" color="warning" @ok="a.del = true"/>
-      <btn-cond v-if="a.del" icon="undo" color="primary" @ok="a.del = false"/>
-      <div :class="'q-mr-md ' + (a.del ? 'text-strike ' : '') + (a.ac ? '' : 'text-bold text-warning')">
+    <div class="q-mt-sm titre-md text-italic">{{ $t('UAPl_a', aliases.length) }}</div>
+    <div v-for="a in aliases" class="row q-ml-lg items-center">
+      <btn-cond v-if="!a.del" size="sm" icon="delete" color="warning" @ok="a.del = true"/>
+      <btn-cond v-if="a.del" size="sm" icon="undo" color="primary" @ok="a.del = false"/>
+      <div :class="'font-mono q-ml-md ' + (a.del ? 'text-strike ' : '') + (a.ac ? '' : 'text-bold text-warning')">
         {{ a.txt }}</div>
     </div>
   </div>
 
   <div v-if="mode === 'p' || mode === 'u'" class="column">
-    <div class="q-mb-sm titre-md text-italic">{{ $t('UAPl_p', phrases.length) }}</div>
-    <div v-for="p in phrases" class="row q-ml-lg">
-      <btn-cond v-if="!p.del" icon="delete" color="warning" @ok="p.del = true"/>
-      <btn-cond v-if="p.del" icon="undo" color="primary" @ok="p.del = false"/>
-      <div :class="'q-mr-md ' + (p.del ? 'text-strike ' : '') + (p.ac ? '' : 'text-bold text-warning')">
+    <div class="q-mt-sm titre-md text-italic">{{ $t('UAPl_p', phrases.length) }}</div>
+    <div v-for="p in phrases" class="row q-ml-lg items-center">
+      <btn-cond v-if="!p.del" size="sm" icon="delete" color="warning" @ok="p.del = true"/>
+      <btn-cond v-if="p.del" size="sm" icon="undo" color="primary" @ok="p.del = false"/>
+      <div :class="'font-mono q-ml-md ' + (p.del ? 'text-strike ' : '') + (p.ac ? '' : 'text-bold text-warning')">
         {{ p.txt || p.hsh}}</div>
     </div>
   </div>
+  <q-separator color="grey-6" class="q-my-md"/>
 </template>
 
 <template #default>
 <div class="column items-center">
-  <q-list style="width:30rem !important" bordered class="rounded-borders">
+  <q-list style="max-width:40rem;width:95vw" bordered class="rounded-borders">
     <safestore-select v-if="mode === 'u'" v-model="store"/>
 
     <q-expansion-item expand-separator v-model="expandA"
-      :label="$t('UAPa_a')">
-      <q-card>
-        <q-card-section>
-          <div class="titre-md text-bold text-italic">
-            {{$t(initA ? 'UAPv_a' : 'UAPs_a')}}</div>
-          <input-b v-model="entry" size="alias" prefix="Alias"
+      :label="$t(initA ? 'UAPv_a' : 'UAPs_a')"
+      header-class="titre-lg text-italic">
+        <div class="column" >
+          <input-b v-model="entryA" size="alias" prefix="Alias"
             @validate="valA"/>
           <div v-if="!initA && !freeA" class="msg">{{ $t('UAPm1_a') }}</div>
           <div v-if="initA && errVA">
@@ -53,29 +52,25 @@ Events: close done
             <btn-cond flat color="primary" :label="$t('UAPc_a')"
               @ok="correcA"/>
           </div>
-          <btn-cond flat color="warning" :label="$t('UAPt_a')"
+          <btn-cond class="self-end" flat color="warning" :label="$t('UAPt_a')"
             @ok="termA"/>
-        </q-card-section>
-      </q-card>
+        </div>
     </q-expansion-item>
 
     <q-expansion-item expand-separator v-model="expandP"
-      :label="$t('UAPa_a')">
-      <q-card>
-        <q-card-section>
-          <div class="titre-md text-bold text-italic">
-            {{$t(initP ? 'UAPv_p' : 'UAPs_p')}}</div>
-          <input-b v-model="entry" size="p1" prefix="Phrase"
+      :label="$t(initP ? 'UAPv_p' : 'UAPs_p')"
+      header-class="titre-lg text-italic">
+        <div class="column">
+          <input-b v-model="entryP" size="p1" prefix="Phrase"
             @validate="valP"/>
           <div v-if="initP && errVP">
             <div class="msg">{{ $t('UAPm3_a') }}</div>
             <btn-cond flat color="primary" :label="$t('UAPc_a')"
               @ok="correcP"/>
           </div>
-          <btn-cond flat color="warning" :label="$t('UAPt_p')"
+          <btn-cond flat class="self-end" color="warning" :label="$t('UAPt_p')"
             @ok="termP"/>
-        </q-card-section>
-      </q-card>
+        </div>
     </q-expansion-item>
 
   </q-list>
@@ -98,6 +93,7 @@ import { Crypt } from '../src-fw/crypt'
 
 import SafestoreSelect from '../components-fw/SafestoreSelect.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import InputB from '../components-fw/InputB.vue'
 
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
@@ -130,20 +126,22 @@ type al = {
   sh?: Uint8Array
 }
 
-const entry = reactive({ inp: '', err: '' })
+const entryA = reactive({ inp: '', err: '' })
+const entryP = reactive({ inp: '', err: '' })
 
 const aliases: Ref<al[]> = reactive([])
 const expandA = ref(false)
-const freeA = ref(false)
+const freeA = ref(true)
 const errVA = ref(false)
 const initA = ref('')
 
 const resetA = () => {
-  entry.inp = ''
-  entry.err = ''
+  entryA.inp = ''
+  entryA.err = ''
   initA.value = ''
-  freeA.value = false
+  freeA.value = true
   errVA.value = false
+  setDiag()
 }
 watch(expandA, (v) => { resetA() })
 
@@ -154,77 +152,91 @@ const initP = ref('')
 const listPAC = ref(new Set<string>())
 
 const resetP = () => {
-  entry.inp = ''
-  entry.err = ''
+  entryP.inp = ''
+  entryP.err = ''
   initP.value = ''
   errVP.value = false
+  setDiag()
 }
 watch(expandP, (v) => { resetP() })
 
 const init = () => {
   if (props.mode === 'a' || props.mode === 'u') {
     aliases.lenth = 0
-    aliases.push({txt: sf.auth.actual.a1K, ac: true, del: false })
-    if (sf.auth.actual.a2K)
-      aliases.push({txt: sf.auth.actual.a2K, ac: true, del: false })
+    if (sf.auth) {
+      aliases.push({txt: sf.auth.actual.a1K, ac: true, del: false })
+      if (sf.auth.actual.a2K)
+        aliases.push({txt: sf.auth.actual.a2K, ac: true, del: false })
+    }
     resetA()
   }
   if (props.mode === 'p' || props.mode === 'u') {
     listPAC.value.clear()
     phrases.length = 0
-    listPAC.value.add(sf.auth.hshp1)
-    if (sf.auth.hshp2) listPAC.value.add(sf.auth.hshp2)
+    if (sf.auth) {
+      listPAC.value.add(sf.auth.hshp1)
+      if (sf.auth.hshp2) listPAC.value.add(sf.auth.hshp2)
+    }
     resetP()
   }
+  setDiag()
 }
 
 const valA = async () => {
   if (!initA.value) {
     let a: al | null = null
-    for(const x of aliases) if (x['txt'] === entry.inp) a = x
+    for(const x of aliases) if (x['txt'] === entryA.inp) a = x
     if (a) {
       a.del = false
       resetA()
       expandA.value = false
       await ui.diagDisplay($t('UAPdup_a'))
+      setDiag()
       return
     }
-    freeA.value = await sf.mdUserFree(entry.inp)
+    freeA.value = await sf.mdAliasFree(entryA.inp)
     if (freeA.value === -1) {
       resetA()
       expandA.value = false
+      setDiag()
       return
     }
     if (freeA.value) {
-      initA.value = entry.inp
+      initA.value = entryA.inp
       errVA.value = false
+      entryA.inp = ''
+      setDiag()
     }
   } else { // vérification
-    if (initA.value === entry.inp) { // OK
+    if (initA.value === entryA.inp) { // OK
       aliases.push({ txt: initA.value, ac: false, del: false })
       resetA()
       expandA.value = false
+      setDiag()
       return
     }
     errVA.value = true
+    setDiag()
   }
 }
 
 const termA = () => {
   resetA()
   expandA.value = false
+  setDiag()
 }
 
 const correcA = () => {
-  entry.inp = initA.value
-  entry.err = ''
+  entryA.inp = initA.value
+  entryA.err = ''
   initA.value = ''
-  freeA.value = false
+  freeA.value = true
   errVA.value = false
+  setDiag()
 }
 
 const valP = async () => {
-  const sh = await Crypt.strongHash(entry.inp, true, true) as Uint8Array
+  const sh = await Crypt.strongHash(entryP.inp, true, true) as Uint8Array
   const hsh = Crypt.shaS(sh)
   const ac = listPAC.value.has(hsh)
   if (!initP.value) {
@@ -233,25 +245,44 @@ const valP = async () => {
     if (p) {
       if (!ac) await ui.diagDisplay($t('UAPdup_p'))
       else await ui.diagDisplay($t('UAPdup_p1'))
-      p.txt = entry.inp
+      p.txt = entryP.inp
       p.hsh = hsh
       p.sh = sh
       p.del = false
       resetP()
       expandP.value = false
+      setDiag()
       return
     }
-    initP.value = entry.inp
+    initP.value = entryP.inp
     errVP.value = false
+    entryP.inp = ''
+    setDiag()
   } else { // vérification
-    if (initP.value === entry.inp) { // OK
+    if (initP.value === entryP.inp) { // OK
       phrases.push({ txt: initP.value, ac: ac, del: false, hsh: hsh, sh: sh })
       resetP()
       expandP.value = false
+      setDiag()
       return
     }
     errVP.value = true
+    setDiag()
   }
+}
+
+const correcP = () => {
+  entryP.inp = initP.value
+  entryP.err = ''
+  initP.value = ''
+  errVP.value = false
+  setDiag()
+}
+
+const termP = () => {
+  resetP()
+  expandP.value = false
+  setDiag()
 }
 
 const alChg = computed(() => {
@@ -270,24 +301,28 @@ const psChg = computed(() => {
   return c
 })
 
-const diag = computed(() => {
+const diag = ref(0)
+
+const setDiag = () => {
+  diag.value = 0
   let na = 0; aliases.forEach((a) => { if (!a.del) na++ })
   let np = 0; phrases.forEach((p) => { if (!p.del) np++ })
-  if (props.mode === 'a' || props.mode === 'a') {
-    if (na === 0) return 1
-    if (na > 1) return 2
+  if (props.mode === 'a' || props.mode === 'u') {
+    if (na === 0) { diag.value = 1; return }
+    if (na > 2) { diag.value = 2; return }
   }
-  if (props.mode === 'p' || props.mode === 'a') {
-    if (np === 0) return 3
-    if (np > 1) return 4
+  if (props.mode === 'p' || props.mode === 'u') {
+    if (np === 0) { diag.value = 3; return }
+    if (np > 2) { diag.value = 4; return }
   }
-  return 0
-})
+  diag.value = !alChg.value && !psChg.value ? 5 : 0
+}
 
 const enabled = computed(() => {
-  if (diag.value !== 0) return false
+  if (diag.value > 0 && diag.value < 5) return false
   if (props.mode === 'a') return alChg.value
-  if (props.mode === 'p') return psChg.value
+  else if (props.mode === 'p') return psChg.value
+  else return true
 })
 
 const validate = async () => {
@@ -295,25 +330,25 @@ const validate = async () => {
     let a1 = '', a2 = ''
     for(const al of aliases) {
       if (al.del) continue
-      if (!a1) a1 = al
-      else if (!a2) a2 = al
+      if (!a1) a1 = al.txt
+      else if (!a2) a2 = al.txt
       else break
     }
     let shp1 = null, shp2 = null
     for(const al of phrases) {
       if (al.del) continue
-      if (!shp1) shp1 = al
-      else if (!shp2) shp2 = al
+      if (!shp1) shp1 = al.sh
+      else if (!shp2) shp2 = al.sh
       else break
     }
-    let status = sf.createSafe(store.value, a1, a2, shp1, shp2)
+    let status = await sf.createSafe(store.value, a1, a2, shp1, shp2)
     if (status > 0) await ui.diagDisplay($t('SFST_' + status))
     else if (status === 0) {
       await ui.diagDisplay($t('UAPok_u'))
       emit('done', true)
+      model.value = false
+      emit('close', true)
     }
-    model.value = false
-    emit('close', true)
   }
 }
 

@@ -7,17 +7,16 @@
   </div>
   <div v-else class="titre-md text-italic">{{$t('INVco_3')}}</div>
 
-  <security-site  v-if="flag.f2 || flag.f1" v-model="sf.safeStore"/>
-
   <login-block v-if="flag.f2" class="full-width q-pl-sm"
     @logged="emit('done', true)"/>
 
-  <div v-if="flag.f1" class="q-mb-sm q-ml-sm">
+  <!--div v-if="flag.f1" class="q-mb-sm q-ml-sm">
     <btn-cond v-if="flag.f1" :label="$t('INVco_cr')"
       @ok="dialogs.create = true"/>
-  </div>
+  </div-->
 
-  <safe-cr v-model="dialogs.create" :mode="0" @done="emit('done', true)"/>
+  <safe-cr v-if="dialogs.create" v-model="dialogs.create"
+    mode="u" @done="emit('done', true)"/>
 </div>
 </template>
 
@@ -27,7 +26,6 @@ import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 
 import LoginBlock from '../components-fw/LoginBlock.vue'
-import SecuritySite from './SafestoreSelect.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
@@ -58,7 +56,7 @@ watch(model, () => {
 })
 
 watch(() => flag.f1, (v) => {
-  if (v) flag.f2 = false
+  if (v) { flag.f2 = false; dialogs.create = true }
 })
 
 watch(() => flag.f2, (v) => {

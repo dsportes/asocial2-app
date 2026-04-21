@@ -4,7 +4,6 @@
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>
-      <security-site v-model="sf.safeStore"/>
       <login-block @logged="sf.setStep(2)"/>
     </div>
 

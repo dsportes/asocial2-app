@@ -1113,8 +1113,8 @@ export const useSafeStore = defineStore('safe', () => {
 
     const a1K = u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a1)), true)
     const a2K = !a2 ? '' : u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a2)), true)
-    const hsha1 = Crypt.shaS(await Crypt.strongHash(encode.encode(a1), false, true))
-    const hsha2 = !a2 ? '' : Crypt.shaS(await Crypt.strongHash(encode.encode(a2), false, true))
+    const hsha1 = Crypt.shaS(await Crypt.strongHash(a1, false, true))
+    const hsha2 = !a2 ? '' : Crypt.shaS(await Crypt.strongHash(a2, false, true))
 
     const d = new Date()
     const llq = quarter(d)
@@ -1146,7 +1146,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     // Enregistrement dans le Master Directory
-    let op = new MDOperation('$mdNewUser')
+    let op = new MDOperation('$mdUserNew')
     try {
       op.args.mdUser = mdUser
       const res = await op.post()
@@ -1202,10 +1202,10 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const mdUserFree = async (alias: string) => {
-    const op = new MDOperation('$mdUserFree')
+  const mdAliasFree = async (alias: string) => {
+    const op = new MDOperation('$mdAliasFree')
     try {
-      op.args.mdUser = alias
+      op.args['alias'] = Crypt.shaS(await Crypt.strongHash(alias, true, true))
       const res = await op.post()
       return res.aliasfree
     } catch (e) {
@@ -1791,7 +1791,7 @@ export const useSafeStore = defineStore('safe', () => {
     isManager /* ??? */,
     getCreds,
     sessionOfProfId, profileOfProfId,
-    createSafe, setPhraseSafe, mdUserFree, mdUserGetICVS /* ??? */, delSafe,
+    createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS /* ??? */, delSafe,
     openSafeByAP, openSafeByPin,
     setAlias, setTrust,setUntrust,setAdmins, setUntrustAll,
     reloadSafe /* ??? */,
