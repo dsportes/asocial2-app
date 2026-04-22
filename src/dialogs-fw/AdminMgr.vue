@@ -1,6 +1,6 @@
 <template>
 <dialog-std2 v-model="model" vue="AdminMgr"
-  :title="$t('HPadminA_label')" tbclass="tbs">
+  :title="$t('HPadminA_label')" tbclass="tbs" noclose @close="closeIt">
 
 <template #default>
   <div class="column items-center">
@@ -45,8 +45,15 @@ const sf = stores.safe
 const ui = stores.ui
 const model = defineModel()
 
-// const emit = defineEmits(['done'])
-watch(model, (v: boolean) => { if (v) resetAdm() })
+const emit = defineEmits(['close'])
+watch(model, (v: boolean) => { 
+  if (v) resetAdm() 
+})
+
+const closeIt = () => {
+  emit('close', true)
+  model.value = false
+}
 
 type Elt = {
   svc: string

@@ -531,8 +531,8 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const compileSafe = async (safe: Safe) => {
     await loadTrustings()
-    const privD = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.D)), true)
-    const privS = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.S)), true)
+    const privD = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.D)))
+    const privS = u8ToB64(await Crypt.decrypt(keyK.value, b64ToU8(safe.auth.S)))
     auth.value = {
       llq: safe.auth.llq,
       lm: safe.auth.lm,
@@ -1522,7 +1522,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$SetAdmins', mySafeStore.value)
     let ret
     try {
-      op.args['setAdmins'] = setadmins
+      op.args['setadmins'] = setadmins
       ret = await op.post()
     } catch(e) {
       op.ko(e)

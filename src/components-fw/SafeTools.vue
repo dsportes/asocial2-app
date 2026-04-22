@@ -41,6 +41,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('HPtrustings_1')"
         :disable="!session.hasNet || session.incognito"
         @open="dialogs.DevTrustings = true"/>
+        
+      <bar-open :bubble="$t('HPadminA_bub')" :disbubble="$t('HPadminA_bub')"
+        :title="$t('HPadminA_label')"
+        :disable="!session.hasNet"
+        @open="dialogs.AdminMgr = true"/>
 
       <bar-open :bubble="$t('HPmanuinfo')"
         :disable="session.incognito || !session.hasNet"
@@ -58,11 +63,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('SESconfig')"
         :disable="!session.hasNet"
         @open="dialogs.CredsMgr = true"/>
-
-      <bar-open :bubble="$t('HPadminA_bub')" :disbubble="$t('HPadminA_bub')"
-        :title="$t('HPadminA_label')"
-        :disable="!session.hasNet"
-        @open="dialogs.AdminMgr = true"/>
 
       <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
         :title="$t('HPprefs_1')"
@@ -90,12 +90,13 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <dev-trustit v-if="dialogs.DevTrustit" v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
   <dev-untrustit v-if="dialogs.DevUntrustit" v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
   <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
+  <admin-mgr v-if="dialogs.AdminMgr" v-model="dialogs.AdminMgr" @close="fnc"/>
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
 
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
   <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
   <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
-  <admin-mgr v-model="dialogs.AdminMgr" @close="fnc"/>
+
 
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
