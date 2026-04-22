@@ -117,7 +117,8 @@ export class AuthRecord {
 
   async signUser () {
     const sf = stores.safe
-    this.userSign = sf.auth && sf.auth.S ? await Crypt.sign(keyFromB64(sf.auth.S), this.challenge) : null
+    this.userSign = sf.auth && sf.auth.S ? 
+      await Crypt.sign(keyFromB64(sf.auth.S), this.challenge) : null
   }
 
   get toObj() {

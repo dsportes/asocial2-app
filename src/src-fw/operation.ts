@@ -122,8 +122,8 @@ export class Operation extends AOperation {
     await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
   }
 
-  /* Si noAuth est true, l'opération N'INCLUE PAS de AuthRecord
-  elle est "publique" sans authentification.
+  /* Si noAuth est true, l'opération N'INCLUE PAS 
+  la signature du user dans AuthRecord.
   */
   async post (noAuth?: boolean) : Promise<any> {
     const config = stores.config
