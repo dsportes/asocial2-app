@@ -28,7 +28,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
+        <btn-cond flat :label="$t('giveup')" @ok="model = false; emit('close', true)"/>
         <btn-cond flat :label="$t('HPuntrust_1')" color="warning" @ok="setUntrust"/>
       </q-card-actions>
     </q-card>
@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { watch, computed } from 'vue'
+import { watch } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
@@ -48,15 +48,8 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 const ui = stores.ui
 const sf = stores.safe
 
-const myModule = 'DevUntrustit'
 const emit = defineEmits(['close', 'done'])
 const model = defineModel()
-// const dialogs = reactive({})
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
-watch(model, (v) => {
-  if(!v) emit('close', true)
-})
 
 const setUntrust = async () => {
   try {
@@ -65,7 +58,7 @@ const setUntrust = async () => {
     await ui.diagDisplay($t('HPstuntrust_' + status))
     emit('done', true)
     model.value = false
-  } catch (e) {
+  } catch (e: any) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }
 }

@@ -23,7 +23,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
+        <btn-cond flat :label="$t('giveup')" @ok="model = false; emit('close', true)"/>
         <btn-cond flat :label="$t('HPtrust_1')" color="warning"
           :disable="trusterr" @ok="setTrust"/>
       </q-card-actions>
@@ -44,12 +44,9 @@ import InputB from '../components-fw/InputB.vue'
 const ui = stores.ui
 const sf = stores.safe
 
-const myModule = 'DevTrustit'
 const emit = defineEmits(['close', 'done'])
 const model = defineModel()
-// const dialogs = reactive({})
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
+
 watch(model, (v) => {
   if(v) init()
   else emit('close', true)
@@ -87,6 +84,7 @@ const setTrust = async () => {
     await ui.diagDisplay($t('HPsttrust_' + status))
     emit('done', true)
     model.value = false
+    emit('close', true)
   } catch (e: any) {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
   }

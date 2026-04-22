@@ -3,7 +3,7 @@ Events: close done
 -->
 <template>
 <dialog-std2 v-model="model" :title="$t('UAPtit_' + mode)" vue="SafeCr"
-  @close="dialogs.close = true">
+  @close="close2">
 <template #hdr>
   <div class="row justify-between q-px-xs q-mb-md items-center">
     <div :class="'col titre-md ' + (diag === 0 || diag === 5 ? 'text-italic' : 'msg')">
@@ -40,7 +40,8 @@ Events: close done
   <q-list style="max-width:40rem;width:95vw" bordered class="rounded-borders">
     <safestore-select v-if="mode === 'u'" v-model="store"/>
 
-    <q-expansion-item expand-separator v-model="expandA"
+    <q-expansion-item v-if="mode === 'a' || mode === 'u'"
+      expand-separator v-model="expandA"
       :label="$t(initA ? 'UAPv_a' : 'UAPs_a')"
       header-class="titre-lg text-italic">
         <div class="column" >
@@ -57,7 +58,8 @@ Events: close done
         </div>
     </q-expansion-item>
 
-    <q-expansion-item expand-separator v-model="expandP"
+    <q-expansion-item v-if="mode === 'p' || mode === 'u'"
+      expand-separator v-model="expandP"
       :label="$t(initP ? 'UAPv_p' : 'UAPs_p')"
       header-class="titre-lg text-italic">
         <div class="column">
@@ -111,9 +113,14 @@ const dialogs = reactive({
   close: false
 })
 
+const close2 = () => {
+  if (alChg.value || psChg.value) dialogs.close = true
+  else { model.value = false; emit('close', true) }
+}
+
 const chooseBack = (n) => {
   dialogs.close = false
-  if (!n) { model.value = false; emit('close', true) }
+  if (n) { model.value = false; emit('close', true) }
 }
 
 const store = ref()
@@ -241,13 +248,18 @@ const valP = async () => {
   const ac = listPAC.value.has(hsh)
   if (!initP.value) {
     let p: al | null = null
+    if (ac) {
+      await ui.diagDisplay($t('UAPdup_p1'))
+      p = { txt: entryP.inp, hsh: hsh, sh: sh, ac: true, del: false }
+      phrases.push(p)
+      resetP()
+      expandP.value = false
+      setDiag()
+      return
+    }
     for(const x of phrases) if (x['hsh'] === hsh) p = x
     if (p) {
-      if (!ac) await ui.diagDisplay($t('UAPdup_p'))
-      else await ui.diagDisplay($t('UAPdup_p1'))
-      p.txt = entryP.inp
-      p.hsh = hsh
-      p.sh = sh
+      await ui.diagDisplay($t('UAPdup_p'))
       p.del = false
       resetP()
       expandP.value = false
@@ -260,7 +272,7 @@ const valP = async () => {
     setDiag()
   } else { // vérification
     if (initP.value === entryP.inp) { // OK
-      phrases.push({ txt: initP.value, ac: ac, del: false, hsh: hsh, sh: sh })
+      phrases.push({ txt: initP.value, ac: false, del: false, hsh: hsh, sh: sh })
       resetP()
       expandP.value = false
       setDiag()
@@ -326,32 +338,70 @@ const enabled = computed(() => {
 })
 
 const validate = async () => {
-  if (props.mode === 'u') {
-    let a1 = '', a2 = ''
-    for(const al of aliases) {
-      if (al.del) continue
-      if (!a1) a1 = al.txt
-      else if (!a2) a2 = al.txt
-      else break
-    }
-    let shp1 = null, shp2 = null
-    for(const al of phrases) {
-      if (al.del) continue
-      if (!shp1) shp1 = al.sh
-      else if (!shp2) shp2 = al.sh
-      else break
-    }
-    let status = await sf.createSafe(store.value, a1, a2, shp1, shp2)
-    if (status > 0) await ui.diagDisplay($t('SFST_' + status))
-    else if (status === 0) {
-      await ui.diagDisplay($t('UAPok_u'))
-      emit('done', true)
-      model.value = false
-      emit('close', true)
-    }
+  if (props.mode === 'u') await validateU()
+  else if (props.mode === 'a') await validateA()
+  else await validateP()
+}
+
+const validateA = async () => {
+  let a1 = '', a2 = ''
+  for(const al of aliases) {
+    if (al.del) continue
+    if (!a1) a1 = al.txt
+    else if (!a2) a2 = al.txt
+    else break
+  }
+  const ok = await sf.setAlias(a1, a2)
+  await ui.diagDisplay($t(ok ? 'UAPok_a' : 'UAPko_a'))
+  if (ok) {
+    emit('done', true)
+    model.value = false
+    emit('close', true)
   }
 }
 
+const validateP = async () => {
+  let shp1 = null, shp2 = null
+  for(const al of phrases) {
+    if (al.del) continue
+    if (!shp1) shp1 = al.sh
+    else if (!shp2) shp2 = al.sh
+    else break
+  }
+  const status = await sf.setPhraseSafe(shp1, shp2)
+  if (status > 0) await ui.diagDisplay($t('SFST_status'))
+  else if (status === 0) {
+    await ui.diagDisplay($t('UAPok_p'))
+    emit('done', true)
+    model.value = false
+    emit('close', true)
+  }
+}
+
+const validateU = async () => {
+  let a1 = '', a2 = ''
+  for(const al of aliases) {
+    if (al.del) continue
+    if (!a1) a1 = al.txt
+    else if (!a2) a2 = al.txt
+    else break
+  }
+  let shp1 = null, shp2 = null
+  for(const al of phrases) {
+    if (al.del) continue
+    if (!shp1) shp1 = al.sh
+    else if (!shp2) shp2 = al.sh
+    else break
+  }
+  let status = await sf.createSafe(store.value, a1, a2, shp1, shp2)
+  if (status > 0) await ui.diagDisplay($t('SFST_' + status))
+  else if (status === 0) {
+    await ui.diagDisplay($t('UAPok_u'))
+    emit('done', true)
+    model.value = false
+    emit('close', true)
+  }
+}
 init()
 </script>
 

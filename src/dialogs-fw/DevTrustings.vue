@@ -4,7 +4,7 @@
     <q-card :class="sty('md')">
       <q-toolbar>
         <btn-cond color="none" size="lg" icon="chevron_left" flat
-          @ok="model = false"/>
+          @ok="closeIt"/>
         <q-toolbar-title class="titre-lg text-right q-mx-sm">{{$t('HPtrustings_1')}}</q-toolbar-title>
         <btn-bubble :text="$t('HPtrustings_2')"/>
       </q-toolbar>
@@ -30,7 +30,7 @@
       </div>
 
       <q-card-actions vertical align="right">
-        <btn-cond flat :label="$t('giveup')" @ok="model = false"/>
+        <btn-cond flat :label="$t('giveup')" @ok="closeIt"/>
         <btn-cond flat :label="$t('HPtrustings_del', [delTrustSet.size])" color="warning"
           :disable="delTrustSet.size === 0" @ok="delTrustings"/>
       </q-card-actions>
@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -50,15 +50,14 @@ import { $t, sty, dkli } from '../src-fw/util'
 const ui = stores.ui
 const sf = stores.safe
 
-const myModule = 'DevTrustings'
 const emit = defineEmits(['close', 'done'])
 const model = defineModel()
-// const dialogs = reactive({})
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
-watch(model, (v) => {
-  if(!v) { delTrustSet.value.clear(); emit('close', true) }
-})
+
+const closeIt = () => {
+  delTrustSet.value.clear()
+  emit('close', true)
+  model.value = false
+}
 
 const delTrustSet = ref(new Set())
 

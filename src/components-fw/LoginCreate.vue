@@ -10,11 +10,6 @@
   <login-block v-if="flag.f2" class="full-width q-pl-sm"
     @logged="emit('done', true)"/>
 
-  <!--div v-if="flag.f1" class="q-mb-sm q-ml-sm">
-    <btn-cond v-if="flag.f1" :label="$t('INVco_cr')"
-      @ok="dialogs.create = true"/>
-  </div-->
-
   <safe-cr v-if="dialogs.create" v-model="dialogs.create"
     mode="u" @done="emit('done', true)"/>
 </div>
@@ -22,11 +17,10 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import stores from '../stores/all'
 
 import LoginBlock from '../components-fw/LoginBlock.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
 import SafeCr from '../dialogs-fw/SafeCr.vue'

@@ -1205,7 +1205,7 @@ export const useSafeStore = defineStore('safe', () => {
   const mdAliasFree = async (alias: string) => {
     const op = new MDOperation('$mdAliasFree')
     try {
-      op.args['alias'] = Crypt.shaS(await Crypt.strongHash(alias, true, true))
+      op.args['alias'] = Crypt.shaS(await Crypt.strongHash(alias, false, true))
       const res = await op.post()
       return res.aliasfree
     } catch (e) {
@@ -1215,7 +1215,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Retourne ICVS (i, c, v, s) d'un user
-  - userId est soit un userId, soit un alias
+  - userId est soit un userId, soit par le hsh d'un alias
   - force: si true, n'utilise pas le cache.
   Obligatoire quand on veut à coup sur le store (qui n'est pas constant).
   */
@@ -1255,11 +1255,11 @@ export const useSafeStore = defineStore('safe', () => {
   - StrongHash d'une de ses phrases en base 64
   Login a récupéré le userId et le store depuis le Master Directory et un alias
   */
-  const openSafeByAP = async ( _userId: string, store: string, shp: string ) => {
-    const op = new SafeOperation('$OpenSafe', store)
+  const openSafeByAP = async ( safeId: string, store: string, shp: string ) => {
+    const op = new SafeOperation('$GetSafe', store)
     let ret
     try {
-      op.args['userId'] = _userId
+      op.args['userId'] = safeId
       op.args['shp'] = shp
       ret = await op.post()
     } catch (e) {
@@ -1269,7 +1269,8 @@ export const useSafeStore = defineStore('safe', () => {
     if (ret.status === 0) {
       const x = b64ToU8(shp)
       const hshp = Crypt.shaS(x)
-      userId.value = ret.safe.id
+      userId.value = ret.safe.userId
+      mySafeStore.value = store
       const a = ret.safe.auth as Auth
       const K = a.hshp1 === hshp ? a.K1 : a.K2
       try {
@@ -1333,14 +1334,17 @@ export const useSafeStore = defineStore('safe', () => {
   const setAlias = async (a1: string, a2: string) : Promise<boolean> => {
     const a1K = u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a1)), true)
     const a2K = !a2 ? '' : u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(a2)), true)
-    const sha1 = await Crypt.strongHash(encode.encode(a1), false, true)
+    const sha1 = await Crypt.strongHash(encoder.encode(a1), false, true)
     const hsha1 = Crypt.shaS(sha1)
-    const sha2 = !a2 ? '' : await Crypt.strongHash(encode.encode(a2), false, true)
+    const sha2 = !a2 ? '' : await Crypt.strongHash(encoder.encode(a2), false, true)
     const hsha2 = !sha2 ? '' : Crypt.shaS(sha2)
     const shK = await Crypt.strongHash(keyK.value, false, false)
 
     // phase 1 : enregistre le futur dans le safe
-    let ac = auth.value.actual
+    let ac = { ...auth.value.actual }
+    ac.a1K = u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(ac.a1K)), true)
+    ac.a2K = !ac.a2K ? '' : u8ToB64(await Crypt.crypt(keyK.value, encoder.encode(ac.a2K)), true)
+
     let fu : Alias = { a1K, a2K, hsha1, hsha2 }
     let op = new SafeOperation('$SetAliasSafe', mySafeStore.value)
     try {
@@ -1413,7 +1417,7 @@ export const useSafeStore = defineStore('safe', () => {
     const cy = Crypt.rnd(24)
     // `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN / cx / cy)`
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + cx + '/' + cy, false, true) as Uint8Array
-    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, false) as Uint8Array
+    const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = u8ToB64(await Crypt.crypt(pincxcy, keyK.value), true)
 
     let t: Trusting = myTrusting.value

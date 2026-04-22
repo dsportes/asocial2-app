@@ -109,7 +109,7 @@ Events: close done
   </dialog-std1>
 
   <!-- Changement des codes du backup-->
-  <safe-cr v-model="dialogs.SafeCr" @done="chgCodes" mode="p"/>
+  <safe-cr v-if="dialogs.SafeCr" v-model="dialogs.SafeCr" @done="chgCodes" mode="p"/>
 </div>
 </template>
 

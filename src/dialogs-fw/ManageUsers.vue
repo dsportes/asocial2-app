@@ -3,7 +3,7 @@ Event: close
 -->
 <template>
 <dialog-std2 v-model="model" :title="$t('HPmanusers')"  vue="ManageUsers"
-  @close="emit('close', true)">
+  noclose @close="closeIt">
 <template #hdr>
   <div>
     <div class="row q-mx-md full-width justify-end">
@@ -111,7 +111,7 @@ Event: close
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, reactive, watch } from 'vue'
+import { ref, computed, Ref, reactive, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t, sty, edvol, dhcool } from '../src-fw/util'
 
@@ -128,9 +128,14 @@ const model = defineModel()
 const dialogs = reactive({
   valcf: false
 })
-watch(model, async (v) => {
-  if(v) await init()
-  else emit('close', true)
+
+const closeIt = () => { 
+  emit('close', true)
+  model.value = false
+}
+
+onMounted(async () => {
+  await init()
 })
 
 const diag = ref('')
@@ -215,7 +220,7 @@ const close = async () => {
     for(const id of tDel.value) await sf.delTrusting(id)
   if (tDel2.value && tDel2.value.size)
     for(const id of tDel2.value) await sf.delTrusting(id)
-  model.value = false
+  closeIt()
 }
 
 </script>

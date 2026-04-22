@@ -198,18 +198,19 @@ export default {
   op_$SetUserICVO: 'Enregistrement du compte dans le Master Directory.',
   op_$SetOpUrl: 'Enregistrement de l\'URL d\'un service.',
   op_$mdUserNew: 'Enregistrement d\'un nouveau safe.',
+  op_$GetSafe: 'Ouverture d\'une Safe Box.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
-  STSF_1: 'Aucun "coffre-fort" n\'est enregistré avec cet ID',
-  STSF_2: 'Preuve de propriété "shK" non reconnue.',
+  STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
+  STSF_2: 'Preuve de propriété non reconnue (phrase ou autre).',
   STSF_3: 'Phrase secrète non reconnue.',
   STSF_4: 'Terminal non certifié.',
   STSF_5: 'Trop d\'essais d\'un code PIN erroné.',
   STSF_6: 'Code PIN non reconnu.',
   STSF_7: 'Invitation inconnue, status non modifiable.',
-  STSF_10: 'L\' alias 1 a déjà été déclaré par un autre utilisateur.',
-  STSF_11: 'L\' alias 2 a déjà été déclaré par un autre utilisateur.',
-  STSF_12: 'Utilisateur déjà enregistré mais avec des valeurs différentes (BUG ?)',
+  STSF_10: 'L\' alias 1 identifie déjà une autre Safe Box.',
+  STSF_11: 'L\' alias 2 identifie déjà une autre Safe Box.',
+  STSF_12: 'Safe Box déjà créée mais avec un contenu différent (BUG ?)',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -239,13 +240,13 @@ export default {
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
   /* UAP : SafeCr */
-  UAPtit_u: 'Création de votre compte et de son "coffre-fort"',
-  UAPtit_a: 'Changement d\'alias',
-  UAPtit_p: 'Changement de phrase secrète',
+  UAPtit_u: 'Création de votreSafe Box',
+  UAPtit_a: 'Changement des alias de votre Safe Box',
+  UAPtit_p: 'Changement des phrase d\'ouverture de votre Safe Box',
 
   UAPok_u: 'Vous êtes déclaré comme utilisateur, un "coffre-fort" vous a été attribué.',
 
-  UAPquit: 'Des saisies ont été effectuées. Voulez-vous fermer quand-même et les perdre ou reprendre la procédure?',
+  UAPquit_txt: 'Des saisies ont été effectuées. Voulez-vous fermer quand-même et les perdre ou reprendre la procédure?',
   UAPquit_1: 'Fermer ce dialogue',
   UAPquit_0: 'Poursuivre la procédure',
   UAPdiag_0: 'OK',
@@ -272,6 +273,9 @@ export default {
   UAPdup_a: 'Cet alias est déjà dans votre liste',
   UAPdup_p: 'Cet phrase est déjà dans votre liste',
   UAPdup_p1: 'Cette phrase était une des vôtres',
+  UAPok_a: 'Alias changé(s).',
+  UAPok_p: 'Phrases changée(s).',
+  UAPko_a: 'Incident technique au cours de la procédure: les alias ont pu être changés OU NON. Retenter l\'opération et si l\'incident persiste la situation sera éclaicie à la prochaine ouverture de la Safe Box.',
 
   Alias_label: 'Mon alias: pseudo, email, mobile ... ',
   Alias_bub: `### Un alias peut être par exemple ...
@@ -778,10 +782,7 @@ bla bla
   HPexporgid: 'ID localisée pour une organisation',
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
-  HPadminC_label: 'Gérer mon pseudo / phrase de contact',
-  HPadminC_bub: `# Gérer mon pseudo / phrase de contact
-bla bla
-`,
+
   HPadminA_label: 'Gérer mes rôles d\'Adiministrateur',
   HPadminA_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
   bla bla
@@ -915,8 +916,14 @@ S'il n'y est pas, c'est que la certification a été retirée à ce terminal.
 `,
   LOGauthbypin_1a: 'Je suis l\'utilisateur [{0}] certifié sur ce terminal',
   LOGauthbypin_1b: 'Je suis un des {0} utilisateurs certifiés sur ce terminal...',
-  LOGauthstrong_label: 'Login par authentification "forte"',
-  LOGauthstrong_bub: `# Authentification "forte"
+  LOGapreset: 'Je saisis un autre alias pour ma Safe Box',
+  LOGapdiag_1: 'Un des alias de la Safe Box est requis.',
+  LOGapdiag_2: 'Une des phrases secrètes d\'ouverture de la Safe Box est requise.',
+  LOGapdiag_3: 'Aucune "Safe Box" n\'est enregistrée sous cet alias.',
+  LOGapdiag_4: 'Cette phrase n\'ouvre pas la Safe Box',
+  LOGok: 'Safe Box ouverte !',
+  LOGap_label: 'Ouvrir une Safe Box par "alias / phrase"',
+  LOGap_bub: `# Ouvrir une Safe Box par "alias / phrase"
 bla bla
 `,
   LOGbypin_1: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
@@ -1006,18 +1013,26 @@ Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
   SCRcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès secondaire".',
   SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
 
-  SFTtit: 'Gérer vos données "de sécurité"',
-  SFTtits: 'Opérations "de sécurité"',
-  SFTus: 'Identifiant utilisateur:',
-  SFTps: 'Terminal certifié par l\'utilisateur - Pseudo local:',
-  SFTnops: 'Terminal NON certifié par l\'utilisateur (pas de pseudo local.',
-  SFTct: 'Phrase de contact:',
-  SFTnoct: 'Aucune phrase de contact déclarée actuellement.',
+  SFTtit: 'Ma Safe Box',
+  SFTtits: 'Ma Safe Box',
+  SFTus: 'Identifiant:',
+  SFTps: 'Terminal certifié - Pseudo local:',
+  SFTnops: 'Terminal NON certifié (pas de pseudo local).',
+  SFTa1: 'Alias 1:',
+  SFTa2: 'Alias 2:',
+  SFTa2n: 'Pas d\'alias 2',
   SFTadmin: 'Administrateur Technique de:',
-  SFTopaf: 'Ces opérations requièrent une authentification "forte" (pas par code PIN)',
-  SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',
   SFTexppub: 'Clés publiques',
   SFTguest: 'Mode "invité", pas d\'utilisateur authentifié.',
+  SFTalias_label: 'Changer les alias de la Safe Box',
+  SFTalias_bub: `### Changer les alias de la Safe Box
+bla bla
+`,
+  SFTphrase_label: 'Changer les phrases d\'ouverture de la Safe Box',
+  SFTphrase_bub: `### Changer les phrases d\'ouverture de la Safe Box
+bla bla
+`,
+  SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',
 
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',

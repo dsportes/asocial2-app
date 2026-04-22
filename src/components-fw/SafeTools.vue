@@ -15,6 +15,40 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       <user-profile/>
       <q-separator color="orange" class="q-my-xs"/>
 
+      <bar-open :bubble="$t('SFTalias_bub')" :disbubble="$t('SFTalias_bub')"
+        :title="$t('SFTalias_label')"
+        :disable="!session.hasNet"
+        @open="dialogs.SafeCrA = true"/>
+
+      <bar-open :bubble="$t('SFTphrase_bub')" :disbubble="$t('SFTphrase_bub')"
+        :title="$t('SFTphrase_label')"
+        :disable="!session.hasNet"
+        @open="dialogs.SafeCrP = true"/>
+
+      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPtrust_1')"
+        @open="dialogs.DevTrustit = true"/>
+
+      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPchgpin_1')"
+        @open="dialogs.DevTrustit = true"/>
+
+      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
+        :title="$t('HPuntrust_1')"
+        @open="openUntrust"/>
+
+      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
+        :title="$t('HPtrustings_1')"
+        :disable="!session.hasNet || session.incognito"
+        @open="dialogs.DevTrustings = true"/>
+
+      <bar-open :bubble="$t('HPmanuinfo')"
+        :disable="session.incognito || !session.hasNet"
+        :title="$t('HPmanusers')"
+        @open="dialogs.ManageUsers = true"/>
+
+      <q-separator clor="blue" class="q-my-sm"/>
+
       <bar-open :bubble="$t('CRRtit_bub')" :disbubble="$t('CRRtit_bub')"
         :title="$t('CRRtit_label')"
         :disable="!session.hasNet"
@@ -30,44 +64,10 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :disable="!session.hasNet"
         @open="dialogs.AdminMgr = true"/>
 
-      <bar-open :bubble="$t('HPadminC_bub')" :disbubble="$t('HPadminC_bub')"
-        :title="$t('HPadminC_label')"
-        :disable="!session.hasNet"
-        @open="dialogs.ContactMgr = true"/>
-
       <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
         :title="$t('HPprefs_1')"
         :disable="!session.hasNet || session.incognito"
         @open="dialogs.PrefsMgr = true"/>
-
-      <bar-open :bubble="$t('HPmanuinfo')"
-        :disable="session.incognito || !session.hasNet"
-        :title="$t('HPmanusers')"
-        @open="dialogs.ManageUsers = true"/>
-
-      <q-separator color="orange" class="q-mx-lg q-my-xs"/>
-      <div class="titre-md text-italic">{{ $t('SFTopaf') }}</div>
-
-      <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
-        :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito"
-        @open="dialogs.DevTrustings = true"/>
-
-      <bar-open :bubble="$t('HPchgcodes_2')" :disbubble="$t('HPchgcodes_2d')"
-        :title="$t('HPchgcodes_1')"
-        @open="dialogs.SafeCr = true"/>
-
-      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPtrust_1')"
-        @open="dialogs.DevTrustit = true"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPchgpin_1')"
-        @open="dialogs.DevTrustit = true"/>
-
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')"
-        @open="openUntrust"/>
 
       <q-separator color="orange" class="q-mx-lg q-my-xs"/>
       <div class="titre-md text-italic text-bold text-warning">{{ $t('SFTopal') }}</div>
@@ -85,16 +85,18 @@ tous les dialogues de gestion des "dsonnées de sécurité".
     </template>
   </dialog-std0>
 
+  <safe-cr v-if="dialogs.SafeCrA" v-model="dialogs.SafeCrA" mode="a" @close="fnc"/>
+  <safe-cr v-if="dialogs.SafeCrP" v-model="dialogs.SafeCrP" mode="p" @close="fnc"/>
+  <dev-trustit v-if="dialogs.DevTrustit" v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
+  <dev-untrustit v-if="dialogs.DevUntrustit" v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
+  <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
+  <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
+
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
   <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
   <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
   <admin-mgr v-model="dialogs.AdminMgr" @close="fnc"/>
-  <contact-mgr v-model="dialogs.ContactMgr" @close="fnc"/>
-  <manage-users v-model="dialogs.ManageUsers" @close="fnc" />
-  <safe-cr v-model="dialogs.SafeCr" mode="a" @close="fnc"/>
-  <dev-trustings v-model="dialogs.DevTrustings" @close="fnc"/>
-  <dev-trustit v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
-  <dev-untrustit v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
+
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
   <!-- Confirmation de destruction du safe -->
@@ -132,7 +134,6 @@ import UserProfile from '../components-fw/UserProfile.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import AdminMgr from '../dialogs-fw/AdminMgr.vue'
-import ContactMgr from '../dialogs-fw/ContactMgr.vue'
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
@@ -151,6 +152,8 @@ const props = defineProps({
   short: Boolean
 })
 const dialogs = reactive({
+  SafeCrA: false,
+  SafeCrP: false,
   SafeTools: false,
   PrefsMgr: false,
   AdminMgr: false,
@@ -158,7 +161,6 @@ const dialogs = reactive({
   CredsMgr: false,
   CredsReview: false,
   ManageUsers: false,
-  SafeCr: false,
   DevTrustings: false,
   DevTrustit: false,
   DevUntrustit: false,
@@ -173,8 +175,9 @@ const openUntrust = async () => {
   dialogs.DevUntrustit = true
 }
 
-const fnc = (st) => {
+const fnc = () => {
   dialogs.SafeTools = false
+  emit('close', true)
 }
 
 const delSafe = async () => {

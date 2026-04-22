@@ -2,20 +2,25 @@
 <template>
 <div>
   <div v-if="sf.userId" class="q-pa-sm column q-gutter-sm">
-    <div class="row q-gutter-sm q-my-xs items-end">
-      <div class="titre-md text-italic">{{ $t('SFTus') }}</div>
+    <div class="row items-center">
+      <div class="titre-md text-italic q-mr-sm">{{ $t('SFTus') }}</div>
       <div class="fs-lg font-mono">{{ sf.userId }}</div>
     </div>
-    <div class="row q-gutter-sm q-my-xs items-end">
-      <div class="titre-md text-italic">{{ $t('SFT' + (sf.userName !== '' ? 'ps' : 'nops')) }}</div>
+    <div class="row items-center">
+      <div class="titre-md text-italic q-mr-sm">{{ $t('SFT' + (sf.userName !== '' ? 'ps' : 'nops')) }}</div>
       <div v-if="sf.userName !== ''" class="font-mono">{{ sf.userName }}</div>
     </div>
-    <div class="row q-gutter-sm q-my-xs items-end">
-      <div class="titre-md text-italic">{{ $t('SFT' + (sf.auth.contact !== '' ? 'ct' : 'noct')) }}</div>
-      <div v-if="sf.auth.contact !== ''" class="font-mono">{{ sf.auth.contact }}</div>
+    <div class="row items-center">
+      <div class="titre-md text-italic q-mr-sm">{{ $t('SFTa1') }}</div>
+      <div class="font-mono">{{ sf.auth.actual.a1K }}</div>
     </div>
-    <div v-if="sf.auth.admins" class="row q-gutter-sm q-my-xs items-end">
-      <div class="titre-md text-italic">{{ $t('SFTadmin')}}</div>
+    <div v-if="!sf.auth.actual.a2K" class="titre-md text-italic">{{ $t('SFTa2n') }}</div>
+    <div v-else class="row  items-center">
+      <div class="titre-md text-italic q-mr-sm">{{ $t('SFTa2') }}</div>
+      <div class="font-mono">{{ sf.auth.actual.a2K }}</div>
+    </div>
+    <div v-if="sf.auth.admins" class="row items-center">
+      <div class="titre-md text-italic q-mr-sm">{{ $t('SFTadmin')}}</div>
       <div class="font-mono">{{ sf.auth.admins }}</div>
     </div>
     <text-zoom class="q-my-xs" :label="$t('SFTexppub')" 
@@ -26,15 +31,6 @@
 </template>
 
 <script setup lang="ts">
-/*
-  UPtitle: 'Profil utilisateur',
-  UPid: 'ID',
-  UPpseudo: 'Pseudo local à ce terminal',
-  UPnone: '(aucun)',
-  UPcontact: 'Pseudo ou phrase de contact externe',
-  UPsessionid: 'ID de synchronisation de la session',
-  UPadmins: 'Administrateur technique de :',
-*/
 // @ts-ignore
 import { ref, computed } from 'vue'
 
@@ -43,9 +39,9 @@ import { $t } from '../src-fw/util'
 
 import TextZoom from '../components-fw/TextZoom.vue'
 
+const decoder = new TextDecoder()
+
 const sf = stores.safe
-const session = stores.session
-const ui = stores.ui
 
 const infopub = computed(() => JSON.stringify([sf.auth.C, sf.auth.V], null, '\t'))
 

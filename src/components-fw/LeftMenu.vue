@@ -20,7 +20,8 @@ Contrôlé par ui.leftMenu
     <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
-    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"/>
+    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"
+      @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
         class="q-mb-sm" flat color="warning" :label="$t('PAGEadmin')"
@@ -51,12 +52,11 @@ Contrôlé par ui.leftMenu
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 
 import HelpButton from '../components-fw/HelpButton.vue'
-// import InputA from '../components-fw/InputA.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
