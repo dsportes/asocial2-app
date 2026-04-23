@@ -1,4 +1,5 @@
-import { Crypt, keyFromB64, keyToB64 } from './crypt'
+import { Crypt } from './crypt'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 import stores from '../stores/all'
 import { Credential } from '../src-fw/documents'
 

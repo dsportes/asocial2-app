@@ -369,7 +369,7 @@ const validateP = async () => {
     else break
   }
   const status = await sf.setPhraseSafe(shp1, shp2)
-  if (status > 0) await ui.diagDisplay($t('SFST_status'))
+  if (status > 0) await ui.diagDisplay($t('STSF_status'))
   else if (status === 0) {
     await ui.diagDisplay($t('UAPok_p'))
     emit('done', true)
@@ -394,7 +394,7 @@ const validateU = async () => {
     else break
   }
   let status = await sf.createSafe(store.value, a1, a2, shp1, shp2)
-  if (status > 0) await ui.diagDisplay($t('SFST_' + status))
+  if (status > 0) await ui.diagDisplay($t('STSF_' + status))
   else if (status === 0) {
     await ui.diagDisplay($t('UAPok_u'))
     emit('done', true)

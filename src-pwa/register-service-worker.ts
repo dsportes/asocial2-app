@@ -1,9 +1,10 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
-import { urlFromText, b64ToObj } from '../src/src-fw/util'
+import { urlFromText } from '../src/src-fw/util'
+import { keyFromB64 } from '../src/src-fw/b64'
 import stores from '../src/stores/all'
-
-// import { decode } from '@msgpack/msgpack'
+// @ts-ignore
+import { decode } from '@msgpack/msgpack'
 
 // Ecoute les changements de permissions et les route vers config
 navigator.permissions.query({ name: 'notifications' })
@@ -26,6 +27,11 @@ type messageNotif = {
   body: string // 'Chat reçu',
   url: string // 'http...'
   defs: string[] // [a/v/c c/d/e ...]
+}
+
+function b64ToObj (b64: string) : any {
+  const bin = keyFromB64(b64)
+  return decode(bin)
 }
 
 /* Traitement des notifications:

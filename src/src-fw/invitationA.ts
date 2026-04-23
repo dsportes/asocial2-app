@@ -1,7 +1,9 @@
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 
-import { Crypt, keyToB64, keyFromB64 } from './crypt'
+import { Crypt } from './crypt'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
+
 import stores from '../stores/all'
 import { Invit } from '../stores/safe-store'
 import { Operation } from '../src-fw/operation'

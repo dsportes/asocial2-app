@@ -4,7 +4,9 @@
 import { Operation } from './operation'
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-import { Crypt, keyFromB64 } from '../src-fw/crypt'
+import { Crypt } from '../src-fw/crypt'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
+
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation } from '../app/invitation'

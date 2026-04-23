@@ -1,11 +1,10 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
-import { fromByteArray, toByteArray } from './base64'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 import stores from '../stores/all'
 
 // @ts-ignore
-import { sha224, sha256 } from 'js-sha256'
 import { gzip, ungzip } from './pako.mjs'
 
 // const stores = null
@@ -31,7 +30,7 @@ let audioContext: AudioContext | null = null
 export async function beep (son: string) {
   if (!audioContext) audioContext = new AudioContext()
   const b64 = son.substring(son.indexOf(',') + 1)
-  const buf = b64ToU8(b64).buffer as ArrayBuffer
+  const buf = keyFromB64(b64).buffer as ArrayBuffer
   const b = await audioContext.decodeAudioData(buf) // (arrayBuffer)
   const source = audioContext.createBufferSource() // creates a sound source
   source.buffer = b // tell the source which sound to play
@@ -267,38 +266,6 @@ setTimeout(() => { window.location.href = "${hr}" }, 2000)
 
 export function coolBye () {
   window.location.href = urlFromText(stores.config.K.coolbyeHtml(window.location.href))
-}
-
-export function objToB64 (obj: any, url?: boolean) : string {
-  if (!obj) return ''
-  const u8 = new Uint8Array(encode(obj))
-  return u8ToB64(u8, url)
-}
-
-export function u8ToB64 (u8: Uint8Array | null, url?: boolean) : string {
-  if (!u8) return ''
-  const s = fromByteArray(u8)
-  return !url ? s : s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-}
-
-export function b64ToU8 (b64: string) : Uint8Array {
-  if (!b64) return new Uint8Array([])
-  const diff = b64.length % 4
-  let x = b64
-  if (diff) {
-    const pad = '===='.substring(0, 4 - diff)
-    x = b64 + pad
-  }
-  return new Uint8Array(toByteArray(x.replace(/-/g, '+').replace(/_/g, '/')))
-}
-
-export function b64ToObj (b64: string) : any {
-  const bin = b64ToU8(b64)
-  return decode(bin)
-}
-
-export function clone (obj: any) : any {
-  return b64ToObj(objToB64(obj))
 }
 
 export function cloneSet (s: any) : any {

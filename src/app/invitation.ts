@@ -5,7 +5,8 @@ import { CredSafe } from '../src-fw/credsafe'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
-import { Crypt, keyToB64 } from '../src-fw/crypt'
+import { Crypt } from '../src-fw/crypt'
+import { keyToB64 } from '../src-fw/b64'
 
 const encoder = new TextEncoder()
 

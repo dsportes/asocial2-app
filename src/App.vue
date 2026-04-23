@@ -83,7 +83,8 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
-import { set$t, sty, b64ToU8 } from './src-fw/util'
+import { set$t, sty } from './src-fw/util'
+import { keyFromB64, fromUrl } from './src-fw/b64'
 
 import SafeHeader from './pages/SafeHeader.vue'
 import SafeHome from './pages/SafeHome.vue'
@@ -123,7 +124,7 @@ set$t($t, i18n)
 ui.set$t$q($t, $q)
 
 onMounted(async () => { // Sur onMounted parce que async
-  await session.setRegistration(b64ToU8(config.K.vapidPublicKey), config.location, config.K.APPNAME)
+  await session.setRegistration(keyFromB64(fromUrl(config.K.vapidPublicKey)), config.location, config.K.APPNAME)
 })
 
 ui.setScreenWH($q.screen.width, $q.screen.height)

@@ -5,7 +5,8 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { Crypt } from './crypt'
-import { AppExc, sleep, b64ToU8, u8ToB64 } from './util'
+import { AppExc, sleep } from './util'
+import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { DocRegistry } from '../src-fw/docregistry'
 import { Subscription, Subs } from '../src-fw/subscription'
 
@@ -34,7 +35,7 @@ export class IDB {
   constructor (name: string) {
     const config = stores.config
     this.mondebug = config.mondebug
-    this.keyK = b64ToU8(config['keyK'])
+    this.keyK = keyFromB64(config['keyK'])
     if (!this.keyK)
       throw new AppExc({code: 12003, label: 'IDB error: keyK not declared' })
     if (this.mondebug) console.log('Open IDB: [' + name + ']')
@@ -74,7 +75,7 @@ export class IDB {
 
   async cryptId (id: string) : Promise<string> {
     const x = await Crypt.crypt(encoder.encode(id), this.keyK)
-    return u8ToB64(x)
+    return keyToB64(x)
   }
 
   async cryptRecord (bin: Uint8Array | Object): Promise<Uint8Array | null> {

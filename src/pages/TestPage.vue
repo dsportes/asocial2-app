@@ -25,7 +25,8 @@ import { encode, decode } from '@msgpack/msgpack'
 import { saveAs } from 'file-saver'
 // @ts-ignore
 import ext2mime from 'ext2mime'
-import { readFile, fileDescr, u8ToB64 } from '../src-fw/util'
+import { readFile, fileDescr } from '../src-fw/util'
+import { keyToB64 } from '../src-fw/b64'
 import { SafeOperation } from '../src-fw/operation'
 import { getData, putData } from '../src-fw/net'
 import { Crypt, fromPem, u8ToHex, testECDH, testSH } from '../src-fw/crypt'
@@ -101,7 +102,7 @@ const t1 = async () => {
   try {
     const inp = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
     const sh1 = await Crypt.strongHash(inp, true, true) as Uint8Array
-    const input = u8ToB64(sh1, true)
+    const input = keyToB64(sh1)
     const shas = Crypt.shaS(sh1)
     $Shas.args.input = input
     const res = await $Shas.post()
@@ -153,10 +154,10 @@ wu3pz2zpU3mrRKCjucw=
   if (h1 === h3)
     console.log('trop cool !!!')
 
-  console.log(u8ToB64(signAsn1))
-  console.log(u8ToB64(sign))
+  console.log(keyToB64(signAsn1))
+  console.log(keyToB64(sign))
 
-  const v = await Crypt.verify(fromPem(pubPem, true), sign, args['x'])
+  const v = await Crypt.verify(fromPem(pubPem), sign, args['x'])
 
   args['sign'] = signAsn1
   args['pubPem'] = pubPem

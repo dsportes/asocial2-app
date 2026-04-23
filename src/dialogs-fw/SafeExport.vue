@@ -125,7 +125,8 @@ import { saveAs } from 'file-saver'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { SafeOperation } from '../src-fw/operation'
-import { $t, b64ToU8, dhcool, u8ToB64, readFile, coolBye } from '../src-fw/util'
+import { $t, dhcool, readFile, coolBye } from '../src-fw/util'
+import { keyToB64, keyFromB64 } from '../src-fw/b64'
 
 import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -240,11 +241,11 @@ const downloadFile = async (f) => {
 const authPS = async (args) => {
   const _id = safe.value.id
   const _hp0 = safe.value.hp0
-  const _Ka = b64ToU8(safe.value.Ka)
+  const _Ka = keyFromB64(safe.value.Ka)
   const _hr0 = safe.value.hr0
   const sh = args.sh
   const sh0 = args.sh0
-  const hp0 = u8ToB64(sh0, true)
+  const hp0 = keyToB64(sh0)
   const _hhp1 = safe.value.hhp1
   const sh1 = args.sh1
   const hhp1 = Crypt.shaS(sh1)
@@ -287,28 +288,13 @@ const importBackup = async () => {
 
 const chgCodes = async (arg) => {
   console.log('chgCodes')
-  /* const arg = {
-    cash0: ca.sh0,
-    cash1: ca.sh1,
-    cash: ca.sh,
-    crsh0: cr.sh0,
-    crsh1: cr.sh1,
-    crsh: cr.sh
-  }
-    hp0: u8ToB64(psh0, true),
-    hr0: u8ToB64(rsh0, true),
-    hhp1: Crypt.shaS(psh1),
-    hhr1: Crypt.shaS(rsh1),
-    Ka: await Crypt.crypt(psh, keyK.value),
-    Kr: await Crypt.crypt(rsh, keyK.value)
-  */
   const s = safe.value
-  s.hp0 = u8ToB64(arg.cash0, true)
-  s.hr0 = u8ToB64(arg.crsh0, true)
+  s.hp0 = keyToB64(arg.cash0)
+  s.hr0 = keyToB64(arg.crsh0)
   s.hhp1 = Crypt.shaS(arg.cash1)
   s.hhr1 = Crypt.shaS(arg.crsh1)
-  s.Ka = u8ToB64(await Crypt.crypt(arg.cash, keyK.value))
-  s.Kr = u8ToB64(await Crypt.crypt(arg.crsh, keyK.value))
+  s.Ka = keyToB64(await Crypt.crypt(arg.cash, keyK.value))
+  s.Kr = keyToB64(await Crypt.crypt(arg.crsh, keyK.value))
   await getStatus(s.id, s.hp0, s.hr0)
 }
 </script>

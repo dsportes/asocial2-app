@@ -1,4 +1,4 @@
-import { u8ToB64, concat } from './util'
+import { concat } from './util'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
@@ -6,14 +6,14 @@ import { sha256 } from 'js-sha256'
 // @ts-ignore
 // import rsa from 'jsrsasign'
 import { KJUR } from './dsportes_jsrsasign.mjs'
-import { fromByteArray } from './base64'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export type KeyPair = {
-  pub: ArrayBuffer,
-  priv: ArrayBuffer
+  pub: Uint8Array,
+  priv: Uint8Array
 }
 
 const p2 = [1, 0, 0, 0, 0, 0]; for (let i = 1; i < 6; i++) p2[i] = p2[i - 1] * 256
@@ -56,8 +56,8 @@ export function u8ToHex (u8: Uint8Array) : string{
   return arrayBuffertohex(u8.buffer)
 }
 
+/*
 function ab2str(buf: ArrayBuffer) : string {
-  // @ts-expect-error
   return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
@@ -67,15 +67,6 @@ function str2ab(str: string) : ArrayBuffer{
   for (let i = 0, strLen = str.length; i < strLen; i++) bufView[i] = str.charCodeAt(i)
   return buf
 }
-/*
-Export the given key and write it into the "exported-key" space.
-*/
-export function toPem(key: ArrayBuffer, pub?: boolean) : string {
-  const exportedAsString = ab2str(key)
-  const exportedAsBase64 = window.btoa(exportedAsString)
-  return !pub ? `-----BEGIN PRIVATE KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`
-  : `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`
-}
 
 export function keyToB64(key: ArrayBuffer) : string {
   return window.btoa(ab2str(key))
@@ -84,16 +75,23 @@ export function keyToB64(key: ArrayBuffer) : string {
 export function keyFromB64 (key: string) : ArrayBuffer {
   return str2ab(window.atob(key))
 }
+*/
 
-export function fromPem(pem: string, pub?: boolean) : ArrayBuffer {
-  // fetch the part of the PEM string between header and footer
+/*
+Export the given key and write it into the "exported-key" space.
+*/
+export function toPem(key: Uint8Array, pub?: boolean) : string {
+  const exportedAsBase64 = keyToB64(key)
+  return !pub ? `-----BEGIN PRIVATE KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`
+  : `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`
+}
+
+export function fromPem(pem: string) : Uint8Array {
+  const pub = pem.startsWith('-----BEGIN PUBLIC KEY-----')
   const pemHeader = pub ? '-----BEGIN PUBLIC KEY-----' : '-----BEGIN PRIVATE KEY-----'
   const pemFooter = pub ? '-----END PUBLIC KEY-----' : '-----END PRIVATE KEY-----'
   const pemContents = pem.substring(pemHeader.length, pem.length - pemFooter.length - 1)
-  // base64 decode the string to get the binary data
-  const binaryDerString = window.atob(pemContents)
-  // convert from a binary string to an ArrayBuffer
-  return str2ab(binaryDerString)
+  return keyFromB64(pemContents)
 }
 
 export class Crypt {
@@ -144,27 +142,27 @@ export class Crypt {
     const p = await crypto.subtle.generateKey(Crypt.algs.ecdh, true, ['deriveKey'])
     const spki = await crypto.subtle.exportKey('spki', p.publicKey)
     const pkcs8 = await crypto.subtle.exportKey('pkcs8', p.privateKey)
-    return { pub: spki, priv: pkcs8 }
+    return { pub: new Uint8Array(spki), priv: new Uint8Array(pkcs8) }
   }
 
   static async getSVKeyPair () : Promise<KeyPair> {
     const p = await crypto.subtle.generateKey(Crypt.algs[Crypt.alg], true, ['sign', 'verify'])
     const spki = await crypto.subtle.exportKey('spki', p.publicKey)
     const pkcs8 = await crypto.subtle.exportKey('pkcs8', p.privateKey)
-    return { pub: spki, priv: pkcs8 }
+    return { pub: new Uint8Array(spki), priv: new Uint8Array(pkcs8) }
   }
 
-  static async getAESKey (pubKey: ArrayBuffer, myPrivKey: ArrayBuffer): Promise<Uint8Array> {
-    const pub = await crypto.subtle.importKey('spki', pubKey, Crypt.algs.ecdh, true, [])
-    const priv = await crypto.subtle.importKey('pkcs8', myPrivKey, Crypt.algs.ecdh, true, ['deriveKey'])
+  static async getAESKey (pubKey: Uint8Array, myPrivKey: Uint8Array): Promise<Uint8Array> {
+    const pub = await crypto.subtle.importKey('spki', pubKey as BufferSource, Crypt.algs.ecdh, true, [])
+    const priv = await crypto.subtle.importKey('pkcs8', myPrivKey as BufferSource, Crypt.algs.ecdh, true, ['deriveKey'])
     const k = await crypto.subtle.deriveKey(
       { name: 'ECDH', public: pub }, priv, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
     )
     return new Uint8Array(await crypto.subtle.exportKey('raw', k))
   }
 
-  static async sign (privKey: ArrayBuffer, data: Uint8Array) : Promise<Uint8Array> {
-    const priv = await crypto.subtle.importKey('pkcs8', privKey, Crypt.algs[Crypt.alg], false, ['sign'])
+  static async sign (privKey: Uint8Array, data: Uint8Array) : Promise<Uint8Array> {
+    const priv = await crypto.subtle.importKey('pkcs8', privKey as BufferSource, Crypt.algs[Crypt.alg], false, ['sign'])
     const sign = await crypto.subtle.sign(Crypt.algs[Crypt.alg + 'sv'], priv, data as BufferSource)
     return new Uint8Array(sign)
   }
@@ -183,8 +181,8 @@ export class Crypt {
     return new Uint8Array(hexToArrayBuffer(x2))
   }
 
-  static async verify (pubKey: ArrayBuffer, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
-    const pub = await crypto.subtle.importKey('spki', pubKey, Crypt.algs[Crypt.alg], true, ['verify'])
+  static async verify (pubKey: Uint8Array, signature: Uint8Array, data: Uint8Array) : Promise<boolean> {
+    const pub = await crypto.subtle.importKey('spki', pubKey as BufferSource, Crypt.algs[Crypt.alg], true, ['verify'])
     return await crypto.subtle.verify(Crypt.algs[Crypt.alg + 'sv'], pub, signature as BufferSource, data as BufferSource)
   }
 
@@ -212,7 +210,7 @@ export class Crypt {
       ['encrypt', 'decrypt']
     )
     const res = new Uint8Array(await crypto.subtle.exportKey('raw', key))
-    return bin ? res : u8ToB64(res, true)
+    return bin ? res : keyToB64(res)
   }
 
   /*
@@ -223,28 +221,30 @@ export class Crypt {
   }
   */
 
-  /* sha256
+  /* sha256: en binaire ou base 64 standard
   // arg string : It also supports byte `Array`, `Uint8Array`, `ArrayBuffer` input
   */
-  static sha (x: any, bin? :boolean) {
+  static sha (x: any, bin? :boolean) : Uint8Array | string{
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
-    if (bin) return u8
-    const s = fromByteArray(u8)
-    return s.substring(0, s.length - 1).replace(/\+/g, '-').replace(/\//g, '_')
+    return bin ? u8 : keyToB64(u8)
   }
 
+  /* SHA raccourci en base 64 URL */
   static shaS (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
-    const s = fromByteArray(u8.subarray(3, 18))
+    // return toUrl(keyToB64(u8.subarray(3, 18)))
+    const s = keyToB64(u8.subarray(3, 18))
     return s.replace(/\+/g, '-').replace(/\//g, '_')
   }
 
+  /*
   static shaInt (x: any) {
     const u8 = new Uint8Array(sha256.arrayBuffer(x))
     let r = 0
     for (let i = 3, j = 0; j < 6; i++, j++) r += (p2[j] * u8[i])
     return r
   }
+  */
 
   static random (nbytes: number) {
     const u8 = new Uint8Array(nbytes)
@@ -252,9 +252,10 @@ export class Crypt {
     return u8
   }
 
+  /* Si nbytes est multiple de 3, le string résultat fait (4 * (nbytes / 3) */
   static rnd (nbytes: number) : string {
-    const s = fromByteArray(Crypt.random(nbytes))
-    return s.replace(/=/g, '').replace(/\+/g, '0').replace(/\//g, '1')
+    const s = keyToB64(Crypt.random(nbytes))
+    return s.replace(/=/g, '2').replace(/\+/g, '0').replace(/\//g, '1')
   }
 }
 
@@ -262,7 +263,7 @@ export async function testSH () {
   const x = 'toto est tres tres beau'
   console.log(Crypt.sha(x))
   console.log(Crypt.shaS(x))
-  console.log(Crypt.shaInt(x))
+  // console.log(Crypt.shaInt(x))
 
   console.log(await Crypt.strongHash(x))
   console.log(await Crypt.strongHash(encoder.encode(x)))
@@ -271,7 +272,7 @@ export async function testSH () {
   console.log(Crypt.sha(x))
   console.log(Crypt.sha(encoder.encode(x)))
   console.log(Crypt.shaS(x))
-  console.log(Crypt.shaInt(x))
+  // console.log(Crypt.shaInt(x))
 
   /*
   const t = Date.now()
@@ -314,9 +315,9 @@ export async function testECDH () {
   else console.log('TOO BAD !!!')
 
   // Dans srv
-  const verif1 = await Crypt.verify(fromPem(appSVPub, true), sign, x)
+  const verif1 = await Crypt.verify(fromPem(appSVPub), sign, x)
   console.log('verif1 = ', verif1)
-  const verif2 = await Crypt.verify(fromPem(appSVPub, true), sign, xx)
+  const verif2 = await Crypt.verify(fromPem(appSVPub), sign, xx)
   console.log('verif2 = ', verif2)
 
   const srvPair = await Crypt.getKeyPair()
@@ -326,13 +327,13 @@ export async function testECDH () {
   console.log(srvPub)
   console.log(srvPriv)
 
-  const aesSrv = await Crypt.getAESKey(fromPem(appPub, true), srvPair.priv)
-  console.log('aesSrv: ', u8ToB64(aesSrv))
+  const aesSrv = await Crypt.getAESKey(fromPem(appPub), srvPair.priv)
+  console.log('aesSrv: ', keyToB64(aesSrv))
   const x1 = await Crypt.crypt(aesSrv, x)
 
   // Dans app
-  const aesApp = await Crypt.getAESKey(fromPem(srvPub, true), appPair.priv)
-  console.log('aesApp: ', u8ToB64(aesApp))
+  const aesApp = await Crypt.getAESKey(fromPem(srvPub), appPair.priv)
+  console.log('aesApp: ', keyToB64(aesApp))
   const x3 = await Crypt.decrypt(aesApp, x1)
   const x2 = decoder.decode(x3 || undefined)
   console.log(x2)

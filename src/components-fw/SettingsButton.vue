@@ -417,8 +417,8 @@ import stores from '../stores/all'
 import { LocPref } from '../stores/safe-store'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
-import { $t, sty, reloadPage, dhcool, u8ToB64, coolBye } from '../src-fw/util'
-
+import { $t, sty, reloadPage, dhcool, coolBye } from '../src-fw/util'
+import { keyToB64 } from '../src-fw/b64'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import PermissionBox from '../components-fw/PermissionBox.vue'
@@ -518,7 +518,7 @@ const ps = reactive({ inp: '', err: ''})
 
 const validPs = async () => {
   const sh = await Crypt.strongHash(ps.inp, false, true) as Uint8Array
-  cr.b64 = u8ToB64(sh, true)
+  cr.b64 = keyToB64(sh)
   cr.shaps = Crypt.sha(sh, false)
   cr.shaSps = Crypt.shaS(sh)
 }
