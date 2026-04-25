@@ -15,7 +15,7 @@ import { SafeOperation, MDOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 
-import { CredSafe } from '../src-fw/credsafe'
+import { CredSafe } from '../src-fw/documents'
 
 /*
 ### Safes stockés dans un directory
@@ -811,10 +811,11 @@ export const useSafeStore = defineStore('safe', () => {
         const [com, data] = decode(safe.creds[xid]) as [string, string]
         const comment = keyToB64(await Crypt.decrypt(keyK.value, keyFromB64(com)))
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
-        const c: CredSafe = new CredSafe(obj)
-        if (msvc[c.svc]) {
+        if (msvc[obj['svc']]) {
+          const c: CredSafe = new CredSafe(obj)
           c.comment = comment
-          m.set(c.id, c)
+          c.recK = !obj['recK'] ? null : decode(await Crypt.decrypt(keyK.value, keyFromB64(obj['recK'])))
+          m.set(c.credId, c)
         }
       } catch (e) {
         console.log(e)
@@ -825,7 +826,7 @@ export const useSafeStore = defineStore('safe', () => {
   type SetCred = {
     userId: string //
     shK: string // shaS de la clé K en base 64
-    credid: string // id du credential
+    credId: string // id du credential
     comment: string // comment crypté par K et en base 64
     cred?: string // CredSafe sérialisé, crypté par K et en base64 (pour création)
   }
@@ -833,12 +834,14 @@ export const useSafeStore = defineStore('safe', () => {
   const createCred = async ( cred : CredSafe ) => {
     const obj = cred.toObj
     delete obj['comment']
+    obj['recK'] = !cred.recK ? null : keyToB64(await Crypt.crypt(keyK.value, encode(cred.recK)))
+    const credSer = keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
     const setCred : SetCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      credid: cred.id,
+      credId: cred.credId,
       comment: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(cred.comment))),
-      cred: keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
+      cred: credSer
     }
     const op = new SafeOperation('$CreateCred', mySafeStore.value)
     op.args = { setCred }
@@ -846,11 +849,11 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Mise à jour du commentaire d'un Cred en safe */
-  const updateCredComment = async ( credid: string, comment: string ) => {
+  const updateCredComment = async ( credId: string, comment: string ) => {
     const setCred : SetCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      credid,
+      credId,
       comment: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(comment)))
     }
     const op = new SafeOperation('$UpdateCredComment', mySafeStore.value)
@@ -874,8 +877,7 @@ export const useSafeStore = defineStore('safe', () => {
     op.args = {revokeCreds}
     return await doOpSafe(op)
   }
-  /****************************************************************************/
-
+  
   /* Profiles ****************************************************************
   Section organisée avec une **sous-section par application** regroupant une liste d'items
   ayant un identifiant généré aléatoirement à sa création.
@@ -1098,7 +1100,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const createSafe = async (
     store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
-    userId.value = Crypt.shaS(Crypt.random(32))
+    userId.value = Crypt.rnd(15)
     keyK.value = Crypt.random(32)
     const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
     const K1 = keyToB64(await Crypt.crypt(shp1, keyK.value))
@@ -1405,8 +1407,7 @@ export const useSafeStore = defineStore('safe', () => {
     pseudo: string
   }
 
-  /* Certifie le device courant, le nomme name et attribue le pseudo
-  de l'utilisateur.
+  /* Certifie le device courant, le nomme name et attribue le pseudo de l'utilisateur.
   */
   const setTrust = async (name: string, pin: string, pseudo: string) => {
     if (!devId.value || name !== devName.value) { // put Header

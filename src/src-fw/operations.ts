@@ -234,52 +234,6 @@ export class ListManagers extends Operation {
   }
 }
 
-/* Enregistre un user en tant que "manager" de l'organisation
-Créé une invitation (proposition directe).
-*/
-export const NewManager = async (
-  svc: string, 
-  org: string, 
-  safeStore: string, // de la cible U 
-  idu: string, // id de la cible U
-  pubcu: string // de la cible U 
-  ) : Promise<boolean> => {
-
-  // Enregistrement dans le safe de U
-  const invitId = Crypt.rnd(8)
-  const time = Math.floor(Date.now() / 1000)
-  const major = 'Org.manager'
-
-  const sf = stores.safe
-  const invit : Invit = {
-    svc: svc,
-    org: org,
-    invitId,
-    time,
-    major,
-    minor: '',
-    status: 2,
-    comment: ''
-  }
-  const aes = await Crypt.getAESKey(keyFromB64(pubcu), keyFromB64(sf.auth.D))
-  const status = await sf.invitCreate(invit, idu, aes, sf.auth.C, safeStore)
-  if (status !== 0) return false
-
-  // Création et enregistrement de l'invitation en DB du service
-  const inv = new Invitation()
-  inv.invitId = invitId
-  inv.major = major
-  inv.time = time
-  inv.status = 2
-  inv.userId = idu // de la cible U
-  inv.safeStore = safeStore // de la cible U
-  inv.pubu = pubcu // clé C de la cible U
-  inv.pubs = sf.auth.C // clé C du sponsor
-  inv.etc = null // Impératif
-  const op = new InvitCreate(svc, org)
-  return await op.run(inv) === 0
-}
-
 export class InvitCreate extends Operation {
   constructor (SVC: string, org: string) { super('InvitCreate', SVC, org) }
 
@@ -370,8 +324,6 @@ export class ListUserCreds extends Operation {
       for(const x of res.list as SCred[]) {
         const c = new Credential()
         for(const p of lp) c[p] = x[p]
-        c.timeSvc = x.time
-        c.from = 2
         m.set(x.id, c)
       }
       return m

@@ -255,7 +255,8 @@ export class Crypt {
   /* Si nbytes est multiple de 3, le string résultat fait (4 * (nbytes / 3) */
   static rnd (nbytes: number) : string {
     const s = keyToB64(Crypt.random(nbytes))
-    return s.replace(/=/g, '2').replace(/\+/g, '0').replace(/\//g, '1')
+    const s1 = (nbytes % 3) === 0 ? s : s.replace(/=/g, '2')
+    return s1.replace(/\+/g, '0').replace(/\//g, '1')
   }
 }
 

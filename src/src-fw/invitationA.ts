@@ -1,11 +1,11 @@
 // @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { encode, decode } from '@msgpack/msgpack'
 
 import { Crypt } from './crypt'
 import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 
 import stores from '../stores/all'
-import { Invit } from '../stores/safe-store'
+import { CredSafe } from '../src-fw/documents'
 import { Operation } from '../src-fw/operation'
 import { $t } from '../src-fw/util'
 
@@ -42,63 +42,77 @@ export class InvitationA {
 
   // Toujours présentes, dès la création de l'invitation
   invitId: string = '' // ID de l'invitation générée aléatoirement à sa création
+  userId: string = '' // ID du bénéficiare de l'invitation
   major: string = '' //code majeur 
   minor: string = '' // code mineur
-  time: number = 0 // date-heure de création epoch en SECONDES. Ceci détermine aussi sa date d'auto-destruction.
-  status: number = 0 // traduit l'état d'avancement dans le temps SEULE PROPRIETE NON immuable
-  /*
-  - (1) : demande déposée par U,
-  - (2) : proposition faite par S,
-  - (3) : proposition validée par U,
-  - (4) : demande de U annulée par U,
-  - (5) : demande de U rejetée par S,
-  - (6) : proposition de S déclinée par U.
-  */
-  userId: string = '' // ID de U (demandeur)
-  safeStore: string = '' // de la cible / demandeur U
-  pubu: string = '' // clé publique C de cryptage de U en base64
+  // v: number = 0 // date-heure de sa dernière évolution, que soit par U ou par un des sponsors.
+  waiting: boolean = true //
+  tab: string = '' // Adroise commune U / sponsors (non cryptée)
+  etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
+  spCredId: string = '' // ID du credential de sponsoring sous lequel le dernier sponsor est intervenu.
+  // challenge: string = ''
+  // sign: string = '' // signature par le credential `spCredId` du challenge (en base 64).
 
-  // Dès la "demande" (pour un cycle complet seulement)
-  req ?: string // texte en clair fourni par U pour exprimer ses souhaits / exigences / motivation.
-
-  // Dès la phase "proposition" (première en cycle court et seconde en cycle complet) ou "rejet"
-  pubs ?: string // clé publique C de cryptage du sponsor en base 64
-
-  // Dès la phase "proposition" (première en cycle court et seconde en cycle complet)
-  etc ?: any // Objet contenant toutes les données nécessaires à la validation:
-  /* 
-  Crypté par la clé AES obtenu du couple de clés `pub-U/priv-S` (ou `pub-S/pub-U`, c'est la même). 
-  Cette clé sera transmise en arguments de l'opération de validation.
-  En session de U, etc peut être décrypté : un texte humainement lisible par U (dans sa langue) 
-  est généré pour lui afficher les clauses la proposition.
-  */
-
-  txt ?: string // texte humainement lisible 
-  /*
-  - soit Phase rejet : S explicite les raisons de son refus de faire une proposition à U.
-  - soit Phase déclinaison: U explicite les raisons qui rendent les conditions (dans etc) non acceptables pour lui. 
-  - crypté par la clé AES obtenu du couple de clés `pub-U/priv-S` (ou `pub-S/pub-U`, c'est la même)
-  */
-
-  isSP ?: boolean // user est le SPONSOR TRAITANT de la demande
-  isU ?: boolean // user est le user DEMANDEUR
-
-  aes ?: Uint8Array // clé AES obtenue de pubu / pubs
-
-  init (major: string, minor: string, req: string ) {
+  init (major: string, minor: string, tab: string ) {
     const sf = stores.safe
-
-    this.invitId = Crypt.rnd(8)
-    this.status = 1
+    this.invitId = Crypt.rnd(15)
+    this.waiting = true
     this.major = major
     this.minor = minor || ''
-    this.time = Math.floor(Date.now() / 1000)
-    this.req = req || ''
-
+    this.tab = tab || ''
     this.userId = sf.userId
-    this.pubu = keyToB64(sf.auth.C)
   }
 
+  constructor (svc: string, org: string, major: string, minor: string, tab: string) {
+    this.svc = svc
+    this.org = org
+    this.invitId = Crypt.rnd(15)
+    this.waiting = true
+    this.major = major
+    this.minor = minor || ''
+    this.tab = tab || ''
+  }
+
+  // Complète l'objet créé par son contructor quand il est créé par U */
+  initByU () {
+    const sf = stores.safe
+    this.userId = sf.userId
+  }
+
+  /* Complète l'objet créé par son contructor quand il est créé par un sponsor
+  - La fourniture de etc et de sa signature sont requises ensuite
+  */
+  initByS (userId: string, etc: any, credId: string) {
+    this.userId = userId
+    this.waiting = false
+    this.etc = keyToB64(encode(etc))
+    this.spCredId = credId
+  }
+
+  updByU (tab: string, waiting: boolean) {
+    
+  }
+
+  async sign () {
+    const sf = stores.safe
+    const challenge = Crypt.rnd(24)
+    let x : string
+    if (this.userId === sf.userId) {
+      x = sf.auth.S
+    } else {
+    
+    if (!cred) {
+      this.spCredId = stores.safe.userId
+      x = sf.auth.S
+    } else {
+      this.spCredId = cred.credId
+      x = cred.privs
+    }
+    const challenge = Crypt.rnd(24)
+    const signature = keyToB64(await Crypt.sign(keyFromB64(x), encoder.encode(this.challenge)))
+  }
+
+  /*
   async fromList (bin : Uint8Array, org: string, svc: string) : Promise<InvitationA> {
     const sf = stores.safe
     const x = decode(bin)
@@ -130,13 +144,13 @@ export class InvitationA {
 
     return this
   }
+  */
 
-  static props = ['invitId', 'major', 'minor', 'time', 'status', 'userId', 'pubu', 'req']
+  static p1 = ['invitId', 'userId', 'major', 'minor', 'waiting', 'tab', 'etc', 'spCredId', 'challenge', 'sign']
 
   toObj () : Object { // TODO
     const x = {}
-    for (const p of InvitationA.props) x[p] = this[p] || null
-    x['ttl'] = Math.floor(this.time / 60)
+    for (const p of InvitationA.p1) x[p] = this[p] || null
     return x
   }
 
@@ -153,7 +167,7 @@ export class InvitationA {
   Génère:
   - l'objet Accept à stocker dans l'invitation,
   - params.txti : le texte de résumé de la proposition d'invitation
-  */
+  
   async setAccept (params: Object) : Promise<Accept | null> {
     return null
   }
@@ -193,13 +207,6 @@ export class InvitationA {
     }
   }
 
-  /* Méthode "abstraite" : surchargée en fonction du 
-  "major" de l'invitation. Par exemple:
-  - enregistrement d'un credential résultant de l'invitation
-  */
-  async validate () {
-  }
-
   async decline (txtx: string) {
     console.log(this.invitId, 'decline')
     const op = new Operation('InvitDC', this.svc, this.org)
@@ -225,6 +232,14 @@ export class InvitationA {
     } catch(e) {
       op.ko(e)
     }
+  }
+  */
+
+  /* Méthode "abstraite" : surchargée en fonction du 
+  "major" de l'invitation. Par exemple:
+  - enregistrement d'un credential résultant de l'invitation
+  */
+  async validate () {
   }
 
 }

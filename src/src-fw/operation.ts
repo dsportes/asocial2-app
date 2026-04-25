@@ -1,17 +1,20 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { AppExc, $t } from './util'
-import { AuthRecord } from './credsafe'
+import { AppExc, $t } from '../src-fw/util'
 import stores from '../stores/all'
+import { Crypt } from '../src-fw/crypt'
+import { keyFromB64 } from '../src-fw/b64'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
+
+const encoder = new TextEncoder()
 
 export type OpArgs = {
   org?: string
   $OP?: string
   SVC?: string
   APIVERSION?: string
-  authRecord?: Object
+  authRecord?: AuthRecord
 }
 
 class AOperation {
@@ -151,11 +154,11 @@ export class Operation extends AOperation {
           'Accept':       'application/octet-stream'   // expected data sent back
         },
         signal: this.controller.signal,
-        body,
+        body
       })
       this.controller = null
       const buf = await response.bytes()
-      const obj = new decode(buf)
+      const obj = decode(buf)
       if (response.status === 200) {
         session.opEnd()
         const ntf = obj['notification']
@@ -262,6 +265,65 @@ export class MDOperation extends A2Operation {
   constructor (opName: string) {
     super(opName)
     this.url = stores.config.K.MASTERDIR_URL
+  }
+
+}
+
+/*
+Toute opération requérant la présence d'au moins un credential est sollicitée en passant
+en arguments un objet de classe `AuthRecord`, construit par l'application et ayant les propriétés suivantes:
+- `userId`: de l'utilisateur.
+- `sessionId`: identifiant de session.
+- `time`: date-heure en seconde de création du record.
+- _challenge_: propriété virtuelle _userId + '/' + time_
+- `userSign`: signature par la clé privée de signature de l'utilisateur, du _challenge_.
+- `signatures`: objet ayant une propriété par ID de credential inscrit dans le record
+  donnant la signature du challenge par la clé privée de signature du credential.
+*/
+export class AuthRecord {
+  svc: string = ''
+  args: Object = ''
+  userId: string
+  sessionId: string
+  time: number
+  userSign: Uint8Array | null
+  // Object par role / docId : [token]
+  signatures: Object | null
+
+  get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }
+
+  constructor () {
+    const sf = stores.safe
+    const session = stores.session
+    this.userId = sf.userId
+    this.sessionId = session.sessionId
+    this.time = Date.now()
+    this.signatures = null
+    this.userSign = null
+  }
+
+  async signUser () {
+    const sf = stores.safe
+    this.userSign = sf.auth && sf.auth.S ? 
+      await Crypt.sign(keyFromB64(sf.auth.S), this.challenge) : null
+  }
+
+  get toObj() {
+    return { userId: this.userId, sessionId: this.sessionId, time: this.time, 
+      signatures: this.signatures, userSign: this.userSign }
+  }
+
+  async sign (svc: string, org: string, role: string, docId?: string) {
+    const session = stores.session
+    for(const [id, c] of session.creds) {
+      if (c.svc === svc && c.org === org
+        && c.role === role && (docId ? c.docId === docId : true)) {
+        const x = await Crypt.sign(keyFromB64(c.pems), this.challenge)
+        const sign = new Uint8Array(x)
+        if (!this.signatures) this.signatures = {}
+        this.signatures[c.role + '/' + (c.docId || '')] = sign
+      }
+    }
   }
 
 }

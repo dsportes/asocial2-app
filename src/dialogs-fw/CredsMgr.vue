@@ -201,7 +201,7 @@ import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
-import { Credential } from '../src-fw/credsafe'
+import { Credential } from '../src-fw/documents'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
 

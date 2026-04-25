@@ -1,9 +1,9 @@
 
 import stores from '../stores/all'
 import { InvitationA, MsgVal } from '../src-fw/invitationA'
-import { CredSafe } from '../src-fw/credsafe'
+import { CredSafe } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
-import { Operation } from '../src-fw/operation'
+import { MDOperation, Operation } from '../src-fw/operation'
 
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64 } from '../src-fw/b64'
@@ -25,14 +25,12 @@ type InvitValOM = { // arguments de validation d'un Credential Org.manager
 export class Invitation extends InvitationA {
   static rnd: number = 0
 
-  constructor () { 
-    super()
+  constructor (svc: string, org: string, major: string, minor: string, tab: string) { 
+    super(svc, org, major, minor, tab)
   }
 
-  /* Retourne un message d'erreur disant pourquoi l'utilisateur
-  ne peut pas "valider / rejeter" l'invitation en status 1.
-  Bref pourquoi il n'est pas un SPONSOR acceptable.
-
+  /* Retourne un message d'erreur disant pourquoi le "sponsor"
+  ne peut pas intervenir sur l'invitation.
   Logique applicative choisie ici:
   - un "manager" est toujours un sponsor valide.
   - un utilisateur qui a un credential Sponsor pour le "major" de l'invitation
@@ -125,8 +123,8 @@ export class Invitation extends InvitationA {
             name: this.etc.label,
             time: invVal.time
           })
-          c.setId()
-          mcreds.set(c.id, c)
+          // c.setId()
+          mcreds.set(c.credId, c)
         }
 
         if (this.etc.option > 1) {
@@ -140,8 +138,7 @@ export class Invitation extends InvitationA {
             name: this.etc.label,
             time: invVal.time
           })
-          c.setId()
-          mcreds.set(c.id, c)
+          mcreds.set(c.credId, c)
         }
 
         const status = await stores.safe.updateCreds(mcreds, null, null, null)
@@ -154,4 +151,33 @@ export class Invitation extends InvitationA {
     }
   }
 
+  /* Enregistre une invitation à un user pour être "manager" de l'organisation
+  (Créé une invitation non sollicitée.)
+  */
+  static async NewManager (
+    svc: string, 
+    org: string,
+    tab: string,
+    userId: string, // id de la cible U
+    ) : Promise<number> {
+
+    const sf = stores.safe
+    const invit = new Invitation(svc, org, 'Org.manager', '', tab)
+    invit.initByS(userId)
+    await invit.signByS({})
+    const status = await sf.invitCreate(invit)
+    if (status !== 0) return status
+
+    const op = new MDOperation('$mdInvitNew')
+    op.args['invitId'] = invit.invitId
+    op.args['challenge'] = invit.challenge
+    op.args['sign'] = invit.sign
+    try {
+      const ret = await op.post()
+      return ret.status
+    } catch(e: any) {
+      op.ko(e)
+      return -1
+    }
+  }
 }
