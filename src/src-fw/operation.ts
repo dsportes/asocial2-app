@@ -122,7 +122,7 @@ export class Operation extends AOperation {
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
   async sign (role: string, docId?: string) {
-    await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
+    return await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
   }
 
   /* Si noAuth est true, l'opération N'INCLUE PAS 
@@ -313,7 +313,7 @@ export class AuthRecord {
       signatures: this.signatures, userSign: this.userSign }
   }
 
-  async sign (svc: string, org: string, role: string, docId?: string) {
+  async sign (svc: string, org: string, role: string, docId?: string) : Promise<boolean> {
     const session = stores.session
     for(const [id, c] of session.creds) {
       if (c.svc === svc && c.org === org
@@ -322,8 +322,10 @@ export class AuthRecord {
         const sign = new Uint8Array(x)
         if (!this.signatures) this.signatures = {}
         this.signatures[c.role + '/' + (c.docId || '')] = sign
+        return true
       }
     }
+    return false
   }
 
 }

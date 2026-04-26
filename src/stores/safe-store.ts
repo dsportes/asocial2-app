@@ -14,8 +14,8 @@ import { AppExc, $t, sleep, quarter } from '../src-fw/util'
 import { SafeOperation, MDOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-
 import { CredSafe } from '../src-fw/documents'
+
 
 /*
 ### Safes stockés dans un directory
@@ -124,17 +124,6 @@ export type Sponsoring = {
   major: string
   minor: string
   isSp: boolean
-}
-
-export type Invit = {
-  svc: string
-  org: string
-  invitId: string // ID de l'invitation
-  time: number // date-heure de création (détermine aussi celle d'auto-destruction).
-  major: string
-  minor: string
-  status: number // 1: déposée, 2: validée, 3: rejetée, 4: acceptée, 5: déclinée
-  comment: string // texte libre écrit par U à la création (rien que pour lui).
 }
 
 const encoder = new TextEncoder()
@@ -487,9 +476,6 @@ export const useSafeStore = defineStore('safe', () => {
   /* Section "creds": organisée avec une **sous-section par application** */
   const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
 
-  /* Section "invits" */
-  const mySafeInvits: Ref<Map<string, Invit>> = ref(null)
-
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
     let y
@@ -557,7 +543,6 @@ export const useSafeStore = defineStore('safe', () => {
     await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
     await loadProfiles(safe) // profiles
-    await loadInvits(safe) // invits
     if (safe.auth.future !== null)
       await resetAliases(safe)
   }
@@ -697,100 +682,6 @@ export const useSafeStore = defineStore('safe', () => {
     return await doOpSafe(op)
   }
   /***************************************************************************/
-
-  /* safe.invits: Object : invitId : { status, time, pubC, data } ************/
-  const loadInvits = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Invit>()
-    const msvc = stores.config.K.SERVICES
-    if (safe.invits) for (const xid in safe.invits) {
-      const x = safe.invits[xid]
-       if (!dlv(x.time))
-        try {
-          const pubC = x.pubC
-          const aes = !pubC ? keyK.value :
-            await Crypt.getAESKey(keyFromB64(pubC), keyFromB64(auth.D))
-          const inv: Invit = decode(await Crypt.decrypt(aes, keyFromB64(x.invit))) as Invit
-          inv.status = x.status
-          if (msvc[inv.svc]) m.set(inv.invitId, inv)
-        } catch (e) {
-          console.log(e)
-        }
-    }
-    mySafeInvits.value = m
-  }
-
-  type AddInvit = {
-    userId: string
-    invitId: string
-    status: number
-    time: number
-    invit: string // Objet invit sérialisé crypté en base64
-    shK?: string // Cas d'une création pour U par U
-    pubC ?: string // Cas d'une création pour U par X
-      //  invit est à décrypter par le couple U/X (et non keyK)
-  }
-
-  /* Creation d'une invitation. Deux cas:
-  - de U pour lui:
-    - aes, pubC: absents. invit est crypté par la clé K de U.
-  - d'un autre utilisateur X (typiquement un "sponsor"):
-    - aes est la clé de cryptage à employer pour crypter invit.
-    - pubC est la clé publique à employer par U pour décrypter avec sa propre clé privée.
-      pubC est passé en argument pour être externe à invit.
-  Le safe n'est recompilé qu'en cas de U pour lui-même.
-  Retour: [ status, VRAIE userId]
-  Dans le cas par X, le userId passé en argument est en général un contact ou pseudo
-  mais au retour on a besoin du vrai userId.
-  */
-  const invitCreate = async (
-    invit: Invit,
-    idu: string,
-    aes: Uint8Array | null,
-    pubC: string | null,
-    safeStore: string) : Promise<number> => { // status
-    const addInvit : AddInvit = {
-      userId: idu,
-      invitId: invit.invitId,
-      time: invit.time,
-      status: invit.status,
-      invit: keyToB64(await Crypt.crypt(aes || keyK.value, encode(invit)))
-    }
-    if (pubC) addInvit.pubC = pubC
-    else addInvit.shK = await Crypt.strongHash(keyK.value, false, false) as string
-
-    const op = new SafeOperation('$AddInvit', safeStore || mySafeStore.value)
-    op.args = { addInvit }
-    try {
-      const ret = await op.post()
-      if (ret.status === 0 && !pubC)
-        try { await compileSafe(ret.safe) } catch (e) {
-          console.log(e) }
-      return ret.status
-    } catch(e) {
-      op.ko(e)
-      return -1
-    }
-  }
-
-  type StatusInvit = {
-    targetId: string
-    invitId: string
-    status: number
-  }
-
-  /* Change le status d'une invitation pour LE user U dans SON safeStore.
-  targetId est un userId. Si vide, c'est le userId de U lui-même.
-  */
-  const setStatusInvit = async (invitId: string, targetId: string, status: number ) : Promise<number> => {
-    const sti : StatusInvit = {
-      targetId: targetId || userId.value,
-      invitId: invitId,
-      status
-    }
-    const op = new SafeOperation('$StatusInvit', mySafeStore.value)
-    op.args = { statusInvit: sti }
-    return await doOpSafe(op)
-  }
 
   /* Creds ************************************************************************
   En safe la map safe.creds a une entrée par CredSafe:
@@ -1787,9 +1678,8 @@ export const useSafeStore = defineStore('safe', () => {
     selectedProfile, selectedSession, users,
 
     auth, devices, mySafePrefs, mySafeProfiles,
-    mySafeCreds, mySafeInvits,
+    mySafeCreds,
     updatePrefs,
-    invitCreate, setStatusInvit /* ??? */,
     createCred /* ??? */, updateCredComment /* ??? */,
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,

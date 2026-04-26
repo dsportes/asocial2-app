@@ -10,7 +10,6 @@ import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation } from '../app/invitation'
-import { Invit } from '../stores/safe-store'
 import { Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -234,52 +233,6 @@ export class ListManagers extends Operation {
   }
 }
 
-export class InvitCreate extends Operation {
-  constructor (SVC: string, org: string) { super('InvitCreate', SVC, org) }
-
-  async run ( invitation: Invitation ) : Promise<number> {
-    try {
-      this.args.invObj = invitation.toObj()
-      const res = await this.post()
-      return res.status
-    } catch(e) {
-      this.ko(e)
-      return -1
-    }
-  }
-}
-
-export class InvitList extends Operation {
-  constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
-
-  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[] | undefined> {
-    try {
-      this.args.major = major
-      this.args.minor = minor
-      this.args.isSp = isSp
-      if (!isSp) this.sign('Org.manager')
-      else { // sponsor
-        // On tente toujours le "major" seul
-        this.sign('Sponsor.', major) 
-        // Le cas échéant on tente le major.minor
-        if (minor !== '') this.sign('Sponsor.', major + '/' + minor)
-      }
-      const res = await this.post()
-      if (res.status) {
-        await stores.ui.diagDisplay($t('MNOcred'))
-        return []
-      }
-      const lst: Invitation[] = []
-      for(const x of res.list) {
-        const inv = new Invitation()
-        lst.push(await inv.fromList(x, this.args.org, this.SVC) as Invitation)
-      }
-      return lst
-    } catch(e) {
-      this.ko(e)
-    }
-  }
-}
 
 /* Lecture d'une invitation par son ID par son propriétaire */
 export class InvitGet extends Operation {
