@@ -27,9 +27,9 @@ export type InvObj = {
   userId: string // ID du bénéficiare de l'invitation
   major: string //code majeur 
   minor: string // code mineur
-  byU: boolean // la dernière maj est de U
+  byU?: boolean // la dernière maj est de U
   tab: string // Adroise commune U / sponsors (non cryptée)
-  etc: any // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
+  etc?: any // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 }
 
 /* ### Document `Invitation` dans la base du service
@@ -37,7 +37,7 @@ export type InvObj = {
 export class InvitationA {
   svc: string = '' // service d'ou l'invitation a été lue (ou préparée à la création)
   org: string = '' // organisation d'ou l'invitation a été lue (ou préparée à la création)
-  v: number = 0 // (lue du service) date-heure de sa dernière évolution, que soit par U ou par un des sponsors.
+  v?: number = 0 // (lue du service) date-heure de sa dernière évolution, que soit par U ou par un des sponsors.
 
   invitId?: string = '' // ID de l'invitation générée aléatoirement à sa création
   userId: string = '' // ID du bénéficiare de l'invitation
@@ -70,22 +70,27 @@ export class InvitationA {
     return x
   }
 
-  async mdInvitSet (lv: boolean) {
-    const mop = new MDOperation('$mdInvitSet')
-    mop.args['svc'] = this.svc
-    mop.args['org'] = this.org
-    mop.args['invitId'] = this.invitId
-    mop.args['userId'] = this.userId
-    mop.args['lv'] = lv
+  async mdInvitSet (lv: boolean) : Promise<boolean> {
+    const op = new MDOperation('$mdInvitSet')
+    op.setArgs({ 
+      invitId: this.invitId, 
+      userId: this.userId, 
+      svc: this.svc, 
+      org: this.org,
+      lv 
+    })
     try {
-      await mop.post()
-    } catch (e: any) {
-      mop.ko(e)
-      return
+      await op.post()
+      stores.ui.diagDisplay($t('INVop_1'), 2)
+      return true
+    } catch(e: any) {
+      op.ko(e)
+      return false
     }
   }
 
-  async createByU () {
+  async createByU () : Promise<boolean> {
+    this.byU = true
     const ui = stores.ui
     const op = new Operation('InvitCreateByU', this.svc, this.org)
     op.args['invObj'] = this.toObj
@@ -93,16 +98,20 @@ export class InvitationA {
       const res = await op.post()
       if (res.status !== 0) {
         await ui.diagDisplay($t('STINV_' + res.status))
-        return
+        return false
       }
-      await this.mdInvitSet(true)
+      if (await this.mdInvitSet(true)) {
+        ui.diagDisplay($t('INVop_1'), 2)
+        return true
+      } else return false
     } catch (e: any) {
       op.ko(e)
-      return
+      return false
     }
   }
 
-  async updateByU (tab: string) {
+  async updateByU (tab: string) : Promise<boolean> {
+    this.byU = true
     const ui = stores.ui
     const op = new Operation('InvitUpdByU', this.svc, this.org)
     op.args['invitId'] = this.invitId
@@ -111,16 +120,20 @@ export class InvitationA {
       const res = await op.post()
       if (res.status !== 0) {
         await ui.diagDisplay($t('STINV_' + res.status))
-        return
+        return false
       }
-      await this.mdInvitSet(true)
+      if (await this.mdInvitSet(true)) {
+        ui.diagDisplay($t('INVop_1'), 2)
+        return true
+      } else return false
     } catch (e: any) {
       op.ko(e)
-      return
+      return false
     }
   }
 
-  async createByS (majorminor: string) {
+  async createByS (majorminor: string)  : Promise<boolean> {
+    this.byU = false
     const ui = stores.ui
     const op = new Operation('InvitCreateByS', this.svc, this.org)
     op.args['invObj'] = this.toObj
@@ -130,16 +143,20 @@ export class InvitationA {
       const res = await op.post()
       if (res.status !== 0) {
         await ui.diagDisplay($t('STINV_' + res.status))
-        return
+        return false
       }
-      await this.mdInvitSet(false)
+      if (await this.mdInvitSet(false)) {
+        ui.diagDisplay($t('INVop_1'), 2)
+        return true
+      } else return false
     } catch (e: any) {
       op.ko(e)
-      return
+      return false
     }
   }
 
-  async updateByS (majorminor: string, tab: string, etc: any) {
+  async updateByS (majorminor: string, tab: string, etc: any)  : Promise<boolean> {
+    this.byU = false
     const ui = stores.ui
     const op = new Operation('InvitUpdByS', this.svc, this.org)
     op.args['invitId'] = this.invitId
@@ -151,16 +168,48 @@ export class InvitationA {
       const res = await op.post()
       if (res.status !== 0) {
         await ui.diagDisplay($t('STINV_' + res.status))
-        return
+        return false
       }
-      await this.mdInvitSet(false)
+      if (await this.mdInvitSet(false)) {
+        ui.diagDisplay($t('INVop_1'), 2)
+        return true
+      } else return false
     } catch (e: any) {
       op.ko(e)
-      return
+      return false
     }
   }
 
-  /* Retourne un message d'erreur disant pourquoi l'utilisateur
+  async cancel ()  : Promise<boolean> {
+    const ui = stores.ui
+    const op = new Operation('InvitCancel', this.svc, this.org)
+    op.args['invObj'] = this.invitId
+    try {
+      const res = await op.post()
+      if (res.status !== 0) {
+        await ui.diagDisplay($t('STINV_' + res.status))
+        return false
+      }
+    } catch (e: any) {
+      op.ko(e)
+      return false
+    }
+    const mop = new MDOperation('$mdInvitDel')
+    mop.args['svc'] = this.svc
+    mop.args['org'] = this.org
+    mop.args['invitId'] = this.invitId
+    mop.args['userId'] = this.userId
+    try {
+      await mop.post()
+      ui.diagDisplay($t('INVop_3'), 2)
+      return true
+    } catch (e: any) {
+      mop.ko(e)
+      return false
+    }
+  }
+
+  /* Méthode "abstraite" : retourne un message d'erreur disant pourquoi l'utilisateur
   ne peut pas "valider / rejeter" l'invitation en status 1.
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
@@ -168,7 +217,10 @@ export class InvitationA {
     return { ok: false, txt: 'KO', role: '', docId: '' }
   }
 
-  async validate () {
+  /* Méthode "abstraite" : surchargée en fonction du "major" de l'invitation.
+  */
+  async validate () : Promise<boolean> {
+    return true
   }
 
   /* InvitList liste pour un sponsor les invitations enregistrées pour un "major"
@@ -177,7 +229,7 @@ export class InvitationA {
   Retourne une liste d'invitations 
   */
   static async InvitList (svc: string, org: string, major: string, minor: string) 
-    : Promise<[number, InvitationA[] | null]> {
+    : Promise<InvitationA[] | null> {
     const op = new Operation(svc, org)
     try {
       op.args['major'] = major
@@ -186,13 +238,14 @@ export class InvitationA {
       let ok = await op.sign('Org.manager')
       if (!ok) ok = await op.sign('Sponsor.', major)
       if (!ok && minor !== '') ok = await op.sign('Sponsor.', major + '/' + minor)
-      if (!ok) 
-        return [1, null]
-
+      if (!ok) {
+        await stores.ui.diagDisplay($t('Invcred'))
+        return null
+      }
       const res = await op.post() 
       if (res.status !== 0) {
-        await stores.ui.diagDisplay($t('MNOcred'))
-        return [res.status, null]
+        await stores.ui.diagDisplay($t('Invcred'))
+        return null
       }
       const lst: InvitationA[] = []
       for(const x of res.list) {
@@ -202,10 +255,10 @@ export class InvitationA {
         const inv = new InvitationA(obj)
         lst.push(inv)
       }
-      return [0, lst]
+      return lst
     } catch(e: any) {
       op.ko(e)
-      return [-1, null]
+      return null
     }
   }
 }

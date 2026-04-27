@@ -25,8 +25,8 @@ type InvitValOM = { // arguments de validation d'un Credential Org.manager
 export class Invitation extends InvitationA {
   static rnd: number = 0
 
-  constructor (svc: string, org: string, major: string, minor: string, tab: string) { 
-    super(svc, org, major, minor, tab)
+  constructor (svc: string, org: string, major: string, minor: string, tab: string, userId: string) { 
+    super({svc, org, major, minor, tab, userId})
   }
 
   /* Retourne un message d'erreur disant pourquoi le "sponsor"
@@ -60,26 +60,39 @@ export class Invitation extends InvitationA {
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
   */
-  async validate () {
-    console.log(this.invitId, this.major, 'validate')
-    switch (this.major) {
-      case 'Org.manager' : { await this.validate_orgManager(); return }
-      case 'Auteur' : { await this.validate_auteur(); return }
+  async validate () : Promise<boolean> {
+    const ui = stores.ui
+    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
+    const m = this['validate_' + s]
+    if (m) {
+      const err = await m()
+      if (err === 'ok') {
+        ui.diagDisplay($t('INVop_4'), 2)
+        return true
+      } else {
+        if (err !== 'ko') await ui.diagDisplay(err)
+        return false
+      }
+    } else {
+      await ui.diagDisplay($t('INVvalbug', [s]))
+      return false
     }
   }
 
-  async validate_orgManager () : Promise<void> {
+  async validate_Org_manager () : Promise<string> {
     const op = new Operation('InvitValidate', this.svc, this.org)
     try {
       op.args.invitId = this.invitId
+      op.args.validArgs = {}
       const res = await op.post()
+      return res.status === 0 ? 'ok' : $t('INVvalOMst_' + res.status)
     } catch (e) {
       op.ko(e)
+      return 'ko'
     }
-
   }
 
-  async validate_auteur () : Promise<void> {
+  async validate_Auteur () : Promise<string> {
     /* 
     Post: invVal avec les pemvA, pemvS, time des credentials
     Puis, enregistrement,
@@ -145,39 +158,21 @@ export class Invitation extends InvitationA {
         if (status !== 0)
           await stores.ui.diagDisplay($t('HPsfop_' + status))
       }
-
+      return 'ok'
     } catch(e) {
       op.ko(e)
+      return 'ko'
     }
   }
 
   /* Enregistre une invitation à un user pour être "manager" de l'organisation
-  (Créé une invitation non sollicitée.)
+  Depuis un administrateur seulement : créé une invitation non sollicitée
   */
-  static async NewManager (
-    svc: string, 
-    org: string,
-    tab: string,
-    userId: string, // id de la cible U
-    ) : Promise<number> {
-
-    const sf = stores.safe
-    const invit = new Invitation(svc, org, 'Org.manager', '', tab)
-    invit.initByS(userId)
-    await invit.signByS({})
-    const status = await sf.invitCreate(invit)
-    if (status !== 0) return status
-
-    const op = new MDOperation('$mdInvitNew')
-    op.args['invitId'] = invit.invitId
-    op.args['challenge'] = invit.challenge
-    op.args['sign'] = invit.sign
-    try {
-      const ret = await op.post()
-      return ret.status
-    } catch(e: any) {
-      op.ko(e)
-      return -1
+  static async NewManager (svc: string, org: string, tab: string, userId: string) : Promise<boolean> {
+    const invit = new Invitation(svc, org, 'Org.manager', '', tab, userId)
+    invit.etc = {
+      credId: Crypt.rnd(15)
     }
+    return await invit.createByS('')
   }
 }

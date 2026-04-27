@@ -71,6 +71,10 @@ class AOperation {
     if (this.background) e.background = true
     await stores.ui.displayExc(e)
   }
+
+  setArgs (args: any) {
+    for(const p of Object.keys(args)) this.args[p] = args[p]
+  }
 }
 
 /* Opération générique ******************************************/

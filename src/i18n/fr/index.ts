@@ -1037,7 +1037,6 @@ bla bla
   MNOtab2: 'Traiter les invitations',
   MNOtit1: 'Liste des managers de l\'organisation',
   MNOtit2: 'Traitement des invitations en attente',
-  MNOcred: 'Droit d\'accès insuffisant ("manager" ou "sponsor" requis)',
   MNOnoinvits: 'Pas d\'invitation trouvée',
   MNOsearch0: '(pas de recherche en cours)',
   MNOsearch1: 'Recherche en cours ...',
@@ -1046,6 +1045,21 @@ bla bla
 bla bla
 `,
   MNOinvalid: 'Un administrateur a révoqué certains de vos droits de "manager": ils vont être "nettoyés.',
+
+  STINV_1: 'Invitation inconnue (peut-être un BUG).',
+  STINV_2: 'Tentative d\'accès à une invitation qui n\'est pas la votre (peut-être un BUG).',
+  STINV_3: 'Tentative d\'accès à une invitation sans en avoir un droit de sponsoring (peut-être un BUG).',
+
+  INVop_1: 'Nouvelle invitation créée.',
+  INVop_2: 'Invitation mise à jour.',
+  INVop_3: 'Invitation supprimée.',
+  INVop_4: 'Invitation validée (et de fait supprimée).',
+
+  INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".',
+
+  INVvalbug: 'BUG : fonction de validation "{0}" non trouvée.',
+
+  INVcred: 'Droit d\'accès insuffisant ("manager" ou "sponsor" requis)',
 
   INVopret_1: '(BUG probable) - L\'invitation est inconnue.',
   INVopret_2: '(BUG probable) - Vous n\'avez aucun des droits d\'accès l\'autorisant.',
