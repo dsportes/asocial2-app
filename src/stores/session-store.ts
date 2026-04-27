@@ -30,8 +30,8 @@ export const useSessionStore = defineStore('session', () => {
   const opDialog = ref(false)
   const opSpinner = ref(0)
   const opSignal = ref(false)
-  let opTimer = null
-  let opTimer2 = null
+  let opTimer = 0
+  let opTimer2 = 0
 
   function opCount () {
     if (opTimer) clearTimeout(opTimer)
@@ -87,13 +87,13 @@ export const useSessionStore = defineStore('session', () => {
           subJSON.value = JSON.stringify(nsub)
           sessionId.value = Crypt.shaS(nsub.endpoint)
           console.log('subJSON: ' + subJSON.value.substring(0, 200))
-        } catch(e) {
+        } catch(e: any) {
           subJSON.value = '??? Souscription non obtenue - ' + e.message
           console.log('subJSON: ' + subJSON.value)
         }
       }
       registration.value.active.postMessage({ type: 'SETSTATE', location, APPNAME })
-    } catch(e) {
+    } catch(e: any) {
       subJSON.value = '??? Souscription non obtenue - ' + e.message
       console.log('subJSON: ' + subJSON.value)
     }

@@ -6,7 +6,7 @@ import { keyToB64 } from '../src-fw/b64'
 
 /* Credential en Safe */
 export class CredSafe {
-  static lp1 = [ 'svc', 'org', 'role', 'docId', 'privs', 'comment' ]
+  static lp1 = [ 'credId', 'svc', 'org', 'role', 'docId', 'privs', 'comment' ]
 
   credId: string = '' // ID du credential.
   svc: string = '' // code du service

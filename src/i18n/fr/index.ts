@@ -40,6 +40,7 @@ export default {
   operator_ph: '$RED',
   app: 'Application:',
   build: 'Build',
+  alias: 'Alias',
   services: 'Services : URL [API]',
   sessionid: 'Session ID:',
   userid: 'Utilisateur ID:',
@@ -199,7 +200,13 @@ export default {
   op_$SetOpUrl: 'Enregistrement de l\'URL d\'un service.',
   op_$mdUserNew: 'Enregistrement d\'un nouveau safe.',
   op_$GetSafe: 'Ouverture d\'une Safe Box.',
-
+  op_InvitCreateByS: 'Création d\'une invitation par un sponsor',
+  op_InvitCreateByU: 'Création d\'une invitation par l\'utilisateur',
+  op_InvitUpdByS: 'Mise à jour d\'une invitation par un sponsor',
+  op_InvitUpdByU: 'Mise à jour d\'une invitation par l\'utilisateur',
+  op_InvitCancel: 'Suppression d\'une invitation par l\'utilisateur',
+  op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
+  
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété non reconnue (phrase ou autre).',
@@ -340,6 +347,7 @@ export default {
   APoc_del: 'SUPPRIMER la configuration',
   APnolimit: '(illimité)',
   APdeclmgr: 'Déclaration d\'un nouveau "manager"',
+  APtab: 'Information à destination de cet utilisateur:',
   APlstmgr: 'Rafraîchir la liste des managers',
   APmgrnolst: 'La liste n\'est délivrée qu\'aux utilisateurs Administrateur Technique du service ou aux "managers" de l\'organisation.',
   APrevcfa_txt: `### Révoquer mon rôle de "manager" de cette organisation ...

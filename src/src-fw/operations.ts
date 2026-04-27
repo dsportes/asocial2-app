@@ -2,14 +2,12 @@
 // import { decode } from '@msgpack/msgpack'
 
 import { Operation } from './operation'
-import { $t } from '../src-fw/util'
+// import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
-import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
 
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
-import { Invitation } from '../app/invitation'
+import { InvitationA } from '../src-fw/invitationA'
 import { Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -219,16 +217,13 @@ export type ListMgrs = {
 
 export class ListManagers extends Operation {
   constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
-
-  async run (mgr?: boolean) : Promise<ListMgrs[] | undefined>{
+  async run () : Promise<ListMgrs[]>{
     try {
-      // if (mgr) this.sign('Org.manager')
       const res = await this.post()
-      const l = res['list'] as ListMgrs[]
-      const s = res['status']
-      return [s, l]
+      return res['list'] as ListMgrs[]
     } catch(e) {
       this.ko(e)
+      return []
     }
   }
 }
@@ -238,17 +233,12 @@ export class ListManagers extends Operation {
 export class InvitGet extends Operation {
   constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }
 
-  async run ( invitId: string ) : Promise<Invitation | null> {
+  async run ( invitId: string, userId: string ) : Promise<InvitationA | null> {
     try {
       this.args.invitId = invitId
+      this.args.userId = userId
       const res = await this.post()
-      if (!res.status) {
-        const inv = new Invitation()
-        await inv.fromList(res.invitation, this.args.org, this.SVC)
-        return inv
-      }
-      await stores.ui.diagDisplay($t('INVopret_' + res.status))
-      return null
+      return !res.invitation ? null : new InvitationA(res.invitation)
     } catch(e) {
       this.ko(e)
       return null

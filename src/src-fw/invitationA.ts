@@ -66,7 +66,7 @@ export class InvitationA {
 
   toObj () : Object {
     const x = {}
-    for (const p of InvitationA.p1) x[p] = this[p] || null
+    for (const p of InvitationA.p1) x[p] = this[p] || ( p === 'etc' ? null : '')
     return x
   }
 
@@ -136,8 +136,8 @@ export class InvitationA {
     this.byU = false
     const ui = stores.ui
     const op = new Operation('InvitCreateByS', this.svc, this.org)
-    op.args['invObj'] = this.toObj
-    if (this.minor !== 'Org.manager')
+    op.args['invObj'] = this.toObj()
+    if (this.major !== 'Org.manager')
       await op.sign('Sponsor.', majorminor)
     try {
       const res = await op.post()

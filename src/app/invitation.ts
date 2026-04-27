@@ -79,13 +79,35 @@ export class Invitation extends InvitationA {
     }
   }
 
+  /*
+  credId: string = '' // ID du credential.
+  svc: string = '' // code du service
+  org: string = '' // le code de l'organisation.
+  role: string = '' // docClass.role : un des codes de rôle connu du service.
+  docId: string = '' // identifiant du document cible du credential.
+  privs: string = '' // clé PRIVEE de signature en base64.
+  comment: string = '' // texte court libre de l'utilisateur.
+  recK: any = null // record libre (crypté par la clé K et en base64 en _safe_).
+  */
   async validate_Org_manager () : Promise<string> {
     const op = new Operation('InvitValidate', this.svc, this.org)
+    const { pub, priv } = await Crypt.getSVKeyPair()
     try {
       op.args.invitId = this.invitId
-      op.args.validArgs = {}
+      op.args.validArgs = { pubV: keyToB64(pub) }
       const res = await op.post()
-      return res.status === 0 ? 'ok' : $t('INVvalOMst_' + res.status)
+      if (res.status !== 0) return $t('INVvalOMst_' + res.status)
+      const credSafe = new CredSafe({
+        credId: this.etc.credId,
+        svc: this.svc,
+        org: this.org,
+        role: 'Sponsor.',
+        docId: 'Org.manager',
+        privs: keyToB64(priv)
+      })
+      credSafe.recK = null
+      const ret = stores.safe.createCred(credSafe)
+      return ret.status === 0 ? 'ok' : $t('STSF_', ret.status)
     } catch (e) {
       op.ko(e)
       return 'ko'
@@ -164,15 +186,17 @@ export class Invitation extends InvitationA {
       return 'ko'
     }
   }
+}
 
-  /* Enregistre une invitation à un user pour être "manager" de l'organisation
-  Depuis un administrateur seulement : créé une invitation non sollicitée
-  */
-  static async NewManager (svc: string, org: string, tab: string, userId: string) : Promise<boolean> {
-    const invit = new Invitation(svc, org, 'Org.manager', '', tab, userId)
-    invit.etc = {
-      credId: Crypt.rnd(15)
-    }
-    return await invit.createByS('')
+/* Enregistre une invitation à un user pour être "manager" de l'organisation
+Depuis un administrateur seulement : créé une invitation non sollicitée
+*/
+export const NewManager = async (svc: string, org: string, tab: string, userId: string, userName: string)
+ : Promise<boolean> => {
+  const invit = new Invitation(svc, org, 'Org.manager', '', tab, userId)
+  invit.etc = {
+    credId: Crypt.rnd(15),
+    name: userName
   }
+  return await invit.createByS('')
 }

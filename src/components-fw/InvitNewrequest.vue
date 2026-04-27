@@ -53,7 +53,7 @@ import { ref, reactive, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { InvitCreate } from '../src-fw/operations'
+// import { InvitCreate } from '../src-fw/operations'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -100,6 +100,7 @@ const reset = () => {
 reset()
 
 const create = async () => {
+  /*
   let status = -1
   const op = new InvitCreate(svcorg.SVC, svcorg.org.inp)
   const invit = await op.run(major.value.value, minor.inp, 
@@ -108,6 +109,7 @@ const create = async () => {
     status = await sf.invitCreate(invit)
   await ui.diagDisplay(status ? $t('INVcrko') : $t('INVcrok'))
   if (!status) reset()
+  */
 }
 </script>
 

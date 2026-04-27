@@ -37,7 +37,7 @@
     <div class="row q-mt-sm titre-sm text-italic">
       <q-icon name="delete" class="col-1" size="16px"/>
       <div class="col-3">ID</div>
-      <div class="col-4">{{$t('mtime')}}</div>
+      <div class="col-4">{{$t('alias')}}</div>
       <div class="col-4">{{$t('ltime')}}</div>
     </div>
     <scroll-area v-if="hasManagedOrgs || sf.auth.admins"
@@ -50,12 +50,8 @@
           <div v-else class="col-1"></div>
           <div v-if="m.userId === sf.userId" class="col-3 font-mono text-bold">({{$t('me')}})</div>
           <div v-else class="col-3 font-mono ellipsis">{{m.userId}}</div>
-          <div class="col-4">{{dhcool(m.time)}}</div>
+          <div class="col-4">{{m.name}}</div>
           <div class="col-4">{{m.limit ? dhcool(m.limit) : $t('APnolimit')}}</div>
-        </div>
-        <div class="row">
-          <div class="col-1"></div>
-          <div class="col-11 text-italic">{{m.cond.info}}</div>
         </div>
       </div>
     </scroll-area>
@@ -63,14 +59,14 @@
     <div v-if="sf.auth.admins && org.ok" class="q-my-md">
       <q-separator color="orange"/>
       <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
-      <security-site class="q-my-sm" v-model="areq.safeStore"/>
+      <input-b class="full-width" prefix="FCtarget" size="alias" noval
+        v-model="targetUser"/>
+      <div class="titre-md text-italic q-mt-md">{{ $t('APtab') }}</div>
+      <q-input class="q-pa-xs bord1 q-mb-md" v-model="tab" type="textarea" :rows="5"/>
 
-      <input-b class="full-width" prefix="FCtarget" size="p0" noval
-        v-model="areq.targetUser"/>
-      <div v-if="diagReq !== ''" class="q-my-sm msg2">{{diagReq}}</div>
       <div class="column items-center">
         <btn-cond :label="$t('APgrantmgr')" icon="check"
-          :disable="diagReq !== ''" @ok="grantManager"/>
+          :disable="targetUser.err !== ''" @ok="grantManager"/>
         <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
           :disable="!org.inp" @ok="dolist"/>
       </div>
@@ -91,14 +87,17 @@
 import { ref, computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { ICVS } from '../stores/safe-store'
+import { Crypt } from '../src-fw/crypt'
+import { MDOperation } from 'src/src-fw/operation'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
-import { NewManager, ListManagers, RevokeCred } from '../src-fw/operations'
+import { ListManagers, RevokeCred } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
+import { NewManager } from '../app/invitation'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import SecuritySite from '../components-fw/SafestoreSelect.vue'
+// import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
@@ -116,12 +115,10 @@ watch(() => sf.mySafeCreds, () => {
 
 const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 const svcOrg = ref()
-const lstMgr = ref([])
+const lstMgr = ref([]) // {credId userId limit name} []
 
-const areq = reactive({
-  targetUser: { inp: '', err: ''},
-  safeStore: ''
-})
+const targetUser = reactive({ inp: '', err: ''})
+
 const org = reactive({ inp: session.currentOrg || '', err: '', ok: false })
 
 const arDone = ref(new Set()) // id des creds DEJA auto-révoqués
@@ -142,9 +139,11 @@ watch(lstMgr, async (l) => {
     }
   }
   if (!lx.length) return
+  /*
   await ui.diagDisplay($t('MNOinvalid'))
   await sf.autoRevokeCreds(lx)
   await dolist()
+  */
 })
 
 watch(() => org.inp, async (x) => {
@@ -161,9 +160,7 @@ const dolist = async () => {
   lstMgr.value = []
   const op = sf.auth.admins ? new ListManagers(ui.adminPage.SVC, org.inp)
     : new ListManagers(svcOrg.value.svc, svcOrg.value.org)
-  const [s, l] = await op.run(true) as [string, any]
-  if (s) await ui.diagDisplay($t('APmgrnolst'))
-  lstMgr.value = l || []
+  lstMgr.value = await op.run()
 }
 
 watch(svcOrg, async (x) => {
@@ -171,30 +168,28 @@ watch(svcOrg, async (x) => {
   else lstMgr.value = []
 })
 
-const diagReq = computed(() => {
-  if (areq.targetUser.err) return $t('APdiagtarget')
-  return ''
-})
+const tab = ref('')
 
 const resetAreq = () => {
-  areq.targetUser.inp = ''
-  areq.targetUser.err = ''
-  areq.safeStore = ''
+  targetUser.inp = ''
+  targetUser.err = ''
+  tab.value = ''
 }
 
 const grantManager = async () => {
-  // TODO mdUserGetICVS icvo
-  const targetId = areq.targetUser.inp
-  const icvs = await sf.getUserICVS(areq.safeStore, targetId) as ICVS
+  const targetId = targetUser.inp
+  const sha = await Crypt.strongHash(targetId, false, true)
+  const op = new MDOperation('$mdUserGetICVS')
+  op.args['userId'] = Crypt.shaS(sha)
+  const ret = await op.post() as ICVS
+  const icvs = ret ? ret['icvs'] : null
   if (!icvs) {
     await ui.diagDisplay($t('APnouser'))
     return
   }
-  const ok = await NewManager(ui.adminPage.SVC, org.inp, areq.safeStore, icvs.i, icvs.c)
-  if (!ok) {
-    await ui.diagDisplay($t('APkomanager'))
-  } else {
-    await ui.diagDisplay($t('APokmanager'))
+  // (svc: string, org: string, tab: string, userId: string)
+  const ok = await NewManager(ui.adminPage.SVC, org.inp, tab.value, icvs.i, targetId)
+  if (ok) {
     await dolist()
     resetAreq()
   }

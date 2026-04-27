@@ -47,11 +47,6 @@ const sf = stores.safe
 const emit = defineEmits(['close', 'done'])
 const model = defineModel()
 
-watch(model, (v) => {
-  if(v) init()
-  else emit('close', true)
-})
-
 const newDev = ref(false)
 const devName = reactive({ inp: '', err: '' })
 const newPIN = reactive({ inp: '', err: '' })
@@ -64,6 +59,11 @@ const init = () => {
   devName.inp = newDev.value ? '' : sf.devName
   newPseudo.inp = t ? t.pseudo : sf.auth.pseudo
 }
+watch(model, (v) => {
+  if(v) init()
+  else emit('close', true)
+})
+init()
 
 const dup = computed(() => {
   let b = false

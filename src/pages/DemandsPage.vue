@@ -41,7 +41,7 @@ import { ref, watch } from 'vue'
 
 import stores from '../stores/all'
 import { Sponsoring } from '../stores/safe-store'
-import { InvitList } from '../src-fw/operations'
+// import { InvitList } from '../src-fw/operations'
 import { $t, dkli } from '../src-fw/util'
 
 import InvitLine from '../components-fw/InvitLine.vue'
@@ -89,6 +89,7 @@ const onUpdate = () => {
 
 // Recalage du courant/zoomé de la liste sur sa nouvelle position après refresh
 const getInvits2 = async (sp: Sponsoring) => {
+  /*
   const acId = ui.currentInvit.invit.invitId
   const op = new InvitList(sp.svc, sp.org)
   invits.value = await op.run(sp.major, sp.minor, sp.isSp)
@@ -102,6 +103,7 @@ const getInvits2 = async (sp: Sponsoring) => {
   else if (invits.value.length) {
     zoom(invits.value[0], 0)
   }
+  */
 }
 
 watch(() => ui.demandsPage.time, async () => {
@@ -111,6 +113,7 @@ watch(() => ui.demandsPage.time, async () => {
 
 // Réinit d'un parcours de la liste récupérée (aucun n'est courant/zoomé)
 const getInvits = async (sp: Sponsoring) => {
+  /*
   search.value = 1
   invits.value = []
   const op = new InvitList(sp.svc, sp.org)
@@ -123,6 +126,7 @@ const getInvits = async (sp: Sponsoring) => {
   u.fnnav = nav
   u.invit = null
   u.inv = null
+  */
 }
 
 </script>
