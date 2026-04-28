@@ -1107,10 +1107,13 @@ bla bla
   INVx_label: 'Label associé:',
   INVx_me: 'Je suis le sponsor ayant traité la demande',
   INVx_tab: 'Ardoise partagée utilisateur / sponsor(s)',
+  INVx_opts: 'Options de l\'invitation',
+  INVx_none: '#### (aucune)',
   INVxnotv_s: 'Version pas encore consultée par l\'utilisateur.',
   INVxnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
+  INVnchU: 'Vous n\'avez par édité l\'ardoise, il n\'y a rien à enregistrer.',
   INVbtn_val: 'Valider',
-  INVbtn_cor: 'Corriger',
+  INVbtn_rec: 'Enregistrer',
   INVbtn_del: 'Renoncer et supprimer',
 
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
@@ -1174,17 +1177,38 @@ bla bla
 bla bla
 `,
   INVrec: 'Enregistrer la demande',
-  INVcancelCf_txt: `### Supprimer cette demande d'invitation.
-En cas de confirmation,
-- cette demande apparaitra comme **Annulée** pendant quelques jours,
-- ne pourra pas être réactivé ni traitée par un _sponsor_,
-- puis disparitra définitivement.
 
-Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par un _sponsor_ qui l'acceptera et la traitera ou la rejetera.
+  INVvalCf_tit: 'Valider cette invitation ?',
+  INVvalCf_txt: `### Valider cette invitation.
+En cas de confirmation, l\'invitation sera validée selon les termes affichés puis supprimée.
+
+Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
+`, 
+  INVvalCf_0: 'Je la laisse vivre encore (sans la valider)',
+  INVvalCf_1: 'Je la VALIDE',
+
+  INVrecCf_tit: 'Confimer ce changement ?',
+  INVrecCf_txt: `### Confimer ce changement
+En cas de confirmation, 
+- l'ardoise de l\'invitation sera modifiée,
+- la durée de vie de l'invitation sera prolongée,
+- ça laissera le temps à un _sponser_ de faire une nouvelle (ou première) proposition d'invitation.
+
+Sinon ce dialogue s'effacera et l'invitation continuera d'exister telle quelle (du moins quelques jours).
+`, 
+  INVrecCf_0: 'Je renonce aux modifications de l\'ardoise',
+  INVrecCf_1: 'Je confirme vouloir les enregistrer',
+
+  INVcancelCf_txt: `### Supprimer cette invitation.
+En cas de confirmation,
+- elle disparaitra définitivement,
+- elle ne pourra pas être réactivée ni traitée par un _sponsor_.
+
+Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
 `,
-  INVcancelCf_tit: 'Supprimer la demande ?',
-  INVcancelCf_0: 'Je laisse ma demande vivante',
-  INVcancelCf_1: 'Je supprime ma demande d\'invitation',
+  INVcancelCf_tit: 'Supprimer cette invitation ?',
+  INVcancelCf_0: 'Je la laisse vivante',
+  INVcancelCf_1: 'Je la supprime',
   INVsponsor_0: 'Vous n\'avez pas les droits requis pour traiter cette demande d\'invitation.',
   INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
   INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
@@ -1309,6 +1333,10 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.
 - il a un droit d'accès **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
 - il a un droit d'accès **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
+`,
+  INVvalidable: `### Une demande d'invitation peut être validée ...
+par l'utilisateur concerné quand un sponsor a traité la demande (ou proposer de lui-même une invitation.
+Quand une demande est validable, ses options retenues (s'il y en a) sont affichées ci-dessous.
 `,
   INVauteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
   INVauteur_1: 'SANS création de droit d\'accès de "sponsoring"',

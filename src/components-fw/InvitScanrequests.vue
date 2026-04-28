@@ -128,6 +128,7 @@ const init = async () => {
   u.zoomed = false
   u.invit = null
   u.inv = null
+  u.newTab = ''
   u.idx = 0
   u.nb = invits.value.length
   u.fnnav = nav

@@ -170,6 +170,7 @@ export const useUiStore = defineStore('ui', () => {
     zoomed: false,
     invit: null, // Invitation (service)
     inv: null, // Invit (safe)
+    newTab: '',
     idx: 0,
     nb: 0,
     fnnav: null,

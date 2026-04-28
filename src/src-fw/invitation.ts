@@ -215,7 +215,7 @@ export class Invitation {
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
   async msgVal () : Promise<MsgVal> {
-    return Major.msgVal(this)
+    return await Major.msgVal(this)
   }
 
   editEtc () : string {

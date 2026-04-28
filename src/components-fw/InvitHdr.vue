@@ -12,78 +12,67 @@
       </div>
       <div v-else class="col titre-md text-italic diag">{{$t('INVnotfound')}}</div>
 
+    </q-toolbar>
+    <q-toolbar class="tbs dense row items-center">
+      <q-space/>
       <!-- L'utilisateur peut ANNULER sa demande-->
-      <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 1" 
-        :label="$t('INVac_an')" icon="delete" class='col-auto q-ml-xs'
+      <btn-cond v-if="isU" 
+        :label="$t('INVbtn_del')" icon="delete" class='col-auto q-ml-xs'
         @ok="dialogs.confirmcancel = true"/>
 
-      <!-- UN sponsor peut ACCEPTER et transformer la demande en invitation 
-        QUI est un SPONSOR autorisé à traiter la demande dépend de l'application 
-        Au mlieu de valider il peut aussi REJETER la demande -->
-      <btn-cond v-if="model.invit && model.invit.status === 1 && msgVal.ok" 
-        :label="$t('INVac_ac')" icon="check" class="col-auto  q-ml-xs"
-        @ok="dialogs.accept = true"/>
-      <btn-cond v-if="model.invit && model.invit.status === 1 && msgVal.ok" 
-        :label="$t('INVac_re')" icon="close" color="warning" class='col-auto q-ml-xs'
-        @ok="dialogs.reject = true"/>
+      <!-- L'utilisateur peut éditer sa demande-->
+      <btn-cond v-if="isU && !chgU"
+        :label="$t('INVbtn_rec')" icon="check" class="col-auto  q-ml-xs"
+        @ok="nothingToSave"/>
 
-      <!-- L'utilisateur peut VALIDER ou DECLINER une invitation validée par un sponsor -->
-      <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 2" 
-        :label="$t('INVac_de')" icon="close" color="warning" class='col-auto q-ml-xs'
-        @ok="dialogs.decline = true"/>
-      <btn-cond v-if="model.invit && model.invit.isU && model.invit.status === 2" 
-        :label="$t('INVac_va')" icon="check" class='col-auto q-ml-xs'
-        @ok="doValidate"/>
+      <btn-cond v-if="isU && chgU"
+        :label="$t('INVbtn_rec')" icon="check" class="col-auto  q-ml-xs"
+        @ok="dialogs.confirmrec = true"/>
+
+      <!-- L'utilisateur peut valider sa demande-->
+      <btn-cond v-if="isU"  :disable=" model.invit.etc === null"
+        :label="$t('INVbtn_val')" icon="check" class="col-auto  q-ml-xs"
+        @ok="dialogs.confirmval = true"/>
+
+      <!-- un sponsor peut traiter la demande -->
+      <btn-cond v-if="!isU && msgVal.ok" 
+        :label="$t('INVbtn_edt')" icon="edit" class="col-auto  q-ml-xs"
+        @ok="dialogs.editS = true"/>
 
     </q-toolbar>
 
-    <div v-if="model.invit && model.invit.status === 1" class="row items-start">
+    <div v-if="!isU" class="row items-start">
       <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
       <div :class="msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
         {{msgVal.txt}}
       </div>
     </div>
+
+    <div v-if="isU" class="row items-start">
+      <btn-bubble :text="$t('INVvalidable')" class="q-mr-md col-auto"/>
+      <div :class="model.invit.etc !== null ? 'col titre-md text-italic' : 'col titre-md msg'">
+        {{$t('INVval_' + (model.invit.etc !== null ? 'y' : 'n'))}}
+      </div>
+    </div>
   </div>
 
-  <dialog-std0 v-model="dialogs.reject" :title="$t('INVac_rej_1')" vue="InvitHdr"
-    @close="txt = ''">
-    <template #hdr>
-      <div class="row justify-between">
-        <div class="titre-md text-italic">{{$t('INVac_rej_2', [min])}}</div>
-        <btn-cond color="warning" :label="$t('INVac_re')"
-          :disable="txt.length < min"
-          @ok="doReject"/>
-      </div>
-    </template>
-    <template #default>
-      <q-input class="q-my-sm q-pa-xs bord1" v-model="txt" type="textarea"
-        borderless :rows="8"/>
-    </template>
-  </dialog-std0>
-
-  <dialog-std0 v-model="dialogs.decline" :title="$t('INVac_dec_1')" vue="InvitHdr"
-    @close="txt = ''">
-    <template #hdr>
-      <div class="row justify-between">
-        <div class="titre-md text-italic">{{$t('INVac_dec_2', [min])}}</div>
-        <btn-cond color="warning" :label="$t('INVac_de')"
-          :disable="txt.length < min"
-          @ok="doDecline"/>
-      </div>
-    </template>
-    <template #default>
-      <q-input class="q-pa-xs bord1" v-model="txt" type="textarea"
-        borderless :rows="5"/>
-    </template>
-  </dialog-std0>
-
-  <invit-acceptation v-if="dialogs.accept" v-model="dialogs.accept" :invit="model.invit"
-    @done="doAccept" @close="dialogs.accept = false"/>
+  <invit-acceptation v-if="dialogs.editS" v-model="dialogs.editS" :invit="model.invit"
+    @done="doAccept" @close="dialogs.editS = false"/>
 
   <choose-it v-model="dialogs.confirmcancel"
     prefix="INVcancelCf" options="pw" 
     @giveup="dialogs.cancel = false"
     @option="doConfirmCancel"/>
+
+  <choose-it v-model="dialogs.confirmval"
+    prefix="INVvalCf" options="pw" 
+    @giveup="dialogs.confirmval = false"
+    @option="doConfirmVal"/>
+
+  <choose-it v-model="dialogs.confirmrec"
+    prefix="INVrecCf" options="pw" 
+    @giveup="dialogs.confirmrec = false"
+    @option="doConfirmRec"/>
 </div>
 </template>
 
@@ -93,32 +82,40 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 
 import stores from '../stores/all'
 
-import { $t, dhcool } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import NavBar from '../components-fw/NavBar.vue'
 
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import InvitAcceptation from '../components/InvitAcceptation.vue'
 
 const min = 10
 
 const ui = stores.ui
+const sf = stores.safe
 
 const model = defineModel()
 
-const msgVal = ref({ ok: false, txt: 'KO' })
+const isU = computed(() => model.value.invit && model.value.invit.userId === sf.userId)
+const chgU = computed(() => isU.value && model.value.newTab 
+  && model.value.newTab !== model.value.invit.tab
+)
 
-const doMsgVal = async () => {
-  if (model.value.invit && model.value.invit.status === 1)
-    msgVal.value = await model.value.invit.msgVal()
+const nothingToSave = async () => {
+  ui.diagDisplay($t('INVnchU'), true)
 }
 
-onMounted(async () => { await doMsgVal() })
+const msgVal = ref({ ok: false, txt: 'KO' })
 
-watch(() => model.value.invit, async () => { await doMsgVal() })
+const init = async () => {
+  if (!isU.value) msgVal.value = await model.value.invit.msgVal()
+}
+
+onMounted(async () => { await init() })
+
+watch(() => model.value.invit, async () => { await init() })
 
 const nav = (n) => {
   const f = model.value['fnnav']
@@ -126,7 +123,7 @@ const nav = (n) => {
 }
 
 const dialogs = reactive({ 
-  accept: false, reject: false, confirmcancel: false, decline: false
+  confirmrec: false, confirmval: false, confirmcancel: false, editS: false
 })
 
 const txt = ref('')
@@ -134,33 +131,28 @@ const txt = ref('')
 // Confirmation de cancel
 const doConfirmCancel = async (n) => {
   if (n === 1) {
-    await model.value.invit.cancel()
-    onUpdate()
+    // TODO
+    // await model.value.invit.cancel()
+    // onUpdate()
   }
 }
 
-const doReject = async () => {
-  dialogs.reject = false; 
-  await model.value.invit.reject(txt.value, msgVal.value)
-  onUpdate()
+// Confirmation de validation
+const doConfirmVal = async (n) => {
+  if (n === 1) {
+    // TODO
+    // await model.value.invit.cancel()
+    // onUpdate()
+  }
 }
 
-const doDecline = async () => {
-  dialogs.decline = false
-  await model.value.invit.decline(txt.value)
-  onUpdate()
-}
-
-// Retour du "done" du dialogue spécifique accept
-const doAccept = async (arg) => { // [accept, txt]
-  await model.value.invit.accept(arg[0], arg[1], msgVal.value)
-  dialogs.accept = false
-  onUpdate()
-}
-
-const doValidate = async () => {
-  await model.value.invit.validate()
-  onUpdate()
+// Confirmation de validation
+const doConfirmRec = async (n) => {
+  if (n === 1) {
+    // TODO
+    // await model.value.invit.cancel()
+    // onUpdate()
+  }
 }
 
 const onUpdate = () => {

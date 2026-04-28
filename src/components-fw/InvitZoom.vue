@@ -1,7 +1,7 @@
 <template>
-<div class="q-pt-lg">
+<div>
   <div v-if="notView && model.invit.userId !== sf.userId" 
-    class='titre-md text-bold text-warning text-italic q-mr-md'>
+    class='titre-md text-bold text-warning text-italic'>
     {{$t('INVxnotv_s')}}</div>
 
   <div class="row q-mt-sm items-center">
@@ -10,19 +10,14 @@
   </div>
   
   <div class="row q-mt-sm items-center">
-    <div class='titre-md text-italic q-mr-md'>
-      <span>{{$t('INVbyU')}}</span>
-      <span class="q-ml-md text-bold">{{$t('INVbyU_' + (model.invit.byU ? 't' : 'f'))}}</span>
-    </div>
+    <div class='titre-md text-italic q-mr-md'>{{$t('INVbyU')}}</div>
+    <div class="text-bold">{{$t('INVbyU_' + (model.invit.byU ? 't' : 'f'))}}</div>
   </div>
 
   <div class="q-mt-sm row items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_v')}}</div>
     <div class='font-mono'>{{dhcool(model.invit.v)}}</div>
   </div>
-
-  <div class='titre-md text-italic q-mt-sm q-mr-md'>
-    {{ $t('INVval_' + (model.invit.etc === null ? 'n' : 'y')) }}</div>
 
   <div v-if="model.invit.minor" class="q-mt-sm row items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_minor')}}</div>
@@ -36,8 +31,14 @@
   </div>
 
   <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_tab')}}</div>
-  <md-editor class="full-width q-pa-xs" v-model="newTab"
+  <md-editor class="full-width q-pa-xs" v-model="model.newTab"
     :texte="model.invit.tab" editable modetxt/>
+
+  <div v-if="model.invit.etc !== null">
+    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_opts')}}</div>
+    <scroll-md class="full-width bord1 q-pa-xs" height="100px" 
+      :text="opts" />
+  </div>
 
 </div>
 </template>
@@ -49,7 +50,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
 
 import { $t, dhcool } from '../src-fw/util'
-// import ScrollMd from '../components-fw/ScrollMd.vue'
+import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import { MDOperation } from 'src/src-fw/operation'
 const sf = stores.safe
@@ -65,6 +66,12 @@ const newTab = ref()
 watch(newTab, (v) => {
   console.log(v)
 })
+
+const opts = ref()
+{
+  const x = model.value.invit ? model.value.invit.editEtc() : ''
+  opts.value = x || $t('INVx_none')
+}
 
 if (notView.value && model.value.invit.userId === sf.userId) 
   onMounted(async () =>{
