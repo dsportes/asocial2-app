@@ -2,11 +2,12 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { Crypt } from './crypt'
-import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from './b64'
 
 import stores from '../stores/all'
-import { MDOperation, Operation } from '../src-fw/operation'
-import { $t } from '../src-fw/util'
+import { MDOperation, Operation } from './operation'
+import { $t } from './util'
+import { Major } from '../app/major'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -34,7 +35,7 @@ export type InvObj = {
 
 /* ### Document `Invitation` dans la base du service
 */
-export class InvitationA {
+export class Invitation {
   svc: string = '' // service d'ou l'invitation a été lue (ou préparée à la création)
   org: string = '' // organisation d'ou l'invitation a été lue (ou préparée à la création)
   v?: number = 0 // (lue du service) date-heure de sa dernière évolution, que soit par U ou par un des sponsors.
@@ -66,7 +67,7 @@ export class InvitationA {
 
   toObj () : Object {
     const x = {}
-    for (const p of InvitationA.p1) x[p] = this[p] || ( p === 'etc' ? null : '')
+    for (const p of Invitation.p1) x[p] = this[p] || ( p === 'etc' ? null : '')
     return x
   }
 
@@ -214,52 +215,87 @@ export class InvitationA {
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
   async msgVal () : Promise<MsgVal> {
-    return { ok: false, txt: 'KO', role: '', docId: '' }
+    return Major.msgVal(this)
   }
 
-  /* Méthode "abstraite" : surchargée en fonction du "major" de l'invitation.
+  editEtc () : string {
+    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
+    const m = Major['editEtc_' + s]
+    return m ? m(this) : ''
+  }
+
+  /* Méthode "abstraite" : surchargée en fonction du 
+  "major" de l'invitation. Par exemple:
+  - enregistrement d'un credential résultant de l'invitation
   */
   async validate () : Promise<boolean> {
-    return true
-  }
-
-  /* InvitList liste pour un sponsor les invitations enregistrées pour un "major"
-  - soit toutes, avec le credential 'Org.manager' ou 'Sponsor.major'
-  - soit uniquement celles du "minor" indiqué pour un 'Sponsor.minor'
-  Retourne une liste d'invitations 
-  */
-  static async InvitList (svc: string, org: string, major: string, minor: string) 
-    : Promise<InvitationA[] | null> {
-    const op = new Operation(svc, org)
-    try {
-      op.args['major'] = major
-      op.args['minor'] = minor
-
-      let ok = await op.sign('Org.manager')
-      if (!ok) ok = await op.sign('Sponsor.', major)
-      if (!ok && minor !== '') ok = await op.sign('Sponsor.', major + '/' + minor)
-      if (!ok) {
-        await stores.ui.diagDisplay($t('Invcred'))
-        return null
+    const ui = stores.ui
+    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
+    const m = Major['validate_' + s]
+    if (m) {
+      const err = await m(this)
+      if (err === 'ok') {
+        ui.diagDisplay($t('INVop_4'), 2)
+        return true
+      } else {
+        if (err !== 'ko') await ui.diagDisplay(err)
+        return false
       }
-      const res = await op.post() 
-      if (res.status !== 0) {
-        await stores.ui.diagDisplay($t('Invcred'))
-        return null
-      }
-      const lst: InvitationA[] = []
-      for(const x of res.list) {
-        const obj = decode(x) as InvObj
-        obj.svc = svc
-        obj.org = org
-        const inv = new InvitationA(obj)
-        lst.push(inv)
-      }
-      return lst
-    } catch(e: any) {
-      op.ko(e)
-      return null
+    } else {
+      await ui.diagDisplay($t('INVvalbug', [s]))
+      return false
     }
   }
 }
 
+/* Enregistre une invitation à un user pour être "manager" de l'organisation
+Depuis un administrateur seulement : créé une invitation non sollicitée
+*/
+export const NewManager = async (svc: string, org: string, tab: string, userId: string, userName: string)
+ : Promise<boolean> => {
+  const invit = new Invitation({svc, org, major: 'Org.manager', minor: '', tab, userId})
+  invit.etc = {
+    credId: Crypt.rnd(15),
+    name: userName
+  }
+  return await invit.createByS('')
+}
+
+/* InvitList liste pour un sponsor les invitations enregistrées pour un "major"
+- soit toutes, avec le credential 'Org.manager' ou 'Sponsor.major'
+- soit uniquement celles du "minor" indiqué pour un 'Sponsor.minor'
+Retourne une liste d'invitations 
+*/
+export const InvitList = async (svc: string, org: string, major: string, minor: string) 
+  : Promise<Invitation[] | null> => {
+  const op = new Operation(svc, org)
+  try {
+    op.args['major'] = major
+    op.args['minor'] = minor
+
+    let ok = await op.sign('Org.manager')
+    if (!ok) ok = await op.sign('Sponsor.', major)
+    if (!ok && minor !== '') ok = await op.sign('Sponsor.', major + '/' + minor)
+    if (!ok) {
+      await stores.ui.diagDisplay($t('Invcred'))
+      return null
+    }
+    const res = await op.post() 
+    if (res.status !== 0) {
+      await stores.ui.diagDisplay($t('Invcred'))
+      return null
+    }
+    const lst: Invitation[] = []
+    for(const x of res.list) {
+      const obj = decode(x) as InvObj
+      obj.svc = svc
+      obj.org = org
+      const inv = new Invitation(obj)
+      lst.push(inv)
+    }
+    return lst
+  } catch(e: any) {
+    op.ko(e)
+    return null
+  }
+}

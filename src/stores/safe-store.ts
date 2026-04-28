@@ -862,13 +862,11 @@ export const useSafeStore = defineStore('safe', () => {
         lst.push({ svc: c.svc, org: c.org, major: '', minor: '', isSp: false})
       else if (c.role === 'Sponsor.') {
         const i = c.docId.indexOf('/')
-        if (i === -1)
-          lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
-        else
-          lst.push({ svc: c.svc, org: c.org,
-            major: c.docId.substring(0, i) || '',
-            minor: c.docId.substring(i + 1) || '',
-            isSp: true })
+        if (i === -1) lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
+        else lst.push({ svc: c.svc, org: c.org,
+          major: c.docId.substring(0, i) || '',
+          minor: c.docId.substring(i + 1) || '',
+          isSp: true })
       }
     }
     for(const s of lst)

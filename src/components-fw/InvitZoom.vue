@@ -1,89 +1,84 @@
 <template>
-<div>
+<div class="q-pt-lg">
+  <div v-if="notView && model.invit.userId !== sf.userId" 
+    class='titre-md text-bold text-warning text-italic q-mr-md'>
+    {{$t('INVxnotv_s')}}</div>
 
   <div class="row q-mt-sm items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_major')}}</div>
-    <div class='font-mono'>{{$t('INV_' + model.major)}}</div>
+    <div class='font-mono'>{{$t('INV_' + model.invit.major)}}</div>
   </div>
   
   <div class="row q-mt-sm items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_status')}}</div>
-    <div class="row items-center">
-      <q-icon v-if="model.status <= 2"
-        name="hourglass_empty" size="24px" color="primary"/>
-      <q-icon v-if="model.status === 2"
-        name="check_circle" size="24px" color="none"/>
-      <q-icon v-if="model.status === 4"
-        name="check_circle" size="24px" color="green-5"/>
-      <q-icon v-if="model.status === 6"
-        name="close" size="24px" color="warning"/>
-      <q-icon v-if="model.status === 3 || model.status === 5"
-        name="close" size="24px" color="negative"/>
-      <div class="font-mono">{{$t('INVst_' + model.status)}}</div>
+    <div class='titre-md text-italic q-mr-md'>
+      <span>{{$t('INVbyU')}}</span>
+      <span class="q-ml-md text-bold">{{$t('INVbyU_' + (model.invit.byU ? 't' : 'f'))}}</span>
     </div>
   </div>
 
-  <div v-if="model.minor" class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_minor')}}</div>
-    <div class='font-mono'>{{model.minor}}</div>
+  <div class="q-mt-sm row items-center">
+    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_v')}}</div>
+    <div class='font-mono'>{{dhcool(model.invit.v)}}</div>
   </div>
 
-  <div class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_time')}}</div>
-    <div class='font-mono'>{{dhcool(model.time * 1000)}}</div>
+  <div class='titre-md text-italic q-mt-sm q-mr-md'>
+    {{ $t('INVval_' + (model.invit.etc === null ? 'n' : 'y')) }}</div>
+
+  <div v-if="model.invit.minor" class="q-mt-sm row items-center">
+    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_minor')}}</div>
+    <div class='font-mono'>{{model.invit.minor}}</div>
   </div>
 
   <div class="q-mt-sm row items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_user')}}</div>
-    <span class="q-ml-xs font-mono">{{model.userId}}</span>
-    <span v-if="model.isU" class="q-ml-xs font-mono">({{$t('me')}})</span>
-    <span v-if="model.safeStore" class="q-ml-md font-mono">[{{model.safeStore}}]</span>
+    <span class="q-ml-xs font-mono">{{model.invit.userId}}</span>
+    <span v-if="model.invit.userId === sf.userId" class="q-ml-xs font-mono">({{$t('me')}})</span>
   </div>
 
-  <div v-if="model.label" class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_label')}}</div>
-    <div class='font-mono'>{{model.label}}</div>
-  </div>
-
-  <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtm')}}</div>
-  <!--q-input class="q-pa-xs bord1" v-model="model.txtm" type="textarea"
-    readonly borderless :rows="5"/-->
-  <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtm" />
-
-
-  <div v-if="model.status > 1 && model.status !== 6 && (model.isSP || model.isU)">
-    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_me')}}</div>
-    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txti')}}</div>
-    <scroll-md class="full-width bord1 q-pa-xs" height="200px" :text="model.txti" />
-  </div>
-
-  <div v-if="model.status === 5">
-    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_txtx')}}</div>
-    <scroll-md class="full-width bord1 q-pa-xs" height="100px" :text="model.txtx" />
-  </div>
-
-  <div v-if="(model.status === 2 || model.status >= 4) && (model.isSP || model.isU)"
-    class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_cred')}}</div>
-    <div class='font-mono'>
-      <span>{{model.role}}</span>
-      <span v-if="model.docId" class="q-ml-md">[{{model.docId}}]</span>
-    </div>
-  </div>
+  <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_tab')}}</div>
+  <md-editor class="full-width q-pa-xs" v-model="newTab"
+    :texte="model.invit.tab" editable modetxt/>
 
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-//import { watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+
+import stores from '../stores/all'
 
 import { $t, dhcool } from '../src-fw/util'
-import ScrollMd from '../components-fw/ScrollMd.vue'
+// import ScrollMd from '../components-fw/ScrollMd.vue'
+import MdEditor from '../components-fw/MdEditor.vue'
+import { MDOperation } from 'src/src-fw/operation'
+const sf = stores.safe
+const ui = stores.ui
 
 const model = defineModel()
 
+const notView = computed(() => model.value.inv.lv < model.value.invit.v )
 // watch(model, (v) => { console.log(v.userId) })
+
+const newTab = ref()
+
+watch(newTab, (v) => {
+  console.log(v)
+})
+
+if (notView.value && model.value.invit.userId === sf.userId) 
+  onMounted(async () =>{
+    await ui.diagDisplay($t('INVxnotv_u'), true)
+    const op = new MDOperation('$mdInvitUpdLV')
+    op.args.invitId = model.value.invit.invitId
+    op.args.userId = model.value.invit.userId
+    try {
+      await op.post()
+      model.value.inv.lp = model.value.inv.v // pas très réglo !
+    } catch(e: any) {
+      console.log(e.toString())
+    }
+  })
 
 </script>
 

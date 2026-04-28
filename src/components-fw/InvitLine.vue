@@ -1,27 +1,22 @@
 <template>
   <div :class="clinv" @click="emit('zoom', model)">
     <div class="row full-width">
-      <div class="col-2 row items-center">
-        <q-icon v-if="model.status <= 2"
-          name="hourglass" size="24px" color="primary"/>
-        <q-icon v-if="model.status === 2"
-          name="check_circle" size="24px" color="none"/>
-        <q-icon v-if="model.status === 4"
+      <div class="col-1 row items-center">
+        <q-icon v-if="model.etc !== null"  
           name="check_circle" size="24px" color="green-5"/>
-        <q-icon v-if="model.status === 6"
-          name="close" size="24px" color="warning"/>
-        <q-icon v-if="model.status === 3 || model.status === 5"
-          name="close" size="24px" color="negative"/>
-        <div class="font-mono">{{$t('INVst_' + model.status)}}</div>
       </div>
-      <div class="col-4">{{dhcool(model.time * 1000)}}</div>
+      <div class="col-1 row items-center">
+        <q-icon v-if="model.byU"
+          name="person" size="24px" color="primary"/>
+      </div>
+      <div class="col-4">{{dhcool(model.v)}}</div>
+      <div class="col-3 ellipsis text-right text-bold">{{$t('INV_' + model.major)}}</div>
       <div class="col-3 text-center">{{ model.minor || '-'}}</div>
-      <div class="col-3 text-center">{{ model.label || '(na)'}}</div>
     </div>
     <div class="row full-width">
       <div class="col-2"></div>
       <div class="col-10 text-italic ellipsis">
-        {{ model.txtx || model.txtm }}
+        {{ model.tab }}
       </div>
     </div>
   </div>

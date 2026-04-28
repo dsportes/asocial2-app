@@ -9,34 +9,22 @@
       @click="selInv(inv, idx)">
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + inv.svc)}}</div>
-        <div class="col-3 ellipsis text-right text-bold">{{$t('INV_' + inv.major)}}</div>
-        <div class="col-2 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
-        <div class="col-3 row items-center justify-end ellipsis">
-          <q-icon v-if="inv.status <= 2"
-            name="hourglass_empty" size="24px" color="primary"/>
-          <q-icon v-if="inv.status === 2"
-            name="check_circle" size="24px" color="none"/>
-          <q-icon v-if="inv.status === 4"
-            name="check_circle" size="24px" color="green-5"/>
-          <q-icon v-if="inv.status === 6"
-            name="close" size="24px" color="warning"/>
-          <q-icon v-if="inv.status === 3 || inv.status === 5"
-            name="close" size="24px" color="negative"/>
-          <div class="font-mono">{{$t('INVst_' + inv.status)}}</div>
+        <div class="col-4 ellipsis text-right text-bold">{{$t('INV_' + inv.major)}}</div>
+        <div class="col-3 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
+        <div class="col-1 row items-center justify-end ellipsis">
+          <q-icon v-if="inv.lv < inv.v"
+            name="fiber_new" size="24px" color="warning"/>
         </div>
       </div>
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{inv.org}}</div>
-        <div class="col-8 text-right ellipsis">{{dhcool(inv.time * 1000)}}</div>
-      </div>
-      <div class="row items-center full-width">
-        <div class="col-12 text-italic text-right q-pr-xs ellipsis">{{inv.comment}}</div>
+        <div class="col-8 text-right ellipsis">{{dhcool(inv.v)}}</div>
       </div>
     </div>
   </div>
 
   <div v-if="ui.currentInvit.zoomed" class="wmd">
-    <invit-zoom v-if="ui.currentInvit.invit" v-model="ui.currentInvit.invit"/>
+    <invit-zoom v-if="ui.currentInvit.invit" v-model="ui.currentInvit"/>
     <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
   </div>
 </div>
@@ -45,26 +33,26 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { Ref, ref, computed, watch } from 'vue'
+import { Ref, ref, onMounted } from 'vue'
 
 import stores from '../stores/all'
-import { $t, sty, dkli, dhcool } from '../src-fw/util'
+import { $t, dkli, dhcool } from '../src-fw/util'
 
 import { InvitGet } from '../src-fw/operations'
 
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
+import { MDOperation } from 'src/src-fw/operation'
 
 type InvitS = {
+  invitId: string
   svc: string
   org: string
-  invitId: string
-  time: number
+  v: number
   major: string
   minor: string
-  status: number
-  comment: string
+  lv: number
 }
 
 const ui = stores.ui
@@ -73,29 +61,23 @@ const sf = stores.safe
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const u = ui.currentInvit
   switch (n) {
-    case 1 : { 
-      if (u.idx < invits.value.length - 1) u.idx++
-      break
-    }
-    case 2 : { 
-      if (u.idx > 0) u.idx--
-      break
-    }
-    case 3 : { 
-      if (u.idx !== 0) u.idx = 0
-      break
-    }
-    case 4 : { 
-      if (u.idx < invits.value.length - 1) u.idx = invits.value.length - 1
-      break
-    }
+    case 1 : { if (u.idx < invits.value.length - 1) u.idx++; break }
+    case 2 : { if (u.idx > 0) u.idx--; break }
+    case 3 : { if (u.idx !== 0) u.idx = 0; break }
+    case 4 : { if (u.idx < invits.value.length - 1) u.idx = invits.value.length - 1; break }
   }
   const inv = invits.value[u.idx] 
   await selInv(inv, u.idx)
 }
 
-// const invits: InvitS[] = computed(() => Array.from(sf.mySafeInvits.values()) )
-const invits: Ref<InvitS[]> = ref(Array.from(sf.mySafeInvits.values()) )
+const invits: Ref<InvitS[]> = ref([])
+
+const mdInvits = async () => {
+  const op = new MDOperation('$mdInvitList')
+  op.args.userId = sf.userId
+  const res = await op.post()
+  invits.value = res && res.invlist ? res.invlist : []
+}
 
 const isCurrent = (inv) => 
   ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
@@ -114,12 +96,12 @@ const onUpdate = () => {
   const acId = ui.currentInvit.invit.invitId
   u.zoomed = false
   setTimeout(async () => {
-    invits.value = Array.from(sf.mySafeInvits.values())
+    await mdInvits()
     let idx = -1
     let inv = null
     for(let i = 0; i < invits.value.length; i++) {
       inv = invits.value[i]
-      if (inv.invitId === acId) { idx = i; break}
+      if (inv && inv['invitId'] === acId) { idx = i; break}
     }
     if (idx !== -1) await selInv(inv, idx)
     else if (invits.value.length) {
@@ -131,7 +113,7 @@ const onUpdate = () => {
 const selInv = async (inv, idx) => {
   // Get de l'invit par le service
   const op = new InvitGet(inv.svc, inv.org)
-  const invit = await op.run(inv.invitId)
+  const invit = await op.run(inv.invitId, sf.userId)
   const u = ui.currentInvit
   u.inv = inv
   u.zoomed = true
@@ -140,18 +122,19 @@ const selInv = async (inv, idx) => {
     u.invit = invit
 }
 
-const init = () => {
+const init = async () => {
+  await mdInvits()
   const u = ui.currentInvit
   u.zoomed = false
   u.invit = null
   u.inv = null
   u.idx = 0
-  u.nb = sf.mySafeInvits.size
+  u.nb = invits.value.length
   u.fnnav = nav
   u.fnOnUpdate = onUpdate
 }
 
-init()
+onMounted(async () => { await init() })
 
 </script>
 

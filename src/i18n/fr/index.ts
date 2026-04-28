@@ -99,6 +99,7 @@ export default {
   recorded: 'Enregistrement effectué avec succès.',
   mtime: 'Dernière mise à jour',
   ltime: 'Valide jusqu\'à',
+  noprint: 'Texte non affichable',
 
   minmax: 'De {0} à {1} signes. ',
   tooshort: 'Texte trop court',
@@ -115,6 +116,22 @@ export default {
   quitQuit: 'Je confirme quitter l\'application',
   quitReload: 'Je confirme relancer l\'application',
   quitCont: 'Je continue ma session',
+
+  // ChoixEmoji
+  EMOsearch1: 'Recherche',
+  EMOnotfound: 'rien trouvé',
+  EMOsearch2: 'Résultat de recherche',
+  EMOrecent: 'Récents',
+  EMOsmileys: 'Smileys / Emotions',
+  EMOpeople: 'People & Corps',
+  EMOnature: 'Animaux / Nature',
+  EMOfoods: 'Nourriture / Boisson',
+  EMOactivity: 'Activitée',
+  EMOplaces: 'Voyages',
+  EMOobjects: 'Objets',
+  EMOsymbols: 'Symboles',
+  EMOflags: 'Drapeaux',
+  EMOcustom: 'Custom',
 
   REGexp_b64: `Caractères autorisés:
   - lettres non accentuées minuscules \`a...z\` et majuscules \`A...Z\`
@@ -1078,30 +1095,24 @@ bla bla
   INVdetail: 'Détail de l\'invitation',
   INVtitval: 'Validation de l\'invitation "{0}"',
   INVtitlst: 'Liste',
-  INVx_time: 'Date-heure de dépôt:',
-  INVx_status: 'Status:',
+  INVx_v: 'Date-heure de dernière mise à jour (ou création):',
+  INVbyU: 'Dernière mise à jour:',
+  INVbyU_t: 'par l\'utilisateur demandeur',
+  INVbyU_f: 'par le sponsor',
+  INVval_y: 'Invitation validable',
+  INVval_n: 'Invitation NON validable',
   INVx_major: 'Type majeur:',
   INVx_minor: 'Type mineur:',
   INVx_user: 'ID du demandeur:',
   INVx_label: 'Label associé:',
   INVx_me: 'Je suis le sponsor ayant traité la demande',
-  INVx_txtm: 'Texte de motivation de la demande d\'invitation',
-  INVx_txtx: 'Pourquoi le demandeur a finalement décliné l\'invitation validée',
-  INVx_txti: 'Réponse à la demande: détail des conditions ou motif de rejet',
-  INVx_cred: 'Droit d\'accès associé (rôle / cible):',
+  INVx_tab: 'Ardoise partagée utilisateur / sponsor(s)',
+  INVxnotv_s: 'Version pas encore consultée par l\'utilisateur.',
+  INVxnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   INVbtn_val: 'Valider',
-  INVbtn_rej: 'Rejeter',
-  INVst_1: 'déposée',
-  INVst_2: 'acceptée',
-  INVst_3: 'refusée',
-  INVst_4: 'validée',
-  INVst_5: 'déclinée',
-  INVst_6: 'annulée',
-  INVac_ac: 'Accepter',
-  INVac_de: 'Décliner',
-  INVac_va: 'Valider',
-  INVac_re: 'Rejeter',
-  INVac_an: 'Annuler',
+  INVbtn_cor: 'Corriger',
+  INVbtn_del: 'Renoncer et supprimer',
+
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
   INVac_rej_1: 'Rejet de l\'invitation',
   INVac_rej_2: 'Justification (au moins {0} signes)',
@@ -1272,6 +1283,12 @@ Sinon ce dialogue s'effacera et la demande pourra être normalement traitée par
   blabla: 'bla bla', // Test surcharge traductions
   blabla1: 'bla1 bla1', // Test surcharge traductions
   titre: 'Test très simple - compteur: {0}',
+
+  'INV_Org.manager': 'Manager de l\'organisation',
+  'INV_Org.manager_label': 'Manager de l\'organisation',
+  'INV_Org.manager_bub': `### Manager de l\'organisation
+bla bla
+`,
 
   INV_Auteur: 'Auteur',
   INV_Auteur_label: 'Nom d\'auteur',

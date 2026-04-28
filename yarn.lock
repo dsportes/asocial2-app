@@ -1087,6 +1087,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.18.6":
+  version: 7.29.2
+  resolution: "@babel/runtime@npm:7.29.2"
+  checksum: 10c0/30b80a0140d16467792e1bbeb06f655b0dab70407da38dfac7fedae9c859f9ae9d846ef14ad77bd3814c064295fe9b1bc551f1541ea14646ae9f22b71a8bc17a
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.27.1, @babel/template@npm:^7.27.2":
   version: 7.27.2
   resolution: "@babel/template@npm:7.27.2"
@@ -3878,6 +3885,7 @@ __metadata:
     "@vue/eslint-config-typescript": "npm:^14.4.0"
     autoprefixer: "npm:^10.4.2"
     dexie: "npm:^4.2.1"
+    emoji-mart-vue-fast: "npm:^15.0.5"
     eslint: "npm:^9.14.0"
     eslint-plugin-vue: "npm:^9.30.0"
     ext2mime: "npm:^2.0.1"
@@ -4550,6 +4558,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"core-js@npm:^3.23.5":
+  version: 3.49.0
+  resolution: "core-js@npm:3.49.0"
+  checksum: 10c0/2e42edb47eda38fd5368380131623c8aa5d4a6b42164125b17744bdc08fa5ebbbdd06b4b4aa6ca3663470a560b0f2fba48e18f142dfe264b0039df85bc625694
+  languageName: node
+  linkType: hard
+
 "core-util-is@npm:~1.0.0":
   version: 1.0.3
   resolution: "core-util-is@npm:1.0.3"
@@ -4861,6 +4876,18 @@ __metadata:
   dependencies:
     sax: "npm:1.1.4"
   checksum: 10c0/669e56d5092382ceaaa2022f3c391b0f6702e47876095b0e00a790181b7f6b5f49fe6e67ebe8339fd6b1b1b66ffe53c87dd47f1e550661ea55722279bf24cad3
+  languageName: node
+  linkType: hard
+
+"emoji-mart-vue-fast@npm:^15.0.5":
+  version: 15.0.5
+  resolution: "emoji-mart-vue-fast@npm:15.0.5"
+  dependencies:
+    "@babel/runtime": "npm:^7.18.6"
+    core-js: "npm:^3.23.5"
+  peerDependencies:
+    vue: ">2.0.0"
+  checksum: 10c0/8bb2bff6eae973663ccf24d75086aadc64f0b52e55cb3a3fcd79a4529888f7b8c793dab387d03519c4b735785b89c848d32d3f28dd553e587a0f87ca526885b8
   languageName: node
   linkType: hard
 

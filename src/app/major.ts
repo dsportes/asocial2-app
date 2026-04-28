@@ -1,9 +1,9 @@
 
 import stores from '../stores/all'
-import { InvitationA, MsgVal } from '../src-fw/invitationA'
+import { Invitation, MsgVal } from '../src-fw/invitation'
 import { CredSafe } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
-import { MDOperation, Operation } from '../src-fw/operation'
+import { Operation } from '../src-fw/operation'
 
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64 } from '../src-fw/b64'
@@ -16,18 +16,32 @@ type InvVal = {
   time: number // time de l'application pour ces deux credentials
 }
 
-type InvitValOM = { // arguments de validation d'un Credential Org.manager
-  time: number // date-heure des credentials associés, etc.
-  pubv: string // clé publique de vérification du credential
-  name: string // nom / pseudo facultatif pour information à stocker en cond
-}
+/* "Fausse" classe statique implémentant pour chaque "Major"
+les méthodes "editEtc" et "validate" dont le paramètre "self"
+est une Invitation.
+  svc: string = '' // service d'ou l'invitation a été lue (ou préparée à la création)
+  org: string = '' // organisation d'ou l'invitation a été lue (ou préparée à la création)
+  v?: number = 0 // (lue du service) date-heure de sa dernière évolution, que soit par U ou par un des sponsors.
 
-export class Invitation extends InvitationA {
-  static rnd: number = 0
+  invitId?: string = '' // ID de l'invitation générée aléatoirement à sa création
+  userId: string = '' // ID du bénéficiare de l'invitation
+  major: string = '' //code majeur 
+  minor: string = '' // code mineur
+  byU: boolean = true // la dernière maj est de U
+  tab: string = '' // Adroise commune U / sponsors (non cryptée)
+  etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 
-  constructor (svc: string, org: string, major: string, minor: string, tab: string, userId: string) { 
-    super({svc, org, major, minor, tab, userId})
-  }
+Cred
+  credId: string = '' // ID du credential.
+  svc: string = '' // code du service
+  org: string = '' // le code de l'organisation.
+  role: string = '' // docClass.role : un des codes de rôle connu du service.
+  docId: string = '' // identifiant du document cible du credential.
+  privs: string = '' // clé PRIVEE de signature en base64.
+  comment: string = '' // texte court libre de l'utilisateur.
+  recK: any = null // record libre (crypté par la clé K et en base64 en _safe_).
+*/
+export class Major {
 
   /* Retourne un message d'erreur disant pourquoi le "sponsor"
   ne peut pas intervenir sur l'invitation.
@@ -38,69 +52,40 @@ export class Invitation extends InvitationA {
   - un utilisateur qui a un credential Sponsor pour le "major.minor" de l'invitation
     est un sponsor valide (à condition bien sur que l'invitation ait un minor).
   */
-  async msgVal () : Promise<MsgVal> {
+  static async msgVal (self: Invitation) : Promise<MsgVal> {
     let credOk : MsgVal = { ok: false, txt: '', role: '', docId: ''}
     const creds : Map<string, CredSafe> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
-      if (c.org !== this.org || c.svc !== this.svc) continue
+      if (c.org !== self.org || c.svc !== self.svc) continue
       if (c.role === 'Org.manager') 
         return { ok: true, txt: $t('INVsponsor_1'), role: 'Org.manager', docId: '' }
       if (c.role === 'Sponsor.') {
-        if (c.docId === this.major)
-          return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + this.major)]), role: 'Sponsor.', docId: c.docId }
-        if (c.docId === this.major + '/' + this.minor)
-          credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + this.major) + ' / ' + this.minor]),
+        if (c.docId === self.major)
+          return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + self.major)]), role: 'Sponsor.', docId: c.docId }
+        if (c.docId === self.major + '/' + self.minor)
+          credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + self.major) + ' / ' + self.minor]),
             role: 'Sponsor.', docId: c.docId }
       }
     } 
     return credOk || { ok: false, txt: $t('INVsponsor_0'), role: null, docId: null }
   }
 
-  /* Méthode "abstraite" : surchargée en fonction du 
-  "major" de l'invitation. Par exemple:
-  - enregistrement d'un credential résultant de l'invitation
-  */
-  async validate () : Promise<boolean> {
-    const ui = stores.ui
-    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
-    const m = this['validate_' + s]
-    if (m) {
-      const err = await m()
-      if (err === 'ok') {
-        ui.diagDisplay($t('INVop_4'), 2)
-        return true
-      } else {
-        if (err !== 'ko') await ui.diagDisplay(err)
-        return false
-      }
-    } else {
-      await ui.diagDisplay($t('INVvalbug', [s]))
-      return false
-    }
+  static editEtc_Org_manager (self: Invitation) : string {
+    return ''
   }
 
-  /*
-  credId: string = '' // ID du credential.
-  svc: string = '' // code du service
-  org: string = '' // le code de l'organisation.
-  role: string = '' // docClass.role : un des codes de rôle connu du service.
-  docId: string = '' // identifiant du document cible du credential.
-  privs: string = '' // clé PRIVEE de signature en base64.
-  comment: string = '' // texte court libre de l'utilisateur.
-  recK: any = null // record libre (crypté par la clé K et en base64 en _safe_).
-  */
-  async validate_Org_manager () : Promise<string> {
-    const op = new Operation('InvitValidate', this.svc, this.org)
+  static async validate_Org_manager (self: Invitation) : Promise<string> {
+    const op = new Operation('InvitValidate', self.svc, self.org)
     const { pub, priv } = await Crypt.getSVKeyPair()
     try {
-      op.args.invitId = this.invitId
+      op.args.invitId = self.invitId
       op.args.validArgs = { pubV: keyToB64(pub) }
       const res = await op.post()
       if (res.status !== 0) return $t('INVvalOMst_' + res.status)
       const credSafe = new CredSafe({
-        credId: this.etc.credId,
-        svc: this.svc,
-        org: this.org,
+        credId: self.etc.credId,
+        svc: self.svc,
+        org: self.org,
         role: 'Sponsor.',
         docId: 'Org.manager',
         privs: keyToB64(priv)
@@ -114,14 +99,18 @@ export class Invitation extends InvitationA {
     }
   }
 
-  async validate_Auteur () : Promise<string> {
+  static editEtc_Auteur (self: Invitation) : string {
+    return ''
+  }
+
+  static async validate_Auteur (self: Invitation) : Promise<string> {
     /* 
     Post: invVal avec les pemvA, pemvS, time des credentials
     Puis, enregistrement,
       - du Credential Safe sur "Auteur"
       - optionnellement du credential "Sponsor".
     */
-    const op = new Operation('InvitValidate', this.svc, this.org)
+    const op = new Operation('InvitValidate', self.svc, self.org)
     try {
       let privA: string = '', privS: string = ''
       const invVal: InvVal = {
@@ -129,17 +118,17 @@ export class Invitation extends InvitationA {
         pemvA: '',
         pemvS: ''
       }
-      if (this.etc.newA === 1) {
+      if (self.etc.newA === 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvA = keyToB64(pub)
         privA = keyToB64(priv)
       }
-      if (this.etc.option > 1) {
+      if (self.etc.option > 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvS = keyToB64(pub)
         privS = keyToB64(priv)
       }
-      op.args.invitId = this.invitId
+      op.args.invitId = self.invitId
       op.args.invVal = invVal
       const res = await op.post()
       if (res.status) await stores.ui.diagDisplay($t('INVopret_' + res.status))
@@ -148,29 +137,29 @@ export class Invitation extends InvitationA {
         // Enregistrement du ou des credential "Safe"
         // static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'name', 'comment' ]
         const mcreds: Map<string, CredSafe> = new Map()
-        if (this.etc.newA === 1) {
+        if (self.etc.newA === 1) {
           const c = new CredSafe({ // Credential "Safe"
             svc: op.SVC || '',
-            org: this.org,
+            org: self.org,
             privs: privA,
-            role: this.etc.role,
-            docId: this.etc.docId,
-            name: this.etc.label,
+            role: self.etc.role,
+            docId: self.etc.docId,
+            name: self.etc.label,
             time: invVal.time
           })
           // c.setId()
           mcreds.set(c.credId, c)
         }
 
-        if (this.etc.option > 1) {
-          const docId = 'Auteur' + (this.etc.option === 2 ? '' : ('/' + this.etc.categ))
+        if (self.etc.option > 1) {
+          const docId = 'Auteur' + (self.etc.option === 2 ? '' : ('/' + self.etc.categ))
           const c = new CredSafe({ // Credential "Safe"
             svc: op.SVC || '',
-            org: this.org,
+            org: self.org,
             privs: privA,
             role: 'Sponsor.',
-            docId: this.etc.docId,
-            name: this.etc.label,
+            docId: self.etc.docId,
+            name: self.etc.label,
             time: invVal.time
           })
           mcreds.set(c.credId, c)
@@ -186,17 +175,4 @@ export class Invitation extends InvitationA {
       return 'ko'
     }
   }
-}
-
-/* Enregistre une invitation à un user pour être "manager" de l'organisation
-Depuis un administrateur seulement : créé une invitation non sollicitée
-*/
-export const NewManager = async (svc: string, org: string, tab: string, userId: string, userName: string)
- : Promise<boolean> => {
-  const invit = new Invitation(svc, org, 'Org.manager', '', tab, userId)
-  invit.etc = {
-    credId: Crypt.rnd(15),
-    name: userName
-  }
-  return await invit.createByS('')
 }

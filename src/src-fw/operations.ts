@@ -7,7 +7,7 @@ import stores from '../stores/all'
 
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
-import { InvitationA } from '../src-fw/invitationA'
+import { Invitation, InvObj } from './invitation'
 import { Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -233,12 +233,16 @@ export class ListManagers extends Operation {
 export class InvitGet extends Operation {
   constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }
 
-  async run ( invitId: string, userId: string ) : Promise<InvitationA | null> {
+  async run ( invitId: string, userId: string ) : Promise<Invitation | null> {
     try {
       this.args.invitId = invitId
       this.args.userId = userId
       const res = await this.post()
-      return !res.invitation ? null : new InvitationA(res.invitation)
+      const inv = res.invitation as InvObj | null
+      if (!inv) return null
+      inv.svc = this.SVC
+      inv.org = this.args.org
+      return new Invitation(inv)
     } catch(e) {
       this.ko(e)
       return null

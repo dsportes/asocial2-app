@@ -83,7 +83,7 @@ export const useUiStore = defineStore('ui', () => {
   const diag = ref(null)
   const diagAutoConfirm = ref()
   const diagResolve = ref(null)
-  const diagDisplay = async (text: string, nbsec?: number) => {
+  const diagDisplay = async (text: string, nbsec?: number | boolean) => {
     return new Promise((resolve) => {
       diagAutoConfirm.value = nbsec || 0
       diag.value = text
@@ -176,6 +176,12 @@ export const useUiStore = defineStore('ui', () => {
     fnOnUpdate: null
   })
 
+  const emojiIndex = ref()
+  const setEmoji = (idx) => {
+    emojiIndex.value = idx
+    return idx
+  }
+
   return {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
@@ -185,7 +191,8 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagResolve, diagAutoConfirm, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    currentInvit, adminPage, demandsPage
+    currentInvit, adminPage, demandsPage,
+    emojiIndex, setEmoji
   }
 })
 
