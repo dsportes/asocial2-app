@@ -7,13 +7,13 @@
       </q-toolbar>
       <!--div class="fs-md q-ma-sm text-center q-mt-md" v-html="ui.diag"></div-->
       <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag"/>
-      <div v-if="ui.diagAutoConfirm !== true" class="row q-my-md q-mx-sm justify-between">
+      <div v-if="ui.diagAutoConfirm === 0" class="row q-my-md q-mx-sm justify-between">
         <btn-cond flat icon="close" color="warning" size="lg"
           :label="$t('ireject')" @ok="gotit(false)"/>
         <btn-cond flat icon="check" :label="$t('iconfirm')" size="lg"
           @ok="gotit(true)"/>
       </div>
-      <div v-else class="row q-my-md q-mx-sm justify-end"> 
+      <div v-if="ui.diagAutoConfirm === -1" class="row q-my-md q-mx-sm justify-end"> 
         <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit(true)"/>
       </div>
     </q-card>
@@ -21,6 +21,8 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
+import { watch } from 'vue'
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -28,14 +30,23 @@ import SdNb from '../components-fw/SdNb.vue'
 
 const ui = stores.ui
 
+/*
+ui.diagAutoConfirm
+- -1: afficher Got it!
+- 0: afficher reject confirm
+- n > 0: pas de choix et disparition dans n secs
+*/
+
 const gotit = (b: boolean) => { 
   ui.appDialogs.GotIt = false
   const f = ui.diagResolve
   if (f) f(b)
 } 
 
-if (ui.diagAutoConfirm) 
-  setTimeout(() => { gotit(true) }, ui.diagAutoConfirm * 1000)
+watch(() => ui.diagToken, () => {
+  const v = ui.diagAutoConfirm
+  if (v > 0) setTimeout(() => { gotit(true) }, (v > 3 ? 3000 : v * 1000))
+})
 
 </script>
 

@@ -120,11 +120,11 @@ export class Invitation {
     try {
       const res = await op.post()
       if (res.status !== 0) {
-        await ui.diagDisplay($t('STINV_' + res.status))
+        await ui.diagDisplay($t('STINV_' + res.status), true)
         return false
       }
       if (await this.mdInvitSet(true)) {
-        ui.diagDisplay($t('INVop_1'), 2)
+        await ui.diagDisplay($t('INVop_2'), 2)
         return true
       } else return false
     } catch (e: any) {
@@ -184,7 +184,7 @@ export class Invitation {
   async cancel ()  : Promise<boolean> {
     const ui = stores.ui
     const op = new Operation('InvitCancel', this.svc, this.org)
-    op.args['invObj'] = this.invitId
+    op.args['invitId'] = this.invitId
     try {
       const res = await op.post()
       if (res.status !== 0) {

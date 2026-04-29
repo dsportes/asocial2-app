@@ -58,7 +58,7 @@ const ui = stores.ui
 
 const model = defineModel()
 
-const notView = computed(() => model.value.inv.lv < model.value.invit.v )
+const notView = computed(() => model.value.inv && model.value.inv.lv < model.value.invit.v )
 // watch(model, (v) => { console.log(v.userId) })
 
 const newTab = ref()
@@ -73,7 +73,7 @@ const opts = ref()
   opts.value = x || $t('INVx_none')
 }
 
-if (notView.value && model.value.invit.userId === sf.userId) 
+if (notView.value && model.value.invit.userId === sf.userId && model.value.inv) 
   onMounted(async () =>{
     await ui.diagDisplay($t('INVxnotv_u'), true)
     const op = new MDOperation('$mdInvitUpdLV')

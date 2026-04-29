@@ -131,9 +131,8 @@ const txt = ref('')
 // Confirmation de cancel
 const doConfirmCancel = async (n) => {
   if (n === 1) {
-    // TODO
-    // await model.value.invit.cancel()
-    // onUpdate()
+    if (await model.value.invit.cancel())
+      onUpdate()
   }
 }
 
@@ -146,12 +145,11 @@ const doConfirmVal = async (n) => {
   }
 }
 
-// Confirmation de validation
+// Confirmation de maj ardoise
 const doConfirmRec = async (n) => {
   if (n === 1) {
-    // TODO
-    // await model.value.invit.cancel()
-    // onUpdate()
+    if (await model.value.invit.updateByU(model.value.newTab))
+      onUpdate()
   }
 }
 

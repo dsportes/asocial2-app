@@ -255,22 +255,18 @@ Le service Safe vérifie les authentifications par les paramètres
 comme hp0, hr0, etc.
 */
 export class SafeOperation extends A2Operation {
-
   constructor (opName: string, safeStore: string) {
     super(opName)
     if (!safeStore) this.url = stores.config.K.STDSAFE_URL
     else this.safeStore = safeStore
   }
-
 }
 
 export class MDOperation extends A2Operation {
-
   constructor (opName: string) {
     super(opName)
     this.url = stores.config.K.MASTERDIR_URL
   }
-
 }
 
 /*
