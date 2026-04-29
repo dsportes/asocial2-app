@@ -88,11 +88,12 @@ export class Major {
         org: self.org,
         role: 'Sponsor.',
         docId: 'Org.manager',
+        comment: $t('nocomment'),
         privs: keyToB64(priv)
       })
       credSafe.recK = null
-      const ret = stores.safe.createCred(credSafe)
-      return ret.status === 0 ? 'ok' : $t('STSF_', ret.status)
+      const status = await stores.safe.createCred(credSafe)
+      return status === 0 ? 'ok' : $t('STSF_', status)
     } catch (e) {
       op.ko(e)
       return 'ko'

@@ -139,9 +139,8 @@ const doConfirmCancel = async (n) => {
 // Confirmation de validation
 const doConfirmVal = async (n) => {
   if (n === 1) {
-    // TODO
-    // await model.value.invit.cancel()
-    // onUpdate()
+    if (await model.value.invit.validate())
+      onUpdate()
   }
 }
 

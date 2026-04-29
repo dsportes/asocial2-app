@@ -195,6 +195,14 @@ export class Invitation {
       op.ko(e)
       return false
     }
+    if (await this.mdInvitDel()) {
+      ui.diagDisplay($t('INVop_3'), 2)
+      return true
+    }
+    return false
+  }
+
+  async mdInvitDel () : Promise<boolean> {
     const mop = new MDOperation('$mdInvitDel')
     mop.args['svc'] = this.svc
     mop.args['org'] = this.org
@@ -202,7 +210,6 @@ export class Invitation {
     mop.args['userId'] = this.userId
     try {
       await mop.post()
-      ui.diagDisplay($t('INVop_3'), 2)
       return true
     } catch (e: any) {
       mop.ko(e)
@@ -235,14 +242,17 @@ export class Invitation {
     if (m) {
       const err = await m(this)
       if (err === 'ok') {
-        ui.diagDisplay($t('INVop_4'), 2)
+        if (await this.mdInvitDel()) {
+          ui.diagDisplay($t('INVop_4'), 2)
+          return true
+        }
         return true
       } else {
-        if (err !== 'ko') await ui.diagDisplay(err)
+        if (err !== 'ko') await ui.diagDisplay(err, true)
         return false
       }
     } else {
-      await ui.diagDisplay($t('INVvalbug', [s]))
+      await ui.diagDisplay($t('INVvalbug', [s]), true)
       return false
     }
   }

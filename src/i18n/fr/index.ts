@@ -223,7 +223,8 @@ export default {
   op_InvitUpdByU: 'Mise à jour d\'une invitation par l\'utilisateur',
   op_InvitCancel: 'Suppression d\'une invitation par l\'utilisateur',
   op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
-  
+  op_$CreateCred: 'Création d\'un credential',
+
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété non reconnue (phrase ou autre).',
@@ -1080,7 +1081,8 @@ bla bla
   INVop_3: 'Invitation supprimée.',
   INVop_4: 'Invitation validée (et de fait supprimée).',
 
-  INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".',
+  INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".(BUG probable [etc]',
+  INVvalOMst_2: 'Echec de validation de l\'invitation à être "manager".(BUG probable [args]',
 
   INVvalbug: 'BUG : fonction de validation "{0}" non trouvée.',
 

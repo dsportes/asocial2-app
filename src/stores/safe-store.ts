@@ -503,7 +503,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
     if (ret.status === 0)
       try {
-       if (!nocomp) await compileSafe(ret.safe)
+        if (!nocomp) await compileSafe(ret.safe)
       } catch (e) {
         console.log(e)
       }
@@ -699,8 +699,9 @@ export const useSafeStore = defineStore('safe', () => {
     const msvc = stores.config.K.SERVICES
     if (safe.creds) for (const xid in safe.creds)
       try {
-        const [com, data] = decode(safe.creds[xid]) as [string, string]
-        const comment = keyToB64(await Crypt.decrypt(keyK.value, keyFromB64(com)))
+        // const [com, data] = decode(safe.creds[xid]) as [string, string]
+        const [com, data] = safe.creds[xid] as [string, string]
+        const comment = await dcX(keyFromB64(com))
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
         if (msvc[obj['svc']]) {
           const c: CredSafe = new CredSafe(obj)
@@ -731,7 +732,7 @@ export const useSafeStore = defineStore('safe', () => {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
       credId: cred.credId,
-      comment: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(cred.comment))),
+      comment: keyToB64(await ecX(cred.comment)),
       cred: credSer
     }
     const op = new SafeOperation('$CreateCred', mySafeStore.value)
