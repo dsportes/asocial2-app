@@ -93,7 +93,7 @@ const optionsSP = [
 ]
 
 const genTxtAuteur = () => {
-  const t = []
+  const t : string[]= []
   t.push($t('INVauteur_t1', [inv.value.label, accept.docId]))
   if (accept.etc.option === 2) t.push($t('INVauteur_t2'))
   if (accept.etc.option === 3) t.push($t('INVauteur_t3', [accept.etc.categ]))
