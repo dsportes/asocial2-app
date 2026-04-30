@@ -228,7 +228,6 @@ export class ListManagers extends Operation {
   }
 }
 
-
 /* Lecture d'une invitation par son ID par son propriétaire */
 export class InvitGet extends Operation {
   constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }

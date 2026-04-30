@@ -90,8 +90,8 @@
 .msg3 { font-size: 0.9rem; font-weight: bold; padding: 1px; background: var(--q-negative); color: white}
 
 .select:hover { background-color: $yellow-2 !important; color: black !important; }
-.current { border: 1px solid $warning }
-.nocurrent { border: 1px solid transparent }
+.current { border-left: 4px solid $yellow-9; padding-left:2px;}
+.nocurrent { border-left: 4px solid transparent; padding-left:2px; }
 
 /* surcharges de quasar */
 .q-toolbar { padding: 0 !important; min-height: 0 !important }

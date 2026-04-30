@@ -19,16 +19,17 @@ L'image doit figurer dans public/images
 <template>
     <div class="cursor-pointer">
       <div class="row no-wrap items-center">
-        <q-icon name="question_mark" class="q-mr-xs"
+        <q-icon name="question_mark" class="q-mr-xs col-auto"
           :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
-          size="20px"/>
-        <div :class="tclass || 'fs-md'">{{ text }}</div>
+          size="20px">
+          <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
+            anchor="center middle" self="center middle"
+            style="height: 300px; max-height:70vh; width: 400px; max-width:90vw">
+            <scroll-md height="300px" :text="bub" inverse />
+          </q-menu>
+        </q-icon>
+        <div :class="tclass || ' col fs-md'">{{ text }}</div>
       </div>
-      <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
-        anchor="center middle" self="center middle"
-        style="height: 300px; max-height:70vh; width: 400px; max-width:90vw">
-        <scroll-md height="300px" :text="bub" inverse />
-      </q-menu>
     </div>
 </template>
 

@@ -8,6 +8,7 @@
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
     tbclass="tbs" noclose @close="checkClose">
     <template #hdr>
+    <div class="sep">
       <div class="column items-center">
         <div class="row items-center">
           <div class="row items-center q-gutter-sm">
@@ -19,13 +20,14 @@
             @ok="addSvcorg"/>
         </div>
       </div>
-      <q-separator v-if="step === 1" class="q-my-sm" color="orange"/>
-
+      <div>{{ todel.size }}</div>
+    </div>
     </template>
 
     <template #default>
-      <div v-if="step >= 1" class="full-width column items-center">
-        <scroll-area size="sm" class="pwmd q-mt-sm q-pa-xs">
+    <div>
+      <div v-if="step >= 1" class="sep full-width column items-center">
+        <scroll-area size="sm" class="pwmd q-mt-sm q-pa-xs" noborder>
           <div v-for="(x, idx) in smso" :key="x.svc + '/' + x.org" class="row items-center">
             <div :class="'full-width ' + dkli(idx) + curSty(x)">
               <div class="col-1">
@@ -42,17 +44,49 @@
         </scroll-area>
       </div>
 
-      <div v-if="step === 2"class="full-width column items-center q-mt-md q-mb-sm">
+      <div v-if="step >= 2" class="sep full-width column items-center q-mb-sm">
         <div class="itre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
-        <scroll-area size="sm" class="q-pa-xs pwmd">
+        <scroll-area size="sm" class="q-pa-xs pwmd" noborder>
           <div v-for="(c, idx) in fusion" :key="c.credId"
-            :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)"
-            @click="selectCr(c)">
-            <cred-row2 :cred="c"/>
+            :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)">
+            <cred-row2 :cred="c" @undo="undodel(c)" @select="selectCr(c)"/>
           </div>
         </scroll-area>
       </div>
 
+      <div v-if="step === 3" class="column items-center q-mt-sm q-mb-sm">
+        <div class="pwmd">
+          <div v-if="curcr.cond" class="q-mb-sm">
+            <div class="titre-md text-bold text-italic">{{ $t('CRRcond') }}</div>
+            <cond-role class="q-ml-md" :role="curcr.role" :cond="curcr.cond"/>
+          </div>
+          <div v-if="curcr.alert === 1" 
+            class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
+          <div v-if="curcr.alert === 2" 
+            class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs2') }}</div>
+          <div v-if="curcr.alert === 3 || curcr.alert === 4" class="row">
+            <div class="col titre-md text-bold text-warning">{{ $t('CRRobs3') }}</div>
+            <btn-cond class="col-auto q-ml-xs" round icon="delete" color="warning"
+              @ok="todelcr"/>
+            <btn-cond v-if="curcr.alert === 4" class="col-auto q-ml-xs" round 
+              icon="undo" color="primary"
+              @ok="undodel(curcr)"/>
+          </div>
+          <div v-if="curcr.alert === 0 || curcr.alert === 5" class="row">
+            <div class="col titre-md text-bold text-warning">
+              {{ $t('CRRdel' + (curcr.alert === 5 ? '2' : '')) }}
+            </div>
+            <btn-cond v-if="curcr.alert === 0" class="col-auto q-ml-xs" round icon="delete" color="negative"
+              @ok="forcedel = true"/>
+            <btn-confirm v-if="forcedel" class="self-start"
+              :actif="forcedel" @confirm="cftodel"/>
+            <btn-cond v-if="curcr.alert === 5" class="col-auto q-ml-xs" round 
+              icon="undo" color="primary"
+              @ok="undodel(curcr)"/>
+          </div>
+        </div>
+      </div>
+    </div>
     </template>
   </dialog-std2>
 </div>
@@ -68,11 +102,13 @@ import { ListUserCreds, SCred } from '../src-fw/operations'
 import { Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BarTitle from '../components-fw/BarTitle.vue'
+import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
+
+import CondRole from '../components/CondRole.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
@@ -83,14 +119,28 @@ const session = stores.session
 const model = defineModel()
 const emit = defineEmits(['close'])
 
-const checkClose = () => {
+const checkClose = async () => {
+  if (todel.value.size) await cleanUp()
   model.value = false
   emit('close', true)
 }
 
+const todel = ref(new Map<string, Credential>())
+
 const step = ref(1)
-const backTo1 = () => {
-  step.value = 1
+watch(step, async (s) => {
+  if (todel.value.size) await cleanUp()
+})
+
+/* alert
+- 1: supprimer du Safe
+- 2: supprimer de DB
+- 4 et 5: supprimer des deux
+*/
+const cleanUp = async () => {
+  console.log('cleanup', todel.value.size)
+  
+  todel.value.clear()
 }
 
 /* Credential (fusion)
@@ -187,11 +237,17 @@ const selectSo = async (x: svcOrgN) => {
 const fusion: Ref<Credential[]> = ref()
 
 const reset2 = async () => {
+  const now = Date.now()
   // alert?: number // 0:safe et db,  1:safe pas db, 2:db pas safe 3: limit dépassée
   const op = new ListUserCreds(curso.value.svc, curso.value.org)
   const lst: SCred[] = await op.run() as SCred[]
   const m = new Map<string, Credential>()
-  for (const x of lst) m.set(x.credId, Credential.fromSCred(x, curso.value.svc, curso.value.org))
+  for (const x of lst) {
+    const c = Credential.fromSCred(x, curso.value.svc, curso.value.org)
+    // c.limit = 12
+    if (c.limit && c.limit * 1000 < now) c.alert = 3
+    m.set(x.credId, c)
+  }
   for(const [credId, rc] of mcreds.value) {
     if (rc.svc !== curso.value.svc || rc.org !== curso.value.org) continue
     let c = m.get(credId)
@@ -206,10 +262,34 @@ const reset2 = async () => {
   l.sort((a: Credential, b: Credential) => 
     a.role < b.role ? -1 : (a.role > b.role ? 1 : a.docId < b.docId ? -1 : (a.docId > b.docId ? 1 : 0)))
   fusion.value = l
+  for(const c of l)
+    if (c.alert && c.alert > 0 && c.alert < 3) todel.value.set(c.credId, c)
 }
 
 const selectCr = (c) => {
   curcr.value = c
+  step.value = 3
+  forcedel.value = false
+}
+
+const forcedel = ref(false)
+
+const todelcr = () => {
+  curcr.value.alert = 4
+  forcedel.value = false
+  todel.value.set(curcr.value.credId, curcr.value)
+}
+
+const undodel = (c) => {
+  c.alert = c.alert === 4 ? 3 : 0
+  forcedel.value = false
+  todel.value.delete(c.credId)
+}
+
+const cftodel = () => {
+  curcr.value.alert = 5
+  forcedel.value = false
+  todel.value.set(curcr.value.credId, curcr.value)
 }
 
 reset()
@@ -217,4 +297,5 @@ reset()
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.sep { border-bottom:1px solid rgba(255, 255, 255, 0.3); padding-bottom: 3px; margin-bottom: 3px;}
 </style>

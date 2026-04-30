@@ -80,7 +80,7 @@ export default {
   url: 'URL du serveur pour cette organisation: {0}',
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
-  confirm: 'Pour confirmer taper {0}', // BtnConfirm
+  confirm: 'Confirmation: {0}', // BtnConfirm
   edit: 'Editer',
   create: 'Nouveau',
   duplicate: 'Dupliquer',
@@ -1012,6 +1012,12 @@ Vous pouvez ajouter un couple service / organisation n'ayant pas actuellement de
 Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
 `,
   CRRstep_2: 'Droits d\'accès enregistrés pour {0} / {1}',
+  CRRcond: 'Propriétés spécifiques de ce droit d\'accès:',
+  CRRobs1: 'Ce droit d\'accès est obsolète, il a été supprimé en central. Il sera nettoyé.',
+  CRRobs2: 'Ce droit d\'accès enregistré en central ne l\'est plus dans votre Safe Box. Il sera nettoyé.',
+  CRRobs3: 'Ce droit d\'accès a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
+  CRRdel: 'Ce droit d\'accès est applicable. Voulez-vous cependant y renoncer?',
+  CRRdel2: 'Ce droit d\'accès est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
 
   SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
   SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
@@ -1382,5 +1388,7 @@ bla bla
 blu blu
 
 `,
+
+  COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"'
 
 }
