@@ -30,16 +30,15 @@
 
   <div class="titre-lg text-italic q-mb-md text-center">{{$t('org')}}</div>
 
-  <input-A class="full-width q-mb-md" prefix="orgcode" v-model="org" size="org"
-    @validate="valOrg"/>
+  <select-org/>
 
   <btn-cond v-if="maySetSt" :label="$t('APorgconfig')"
-    :disable="!orgOk"
+    :disable="!session.orgs.c"
     icon="open_in_new" @ok="openOrgConfig"/>
 
   <div class="row justify-between q-my-sm">
     <btn-cond class="col-auto q-pr-sm" :label="$t('status')" 
-      :disable="!svcop.$OP || !orgOk" @ok="svcOrgStatus"/>
+      :disable="!svcop.$OP || !session.orgs.c" @ok="svcOrgStatus"/>
     <div v-if="resping2 !== null" class="col">
       <div>{{$t('svcStatus_now', [dhcool(resping2.now)])}}</div>
       <div>{{$t('svcStatus_' + resping2.st, [dhcool(resping2.at)])}}</div>
@@ -47,7 +46,7 @@
     </div>
   </div>
 
-  <div v-if="maySetSt && orgOk" class="column q-mt-sm q-gutter-sm">
+  <div v-if="maySetSt && session.orgs.c" class="column q-mt-sm q-gutter-sm">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
 
     <input-a prefix="svcStatus" v-model="newComment"/>
@@ -76,7 +75,7 @@
         </div>
         <div class="row">
           <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_org')}}</div>
-          <div class="col-6 font-mono text-bold">{{org}}</div>
+          <div class="col-6 font-mono text-bold">{{session.orgs.c}}</div>
         </div>
         <div class="row">
           <div class="col-6 titre-md text-italic text-right q-pr-lg">{{$t('APoc_db')}}</div>
@@ -122,11 +121,13 @@ import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
 
 import DialogStd0 from '../dialogs-fw//DialogStd0.vue'
 
-const config = stores.config
+// const config = stores.config
 const sf = stores.safe
+const session = stores.session
 
 const props = defineProps({ 
   svc: String,
@@ -153,22 +154,11 @@ type Elt = {
 const svcOps: Ref<Map<string, Elt>> = ref(new Map())
 const services2: Ref<string> = ref(new Set())
 
-const org = ref('')
-const orgOk = ref(false)
-const valOrg = () => {
-  orgOk.value = true
-}
-
-watch(org, (v) => {
-  orgOk.value = false
-})
-
 const resping = ref(null)
 const resping2 = ref(null)
 const newComment = ref('')
 
 const reset = () => {
-  org.value = ''
   resping.value = null
   resping2.value = null
   newComment.value = ''
@@ -200,7 +190,7 @@ const svcOrgStatus = async () => {
   await svcOpStatus()
   resping2.value = null
   try {
-    resping2.value = await new GetSvcOrgStatus(svcop.SVC, org.value).run()
+    resping2.value = await new GetSvcOrgStatus(svcop.SVC, session.orgs.c).run()
   } catch (e) { }
 }
 
@@ -223,7 +213,7 @@ async function setSvcOpStatus (stx) : Promise<void> {
   ADMINISTRATEUR
 */
 async function setSvcOrgStatus (stx) : Promise<void> {
-  const op = new SetSvcOrgStatus(svcop.SVC, org.value)
+  const op = new SetSvcOrgStatus(svcop.SVC, session.orgs.c)
   const res = await op.run(stx, newComment.value)
   // res.svcOrgStatus contient le status mis à jour
   await svcOrgStatus()
@@ -235,7 +225,7 @@ const oc = reactive({ ac : {db: '', st: '', dbs: [], sts: []}, dbn: '', stn: '' 
 const nch = computed(() => oc.ac.db === oc.dbn && oc.ac.st === oc.stn)
 
 const openOrgConfig = async () => {
-  const ret = await new GetOrgConfig(svcop.SVC, org.value).run()
+  const ret = await new GetOrgConfig(svcop.SVC, session.orgs.c).run()
   if (ret) {
     oc.ac = ret
     oc.dbn = oc.ac.db || ''
@@ -245,13 +235,13 @@ const openOrgConfig = async () => {
 }
 
 const setOrgConfig = async () => {
-  const { db, st } = await new SetOrgConfig(svcop.SVC, org.value).run(oc.dbn, oc.stn)
+  const { db, st } = await new SetOrgConfig(svcop.SVC, session.orgs.c).run(oc.dbn, oc.stn)
   oc.ac.db = db
   oc.ac.st = st
 }
 
 const delOrgConfig = async () => {
-  const ret = await new SetOrgConfig(svcop.SVC, org.value).run()
+  const ret = await new SetOrgConfig(svcop.SVC, session.orgs.c).run()
 }
 
 </script>

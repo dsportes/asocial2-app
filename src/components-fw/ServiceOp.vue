@@ -2,7 +2,7 @@
 -->
 <template>
 <div class="row">
-  <service-select class="col-5" v-model="model.SVC"/>
+  <select-svc class="col-5" v-model="model.SVC"/>
   <div class="col-1"/>
   <input-A class="col-6" prefix="operator" v-model="model.$OP" size="oper"
     :list="config.K.FAVORITE_OPERATORS"/>
@@ -15,7 +15,7 @@
 
 import stores from '../stores/all'
 import InputA from '../components-fw/InputA.vue'
-import ServiceSelect from '../components-fw/ServiceSelect.vue'
+import SelectSvc from './SelectSvc.vue'
 
 const config = stores.config
 

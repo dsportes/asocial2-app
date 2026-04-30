@@ -9,7 +9,6 @@ import stores from './all'
 import { Crypt } from '../src-fw/crypt'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
-
 type StartContext = {
   userId: string
   pseudo: string
@@ -166,29 +165,19 @@ export const useSessionStore = defineStore('session', () => {
     pref.code = code; pref.time = time; pref.obj = obj
   }
 
-  const currentOrg = ref('')
-  const _userId: Ref<string> = ref('')
-  const userId = computed(() => _userId.value)
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
   const _creds: Ref<Map<string, Credential>> = ref(null)
   const creds = computed(() => _creds.value)
   const svcOrgs = ref(new Set())
-  const $OP = ref('')
-  const SVC = ref('')
-  const org = ref('')
 
   const setStartContext = (
       userId: string,
       aboutProfile: string,
       creds: Map<string, Credential>) => {
     setPhase(0)
-    _userId.value = userId
     _aboutProfile.value = aboutProfile
     _creds.value = creds
-    $OP.value =''
-    SVC.value = ''
-    org.value = ''
     svcOrgs.value.clear()
     for(const [,c] of _creds.value)
       svcOrgs.value.add(c.svc + '/' + c.org)
@@ -196,14 +185,33 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const endSession = () => {
-    _userId.value = ''
     _aboutProfile.value = ''
     _creds.value = null
     svcOrgs.value.clear()
-    $OP.value =''
-    SVC.value = ''
-    org.value = ''
   }
+
+  const orgs = reactive({
+    c: '',
+    lst: [] 
+  })
+  const setOrgs = (s: Set<string>) => {
+    const s1 = new Set(orgs.lst)
+    for(const o of s) s1.add(o)
+    if (orgs.c) {
+      s1.delete(orgs.c)
+      orgs.lst = [orgs.c, ...Array.from(s1.values()).sort()]
+    } else {
+      orgs.lst = Array.from(s1.values()).sort()
+      orgs.c = orgs.lst.length > 0 ? orgs.lst[0] : ''
+    }
+  }
+  const setOrg = (org: string) => {
+    orgs.c = org
+    setOrgs(new Set([org]))
+  }
+
+  const _currentSvc = ref()
+  const currentSvc = computed(() => _currentSvc.value || stores.config.K.DEFAULT_SERVICE)
 
   return {
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
@@ -213,8 +221,9 @@ export const useSessionStore = defineStore('session', () => {
     dbName, setDbName, phase, setPhase,
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
-    userId, currentOrg, aboutProfile, creds, setStartContext, endSession,
-    SVC, $OP, org, svcOrgs
+    aboutProfile, creds, setStartContext, endSession,
+    svcOrgs, currentSvc,
+    orgs, setOrg, setOrgs
     // focus, getFocus, lostFocus, closingApp
   }
 })

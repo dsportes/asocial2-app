@@ -80,16 +80,18 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   // Gestion d'un dialogue avec confirmation
-  const diag = ref(null)
-  const diagToken = ref(0)
-  const diagAutoConfirm = ref()
-  const diagResolve = ref(null)
-  const diagDisplay = async (text: string, nbsec?: number | boolean) => {
+  const diag = reactive({
+    txt: '',
+    token: 0,
+    cf: -1,
+    resolve: null
+  })
+  const diagDisplay = async (txt: string, nbsec?: number | boolean) => {
     return new Promise((resolve) => {
-      diagToken.value = Date.now()
-      diagAutoConfirm.value = nbsec === true ? -1 : (nbsec || 0)
-      diag.value = text
-      diagResolve.value = resolve
+      diag.token = Date.now()
+      diag.cf = nbsec === true ? -1 : (nbsec || 0)
+      diag.txt = txt
+      diag.resolve = resolve
       appDialogs.GotIt = true
     })
   }
@@ -191,7 +193,7 @@ export const useUiStore = defineStore('ui', () => {
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
     appDialogs, confirmQuit, 
     exc, displayExc, hideExc,
-    diag, diagResolve, diagAutoConfirm, diagToken, diagDisplay,
+    diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
     currentInvit, adminPage, demandsPage,

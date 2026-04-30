@@ -117,6 +117,10 @@ export default {
   quitReload: 'Je confirme relancer l\'application',
   quitCont: 'Je continue ma session',
 
+  ORG: 'Code organisation',
+  ORG_label: 'Code organisation',
+  ORG_ph: 'monorg',
+
   // ChoixEmoji
   EMOsearch1: 'Recherche',
   EMOnotfound: 'rien trouvé',
@@ -996,6 +1000,7 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 `,
   SESconfig: 'Droits d\'accès et sessions épinglées',
 
+  CRRnosvc: 'Ce service [{0}] ne gère pas cette organisation [{1}].',
   CRRtit_label: 'Revue des droits d\'accès par service / organisation',
   CRRtit_bub: `### Revue des droits d\'accès par service / organisation
 bla bla
@@ -1363,11 +1368,11 @@ Quand une demande est validable, ses options retenues (s'il y en a) sont affich�
 `,
 
   ROLE: 'Rôle',
-  ROLEOrg_manager: 'Manager de l\'organisation',
-  ROLEOrg_manager_bub: `### Manager de l\'organisation
+  'ROLEOrg.manager': 'Manager de l\'organisation',
+  'ROLEOrg.manager_bub': `### Manager de l\'organisation
 `,
-  ROLEAuteur_: 'Auteur d\'articles',
-  ROLEAuteur__bub: `### Auteur d\'articles
+  'ROLEAuteur.': 'Auteur d\'articles',
+  'ROLEAuteur._bub': `### Auteur d\'articles
 `,
   ROLERelecteur_: 'Relecteur d\'articles',
   ROLEGroupe: 'Groupe de relecteurs',

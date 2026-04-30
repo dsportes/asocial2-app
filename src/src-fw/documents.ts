@@ -1,6 +1,7 @@
 import { DocRegistry, Document } from '../src-fw/docregistry'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64 } from '../src-fw/b64'
+import { SCred } from '../src-fw/operations'
 // import stores from '../stores/all'
 
 
@@ -79,5 +80,18 @@ export class Credential extends Document {
   limit: number = 0 // date-heure en seconde de fin de validité (0 si toujors valide)
   cond: any = null // Objet contenant les conditions d'application
 
+  alert?: number // 0:safe et db,  1:safe pas db, 2:db pas safe 3: limit dépassée
+  svc?: string
+  org?: string
+  comment?: string
+
+  static fromSCred (cs: SCred, svc: string, org: string) {
+    const c = new Credential()
+    c.svc = svc; c.org = org
+    c.credId = cs.credId; c.role= cs.role; c.docId = cs.docId; c.comment = ''
+    c.limit = cs.limit; c.pubv = ''; c.cond = cs.cond; 
+    c.alert = cs.limit && (cs.limit * 1000 < Date.now()) ? 3 : 2
+    return c
+  }
 }
 DocRegistry.registerD(Credential)

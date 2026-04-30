@@ -11,10 +11,10 @@ Contrôlé par ui.leftMenu
       </q-toolbar-title>
       <help-button page="help"/>
     </q-toolbar>
-    <!--div v-if="sf.userId" class="column items-center">
-      <input-A  class="q-ma-sm" prefix="orgcode"
-        v-model="session.currentOrg" size="org"/>
-    </div-->
+    <div class="row items-center q-gutter-sm">
+      <select-svc @change="svcsel"/>
+      <select-org @change="console.log(session.orgs.c)"/>
+    </div>
   </q-header>
   <q-page-container>
     <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
@@ -60,6 +60,10 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectSvc from '../components-fw/SelectSvc.vue'
+
+const svcsel = (v) => {console.log(v)}
 
 const sf = stores.safe
 const ui = stores.ui
@@ -78,9 +82,6 @@ const hasManagedOrgs = computed(() => sf.managedOrgs().length !== 0)
 const openAdmin = (svc) => {
   ui.closeMenu()
   ui.setPage('admin')
-  session.SVC = ''
-  session.$OP = ''
-  session.org = ''
 }
 
 const openDemands = (svc) => {

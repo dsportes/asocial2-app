@@ -697,6 +697,7 @@ export const useSafeStore = defineStore('safe', () => {
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, CredSafe>()
     const msvc = stores.config.K.SERVICES
+    const orgs = new Set<string>(['didi', 'dodo'])
     if (safe.creds) for (const xid in safe.creds)
       try {
         // const [com, data] = decode(safe.creds[xid]) as [string, string]
@@ -708,11 +709,13 @@ export const useSafeStore = defineStore('safe', () => {
           c.comment = comment
           c.recK = !obj['recK'] ? null : decode(await Crypt.decrypt(keyK.value, keyFromB64(obj['recK'])))
           m.set(c.credId, c)
+          orgs.add(c.org)
         }
       } catch (e) {
         console.log(e)
       }
     mySafeCreds.value = m
+    stores.session.setOrgs(orgs)
   }
 
   type SetCred = {

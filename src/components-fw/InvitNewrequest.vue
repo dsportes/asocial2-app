@@ -3,16 +3,16 @@
 <template>
 <div class="column items-center">
 <div class="pwsm q-pa-xs">
-  <service-org v-model="svcorg" class="full-width q-mt-sm"/>
-  
-  <div :class="'q-my-md full-width ' + (svcorg.org.err ? 'disabled' : '')">
+  <div class="row items-center q-gutter-sm">
+    <select-svc v-model="svc"/>
+    <select-org/>
+  </div>
+
   <bar-title prefix="INVmajor"/>
   <q-select v-model="major" style="margin-left:20px"
     dense options-dense
     transition-show="flip-up" transition-hide="flip-down"
-    :disable="svcorg.org.err !== ''"
     :options="majOpts" :label="$t('INVmajor_c')"/>
-  </div>
 
   <div v-if="major.value && majdescr" class="q-my-md full-width">
     <div v-if="majdescr.hasMinor" class="q-mt-sm" >
@@ -59,7 +59,8 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InputB from '../components-fw/InputB.vue'
 import InputA from '../components-fw/InputA.vue'
-import ServiceOrg from '../components-fw/ServiceOrg.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectSvc from '../components-fw/SelectSvc.vue'
 
 const mintxtm = 10
 const ui = stores.ui
@@ -71,10 +72,8 @@ const majOpts = ref([])
 for (const m of majors) 
   majOpts.value.push({ value: m, label: $t('INV_' + m)})
 
-const svcorg = reactive({
-  org: { inp: '', err: 'tooshort' },
-  SVC: ''
-})
+const svc = ref(config.K.DEFAULT_SERVICE)
+
 const major = ref()
 const minor = reactive({ inp: '', err: 'tooshort' })
 const label = reactive({ inp: '', err: 'tooshort' })
@@ -82,15 +81,14 @@ const txtm = ref('')
 const comment = ref('')
 
 const completed = computed(() => 
-  svcorg.org.err === '' && major.value.value && label.err === '' && txtm.value.length > mintxtm
+  major.value.value && label.err === '' && txtm.value.length > mintxtm
 )
 
 const majdescr = computed(() => config.K.majorInvits[major.value.value])
 
 const reset = () => {
-  svcorg.SVC = ''
+  svc.value = config.K.DEFAULT_SERVICE
   major.value = majors[0]
-  svcorg.org.inp = ''; svcorg.org.err = 'tooshort'
   major.value = ''; 
   minor.inp = ''; minor.err = 'tooshort'
   label.inp = ''; label.err = 'tooshort'
@@ -102,7 +100,7 @@ reset()
 const create = async () => {
   /*
   let status = -1
-  const op = new InvitCreate(svcorg.SVC, svcorg.org.inp)
+  const op = new InvitCreate(svc.value, session.orgs.c)
   const invit = await op.run(major.value.value, minor.inp, 
     txtm.value, label.inp, comment.value)
   if (invit)

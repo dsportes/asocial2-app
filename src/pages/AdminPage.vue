@@ -20,9 +20,7 @@
     <div v-if="sf.auth.admins">
       <div v-if="!ui.adminPage.SVC" class="titre-md text-italic">{{ $t('svcStatus_no2') }}</div>
       <div class="q-my-md full-width column">
-        <input-b prefix="orgcode" v-model="org" size="org"
-          :disable="!ui.adminPage.SVC"
-          @validate="doOrgOk"/>
+        <select-org @change="doOrgOk"/>
       </div>
     </div>
     <div v-else class="q-my-md">
@@ -99,6 +97,7 @@ import { NewManager } from '../src-fw/invitation'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 // import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 const ui = stores.ui
@@ -119,7 +118,7 @@ const lstMgr = ref([]) // {credId userId limit name} []
 
 const targetUser = reactive({ inp: '', err: ''})
 
-const org = reactive({ inp: session.currentOrg || '', err: '', ok: false })
+// const org = reactive({ inp: session.Org || '', err: '', ok: false })
 
 const arDone = ref(new Set()) // id des creds DEJA auto-révoqués
 
@@ -146,19 +145,20 @@ watch(lstMgr, async (l) => {
   */
 })
 
-watch(() => org.inp, async (x) => {
+/*watch(() => org.inp, async (x) => {
   org.ok = false
   if (lstMgr.value.length) lstMgr.value = []
 })
+*/
 
 const doOrgOk = async () => {
-  org.ok = true
+  // org.ok = true
   await dolist()
 }
 
 const dolist = async () => {
   lstMgr.value = []
-  const op = sf.auth.admins ? new ListManagers(ui.adminPage.SVC, org.inp)
+  const op = sf.auth.admins ? new ListManagers(ui.adminPage.SVC, session.orgs.c)
     : new ListManagers(svcOrg.value.svc, svcOrg.value.org)
   lstMgr.value = await op.run()
 }
@@ -188,7 +188,7 @@ const grantManager = async () => {
     return
   }
   // (svc: string, org: string, tab: string, userId: string)
-  const ok = await NewManager(ui.adminPage.SVC, org.inp, tab.value, icvs.i, targetId)
+  const ok = await NewManager(ui.adminPage.SVC, session.orgs.c, tab.value, icvs.i, targetId)
   if (ok) {
     await dolist()
     resetAreq()
@@ -204,7 +204,7 @@ const revoke = async (c) => {
 
 const doConfirmRevoke = async () => {
   dialogs.confirmrevoke = false
-  let op = sf.auth.admins ? new RevokeCred(ui.adminPage.SVC, org.inp)
+  let op = sf.auth.admins ? new RevokeCred(ui.adminPage.SVC, session.orgs.c)
     : new RevokeCred(svcOrg.value.svc, svcOrg.value.org)
   const status = await op.run(revokeC.value.userId, 'Org.manager', '')
   if (status) {

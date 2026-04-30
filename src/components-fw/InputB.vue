@@ -88,7 +88,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
             <q-btn dense flat no-caps v-for="x in list" :key="x" :label="x"
-              @click="model.inp = x"/>
+              @click="model.inp = x; emit('validate', true)"/>
           </div>
         </q-menu>
       </q-btn>

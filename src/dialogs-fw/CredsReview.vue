@@ -8,50 +8,49 @@
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
     tbclass="tbs" noclose @close="checkClose">
     <template #hdr>
-      <bar-title v-if="step === 1" prefix="CRRstep_1" :class="'full-width ' + sty()"/>
-      <div v-if="step === 1" class="wmd row items-center full-width">
-        <service-org v-model="svcorg" class="col"/>
-        <btn-cond class="q-ml-md col-auto"round icon="add" size="md"
-          :disable="svcorg.org.err !== ''"
-          @ok="addSvcorg"/>
+      <div class="column items-center">
+        <div class="row items-center">
+          <div class="row items-center q-gutter-sm">
+            <select-svc/>
+            <select-org/>
+          </div>
+          <btn-cond class="q-ml-md col-auto"round icon="add" size="md"
+            :disable="session.orgs.c === ''"
+            @ok="addSvcorg"/>
+        </div>
       </div>
       <q-separator v-if="step === 1" class="q-my-sm" color="orange"/>
 
-      <q-toolbar v-if="step === 2" dense color="none">
-        <btn-cond class="q-ml-sm" round color="primary" icon="arrow_upward"
-          @ok="backTo1"/>
-        <q-toolbar-title class="titre-md text-center">
-          {{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}
-        </q-toolbar-title>
-      </q-toolbar>
     </template>
 
     <template #default>
-      <div v-if="step === 1" class="full-width column items-center">
-        <div class="pwsm q-mt-md q-pa-xs">
+      <div v-if="step >= 1" class="full-width column items-center">
+        <scroll-area size="sm" class="pwmd q-mt-sm q-pa-xs">
           <div v-for="(x, idx) in smso" :key="x.svc + '/' + x.org" class="row items-center">
-            <div class="col-1">
-              <btn-cond v-if="x.n === 0" icon="delete" color="warning" size="sm" round
-                @ok="delSvcOrg(x)"/>
-            </div>
-            <div :class="'col-11 row cursor-pointer select q-my-xs ' + dkli(idx) + curSty(x)"
-              @click="selectSo(x)">
-              <div class="col-1 font-mono">{{ x.n }}</div>
-              <div class="col-6 ellipsis q-pr-md">{{ $t('services_' + x.svc) }}</div>
-              <div class="col-5 ellipsis font-mono">{{ x.org}}</div>
+            <div :class="'full-width ' + dkli(idx) + curSty(x)">
+              <div class="col-1">
+                <btn-cond v-if="x.n === 0" icon="delete" color="warning" size="sm" round
+                  @ok="delSvcOrg(x)"/>
+              </div>
+              <div class="col-11 row cursor-pointer select q-my-xs" @click="selectSo(x)">
+                <div class="col-1 font-mono">{{ x.n }}</div>
+                <div class="col-6 ellipsis q-pr-md text-center">{{ $t('services_' + x.svc) }}</div>
+                <div class="col-5 ellipsis font-mono text-center">{{ x.org}}</div>
+              </div>
             </div>
           </div>
-        </div>
+        </scroll-area>
       </div>
 
-      <div v-if="step === 2"class="full-width column items-center">
-        <div class="pwsm q-pa-xs">
-          <div v-for="(c, idx) in fusion" :key="c.id"
+      <div v-if="step === 2"class="full-width column items-center q-mt-md q-mb-sm">
+        <div class="itre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
+        <scroll-area size="sm" class="q-pa-xs pwmd">
+          <div v-for="(c, idx) in fusion" :key="c.credId"
             :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)"
             @click="selectCr(c)">
             <cred-row2 :cred="c"/>
           </div>
-        </div>
+        </scroll-area>
       </div>
 
     </template>
@@ -65,17 +64,21 @@ import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
-import { ListUserCreds } from '../src-fw/operations'
+import { ListUserCreds, SCred } from '../src-fw/operations'
+import { Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
-import ServiceOrg from '../components-fw/ServiceOrg.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectSvc from '../components-fw/SelectSvc.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const sf = stores.safe
 const ui = stores.ui
+const session = stores.session
 
 const model = defineModel()
 const emit = defineEmits(['close'])
@@ -90,22 +93,18 @@ const backTo1 = () => {
   step.value = 1
 }
 
-const svcorg = reactive({
-  org: { inp: '', err: 'tooshort' },
-  SVC: ''
-})
-
-/* Credential
-  id: string = '' // ID du credential.
-  svc: string = '' // code du service
-  org: string = '' // le code de l'organisation.
+/* Credential (fusion)
+  credId: string = '' // ID du credential.
   role: string = '' // docClass.role : un des codes de rôle connu du service.
   docId: string = '' // identifiant du document cible du credential.
-  time: number = 0 // epoch en seconde de génération
-  pems: string = '' // clé PRIVEE de signature, le texte de 400c.
-  name: string = '' // libellé / label etc. lisible de docId
-  skey: string = ''// clé AES spécifique de docId, cryptée par la clé K de l'utilisateur et mise en base 64.
-  comment: string = '' // un texte court libre de l'utilisateur.
+  pubv: string = '' // clé PUBLIQUE de vérification (base64 sans bannière).
+  limit: number = 0 // date-heure en seconde de fin de validité (0 si toujors valide)
+  cond: any = null // Objet contenant les conditions d'application
+
+  from?: number
+  svc?: string
+  org?: string
+  comment?: string
 */
 const mcreds: Ref<Map<string, Credential>> = ref()
 
@@ -123,7 +122,7 @@ const curcr: Ref<Credential> = ref()
 const curSty = (x: svcOrgN) =>
   !curso.value ? ' nocurrent' : (curso.value.svc === x.svc && curso.value.org === x.org ? ' current' : ' nocurrent')
 const curSty2 = (x: Credential) =>
-  !curcr.value ? ' nocurrent' : (curcr.value.id === x.id ? ' current' : ' nocurrent')
+  !curcr.value ? ' nocurrent' : (curcr.value.credId === x.credId ? ' current' : ' nocurrent')
 
 const addedSo: Ref<Set<string>> = ref(new Set())
 
@@ -151,11 +150,18 @@ const sortMso = () => {
   smso.value = l
 }
 
-const addSvcorg = () => {
-  const x = svcorg.SVC + '/' + svcorg.org.inp
+const addSvcorg = async () => {
+  const x = session.currentSvc + '/' + session.orgs.c
   let e = mso.value.get(x)
   if (!e) { 
-    e = { svc: svcorg.SVC, org: svcorg.org.inp, n: 0 }
+    const op = new ListUserCreds(session.currentSvc, session.orgs.c)
+    try {
+      await op.getBaseUrl()
+    } catch (e) {
+      await ui.diagDisplay($t('CRRnosvc', [session.currentSvc, session.orgs.c]), true)
+      return
+    }
+    e = { svc: session.currentSvc, org: session.orgs.c, n: 0 }
     mso.value.set(x, e)
     addedSo.value.add(x)
     sortMso()
@@ -169,30 +175,32 @@ const delSvcOrg = (so: svcOrgN) => {
   sortMso()
   if (curso.value && curso.value.svc === so.svc && curso.value.org === so.org)
     curso.value = null
+  step.value = 1
 }
 
 const selectSo = async (x: svcOrgN) => {
- curso.value = x
- step.value = 2
- await reset2()
+  curso.value = x
+  step.value = 2
+  await reset2()
 }
 
 const fusion: Ref<Credential[]> = ref()
 
 const reset2 = async () => {
-  const lp = [ 'id', 'role', 'docId', 'time', 'comment' ]
-
+  // alert?: number // 0:safe et db,  1:safe pas db, 2:db pas safe 3: limit dépassée
   const op = new ListUserCreds(curso.value.svc, curso.value.org)
-  const m :Map<string, Credential> = await op.run() as Map<string, Credential>
-  for(const [id, rc] of mcreds.value) {
+  const lst: SCred[] = await op.run() as SCred[]
+  const m = new Map<string, Credential>()
+  for (const x of lst) m.set(x.credId, Credential.fromSCred(x, curso.value.svc, curso.value.org))
+  for(const [credId, rc] of mcreds.value) {
     if (rc.svc !== curso.value.svc || rc.org !== curso.value.org) continue
-    let c = m.get(id)
+    let c = m.get(credId)
     if (!c) {
-      c = new Credential()
-      c.from = 1
-      m.set(id, c)
-    } else c.from = 3
-    for(const p of lp) c[p] = rc[p]
+      rc.alert = 1
+      m.set(rc.credId, rc)
+    } else {
+      if (c.alert === 2) c.alert = 0
+    }
   }
   const l = Array.from(m.values())
   l.sort((a: Credential, b: Credential) => 

@@ -7,6 +7,7 @@ export const K = {
     ASSO2: { api: 1 },
     SAFE: { api: 1 }
   },
+  DEFAULT_SERVICE: 'AS2',
   MASTERDIR_URL: 'http://localhost:8080/master/',
   STDSAFE_URL: 'http://localhost:8080/safe/',
   FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],

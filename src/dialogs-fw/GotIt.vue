@@ -6,14 +6,14 @@
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('important')}}</q-toolbar-title>
       </q-toolbar>
       <!--div class="fs-md q-ma-sm text-center q-mt-md" v-html="ui.diag"></div-->
-      <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag"/>
-      <div v-if="ui.diagAutoConfirm === 0" class="row q-my-md q-mx-sm justify-between">
+      <sd-nb class="q-ma-sm q-mt-md" :text="ui.diag.txt"/>
+      <div v-if="ui.diag.cf === 0" class="row q-my-md q-mx-sm justify-between">
         <btn-cond flat icon="close" color="warning" size="lg"
           :label="$t('ireject')" @ok="gotit(false)"/>
         <btn-cond flat icon="check" :label="$t('iconfirm')" size="lg"
           @ok="gotit(true)"/>
       </div>
-      <div v-if="ui.diagAutoConfirm === -1" class="row q-my-md q-mx-sm justify-end"> 
+      <div v-if="ui.diag.cf === -1" class="row q-my-md q-mx-sm justify-end"> 
         <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit(true)"/>
       </div>
     </q-card>
@@ -31,7 +31,7 @@ import SdNb from '../components-fw/SdNb.vue'
 const ui = stores.ui
 
 /*
-ui.diagAutoConfirm
+ui.diag.cf
 - -1: afficher Got it!
 - 0: afficher reject confirm
 - n > 0: pas de choix et disparition dans n secs
@@ -39,14 +39,18 @@ ui.diagAutoConfirm
 
 const gotit = (b: boolean) => { 
   ui.appDialogs.GotIt = false
-  const f = ui.diagResolve
+  const f = ui.diag.resolve
   if (f) f(b)
 } 
 
-watch(() => ui.diagToken, () => {
-  const v = ui.diagAutoConfirm
-  if (v > 0) setTimeout(() => { gotit(true) }, (v > 3 ? 3000 : v * 1000))
-})
+const init = () => {
+  const d = ui.diag
+  if (d.txt && d.v > 0) setTimeout(() => { gotit(true) }, (d.v > 3 ? 3000 : d.v * 1000))
+}
+
+watch(() => ui.diag.token, () => { init()} )
+
+init()
 
 </script>
 
