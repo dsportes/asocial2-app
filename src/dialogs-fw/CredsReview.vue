@@ -77,9 +77,7 @@
               {{ $t('CRRdel' + (curcr.alert === 5 ? '2' : '')) }}
             </div>
             <btn-cond v-if="curcr.alert === 0" class="col-auto q-ml-xs" round icon="delete" color="negative"
-              @ok="forcedel = true"/>
-            <btn-confirm v-if="forcedel" class="self-start"
-              :actif="forcedel" @confirm="cftodel"/>
+              confirm @ok="cftodel"/>
             <btn-cond v-if="curcr.alert === 5" class="col-auto q-ml-xs" round 
               icon="undo" color="primary"
               @ok="undodel(curcr)"/>
@@ -102,7 +100,6 @@ import { ListUserCreds, SCred } from '../src-fw/operations'
 import { Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
@@ -269,26 +266,20 @@ const reset2 = async () => {
 const selectCr = (c) => {
   curcr.value = c
   step.value = 3
-  forcedel.value = false
 }
-
-const forcedel = ref(false)
 
 const todelcr = () => {
   curcr.value.alert = 4
-  forcedel.value = false
   todel.value.set(curcr.value.credId, curcr.value)
 }
 
 const undodel = (c) => {
   c.alert = c.alert === 4 ? 3 : 0
-  forcedel.value = false
   todel.value.delete(c.credId)
 }
 
 const cftodel = () => {
   curcr.value.alert = 5
-  forcedel.value = false
   todel.value.set(curcr.value.credId, curcr.value)
 }
 

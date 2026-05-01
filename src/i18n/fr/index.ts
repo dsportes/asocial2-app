@@ -80,7 +80,7 @@ export default {
   url: 'URL du serveur pour cette organisation: {0}',
   validate: 'Valider',
   nothing2confirm: 'Rien à confirmer', // BtnConfirm
-  confirm: 'Confirmation: {0}', // BtnConfirm
+  confirm: 'Pour confirmer, taper', // BtnConfirm
   edit: 'Editer',
   create: 'Nouveau',
   duplicate: 'Dupliquer',

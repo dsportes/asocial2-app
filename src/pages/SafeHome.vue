@@ -1,6 +1,9 @@
 <template>
 <div class="column items-center">
-  <!--btn-cond label="BUG" @ok="bug"/-->
+  <!--
+  <btn-cond label="BUG" @ok="bug"/>
+  <btn-cond confirm label="test" tp="coucou" @ok="console.log('okkkkkkkkk')"/>
+  -->
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>

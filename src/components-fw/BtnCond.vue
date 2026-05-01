@@ -17,6 +17,7 @@
     :round="round || false"
     @click.stop="ok">
     <q-tooltip v-if="tp || diag" class="bg-white text-primary">{{diag || tp}}</q-tooltip>
+    <menu-confirm v-if="menu" v-model="confirmCode" @confirm="ok()"/>
     <slot />
   </q-btn>
   <q-btn v-else
@@ -31,8 +32,9 @@
     :size="size || 'md'"
     :label="label || ''"
     :round="round || false"
-    @click="ok">
+    @click="clok">
     <q-tooltip v-if="tp || diag" class="bg-white text-primary">{{diag || tp}}</q-tooltip>
+    <menu-confirm v-if="menu" v-model="confirmCode" @confirm="ok()"/>
     <slot />
   </q-btn>
 </span>
@@ -42,8 +44,10 @@
 import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
+import MenuConfirm from '../components-fw/MenuConfirm.vue'
 const ui = stores.ui
-import { $t } from '../src-fw/util'
+import { Crypt } from '../src-fw/crypt'
+// import { $t } from '../src-fw/util'
 
 const props = defineProps({
   color: String, // defaut primary
@@ -58,9 +62,19 @@ const props = defineProps({
   round: Boolean,
   stop: Boolean,
   noCaps: Boolean,
-  padding: String
+  padding: String,
+  confirm: Boolean
 })
 
+const menu = ref(false)
+const confirmCode = ref()
+
+const clok = () => {
+  if (props.confirm) {
+    confirmCode.value = '' + (100 + Crypt.random(1)[0])
+    menu.value = true
+  } else ok()
+}
 const emit = defineEmits(['ok'])
 
 const tc = computed(() => {
@@ -85,11 +99,12 @@ const diag = ref('')
 // const diag = computed(() => props.cond && session[props.cond] ? $t(session[props.cond]) : '')
 
 async function ok () {
+  menu.value = false
   if (!diag.value) {
     emit('ok', props.ctx || null)
     return
   }
-  await ui.diagDisplay(diag.value)
+  await ui.diagDisplay(diag.value, true)
 }
 
 </script>
