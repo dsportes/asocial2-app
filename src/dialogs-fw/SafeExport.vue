@@ -76,7 +76,7 @@ Events: close done
           <div v-else>
             <div class="column items-center q-gutter-sm q-my-sm">
               <btn-cond :label="$t('HPsafest_r')" @ok="cfImp = true"/>
-              <btn-confirm :actif="cfImp" @confirm="importBackup"/>
+              <btn-cond :label="$t('iconfirm')" confirm :disable="!cfImp" @ok="importBackup"/>
             </div>
           </div>
         </div>
@@ -96,7 +96,7 @@ Events: close done
           <div v-else>
             <div class="column items-center q-gutter-sm q-my-sm">
               <btn-cond :label="$t('HPsafest_i')" @ok="cfImp = true"/>
-              <btn-confirm :actif="cfImp" @confirm="importBackup"/>
+              <btn-cond :disable="!cfImp" confirm @ok="importBackup"/>
             </div>
           </div>
         </div>
@@ -130,7 +130,6 @@ import { keyToB64, keyFromB64 } from '../src-fw/b64'
 
 import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import P0P1 from '../components-fw/P0P1.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputB from '../components-fw/InputB.vue'

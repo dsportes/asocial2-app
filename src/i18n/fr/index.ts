@@ -1229,19 +1229,106 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   INVverif: "Vérifier avant de valider",
   INVtxti: "Texte résumant la proposition d\'invitation à valider par l\'utilisateur (ou à décliner)",
 
-  EX_0: '"BUG" probable: erreur inattendue récupérée par le terminal',
-  EX_1: 'Données saisies non conformes',
-  EX_2: 'Données saisies non conformes',
-  EX_3: '"BUG" probable: erreur inattendue récupérée par le serveur',
-  EX_4: '"BUG" probable: erreur inattendue récupérée par le serveur',
-  EX_5: '"BUG" probable: erreur inattendue récupérée par le serveur',
-  EX_6: '"BUG" probable: erreur inattendue récupérée par le serveur',
+  /*
+  Détecté par l'application
+  1000: erreur fonctionnelle APP
+  2000: erreur fonctionnelle FW
+  3000: assertion FW - BUG: 
+  4000: assertion APP - BUG:
+  8000: FW : Exception technique DB / réseau
+  9000: APP: Exception technique DB / réseau
+
+  Remonté d'un service - assertions 13...16 transmises à l'adiministarteur
+  11000: erreur fonctionnelle FW : non détectable par l'application
+  12000: erreur fonctionnelle APP : non détectable par l'application
+  13000: assertion FW - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  14000: assertion APP - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  15000: assertions FW - Données incohérentes non détectables par l'application
+  16000: assertions APP - Données incohérentes non détectables par l'application
+  18000: APP : Exception technique DB / réseau - après 500: configuration ?
+  19000: FW : Exception technique DB / réseau - après 500: configuration ?
+  */
+
+  EX0_label: '"BUG" probable: erreur inattendue récupérée par le terminal',
+  EX0_bub: '"BUG" probable: erreur inattendue récupérée par le terminal',
+  EX1_label: 'Données saisies non conformes  détectées par le serveur.',
+  EX1_bub: 'Données saisies non conformes détectées par le serveur.',
+  EX2_label: 'Données saisies non conformes détectées par le serveur',
+  EX2_bub: 'Données saisies non conformes',
+  EX3_label: 'Une situation inattendue a été détectée par le serveur ("BUG" probable).',
+  EX3_bub: `### Une situation inattendue a été détectée par le serveur
+  - les données ne sont pas dans un état _normal_ pour supporter cette opération.
+  - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
+  
+  Vous pouvez continuer, l'opération ne s'est pas terminée correctement mais _a priori_ sans conséquences futures.
+  Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
+  Cette anomalie a été rapportée à l'administration technique.
+  `,
+  EX4_label: 'Une situation inattendue a été détectée par le serveur ("BUG" probable).',
+  EX4_bub: `### Une situation inattendue a été détectée par le serveur
+  - les données ne sont pas dans un état _normal_ pour supporter cette opération.
+  - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
+  
+  L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
+  Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
+  Cette anomalie a été rapportée à l'administration technique.
+  `,
+  EX5_label: 'Une erreur technique inattendue a été récupérée par le serveur.',
+  EX5_bub: `### Une erreur technique inattendue a été récupérée par le serveur
+  - des données indispensables à l'exécution de cette opération n'ont pas pu être accédées.
+  - _a priori_, il s'agit d'un incident sans rapport direct avec l'opération demandée, une base de données non lisible, un accès à un service distant interrompu, etc.
+
+  L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
+  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
+  La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
+  Cette anomalie a été rapportée à l'administration technique.
+  `,
+  EX6_label: '"BUG" probable: erreur inattendue récupérée par le serveur',
+  EX6_bub: '"BUG" probable: erreur inattendue récupérée par le serveur',
 
   EX_10: 'Interruption volontaire (appui sur le bouton rouge)',
   EX_11: 'Erreur d`accès au serveur, réseau indisponible ?',
   EX_12: 'Erreur d\'accès à la base locale',
   EX_13: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
   EX_14: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
+
+  EX101_masterdir_no_admin: 'masterdir_no_admin',
+  EX101_masterdir_svc_unkown_or_not_implemented_by_op: 'Service: [{0}] - Opérateur: [{1}] - Organisation: [{2}]',
+  EX101_operation_admin_required: 'operation_admin_required',
+  EX101_operation_authentication_required: 'operation_authentication_required',
+  EX101_operation_no_user_keys_cv: 'operation_no_user_keys_cv',
+  EX101_operation_bad_signature: 'operation_bad_signature',
+  EX101_operation_bad_credentials: 'Rôles KO: [{0}]',
+
+  EX103_origin_not_authorized: 'Origine: [{0}]',
+  EX103_unknown_operation: 'Opération: [{0}]',
+  EX103_unknown_organisation: 'Opération: [{0}] - Organisation: [{1}]',
+  EX103_unsupported_API: 'Application: [{2}] - Service: [{0}] [{1}] - build: [{3}]',
+  EX103_masterdir_unknown_operation: 'Opération: [{0}]',
+  EX103_invalid_object_argument: 'Argument: [{0}]',
+  EX103_invalid_bin_argument: 'Argument: [{0}]',
+  EX103_invalid_array_argument: 'Argument: [{0}]',
+  EX103_invalid_string_argument: 'Argument: [{0}]',
+  EX103_invalid_string_array_argument: 'Argument: [{0}]',
+  EX103_invalid_int_argument: 'Argument: [{0}]',
+  EX103_invalid_bool_argument: 'Argument: [{0}]',
+  EX103_SafeOperation_unknown_operation: 'Opération: [{0}]',
+
+  EX105_Subscription_unknown_session: 'SessionId: [{0}]',
+
+  EX108_SQLite_connexion_failed: 'Détail: [{0}]',
+  EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
+
+  EX110_FilesystemStorage_path_not_found: 'Rootpath: [{0}]',
+  EX110_DbConnector_credentials_not_found: 'DbConnector_credentials_not_found',
+  EX110_DbConnector_missing_crypt_key: 'DbConnector_missing_crypt_key',
+  EX110_startSRV_certificate_not_found: 'Path: [{0}]',
+  EX110_startSRV_private_key_not_found: 'Path: [{0}]',
+  EX110_DB_lock: 'Détail: [{0}]',
+  EX110_SQLite_path_not_found: 'Path: [{0}]',
+  EX110_SQLite_path_missing: 'SQLite path missing',
+
+
 
   EX_1001: 'Erreur "fake" pour test\n{0}',
   EX_1002: 'Opération inconnue [{0}]',
@@ -1271,6 +1358,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX_3004: 'BUG probable: classe de document [{0}] non déclarée dans config.documentClasses',
   EX_3005: 'BUG probable: opérateur de SAFE {1} inconnu pour l\'opération [{0}]',
   EX_3006: 'BUG probable: changement de phrases secrètes mais aucune n\'est donnée',
+  EX_3007: 'BUG probable: tentative de suppression d\'un droits d\'accès dont vous n\'êtes pas propriétaire. ({0} / {1})',
   EX_10000: 'Interruption volontaire',
 
   // 11000: Toutes erreurs de réseau

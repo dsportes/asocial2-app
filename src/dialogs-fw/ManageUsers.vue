@@ -97,8 +97,9 @@ Event: close
       </div>
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="dialogs.valcf = false"/>
-        <btn-confirm :actif="nbdel2 !== 0 || (sDel && sDel.size)"
-          @confirm="close"/>
+        <!--TODO A retester -->
+        <btn-cond :label="$t('iconfirm')" :disable="nbdel2 === 0 && (!sDel || !sDel.size)"
+          confirm @ok="close"/>
       </div>
     </q-card>
   </q-dialog>
@@ -116,7 +117,6 @@ import stores from '../stores/all'
 import { $t, sty, edvol, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'

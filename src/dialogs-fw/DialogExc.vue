@@ -3,7 +3,8 @@
   <q-dialog v-model="ui.appDialogs.DialogExc" persistent>
     <q-card :class="sty('md')">
       <q-toolbar class="tbs">
-        <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX_' + major)}}</q-toolbar-title>
+        <btn-bubble :text="$t('EX' + major + '_bub')"/>
+        <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX' + major + '_label')}}</q-toolbar-title>
       </q-toolbar>
       <q-card-section v-if="!abort">
         <div class="titre-md" v-html="html"/>
@@ -31,6 +32,7 @@ import stores from '../stores/all'
 import { sty, $t } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 
 /* code
 public code: number
@@ -46,7 +48,7 @@ background: true si l'opération a été lancé en mode background
 
 const ui = stores.ui
 const errstack = ref(false)
-const exc = computed(() => ui.exc || { code: 0 })
+const exc = computed(() => ui.exc.ex || { code: 0 })
 const major = computed(() => { const c = exc.value.code; return Math.floor(c / 1000) })
 const html = computed(() => {
   const e = exc.value

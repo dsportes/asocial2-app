@@ -59,24 +59,24 @@ export const useUiStore = defineStore('ui', () => {
   // ********************************************
 
   // Gestion de l'affichage des exceptions
-  const excResolve = ref(null)
-  const exc = ref(null) // Exception trappée : en attente de décision de l'utilisateu
-
+  const exc = reactive({
+    resolve: null,
+    ex: null
+  })
   const displayExc = async (e: any) => {
     if (appDialogs.DialogExc) return
-    exc.value = e
     appDialogs.DialogExc = true
     return new Promise((resolve) => {
-      excResolve.value = resolve
+      exc.ex = e
+      exc.resolve = resolve
     })
   }
-
   const hideExc = () => {
-    exc.value = null
     appDialogs.DialogExc = false
-    const f = excResolve.value
+    const f = exc.resolve.value
+    exc.ex = null
+    exc.resolve= null
     if (f) f()
-    excResolve.value = null
   }
 
   // Gestion d'un dialogue avec confirmation

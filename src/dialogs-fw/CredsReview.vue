@@ -96,7 +96,7 @@ import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
-import { ListUserCreds, SCred } from '../src-fw/operations'
+import { ListUserCreds, SCred, AutoRevokeCred } from '../src-fw/operations'
 import { Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -125,17 +125,27 @@ const checkClose = async () => {
 const todel = ref(new Map<string, Credential>())
 
 const step = ref(1)
-watch(step, async (s) => {
-  if (todel.value.size) await cleanUp()
-})
 
 /* alert
 - 1: supprimer du Safe
 - 2: supprimer de DB
 - 4 et 5: supprimer des deux
+  - 4 : avait une limite dépassée
+  - 5 : décision user
 */
 const cleanUp = async () => {
   console.log('cleanup', todel.value.size)
+  const lst: string[] = []
+  for(const [credId, c] of todel.value) {
+    if (c.alert === 1 || c.allert === 4 || c.alert === 5)
+      lst.push(credId)
+    if (c.alert === 2 || c.allert === 4 || c.alert === 5) {
+      const op = new AutoRevokeCred(c.svc, c.org)
+      await op.run(sf.userId, c.role, c.docId)
+    }
+  }
+  if (lst.length)
+    await sf.autoRevokeCreds(lst)
   
   todel.value.clear()
 }
@@ -234,6 +244,7 @@ const selectSo = async (x: svcOrgN) => {
 const fusion: Ref<Credential[]> = ref()
 
 const reset2 = async () => {
+  if (todel.value.size) await cleanUp()
   const now = Date.now()
   // alert?: number // 0:safe et db,  1:safe pas db, 2:db pas safe 3: limit dépassée
   const op = new ListUserCreds(curso.value.svc, curso.value.org)

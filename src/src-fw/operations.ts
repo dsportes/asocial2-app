@@ -194,6 +194,7 @@ export class Sync extends Operation {
   }
 }
 
+// TODO en discussion (vor service)
 export class RevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
 
@@ -202,6 +203,19 @@ export class RevokeCred extends Operation {
       this.args.revokeReq = { userId, role, docId }
       const res = await this.post()
       return res.status
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
+export class AutoRevokeCred extends Operation {
+  constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
+
+  async run (userId: string, role: string, docId: string) { 
+    try {
+      this.setArgs({ userId, role, docId })
+      await this.post()
     } catch(e) {
       this.ko(e)
     }

@@ -112,7 +112,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       </div>
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="dialogs.delSafe = false"/>
-        <btn-confirm actif @confirm="delSafe"/>
+        <btn-cond :label="$t('iconfirm')" confirm @ok="delSafe"/>
       </div>
     </q-card>
   </q-dialog>
@@ -128,7 +128,6 @@ import stores from '../stores/all'
 import { $t, sty, coolBye } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnConfirm from '../components-fw/BtnConfirm.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 
