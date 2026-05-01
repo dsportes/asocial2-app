@@ -210,8 +210,8 @@ type Device = {
   nbe: number
 }
 
-function EX (e: any, n: number) {
-  const ex = new AppExc({code: 1200 + n, label: 'IDBS error', args: [e.message] })
+function EX (e: any, op: string) {
+  const ex = new AppExc(8, 'IDB_SAFE_error', op, [e.message])
   if (e && e.stack) ex.stack = e.stack
   return ex
 }
@@ -264,7 +264,7 @@ export const useSafeStore = defineStore('safe', () => {
         devName: devName.value || ''
       })
     } catch (e) {
-      throw EX(e, 2)
+      throw EX(e, 'setHeader')
     }
   }
 
@@ -300,7 +300,7 @@ export const useSafeStore = defineStore('safe', () => {
       await db.value.trustings.put({ id: t.userId, bin: encode(obj)})
       trustings.value.set(t.userId, t)
     } catch (e) {
-      throw EX(e, 2)
+      throw EX(e, 'setTrusting')
     }
   }
 
@@ -310,7 +310,7 @@ export const useSafeStore = defineStore('safe', () => {
       await db.value.trustings.where({id}).delete()
       trustings.value.delete(id)
     } catch (e) {
-      throw EX(e, 2)
+      throw EX(e, 'delTrusting')
     }
   }
 
@@ -362,7 +362,7 @@ export const useSafeStore = defineStore('safe', () => {
       s.about = ab
       mySessions.value.set(id, s)
     } catch (e) {
-      throw EX(e, 2)
+      throw EX(e, 'saveTSession')
     }
   }
 
@@ -408,7 +408,7 @@ export const useSafeStore = defineStore('safe', () => {
           console.log(s.dbName + ' deletion FAILED: ', e.message())
         }
     } catch (e) {
-      throw EX(e, 2)
+      throw EX(e, 'setTSession')
     }
   }
 

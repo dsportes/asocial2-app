@@ -1231,66 +1231,95 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
 
   /*
   Détecté par l'application
-  1000: erreur fonctionnelle APP
-  2000: erreur fonctionnelle FW
-  3000: assertion FW - BUG: 
-  4000: assertion APP - BUG:
-  8000: FW : Exception technique DB / réseau
-  9000: APP: Exception technique DB / réseau
+  1: erreur fonctionnelle APP
+  2: erreur fonctionnelle FW
+  3: assertion FW - BUG: 
+  4: assertion APP - BUG:
+  8: FW : Exception technique DB / réseau
+  9: APP: Exception technique DB / réseau
+  10: FW : Exception technique DB / réseau : configuration suspectée
+  11: APP: Exception technique DB / réseau : configuration suspectée
+  99: Interruption actionnée par l'utilisateur
 
   Remonté d'un service - assertions 13...16 transmises à l'adiministarteur
-  11000: erreur fonctionnelle FW : non détectable par l'application
-  12000: erreur fonctionnelle APP : non détectable par l'application
-  13000: assertion FW - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
-  14000: assertion APP - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
-  15000: assertions FW - Données incohérentes non détectables par l'application
-  16000: assertions APP - Données incohérentes non détectables par l'application
-  18000: APP : Exception technique DB / réseau - après 500: configuration ?
-  19000: FW : Exception technique DB / réseau - après 500: configuration ?
+  101: erreur fonctionnelle FW : non détectable par l'application
+  102: erreur fonctionnelle APP : non détectable par l'application
+  103: assertion FW - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  104: assertion APP - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  105: assertions FW - Données incohérentes non détectables par l'application
+  106: assertions APP - Données incohérentes non détectables par l'application
+  108: FW : Exception technique DB / réseau
+  109: APP : Exception technique DB / réseau
+  110: FW : Exception technique DB / réseau : configuration suspectée
+  111: APP : Exception technique DB / réseau : configuration suspectée
   */
 
-  EX0_label: '"BUG" probable: erreur inattendue récupérée par le terminal',
-  EX0_bub: '"BUG" probable: erreur inattendue récupérée par le terminal',
-  EX1_label: 'Données saisies non conformes  détectées par le serveur.',
-  EX1_bub: 'Données saisies non conformes détectées par le serveur.',
-  EX2_label: 'Données saisies non conformes détectées par le serveur',
-  EX2_bub: 'Données saisies non conformes',
-  EX3_label: 'Une situation inattendue a été détectée par le serveur ("BUG" probable).',
-  EX3_bub: `### Une situation inattendue a été détectée par le serveur
+  EX1_label: 'Données erronées (erreur de saisie ?)',
+  EX1_bub: `### Données erronées
+  `,
+
+  EX3_label: 'Une situation inattendue des données a été détectée ("BUG" probable).',
+  EX3_bub: `### Une situation inattendue des données a été détectée
   - les données ne sont pas dans un état _normal_ pour supporter cette opération.
   - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
   
   Vous pouvez continuer, l'opération ne s'est pas terminée correctement mais _a priori_ sans conséquences futures.
   Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
-  Cette anomalie a été rapportée à l'administration technique.
   `,
-  EX4_label: 'Une situation inattendue a été détectée par le serveur ("BUG" probable).',
-  EX4_bub: `### Une situation inattendue a été détectée par le serveur
+
+  EX8_label: 'Une erreur technique inattendue a été récupérée.',
+  EX8_bub: `### Une erreur technique inattendue a été récupérée
+  - des données indispensables à l'exécution de cette opération n'ont pas pu être accédées.
+  - _a priori_, il s'agit d'un incident **technique** sans rapport direct avec l'opération demandée, une base de données non lisible, un accès à un service distant interrompu, etc.
+  - ce peut être aussi un BUG.
+
+  L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
+  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
+  La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
+  `,
+
+  EX10_label: 'Une erreur technique inattendue a été récupérée, (peut-être un problème de configuration).',
+  EX10_bub: `### Une erreur technique inattendue a été récupérée
+  - un problème de configuration est supecté (donc un BUG).
+  - des données indispensables à l'exécution de cette opération n'ont pas pu être accédées.
+  - _a priori_, il s'agit d'un incident **technique** sans rapport direct avec l'opération demandée, une base de données non lisible, un accès à un service distant interrompu, etc.
+
+  L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
+  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
+  La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
+  `,
+
+  EX105_label: 'Une situation inattendue des données a été détectée ("BUG" probable).',
+  EX105_bub: `### Une situation inattendue des données a été détectée par le serveur
   - les données ne sont pas dans un état _normal_ pour supporter cette opération.
   - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
   
   L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
   Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
-  Cette anomalie a été rapportée à l'administration technique.
   `,
-  EX5_label: 'Une erreur technique inattendue a été récupérée par le serveur.',
-  EX5_bub: `### Une erreur technique inattendue a été récupérée par le serveur
-  - des données indispensables à l'exécution de cette opération n'ont pas pu être accédées.
-  - _a priori_, il s'agit d'un incident sans rapport direct avec l'opération demandée, une base de données non lisible, un accès à un service distant interrompu, etc.
 
-  L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
-  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
-  La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
-  Cette anomalie a été rapportée à l'administration technique.
+  EX99_label: 'Interruption volontaire d\'une opération par appui volontaire sur le bouton rouge',
+  EX99_bub: `### Interruption volontaire d\'une opération
+  - par appui volontaire sur le bouton rouge.
+  - il est impossible de savoir si l\'opération s\'est bien effectuée ou non.
+  
+  Regarder les données affichées pour en déduire si l\'opération est allée à son terme ou a été interrompue avant.
   `,
-  EX6_label: '"BUG" probable: erreur inattendue récupérée par le serveur',
-  EX6_bub: '"BUG" probable: erreur inattendue récupérée par le serveur',
 
-  EX_10: 'Interruption volontaire (appui sur le bouton rouge)',
-  EX_11: 'Erreur d`accès au serveur, réseau indisponible ?',
-  EX_12: 'Erreur d\'accès à la base locale',
-  EX_13: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
-  EX_14: 'Erreur inattendue survenue dans le traitement sur l\'appareil',
+  EX99_interrupted: 'Interrompu par l\'utilisateur',
+
+  EX3_IDB_keyK_not_declared: 'IDB_keyK_not_declared',
+  EX3_svc_org_$OP_not_found: 'svc_org_$OP_not_found',
+  EX3_svcopurl_not_found: 'svcopurl_not_found. Service: [{0}] - StatusText: [{1}]',
+  EX3_svcorgurl_not_found: 'svcorgurl_not_found. Organisation: [{0}] - Service: [{1}]',
+  EX3_safeStore_url_not_found: 'safeStore_url_not_found. Safestore: [{0}]',
+
+  EX8_IDB_error: 'IDB_error. Détail: [{0}]',
+  EX8_IDB_SAFE_error: 'IDB_error. Détail: [{0}]',
+  EX8_HTTP_not_200: 'HTTP pas 200. Status: [{0}] - StatusText: [{1}]',
+  EX8_HTTP_400_401: 'HTTP 400 ou 401. Détail: [{0}]',
+  EX8_HTTP_500_etc: 'HTTP 500 etc. Status: [{0}] - URL: [{1}] - StatusText: [{2}]',
+  EX8_unexpected_network_service_response: 'unexpected_network_service_response. URL: [{0}] - Détail: [{1}]',
 
   EX101_masterdir_no_admin: 'masterdir_no_admin',
   EX101_masterdir_svc_unkown_or_not_implemented_by_op: 'Service: [{0}] - Opérateur: [{1}] - Organisation: [{2}]',
@@ -1312,9 +1341,17 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX103_invalid_string_array_argument: 'Argument: [{0}]',
   EX103_invalid_int_argument: 'Argument: [{0}]',
   EX103_invalid_bool_argument: 'Argument: [{0}]',
+  EX103_missing_argument_name: 'missing_argument_name',
+  EX103_missing_argument: 'Argument: [{0}]',
+  EX103_invalid_argument: 'Argument: [{0}]',
   EX103_SafeOperation_unknown_operation: 'Opération: [{0}]',
+  EX103_missing_credential: 'Credential recherché et non transmis à l\'opération. Organisation: [{0}] - Role: [{1}] - DocId: [{2}]',
+  EX103_no_cred_owner: 'Tentative de révocation d\'un credential dont l\'utilisateur n\'est propriétaire. Role: [{1}] - DocId: [{2}]',
+  EX103_missing_p1_and_p2: 'Tentative de remplacement des phrases secrètes sans les fournir.',
 
   EX105_Subscription_unknown_session: 'SessionId: [{0}]',
+  EX105_document_class_not_registered: 'Classe de document [{0}] non déclarée dans config.documentClasses',
+  EX105_masterdir_safe_unexpected_exception: 'Opération Master Directory ou Safe Box en échec inattendu. Détail: [{0}]',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
@@ -1327,62 +1364,6 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX110_DB_lock: 'Détail: [{0}]',
   EX110_SQLite_path_not_found: 'Path: [{0}]',
   EX110_SQLite_path_missing: 'SQLite path missing',
-
-
-
-  EX_1001: 'Erreur "fake" pour test\n{0}',
-  EX_1002: 'Opération inconnue [{0}]',
-  EX_1003: 'Opération [{0}] - organisation inconnue [{1}]',
-  EX_1004: 'Opération [{0}] - service inconnu [{1}]',
-  EX_1005: 'Droit d\'accès NON validé - organisation [{0}] - role [{1}] - entid [{2}] ]',
-  EX_1006: 'Jeton d\'accès expiré sur opération pour l\'organisation [{0}] - Tenter de la relancer.',
-  EX_1007: 'BUG probable: appel d\'opération sans service ou sans organisation / opérateur.',
-  EX_1008: 'L\'organisation [{0}] n\'a pas d\'opérateur assurant le service [{1}]. Erreur de saisie (ou BUG improbable)',
-  EX_1009: 'Le service [{0}] n\'est pas géré par l\'application. Erreur de saisie (ou BUG improbable)',
-  EX_1010: 'L\'opérateur [{0}] ne gère pas les "safes" des utilisateurs. Erreur de saisie (ou BUG improbable)',
-  EX_1011: 'Le service [{0}] n\'est pas assuré par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
-  EX_1012: 'Aucun opérateur [{0}] n\'est enregistré pour gérer le stockage de coffres-forts.',
-
-  EX_2002: 'Vous n\'êtes pas enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
-  EX_2003: 'Signature "hors délai" dans la vérification que vous êtes enregistré en tant qu\'Administrateur du dépôt générique des "coffres forts"',
-  EX_2004: 'Pour le service [{0}], l\'organisation [{2}] n\'est pas hébergée par l\'opérateur [{1}]. Erreur de saisie (ou BUG improbable)',
-  EX_2005: 'Utilisateur non authentifié par le service (PEMV non trouvé).',
-  EX_2006: 'Utilisateur non authentifié par le service (signature invalide).',
-  EX_2007: 'Cette opération n\'est accessible qu\'à un utilisateur ADMINISTRATEUR du service.',
-  EX_2008: 'Un credential au moins a été rejeté. Liste des rejets: [{0}]',
-  EX_2009: 'Cette opération n\'est accessible qu\'à un utilisateur authentifié.',
-
-  EX_3001: 'BUG probable: erreur inattendue\n{0}',
-  EX_3002: 'BUG probable: droit d\'accès [{0} / {1} / {2}] requis pour cette opération et non transmis par l\'application.',
-  EX_3003: 'BUG probable: échec de l\'opération [{0}] sur appel de l\'opération sur SAFE [{1}]. Détail : {2}',
-  EX_3004: 'BUG probable: classe de document [{0}] non déclarée dans config.documentClasses',
-  EX_3005: 'BUG probable: opérateur de SAFE {1} inconnu pour l\'opération [{0}]',
-  EX_3006: 'BUG probable: changement de phrases secrètes mais aucune n\'est donnée',
-  EX_3007: 'BUG probable: tentative de suppression d\'un droits d\'accès dont vous n\'êtes pas propriétaire. ({0} / {1})',
-  EX_10000: 'Interruption volontaire',
-
-  // 11000: Toutes erreurs de réseau
-  EX_11001: 'Erreur inattendue du serveur. Status:{0} URL:{1}.\n{2}',
-  EX_11002: 'Erreur inattendue d\'envoi au serveur, de réseau, ou de réception de la réponse. URL:{0}.\n{1}',
-  EX_11003: 'Rupture de la liaison avec le serveur par le serveur ou URL mal configurée ( {0} ).',
-  EX_11005: 'Erreur de transfert du fichier vers le serveur de fichier. Détail: {0}',
-  EX_11006: 'Erreur de transfert du fichier vers l\'application locale de stockage de fichiers. Détail: {0}',
-  EX_11007: 'Aucun serveur ne prend en charge l\'organisation "{0}".\nDétail: {1}',
-
-  // 12000: Toutes erreurs d'accès à la base locale
-  EX_12001: 'Ouverture de la base locale impossible.\nDétail: {0}',
-  EX_12002: 'Erreur d\'accès à la base locale impossible.\nDétail: {0}',
-
-  // 13000:  Erreur inattendue trappée sur le browser
-  EX_13000: 'Bug probable de l\'application.\nDétail: {0}',
-  EX_13001: 'Retour de la requête mal formé : parse JSON en erreur. Opération: {0}\nDétail: {1}',
-  EX_13002: 'Retour de la requête mal formé : désérialisation en erreur. Opération: {0}\nDétail: {1}',
-  EX_13007: 'Echec d\'encryption. Buffer: {0} - Clé: {1} - Détail: {2}',
-  EX_13008: 'Echec de decryption. Buffer: {0} - Clé: {1} - Détail: {2}',
-  EX_13021: 'Bug probable de \'opération "{0}" après plusieurs tentatives aynat échoué.',
-  EX_13022: 'Fichier impossible à décrypter: {0}',
-  EX_13023: 'Echec de decryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
-  EX_13024: 'Echec d\'encryption RSA. Buffer: {0} - Clé: {1} - Détail: {2}',
 
   EX_quit: 'Quitter l\'application',
   EX_reload: 'Relancer l\'application',

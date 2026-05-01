@@ -37,21 +37,21 @@ export class IDB {
     this.mondebug = config.mondebug
     this.keyK = keyFromB64(config['keyK'])
     if (!this.keyK)
-      throw new AppExc({code: 12003, label: 'IDB error: keyK not declared' })
+      throw new AppExc(3, 'IDB_keyK_not_declared')
     if (this.mondebug) console.log('Open IDB: [' + name + ']')
     this.db = new Dexie(name, { autoOpen: true })
     this.db.version(1).stores(STORES)
     IDB.idb = this
   }
 
-  static async open() {
+  static async open () {
     const session = stores.session
     try {
       const idb = new IDB(session.dbName)
       await idb.db.open()
       return idb
     } catch (e) {
-      throw IDB.EX(e, 1)
+      throw IDB.EX(e, 'open')
     }
   }
 
@@ -67,8 +67,8 @@ export class IDB {
     IDB.idb = null
   }
 
-  static EX (e: any, n: number) { 
-    const ex = new AppExc({code: 1200 + n, label: 'IDB error', args: [e.message] })
+  static EX (e: any, opName: string) { 
+    const ex = new AppExc(8, 'IDB_error', opName, [e.message])
     if (e && e.stack) ex.stack = e.stack
     return ex
   }
@@ -94,7 +94,7 @@ export class IDB {
       const r = await this.db.singletons.get(name)
       return r ? (await this.decryptRecord(r.bin) as Object) : { }
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'getState')
     }
   }
 
@@ -104,7 +104,7 @@ export class IDB {
       const bin = await this.cryptRecord(rec)
       await this.db.singletons.put({ name, bin })
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'putState')
     }
   }
 
@@ -118,7 +118,7 @@ export class IDB {
         await this.db.subsriptions.where({ org }).delete()
       })
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'delSubscription')
     }
   }
 
@@ -132,7 +132,7 @@ export class IDB {
       })
       return m
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'getSubscriptions')
     }
   }
 
@@ -150,7 +150,7 @@ export class IDB {
       })
       return m
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'getSubs')
     }
   }
 
@@ -201,7 +201,7 @@ export class IDB {
           await this.db.documents.where({ org, id: binPks.get(pk) }).delete()
       })
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'retSync')
     }
   }
 
@@ -230,7 +230,7 @@ export class IDB {
         }
       })
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'updateSubscription')
     }
   }
 
@@ -248,7 +248,7 @@ export class IDB {
       } else 
         await this.db.subs.where({ org, clazz }).delete()
     } catch (e) {
-      throw IDB.EX(e, 2)
+      throw IDB.EX(e, 'updSubs')
     }
   }
 }

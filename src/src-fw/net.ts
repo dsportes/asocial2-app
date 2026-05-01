@@ -9,7 +9,7 @@ export async function getData (url: string) : Promise<Uint8Array> {
       headers: {'Content-Type': 'application/octet-stream' }
     })
     if (response.status === 200) return await response.bytes()
-    throw new AppExc({ code: response.status, label: response.statusText, args: ['getData'] })
+    throw new AppExc(8, 'HTTP_not_200', 'getData', ['' + response.status, response.statusText])
   } catch (e: any) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     throw e
@@ -24,7 +24,7 @@ export async function putData (url: string, data: Uint8Array) : Promise<void> {
       body: new Uint8Array(data)
     })
     if (response.status !== 200)
-      throw new AppExc({ code: response.status, label: response.statusText, args: ['putData'] })
+      throw new AppExc(8, 'HTTP_not_200', 'putData', ['' + response.status, response.statusText])
   } catch (e: any) {
     console.log(e.message + (e.stack ? '\n' + e.stack : ''))
     throw e

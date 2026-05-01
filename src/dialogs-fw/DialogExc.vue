@@ -44,6 +44,30 @@ public args: string[]
 public message: string
 
 background: true si l'opération a été lancé en mode background
+
+Codes:
+  Détecté par l'application
+  1: erreur fonctionnelle APP
+  2: erreur fonctionnelle FW
+  3: assertion FW - BUG: 
+  4: assertion APP - BUG:
+  8: FW : Exception technique DB / réseau
+  9: APP: Exception technique DB / réseau
+  10: FW : Exception technique DB / réseau : configuration suspectée
+  11: APP: Exception technique DB / réseau : configuration suspectée
+  99: Interruption actionnée par l'utilisateur
+
+  Remonté d'un service - assertions 13...16 transmises à l'adiministarteur
+  101: erreur fonctionnelle FW : non détectable par l'application
+  102: erreur fonctionnelle APP : non détectable par l'application
+  103: assertion FW - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  104: assertion APP - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
+  105: assertions FW - Données incohérentes non détectables par l'application
+  106: assertions APP - Données incohérentes non détectables par l'application
+  108: FW : Exception technique DB / réseau
+  109: APP : Exception technique DB / réseau
+  110: FW : Exception technique DB / réseau : configuration suspectée
+  111: APP : Exception technique DB / réseau : configuration suspectée
 */
 
 const ui = stores.ui

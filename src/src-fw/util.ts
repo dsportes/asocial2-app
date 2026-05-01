@@ -169,18 +169,16 @@ export class AppExc {
   public code: number
   public label: string
   public opName: string
-  public org: string
   public stack: string
   public args: string[]
   public message: string
 
-  constructor ( arg: any ) {
-    this.label = arg.label || ''
-    this.code = arg.code || 0
-    this.opName = arg.opName || ''
-    this.org = arg.org || ''
-    this.args = arg.args || []
-    this.stack = arg.stack || ''
+  constructor (code: number, label: string, opName?: string, args?: string[], stack?: string) {
+    this.label = label || ''
+    this.code = code || 0
+    this.opName = opName || ''
+    this.args = args || []
+    this.stack = stack || ''
     this.message = 'AppExc: ' + this.code + ':' + this.label +
       (this.opName ? '@' + this.opName + ':': '') + JSON.stringify(this.args || [])
   }

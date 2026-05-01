@@ -93,7 +93,7 @@ export class Operation extends AOperation {
   constructor (opName: string, SVC: string, org?: string, $OP?: string, background?: boolean) {
     super(opName)
     if (!SVC || (!org && !$OP))
-      throw new AppExc({code: 1007, label: 'svc / org / $OP not found', opName: this.opName, args: [] })
+      throw new AppExc(3, 'svc_org_$OP_not_found', this.opName)
 
     if (org) this.args.org = org
     else if ($OP) this.args.$OP = $OP
@@ -113,14 +113,14 @@ export class Operation extends AOperation {
     if (this.args.$OP) {
       const u = await this.urlOfSvcOp(this.SVC, this.args.$OP)
       if (u) return u
-      throw new AppExc({code: 1011, label: 'svcopurl not found', opName: this.opName, args: [this.SVC, this.args.$OP] })
+      throw new AppExc(3, 'svcopurl_not_found', this.opName, [this.SVC, this.args.$OP])
     } else {
       let e = AOperation.orgs.get(this.args.org)
       if (!e) e = await AOperation.loadOrg(this.args.org)
       const $OP = e ? e.get(this.SVC) : ''
       const u = !$OP ? '' : await this.urlOfSvcOp(this.SVC, $OP)
       if (u) return u
-      throw new AppExc({code: 1008, label: 'svcorgurl not found', opName: this.opName, args: [this.args.org, this.SVC] })
+      throw new AppExc(3, 'svcorgurl_not_found', this.opName, [this.args.org, this.SVC])
     }
   }
 
@@ -173,18 +173,17 @@ export class Operation extends AOperation {
         return obj
       }
       if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
-        throw new AppExc(obj)
+        throw new AppExc(8, 'HTTP_404_401', 'post', [JSON.stringify(obj)])
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc({ code:11001, label: 'Unexpected from server',
-        args:[response.status, (u || '?'), txt]})
+      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (u || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
-      if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
-      throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
-        args:[(this.url || '?'), e.toString()]})
+      if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
+      throw new AppExc(8, 'unexpected_network_service_response', 'post',
+        [(this.url || '?'), e.toString()])
     }
   }
 
@@ -199,7 +198,7 @@ abstract class A2Operation extends AOperation {
     const x = os.get('SAFE')
     const u = x?.get(this.safeStore)
     if (!u)
-      throw new AppExc({code: 1012, label: 'safeStore url not found', opName: this.opName, args: [this.safeStore] })
+      throw new AppExc(3, 'safeStore_url_not_found', this.opName, [this.safeStore])
     return u
   }
 
@@ -234,18 +233,17 @@ abstract class A2Operation extends AOperation {
         return obj
       }
       if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
-        throw new AppExc(obj)
+        throw new AppExc(8, 'HTTP_404_401', 'post', [JSON.stringify(obj)])
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc({ code:11001, label: 'Unexpected from server',
-        args:[response.status, (this.url || '?'), txt]})
+      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (this.url || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
-      if (this.aborted) throw new AppExc({ code: 10000, label: 'Interrupted', opName: this.opName})
-      throw new AppExc({ code:11002, label: 'Unexpected network/server/response',
-        args:[(this.url || '?'), e.toString()]})
+      if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
+      throw new AppExc(8, 'unexpected_network_service_response', 'post',
+        [(this.url || '?'), e.toString()])
     }
   }
 }
