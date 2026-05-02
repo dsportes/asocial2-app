@@ -1,7 +1,6 @@
 import { DocRegistry, Document } from '../src-fw/docregistry'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64 } from '../src-fw/b64'
-import { SCred } from '../src-fw/operations'
 // import stores from '../stores/all'
 
 
@@ -52,6 +51,14 @@ export class CredSafe {
     const c = Credential.fromCredSafe(cs, keyToB64(pub), limit)
     return [cs, c]
   }
+}
+
+export type SCred = {
+  credId: string
+  role: string
+  docId: string
+  limit: number
+  cond: any
 }
 
 /* Document Credential stocké en DB du service/org

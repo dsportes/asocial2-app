@@ -228,6 +228,7 @@ export default {
   op_InvitCancel: 'Suppression d\'une invitation par l\'utilisateur',
   op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
   op_$CreateCred: 'Création d\'un credential',
+  op_GetCredLimitCond: 'Obtention des conditions d\'un credential',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1014,8 +1015,8 @@ Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
   CRRstep_2: 'Droits d\'accès enregistrés pour {0} / {1}',
   CRRcond: 'Propriétés spécifiques de ce droit d\'accès:',
   CRRobs1: 'Ce droit d\'accès est obsolète, il a été supprimé en central. Il sera nettoyé.',
-  CRRobs2: 'Ce droit d\'accès enregistré en central ne l\'est plus dans votre Safe Box. Il sera nettoyé.',
-  CRRobs3: 'Ce droit d\'accès a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
+  CRRobs2: 'Ce droit d\'accès a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
+  CRRobs3: 'Ce droit d\'accès a une limite de validité dépassé. Vous avez décidé de le supprimer. Voulez-vous finalement le garder ?',
   CRRdel: 'Ce droit d\'accès est applicable. Voulez-vous cependant y renoncer?',
   CRRdel2: 'Ce droit d\'accès est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
 
@@ -1358,7 +1359,9 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
 
   EX105_Subscription_unknown_session: 'SessionId: [{0}]',
   EX105_document_class_not_registered: 'Classe de document [{0}] non déclarée dans config.documentClasses',
-  EX105_masterdir_safe_unexpected_exception: 'Opération Master Directory ou Safe Box en échec inattendu. Détail: [{0}]',
+  EX105_masterdir_unexpected_exception: 'Opération Master Directory en échec inattendu. Détail: [{0}]',
+  EX105_service_unexpected_exception: 'Opération Service en échec inattendu. Détail: [{0}]',
+  EX105_safe_unexpected_exception: 'Opération Safe Box en échec inattendu. Détail: [{0}]',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
@@ -1453,6 +1456,10 @@ Quand une demande est validable, ses options retenues (s'il y en a) sont affich�
   'ROLEOrg.manager': 'Manager de l\'organisation',
   'ROLEOrg.manager_bub': `### Manager de l\'organisation
 `,
+  'ROLESponsor.': 'Sponsor',
+  'ROLESponsor._bub': `### Sponsor
+`,
+
   'ROLEAuteur.': 'Auteur d\'articles',
   'ROLEAuteur._bub': `### Auteur d\'articles
 `,

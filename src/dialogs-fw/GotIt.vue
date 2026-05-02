@@ -13,7 +13,7 @@
         <btn-cond flat icon="check" :label="$t('iconfirm')" size="lg"
           @ok="gotit(true)"/>
       </div>
-      <div v-if="ui.diag.cf === -1" class="row q-my-md q-mx-sm justify-end"> 
+      <div v-if="ui.diag.cf === -1 || ui.diag.cf > 0" class="row q-my-md q-mx-sm justify-end"> 
         <btn-cond flat icon="check" :label="$t('gotit')" @ok="gotit(true)"/>
       </div>
     </q-card>
@@ -45,7 +45,7 @@ const gotit = (b: boolean) => {
 
 const init = () => {
   const d = ui.diag
-  if (d.txt && d.v > 0) setTimeout(() => { gotit(true) }, (d.v > 3 ? 3000 : d.v * 1000))
+  if (d.txt && d.cf > 0) setTimeout(() => { gotit(true) }, (d.cf > 3 ? 3000 : d.v * 1000))
 }
 
 watch(() => ui.diag.token, () => { init()} )

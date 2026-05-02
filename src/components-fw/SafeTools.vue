@@ -183,11 +183,11 @@ const fnc = () => {
 const delSafe = async () => {
   const status = await sf.delSafe()
   if (status === 0) {
-    await ui.diagDisplay($t('HPcsret_9'))
+    await ui.diagDisplay($t('HPcsret_9'), true)
     dialogs.SafeTools = false
     coolBye()
   } else {
-    await ui.diagDisplay($t('HPopsret_' + status))
+    await ui.diagDisplay($t('HPopsret_' + status), true)
   }
 }
 

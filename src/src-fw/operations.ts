@@ -275,25 +275,18 @@ export class InvitGet extends Operation {
   }
 }
 
-export type SCred = {
-  credId: string
-  role: string
-  docId: string
-  limit: number
-  cond: any
-  from?: number
-}
+export class GetCredLimitCond extends Operation {
+  constructor (SVC: string, org: string) { super('GetCredLimitCond', SVC, org) }
 
-export class ListUserCreds extends Operation {
-  constructor (SVC: string, org: string) { super('ListUserCreds', SVC, org) }
-
-  async run ( ) : Promise<SCred[]> {
+  async run (c: Credential ) : Promise<[number, Object] | null> {
     try {
+      this.setArgs({ credId: c.credId, role: c.role, docId: c.docId})
+      await this.sign(c.role, c.docId)
       const res = await this.post()
-      return res.list as SCred[]
+      return res.limitcond ? res.limitcond : null
     } catch(e) {
       this.ko(e)
-      return []
+      return null
     }
   }
 }

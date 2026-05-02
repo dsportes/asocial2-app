@@ -5,7 +5,7 @@
       <div class="col-1">
         <q-icon v-if="cred.alert === 0" name="check" size="18px" color="green-5"/>
         <q-icon v-if="cred.alert" name="warning" size="24px" color="warning"/>
-        <btn-cond v-if="cred.alert >= 4"
+        <btn-cond v-if="cred.alert >= 3"
           icon="undo" round color="primary" @ok="emit('undo', true)"/>
       </div>
       <div class="col-11 q-pl-sm cursor-pointer" @click.stop="emit('select', true)">
@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed} from 'vue'
+// import { computed} from 'vue'
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 

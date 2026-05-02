@@ -988,7 +988,6 @@ export const useSafeStore = defineStore('safe', () => {
     creds: Object | null
     profiles: Object | null
     prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
-    invits: Object | null// une propriété par invitation
   }
 
   const createSafe = async (
@@ -1032,8 +1031,7 @@ export const useSafeStore = defineStore('safe', () => {
       devices: null,
       creds: null,
       profiles: null,
-      prefs: null,
-      invits: null
+      prefs: null
     }
 
     const mdUser: MDuser = {

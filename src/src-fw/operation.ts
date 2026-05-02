@@ -312,14 +312,14 @@ export class AuthRecord {
   }
 
   async sign (svc: string, org: string, role: string, docId?: string) : Promise<boolean> {
-    const session = stores.session
-    for(const [id, c] of session.creds) {
+    const sf = stores.safe
+    for(const [id, c] of sf.mySafeCreds) {
       if (c.svc === svc && c.org === org
         && c.role === role && (docId ? c.docId === docId : true)) {
-        const x = await Crypt.sign(keyFromB64(c.pems), this.challenge)
+        const x = await Crypt.sign(keyFromB64(c.privs), this.challenge)
         const sign = new Uint8Array(x)
         if (!this.signatures) this.signatures = {}
-        this.signatures[c.role + '/' + (c.docId || '')] = sign
+        this.signatures[c.role + '/' + (c.docId || '')] = [c.credId, sign]
         return true
       }
     }

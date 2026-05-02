@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="role === 'Org.manager'" class="column full-width">
-      <div class="titre-md">{{ $t('COND_orgm_1', [cond.name]) }}</div>
+    <div v-if="cred.role === 'Sponsor.' && cred.docId === 'Org.manager'" class="column full-width">
+      <div class="titre-md">{{ $t('COND_orgm_1', [cred.cond.name]) }}</div>
     </div>
   </div>
 </template>
@@ -11,11 +11,11 @@
 // import { ref, Ref, computed, watch } from 'vue'
 // @ts-ignore
 import { $t } from '../src-fw/util'
+import { CredSafe } from '../src-fw/documents'
 // import stores from '../stores/all'
 
 const props = defineProps({
-  cond: Object,
-  role: String
+  cred: CredSafe
 })
 
 </script>

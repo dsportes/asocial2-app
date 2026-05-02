@@ -54,7 +54,7 @@
       </div>
     </scroll-area>
 
-    <div v-if="sf.auth.admins && org.ok" class="q-my-md">
+    <div v-if="sf.auth.admins" class="q-my-md">
       <q-separator color="orange"/>
       <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
       <input-b class="full-width" prefix="FCtarget" size="alias" noval
@@ -66,7 +66,7 @@
         <btn-cond :label="$t('APgrantmgr')" icon="check"
           :disable="targetUser.err !== ''" @ok="grantManager"/>
         <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
-          :disable="!org.inp" @ok="dolist"/>
+          @ok="dolist"/>
       </div>
     </div>
 
@@ -145,14 +145,7 @@ watch(lstMgr, async (l) => {
   */
 })
 
-/*watch(() => org.inp, async (x) => {
-  org.ok = false
-  if (lstMgr.value.length) lstMgr.value = []
-})
-*/
-
 const doOrgOk = async () => {
-  // org.ok = true
   await dolist()
 }
 
@@ -184,7 +177,7 @@ const grantManager = async () => {
   const ret = await op.post() as ICVS
   const icvs = ret ? ret['icvs'] : null
   if (!icvs) {
-    await ui.diagDisplay($t('APnouser'))
+    await ui.diagDisplay($t('APnouser'), true)
     return
   }
   // (svc: string, org: string, tab: string, userId: string)

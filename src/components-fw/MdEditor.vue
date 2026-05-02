@@ -157,7 +157,7 @@ const print = async () => {
   if (url) {
     setTimeout(() => { window.open(url, '_blank') }, 100)
   } else {
-    await ui.diagDisplay($t('noprint'))
+    await ui.diagDisplay($t('noprint'), true)
   }
 }
 

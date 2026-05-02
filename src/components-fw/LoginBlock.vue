@@ -65,7 +65,7 @@ const selectUser = (u) => {
 const authPIN = async () => {
   const status = await sf.openSafeByPin(pin.inp, selectedUser.value)
   if (status === 0) emit('logged', null)
-  else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
+  else if (status > 0) await ui.diagDisplay($t('STSF_' + status), true)
 }
 
 const entryA = reactive({inp:'', err:''})

@@ -89,7 +89,7 @@ export const useUiStore = defineStore('ui', () => {
   const diagDisplay = async (txt: string, nbsec?: number | boolean) => {
     return new Promise((resolve) => {
       diag.token = Date.now()
-      diag.cf = nbsec === true ? -1 : (nbsec || 0)
+      diag.cf = nbsec === true || nbsec === undefined ? -1 : (nbsec || 0)
       diag.txt = txt
       diag.resolve = resolve
       appDialogs.GotIt = true
@@ -143,7 +143,7 @@ export const useUiStore = defineStore('ui', () => {
     DialogHelp: false,
     GotIt: false
   })
-  
+
   const confirmQuit = () => { appDialogs.ConfirmQuit = true }
 
   const backToOpenSession = () => {
