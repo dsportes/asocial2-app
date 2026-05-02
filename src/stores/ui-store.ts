@@ -143,9 +143,8 @@ export const useUiStore = defineStore('ui', () => {
     DialogHelp: false,
     GotIt: false
   })
-  const confirmQuit = () => { appDialogs.ConfirmQuit = false }
-
-  // const reopenSession = ref(0)
+  
+  const confirmQuit = () => { appDialogs.ConfirmQuit = true }
 
   const backToOpenSession = () => {
     stores.session.endSession()

@@ -173,7 +173,7 @@ export class Operation extends AOperation {
         return obj
       }
       if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
-        throw new AppExc(8, 'HTTP_404_401', 'post', [JSON.stringify(obj)])
+        throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
       throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (u || '?'), txt])
@@ -233,7 +233,7 @@ abstract class A2Operation extends AOperation {
         return obj
       }
       if (response.status === 400 || response.status === 401) // 400: AppExc - 401: AppExc inattendue
-        throw new AppExc(8, 'HTTP_404_401', 'post', [JSON.stringify(obj)])
+        throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
       throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (this.url || '?'), txt])

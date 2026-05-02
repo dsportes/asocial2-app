@@ -23,6 +23,18 @@ export class Bug extends Operation {
   }
 }
 
+export class ErrorTest extends Operation {
+  constructor (SVC: string, org: string) { super('ErrorTest', SVC, org) }
+
+  async run () : Promise<void> {
+    try {
+      await this.post()
+    } catch(e) {
+      this.ko(e)
+    }
+  }
+}
+
 export class  SvcOpIsAdmin extends Operation {
   constructor (SVC: string, $OP: string) { super('SvcOpIsAdmin', SVC, '', $OP) }
 

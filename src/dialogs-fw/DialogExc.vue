@@ -7,13 +7,15 @@
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX' + major + '_label')}}</q-toolbar-title>
       </q-toolbar>
       <q-card-section v-if="!abort">
-        <div class="titre-md" v-html="html"/>
+        <div class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
+        <div class="q-mb-xs titre-md" v-html="html"/>
+        <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
       </q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
         <btn-cond v-if="!exc.background" color="primary" icon="arrow_forward"
           :label="$t('EX_continue')" @ok="cont"/>
         <btn-cond color="warning" icon="logout" 
-          :label="$t('EX_quit')" @ok="reload"/>
+          :label="$t('EX_quit')" @ok="bye"/>
         <btn-cond color="warning" icon="refresh" 
           :label="$t('EX_reload')" @ok="reload"/>
       </q-card-actions>
@@ -41,6 +43,7 @@ public opName: string
 public org: string
 public stack: string
 public args: string[]
+
 public message: string
 
 background: true si l'opération a été lancé en mode background
@@ -69,17 +72,27 @@ Codes:
   110: FW : Exception technique DB / réseau : configuration suspectée
   111: APP : Exception technique DB / réseau : configuration suspectée
 */
+const important = new Set([103, 104, 108, 109, 110, 111])
 
+const equiv = {
+  1: 1, 2: 1, 3: 3, 4: 3, 8: 8, 9: 8, 10: 10, 11: 10,
+  101: 1, 102: 1, 103: 3, 104: 4, 105: 105, 106: 105, 
+  107: 105, 108: 8, 109: 8, 110: 10, 111: 10
+}
 const ui = stores.ui
 const errstack = ref(false)
 const exc = computed(() => ui.exc.ex || { code: 0 })
-const major = computed(() => { const c = exc.value.code; return Math.floor(c / 1000) })
+const major = computed(() => equiv[exc.value.code] || 8)
+const isApp = computed(() => exc.value.code < 100)
+const abort = computed(() => exc.value.code === 99)
+const i18e = computed(() => 
+  'EX' + exc.value.code + '_' + exc.value.label)
+
 const html = computed(() => {
   const e = exc.value
-  const str = !e.args ? $t('EX_' + e.code) : $t('EX_' + e.code, e.args)
-  return  e.code + ' - ' + str.replace(/\n/g, '<br>')
+  const str = !e.args ? $t(i18e.value) : $t(i18e.value, e.args)
+  return str.replace(/\n/g, '<br>')
 })
-const abort = computed(() => major.value === 10)
 
 async function bye () {
   ui.confirmQuit()

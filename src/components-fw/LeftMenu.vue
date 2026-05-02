@@ -17,6 +17,7 @@ Contrôlé par ui.leftMenu
     </div>
   </q-header>
   <q-page-container>
+    <!--div><btn-cond label="Test Erreur" @ok="test"/></div-->
     <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
       flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
@@ -55,6 +56,7 @@ Contrôlé par ui.leftMenu
 import { computed, reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
+import { ErrorTest } from '../src-fw/operations'
 
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -72,6 +74,10 @@ const session = stores.session
 const dialogs = reactive({
   SessionClose: false
 })
+
+const test = async () => {
+  await new ErrorTest('AS2', 'doda').run()
+}
 
 const sessionClose = (n) => {
   if (n === 1) ui.backToOpenSession()

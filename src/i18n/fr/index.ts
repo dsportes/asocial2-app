@@ -1254,8 +1254,14 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   111: APP : Exception technique DB / réseau : configuration suspectée
   */
 
+  EX_isApp: 'Erreur détectée par l\'application s\'exécutant sur ce terminal.',
+  EX_isSvc: 'Erreur détectée par un service "cloud" et remontée à l\'application s\'exécutant sur ce terminal.',
+  EX_toAdmin: 'L\'erreur a été transmise à l\'administrateur technique.',
   EX1_label: 'Données erronées (erreur de saisie ?)',
   EX1_bub: `### Données erronées
+  A priori une erreur de saisie a provoqué cette anomalie: corriger et relancer l\'opération.
+
+  _Il n'est toutefois pas impossible que la saisie soit correcte et la détection d'anomalie ait un BUG._
   `,
 
   EX3_label: 'Une situation inattendue des données a été détectée ("BUG" probable).',
@@ -1317,7 +1323,6 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX8_IDB_error: 'IDB_error. Détail: [{0}]',
   EX8_IDB_SAFE_error: 'IDB_error. Détail: [{0}]',
   EX8_HTTP_not_200: 'HTTP pas 200. Status: [{0}] - StatusText: [{1}]',
-  EX8_HTTP_400_401: 'HTTP 400 ou 401. Détail: [{0}]',
   EX8_HTTP_500_etc: 'HTTP 500 etc. Status: [{0}] - URL: [{1}] - StatusText: [{2}]',
   EX8_unexpected_network_service_response: 'unexpected_network_service_response. URL: [{0}] - Détail: [{1}]',
 
@@ -1328,6 +1333,8 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX101_operation_no_user_keys_cv: 'operation_no_user_keys_cv',
   EX101_operation_bad_signature: 'operation_bad_signature',
   EX101_operation_bad_credentials: 'Rôles KO: [{0}]',
+
+  EX102_error_test: 'Test d\'erreur. Arg1: [{0}] - Arg1: [{1}]',
 
   EX103_origin_not_authorized: 'Origine: [{0}]',
   EX103_unknown_operation: 'Opération: [{0}]',
