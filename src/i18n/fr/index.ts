@@ -1002,9 +1002,10 @@ Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_
 `,
   SESconfig: 'Droits d\'accès et sessions épinglées',
 
-  CRRnosvc: 'Ce service [{0}] ne gère pas cette organisation [{1}].',
-  CRRtit_label: 'Revue des droits d\'accès par service / organisation',
-  CRRtit_bub: `### Revue des droits d\'accès par service / organisation
+  CRRnocred: 'Aucun droit d\'accès n\'est enregistré.',
+  CRRtit_label: 'Revue des droits d\'accès',
+  CRRtit_bub: `### Revue des droits d\'accès
+Vue par service / organisation
 bla bla
 `,
   CRRstep_1_label: 'Sélection d\'un "service / organisation"',

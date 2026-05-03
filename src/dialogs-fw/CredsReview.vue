@@ -10,7 +10,7 @@
     <template #hdr>
     <div class="sep">
       <div class="column items-center">
-        <scroll-area size="sm" class="pwsm q-mt-sm q-pa-xs">
+        <scroll-area v-if="svcOrgs.length" size="sm" class="pwsm q-mt-sm q-pa-xs">
           <div v-for="(x, idx) in svcOrgs" :key="x.svc + '/' + x.org" class="row items-center">
             <div :class="'full-width ' + dkli(idx) + curSty(x)">
               <div class="col-11 row cursor-pointer select q-my-xs" @click="selectSo(x)">
@@ -21,13 +21,14 @@
             </div>
           </div>
         </scroll-area>
+        <div v-else class="titre-lg text-italic">{{ $t('CRRnocred') }}</div>
       </div>
     </div>
     </template>
 
     <template #default>
     <div>
-      <div v-if="step >= 2" class="sep full-width column items-center q-mb-sm">
+      <div v-if="step >= 2" class="sep full-width column items-center q-my-sm">
         <div class="itre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
         <scroll-area size="sm" class="q-pa-xs pwmd" noborder>
           <div v-for="(c, idx) in curso.creds" :key="c.credId"
@@ -130,12 +131,16 @@ const cleanUp = async () => {
       lst.push(credId)
     if (c.alert === 3 || c.alert === 4) {
       const op = new AutoRevokeCred(c.svc, c.org)
-      await op.run(sf.userId, c.role, c.docId)
+      if (!await op.run(c.credId, c.role, c.docId)) {
+        todel.value.clear()
+        return
+      }
     }
   }
   if (lst.length)
     await sf.autoRevokeCreds(lst)
   todel.value.clear()
+  reset(true)
 }
 
 /* Credential (fusion avec cond / limit)
@@ -162,7 +167,8 @@ const svcOrgs: Ref<svcOrg[]> = ref([])
 const curso: Ref<svcOrg> = ref()
 const curcr: Ref<Credential> = ref()
 
-const reset = () => {
+const reset = (keepCur: boolean) => {
+  const before = curso.value ? curso.value.k : ''
   svcOrgs.value.length = 0
   const m = sf.mySafeCreds as Map<string, Credential>
   const mx: Map<string, svcOrg> = new Map()
@@ -179,8 +185,21 @@ const reset = () => {
   }
   so.sort()
   for(const k of so) svcOrgs.value.push(mx.get(k))
-  curso.value = null
-  curcr.value = null
+  if (keepCur) {
+    let svo = null
+    for(const x of svcOrgs.value) if (x.k === before) svo = x
+    if (svo)
+      setTimeout(async () => { await selectSo(svo) }, 50)
+    else {
+      curso.value = null
+      curcr.value = null
+      step.value = 1
+    }
+  } else {
+    curso.value = null
+    curcr.value = null
+    step.value = 1
+  }
 }
 
 const curSty = (x: svcOrg) =>
@@ -242,10 +261,10 @@ const chgComment = async (text) => {
   }
 }
 
-reset()
+reset(false)
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.sep { border-bottom:1px solid rgba(255, 255, 255, 0.3); padding-bottom: 3px; margin-bottom: 3px;}
+.sep { border-bottom:1px solid rgba(255, 255, 255, 0.3); padding-bottom: 3px; margin-bottom: 5px;}
 </style>

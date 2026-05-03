@@ -18,7 +18,7 @@ export class Bug extends Operation {
       const res = await this.post(true)
       return res
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -30,7 +30,7 @@ export class ErrorTest extends Operation {
     try {
       await this.post()
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -43,7 +43,7 @@ export class  SvcOpIsAdmin extends Operation {
       const res = await this.post()
       return res['isadmin']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       throw e
     }
   }
@@ -57,7 +57,7 @@ export class  GetSvcOpStatus extends Operation {
       const res = await this.post(true)
       return res['svcStatus']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       throw e
     }
   }
@@ -71,7 +71,7 @@ export class  GetSvcOrgStatus extends Operation {
       const res = await this.post(true)
       return res['orgStatus']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       throw e
     }
   }
@@ -87,7 +87,7 @@ export class SetSvcOpStatus extends Operation {
       const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -102,7 +102,7 @@ export class SetSvcOrgStatus extends Operation {
       const res = await this.post()
       return res['svcOpStatus']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -115,7 +115,7 @@ export class GetOrgConfig extends Operation {
       const res = await this.post()
       return res['orgconfig']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -130,7 +130,7 @@ export class SetOrgConfig extends Operation {
       const res = await this.post()
       return res['orgconfig']
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -149,7 +149,7 @@ export class SetSubscription extends Operation {
       this.args.longLife = longLife 
       const res = await this.post()
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -167,7 +167,7 @@ export class UpdateSubscription extends Operation {
       this.args.defs = defs
       const res = await this.post()
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -201,7 +201,7 @@ export class Sync extends Operation {
       const opTime = res['now']
       await dataSt.retSync(opTime, this.args.org, subsToSync.def, x)
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
@@ -216,20 +216,23 @@ export class RevokeCred extends Operation {
       const res = await this.post()
       return res.status
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
     }
   }
 }
 
 export class AutoRevokeCred extends Operation {
-  constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
+  constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
-  async run (userId: string, role: string, docId: string) { 
+  async run (credId: string, role: string, docId: string) : Promise<boolean> { 
     try {
-      this.setArgs({ userId, role, docId })
+      this.setArgs({ credId, role, docId })
+      await this.sign(role, docId )
       await this.post()
+      return true
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
+      return false
     }
   }
 }
@@ -248,7 +251,7 @@ export class ListManagers extends Operation {
       const res = await this.post()
       return res['list'] as ListMgrs[]
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       return []
     }
   }
@@ -269,7 +272,7 @@ export class InvitGet extends Operation {
       inv.org = this.args.org
       return new Invitation(inv)
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       return null
     }
   }
@@ -285,7 +288,7 @@ export class GetCredLimitCond extends Operation {
       const res = await this.post()
       return res.limitcond ? res.limitcond : null
     } catch(e) {
-      this.ko(e)
+      await this.ko(e)
       return null
     }
   }
