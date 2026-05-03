@@ -64,15 +64,36 @@
     @giveup="dialogs.cancel = false"
     @option="doConfirmCancel"/>
 
-  <choose-it v-model="dialogs.confirmval"
+  <!--choose-it v-model="dialogs.confirmval"
     prefix="INVvalCf" options="pw" 
     @giveup="dialogs.confirmval = false"
-    @option="doConfirmVal"/>
+    @option="doConfirmVal"/-->
 
   <choose-it v-model="dialogs.confirmrec"
     prefix="INVrecCf" options="pw" 
     @giveup="dialogs.confirmrec = false"
     @option="doConfirmRec"/>
+
+  <dialog-std0 v-model="dialogs.confirmval" hdrclass="tbs" 
+    :title="$t('INVvalCf_tit')">
+    <template #hdr>
+      <div class="row items-center justify-between">
+        <btn-bubble :text="$t('INVvalCf_txt')"/>
+        <div class="row items-center q-gutter-sm">
+          <btn-cond icon="close" :label="$t('giveup')"
+            @ok="dialogs.confirmval = false"/>
+          <btn-cond icon="check" :label="$t('validate')"
+            @ok="doConfirmVal" color="warning"/>
+        </div>
+      </div>
+    </template>
+    <template #default>
+      <div class="titre-md text-italic text-bold q-my-sm">{{ $t('INVlabels', [valLabels.length]) }}</div>
+      <div v-for="label in valLabels" :key="label">
+        
+      </div>
+    </template>
+  </dialog-std0>
 </div>
 </template>
 
@@ -90,8 +111,6 @@ import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import NavBar from '../components-fw/NavBar.vue'
 
 import InvitAcceptation from '../components/InvitAcceptation.vue'
-
-const min = 10
 
 const ui = stores.ui
 const sf = stores.safe
@@ -137,12 +156,16 @@ const doConfirmCancel = async (n) => {
 }
 
 // Confirmation de validation
-const doConfirmVal = async (n) => {
-  if (n === 1) {
-    if (await model.value.invit.validate())
-      onUpdate()
-  }
+const doConfirmVal = async () => {
+  dialogs.confirmval = false
+  if (await model.value.invit.validate())
+    onUpdate()
 }
+
+const valLabels = computed(() => {
+  const etc = model.value.invit.etc
+  return etc.valLabels || []
+})
 
 // Confirmation de maj ardoise
 const doConfirmRec = async (n) => {

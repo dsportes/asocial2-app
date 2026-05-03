@@ -1236,8 +1236,12 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
   INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
   INVsponsor_3: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
-  INVverif: "Vérifier avant de valider",
-  INVtxti: "Texte résumant la proposition d\'invitation à valider par l\'utilisateur (ou à décliner)",
+  INVverif: 'Vérifier avant de valider',
+  INVtxti: 'Texte résumant la proposition d\'invitation à valider par l\'utilisateur (ou à décliner)',
+  INVlabels: 'Aucune autre information n\'est attendue de votre part avant validation.| ' +
+    'Vous avez un texte à saisir avant de pouvoir valider. |' +
+    'Vous avez {count} textes à saisir avant de pouvoir valider. |',
+
 
   /*
   Détecté par l'application
@@ -1416,13 +1420,16 @@ bla bla
 `,
 
   INV_Auteur: 'Auteur',
-  INV_Auteur_label: 'Nom d\'auteur',
-  INV_Auteur_bub: `### Nom d'auteur
+  INV_Auteur_label: 'Auteur d\'articles',
+  INV_Auteur_bub: `### Auteur d\'articles
 bla bla
 `,
+  INV_Auteur_nom: 'Nom ou pseudonyme de l\'auteur à créer',
+  INV_Auteur_nom_ph: 'Victor Hugo',
+
   INV_Relecteur: 'Relecteur',
-  INV_Relecteur_label: 'Pseudo de relecteur',
-  INV_Relecteur_bub: `### Pseudo de relecteur
+  INV_Relecteur_label: 'Relecteur d\'articles',
+  INV_Relecteur_bub: `### Relecteur d\'articles
 bla bla
 `,
   INV_Cedit: 'Membre du comité éditorial',
