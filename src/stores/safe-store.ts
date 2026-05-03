@@ -744,7 +744,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Mise à jour du commentaire d'un Cred en safe */
-  const updateCredComment = async ( credId: string, comment: string ) => {
+  const updateCredComment = async ( credId: string, comment: string ) 
+    : Promise<boolean> => {
     const setCred : SetCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
@@ -753,7 +754,13 @@ export const useSafeStore = defineStore('safe', () => {
     }
     const op = new SafeOperation('$UpdateCredComment', mySafeStore.value)
     op.args = { setCred }
-    return await doOpSafe(op)
+    try {
+      await doOpSafe(op)
+      return true
+    } catch (e: any) {
+      op.ko(e)
+      return false
+    }
   }
 
   type RevokeCreds = {

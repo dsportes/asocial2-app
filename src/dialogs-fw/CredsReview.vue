@@ -39,6 +39,10 @@
 
       <div v-if="step === 3" class="column items-center q-mt-sm q-mb-sm">
         <div class="pwmd">
+
+          <line-edit class="q-my-sm" prefix="CRRabout" :text="curcr.comment"
+            @change="chgComment"/>
+
           <div v-if="curcr.cond" class="q-mb-sm">
             <div class="titre-md text-bold text-italic">{{ $t('CRRcond') }}</div>
             <cond-role class="q-ml-md" :cred="curcr"/>
@@ -83,12 +87,13 @@
 // @ts-ignore
 import { ref, Ref } from 'vue'
 
-import { $t, sty, dkli } from '../src-fw/util'
+import { $t, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import { GetCredLimitCond, AutoRevokeCred } from '../src-fw/operations'
 import { Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
+import LineEdit from '../components-fw/LineEdit.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
@@ -227,6 +232,14 @@ const undodel = () => {
 const cftodel = () => {
   curcr.value.alert = 4
   todel.value.set(curcr.value.credId, curcr.value)
+}
+
+const chgComment = async (text) => {
+  const c = curcr.value
+  console.log('New comment', text)
+  if (sf.updateCredComment(c.credId, text)) {
+    c.comment = text
+  }
 }
 
 reset()

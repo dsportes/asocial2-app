@@ -229,6 +229,7 @@ export default {
   op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
   op_$CreateCred: 'Création d\'un credential',
   op_GetCredLimitCond: 'Obtention des conditions d\'un credential',
+  op_$UpdateCredComment: 'Mise à jour du commentaire d\'un droit d\'accès',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1019,6 +1020,13 @@ Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
   CRRobs3: 'Ce droit d\'accès a une limite de validité dépassé. Vous avez décidé de le supprimer. Voulez-vous finalement le garder ?',
   CRRdel: 'Ce droit d\'accès est applicable. Voulez-vous cependant y renoncer?',
   CRRdel2: 'Ce droit d\'accès est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
+
+  CRRabout_label : 'Commentaire privé à propos du droit d\'accès',
+  CRRabout_bub : `### Commentaire privé à propos du droit d\'accès
+  Il aide à retrouver à qui sert ce droit, en particulier pour constituer des profils de sessions ayant une liste réduite de droits.
+  Ce texte est éditable.
+  Il est strictement privé et crypté (vous seul le voyez).
+`,
 
   SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
   SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
