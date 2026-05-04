@@ -25,7 +25,7 @@
   </div>
 
   <div v-if="ui.currentInvit.zoomed" class="pwsm">
-    <invit-zoom v-if="ui.currentInvit.invit" editable class="q-mt-sm"/>
+    <invit-zoom v-if="ui.currentInvit.invit" class="q-mt-sm"/>
     <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
   </div>
 </div>
@@ -58,7 +58,7 @@ const ui = stores.ui
 const sf = stores.safe
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
-  const u = ui.currentInvit
+  const u = ui.navBar
   switch (n) {
     case 1 : { if (u.idx < invits.value.length - 1) u.idx++; break }
     case 2 : { if (u.idx > 0) u.idx--; break }
@@ -82,8 +82,6 @@ const isCurrent = (inv) =>
   ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
 const clinv = (inv, idx) => dkli(idx) + (isCurrent(inv) ? ' current ' : ' nocurrent ')
 
-
-
 /* Invitation mise à jour : 
 - récupère l'ID de l'invitation courante - acId
 - recharge la liste du Safe
@@ -105,10 +103,23 @@ const onUpdate = () => {
       if (inv && inv['invitId'] === acId) { idx = i; break}
     }
     if (idx !== -1) await selInv(inv, idx)
-    else if (invits.value.length) {
-      await selInv(invits.value[0], 0)
+    else {
+      if (invits.value.length)
+        await selInv(invits.value[0], 0)
+      else selInv0()
     }
-  }, 500)
+  }, 100)
+}
+
+const selInv0 = () => {
+  const u = ui.currentInvit
+  u.invit = null
+  u.inv = null
+  u.zoomed = false
+  u.newTab = ''
+  const nb = ui.navBar
+  nb.idx = 0
+  nb.nb = invits.value.length
 }
 
 const selInv = async (inv, idx) => {
@@ -118,22 +129,18 @@ const selInv = async (inv, idx) => {
   const u = ui.currentInvit
   u.inv = inv
   u.zoomed = true
-  u.idx = idx
-  if (invit)
-    u.invit = invit
+  u.newTab = ''
+  u.invit = invit || null
+  const nb = ui.navBar
+  nb.idx = idx
+  nb.nb = invits.value.length
 }
 
 const init = async () => {
   await mdInvits()
-  const u = ui.currentInvit
-  u.zoomed = false
-  u.invit = null
-  u.inv = null
-  u.newTab = ''
-  u.idx = 0
-  u.nb = invits.value.length
-  u.fnnav = nav
-  u.fnOnUpdate = onUpdate
+  selInv0()
+  ui.currentInvit.fnOnUpdate = onUpdate
+  ui.navBar.fnnav = nav
 }
 
 onMounted(async () => { await init() })

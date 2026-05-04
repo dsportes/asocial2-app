@@ -202,7 +202,7 @@ export class Invitation {
       return false
     }
     if (await this.mdInvitDel()) {
-      ui.diagDisplay($t('INVop_3'), 2)
+      await ui.diagDisplay($t('INVop_3'), 2)
       return true
     }
     return false

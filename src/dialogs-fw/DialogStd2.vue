@@ -1,10 +1,10 @@
 <template>
 <q-dialog v-model="model" maximized persistent
     transition-show="slide-right">
-  <q-card :class="sty()">
+  <q-card :class="sty() + ' full-width'">
   <q-layout container view="hHh lpR fFf">
-    <q-header :class="sty()">
-      <q-toolbar :class="tbclass || ''">
+    <q-header>
+      <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
         <btn-cond color="none" size="lg" icon="chevron_left" flat 
           @ok="onClose"/>
         <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>

@@ -45,7 +45,10 @@ const gotit = (b: boolean) => {
 
 const init = () => {
   const d = ui.diag
-  if (d.txt && d.cf > 0) setTimeout(() => { gotit(true) }, (d.cf > 3 ? 3000 : d.v * 1000))
+  if (d.txt && d.cf > 0) 
+    setTimeout(() => { 
+      gotit(true) 
+    }, (d.cf > 3 ? 3000 : d.cf * 1000))
 }
 
 watch(() => ui.diag.token, () => { init()} )

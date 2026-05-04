@@ -5,7 +5,7 @@
     :style="'height:' + (vh ? vh : '50') + 'vh;'">
   <q-card class="full-width">
     <q-header>
-      <q-toolbar :class="(hdrclass ? hdrclass : 'tbs') + ' dense'">
+      <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
         <btn-cond color="none" size="lg" icon="chevron_left" flat 
           @ok="onClose"/>
         <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>

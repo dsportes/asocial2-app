@@ -31,9 +31,8 @@
   </div>
 
   <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_tab')}}</div>
-  <md-editor class="full-width q-pa-xs" v-model="newTab"
-    :texte="invit.tab" :editable="editable" modetxt :okbtn="editable"
-    @ok="emit('tabchnage', newTab)"/>
+  <md-editor class="full-width q-pa-xs" v-model="ui.currentInvit.newTab"
+    :texte="invit.tab" :editable="editable" modetxt/>
 
   <div v-if="invit.etc !== null">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_opts')}}</div>
@@ -50,7 +49,7 @@ import { ref, Ref, computed, onMounted, watch } from 'vue'
 
 import stores from '../stores/all'
 
-import { $t, dhcool, sty } from '../src-fw/util'
+import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import { Invitation } from '../src-fw/invitation'
@@ -68,10 +67,9 @@ const inv = computed(() => ui.currentInvit.inv)
 const notView = computed(() => inv.value && inv.value.lv < invit.value.v )
 const opts = ref($t('INVx_none'))
 const vuToSet = computed(() => notView.value && invit.value.userId === sf.userId && inv.value)
-const newTab = ref('')
 
 const init = async () => {
-  newTab.value = invit.value.tab
+  ui.currentInvit.newTab = invit.value.tab
   const x = invit.value ? invit.value.editEtc() : ''
   opts.value = x || $t('INVx_none')
   if (vuToSet.value) await vu()

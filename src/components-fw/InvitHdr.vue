@@ -3,9 +3,8 @@
   <div class="column full-width">
     <q-toolbar class="tbs dense row items-center">
 
-      <nav-bar v-model="model" class="col-auto q-ma-xs" hasback
-        @back="model.zoomed = false"
-        @navigate="nav"/>
+      <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
+        @back="model.zoomed = false"/>
 
       <div v-if="model.invit" class="col titre-sm">
         {{$t('INVtitzoom', [model.invit.$t])}}
@@ -57,10 +56,18 @@
     @giveup="dialogs.cancel = false"
     @option="doConfirmCancel"/>
 
-  <dialog-std0 v-if="dialogs.tabedit" v-model="dialogs.tabedit" width="pwsm"
+  <dialog-std0 v-if="dialogs.tabedit" v-model="dialogs.tabedit" width="pwsm" vh="80"
     :title="$t('INVtabedit')" hdrclass="tbs" vue="InvitZoom">
+    <template #hdr>
+      <div class="row justify-between items-center">
+        <btn-cond :label="$t('giveup')" icon="close" 
+          @ok="dialogs.tabedit = false" />
+        <btn-cond :label="$t('validate')" icon="check" @ok="tabchange"
+          color="warning" :disable="!chgU"/>
+      </div>
+    </template>
     <template #default>
-      <invit-zoom editable @tabchange="tabchange"/>
+      <invit-zoom editable/>
     </template>
   </dialog-std0>
 
@@ -93,9 +100,7 @@ const sf = stores.safe
 const model = defineModel()
 
 const isU = computed(() => model.value.invit && model.value.invit.userId === sf.userId)
-const chgU = computed(() => isU.value && model.value.newTab 
-  && model.value.newTab !== model.value.invit.tab
-)
+const chgU = computed(() => model.value.newTab && model.value.newTab !== model.value.invit.tab)
 
 const msgVal = ref({ ok: false, txt: 'KO' })
 
@@ -106,11 +111,6 @@ const init = async () => {
 onMounted(async () => { await init() })
 
 watch(() => model.value.invit, async () => { await init() })
-
-const nav = (n) => {
-  const f = model.value['fnnav']
-  if (f) f(n)
-}
 
 const dialogs = reactive({ 
   confirmcancel: false, 
@@ -134,15 +134,16 @@ const doValidate = async (args: any) => {
     onUpdate()
 }
 
-// Invitation par un sponsor
+/* Invitation par un sponsor
 const doInvitation = async (args: any) => {
   dialogs.sponsor = false
   if (await model.value.invit.invitation(args))
     onUpdate()
 }
+*/
 
-const tabchange = async (newTab: string) => {
-  if (await model.value.invit.updateByU(newTab)) {
+const tabchange = async () => {
+  if (await model.value.invit.updateByU(model.value.newTab)) {
     onUpdate()
   }
 }
