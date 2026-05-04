@@ -175,7 +175,7 @@ import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
 import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
-import InvitNewrequest from '../components-fw/InvitNewrequest.vue'
+import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 // import { Bug } from '../src-fw/operations'
 
 // @ts-ignore

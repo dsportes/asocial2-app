@@ -1,6 +1,7 @@
 import { DocRegistry, Document } from '../src-fw/docregistry'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64 } from '../src-fw/b64'
+import { $t } from '../src-fw/util'
 // import stores from '../stores/all'
 
 
@@ -23,7 +24,8 @@ export class CredSafe {
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
-  get $trole () : string { return 'ROLE' + this.role.replace('.', '_')}
+  get $trole () : string { return $t('ROLE$' + this.role.replace('.', '_'))}
+  get $trole_bub () : string { return $t('ROLE$' + this.role.replace('.', '_') + '_bub')}
 
   get toObj () : Object {
     const obj = {}

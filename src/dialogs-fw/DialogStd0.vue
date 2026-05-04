@@ -1,11 +1,11 @@
 <template>
 <q-dialog v-model="model" persistent
-    transition-show="slide-up">
-  <q-card :class="sty() + (hdrclass ? ' ' + hdrclass : '') + ' full-width'"
+  transition-show="slide-up">
+  <q-layout container view="hHh lpR fFf" :class="width || 'pwmd'"
     :style="'height:' + (vh ? vh : '50') + 'vh;'">
-  <q-layout container view="hHh lpR fFf">
-    <q-header :class="sty()">
-      <q-toolbar class="tbs">
+  <q-card class="full-width">
+    <q-header>
+      <q-toolbar :class="(hdrclass ? hdrclass : 'tbs') + ' dense'">
         <btn-cond color="none" size="lg" icon="chevron_left" flat 
           @ok="onClose"/>
         <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
@@ -17,8 +17,8 @@
     <q-page-container>
       <slot/>
     </q-page-container>
+    </q-card>
   </q-layout>
-  </q-card>
 </q-dialog>
 </template>
 
@@ -38,10 +38,11 @@ const emit = defineEmits(['close'])
 const props = defineProps({
   vue: String,
   title: String, // titre de la top bar
-  help: String,  // code de loa page d'aide s'il y en a une
+  help: String,  // code de la page d'aide s'il y en a une
   hdrclass: String,
   noclose: Boolean,
-  vh: String
+  vh: String,
+  width: String
 })
 
 const onClose = () => { 

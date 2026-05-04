@@ -16,6 +16,8 @@
             {{textelocal ? textelocal.length : 0}}/{{maxlg}}c
           </div>
           <btn-cond class="q-mx-xs" @ok="print" icon="print" flat color="nb"/>
+          <btn-cond v-if="okbtn && editable" class="q-mx-xs" padding="xs" color="warning"
+            @ok="emit('ok', true)" :disable="!modifie" :label="$t('ok')"/>
           <help-button page="dial_editeur"/>
         </q-toolbar>
       </q-header>
@@ -46,6 +48,8 @@
             {{textelocal ? textelocal.length : 0}}/{{maxlg}}c
           </div>
           <btn-cond class="q-mx-xs" @ok="print" icon="print" flat color="nb"/>
+          <btn-cond v-if="okbtn && editable" class="q-mx-xs" padding="xs" color="warning"
+            @ok="emit('ok', true)" :disable="!modifie" :label="$t('ok')"/>
           <help-button page="dial_editeur"/>
         </q-toolbar>
       </q-header>
@@ -81,6 +85,8 @@ import EmojiSelect from '../dialogs-fw/EmojiSelect.vue'
 
 const model = defineModel({ type: String })
 
+const emit = defineEmits(['ok'])
+
 const dialogs = reactive({ emoji: false })
 
 const props = defineProps({
@@ -91,6 +97,7 @@ const props = defineProps({
   editable: Boolean,
   idx: Number,
   modetxt: Boolean,
+  okbtn: Boolean,
   mh: String
 })
 

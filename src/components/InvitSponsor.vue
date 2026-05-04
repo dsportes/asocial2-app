@@ -1,7 +1,7 @@
 
 <template>
 <dialog-std1 v-model="model" @close="model = false; emit('close', true)"
-  :title="$t('INVtitval', [$t('INV_' + invit.major)])">
+  :title="$t('INVtitval', [invit.$t])">
   <template #hdr>
     <div class="row justify-end items-center">
       <btn-cond icon="check" :label="$t('validate')"
@@ -15,19 +15,19 @@
       <q-expansion-item class="q-my-xs full-width" 
         header-class="tbp" dense :label="$t('INVdetail')">
         <div class="q-my-xs full-width">
-          <invit-zoom class="q-ml-lg" v-model="inv"/>
+          <invit-zoom class="q-ml-lg"/>
           <q-separator color="orange" class="q-my-sm"/>
         </div>
       </q-expansion-item>
 
-      <div v-if="inv.major === 'Auteur'" class="q-my-xs full-width column items-center">
-        <div class="titre-lg text-italic q-my-sm">{{$t('INVauteur_tit')}}</div>
+      <div v-if="invit.major === 'Auteur'" class="q-my-xs full-width column items-center">
+        <div class="titre-lg text-italic q-my-sm">{{invit.$t}}</div>
         <q-option-group class="full-width q-my-sm" :options="optionsA" type="radio" dense
           v-model="accept.etc.newA"/>
         <q-option-group class="full-width q-my-sm" :options="optionsSP" type="radio" dense
           v-model="accept.etc.option"/>
         <div v-if="(!accept.etc.option || accept.etc.option === 1) && (!accept.etc.newA || accept.etc.newA === 2)"
-          class="msg">{{$t('INVauteur_e')}}</div>
+          class="msg">{{$t('INV$Auteur_e')}}</div>
         <input-a v-if="accept.etc.option === 3" class="q-my-sm"
           prefix="INVauteur_categ" size="minor" noval
           v-model="accept.etc.categ"/>

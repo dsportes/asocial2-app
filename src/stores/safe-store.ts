@@ -697,7 +697,7 @@ export const useSafeStore = defineStore('safe', () => {
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, CredSafe>()
     const msvc = stores.config.K.SERVICES
-    const orgs = new Set<string>(['didi', 'dodo'])
+    const orgs = new Set<string>([])
     if (safe.creds) for (const xid in safe.creds)
       try {
         // const [com, data] = decode(safe.creds[xid]) as [string, string]

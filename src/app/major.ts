@@ -61,9 +61,9 @@ export class Major {
         return { ok: true, txt: $t('INVsponsor_1'), role: 'Org.manager', docId: '' }
       if (c.role === 'Sponsor.') {
         if (c.docId === self.major)
-          return { ok: true, txt: $t('INVsponsor_2', [$t('INV_' + self.major)]), role: 'Sponsor.', docId: c.docId }
+          return { ok: true, txt: $t('INVsponsor_2', [self.$t]), role: 'Sponsor.', docId: c.docId }
         if (c.docId === self.major + '/' + self.minor)
-          credOk = { ok: true, txt: $t('INVsponsor_3', [$t('INV_' + self.major) + ' / ' + self.minor]),
+          credOk = { ok: true, txt: $t('INVsponsor_3', [self.$t + ' / ' + self.minor]),
             role: 'Sponsor.', docId: c.docId }
       }
     } 
@@ -74,7 +74,7 @@ export class Major {
     return ''
   }
 
-  static async validate_Org_manager (self: Invitation) : Promise<string> {
+  static async validate_Org_manager (self: Invitation, args: any) : Promise<string> {
     const op = new Operation('InvitValidate', self.svc, self.org)
     const { pub, priv } = await Crypt.getSVKeyPair()
     try {
@@ -104,7 +104,7 @@ export class Major {
     return ''
   }
 
-  static async validate_Auteur (self: Invitation) : Promise<string> {
+  static async validate_Auteur (self: Invitation, args: any) : Promise<string> {
     /* 
     Post: invVal avec les pemvA, pemvS, time des credentials
     Puis, enregistrement,

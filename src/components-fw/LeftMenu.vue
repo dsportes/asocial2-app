@@ -31,6 +31,9 @@ Contrôlé par ui.leftMenu
       <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEdemands')"
         :icon="'img:icons/request_' + (ui.isDark ? 'white.png' : 'black.png')"
         @ok="openDemands"/>
+      <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEsponsorings')"
+        :icon="'img:icons/request_' + (ui.isDark ? 'white.png' : 'black.png')"
+        @ok="openSponsorings"/>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
@@ -96,6 +99,14 @@ const openDemands = (svc) => {
   ui.demandsPage.SVC = ''
   ui.demandsPage.org = ''
   ui.demandsPage.tab = 'list'
+}
+
+const openSponsorings = (svc) => {
+  ui.closeMenu()
+  ui.setPage('sponsorings')
+  ui.sponsoringsPage.SVC = ''
+  ui.sponsoringsPage.org = ''
+  ui.sponsoringsPage.tab = 'list'
 }
 
 </script>

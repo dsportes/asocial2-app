@@ -48,6 +48,10 @@ export class Invitation {
   tab: string = '' // Adroise commune U / sponsors (non cryptée)
   etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 
+  get $t () { return $t('INV$' + this.major)}
+  get $t_bub () { return $t('INV$' + this.major + '_bub')}
+  get $t_tit () { return $t('INV$' + this.major + '_tit')}
+
   static p1 = ['invitId', 'userId', 'major', 'minor', 'byU', 'tab', 'etc']
 
   constructor (obj?: InvObj) {
@@ -65,7 +69,7 @@ export class Invitation {
     this.userId = obj && obj.userId ? obj.userId : stores.safe.userId
   }
 
-  toObj () : Object {
+  get toObj () : Object {
     const x = {}
     for (const p of Invitation.p1) x[p] = this[p] || ( p === 'etc' ? null : '')
     return x
@@ -120,7 +124,7 @@ export class Invitation {
     try {
       const res = await op.post()
       if (res.status !== 0) {
-        await ui.diagDisplay($t('STINV_' + res.status), true)
+        await ui.diagDisplay($t('STINV_' + res.status))
         return false
       }
       if (await this.mdInvitSet(true)) {
@@ -133,11 +137,13 @@ export class Invitation {
     }
   }
 
-  async createByS (majorminor: string)  : Promise<boolean> {
+  async createByS (majorminor: string, tab: string, etc: any)  : Promise<boolean> {
     this.byU = false
     const ui = stores.ui
+    this.tab = tab
+    this.etc = etc
     const op = new Operation('InvitCreateByS', this.svc, this.org)
-    op.args['invObj'] = this.toObj()
+    op.args['invObj'] = this.toObj
     if (this.major !== 'Org.manager')
       await op.sign('Sponsor.', majorminor)
     try {
@@ -172,7 +178,7 @@ export class Invitation {
         return false
       }
       if (await this.mdInvitSet(false)) {
-        ui.diagDisplay($t('INVop_1'), 2)
+        ui.diagDisplay($t('INVop_2'), 2)
         return true
       } else return false
     } catch (e: any) {
@@ -232,29 +238,41 @@ export class Invitation {
   }
 
   /* Méthode "abstraite" : surchargée en fonction du 
+  "major" de l'invitation. 
+  Construit le 'majorminor tab etc' de l'invitation depuis les arguments saisis par 
+  l'utilisateur sur le formulaire adapté au 'major'.
+  */
+  async invitation (args: any) : Promise<boolean> {
+    const ui = stores.ui
+    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
+    const m = Major['invitation_' + s]
+    if (!m) { await ui.diagDisplay($t('INVinvbug', [s])); return false }
+    const { err, majorminor, tab, etc } = await m(this, args)
+    if ( err !== 'ok') { await ui.diagDisplay(err); return false }
+    if (this.etc === null)
+      return await this.createByS(majorminor, tab, etc)
+    else 
+      return await this.updateByS(majorminor, tab, etc)
+  }
+
+  /* Méthode "abstraite" : surchargée en fonction du 
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
+  En cas de succès l'invitation a été supprimée par le service, 
+  MAIS elle n'a pas encore été supprimée du Master Directory
+  ce qui est fait ici.
   */
-  async validate () : Promise<boolean> {
+  async validate (args: any) : Promise<boolean> {
     const ui = stores.ui
     const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
     const m = Major['validate_' + s]
-    if (m) {
-      const err = await m(this)
-      if (err === 'ok') {
-        if (await this.mdInvitDel()) {
-          ui.diagDisplay($t('INVop_4'), 2)
-          return true
-        }
-        return true
-      } else {
-        if (err !== 'ko') await ui.diagDisplay(err, true)
-        return false
-      }
-    } else {
-      await ui.diagDisplay($t('INVvalbug', [s]), true)
-      return false
-    }
+    if (!m) { await ui.diagDisplay($t('INVvalbug', [s])); return false }
+    const err = await m(this, args)
+    if ( err !== 'ok') { await ui.diagDisplay(err); return false }
+    const x = await this.mdInvitDel()
+    if (x) await ui.diagDisplay($t('INVop_4'), 2)
+    else await ui.diagDisplay($t('INVop_5'))
+    return true
   }
 }
 
@@ -264,11 +282,11 @@ Depuis un administrateur seulement : créé une invitation non sollicitée
 export const NewManager = async (svc: string, org: string, tab: string, userId: string, userName: string)
  : Promise<boolean> => {
   const invit = new Invitation({svc, org, major: 'Org.manager', minor: '', tab, userId})
-  invit.etc = {
+  const etc = {
     credId: Crypt.rnd(15),
     name: userName
   }
-  return await invit.createByS('')
+  return await invit.createByS('', tab, etc)
 }
 
 /* InvitList liste pour un sponsor les invitations enregistrées pour un "major"

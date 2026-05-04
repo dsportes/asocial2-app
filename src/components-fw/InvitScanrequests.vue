@@ -4,12 +4,13 @@
 <div class="column items-center">
 <div class="pwsm">
   <div v-if="!ui.currentInvit.zoomed" class="full-width">
-    <div v-for="(inv, idx) of invits" :key="inv.invitId"
+    <div v-if="!invits.length" class="titre-md text-italic q-pa-md">{{ $t('INVnoinvits') }}</div>
+    <div v-else v-for="(inv, idx) of invits" :key="inv.invitId"
       :class="clinv(inv, idx) + ' q-my-sm full-width cursor-pointer select'"
       @click="selInv(inv, idx)">
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + inv.svc)}}</div>
-        <div class="col-4 ellipsis text-right text-bold">{{$t('INV_' + inv.major)}}</div>
+        <div class="col-4 ellipsis text-right text-bold">{{ inv.$t}}</div>
         <div class="col-3 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
         <div class="col-1 row items-center justify-end ellipsis">
           <q-icon v-if="inv.lv < inv.v"
@@ -23,8 +24,8 @@
     </div>
   </div>
 
-  <div v-if="ui.currentInvit.zoomed" class="wmd">
-    <invit-zoom v-if="ui.currentInvit.invit" v-model="ui.currentInvit"/>
+  <div v-if="ui.currentInvit.zoomed" class="pwsm">
+    <invit-zoom v-if="ui.currentInvit.invit" editable class="q-mt-sm"/>
     <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
   </div>
 </div>
@@ -40,8 +41,6 @@ import { $t, dkli, dhcool } from '../src-fw/util'
 
 import { InvitGet } from '../src-fw/operations'
 
-import BtnBubble from '../components-fw/BtnBubble.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
 import { MDOperation } from 'src/src-fw/operation'
 
@@ -83,13 +82,15 @@ const isCurrent = (inv) =>
   ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
 const clinv = (inv, idx) => dkli(idx) + (isCurrent(inv) ? ' current ' : ' nocurrent ')
 
+
+
 /* Invitation mise à jour : 
 - récupère l'ID de l'invitation courante - acId
 - recharge la liste du Safe
 - recherche dans la liste rafraichie l'indice de l'invitation d'ID acId
 - resélectionne cette invitation à son nouvel indice et rezoom
 - si l'invitation a disparu, rezoom sur le premier de la liste
-  ou pas rezooml du tout si la liste rafraichie est vide.
+  ou pas rezoom du tout si la liste rafraichie est vide.
 */
 const onUpdate = () => {
   const u = ui.currentInvit

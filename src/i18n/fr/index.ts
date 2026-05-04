@@ -166,7 +166,24 @@ export default {
   PAGEhome: 'Connexion',
   PAGEadmin: 'Administration Technique',
   PAGEapp: 'Auteurs et relecteurs',
-  PAGEdemands: 'Demandes: création, suivi, réponse',
+  PAGEdemands: 'Mes demandes d\'invitation',
+  PAGEdemands_label: 'Mes demandes d\'invitation: création / suivi',
+  PAGEdemands_bub: `### Mes demandes d\'invitation: création / suivi
+  - faire une nouvelle demande d\'invitation: solliciter des sponsors pour que l\'un d'entre eux étabblisse une invitaion.
+  - lister mes invitations _en cours_:
+    - mes demandes n'ayant pas encore été prises en compte par un sponsor,
+    - les invitations qu'un sponsor m'a faite, soit suite à une de mes demandes, soit de sa propre inititiative.
+  
+  `,
+  PAGEsponsorings: 'Mes sponsorings',
+  PAGEsponsorings_label: 'Mes sponsorings: mes propositions, création et suivi',
+  PAGEsponsorings_bub: `### Mes sponsorings: mes propositions, création et suivi
+  - répondre à une demande d'invitation en faisant une proposition.
+  - proposer une invitation à un utilisateur sans qu'il l'ai sollicitée.
+  - lister les invitations _en cours_ que j'ai lancé et le cas échant les modifier.
+
+  `,
+
   PAGEtest: 'Page des tests',
 
   PanelManager: 'Management des organisations',
@@ -1101,11 +1118,14 @@ bla bla
   INVop_2: 'Invitation mise à jour.',
   INVop_3: 'Invitation supprimée.',
   INVop_4: 'Invitation validée (et de fait supprimée).',
+  INVop_5: 'L\'invitation a été validée par le service central. ' +
+    ' Toutefois suite à un incident technique elle pourrait encore apparaître "à valider".',
 
   INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".(BUG probable [etc]',
   INVvalOMst_2: 'Echec de validation de l\'invitation à être "manager".(BUG probable [args]',
 
-  INVvalbug: 'BUG : fonction de validation "{0}" non trouvée.',
+  INVvalbug: 'BUG : fonction ["{0}"] de validation de l\'invitation non trouvée.',
+  INVinvbug: 'BUG : fonction ["{0}"] de génération de l\'invitation non trouvée.',
 
   INVcred: 'Droit d\'accès insuffisant ("manager" ou "sponsor" requis)',
 
@@ -1136,8 +1156,10 @@ bla bla
   INVxnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   INVnchU: 'Vous n\'avez par édité l\'ardoise, il n\'y a rien à enregistrer.',
   INVbtn_val: 'Valider',
-  INVbtn_rec: 'Enregistrer',
+  INVbtn_rec: 'Editer l\'ardoise',
   INVbtn_del: 'Renoncer et supprimer',
+
+  INVnoinvits: 'Pas d\'invitation en cours actuellement.',
 
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
   INVac_rej_1: 'Rejet de l\'invitation',
@@ -1151,9 +1173,9 @@ bla bla
   INVspons_no: 'Vous n\'avez pas de droit pour traiter aucune demande',
   INVspons_on: 'Demandes que vous avez le droit de traiter',
 
-  INVtit_1: 'Créer',
-  INVtit_1_label: 'Déposer une nouvelle demande',
-  INVtit_1_bub: `## Déposer une nouvelle demande...
+  INVtit_1: 'Nouvelle demande',
+  INVtit_1_label: 'Nouvelle demanded\'invitation',
+  INVtit_1_bub: `### Déposer une nouvelle demande...
 - d'invitation, de création d'une entité, de droit d'accès ...
 bla bla
 `,
@@ -1185,6 +1207,14 @@ Un **coffre fort** est créé pour mémoriser en toute sécurité les données "
   INVmajor_bub: `## Quelle invitation sollicitez-vous ?
 bla bla
 `,
+
+  INVtabedit: 'Changer le texte de l\'ardoise',
+  INVtabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
+  INVtabu_bub: `### Ardoise partagée avec les sponsors
+- qui suis-je, ma motivation ...
+- les remarques des sponsors successifs 
+`,
+
   INVcomment_c_label: 'Commentaire',
   INVcomment_label: 'Commentaire strictement personnel',
   INVcomment_bub: `### Commentaire strictement personnel
@@ -1413,29 +1443,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   blabla1: 'bla1 bla1', // Test surcharge traductions
   titre: 'Test très simple - compteur: {0}',
 
-  'INV_Org.manager': 'Manager de l\'organisation',
-  'INV_Org.manager_label': 'Manager de l\'organisation',
-  'INV_Org.manager_bub': `### Manager de l\'organisation
-bla bla
-`,
-
-  INV_Auteur: 'Auteur',
-  INV_Auteur_label: 'Auteur d\'articles',
-  INV_Auteur_bub: `### Auteur d\'articles
-bla bla
-`,
-  INV_Auteur_nom: 'Nom ou pseudonyme de l\'auteur à créer',
-  INV_Auteur_nom_ph: 'Victor Hugo',
-
-  INV_Relecteur: 'Relecteur',
-  INV_Relecteur_label: 'Relecteur d\'articles',
-  INV_Relecteur_bub: `### Relecteur d\'articles
-bla bla
-`,
-  INV_Cedit: 'Membre du comité éditorial',
-  INV_Cedit_label: 'Membre du comité éditorial',
-  INV_Cedit_bub: 'Membre du comité éditorial',
-
+  
   INVsponsoring: `### Qui peut traiter une demande d'invitation ?
 Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.
@@ -1446,47 +1454,68 @@ Un utilisateur est un "sponsor" valide pour une demande quand,
 par l'utilisateur concerné quand un sponsor a traité la demande (ou proposer de lui-même une invitation.
 Quand une demande est validable, ses options retenues (s'il y en a) sont affichées ci-dessous.
 `,
-  INVauteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
-  INVauteur_1: 'SANS création de droit d\'accès de "sponsoring"',
-  INVauteur_2: 'Droit d\'accès de "sponsoring" générale "Auteur"',
-  INVauteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
-  INVauteur_4: 'Création d\'un nouvel auteur',
-  INVauteur_5: 'SANS nouvel auteur',
-  INVauteur_e: 'Une acceptation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens: dans ce cas LA REJETER.',
-  INVauteur_categ_label: 'Catégorie d\'auteurs',
-  INVauteur_t1: `### Auteur en création:
+
+  'INV$Org.manager': 'Manager de l\'organisation',
+  'INV$Org.manager_label': 'Manager de l\'organisation',
+  'INV$Org.manager_bub': `### Manager de l\'organisation
+bla bla
+`,
+
+  INV$Auteur: 'Auteur',
+  INV$Auteur_label: 'Auteur d\'articles',
+  INV$Auteur_bub: `### Auteur d\'articles
+bla bla
+`,
+  INV$Auteur_nom: 'Nom ou pseudonyme de l\'auteur à créer',
+  INV$Auteur_nom_ph: 'Victor Hugo',
+
+  INV$Auteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
+  INV$Auteur_1: 'SANS création de droit d\'accès de "sponsoring"',
+  INV$Auteur_2: 'Droit d\'accès de "sponsoring" générale "Auteur"',
+  INV$Auteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
+  INV$Auteur_4: 'Création d\'un nouvel auteur',
+  INV$Auteur_5: 'SANS nouvel auteur',
+  INV$Auteur_e: 'Une acceptation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens: dans ce cas LA REJETER.',
+  INV$Auteur_categ_label: 'Catégorie d\'auteurs',
+  INV$Auteur_t1: `### Auteur en création:
 - nom: **{0}**
 - ID: _{1}_
 
 `,
-  INVauteur_t2: `### Droit de _Sponsoring_ accordé pour traitement de:
+  INV$Auteur_t2: `### Droit de _Sponsoring_ accordé pour traitement de:
 - toute demande de création d'auteur.
 
 `,
-  INVauteur_t3: `### Droit de _Sponsoring_ accordé pour traitement de:
+  INV$Auteur_t3: `### Droit de _Sponsoring_ accordé pour traitement de:
 - création d'un auteur de catagorie **{0}**.
 
 `,
 
-  ROLE: 'Rôle',
-  'ROLEOrg.manager': 'Manager de l\'organisation',
-  'ROLEOrg.manager_bub': `### Manager de l\'organisation
+  INV_Relecteur: 'Relecteur',
+  INV_Relecteur_label: 'Relecteur d\'articles',
+  INV_Relecteur_bub: `### Relecteur d\'articles
+bla bla
 `,
-  'ROLESponsor.': 'Sponsor',
-  'ROLESponsor._bub': `### Sponsor
-`,
+  INV_Cedit: 'Membre du comité éditorial',
+  INV_Cedit_label: 'Membre du comité éditorial',
+  INV_Cedit_bub: 'Membre du comité éditorial',
 
-  'ROLEAuteur.': 'Auteur d\'articles',
-  'ROLEAuteur._bub': `### Auteur d\'articles
+  ROLE: 'Rôle',
+  ROLE$Org_manager: 'Manager de l\'organisation',
+  ROLE$Org_manager_bub: `### Manager de l\'organisation
 `,
-  ROLERelecteur_: 'Relecteur d\'articles',
-  ROLEGroupe: 'Groupe de relecteurs',
-  ROLESponsor_: 'Sponsor traitant les demandes d\'invitation',
-  ROLESponsor__bub: `### Sponsor traitant les demandes d\'invitation
+  ROLE$Sponsor_: 'Sponsor traitant les demandes d\'invitation',
+  ROLE$Sponsor__bub: `### Sponsor traitant les demandes d\'invitation
 bla bla
 blu blu
 
 `,
+
+  ROLE$Auteur_: 'Auteur d\'articles',
+  ROLE$Auteur__bub: `### Auteur d\'articles
+`,
+  ROLE$Relecteur_: 'Relecteur d\'articles',
+  ROLE$Groupe_: 'Groupe de relecteurs',
 
   COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"'
 

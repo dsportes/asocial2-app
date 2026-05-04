@@ -8,7 +8,7 @@
         @navigate="nav"/>
 
       <div v-if="model.invit" class="col titre-sm">
-        {{$t('INVtitzoom', [$t('INV_' + model.invit.major)])}}
+        {{$t('INVtitzoom', [model.invit.$t])}}
       </div>
       <div v-else class="col titre-md text-italic diag">{{$t('INVnotfound')}}</div>
 
@@ -16,84 +16,57 @@
     <q-toolbar class="tbs dense row items-center">
       <q-space/>
       <!-- L'utilisateur peut ANNULER sa demande-->
-      <btn-cond v-if="isU" 
-        :label="$t('INVbtn_del')" icon="delete" class='col-auto q-ml-xs'
+      <btn-cond :label="$t('INVbtn_del')" icon="delete" class='col-auto q-ml-xs'
         @ok="dialogs.confirmcancel = true"/>
 
       <!-- L'utilisateur peut éditer sa demande-->
-      <btn-cond v-if="isU && !chgU"
-        :label="$t('INVbtn_rec')" icon="check" class="col-auto  q-ml-xs"
-        @ok="nothingToSave"/>
-
-      <btn-cond v-if="isU && chgU"
-        :label="$t('INVbtn_rec')" icon="check" class="col-auto  q-ml-xs"
-        @ok="dialogs.confirmrec = true"/>
+      <btn-cond v-if="isU"
+        :label="$t('INVbtn_rec')" icon="edit" class="col-auto q-ml-xs"
+        @ok="dialogs.tabedit = true"/>
 
       <!-- L'utilisateur peut valider sa demande-->
-      <btn-cond v-if="isU"  :disable=" model.invit.etc === null"
+      <btn-cond v-if="isU" :disable=" model.invit.etc === null"
         :label="$t('INVbtn_val')" icon="check" class="col-auto  q-ml-xs"
         @ok="dialogs.confirmval = true"/>
 
-      <!-- un sponsor peut traiter la demande -->
+      <!-- un sponsor peut traiter la demande 
       <btn-cond v-if="!isU && msgVal.ok" 
         :label="$t('INVbtn_edt')" icon="edit" class="col-auto  q-ml-xs"
         @ok="dialogs.editS = true"/>
-
+      -->
     </q-toolbar>
-
-    <div v-if="!isU" class="row items-start">
+    <!--
+    <div v-if="!isU" class="row items-start q-my-sm">
       <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
       <div :class="msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
         {{msgVal.txt}}
       </div>
     </div>
 
-    <div v-if="isU" class="row items-start">
+    <div v-if="isU" class="row items-start q-my-sm">
       <btn-bubble :text="$t('INVvalidable')" class="q-mr-md col-auto"/>
       <div :class="model.invit.etc !== null ? 'col titre-md text-italic' : 'col titre-md msg'">
         {{$t('INVval_' + (model.invit.etc !== null ? 'y' : 'n'))}}
       </div>
     </div>
+    -->
   </div>
-
-  <invit-acceptation v-if="dialogs.editS" v-model="dialogs.editS" :invit="model.invit"
-    @done="doAccept" @close="dialogs.editS = false"/>
 
   <choose-it v-model="dialogs.confirmcancel"
     prefix="INVcancelCf" options="pw" 
     @giveup="dialogs.cancel = false"
     @option="doConfirmCancel"/>
 
-  <!--choose-it v-model="dialogs.confirmval"
-    prefix="INVvalCf" options="pw" 
-    @giveup="dialogs.confirmval = false"
-    @option="doConfirmVal"/-->
-
-  <choose-it v-model="dialogs.confirmrec"
-    prefix="INVrecCf" options="pw" 
-    @giveup="dialogs.confirmrec = false"
-    @option="doConfirmRec"/>
-
-  <dialog-std0 v-model="dialogs.confirmval" hdrclass="tbs" 
-    :title="$t('INVvalCf_tit')">
-    <template #hdr>
-      <div class="row items-center justify-between">
-        <btn-bubble :text="$t('INVvalCf_txt')"/>
-        <div class="row items-center q-gutter-sm">
-          <btn-cond icon="close" :label="$t('giveup')"
-            @ok="dialogs.confirmval = false"/>
-          <btn-cond icon="check" :label="$t('validate')"
-            @ok="doConfirmVal" color="warning"/>
-        </div>
-      </div>
-    </template>
+  <dialog-std0 v-if="dialogs.tabedit" v-model="dialogs.tabedit" width="pwsm"
+    :title="$t('INVtabedit')" hdrclass="tbs" vue="InvitZoom">
     <template #default>
-      <div class="titre-md text-italic text-bold q-my-sm">{{ $t('INVlabels', [valLabels.length]) }}</div>
-      <div v-for="label in valLabels" :key="label">
-        
-      </div>
+      <invit-zoom editable @tabchange="tabchange"/>
     </template>
   </dialog-std0>
+
+  <invit-validate v-if="dialogs.validate" v-model="dialogs.validate" :invit="model.invit"
+    @validate="doValidate" @close="dialogs.validate = false"/>
+
 </div>
 </template>
 
@@ -106,11 +79,13 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
 
-import InvitAcceptation from '../components/InvitAcceptation.vue'
+// import InvitSponsor from '../components/InvitSponsor.vue'
+import InvitValidate from '../components/InvitValidate.vue'
+import InvitZoom from '../components-fw/InvitZoom.vue'
 
 const ui = stores.ui
 const sf = stores.safe
@@ -121,10 +96,6 @@ const isU = computed(() => model.value.invit && model.value.invit.userId === sf.
 const chgU = computed(() => isU.value && model.value.newTab 
   && model.value.newTab !== model.value.invit.tab
 )
-
-const nothingToSave = async () => {
-  ui.diagDisplay($t('INVnchU'), true)
-}
 
 const msgVal = ref({ ok: false, txt: 'KO' })
 
@@ -142,33 +113,42 @@ const nav = (n) => {
 }
 
 const dialogs = reactive({ 
-  confirmrec: false, confirmval: false, confirmcancel: false, editS: false
+  confirmcancel: false, 
+  tabedit: false, 
+  validate: false, 
+  sponsor: false
 })
 
-const txt = ref('')
-
 // Confirmation de cancel
-const doConfirmCancel = async (n) => {
+const doConfirmCancel = async (n: number) => {
   if (n === 1) {
     if (await model.value.invit.cancel())
       onUpdate()
   }
 }
 
-// Confirmation de validation
-const doConfirmVal = async () => {
-  dialogs.confirmval = false
-  if (await model.value.invit.validate())
+// Validation
+const doValidate = async (args: any) => {
+  dialogs.validate = false
+  if (await model.value.invit.validate(args))
     onUpdate()
 }
 
-const valLabels = computed(() => {
-  const etc = model.value.invit.etc
-  return etc.valLabels || []
-})
+// Invitation par un sponsor
+const doInvitation = async (args: any) => {
+  dialogs.sponsor = false
+  if (await model.value.invit.invitation(args))
+    onUpdate()
+}
+
+const tabchange = async (newTab: string) => {
+  if (await model.value.invit.updateByU(newTab)) {
+    onUpdate()
+  }
+}
 
 // Confirmation de maj ardoise
-const doConfirmRec = async (n) => {
+const doConfirmRec = async (n: number) => {
   if (n === 1) {
     if (await model.value.invit.updateByU(model.value.newTab))
       onUpdate()

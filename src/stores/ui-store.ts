@@ -163,7 +163,12 @@ export const useUiStore = defineStore('ui', () => {
   })
 
   const demandsPage = reactive({
-    tab: '', // new, list, process
+    spons: null,
+    svcOrg: { SVC: '', org: '' },
+    time: 0
+  })
+
+  const sponsoringsPage = reactive({
     spons: null,
     svcOrg: { SVC: '', org: '' },
     time: 0

@@ -66,10 +66,10 @@
 .wmd { max-width: 30rem }
 .wlg { max-width: 40rem }
 
-.pwsm { max-width: 30rem; width: 95vw }
-.pwmd { max-width: 40rem; width: 95vw }
-.pwlg { max-width: 50rem; width: 95vw }
-.pwxl { max-width: 90rem; width: 95vw }
+.pwsm { max-width: 30rem !important; width: 95vw !important }
+.pwmd { max-width: 40rem !important; width: 95vw !important }
+.pwlg { max-width: 50rem !important; width: 95vw !important }
+.pwxl { max-width: 90rem !important; width: 95vw !important }
 
 .tbp { background: var(--q-primary) !important; color: var(--q-tbptc) !important }
 .tbs { background: var(--q-secondary) !important; color: var(--q-tbstc) !important }

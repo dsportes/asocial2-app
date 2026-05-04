@@ -10,7 +10,7 @@
           name="person" size="24px" color="primary"/>
       </div>
       <div class="col-4">{{dhcool(model.v)}}</div>
-      <div class="col-3 ellipsis text-right text-bold">{{$t('INV_' + model.major)}}</div>
+      <div class="col-3 ellipsis text-right text-bold">{{$t('INV$' + model.major)}}</div>
       <div class="col-3 text-center">{{ model.minor || '-'}}</div>
     </div>
     <div class="row full-width">

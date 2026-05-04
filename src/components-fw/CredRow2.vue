@@ -11,7 +11,7 @@
       <div class="col-11 q-pl-sm cursor-pointer" @click.stop="emit('select', true)">
         <div class="row">
           <div class="col-8">
-            <btn-bubbletxt :text="$t('ROLE' + cred.role)" :bub="$t('ROLE' + cred.role + '_bub')"/>
+            <btn-bubbletxt :text="cred.$trole" :bub="cred.$trole_bub"/>
           </div>
           <div class="col-3 text-italic ellipsis">{{cred.docId || '(na)'}}</div>
           <q-icon v-if="cred.cond" class="col-1 self-start" name="star" size="24px" color="green-5"/>
