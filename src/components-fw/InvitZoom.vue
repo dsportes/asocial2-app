@@ -48,12 +48,14 @@
 import { ref, Ref, computed, onMounted, watch } from 'vue'
 
 import stores from '../stores/all'
-
+import { Crypt } from '../src-fw/crypt'
 import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import { Invitation } from '../src-fw/invitation'
 import { MDOperation } from 'src/src-fw/operation'
+
+const encoder = new TextEncoder()
 
 const sf = stores.safe
 const ui = stores.ui
@@ -68,9 +70,18 @@ const notView = computed(() => inv.value && inv.value.lv < invit.value.v )
 const opts = ref($t('INVx_none'))
 const vuToSet = computed(() => notView.value && invit.value.userId === sf.userId && inv.value)
 
+const trace = () => {
+  if (invit.value) {
+    const val = Crypt.shaS(encoder.encode(invit.value.major))
+    const pk = Crypt.shaS(encoder.encode(invit.value.invitId))
+    console.log('invit change major index', pk, val)
+  }
+}
+
 const init = async () => {
   ui.currentInvit.newTab = invit.value.tab
   const x = invit.value ? invit.value.editEtc() : ''
+  trace()
   opts.value = x || $t('INVx_none')
   if (vuToSet.value) await vu()
 }
@@ -78,7 +89,7 @@ const init = async () => {
 onMounted(async () => { await init() })
 
 watch(invit, async (v) => { 
-  console.log('invit change')
+  trace()
   await init() 
 })
 
@@ -96,6 +107,8 @@ const vu = async () => {
     console.log(e.toString())
   }
 }
+
+
 
 </script>
 

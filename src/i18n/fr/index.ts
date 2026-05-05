@@ -1494,14 +1494,14 @@ bla bla
 
 `,
 
-  INV_Relecteur: 'Relecteur',
-  INV_Relecteur_label: 'Relecteur d\'articles',
-  INV_Relecteur_bub: `### Relecteur d\'articles
+  INV$Relecteur: 'Relecteur',
+  INV$Relecteur_label: 'Relecteur d\'articles',
+  INV$Relecteur_bub: `### Relecteur d\'articles
 bla bla
 `,
-  INV_Cedit: 'Membre du comité éditorial',
-  INV_Cedit_label: 'Membre du comité éditorial',
-  INV_Cedit_bub: 'Membre du comité éditorial',
+  INV$Cedit: 'Membre du comité éditorial',
+  INV$Cedit_label: 'Membre du comité éditorial',
+  INV$Cedit_bub: 'Membre du comité éditorial',
 
   ROLE: 'Rôle',
   ROLE$Org_manager: 'Manager de l\'organisation',

@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 
 import stores from '../stores/all'
 import { Sponsoring } from '../stores/safe-store'
@@ -38,7 +38,6 @@ import { $t, dkli } from '../src-fw/util'
 
 import InvitLine from '../components-fw/InvitLine.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
-import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 
 const ui = stores.ui
 

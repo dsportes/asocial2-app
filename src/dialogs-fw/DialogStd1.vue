@@ -1,7 +1,8 @@
 <template>
 <q-dialog v-model="model" full-height persistent
     transition-show="slide-up">
-  <q-card :class="sty() + ' full-width'">
+  <q-card :class="sty()"
+    :style="'max-width: ' + wx[width || 'md'] + 'rem !important; width: 95vw !important'">
   <q-layout container view="hHh lpR fFf">
     <q-header>
       <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
@@ -31,6 +32,8 @@ import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 
+const wx = {sm: '30', md: '40', lg: '50'}
+
 const model = defineModel()
 const emit = defineEmits(['close'])
 
@@ -39,7 +42,8 @@ const props = defineProps({
   title: String, // titre de la top bar
   help: String,  // code de loa page d'aide s'il y en a une
   hdrclass: String,
-  noclose: Boolean
+  noclose: Boolean,
+  width: String
 })
 
 const onClose = () => { 

@@ -48,7 +48,10 @@ export class Invitation {
   tab: string = '' // Adroise commune U / sponsors (non cryptée)
   etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 
-  get $t () { return $t('INV$' + this.major)}
+  get $t () { 
+    const x = $t('INV$' + this.major) 
+    return x
+  }
   get prefix () { return 'INV$' + this.major }
 
   static p1 = ['invitId', 'userId', 'major', 'minor', 'byU', 'tab', 'etc']

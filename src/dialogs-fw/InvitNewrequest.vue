@@ -2,7 +2,8 @@
 -->
 <template>
 <div>
-<dialog-std1 v-model="model" @close="model = false; emit('close', true)"
+<dialog-std1 v-model="model" width="sm"
+  @close="model = false; emit('close', true)"
   :title="$t('INVtit_1_label')">
   <template #hdr>
     <div class="row justify-between items-center">
@@ -15,8 +16,8 @@
   </template>
   <template #default>
     <div class="column items-center">
-      <div class="pwsm q-pa-xs">
-        <div class="row items-center q-gutter-sm">
+      <div class="q-pa-xs">
+        <div class="row items-center justify-center q-gutter-sm">
           <select-svc v-model="svc"/>
           <select-org/>
         </div>
@@ -28,15 +29,17 @@
             transition-show="flip-up" transition-hide="flip-down"
             :options="majOpts" :label="$t('INVmajor_c')"/>
 
-          <div v-if="hasMinor" class="q-mt-sm full-width" >
-            <bar-title prefix="INVminor"/>
-            <input-b prefix="INVminor_c" v-model="minor" size="minor" noval/>
-          </div>
+          <div v-if="major">
+            <div v-if="hasMinor" class="q-mt-sm full-width" >
+              <bar-title prefix="INVminor"/>
+              <input-b prefix="INVminor_c" v-model="minor" size="minor" noval/>
+            </div>
 
-          <div v-if="xerr === ''">
-            <bar-title class="q-mt-md" prefix="INVtabu"/>
-            <md-editor class="full-width q-pa-xs" v-model="tab"
-              editable modetxt/>
+            <div v-if="xerr === ''">
+              <bar-title class="q-mt-md" prefix="INVtabu"/>
+              <md-editor class="full-width q-pa-xs" v-model="tab"
+                editable modetxt/>
+            </div>
           </div>
         </div>
       </div>
@@ -88,7 +91,8 @@ const hasMinor = computed(() => major.value && majdescr && majdescr.hasMinor )
 
 const xerr = computed(() => !hasMinor.value ? '' : minor.err )
 
-const completed = computed(() => session.orgs.c && xerr.value === '' && tab.value.length > mintab)
+const completed = computed(() => 
+  session.orgs.c && xerr.value === '' && tab.value.length > mintab)
 
 const reset = () => {
   svc.value = config.K.DEFAULT_SERVICE

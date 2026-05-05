@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="cred.role === 'Sponsor.' && cred.docId === 'Org.manager'" class="column full-width">
+    <div v-if="cred.role === 'Org.manager' && !cred.docId" class="column full-width">
       <div class="titre-md">{{ $t('COND_orgm_1', [cred.cond.name]) }}</div>
     </div>
   </div>
