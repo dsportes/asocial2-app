@@ -1,8 +1,8 @@
 // @ts-ignore
-// import { decode } from '@msgpack/msgpack'
+import { decode } from '@msgpack/msgpack'
 
 import { Operation } from './operation'
-// import { $t } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 
 import { subsToSync } from '../stores/data-store'
@@ -238,10 +238,9 @@ export class AutoRevokeCred extends Operation {
 }
 
 export type ListMgrs = {
-  userId: string
+  credId: string
   time: number
-  limit: number
-  cond: Object
+  name: string
 }
 
 export class ListManagers extends Operation {
@@ -290,6 +289,47 @@ export class GetCredLimitCond extends Operation {
     } catch(e) {
       await this.ko(e)
       return null
+    }
+  }
+}
+
+/* InvitList liste, pour un sponsor, les invitations enregistrées pour un "major"
+- soit toutes, avec le credential 'Org.manager' ou 'Sponsor.major'
+- soit uniquement celles du "minor" indiqué pour un 'Sponsor.minor'
+Retourne une liste d'invitations 
+*/
+export class InvitList extends Operation {
+  constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
+
+  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[]> {
+    try {
+      this.args.major = major
+      this.args.minor = minor
+      if (!isSp) this.sign('Org.manager')
+      else { // sponsor
+        // On tente toujours le "major" seul
+        this.sign('Sponsor.', major) 
+        // Le cas échéant on tente le major.minor
+        if (minor !== '') this.sign('Sponsor.', major + '/' + minor)
+      }
+      const res = await this.post()
+      const status = res.status
+      if (status !== 0) {
+        await stores.ui.diagDisplay($t('INVcred'))
+        return []
+      }
+      const lst: Invitation[] = []
+      for(const data of res.list) {
+        const obj = decode(data)
+        obj.svc = this.SVC
+        obj.org = this.args.org
+        const inv = new Invitation(obj)
+        lst.push(inv)
+      }
+      return lst
+    } catch(e) {
+      await this.ko(e)
+      return []
     }
   }
 }

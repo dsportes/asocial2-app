@@ -49,8 +49,7 @@ export class Invitation {
   etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 
   get $t () { return $t('INV$' + this.major)}
-  get $t_bub () { return $t('INV$' + this.major + '_bub')}
-  get $t_tit () { return $t('INV$' + this.major + '_tit')}
+  get prefix () { return 'INV$' + this.major }
 
   static p1 = ['invitId', 'userId', 'major', 'minor', 'byU', 'tab', 'etc']
 

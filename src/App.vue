@@ -4,6 +4,7 @@
     <safe-header v-if="ui.page === 'safeHome'"/>
     <admin-header v-if="ui.page === 'admin'"/>
     <demands-header v-if="ui.page === 'demands'"/>
+    <sponsorings-header v-if="ui.page === 'sponsorings'"/>
 
     <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
       <btn-cond class="q-mr-xs" color="none" flat icon="menu"
@@ -52,6 +53,11 @@
       </q-page>
     </transition>
     <transition name="anim1">
+      <q-page v-if="ui.page === 'sponsorings'" class="column">
+        <sponsorings-page class="q-mt-sm"/>
+      </q-page>
+    </transition>
+    <transition name="anim1">
       <q-page v-if="ui.page === 'test'" class="column">
         <test-page class="q-mt-sm"/>
       </q-page>
@@ -95,6 +101,9 @@ import AdminHeader from './pages/AdminHeader.vue'
 import DemandsPage from './pages/DemandsPage.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
 
+import SponsoringsPage from './pages/SponsoringsPage.vue'
+import SponsoringsHeader from './pages/SponsoringsHeader.vue'
+
 import TestPage from './pages/TestPage.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
@@ -109,7 +118,7 @@ import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
-const hdrPages = new Set(['admin', 'demands', 'safeHome'])
+const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
 
 const config = stores.config
 const session = stores.session

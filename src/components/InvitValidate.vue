@@ -16,8 +16,8 @@
     <div v-else class="titre-md text-italic">{{ $t('ok') }}</div>
   </template>
   <template #default>
-    <div class="pwmd q-px-sm column items-center">
-    <div> <!-- en théorie le div est inutile mais en fait SI -->
+    <div class="q-px-sm column items-center">
+      <!-- en théorie le div est inutile mais en fait SI -->
       <q-expansion-item class="q-my-xs full-width" 
         header-class="tbp" dense :label="$t('INVdetail')">
         <div class="q-my-xs full-width">
@@ -26,8 +26,13 @@
         </div>
       </q-expansion-item>
 
+      <div v-if="invit.major === 'Org.manager'" class="q-my-xs full-width column items-center">
+        <bar-title :prefix="invit.prefix"/>
+        <div class="titre-md text-italic q-my-sm">{{ $t('noopts') }}</div>
+      </div>
+
       <div v-if="invit.major === 'Auteur'" class="q-my-xs full-width column items-center">
-        <div class="titre-lg text-italic q-my-sm">{{invit$t_tit}}</div>
+        <bar-title :prefix="invit.prefix"/>
         <q-option-group class="full-width q-my-sm" :options="optionsA" type="radio" dense
           v-model="accept.etc.newA"/>
         <q-option-group class="full-width q-my-sm" :options="optionsSP" type="radio" dense
@@ -41,11 +46,6 @@
           @ok="genTxtAuteur"/>
       </div>
 
-      <q-separator color="orange" class="q-my-sm"/>
-
-      <div class="titre-lg text-italic q-mb-sm">{{$t('INVtxti')}}</div>
-      <scroll-md class="bord1 q-py-xs" height="200px" :text="txt" />
-    </div>
     </div>
   </template>
 </dialog-std1>
@@ -60,7 +60,10 @@ import { $t } from '../src-fw/util'
 // import { Crypt } from '../src-fw/crypt'
 
 import InputA from '../components-fw/InputA.vue'
-
+import BtnBubble from '../components-fw/BtnBubble.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import InvitZoom from '../components-fw/InvitZoom.vue'
+import BarTitle from '../components-fw/BarTitle.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
 const model = defineModel()

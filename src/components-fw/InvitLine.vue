@@ -2,12 +2,10 @@
   <div :class="clinv" @click="emit('zoom', model)">
     <div class="row full-width">
       <div class="col-1 row items-center">
-        <q-icon v-if="model.etc !== null"  
-          name="check_circle" size="24px" color="green-5"/>
+        <q-icon v-if="model.etc !== null" name="check_circle" size="24px" color="green-5"/>
       </div>
       <div class="col-1 row items-center">
-        <q-icon v-if="model.byU"
-          name="person" size="24px" color="primary"/>
+        <q-icon v-if="model.byU" name="person" size="24px" color="primary"/>
       </div>
       <div class="col-4">{{dhcool(model.v)}}</div>
       <div class="col-3 ellipsis text-right text-bold">{{$t('INV$' + model.major)}}</div>
@@ -15,9 +13,7 @@
     </div>
     <div class="row full-width">
       <div class="col-2"></div>
-      <div class="col-10 text-italic ellipsis">
-        {{ model.tab }}
-      </div>
+      <div class="col-10 text-italic ellipsis">{{ model.tab }}</div>
     </div>
   </div>
 </template>

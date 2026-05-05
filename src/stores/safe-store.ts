@@ -922,6 +922,20 @@ export const useSafeStore = defineStore('safe', () => {
     return lst
   }
 
+  const managedOrgs2 = () => {
+    const lst : { label, svc, org, credId }[] = []
+    if (mySafeCreds.value) {
+      const svcOrgs: Map<string, Set<string>> = new Map()
+      for (const [,c] of mySafeCreds.value) {
+        if (c.role === 'Org.manager') {
+          const label = $t('services_' + c.svc)
+          lst.push({ label, org: c.org, svc: c.svc, credId: c.credId})
+        }
+      }
+    }
+    return lst
+  }
+
   /* Retourne true si l'utilisateur est "manager" du couple svc / org ***********/
   const isManager = (svc, org) : boolean => {
     for (const [,c] of mySafeCreds.value)
@@ -1691,7 +1705,7 @@ export const useSafeStore = defineStore('safe', () => {
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     sponsorings,
-    managedOrgs,
+    managedOrgs, managedOrgs2,
     isManager /* ??? */,
     getCreds,
     sessionOfProfId, profileOfProfId,

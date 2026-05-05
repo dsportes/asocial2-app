@@ -86,8 +86,8 @@ export class Major {
         credId: self.etc.credId,
         svc: self.svc,
         org: self.org,
-        role: 'Sponsor.',
-        docId: 'Org.manager',
+        role: 'Org.manager',
+        docId: '',
         comment: $t('nocomment'),
         privs: keyToB64(priv)
       })

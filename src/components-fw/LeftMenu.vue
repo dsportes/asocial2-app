@@ -96,17 +96,13 @@ const openAdmin = (svc) => {
 const openDemands = (svc) => {
   ui.closeMenu()
   ui.setPage('demands')
-  ui.demandsPage.SVC = ''
-  ui.demandsPage.org = ''
-  ui.demandsPage.tab = 'list'
 }
 
 const openSponsorings = (svc) => {
   ui.closeMenu()
   ui.setPage('sponsorings')
-  ui.sponsoringsPage.SVC = ''
-  ui.sponsoringsPage.org = ''
-  ui.sponsoringsPage.tab = 'list'
+  ui.sponsoringsPage.spons = null
+  ui.sponsoringsPage.time = Date.now()
 }
 
 </script>

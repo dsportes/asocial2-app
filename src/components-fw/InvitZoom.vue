@@ -87,11 +87,11 @@ const emit = defineEmits(['tabchange'])
 const vu = async () => {
   await ui.diagDisplay($t('INVxnotv_u'))
   const op = new MDOperation('$mdInvitUpdLV')
-  op.args.invitId = props.invit.invit.invitId
-  op.args.userId = props.invit.invit.userId
+  op.args.invitId = invit.value.invitId
+  op.args.userId = invit.value.userId
   try {
     await op.post()
-    props.invit.inv.lp = props.invit.inv.v // pas très réglo !
+    inv.value.lv = invit.value.v // pas très réglo !
   } catch(e: any) {
     console.log(e.toString())
   }

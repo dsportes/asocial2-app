@@ -38,10 +38,10 @@ import { $t, sty } from '../src-fw/util'
 import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
 import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const ui = stores.ui
 const session = stores.session

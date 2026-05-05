@@ -32,6 +32,7 @@ Events: close done
         {{ p.txt || p.hsh}}</div>
     </div>
   </div>
+
   <q-separator color="grey-6" class="q-my-md"/>
 </template>
 

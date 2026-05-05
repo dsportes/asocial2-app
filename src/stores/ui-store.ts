@@ -162,16 +162,9 @@ export const useUiStore = defineStore('ui', () => {
     $OP: ''
   })
 
-  const demandsPage = reactive({
-    spons: null,
-    svcOrg: { SVC: '', org: '' },
-    time: 0
-  })
-
   const sponsoringsPage = reactive({
     spons: null,
-    svcOrg: { SVC: '', org: '' },
-    time: 0
+    time: Date.now()
   })
 
   const navBar = reactive({
@@ -203,7 +196,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    currentInvit, navBar, adminPage, demandsPage,
+    currentInvit, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
   }
 })

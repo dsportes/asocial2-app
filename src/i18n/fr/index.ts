@@ -69,6 +69,8 @@ export default {
   svcStatus_no: 'Service / opérateur non sélectionné',
   svcStatus_no2: 'Service non sélectionné',
   svcStatus_no3: 'Vous n\'êtes "manager" d\'aucune organisation.',
+  svcStatus_no4: 'Vous êtes "manager" des organisations ci-dessous. ' +
+    'Cliquer sur le bouton "corbeille" d\'un droit pour LE REVOQUER.',
   up: 'UP',
   down: 'DOWN',
   readonly: 'LECTURE SEULE',
@@ -1443,7 +1445,8 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   blabla1: 'bla1 bla1', // Test surcharge traductions
   titre: 'Test très simple - compteur: {0}',
 
-  
+  noopts: 'Aucune option à saisir.',
+
   INVsponsoring: `### Qui peut traiter une demande d'invitation ?
 Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.

@@ -26,15 +26,15 @@
       <!-- L'utilisateur peut valider sa demande-->
       <btn-cond v-if="isU" :disable=" model.invit.etc === null"
         :label="$t('INVbtn_val')" icon="check" class="col-auto  q-ml-xs"
-        @ok="dialogs.confirmval = true"/>
+        @ok="dialogs.validate = true"/>
 
-      <!-- un sponsor peut traiter la demande 
+      <!-- un sponsor peut éditer la demande -->
       <btn-cond v-if="!isU && msgVal.ok" 
         :label="$t('INVbtn_edt')" icon="edit" class="col-auto  q-ml-xs"
         @ok="dialogs.editS = true"/>
-      -->
+      
     </q-toolbar>
-    <!--
+    
     <div v-if="!isU" class="row items-start q-my-sm">
       <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
       <div :class="msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
@@ -48,7 +48,7 @@
         {{$t('INVval_' + (model.invit.etc !== null ? 'y' : 'n'))}}
       </div>
     </div>
-    -->
+    
   </div>
 
   <choose-it v-model="dialogs.confirmcancel"
@@ -86,6 +86,7 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
@@ -116,7 +117,8 @@ const dialogs = reactive({
   confirmcancel: false, 
   tabedit: false, 
   validate: false, 
-  sponsor: false
+  sponsor: false,
+  editS: false
 })
 
 // Confirmation de cancel
@@ -134,13 +136,12 @@ const doValidate = async (args: any) => {
     onUpdate()
 }
 
-/* Invitation par un sponsor
+/* Invitation par un sponsor */
 const doInvitation = async (args: any) => {
   dialogs.sponsor = false
   if (await model.value.invit.invitation(args))
     onUpdate()
 }
-*/
 
 const tabchange = async () => {
   if (await model.value.invit.updateByU(model.value.newTab)) {

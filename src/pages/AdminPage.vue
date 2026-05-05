@@ -19,54 +19,60 @@
 
     <div v-if="sf.auth.admins">
       <div v-if="!ui.adminPage.SVC" class="titre-md text-italic">{{ $t('svcStatus_no2') }}</div>
-      <div class="q-my-md full-width column">
-        <select-org @change="doOrgOk"/>
-      </div>
-    </div>
-    <div v-else class="q-my-md">
-      <q-select v-if="hasManagedOrgs"
-        dense class="full-width" options-dense filled clearable
-        transition-show="flip-up" transition-hide="flip-down"
-        v-model="svcOrg"
-        :options="sorgs" :label="$t('MNOorgs')"/>
-      <div v-else class="titre-md text-italic">{{ $t('svcStatus_no3') }}</div>
-    </div>
-
-    <div class="row q-mt-sm titre-sm text-italic">
-      <q-icon name="delete" class="col-1" size="16px"/>
-      <div class="col-3">ID</div>
-      <div class="col-4">{{$t('alias')}}</div>
-      <div class="col-4">{{$t('ltime')}}</div>
-    </div>
-    <scroll-area v-if="hasManagedOrgs || sf.auth.admins"
-      class="full-width bord1">
-      <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
-        <div class="row">
-          <btn-cond v-if="!m.limit && (sf.auth.admins || m.userId  === sf.userId)"
-            class="col-1" icon="delete" color="warning"
-            @ok="revoke(m)"/>
-          <div v-else class="col-1"></div>
-          <div v-if="m.userId === sf.userId" class="col-3 font-mono text-bold">({{$t('me')}})</div>
-          <div v-else class="col-3 font-mono ellipsis">{{m.userId}}</div>
-          <div class="col-4">{{m.name}}</div>
-          <div class="col-4">{{m.limit ? dhcool(m.limit) : $t('APnolimit')}}</div>
+      <div v-else>
+        <div class="q-my-md full-width row q-gutter-sm items-center">
+          <select-org @change="doOrgOk"/>
+          <btn-cond round icon="refresh" @ok="doOrgOk" size="lg"/>
         </div>
-      </div>
-    </scroll-area>
 
-    <div v-if="sf.auth.admins" class="q-my-md">
-      <q-separator color="orange"/>
-      <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
-      <input-b class="full-width" prefix="FCtarget" size="alias" noval
-        v-model="targetUser"/>
-      <div class="titre-md text-italic q-mt-md">{{ $t('APtab') }}</div>
-      <q-input class="q-pa-xs bord1 q-mb-md" v-model="tab" type="textarea" :rows="5"/>
+        <div class="q-my-md">
+          <q-select v-if="hasManagedOrgs"
+            dense class="full-width" options-dense filled clearable
+            transition-show="flip-up" transition-hide="flip-down"
+            v-model="svcOrg"
+            :options="sorgs" :label="$t('MNOorgs')"/>
+          <div v-else class="titre-md text-italic">{{ $t('svcStatus_no3') }}</div>
+        </div>
 
-      <div class="column items-center">
-        <btn-cond :label="$t('APgrantmgr')" icon="check"
-          :disable="targetUser.err !== ''" @ok="grantManager"/>
-        <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
-          @ok="dolist"/>
+        <div class="row q-mt-sm titre-sm text-italic">
+          <q-icon name="delete" class="col-1" size="16px"/>
+          <div class="col-3">ID</div>
+          <div class="col-1">{{$t('me')}}</div>
+          <div class="col-3">{{$t('alias')}}</div>
+          <div class="col-4">{{$t('ltime')}}</div>
+        </div>
+        <scroll-area v-if="hasManagedOrgs || sf.auth.admins"
+          class="full-width bord1">
+          <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
+            <div class="row">
+              <btn-cond v-if="!m.limit && (sf.auth.admins || sf.mySafeCreds.has(m.credId))"
+                class="col-1" icon="delete" color="warning"
+                @ok="revoke(m)"/>
+              <div v-else class="col-1"></div>
+              <div class="col-3 font-mono ellipsis">{{m.credId}}</div>
+              <div v-if="sf.mySafeCreds.has(m.credId)" class="col-1 font-mono text-bold">({{$t('me')}})</div>
+              <div v-else class="col-1"></div>
+              <div class="col-3">{{m.name}}</div>
+              <div class="col-4">{{m.limit ? dhcool(m.limit) : $t('APnolimit')}}</div>
+            </div>
+          </div>
+        </scroll-area>
+
+        <div v-if="sf.auth.admins" class="q-my-md">
+          <q-separator color="orange"/>
+          <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
+          <input-b class="full-width" prefix="FCtarget" size="alias" noval
+            v-model="targetUser"/>
+          <div class="titre-md text-italic q-mt-md">{{ $t('APtab') }}</div>
+          <q-input class="q-pa-xs bord1 q-mb-md" v-model="tab" type="textarea" :rows="5"/>
+
+          <div class="column items-center">
+            <btn-cond :label="$t('APgrantmgr')" icon="check"
+              :disable="targetUser.err !== ''" @ok="grantManager"/>
+            <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
+              @ok="dolist"/>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -95,7 +101,6 @@ import { ListManagers, RevokeCred } from '../src-fw/operations'
 import { $t, dkli, dhcool } from '../src-fw/util'
 import { NewManager } from '../src-fw/invitation'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-// import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'

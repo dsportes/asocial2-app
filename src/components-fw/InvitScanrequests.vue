@@ -92,7 +92,7 @@ const clinv = (inv, idx) => dkli(idx) + (isCurrent(inv) ? ' current ' : ' nocurr
 */
 const onUpdate = () => {
   const u = ui.currentInvit
-  const acId = ui.currentInvit.invit.invitId
+  const acId = u.invit.invitId
   u.zoomed = false
   setTimeout(async () => {
     await mdInvits()
