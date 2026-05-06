@@ -15,10 +15,12 @@ Les liens vers la documentation externe par langue sont donnés dans constant.ts
 Les liens vers les images sont de cette forme:
 <img src="images/flowers.png" style="background-color:white">
 L'image doit figurer dans public/images
+:style="'height :' + (height || '300px') + ';'"
 -->
 <template>
-  <q-scroll-area :style="'height :' + (height || '300px') + ';'"
-    :class="(!dark ? 'clear' : 'dark') + ' q-pt-xs q-pb-xl'"
+  <q-scroll-area
+    :style="'height :' + (height || '300px') + ';'"
+    :class="(!dark ? 'clear' : 'dark') + ' q-py-xs'"
     :barStyle="barStyle" :thumbStyle="thumbStyle">
     <sd-noir v-if="dark" :text="text2()"/>
     <sd-blanc v-else :text="text2()"/>

@@ -37,7 +37,7 @@ const props = defineProps({
   vue: String,
   title: String, // titre de la top bar
   help: String,  // code de loa page d'aide s'il y en a une
-  tbclass: String,
+  hdrclass: String,
   noclose: Boolean
 })
 

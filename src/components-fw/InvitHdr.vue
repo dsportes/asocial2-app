@@ -111,7 +111,7 @@ const doConfirmCancel = async (n: number) => {
 // Validation
 const doValidate = async (args: any) => {
   dialogs.validate = false
-  if (await model.value.invit.validate(args))
+  if (await model.value.invit.validate(args)) 
     onUpdate()
 }
 

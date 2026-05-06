@@ -943,6 +943,21 @@ export const useSafeStore = defineStore('safe', () => {
     return false
   }
 
+  /* Retourne:
+  - '' : PAS sponsor du major
+  - 'M' : sponsor du "major"
+  - 'M/m' : sponsor du "major/minor" 
+  */
+  const sponsorOf = (svc, org, major, minor) : string => {
+    const majmin = major + '/' + 'minor'
+    for (const [,c] of mySafeCreds.value)
+      if (c.role === 'Sponsor.') {
+        if (c.docId === major) return major
+        if (minor && c.docId === majmin) return majmin
+      } 
+    return ''
+  }
+
   /* Retourne la Map des CredSafe dont l'id est citée dans le profile *************/
   const getCreds = (profile: Profile) : Map<string, Credential> => {
     const x: Map<string, Credential> = new Map<string, Credential>()
@@ -1705,8 +1720,7 @@ export const useSafeStore = defineStore('safe', () => {
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     sponsorings,
-    managedOrgs, managedOrgs2,
-    isManager /* ??? */,
+    managedOrgs, managedOrgs2, isManager, sponsorOf,
     getCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS /* ??? */, delSafe,

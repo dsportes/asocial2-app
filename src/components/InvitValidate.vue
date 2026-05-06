@@ -9,14 +9,15 @@
         <btn-cond icon="close" :label="$t('giveup')"
           @ok="doClose"/>
         <btn-cond icon="check" :label="$t('validate')"
+          :disable="diag !== ''"
           @ok="doValidate" color="warning"/>
       </div>
     </div>
-    <div v-if="diag" class="msg">diag</div>
+    <div v-if="diag" class="msg">{{diag}}</div>
     <div v-else class="titre-md text-italic">{{ $t('ok') }}</div>
   </template>
   <template #default>
-    <div class="q-px-sm column items-center">
+    <div class="q-px-sm full-width column items-center">
       <!-- en théorie le div est inutile mais en fait SI -->
       <q-expansion-item class="q-my-xs full-width" 
         header-class="tbp" dense :label="$t('INVdetail')">
@@ -31,21 +32,14 @@
         <div class="titre-md text-italic q-my-sm">{{ $t('noopts') }}</div>
       </div>
 
-      <div v-if="invit.major === 'Auteur'" class="q-my-xs full-width column items-center">
-        <bar-title :prefix="invit.prefix"/>
-        <q-option-group class="full-width q-my-sm" :options="optionsA" type="radio" dense
-          v-model="accept.etc.newA"/>
-        <q-option-group class="full-width q-my-sm" :options="optionsSP" type="radio" dense
-          v-model="accept.etc.option"/>
-        <div v-if="(!accept.etc.option || accept.etc.option === 1) && (!accept.etc.newA || accept.etc.newA === 2)"
-          class="msg">{{$t('INVauteur_e')}}</div>
-        <input-a v-if="accept.etc.option === 3" class="q-my-sm"
-          prefix="INVauteur_categ" size="minor" noval
-          v-model="accept.etc.categ"/>
-        <btn-cond class="q-my-sm items-end" :label="$t('INVverif')"
-          @ok="genTxtAuteur"/>
+      <div v-if="invit.major === 'Auteur'" class="q-my-xs" style="min-width:20rem">
+        <div v-if="invit.etc.newA === 1">
+          <bar-title prefix="INV$Auteur"/>
+          <input-b v-model="args.Auteur.nom" size="auteur" noval
+            prefix="INV$Auteur_nom"/>
+        </div>
+        <div v-else class="titre-md text-italic">{{ $t('noopts') }}</div>
       </div>
-
     </div>
   </template>
 </dialog-std1>
@@ -53,13 +47,13 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 
 // import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 // import { Crypt } from '../src-fw/crypt'
 
-import InputA from '../components-fw/InputA.vue'
+import InputB from '../components-fw/InputB.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
@@ -79,7 +73,14 @@ const doClose = () => {
 }
 
 const doValidate = () => {
-  emit('validate', args[props.invit.role])
+  const x: any = { }
+    switch (props.invit.major) {
+    case 'Auteur' : {
+      x.nom = args.Auteur.nom.inp
+      break
+    }
+  }
+  emit('validate', x)
   model.value = false
 }
 
@@ -89,12 +90,18 @@ const args = reactive({
   }
 })
 
-const diag = computed(() => {
-  switch (props.invit.role) {
+const diag = ref('')
+const setDiag = () => {
+  switch (props.invit.major) {
     case 'Auteur' : {
-      return args.Auteur.nom.err
+      diag.value = $t(args.Auteur.nom.err)
+      break
     }
   }
+}
+
+watch(args, () => {
+  setDiag()
 })
 
 </script>

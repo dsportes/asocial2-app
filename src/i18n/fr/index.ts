@@ -1470,7 +1470,7 @@ bla bla
   INV$Auteur_bub: `### Auteur d\'articles
 bla bla
 `,
-  INV$Auteur_nom: 'Nom ou pseudonyme de l\'auteur à créer',
+  INV$Auteur_nom_label: 'Nom ou pseudonyme de l\'auteur à créer',
   INV$Auteur_nom_ph: 'Victor Hugo',
 
   INV$Auteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
@@ -1481,18 +1481,18 @@ bla bla
   INV$Auteur_5: 'SANS nouvel auteur',
   INV$Auteur_e: 'Une invitation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens.',
   INV$Auteur_categ_label: 'Catégorie d\'auteurs',
-  INV$Auteur_t1: `### Auteur en création:
-- nom: **{0}**
-- ID: _{1}_
-
+  INV$Auteur_t1: `Un **auteur** sera créé:
+  - ID: _{0}_
+`,  
+  INV$Auteur_t0: `Auncun **auteur** ne sera créé.
 `,
-  INV$Auteur_t2: `### Droit de _Sponsoring_ accordé pour traitement de:
-- toute demande de création d'auteur.
-
+  INV$Auteur_t2: `### Droit de _Sponsoring_ 
+- un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur.
+- il pourra être transmis.
 `,
-  INV$Auteur_t3: `### Droit de _Sponsoring_ accordé pour traitement de:
-- création d'un auteur de catagorie **{0}**.
-
+  INV$Auteur_t3: `### Droit de _Sponsoring_ 
+- un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur de la seule catégorie **{0}**.
+- il pourra être transmis.
 `,
 
   INV$Relecteur: 'Relecteur',
@@ -1517,11 +1517,11 @@ blu blu
 
 `,
 
-  ROLE$Auteur_: 'Auteur d\'articles',
-  ROLE$Auteur__bub: `### Auteur d\'articles
+  ROLE$Auteur: 'Auteur d\'articles',
+  ROLE$Auteur_bub: `### Auteur d\'articles
 `,
-  ROLE$Relecteur_: 'Relecteur d\'articles',
-  ROLE$Groupe_: 'Groupe de relecteurs',
+  ROLE$Relecteur: 'Relecteur d\'articles',
+  ROLE$Groupe: 'Groupe de relecteurs',
 
   COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"'
 

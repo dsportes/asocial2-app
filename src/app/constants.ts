@@ -46,7 +46,7 @@ export const K = {
     entid: [0, 60],
     isotime: [24, 24],
     svc: [3, 8, 'svc'],
-    contact: [16, 24],
+    auteur: [6, 24],
     minor: [0, 12, 'an2']
   },
 

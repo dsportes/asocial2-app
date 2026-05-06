@@ -36,7 +36,7 @@
 
   <div v-if="invit.etc !== null">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_opts')}}</div>
-    <scroll-md class="full-width bord1 q-pa-xs" height="100px" 
+    <scroll-md class="full-width bord1 q-pa-xs" height="150px" 
       :text="opts" />
   </div>
 
@@ -48,7 +48,6 @@
 import { ref, Ref, computed, onMounted, watch } from 'vue'
 
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
 import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
@@ -68,8 +67,9 @@ const invit: Ref<Invitation> = computed(() => ui.currentInvit.invit)
 const inv = computed(() => ui.currentInvit.inv)
 const notView = computed(() => invit.value.userId === sf.userId
   && (inv.value && inv.value.lv < invit.value.v) )
-const opts = ref($t('INVx_none'))
+const opts = ref('')
 
+/*
 const trace = () => {
   if (invit.value) {
     const val = Crypt.shaS(encoder.encode(invit.value.major))
@@ -77,11 +77,12 @@ const trace = () => {
     console.log('invit change major index', pk, val)
   }
 }
+*/
 
 const init = async () => {
   ui.currentInvit.newTab = invit.value.tab
+  // trace()
   const x = invit.value ? invit.value.editEtc() : ''
-  trace()
   opts.value = x || $t('INVx_none')
   if (notView.value) await vu()
 }
@@ -89,7 +90,7 @@ const init = async () => {
 onMounted(async () => { await init() })
 
 watch(invit, async (v) => { 
-  trace()
+  // trace()
   await init() 
 })
 
@@ -107,8 +108,6 @@ const vu = async () => {
     console.log(e.toString())
   }
 }
-
-
 
 </script>
 

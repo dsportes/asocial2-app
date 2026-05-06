@@ -11,9 +11,11 @@ import { keyToB64 } from '../src-fw/b64'
 const encoder = new TextEncoder()
 
 type InvVal = {
-  pemvA: string, // pemV pour le credential d'accès à l'auteur
-  pemvS: string, // pemV pour le credential Sponsor (s'il y a lieu)
-  time: number // time de l'application pour ces deux credentials
+  nom: string // nom d'auteur
+  pemvA: string // pemV pour le credential d'accès à l'auteur
+  pemvS: string // pemV pour le credential Sponsor (s'il y a lieu)
+  credIdA: string
+  credIdS: string
 }
 
 /* "Fausse" classe statique implémentant pour chaque "Major"
@@ -108,7 +110,13 @@ export class Major {
   }
 
   static editEtc_Auteur (self: Invitation) : string {
-    return ''
+    if (!self.etc) return ''
+    const t: string[] = []
+    if (self.etc.newA === 1) t.push($t('INV$Auteur_t1', [self.etc.docId]))
+    if (self.etc.newA === 2) t.push($t('INV$Auteur_t0'))
+    if (self.etc.option === 2) t.push($t('INV$Auteur_t2'))
+    if (self.etc.option === 3) t.push($t('INV$Auteur_t2', self.etc.categ))
+    return t.join('\n')
   }
 
   static async validate_Auteur (self: Invitation, args: any) : Promise<string> {
@@ -119,44 +127,46 @@ export class Major {
       - optionnellement du credential "Sponsor".
     */
     const op = new Operation('InvitValidate', self.svc, self.org)
+    const sf = stores.safe
     try {
-      let privA: string = '', privS: string = ''
+      let privA: string = ''
+      let privS: string = ''
       const invVal: InvVal = {
-        time: Date.now(),
         pemvA: '',
-        pemvS: ''
+        pemvS: '',
+        nom: args.nom || '',
+        credIdA: '',
+        credIdS: ''
       }
       if (self.etc.newA === 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvA = keyToB64(pub)
+        invVal.credIdA = Crypt.rnd(15)
         privA = keyToB64(priv)
       }
       if (self.etc.option > 1) {
         const { pub, priv } = await Crypt.getSVKeyPair()
         invVal.pemvS = keyToB64(pub)
+        invVal.credIdS = Crypt.rnd(15)
         privS = keyToB64(priv)
       }
       op.args.invitId = self.invitId
-      op.args.invVal = invVal
+      op.args.validArgs = invVal
       const res = await op.post()
-      if (res.status) await stores.ui.diagDisplay($t('INVopret_' + res.status))
-      else { 
-
-        // Enregistrement du ou des credential "Safe"
-        // static lp1 = [ 'svc', 'org', 'role', 'docId', 'time', 'privs', 'name', 'comment' ]
-        const mcreds: Map<string, CredSafe> = new Map()
+      if (res.status) return $t('INVopret_' + res.status)
+      else {
         if (self.etc.newA === 1) {
           const c = new CredSafe({ // Credential "Safe"
             svc: op.SVC || '',
             org: self.org,
+            credId: invVal.credIdA,
             privs: privA,
-            role: self.etc.role,
+            role: 'Auteur.',
             docId: self.etc.docId,
-            name: self.etc.label,
-            time: invVal.time
+            comment: 'Auteur nommé [' + args.nom + '] #' + self.etc.docId,
           })
-          // c.setId()
-          mcreds.set(c.credId, c)
+          const status = await sf.createCred(c)
+          if (status !== 0) return $t('HPsfop_' + status)
         }
 
         if (self.etc.option > 1) {
@@ -164,23 +174,20 @@ export class Major {
           const c = new CredSafe({ // Credential "Safe"
             svc: op.SVC || '',
             org: self.org,
-            privs: privA,
+            credId: invVal.credIdS,
+            privs: privS,
             role: 'Sponsor.',
-            docId: self.etc.docId,
-            name: self.etc.label,
-            time: invVal.time
+            docId: docId,
+            comment: 'Sponsoring: [' + docId + ']'
           })
-          mcreds.set(c.credId, c)
+          const status = await sf.createCred(c)
+          if (status !== 0) return $t('HPsfop_' + status)
         }
-
-        const status = await stores.safe.updateCreds(mcreds, null, null, null)
-        if (status !== 0)
-          await stores.ui.diagDisplay($t('HPsfop_' + status))
       }
       return 'ok'
     } catch(e) {
-      op.ko(e)
-      return 'ko'
+      await op.ko(e)
+      return 'exc'
     }
   }
 }

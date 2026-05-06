@@ -30,7 +30,7 @@
     </div>
     <div class="tbp row items-center q-gutter-xs justify-end">
       <!-- un sponsor peut éditer la demande / invitation -->
-      <btn-cond :label="$t('INVbtn_' + (ui.currentInvit.etc ? 'rev' : 'inv'))" 
+      <btn-cond :label="$t('INVbtn_' + (ui.currentInvit.invit.etc !== null ? 'rev' : 'inv'))" 
         icon="edit" class="col-auto"
         @ok="dialogs.invitsponsor = true"/>
     </div>
@@ -139,7 +139,8 @@ const reset = () => {
 
 const invitDone = async (spArgs) => {
   const invit = new Invitation(ui.currentInvit.invit)
-  if (await invit.updateByS(spArgs.majorminor, spArgs.tab, spArgs.etc)) {
+  if (await invit.updateByS(spArgs.tab, spArgs.etc)) {
+    dialogs.invitsponsor = false
     const f = ui.currentInvit.fnOnUpdate
     if (f) f()
   }

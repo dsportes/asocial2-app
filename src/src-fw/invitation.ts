@@ -20,7 +20,6 @@ export type MsgVal = {
 }
 
 export type SpArgs = {
-  majorminor: string,
   tab: string, 
   etc: any
 }
@@ -66,7 +65,7 @@ export class Invitation {
       this.v = obj.v || 0
       this.major = obj.major
       this.minor = obj.minor || ''
-      this.byU = obj.byU || true
+      this.byU = obj.byU ? true : false
       this.tab = obj.tab || ''
       this.etc = obj.etc || null
     }
@@ -142,20 +141,31 @@ export class Invitation {
     }
   }
 
-  /* majorminor
-  - si absent, le sponsor est "manager"
-  - si présent (par exempele 'Auteur') 
-    il doit avoir un credential "Sponsor." / "Auteur"
-  */
-  async createByS (majorminor: string, tab: string, etc: any)  : Promise<boolean> {
+  async signOp (op: Operation) : Promise<boolean> {
+    const sf = stores.safe
+    const ui = stores.ui
+    if (sf.isManager(this.svc, this.org)) {
+      await op.sign('Org.manager', '')
+      return true
+    } else {
+      const majmin = sf.sponsorOf(this.svc, this.org, this.major, this.minor)
+      if (majmin) {
+        await op.sign('Sponsor.', majmin)
+        return true
+      }
+    }
+    await ui.diagDisplay($t('STINV_3'))
+    return false
+  }
+
+  async createByS (tab: string, etc: any)  : Promise<boolean> {
     this.byU = false
     const ui = stores.ui
     this.tab = tab
     this.etc = etc
     const op = new Operation('InvitCreateByS', this.svc, this.org)
     op.args['invObj'] = this.toObj
-    if (!majorminor) await op.sign('Sponsor.', majorminor)
-      else await op.sign('Org.manager', '')
+    if (!await this.signOp(op)) return false
     try {
       const res = await op.post()
       if (res.status !== 0) {
@@ -172,15 +182,14 @@ export class Invitation {
     }
   }
 
-  async updateByS (majorminor: string, tab: string, etc: any)  : Promise<boolean> {
+  async updateByS (tab: string, etc: any)  : Promise<boolean> {
     this.byU = false
     const ui = stores.ui
     const op = new Operation('InvitUpdByS', this.svc, this.org)
     op.args['invitId'] = this.invitId
     op.args['etc'] = etc
     op.args['tab'] = tab
-    if (!majorminor) await op.sign('Sponsor.', majorminor)
-      else await op.sign('Org.manager', '')
+    if (!await this.signOp(op)) return false
     try {
       const res = await op.post()
       if (res.status !== 0) {
@@ -248,24 +257,6 @@ export class Invitation {
   }
 
   /* Méthode "abstraite" : surchargée en fonction du 
-  "major" de l'invitation. 
-  Construit le 'majorminor tab etc' de l'invitation depuis les arguments saisis par 
-  l'utilisateur sur le formulaire adapté au 'major'.
-  */
-  async invitation (args: any) : Promise<boolean> {
-    const ui = stores.ui
-    const s = this.major.replaceAll('.', '_').replaceAll('/', '_')
-    const m = Major['invitation_' + s]
-    if (!m) { await ui.diagDisplay($t('INVinvbug', [s])); return false }
-    const { err, majorminor, tab, etc } = await m(this, args)
-    if ( err !== 'ok') { await ui.diagDisplay(err); return false }
-    if (this.etc === null)
-      return await this.createByS(majorminor, tab, etc)
-    else 
-      return await this.updateByS(majorminor, tab, etc)
-  }
-
-  /* Méthode "abstraite" : surchargée en fonction du 
   "major" de l'invitation. Par exemple:
   - enregistrement d'un credential résultant de l'invitation
   En cas de succès l'invitation a été supprimée par le service, 
@@ -278,7 +269,11 @@ export class Invitation {
     const m = Major['validate_' + s]
     if (!m) { await ui.diagDisplay($t('INVvalbug', [s])); return false }
     const err = await m(this, args)
-    if ( err !== 'ok') { await ui.diagDisplay(err); return false }
+    if ( err !== 'ok') { 
+      if (err !== 'exc')
+        await ui.diagDisplay(err)
+      return false
+    }
     const x = await this.mdInvitDel()
     if (x) await ui.diagDisplay($t('INVop_4'), 2)
     else await ui.diagDisplay($t('INVop_5'))
@@ -296,7 +291,7 @@ export const NewManager = async (svc: string, org: string, tab: string, userId: 
     credId: Crypt.rnd(15),
     name: userName
   }
-  return await invit.createByS('', tab, etc)
+  return await invit.createByS(tab, etc)
 }
 
 /* InvitList liste pour un sponsor les invitations enregistrées pour un "major"

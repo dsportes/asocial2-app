@@ -70,7 +70,6 @@ const props = defineProps({
   invit: Object
 })
 
-const majorminor = ref('')
 const etc = reactive({})
 const tab = ref('')
 const err = computed(() => {
@@ -86,7 +85,6 @@ const err = computed(() => {
 
 const spArgs: Ref<SpArgs> = () => {
   return {
-    majorminor: majorminor.value,
     etc: etc,
     tab: tab.value
   }
@@ -107,12 +105,18 @@ const reset = () => {
   const inv = props.invit
   tab.value = inv.tab
   if (inv.major === 'Auteur') {
-    majorminor.value = ''
-    etc.role = 'Auteur.'
-    etc.docId = Crypt.rnd(24)
-    etc.option = optionsSP[0]
-    etc.newA = optionsA[0]
-    etc.categ = ''
+    if (inv.etc) {
+      etc.option = inv.etc.option
+      etc.newA = inv.etc.newA
+      etc.docId = inv.etc.newA === 1 ? (inv.etc.docId || Crypt.rnd(24)) : ''
+      etc.categ = inv.etc.option === 3 ? inv.etc.categ : ''
+    } else {
+      etc.role = 'Auteur.'
+      etc.docId = Crypt.rnd(24)
+      etc.option = optionsSP[0].value
+      etc.newA = optionsA[0].value
+      etc.categ = ''
+    }
   }
 }
 

@@ -24,8 +24,9 @@ export class CredSafe {
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
-  get $trole () : string { return $t('ROLE$' + this.role.replace('.', '_'))}
-  get $trole_bub () : string { return $t('ROLE$' + this.role.replace('.', '_') + '_bub')}
+  get $trole () : string { 
+    return $t('ROLE$' + (this.role || '').replace('.', '_'))}
+  get $trole_bub () : string { return $t('ROLE$' + (this.role || '').replace('.', '_') + '_bub')}
 
   get toObj () : Object {
     const obj = {}

@@ -104,10 +104,10 @@ const onUpdate = () => {
       inv = invits.value[i]
       if (inv && inv['invitId'] === acId) { idx = i; break}
     }
-    if (idx !== -1) await selInv(inv, idx)
+    if (idx !== -1) selInv(inv, idx)
     else {
       if (invits.value.length)
-        await selInv(invits.value[0], 0)
+        selInv(invits.value[0], 0)
       else selInv0()
     }
   }, 100)
