@@ -19,6 +19,12 @@ export type MsgVal = {
   docId: string
 }
 
+export type SpArgs = {
+  majorminor: string,
+  tab: string, 
+  etc: any
+}
+
 export type InvObj = {
   svc?: string // service d'ou l'invitation a été lue (ou préparée à la création)
   org?: string // organisation d'ou l'invitation a été lue (ou préparée à la création)
@@ -48,10 +54,7 @@ export class Invitation {
   tab: string = '' // Adroise commune U / sponsors (non cryptée)
   etc: any = null // objet écrit exclusivement par les sponsors intervenant et contenant toutes les données nécessaires à la _validation_ de l'invitation. En pratique c'est une _sérialisation_ d'un objet.
 
-  get $t () { 
-    const x = $t('INV$' + this.major) 
-    return x
-  }
+  $t () { return $t('INV$' + this.major) }
   get prefix () { return 'INV$' + this.major }
 
   static p1 = ['invitId', 'userId', 'major', 'minor', 'byU', 'tab', 'etc']
@@ -139,6 +142,11 @@ export class Invitation {
     }
   }
 
+  /* majorminor
+  - si absent, le sponsor est "manager"
+  - si présent (par exempele 'Auteur') 
+    il doit avoir un credential "Sponsor." / "Auteur"
+  */
   async createByS (majorminor: string, tab: string, etc: any)  : Promise<boolean> {
     this.byU = false
     const ui = stores.ui
@@ -146,8 +154,8 @@ export class Invitation {
     this.etc = etc
     const op = new Operation('InvitCreateByS', this.svc, this.org)
     op.args['invObj'] = this.toObj
-    if (this.major !== 'Org.manager')
-      await op.sign('Sponsor.', majorminor)
+    if (!majorminor) await op.sign('Sponsor.', majorminor)
+      else await op.sign('Org.manager', '')
     try {
       const res = await op.post()
       if (res.status !== 0) {
@@ -171,8 +179,8 @@ export class Invitation {
     op.args['invitId'] = this.invitId
     op.args['etc'] = etc
     op.args['tab'] = tab
-    if (this.minor !== 'Org.manager')
-      await op.sign('Sponsor.', majorminor)
+    if (!majorminor) await op.sign('Sponsor.', majorminor)
+      else await op.sign('Org.manager', '')
     try {
       const res = await op.post()
       if (res.status !== 0) {
@@ -229,8 +237,8 @@ export class Invitation {
   ne peut pas "valider / rejeter" l'invitation en status 1.
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
-  async msgVal () : Promise<MsgVal> {
-    return await Major.msgVal(this)
+  msgVal () : MsgVal {
+    return Major.msgVal(this)
   }
 
   editEtc () : string {

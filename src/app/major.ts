@@ -52,22 +52,29 @@ export class Major {
   - un utilisateur qui a un credential Sponsor pour le "major.minor" de l'invitation
     est un sponsor valide (à condition bien sur que l'invitation ait un minor).
   */
-  static async msgVal (self: Invitation) : Promise<MsgVal> {
-    let credOk : MsgVal = { ok: false, txt: '', role: '', docId: ''}
+  static msgVal (self: Invitation) : MsgVal {
+    let credOk : MsgVal | null = null
     const creds : Map<string, CredSafe> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
       if (c.org !== self.org || c.svc !== self.svc) continue
-      if (c.role === 'Org.manager') 
-        return { ok: true, txt: $t('INVsponsor_1'), role: 'Org.manager', docId: '' }
+      if (c.role === 'Org.manager') {
+        const x = $t('INVsponsor_1')
+        credOk = { ok: true, txt: x, role: 'Org.manager', docId: '' }
+        return credOk
+      }
       if (c.role === 'Sponsor.') {
-        if (c.docId === self.major)
-          return { ok: true, txt: $t('INVsponsor_2', [self.$t]), role: 'Sponsor.', docId: c.docId }
-        if (c.docId === self.major + '/' + self.minor)
+        if (c.docId === self.major) {
+          credOk = { ok: true, txt: $t('INVsponsor_2', [self.$t]), role: 'Sponsor.', docId: c.docId }
+          return credOk
+        }
+        if (c.docId === self.major + '/' + self.minor) {
           credOk = { ok: true, txt: $t('INVsponsor_3', [self.$t + ' / ' + self.minor]),
             role: 'Sponsor.', docId: c.docId }
+          return credOk
+        }
       }
     } 
-    return credOk || { ok: false, txt: $t('INVsponsor_0'), role: null, docId: null }
+    return { ok: false, txt: $t('INVsponsor_0'), role: '', docId: '' }
   }
 
   static editEtc_Org_manager (self: Invitation) : string {

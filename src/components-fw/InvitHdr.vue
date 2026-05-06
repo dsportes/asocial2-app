@@ -1,48 +1,31 @@
 <template>
 <div>
   <div class="column full-width">
-    <q-toolbar class="tbs dense row items-center">
-
+    <div class="tbs row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
         @back="model.zoomed = false"/>
+      <div v-if="model.invit" class="titre-sm q-mr-xs">
+        {{$t('INVtitzoom', [model.invit.$t()])}}</div>
+      <div v-else class="titre-md text-italic diag q-mr-xs">
+        {{$t('INVnotfound')}}</div>
+    </div>
 
-      <div v-if="model.invit" class="col titre-sm">
-        {{$t('INVtitzoom', [model.invit.$t])}}
-      </div>
-      <div v-else class="col titre-md text-italic diag">{{$t('INVnotfound')}}</div>
-
-    </q-toolbar>
-    <q-toolbar class="tbs dense row items-center">
-      <q-space/>
+    <div class="tbs row items-center q-gutter-xs justify-end">
       <!-- L'utilisateur peut ANNULER sa demande-->
       <btn-cond :label="$t('INVbtn_del')" icon="delete" class='col-auto q-ml-xs'
         @ok="dialogs.confirmcancel = true"/>
 
       <!-- L'utilisateur peut éditer sa demande-->
-      <btn-cond v-if="isU"
-        :label="$t('INVbtn_rec')" icon="edit" class="col-auto q-ml-xs"
+      <btn-cond :label="$t('INVbtn_rec')" icon="edit" class="col-auto q-ml-xs"
         @ok="dialogs.tabedit = true"/>
 
       <!-- L'utilisateur peut valider sa demande-->
-      <btn-cond v-if="isU" :disable=" model.invit.etc === null"
+      <btn-cond :disable=" model.invit.etc === null"
         :label="$t('INVbtn_val')" icon="check" class="col-auto  q-ml-xs"
         @ok="dialogs.validate = true"/>
-
-      <!-- un sponsor peut éditer la demande -->
-      <btn-cond v-if="!isU && msgVal.ok" 
-        :label="$t('INVbtn_edt')" icon="edit" class="col-auto  q-ml-xs"
-        @ok="dialogs.editS = true"/>
-      
-    </q-toolbar>
-    
-    <div v-if="!isU" class="row items-start q-my-sm">
-      <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
-      <div :class="msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
-        {{msgVal.txt}}
-      </div>
     </div>
 
-    <div v-if="isU" class="row items-start q-my-sm">
+    <div class="row items-start q-my-sm">
       <btn-bubble :text="$t('INVvalidable')" class="q-mr-md col-auto"/>
       <div :class="model.invit.etc !== null ? 'col titre-md text-italic' : 'col titre-md msg'">
         {{$t('INVval_' + (model.invit.etc !== null ? 'y' : 'n'))}}
@@ -90,8 +73,6 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
-
-// import InvitSponsor from '../components/InvitSponsor.vue'
 import InvitValidate from '../components/InvitValidate.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
 
@@ -100,25 +81,23 @@ const sf = stores.safe
 
 const model = defineModel()
 
-const isU = computed(() => model.value.invit && model.value.invit.userId === sf.userId)
 const chgU = computed(() => model.value.newTab && model.value.newTab !== model.value.invit.tab)
 
+/*
+const isU = computed(() => model.value.invit && model.value.invit.userId === sf.userId)
 const msgVal = ref({ ok: false, txt: 'KO' })
-
 const init = async () => {
   if (!isU.value) msgVal.value = await model.value.invit.msgVal()
 }
-
 onMounted(async () => { await init() })
-
 watch(() => model.value.invit, async () => { await init() })
+*/
 
 const dialogs = reactive({ 
   confirmcancel: false, 
   tabedit: false, 
   validate: false, 
-  sponsor: false,
-  editS: false
+  sponsor: false
 })
 
 // Confirmation de cancel

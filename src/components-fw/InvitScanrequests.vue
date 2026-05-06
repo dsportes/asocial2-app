@@ -10,7 +10,7 @@
       @click="selInv(inv, idx)">
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + inv.svc)}}</div>
-        <div class="col-4 ellipsis text-right text-bold">{{ inv.$t}}</div>
+        <div class="col-4 ellipsis text-right text-bold">{{ $t('INV$' + inv.major) }}</div>
         <div class="col-3 ellipsis q-pl-sm">{{inv.minor || ''}}</div>
         <div class="col-1 row items-center justify-end ellipsis">
           <q-icon v-if="inv.lv < inv.v"

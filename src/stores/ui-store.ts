@@ -178,7 +178,8 @@ export const useUiStore = defineStore('ui', () => {
     invit: null, // Invitation (service)
     inv: null, // Invit (safe)
     newTab: '',
-    fnOnUpdate: null
+    fnOnUpdate: null,
+    msgVal: null
   })
 
   const emojiIndex = ref()

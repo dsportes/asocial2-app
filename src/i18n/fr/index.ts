@@ -1160,6 +1160,8 @@ bla bla
   INVbtn_val: 'Valider',
   INVbtn_rec: 'Editer l\'ardoise',
   INVbtn_del: 'Renoncer et supprimer',
+  INVbtn_inv: 'Proposer une invitation',
+  INVbtn_rev: 'Réviser l\'invitation',
 
   INVnoinvits: 'Pas d\'invitation en cours actuellement.',
 
@@ -1269,7 +1271,6 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
   INVsponsor_3: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
   INVverif: 'Vérifier avant de valider',
-  INVtxti: 'Texte résumant la proposition d\'invitation à valider par l\'utilisateur (ou à décliner)',
   INVlabels: 'Aucune autre information n\'est attendue de votre part avant validation.| ' +
     'Vous avez un texte à saisir avant de pouvoir valider. |' +
     'Vous avez {count} textes à saisir avant de pouvoir valider. |',
@@ -1478,7 +1479,7 @@ bla bla
   INV$Auteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
   INV$Auteur_4: 'Création d\'un nouvel auteur',
   INV$Auteur_5: 'SANS nouvel auteur',
-  INV$Auteur_e: 'Une acceptation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens: dans ce cas LA REJETER.',
+  INV$Auteur_e: 'Une invitation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens.',
   INV$Auteur_categ_label: 'Catégorie d\'auteurs',
   INV$Auteur_t1: `### Auteur en création:
 - nom: **{0}**
@@ -1502,6 +1503,8 @@ bla bla
   INV$Cedit: 'Membre du comité éditorial',
   INV$Cedit_label: 'Membre du comité éditorial',
   INV$Cedit_bub: 'Membre du comité éditorial',
+
+  INVERR$tab: 'Le texte de l\'ardoise doit avoir au moins 10 signes.',
 
   ROLE: 'Rôle',
   ROLE$Org_manager: 'Manager de l\'organisation',

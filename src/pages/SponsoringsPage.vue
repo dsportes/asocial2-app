@@ -16,7 +16,8 @@
       </div>
 
       <div v-for="(inv, idx) in invits" :key="inv.invitId" :class="dkli(idx) + ' q-pa-xs'">
-        <invit-line v-model="invits[idx]" :selected="isCurrent(inv)" @zoom="selInv(inv, idx)"/>
+        <invit-line v-model="invits[idx]" :selected="isCurrent(inv)" 
+          @zoom="selInv(inv, idx)"/>
       </div>
     </div>
     <div v-else class="pwmd">
@@ -35,13 +36,12 @@ import stores from '../stores/all'
 import { Sponsoring } from '../stores/safe-store'
 import { InvitList } from '../src-fw/operations'
 import { $t, dkli } from '../src-fw/util'
-
 import InvitLine from '../components-fw/InvitLine.vue'
 import InvitZoom from '../components-fw/InvitZoom.vue'
 
 const ui = stores.ui
 
-const nav = (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const u = ui.navBar
   switch (n) {
     case 1 : { if (u.idx < invits.value.length - 1) u.idx++; break }
@@ -55,10 +55,14 @@ const nav = (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
 
 const selInv = (inv, idx) => {
   const u = ui.currentInvit
-  u.inv = inv
+  u.invit = inv
+  u.inv = null
   u.zoomed = true
   u.newTab = ''
-  u.inv = inv || null
+  u.msgVal = inv.msgVal()
+  const nb = ui.navBar
+  nb.idx = idx
+  nb.nb = invits.value.length
 }
 
 const selInv0 = () => {
@@ -80,6 +84,7 @@ const reset = () => {
   selInv0()
   ui.currentInvit.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
+  ui.navBar.hasback = true
 }
 
 const isCurrent = (inv) => ui.currentInvit.invit && (ui.currentInvit.invit.invitId === inv.invitId)
@@ -99,10 +104,10 @@ const onUpdate = () => {
       inv = invits.value[i]
       if (inv && inv['invitId'] === acId) { idx = i; break}
     }
-    if (idx !== -1) selInv(inv, idx)
+    if (idx !== -1) await selInv(inv, idx)
     else {
       if (invits.value.length)
-        selInv(invits.value[0], 0)
+        await selInv(invits.value[0], 0)
       else selInv0()
     }
   }, 100)

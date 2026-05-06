@@ -1,12 +1,12 @@
 <template>
 <div>
-  <div v-if="notView && invit.userId !== sf.userId" 
+  <div v-if="notView" 
     class='titre-md text-bold text-warning text-italic'>
     {{$t('INVxnotv_s')}}</div>
 
   <div class="row q-mt-sm items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_major')}}</div>
-    <div class='font-mono'>{{invit.$t}}</div>
+    <div class='font-mono'>{{invit.$t()}}</div>
   </div>
   
   <div class="row q-mt-sm items-center">
@@ -32,7 +32,7 @@
 
   <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_tab')}}</div>
   <md-editor class="full-width q-pa-xs" v-model="ui.currentInvit.newTab"
-    :texte="invit.tab" :editable="editable" modetxt/>
+    :text="invit.tab" :editable="editable" modetxt/>
 
   <div v-if="invit.etc !== null">
     <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_opts')}}</div>
@@ -66,9 +66,9 @@ const props = defineProps({
 
 const invit: Ref<Invitation> = computed(() => ui.currentInvit.invit)
 const inv = computed(() => ui.currentInvit.inv)
-const notView = computed(() => inv.value && inv.value.lv < invit.value.v )
+const notView = computed(() => invit.value.userId === sf.userId
+  && (inv.value && inv.value.lv < invit.value.v) )
 const opts = ref($t('INVx_none'))
-const vuToSet = computed(() => notView.value && invit.value.userId === sf.userId && inv.value)
 
 const trace = () => {
   if (invit.value) {
@@ -83,7 +83,7 @@ const init = async () => {
   const x = invit.value ? invit.value.editEtc() : ''
   trace()
   opts.value = x || $t('INVx_none')
-  if (vuToSet.value) await vu()
+  if (notView.value) await vu()
 }
 
 onMounted(async () => { await init() })

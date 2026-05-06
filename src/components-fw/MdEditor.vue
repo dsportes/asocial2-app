@@ -92,7 +92,7 @@ const dialogs = reactive({ emoji: false })
 const props = defineProps({
   help: String,
   lgmax: Number,
-  texte: String,
+  text: String,
   placeholder: String,
   editable: Boolean,
   idx: Number,
@@ -111,12 +111,12 @@ const max = ref(false)
 
 const maxlg = ref(props.lgmax || config.maxlgtextegen)
 
-const textelocal = ref(props.texte)
-const texteinp = ref(props.texte) // dernière valeur source passée sur la prop 'texte'
+const textelocal = ref(props.text)
+const texteinp = ref(props.text) // dernière valeur source passée sur la prop 'texte'
 const md = ref(!props.modetxt)
 const inp = ref(null)
 
-watch(() => props.texte, (ap, av) => { // quand texte change, textelocal ne change pas si en édition
+watch(() => props.text, (ap, av) => { // quand texte change, textelocal ne change pas si en édition
   if (textelocal.value === texteinp.value && textelocal.value !== ap) {
     // textelocal n'était PAS modifié, ni égal à la nouvelle valeur : alignement sur la nouvelle valeur
     textelocal.value = ap

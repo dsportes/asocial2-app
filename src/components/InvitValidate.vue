@@ -1,7 +1,7 @@
 
 <template>
 <dialog-std1 v-model="model" @close="doClose"
-  :title="$t('INVtitval', [invit.$t])">
+  :title="$t('INVtitval', [invit.$t()])">
   <template #hdr>
     <div class="row items-center justify-between">
       <btn-bubble :text="$t('INVvalCf_txt')"/>

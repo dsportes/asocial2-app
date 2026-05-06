@@ -1,41 +1,33 @@
 <template>
-<q-dialog v-model="model" full-height persistent
-    transition-show="slide-up">
-  <q-card :class="sty()"
-    :style="'max-width: ' + wx[width || 'md'] + 'rem !important; width: 95vw !important'">
-  <q-layout container view="hHh lpR fFf">
-    <q-header>
-      <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
-        <btn-cond color="none" size="lg" icon="chevron_left" flat 
-        @ok="onClose"/>
-        <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
-        <help-button v-if="help" :page="help"/>
-        <div v-if="vue" style="color:transparent;width:3px">*<q-tooltip>{{ vue }}</q-tooltip></div>
-      </q-toolbar>
-      <slot name="hdr"/>
-    </q-header>
-    <q-page-container>
-      <slot/>
-    </q-page-container>
-  </q-layout>
-  </q-card>
+<q-dialog v-model="model" full-height persistent transition-show="slide-up">
+<q-card :class="sty()" :style="styc">
+<q-layout container view="hHh lpR fFf">
+  <q-header>
+    <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
+      <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="onClose"/>
+      <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
+      <btn-bubble v-if="help" :text="help"/>
+      <div v-if="vue" style="color:transparent;width:3px">*<q-tooltip>{{ vue }}</q-tooltip></div>
+    </q-toolbar>
+    <slot name="hdr"/>
+  </q-header>
+  <q-page-container>
+    <slot/>
+  </q-page-container>
+</q-layout>
+</q-card>
 </q-dialog>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-// import { watch } from 'vue'
+import { ref } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
-
-const wx = {sm: '30', md: '40', lg: '50'}
-
-const model = defineModel()
-const emit = defineEmits(['close'])
+import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const props = defineProps({
   vue: String,
@@ -45,6 +37,11 @@ const props = defineProps({
   noclose: Boolean,
   width: String
 })
+const wx = {sm: '30', md: '40', lg: '50'}
+const styc = ref('max-width: ' + wx[props.width || 'md'] + 'rem !important; width: 95vw !important;')
+
+const model = defineModel()
+const emit = defineEmits(['close'])
 
 const onClose = () => { 
   if (!props.noclose) model.value = false
