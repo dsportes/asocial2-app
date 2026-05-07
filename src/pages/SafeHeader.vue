@@ -28,19 +28,23 @@
   <creds-mgr v-model="dialogs.CredsMgr"/>
 
   <div v-if="sf.step === 3"> 
-    <q-tabs dense v-model="sf.tab3" 
-      class="full-width bg-primary text-white shadow-2">
-      <q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" />
-      <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
-    </q-tabs>
-    <div class="row justify-between q-ma-xs items-center">
-      <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
+    <div :class="sty() + ' row justify-between q-pa-xs items-center'">
+      <btn-cond icon="chevron_left" :label="$t('LOGback')"
         @ok="sf.setStep(1)"/>
-      <btn-cond icon="chevron_right" color="none" :label="$t('LOGsession')"
+      <btn-cond icon="chevron_right" :label="$t('LOGsession')"
         @ok="sf.setStep(2)"/>
     </div>
+    <q-tabs dense v-model="sf.tab3" 
+      class="full-width bg-primary text-white shadow-2">
+      <btn-cond icon="add_box" color="none" :label="$t('SFHnewr')"
+        @ok="dialogs.NewReq = true"/>
+      <!--q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" /-->
+      <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
+    </q-tabs>
     <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
   </div>
+
+  <invit-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
 </div>
 </template>
 
@@ -51,11 +55,12 @@ import { useI18n } from 'vue-i18n'
 import { ref, reactive } from 'vue'
 
 import stores from '../stores/all'
-
+import { sty } from '../src-fw/util'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
+import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
 
@@ -66,7 +71,8 @@ const session = stores.session
 const ui = stores.ui
 
 const dialogs = reactive({
-  CredsMgr: false
+  CredsMgr: false,
+  NewReq: false
 })
 
 </script>

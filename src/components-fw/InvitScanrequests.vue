@@ -141,6 +141,7 @@ const init = async () => {
   selInv0()
   ui.currentInvit.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
+  ui.navBar.hasback = true
 }
 
 onMounted(async () => { await init() })

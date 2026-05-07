@@ -95,10 +95,6 @@
     </div>
   </div>
 
-  <div v-if="sf.tab3 === 'newr' && sf.step === 3" class="q-pa-xs">
-    <invit-newrequest/>
-  </div>
-
   <div v-if="sf.tab3 === 'scan' && sf.step === 3" class="q-pa-xs">
     <invit-scanrequests/>
   </div>
@@ -165,7 +161,6 @@ import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import SecuritySite from '../components-fw/SafestoreSelect.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
@@ -175,7 +170,6 @@ import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
 import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
-import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 // import { Bug } from '../src-fw/operations'
 
 // @ts-ignore

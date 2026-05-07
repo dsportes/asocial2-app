@@ -290,7 +290,7 @@ export default {
   PEopt2: 'Demander au navigateur d\'autoriser les notifications',
 
   /* UAP : SafeCr */
-  UAPtit_u: 'Création de votreSafe Box',
+  UAPtit_u: 'Création de votre Safe Box',
   UAPtit_a: 'Changement des alias de votre Safe Box',
   UAPtit_p: 'Changement des phrase d\'ouverture de votre Safe Box',
 

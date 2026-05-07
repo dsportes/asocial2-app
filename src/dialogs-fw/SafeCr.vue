@@ -33,11 +33,11 @@ Events: close done
     </div>
   </div>
 
-  <q-separator color="grey-6" class="q-my-md"/>
+  <q-separator color="grey-6" class="q-mt-md"/>
 </template>
 
 <template #default>
-<div class="column items-center">
+<div class="column items-center q-mt-md">
   <q-list style="max-width:40rem;width:95vw" bordered class="rounded-borders">
     <safestore-select v-if="mode === 'u'" v-model="store"/>
 
