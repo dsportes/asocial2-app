@@ -133,7 +133,10 @@ export const useUiStore = defineStore('ui', () => {
 
   const setPage = (p: string) => {
     page.value = ''
-    setTimeout(() => { page.value = p }, 350)
+    setTimeout(() => { 
+      page.value = p 
+      if (p === 'app') openMenu()
+    }, 350)
   }
 
   // dialogues permanents rattachés à App.vue

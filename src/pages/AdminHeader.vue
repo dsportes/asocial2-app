@@ -11,13 +11,18 @@
     <div style="color:transparent;width:3px">*<q-tooltip>AdminPage</q-tooltip></div>
   </q-toolbar>
 
-  <div v-if="svcOps.size" :class="sty() + ' row q-gutter-sm q-pa-sm'">
-    <div class="titre-md text-italic">{{ $t('APservices') }}</div>
-    <btn-cond v-for="[k,svcOp] of svcOps" :key="k"
-      @ok="setSvcOp(svcOp)"
-      :color="svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'warning' : 'primary'"
-      :label="'[' + $t('services_' + svcOp.svc) + '] / ' + svcOp.op"/>
-    <!--btn-cond label="ASSO2$BLUE" @ok="ui.adminPage.SVC='ASSO2'; ui.adminPage.$OP='$BLUE'"/-->
+  <div :class="sty() + ' q-pb-sm'">
+    <div class="column items-center">
+      <div class="titre-md text-italic text-center">{{ $t('APservices') }}</div>
+      <scroll-area size="xs" class="pwsm">
+        <div v-for="[k,svcOp] of svcOps" :key="k" 
+          :class="'row items-center cursor-pointer ' + (svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'current': 'nocurrent')"
+          @click="setSvcOp(svcOp)">
+          <div class="col-6 text-center">{{ $t('services_' + svcOp.svc) }}</div>
+          <div class="col-6 text-center">{{ svcOp.op }}</div>
+        </div>
+      </scroll-area>
+    </div>
   </div>
 
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
@@ -40,6 +45,7 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import ScrollArea from '../components-fw/ScrollArea.vue'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'

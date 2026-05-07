@@ -14,6 +14,7 @@ import { computed } from 'vue'
 const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
 const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
 const sizes = {
+  xs: '50px',
   sm: '100px',
   md: '170px',
   lg: '240px'

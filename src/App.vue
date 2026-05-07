@@ -65,9 +65,7 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'app'" :class="'ano-' + ($q.dark.isActive ? 'w' : 'b')">
-        <div class="titre-xxl">
-          Hello world
-        </div>
+        <!--div class="titre-xxl">Hello world</div-->
       </q-page>
     </transition>
   </q-page-container>
