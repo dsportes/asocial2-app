@@ -5,6 +5,7 @@ Events: close done
 <dialog-std2 v-model="model" :title="$t('UAPtit_' + mode)" vue="SafeCr"
   @close="close2">
 <template #hdr>
+<div :class="sty()">
   <div class="row justify-between q-px-xs q-mb-md items-center">
     <div :class="'col titre-md ' + (diag === 0 || diag === 5 ? 'text-italic' : 'msg')">
       {{ $t('UAPdiag_' + diag) }}</div>
@@ -34,6 +35,7 @@ Events: close done
   </div>
 
   <q-separator color="grey-6" class="q-mt-md"/>
+</div>
 </template>
 
 <template #default>
@@ -91,7 +93,7 @@ Events: close done
 import { ref, Ref, reactive, watch, computed } from 'vue'
 
 import stores from '../stores/all'
-import { $t } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 
 import SafestoreSelect from '../components-fw/SafestoreSelect.vue'

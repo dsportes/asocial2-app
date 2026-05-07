@@ -25,15 +25,21 @@ Contrôlé par ui.leftMenu
       @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
-        class="q-mb-sm" flat color="warning" :label="$t('PAGEadmin')"
-        icon="img:icons/superman.jpg" 
-        @ok="openAdmin"/>
-      <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEdemands')"
-        :icon="'img:icons/request_' + (ui.isDark ? 'white.png' : 'black.png')"
-        @ok="openDemands"/>
-      <btn-cond class="q-mb-sm" flat color="primary" :label="$t('PAGEsponsorings')"
-        :icon="'img:icons/request_' + (ui.isDark ? 'white.png' : 'black.png')"
-        @ok="openSponsorings"/>
+        class="q-mb-sm" flat color="warning"
+        @ok="openAdmin">
+        <img :src="superman" class="q-mr-xs" width="24px"/>
+        <div>{{ $t('PAGEadmin') }}</div>
+      </btn-cond>
+      <btn-cond class="q-mb-sm" flat color="primary"
+        @ok="openDemands">
+        <img :src="invitation" class="q-mr-xs" width="24px"/>
+        <div>{{ $t('PAGEdemands') }}</div>
+      </btn-cond>
+      <btn-cond class="q-mb-sm" flat color="primary"
+        @ok="openSponsorings">
+        <img :src="invitation" class="q-mr-xs" width="24px"/>
+        <div>{{ $t('PAGEsponsorings') }}</div>
+      </btn-cond>
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
@@ -67,6 +73,10 @@ import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
+// @ts-ignore
+import superman from '../assets/superman.jpg'
+// @ts-ignore
+import invitation from '../assets/invitation.png'
 
 const svcsel = (v) => {console.log(v)}
 

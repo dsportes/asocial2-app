@@ -23,7 +23,10 @@
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
     <q-tab name="svcstatus" icon="cloud" :label="$t('svcorg')" />
-    <q-tab name="managers" icon="img:icons/superman.jpg" :label="$t('APnewManager_2')" />
+    <q-tab name="managers">
+      <img :src="superman" width="24px"/>
+      <div>{{ $t('APnewManager_2') }}</div>
+    </q-tab>
   </q-tabs>
 </div>
 </template>
@@ -37,6 +40,9 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+
+// @ts-ignore
+import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
 const sf = stores.safe

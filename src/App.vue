@@ -38,7 +38,8 @@
     </transition>
     -->
     <transition name="anim1">
-      <q-page v-if="ui.page === 'safeHome'" class="column">
+      <q-page v-if="ui.page === 'safeHome'"
+        :class="'column ano-' + ($q.dark.isActive ? 'w' : 'b')">
         <safe-home class="q-mt-sm"/>
       </q-page>
     </transition>
@@ -63,8 +64,10 @@
       </q-page>
     </transition>
     <transition name="anim1">
-      <q-page v-if="ui.page === 'app'">
-        <div class="titre-xxl">Hello World!</div>
+      <q-page v-if="ui.page === 'app'" :class="'ano-' + ($q.dark.isActive ? 'w' : 'b')">
+        <div class="titre-xxl">
+          Hello world
+        </div>
       </q-page>
     </transition>
   </q-page-container>
@@ -152,4 +155,15 @@ watchEffect(() => {
 .anim1-enter-from { opacity:0; transform: translateX(50%);}
 .anim1-leave-to { opacity:0; transform: translateX(-50%);}
 
+.ano-b, .ano-w {
+  background-position: center center; 
+  background-repeat: no-repeat;
+  background-size:contain;
+}
+.ano-b {
+  background-image: url('./assets/anonymous-bt.svg');
+}
+.ano-w {
+  background-image: url('./assets/anonymous-wt.svg');
+}
 </style>

@@ -1098,8 +1098,8 @@ export const useSafeStore = defineStore('safe', () => {
     op = new SafeOperation('$CreateSafe', store)
     try {
       op.args['safe'] = safe
-      const ret = await op.post()
-      if (!ret.status) return ret.status
+      await op.post()
+      // pas de status, mais exception toujours possible ("duplicate key ...")
     } catch (e) {
       op.ko(e)
       return -1
@@ -1227,18 +1227,19 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['userId'] = t.userId
       op.args['devId'] = devId.value
       op.args['pincx'] = pincx
-      ret = await op.post()
+      ret = await op.post() 
     } catch (e) {
       op.ko(e)
       return -1
     }
+    // Status: 1-pas de safe 4-pas de device 5-échec>2 6-echec<2
     if (ret.status !== 0) return ret.status
     const cy = ret.cy
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
     try {
       keyK.value = await Crypt.decrypt(pincxcy, keyFromB64(t.Kp))
     } catch (e) {
-      return 4
+      return 8
     }
     const shK = await Crypt.strongHash(keyK.value, false, false)
 
@@ -1251,7 +1252,8 @@ export const useSafeStore = defineStore('safe', () => {
       op.ko(e)
       return -1
     }
-    if (ret.status) return 2
+    // status: 1-pas de safe avec ce user 2:shk 3:shp
+    if (ret.status) return 9
     userId.value = t.userId
     await compileSafe(ret.safe)
     return 0

@@ -44,7 +44,7 @@
 
         <q-item  v-if="stores.safe.step !== 1" @click="dialogs.userProfile = true"
           clickable dense v-close-popup>
-          <q-item-section avatar><q-avatar size="xl" icon="img:icons/anonymous_white.png"/></q-item-section>
+          <q-item-section avatar><q-avatar size="xl" icon="person"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('UPtitle')}}</q-item-section>
         </q-item>
 
@@ -314,7 +314,10 @@
       <div class="row items-center wmd full-width">
         <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
           <q-tab name="crypto" icon="key" :label="$t('crypto')" />
-          <q-tab name="hot" icon="img:icons/superman.jpg" :label="$t('SBhot')" />
+          <q-tab name="hot">
+            <img :src="superman" width="24px"/>
+            <div>{{ $t('SBhot') }}</div>
+          </q-tab>
         </q-tabs>
       </div>
     </template>
@@ -434,6 +437,8 @@ import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 import PrefEditor from '../components/PrefEditor.vue'
+// @ts-ignore
+import superman from '../assets/superman.jpg'
 
 const i18n = useI18n()
 const config = stores.config

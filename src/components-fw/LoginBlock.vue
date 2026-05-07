@@ -20,14 +20,18 @@ Event émis: logged
 
   <!-- Authentification "forte" -->
   <div class="full-width column">
-    <bar-title prefix="LOGap" class="q-my-sm text-italic"/>
-    <input-b v-if="stepAP===0" v-model="entryA" size="alias" prefix="Alias"
+    <bar-title prefix="LOGap" class="q-mt-sm q-mb-xs text-italic"/>
+    <div v-if="diagAP" class="q-my-xs msg self-end"
+      style="margin-left:55px">
+      {{ $t('LOGapdiag_' + diagAP)}}</div>
+    <input-b v-if="stepAP===0" class="q-ml-lg"
+      v-model="entryA" size="alias" prefix="Alias"
       @validate="valA"/>
-    <input-b v-if="stepAP===1" v-model="entryP" size="p1" prefix="Phrase"
+    <input-b v-if="stepAP===1" class="q-ml-lg" 
+      v-model="entryP" size="p1" prefix="Phrase"
       @validate="valP"/>
-    <div v-if="diagAP" class="q-ml-lg q-mt-sm msg">{{ $t('LOGapdiag_' + diagAP)}}</div>
-    <btn-cond v-if="stepAP===1" flat class="self-end" color="warning" 
-      :label="$t('UAPt_p')" @ok="resetAP"/>
+    <btn-cond v-if="stepAP===1" class="q-ml-lg self-end" 
+      flat color="warning" :label="$t('UAPt_p')" @ok="resetAP"/>
   </div>
 </div>
 </template>

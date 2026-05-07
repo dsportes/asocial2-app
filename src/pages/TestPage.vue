@@ -32,12 +32,6 @@ import { getData, putData } from '../src-fw/net'
 import { Crypt, fromPem, u8ToHex, testECDH, testSH } from '../src-fw/crypt'
 import BtnCond from '../components-fw/BtnCond.vue'
 import stores from '../stores/all'
-// import anonymousW from '../assets/anonymous_white.png'
-// import anonymousB from '../assets/anonymous_black.png'
-// import databaseW from '../assets/database_white.png'
-// import databaseB from '../assets/database_black.png'
-// import superman from '../assets/superman.jpg'
-// import incognito from '../assets/incognito_blanc.svg'
 
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()

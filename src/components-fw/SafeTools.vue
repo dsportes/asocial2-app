@@ -3,9 +3,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 -->
 <template>
 <div>
-  <btn-cond v-if="short" :label="$t('SFTtits')" flat color="warning"
-    icon="settings"
-    @ok="dialogs.SafeTools = true"/>
+  <btn-cond v-if="short" class="q-mb-sm" flat color="primary"
+    @ok="dialogs.SafeTools = true">
+    <img :src="safebox" class="q-mr-xs" width="24px"/>
+    <div>{{ $t('SFTtits') }}</div>
+  </btn-cond>
   <btn-cond v-else :label="$t('SFTtit')" flat color="none"
     @ok="dialogs.SafeTools = true"/>
 
@@ -97,7 +99,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
   <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
 
-
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
   <!-- Confirmation de destruction du safe -->
@@ -142,6 +143,9 @@ import DevTrustings from '../dialogs-fw/DevTrustings.vue'
 import DevTrustit from '../dialogs-fw/DevTrustit.vue'
 import DevUntrustit from '../dialogs-fw/DevUntrustit.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
+
+// @ts-ignore
+import safebox from '../assets/safe-box.png'
 
 const ui = stores.ui
 const session = stores.session

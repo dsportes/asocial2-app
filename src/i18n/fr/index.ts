@@ -252,15 +252,17 @@ export default {
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
-  STSF_2: 'Preuve de propriété non reconnue (phrase ou autre).',
+  STSF_2: 'Preuve de propriété de la Safe Box non reconnue (phrase ou autre).',
   STSF_3: 'Phrase secrète non reconnue.',
-  STSF_4: 'Terminal non certifié.',
-  STSF_5: 'Trop d\'essais d\'un code PIN erroné.',
-  STSF_6: 'Code PIN non reconnu.',
+  STSF_4: 'Terminal non identifié, n\'ayant pas fait l\'objet d\'une certification.',
+  STSF_5: 'Trop d\'essais d\'un code PIN erroné. La certification du terminal a été supprimée.',
+  STSF_6: 'Code PIN non reconnu. Deux échecs son tolérés avant suppression de la certification du terminal.',
   STSF_7: 'Invitation inconnue, status non modifiable.',
-  STSF_10: 'L\' alias 1 identifie déjà une autre Safe Box.',
-  STSF_11: 'L\' alias 2 identifie déjà une autre Safe Box.',
-  STSF_12: 'Safe Box déjà créée mais avec un contenu différent (BUG ?)',
+  STSF_8: 'Terminal non authentifié comme certifié.',
+  STSF_9: 'Authentification du terminal impossible. Se connecter par alias / phrase et certifier à nouveau le terminal.',
+  STSF_11: 'Alias 1 identifie déjà une autre Safe Box.',
+  STSF_12: 'Alias 2 identifie déjà une autre Safe Box.',
+  STSF_13: 'Safe Box déjà créée mais avec un contenu différent (BUG ?)',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -1178,7 +1180,7 @@ bla bla
   INVspons_on: 'Demandes que vous avez le droit de traiter',
 
   INVtit_1: 'Nouvelle demande',
-  INVtit_1_label: 'Nouvelle demanded\'invitation',
+  INVtit_1_label: 'Nouvelle demande d\'invitation',
   INVtit_1_bub: `### Déposer une nouvelle demande...
 - d'invitation, de création d'une entité, de droit d'accès ...
 bla bla

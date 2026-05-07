@@ -14,8 +14,14 @@
 
   <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" breakpoint="2000px"
     class="full-width bg-primary text-white shadow-2">
-    <q-tab name="login" icon="img:icons/anonymous_white.png" :label="$t('login')" />
-    <q-tab name="guest" icon="img:icons/flowers.png" :label="$t('guest')" />
+    <q-tab name="login">
+      <img :src="anonymous" width="32px"/>
+      <div>{{ $t('login') }}</div>
+    </q-tab>
+    <q-tab name="guest">
+      <img :src="flowers" width="32px"/>
+      <div>{{ $t('guest') }}</div>
+    </q-tab>
   </q-tabs>
 
   <div v-if="sf.step === 2" 
@@ -63,6 +69,10 @@ import InvitHdr from '../components-fw/InvitHdr.vue'
 import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 
 import CredsMgr from '../dialogs-fw/CredsMgr.vue'
+// @ts-ignore
+import anonymous from '../assets/anonymous-w.svg'
+// @ts-ignore
+import flowers from '../assets/flowers.png'
 
 const $t = useI18n().t
 const sf = stores.safe
