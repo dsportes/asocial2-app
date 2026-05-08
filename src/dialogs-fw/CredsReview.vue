@@ -6,9 +6,9 @@
 <template>
 <div>
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
-    tbclass="tbs" noclose @close="checkClose">
+    hdrclass="tbs" noclose @close="checkClose">
     <template #hdr>
-    <div class="sep">
+    <div :class="sty()">
       <div class="column items-center">
         <scroll-area v-if="svcOrgs.length" size="sm" class="pwsm q-mt-sm q-pa-xs">
           <div v-for="(x, idx) in svcOrgs" :key="x.svc + '/' + x.org" class="row items-center">
@@ -27,6 +27,7 @@
     </template>
 
     <template #default>
+    <q-separator color="orange" class="q-my-sm"/>
     <div>
       <div v-if="step >= 2" class="sep full-width column items-center q-my-sm">
         <div class="itre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
@@ -88,7 +89,7 @@
 // @ts-ignore
 import { ref, Ref } from 'vue'
 
-import { $t, dkli } from '../src-fw/util'
+import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import { GetCredLimitCond, AutoRevokeCred } from '../src-fw/operations'
 import { Credential } from '../src-fw/documents'

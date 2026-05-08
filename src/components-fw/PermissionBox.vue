@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import { computed } from 'vue'
 import stores from '../stores/all'
 import { sty, coolBye, reloadPage } from '../src-fw/util'

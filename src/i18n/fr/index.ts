@@ -358,6 +358,34 @@ export default {
   `,
   Phrase_ph: 'Les1sanglots2Longs3du4Printemps',
 
+  LCRtit_label: 'Gérer mes "listes de droits d\'accès"',
+  LCRtit_bub: `### Gérer mes "listes de droits d'accès"
+Une **liste de drois**,
+- porte un nom (court) de votre choix explicitant l\'usage que vous en faites,
+- est une simple liste de certains de vos droits d'accès.
+
+La liste (virtuelle) **Générale** est définie par défaut,
+- contient à tout instant tous vos droits (elle ne peut pas être modifiée), 
+- porte le nom _Général_ qui ne peut pas changer.
+
+Quant une session de l'application s'ouvre, elle référence toujours une liste de droits (le cas échéant _Générale):
+- elle se déroulera comme si vous n'aviez QUE ces droits,
+- de ce fait elle concentre la session sur un sujet d'intérêt précis: par exemple un _magasin_ (une organisation), un _employé_ ...
+
+`,
+  LCRbtnnew: 'Nouvelle liste avec droits d\'accès...',
+  LCRbtnnew_e: 'Aucun',
+  LCRbtnnew_f: 'Tous',
+  LCRtab_l: 'Mes listes',
+  LCRtab_c: 'Droit courant',
+  LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
+  LCRcredcl_tit: 'Des mises à jour n\'ont pas été validées. Fermer quand même ?',
+  LCRcredcl_txt: `### Des mises à jour n\'ont pas été validées.
+  Si vous fermez ce dialogue, **elles seront perdues**.
+  Fermer quand même ?
+  `,
+  LCRcredcl_0: 'Je ne ferme pas ce dialogue',
+  LCRcredcl_1: "J\'assume et ferme ce dialogue",
 
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
@@ -750,6 +778,7 @@ A propos du status ...
   HPcredsdet_2: `# Détail d'un droit d'accès enregistré
 A propos du status ...
 `,
+
   HPcredcl_tit: 'Des mises à jour n\'ont pas été validées. Fermer quand même ?',
   HPcredcl_txt: `### Des mises à jour n\'ont pas été validées.
   Si vous fermez ce dialogue, **elles seront perdues**.
@@ -757,6 +786,7 @@ A propos du status ...
   `,
   HPcredcl_0: 'Je ne ferme pas ce dialogue',
   HPcredcl_1: "J\'assume et ferme ce dialogue",
+
   HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
   HPpsno: 'Aucune session sélectionnée dans la liste',
   HPcreddet_0: 'Service: [{0}] - Organisation:[{1}] - Rôle: {2}',
@@ -1519,11 +1549,11 @@ blu blu
 
 `,
 
-  ROLE$Auteur: 'Auteur d\'articles',
-  ROLE$Auteur_bub: `### Auteur d\'articles
+  ROLE$Auteur_: 'Auteur d\'articles',
+  ROLE$Auteur__bub: `### Auteur d\'articles
 `,
-  ROLE$Relecteur: 'Relecteur d\'articles',
-  ROLE$Groupe: 'Groupe de relecteurs',
+  ROLE$Relecteur_: 'Relecteur d\'articles',
+  ROLE$Groupe_: 'Groupe de relecteurs',
 
   COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"'
 

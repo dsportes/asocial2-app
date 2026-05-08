@@ -66,6 +66,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :disable="!session.hasNet"
         @open="dialogs.CredsMgr = true"/>
 
+      <bar-open :bubble="$t('LCRtit_bub')" :disbubble="$t('LCRtit_bub')"
+        :title="$t('LCRtit_label')"
+        :disable="!session.hasNet"
+        @open="dialogs.ListcredsMgr = true"/>
+
       <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
         :title="$t('HPprefs_1')"
         :disable="!session.hasNet || session.incognito"
@@ -96,8 +101,9 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
 
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
-  <creds-mgr v-model="dialogs.CredsMgr" @close="fnc"/>
-  <prefs-mgr v-model="dialogs.PrefsMgr" @close="fnc"/>
+  <!--creds-mgr v-if="dialogs.CredsMgr" v-model="dialogs.CredsMgr" @close="fnc"/-->
+  <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr" @close="fnc"/>
+  <prefs-mgr v-if="dialogs.PrefsMgr" v-model="dialogs.PrefsMgr" @close="fnc"/>
 
   <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
@@ -135,7 +141,7 @@ import UserProfile from '../components-fw/UserProfile.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import AdminMgr from '../dialogs-fw/AdminMgr.vue'
-import CredsMgr from '../dialogs-fw/CredsMgr.vue'
+import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'
@@ -163,6 +169,7 @@ const dialogs = reactive({
   AdminMgr: false,
   ContactMgr: false,
   CredsMgr: false,
+  ListcredsMgr: false,
   CredsReview: false,
   ManageUsers: false,
   DevTrustings: false,
