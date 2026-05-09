@@ -60,12 +60,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('CRRtit_label')"
         :disable="!session.hasNet"
         @open="dialogs.CredsReview = true"/>
-
-      <bar-open :bubble="$t('SESconfig')" :disbubble="$t('SESconfig')"
-        :title="$t('SESconfig')"
-        :disable="!session.hasNet"
-        @open="dialogs.CredsMgr = true"/>
-
+      
       <bar-open :bubble="$t('LCRtit_bub')" :disbubble="$t('LCRtit_bub')"
         :title="$t('LCRtit_label')"
         :disable="!session.hasNet"

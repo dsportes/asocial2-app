@@ -60,25 +60,26 @@
 
 <template #default>
   <q-separator color="orange" class="q-my-sm"/>
-  <div v-if="tab === 'lists" class="column items-center">
+  <div v-if="tab === 'lists'" class="column items-center full-width">
     <div v-for="(item, idx) in allCreds" :key="item.cred.credId">
-      <div :class="dkli(idx) + ' q-py-sm row items-start'">
-        <btn-cond class="col-1" icon="fast_forward" @ok="selectCr(item)"/>
-        <div class="col-11 column">
-          <div class="row">
-            <div class="col-2 row justify-betwwen">
-              <q-checkbox v-model="item.chk" @click="clickCB(item)"/>
-              <q-checkbox v-model="item.chkB" disable/>
+      <div class="row items-center q-my-xs pwsm">
+        <btn-cond class="col-1" icon="zoom_in" round @ok="selectCr(item)"/>
+        <div :class="dkli(idx) + ' col-11'">
+          <div class="row full-width items-center">
+            <div class="col-2 row">
+              <q-checkbox v-model="item.chk" dense size="sm" @click="clickCB(item)"
+                :disable="!curLc"/>
+              <q-checkbox v-model="item.chkB" dense size="sm" disable readonly/>
             </div>
             <div class="col-5 ellipsis">{{ item.cred.org }}</div>
-            <div class="col-5 ellipsis">{{ $t('services_' + item.cred.svc) }}</div>
+            <div class="col-5 ellipsis text-right">{{ $t('services_' + item.cred.svc) }}</div>
           </div>
-          <div class="row">
+          <div class="row full-width items-conter">
             <div class="col-2"></div>
-            <div class="col-5 ellipsis">{{ $t(item.cred.$trole) }}</div>
-            <div class="col-5 ellipsis">{{ item.cred.docId }}</div>
+            <div class="col-5 ellipsis">{{ item.cred.$trole }}</div>
+            <div class="col-5 ellipsis text-right">{{ item.cred.docId }}</div>
           </div>
-          <div v-if="item.cred.comment" class="row">
+          <div v-if="item.cred.comment" class="row full-width items-center">
             <div class="col-2"></div>
             <div class="col-10 font-mono text-italic fs-md text-right ellipsis">{{ item.cred.comment }}</div>
           </div>
@@ -110,7 +111,6 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-// import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 type ListCreds = {
@@ -158,6 +158,7 @@ const sorted = ref([])
 
 const crmap = reactive({})
 const allCreds = ref([])
+const allCredIds = ref()
 
 const init = () => {
   for(const p of Object.keys(lcmap))
@@ -168,11 +169,12 @@ const init = () => {
   changes.value.clear()
 
   const lst: CredItem[] = []
+  const cIds = new Set()
   for(const [crId, c] of sf.mySafeCreds) {
     const t = [
       c.org,
       $t('services_' + c.svc),
-      $t(c.$trole),
+      c.$trole,
       c.docId
     ]
     const it: CredItem = {
@@ -181,11 +183,13 @@ const init = () => {
       cred: c,
       k: t.join('/')
     }
-    crmap[crId] = c
+    crmap[crId] = it
+    cIds.add(crId)
     lst.push(it)
   }
   lst.sort((a,b) => a.k < b.k ? -1 : (a.k > b.k ? -1 : 0))
   allCreds.value = lst
+  allCredIds.value = cIds
 
   // Chargement des profiles
   // mySafeProfiles: Ref<Map<string, Profile>> = ref()
@@ -217,14 +221,27 @@ const sortLc = () => {
 
 const select = (profId) => {
   curLc.value = profId
-  // TODO
+  const lc = lcmap[profId]
+  for(const crId of allCredIds.value) {
+    const item = crmap[crId]
+    item.chk = lc.crIds.has(crId)
+    item.chkB = lc.crIdsB.has(crId)
+  }
+  // ?? checkChanges()
 }
 
 const selectCr = (item) => {
-
+  curCred.value = item.cred.credId
+  tab.value = 'creds'
 }
+
 const clickCB = (item) => {
-  console.log(item.chk)
+  const cb = item.chk
+  const credId = item.cred.credId
+  const lc = lcmap[curLc.value]
+  if (cb) lc.crIds.add(credId)
+  else lc.crIds.delete(credId)
+  checkChanges()
 }
 
 const namechange = (lc) => {
@@ -267,12 +284,12 @@ const newList = (full: boolean) => {
     nameB: profId,
     ex: true,
     exB: false,
-    crIds: new Set(full ? cloneSet(allCreds.value) : []),
+    crIds: new Set(full ? cloneSet(allCredIds.value) : []),
     crIdsB: new Set()
   }
   lcmap[profId] = lc
   sortLc()
-  curLc.value = profId
+  select(profId)
   checkChanges()
 }
 
