@@ -3,11 +3,11 @@
 <div>
   <div class="row items-center">
     <div class="col-3 row q-gutter-xs">
-      <btn-cond icon="content_copy" color="warning"
+      <btn-cond v-if="!restricted" icon="content_copy" color="warning"
         @ok="emit('duplicate', model)"/>
-      <btn-cond v-if="model.ex" icon="delete" round color="warning"
+      <btn-cond v-if="!restricted && model.ex" icon="delete" round color="warning"
         @ok="emit('delete', model)"/>
-      <btn-cond v-if="!model.ex" icon="undo" round 
+      <btn-cond v-if="!restricted && !model.ex" icon="undo" round 
         @ok="emit('undo', model)"/>
       <q-icon :name="ic1" size="24px"/>
     </div>
@@ -61,7 +61,8 @@ type ListCreds = {
 
 const model = defineModel()
 const props = defineProps({
-  lcmap: Object // Map<id, ListCreds
+  lcmap: Object, // Map<id, ListCreds
+  restricted: Boolean // pas de duplicate / delete / undo
 })
 const emit = defineEmits(['namechange', 'delete', 'undo', 'duplicate'])
 

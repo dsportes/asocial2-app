@@ -358,6 +358,7 @@ export default {
   `,
   Phrase_ph: 'Les1sanglots2Longs3du4Printemps',
 
+  LCRtit_btn: 'Gérer les "listes de droits"',
   LCRtit_label: 'Gérer mes "listes de droits d\'accès"',
   LCRtit_bub: `### Gérer mes "listes de droits d'accès"
 Une **liste de drois**,
@@ -376,6 +377,9 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   LCRbtnnew: 'Nouvelle liste avec droits d\'accès...',
   LCRbtnnew_e: 'Aucun',
   LCRbtnnew_f: 'Tous',
+  LCRnosel: 'Sélectionner une liste existante ci-dessus, ou créer une nouvelle liste.',
+  LCRonlylc: 'Ne voir QUE les droits d\'accès référencés dans la liste',
+  LCRonlycr: 'Ne voir QUE les listes référençant ce droit d\'accès',
   LCRtab_l: 'Mes listes',
   LCRtab_c: 'Droit courant',
   LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
@@ -386,6 +390,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   `,
   LCRcredcl_0: 'Je ne ferme pas ce dialogue',
   LCRcredcl_1: "J\'assume et ferme ce dialogue",
+  LCRok: 'Mises à jour des listes de droits enregistrées.',
 
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',

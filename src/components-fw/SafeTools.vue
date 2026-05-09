@@ -96,7 +96,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
 
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
-  <!--creds-mgr v-if="dialogs.CredsMgr" v-model="dialogs.CredsMgr" @close="fnc"/-->
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr" @close="fnc"/>
   <prefs-mgr v-if="dialogs.PrefsMgr" v-model="dialogs.PrefsMgr" @close="fnc"/>
 

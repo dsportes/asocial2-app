@@ -42,29 +42,50 @@
               <q-icon v-else 
                 class="col-1"
                 name="fast_forward" size="32px" color="green-5"/>
-              <lc1-row class="col-11"
+              <lc-row class="col-11"
                 v-model="lcmap[profId]" :lcmap="lcmap"
                 @namechange="namechange" @delete="deleteLc"
                 @undo="undoLc" @duplicate="duplicateLc"/>
             </div>
           </div>
         </scroll-area>
+        <q-checkbox left-label v-model="onlylc" 
+          :label="$t('LCRonlylc')"/>
       </div>
 
-      <div v-if="tab === 'cred'" class="full-width">
-        
+      <div v-if="tab === 'cred'" class="full-width q-my-sm">
+        <div class="bord1 q-pa-xs">
+          <div class="row full-width items-center">
+            <div class="col-6 ellipsis">{{ curCred.org }}</div>
+            <div class="col-6 ellipsis text-right">{{ $t('services_' + curCred.svc) }}</div>
+          </div>
+          <div class="row full-width items-conter">
+            <div class="col-6 ellipsis">{{ curCred.$trole }}</div>
+            <div class="col-6 ellipsis text-right">{{ curCred.docId }}</div>
+          </div>
+          <div v-if="curCred.comment"
+            class="font-mono text-italic fs-md text-right ellipsis">{{ curCred.comment }}</div>
+        </div>
+        <q-checkbox class="q-mt-sm" left-label v-model="onlycr" 
+          :label="$t('LCRonlycr')"/>
       </div>
+
     </div>
     </div>
   </template>
 
 <template #default>
   <q-separator color="orange" class="q-my-sm"/>
-  <div v-if="tab === 'lists'" class="column items-center full-width">
+
+  <div v-if="tab === 'lists' && !curLc" class="q-mx-sm text-center text-italic titre-md text-bold">
+    {{ $t('LCRnosel') }}
+  </div>
+
+  <div v-if="tab === 'lists' && curLc" class="column items-center full-width">
     <div v-for="(item, idx) in allCreds" :key="item.cred.credId">
-      <div class="row items-center q-my-xs pwsm">
+      <div v-if="!onlylc || item.chk" class="row items-center q-my-xs pwsm">
         <btn-cond class="col-1" icon="zoom_in" round @ok="selectCr(item)"/>
-        <div :class="dkli(idx) + ' col-11'">
+        <div :class="dkli(idx) + ' col-11 ' + (curCred && item.cred.credId === curCred.credId ? 'current' : 'nocurrent')">
           <div class="row full-width items-center">
             <div class="col-2 row">
               <q-checkbox v-model="item.chk" dense size="sm" @click="clickCB(item)"
@@ -87,6 +108,22 @@
       </div>
     </div>
   </div>
+
+  <div v-if="tab === 'cred'" class="column items-center full-width">
+    <div v-for="(it, idx) in lcItems" :key="it.lc.profId">
+      <div v-if="!onlycr || it.chk"
+        :class="dkli(idx) + ' q-py-xs row items-start pwsm'">
+        <div class="col-2 row">
+          <q-checkbox v-model="it.chk" dense size="sm" @click="clickLC(it)"/>
+          <q-checkbox v-model="it.chkB" dense size="sm" disable readonly/>
+        </div>
+        <lc-row class="col-10" restricted
+          v-model="it.lc" :lcmap="lcmap"
+          @namechange="namechange" @delete="deleteLc"
+          @undo="undoLc" @duplicate="duplicateLc"/>
+      </div>
+    </div>
+  </div>
 </template>
 </dialog-std2>
 
@@ -99,14 +136,15 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, reactive, watch } from 'vue'
+import { ref, reactive } from 'vue'
 
 import { $t, sty, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
 import { Credential } from '../src-fw/documents'
 import { Crypt } from '../src-fw/crypt'
+import { Profile } from '../stores/safe-store'
 
-import Lc1Row from '../components-fw/Lc1Row.vue'
+import LcRow from '../components-fw/LcRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
@@ -130,6 +168,12 @@ type CredItem = {
   k: string
 }
 
+type LcItem = {
+  chk: boolean
+  chkB: boolean
+  lc: ListCreds
+}
+
 const sf = stores.safe
 const ui = stores.ui
 
@@ -140,31 +184,34 @@ const dialogs = reactive({
 
 const checkClose = () => {
   if (changes.value.size) dialogs.close = true
-  else model.value = false
+  else { model.value = false; emit('close', true)}
 }
 
 const chooseBack = (n) => {
   dialogs.close = false
   if (n === 1)
-    model.value = false
+    { model.value = false; emit('close', true)}
 }
 
 const tab = ref('lists') // cred
 const lcmap = reactive({})
 const changes = ref(new Set())
-const curLc: Ref<ListCreds> = ref()
+const curLc = ref('') // profId
 const curCred = ref()
 const sorted = ref([])
+const onlylc = ref(false)
 
 const crmap = reactive({})
 const allCreds = ref([])
 const allCredIds = ref()
+const onlycr = ref(false)
+const lcItems = ref([])
 
 const init = () => {
   for(const p of Object.keys(lcmap))
     delete lcmap[p]
 
-  curLc.value = null
+  curLc.value = ''
   curCred.value = null
   changes.value.clear()
 
@@ -227,12 +274,23 @@ const select = (profId) => {
     item.chk = lc.crIds.has(crId)
     item.chkB = lc.crIdsB.has(crId)
   }
-  // ?? checkChanges()
 }
 
 const selectCr = (item) => {
-  curCred.value = item.cred.credId
-  tab.value = 'creds'
+  curCred.value = item.cred
+  const cid = item.cred.credId
+  tab.value = 'cred'
+  const l: LcItem[] = []
+  for(const profId of sorted.value) {
+    const lc = lcmap[profId]
+    const it: LcItem = {
+      lc,
+      chk: lc.crIds.has(cid),
+      chkB: lc.crIdsB.has(cid)
+    }
+    l.push(it)
+  }
+  lcItems.value = l
 }
 
 const clickCB = (item) => {
@@ -241,6 +299,15 @@ const clickCB = (item) => {
   const lc = lcmap[curLc.value]
   if (cb) lc.crIds.add(credId)
   else lc.crIds.delete(credId)
+  checkChanges()
+}
+
+const clickLC = (it: LcItem) =>{
+  const cb = it.chk
+  const profId = it.lc.profId
+  if (cb) it.lc.crIds.add(curCred.value.credId)
+  else it.lc.crIds.delete(curCred.value.credId)
+  select(profId)
   checkChanges()
 }
 
@@ -293,18 +360,6 @@ const newList = (full: boolean) => {
   checkChanges()
 }
 
-/*
-type ListCreds = {
-  profId: string
-  name: string
-  nameB: string // 
-  ex: boolean, // existe
-  exB: boolean, // existait avant
-  crIds: Set<string> // Set des ids des credentials
-  crIdsB: Set<string> // Set des ids des credentials avant changement
-}
-*/
-
 const checkChanges = () => {
   changes.value.clear()
   for(const x in lcmap) {
@@ -320,19 +375,26 @@ const checkChanges = () => {
 
 
 const validate = async () => {
-  for(const profId of changes.value)
-    console.log(profId)
-  /*
-  try {
-    const status = await sf.updateCreds()
-    if (status < 0) return
-    await ui.diagDisplay($t('HPsfop_' + status))
-    dialogs.reportIt = false
-    model.value = false
-  } catch (e: any) {
-    await ui.diagDisplay($t('exui', [e.label, e.message]))
+  const m = new Map<string, Profile>()
+  const lst: string[] = []
+  for(const profId of changes.value) {
+    const lc: ListCreds = lcmap[profId]
+    if (lc.ex)
+      m.set(profId, { profId, about: lc.name, crIds: Array.from(lc.crIds) })
+    if (!lc.ex && lc.exB)
+      lst.push(profId)
   }
-  */
+  const status = await sf.updateProfiles(m, lst)
+  if (status < 0) return
+  if (status !== 0)
+    await ui.diagDisplay($t('STSF_' + status))
+  else {
+    changes.value.clear()
+    await ui.diagDisplay($t('LCRok'), 3)
+    model.value = false
+    emit('done', true)
+    emit('close', true)
+  }
 }
 
 init()

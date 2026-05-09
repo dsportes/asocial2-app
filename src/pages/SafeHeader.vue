@@ -28,10 +28,10 @@
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
-    <btn-cond :disable="!session.hasNet" :label="$t('SESconfig')" icon="settings"
-      @ok="dialogs.CredsMgr = true"/>
+    <btn-cond :disable="!session.hasNet" :label="$t('LCRtit_btn')" icon="settings"
+      @ok="dialogs.ListcredsMgr = true"/>
   </div>
-  <creds-mgr v-model="dialogs.CredsMgr"/>
+  <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
 
   <div v-if="sf.step === 3"> 
     <div :class="sty() + ' row justify-between q-pa-xs items-center'">
@@ -51,6 +51,7 @@
   </div>
 
   <invit-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
+
 </div>
 </template>
 
@@ -68,7 +69,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
 import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 
-import CredsMgr from '../dialogs-fw/CredsMgr.vue'
+import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 // @ts-ignore
 import anonymous from '../assets/anonymous-w.svg'
 // @ts-ignore
@@ -81,7 +82,7 @@ const session = stores.session
 const ui = stores.ui
 
 const dialogs = reactive({
-  CredsMgr: false,
+  ListcredsMgr: false,
   NewReq: false
 })
 
