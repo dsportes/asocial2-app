@@ -13,13 +13,13 @@
       <btn-cond icon="close" size="md" flat color="warning" @ok="emit('giveup', true)"/>
       <q-toolbar-title class="titre-lg full-width text-center">{{$t(prefix + '_tit')}}</q-toolbar-title>
     </q-toolbar>
-    <sd-nb class="q-ma-sm q-my-md" :text="$t(prefix + '_txt')"/>
+    <sd-nb class="q-ma-sm q-my-md" :text="$t(prefix + '_txt', args || [])"/>
     <q-card-actions vertical align="center">
       <btn-cond v-for="(b, idx) in opts" :key="idx"
         class="q-mt-sm"
         :label="$t(prefix + '_' + idx)"
         :color="b ? 'warning' : 'primary'"
-        @ok="model= false; emit('option', idx)"/>
+        @ok="model = false; emit('option', idx)"/>
     </q-card-actions>
   </q-card>
 </q-dialog>
@@ -27,20 +27,20 @@
 
 <script setup>
 import { ref } from 'vue'
-import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SdNb from '../components-fw/SdNb.vue'
 
 const props = defineProps({
   prefix: String,
+  args: Array,
   options: String
 })
 
 const model = defineModel()
 
-const opts = ref(new Array(props.options.length))
-for(let i = 0; i < props.options.length; i++) opts.value[i] = props.options.charAt(i) === 'w'
+const opts = ref(new Array(props.options ? props.options.length : 0))
+for(let i = 0; i < (props.options ? props.options.length : 0); i++) opts.value[i] = props.options.charAt(i) === 'w'
 
 const emit = defineEmits(['giveup', 'option'])
 

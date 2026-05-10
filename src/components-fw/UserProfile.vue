@@ -1,7 +1,7 @@
 <!-- Boîte d'affichage du profil courant de l'utilisateur -->
 <template>
 <div>
-  <div v-if="sf.userId" class="q-pa-sm column q-gutter-sm">
+  <div v-if="sf.userId" class="q-pa-sm column q-gutter-xs">
     <div class="row items-center">
       <div class="titre-md text-italic q-mr-sm">{{ $t('SFTus') }}</div>
       <div class="fs-lg font-mono">{{ sf.userId }}</div>

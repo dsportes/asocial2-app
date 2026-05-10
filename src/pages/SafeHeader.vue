@@ -28,8 +28,7 @@
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
-    <btn-cond :disable="!session.hasNet" :label="$t('LCRtit_btn')" icon="settings"
-      @ok="dialogs.ListcredsMgr = true"/>
+    <safe-tools/>
   </div>
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
 
@@ -68,8 +67,9 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
 import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
-
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
+
+import SafeTools from '../components-fw/SafeTools.vue'
 // @ts-ignore
 import anonymous from '../assets/anonymous-w.svg'
 // @ts-ignore

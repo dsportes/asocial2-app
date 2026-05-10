@@ -7,6 +7,12 @@
 <div>
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
     hdrclass="tbs" noclose @close="checkClose">
+    <template #btn>
+      <btn-cond :label="$t('validate')" icon="check" :disable="!todel.size"
+        @ok="cleanUp">
+        <q-badge color="red" floating>{{ todel.size }}</q-badge>
+      </btn-cond>
+    </template>
     <template #hdr>
     <div :class="sty()">
       <div class="column items-center">

@@ -89,6 +89,8 @@ const resetAP = () => {
 const valA = async () => {
   const hsha = Crypt.shaS(await Crypt.strongHash(entryA.inp, false, true))
   safeIS.value = await sf.mdUserGetICVS(hsha, true)
+  if (!safeIS.value)
+    safeIS.value = await sf.mdUserGetICVS(entryA.inp, false)
   if (!safeIS.value) diagAP.value = 3
   else {
     diagAP.value = 2

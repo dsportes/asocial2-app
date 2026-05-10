@@ -101,7 +101,7 @@
     </q-menu>
   </q-btn>
 
-  <safe-export v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
+  <safe-export v-if="dialogs.SafeExport" v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
 
   <q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
     full-height persistent>

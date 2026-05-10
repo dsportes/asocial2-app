@@ -57,8 +57,6 @@
         </div>
         </template>
       </scroll-area>
-
-      <safe-tools/>
     </div>
 
     <div v-if="sf.tab === 'guest' && sf.step === 1" class="q-pa-xs">

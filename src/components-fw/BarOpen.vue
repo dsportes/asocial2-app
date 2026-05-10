@@ -11,10 +11,10 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 
   <div :class="clt" @click="open">{{title}}</div>
 
-  <q-btn v-if="!passive" @click="open"
-    class="col-auto" flat padding="none"
-    :size="large ? '24px' : '20px'"
-    :icon="icon || 'chevron_right'" 
+  <q-icon v-if="!passive" @click="open"
+    class="col-auto"
+    :size="large ? '30px' : '24px'"
+    :name="icon || 'chevron_right'" 
     :disable="disable" 
     :color="color || 'none'"/>
 

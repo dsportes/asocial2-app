@@ -7,6 +7,7 @@
       <btn-cond color="none" size="lg" icon="chevron_left" flat 
         @ok="onClose"/>
       <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
+      <slot name="btn"/>
       <btn-bubble v-if="help" :text="help"/>
       <div v-if="vue" style="color:transparent;width:3px">*<q-tooltip>{{ vue }}</q-tooltip></div>
     </q-toolbar>

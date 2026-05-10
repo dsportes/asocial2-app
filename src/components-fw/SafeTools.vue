@@ -8,8 +8,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
     <img :src="safebox" class="q-mr-xs" width="24px"/>
     <div>{{ $t('SFTtits') }}</div>
   </btn-cond>
-  <btn-cond v-else :label="$t('SFTtit')" flat color="none"
-    @ok="dialogs.SafeTools = true"/>
+  <btn-cond v-else color="primary"
+    @ok="dialogs.SafeTools = true" size="lg" padding="xs sm">
+    <img :src="safebox" class="q-mx-sm" width="36px"/>
+    <div>{{ $t('SFTtit') }}</div>
+  </btn-cond>
 
   <dialog-std0 v-model="dialogs.SafeTools" :title="$t('SFTtit')" vue="SafeTools"
     vh="90" @close="emit('close', true)">
@@ -54,7 +57,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('HPmanusers')"
         @open="dialogs.ManageUsers = true"/>
 
-      <q-separator clor="blue" class="q-my-sm"/>
+      <q-separator color="primary" class="q-my-xs q-mx-lg"/>
 
       <bar-open :bubble="$t('CRRtit_bub')" :disbubble="$t('CRRtit_bub')"
         :title="$t('CRRtit_label')"
@@ -71,18 +74,18 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :disable="!session.hasNet || session.incognito"
         @open="dialogs.PrefsMgr = true"/>
 
-      <q-separator color="orange" class="q-mx-lg q-my-xs"/>
-      <div class="titre-md text-italic text-bold text-warning">{{ $t('SFTopal') }}</div>
+      <q-separator color="orange" class="q-my-xs"/>
+      <div class="titre-md text-italic text-bold text-warning text-center">{{ $t('SFTopal') }}</div>
 
       <bar-open :bubble="$t('HPexpsafe_2')"
         :disable="session.incognito || !session.hasNet"
         :title="$t('HPexpsafe_1')"
-        @open="dialogs.ExportSafe = true"/>
+        @open="dialogs.SafeExport = true"/>
 
       <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
         :disable="session.incognito || !session.hasNet"
         :title="$t('HPdelsafe_1')"
-        @open="dialogs.delsafe = true"/>
+        @open="dialogs.delSafe = true"/>
 
     </template>
   </dialog-std0>
@@ -94,22 +97,21 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
   <admin-mgr v-if="dialogs.AdminMgr" v-model="dialogs.AdminMgr" @close="fnc"/>
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
-
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr" @close="fnc"/>
   <prefs-mgr v-if="dialogs.PrefsMgr" v-model="dialogs.PrefsMgr" @close="fnc"/>
 
-  <safe-export v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
+  <safe-export v-if="dialogs.SafeExport" v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
 
   <!-- Confirmation de destruction du safe -->
-  <q-dialog v-model="dialogs.delSafe" persistent>
+  <q-dialog v-if="dialogs.delSafe" v-model="dialogs.delSafe" persistent>
     <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-    <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
+    <q-img :src="skull" style="height: 128px; max-width: 128px"/>
     <div class="q-my-sm titre-lg text-bold text-center">
-        {{$t('HPskull_9')}}
+        {{$t('SFXskull_9')}}
       </div>
       <div class="q-my-sm titre-md text-bold text-italic text-center">
-        {{$t('HPskull_8')}}
+        {{$t('SFXskull_8')}}
       </div>
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="dialogs.delSafe = false"/>
@@ -143,6 +145,9 @@ import DevTrustings from '../dialogs-fw/DevTrustings.vue'
 import DevTrustit from '../dialogs-fw/DevTrustit.vue'
 import DevUntrustit from '../dialogs-fw/DevUntrustit.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
+
+// @ts-ignore
+import skull from '../assets/skull.png'
 
 // @ts-ignore
 import safebox from '../assets/safe-box.png'
@@ -188,11 +193,11 @@ const fnc = () => {
 const delSafe = async () => {
   const status = await sf.delSafe()
   if (status === 0) {
-    await ui.diagDisplay($t('HPcsret_9'), true)
+    await ui.diagDisplay($t('SFXdel'))
     dialogs.SafeTools = false
     coolBye()
   } else {
-    await ui.diagDisplay($t('HPopsret_' + status), true)
+    if (status !== -1) await ui.diagDisplay($t('STSF_' + status))
   }
 }
 

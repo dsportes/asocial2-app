@@ -136,7 +136,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
 import { $t, sty, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
@@ -207,7 +207,10 @@ const allCredIds = ref()
 const onlycr = ref(false)
 const lcItems = ref([])
 
-const init = () => {
+const init = async () => {
+  // Profiles "régularisés" qui référençaient un droit inexistant
+  const upds = new Map<string, Profile>()
+
   for(const p of Object.keys(lcmap))
     delete lcmap[p]
 
@@ -242,18 +245,37 @@ const init = () => {
   // mySafeProfiles: Ref<Map<string, Profile>> = ref()
   for(const [profId, p] of sf.mySafeProfiles) {
     if (profId === '*') continue
+
+    // Détection des crIds ne référençant plus un credential existant
+    const s: string[] = []
+    let haslost = false
+    for (const crId of p.crIds)
+      if (crmap[crId]) s.push(crId); else haslost = true
+    if (haslost)
+      upds.set(profId, { profId, about: p.about, crIds: s })
+
     const lc: ListCreds = {
       profId: profId,
       name: p.about || '',
       nameB: p.about || '',
       ex: true,
       exB: true,
-      crIds: new Set(p.crIds),
-      crIdsB: new Set(p.crIds)
+      crIds: new Set(s),
+      crIdsB: new Set(s)
     }
     lcmap[profId] = lc
+
   }
   sortLc()
+  if (upds.size) {
+    const status = await sf.updateProfiles(upds, [])
+    if (status < 0 || status !== 0) { 
+      if (status !== 0) await ui.diagDisplay($t('STSF_' + status))
+      model.value = false
+      emit('close', true)
+      return 
+    }
+  }
 }
 
 const sortLc = () => {
@@ -373,7 +395,6 @@ const checkChanges = () => {
   }
 }
 
-
 const validate = async () => {
   const m = new Map<string, Profile>()
   const lst: string[] = []
@@ -397,7 +418,9 @@ const validate = async () => {
   }
 }
 
-init()
+onMounted(async () => { 
+  await init() 
+})
 </script>
 
 <style lang="scss" scoped>

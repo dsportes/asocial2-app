@@ -61,10 +61,10 @@
 .bsclear { box-shadow: 5px -5px 5px 0px rgba(0,0,0,0.75) !important }
 .bsdark { box-shadow: 5px -5px 5px 0px rgba(89,89,89,0.75) !important }
 
-.wxs { max-width: 10rem }
-.wsm { max-width: 20rem }
-.wmd { max-width: 30rem }
-.wlg { max-width: 40rem }
+.wxs { max-width: 20rem; width: 100% }
+.wsm { max-width: 30rem; width: 100% }
+.wmd { max-width: 40rem; width: 100% }
+.wlg { max-width: 50rem; width: 100% }
 
 .pwsm { max-width: 30rem !important; width: 95vw !important }
 .pwmd { max-width: 40rem !important; width: 95vw !important }

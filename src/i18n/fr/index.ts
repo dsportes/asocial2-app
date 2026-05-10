@@ -569,7 +569,6 @@ bla bla
   HPcsret_20: 'Importation effectuée avec succès.',
   HPcsret_21: 'Echec de l\'importation: changer le "pseudo du code d\'accès principal".',
   HPcsret_22: 'Echec de l\'importation: changer le "pseudo du code d\'accès secondaire".',
-  HPcsret_9: '"Coffre fort définitivement supprimé',
 
   /*
   HPauthby_0: 'Utilisateur anonyme',
@@ -622,8 +621,6 @@ bla bla
   HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
   HPclicksession: 'Choisir la session ou profil à ouvrir / rouvrir.',
   HPnoclick: 'Aucune session sélectionnée',
-  HPskull_9: 'Votre "coffre fort" va être irrémédiablement supprimé. Avez-vous effectué un "backup" par précaution ?',
-  HPskull_8: 'Renoncer ou confirmer.',
 
   HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
   HPresetdb_1: `### Attention !
@@ -648,16 +645,16 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
   HPpref_1: 'par défaut',
   HPnotpinned: '(non épinglée)',
   HPexpname_label: 'Nom du fichier de backup',
-  HPexpsafe_1: 'Faire un backup de son "coffre-fort"',
-  HPexpsafe_2: `# Faire un backup de son "coffre-fort"
+  HPexpsafe_1: 'Sauvegarde / Restauration de sa Safe Box',
+  HPexpsafe_2: `# Faire un backup de sa Safe Box
 bla bla
 `,
-  HPdelsafe_1: 'Suppression irrémédiable de mon "coffre fort"',
-  HPdelsafe_2: `# Suppression irrémédiable de mon "coffre fort"
+  HPdelsafe_1: 'Suppression irrémédiable de ma Safe Box',
+  HPdelsafe_2: `# Suppression irrémédiable de ma Safe Box"
 bla bla
 `,
-  HPdelsafe_3: `# Suppression irrémédiable de mon "coffre fort"
-Auth forte requise bla bla
+  HPdelsafe_3: `# Suppression irrémédiable de ma Safe Box
+bla bla
 `,
 
   HPmanuser: 'Utilisateurs',
@@ -806,8 +803,6 @@ A propos du status ...
   HPimport_0: 'Importer',
   HPexport_0: 'Exporter',
   HPbackup_0: 'Backup',
-  HPimport_1: 'Importer des droits d\'accès',
-  HPexport_1: 'Exporter des droits d\'accès',
   HPexportsafe_ko: 'Le coffre-fort n\'a pas pu être obtenu. Etes-vous bien authentifié et connecté à Internet ?',
   HPimport_clear: 'Depuis un fichier JSON en clair',
   HPimport_crypt: 'Depuis un fichier JSON crypté',
@@ -1130,7 +1125,34 @@ bla bla
   SFTphrase_bub: `### Changer les phrases d\'ouverture de la Safe Box
 bla bla
 `,
-  SFTopal: 'Ces opérations sont DANGEREUSES: les utiliser avec précaution',
+  SFTopal: 'Opérations DANGEREUSES à utiliser avec précaution',
+
+  SFXps_label: 'Phrase secrète d\'ouverture de votre Safe Box (1 ou 2)',
+  SFXps_ko: 'Cette phrase n\'est pas reconnue',
+  SFXcfex_tit: 'Confirmer la sauvagarde',
+  SFXcfex_txt: `### Sauvegarde de votre Safe Box
+- sa clé de cryptage est votre phrase secrèté #{0}.
+- elle n'a aucun _alias_: il sera à fournir à la restauration.
+- le fichier aura pour nom [{1}].
+`,
+  SFXcfex_0: 'Je renonce',
+  SFXcfex_1: 'Je confirme "SAUVEGARDER"',
+  SFXbkpok: 'Sauvegarde disponible sous le nom [{0} dans le répertoire de Téléchargements.',
+
+  SFXimpsafe_1: 'Importer une sauvegarde de votre Safe Box',
+  SFXimpsafe_2: `### Importer une sauvegarde de votre Safe Box
+bla bla
+`,
+  SFXimpsafe_ko1: 'Fichier illisible.',
+  SFXimpsafe_ko2: 'Le fichier ne peut pas être décrypté par la phrase secrète que vous avez saisie.',
+  SFXimpsafe_ko3: 'Le fichier a pu être décrypté mais semble corrompu: la clé majeure de la Safe Box ne peut pas être décrypytée par la phrase secrète que vous avez saisie.',
+  SFXimpsafe_ok: 'Le fichier a pu être décrypté et correspond bien à une sauvegarde de votre Safe Box.',
+  SFXsafeexists_0: 'Votre Safe Box est actuellement gérée par l\'opérateur standard. Elle ne PEUT PAS être restaurée tant que vous ne l\'avez pas explicitement détruite.',
+  SFXsafeexists_1: 'Votre Safe Box est actuellement gérée par l\'opérateur [{0}]. Elle ne PEUT PAS être restaurée tant que vous ne l\'avez pas explicitement détruite.',
+
+  SFXskull_9: 'Votre Safe Box va être irrémédiablement supprimée. Avez-vous effectué une "sauvegarde" par précaution ?',
+  SFXskull_8: 'Renoncer ou confirmer.',
+  SFXdel: 'Votre Safe Box est définitivement supprimée: l\'application va s\'arrêter.',
 
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',

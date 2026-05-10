@@ -111,6 +111,42 @@ export type LocPref = {
   obj: Uint8Array
 }
 
+export type Alias = {
+  a1K: string // alias 1 crypté par la clé K (en base 64).
+  hsha1: string // SHA raccourci du Strong Hash de l'alias 1.
+  a2K: string
+  hsha2: string
+}
+
+export type Auth = {
+  llq: number //_last login quarter_, trimestre du dernier login. Permet une _purge_ périodique des _safe_ obsolètes / fantômes.
+  lm: number // _epoch_ en secondes de dernière mise à jour.
+  C: string // clé de cryptage en clair (en base 64).
+  D: string // clé de décryptage cryptée par la clé `K` (en base 64).
+  S: string // clé de signature cryptée par la clé `K` (en base 64).
+  V: string // clé de vérification en clair (en base 64).
+  hshK: string // SHA raccourci du Strong Hash de la clé K.
+  admins: string // liste des couples `SVC1.$OP1 / SVC2.$OP2 / ...` dont l'utilisateur a _déclaré_ être l'administrateur (cryptée par sa clé K et en base 64). La véracité de la _déclaration_ est vérifiée mais l'utilisateur peut se voir retiré cette qualité par l'opérateur sans que cette liste ne change.
+  pseudo: string // dernier pseudo crypté par la clé K du _safe_ (en base 64) utilisé à la certification d'un terminal.
+
+  hshp1: string // SHA raccourci du Strong Hash de la phrase 1 (en base 64).
+  K1: string // clé K cryptée par le Strong Hash de la phrase 1.
+  hshp2: string
+  K2: string
+
+  actual: Alias
+  future: Alias | null
+}
+
+export type Safe = {
+  userId: string
+  auth: Auth
+  devices: Object | null
+  creds: Object | null
+  profiles: Object | null
+  prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+}
+
 export type Profile = {
   profId: string
   about: string
@@ -515,7 +551,7 @@ export const useSafeStore = defineStore('safe', () => {
     - auth, devices, creds, prefs, profiles, invits
   La clé K :
     - soit vient d'être généré dans $createSafe
-    - soit a été décryptée au retour des opérations $openSafeByPR $openSafeByPin
+    - soit a été décryptée au retour des opérations AP $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
     await loadTrustings()
@@ -990,42 +1026,6 @@ export const useSafeStore = defineStore('safe', () => {
     store: string // code du store où est stocké à l'instant actuel le _safe_ de U.
   }
 
-  type Alias = {
-    a1K: string // alias 1 crypté par la clé K (en base 64).
-    hsha1: string // SHA raccourci du Strong Hash de l'alias 1.
-    a2K: string
-    hsha2: string
-  }
-
-  type Auth = {
-    llq: number //_last login quarter_, trimestre du dernier login. Permet une _purge_ périodique des _safe_ obsolètes / fantômes.
-    lm: number // _epoch_ en secondes de dernière mise à jour.
-    C: string // clé de cryptage en clair (en base 64).
-    D: string // clé de décryptage cryptée par la clé `K` (en base 64).
-    S: string // clé de signature cryptée par la clé `K` (en base 64).
-    V: string // clé de vérification en clair (en base 64).
-    hshK: string // SHA raccourci du Strong Hash de la clé K.
-    admins: string // liste des couples `SVC1.$OP1 / SVC2.$OP2 / ...` dont l'utilisateur a _déclaré_ être l'administrateur (cryptée par sa clé K et en base 64). La véracité de la _déclaration_ est vérifiée mais l'utilisateur peut se voir retiré cette qualité par l'opérateur sans que cette liste ne change.
-    pseudo: string // dernier pseudo crypté par la clé K du _safe_ (en base 64) utilisé à la certification d'un terminal.
-
-    hshp1: string // SHA raccourci du Strong Hash de la phrase 1 (en base 64).
-    K1: string // clé K cryptée par le Strong Hash de la phrase 1.
-    hshp2: string
-    K2: string
-
-    actual: Alias
-    future: Alias | null
-  }
-
-  type Safe = {
-    userId: string
-    auth: Auth
-    devices: Object | null
-    creds: Object | null
-    profiles: Object | null
-    prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
-  }
-
   const createSafe = async (
     store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
     userId.value = Crypt.rnd(15)
@@ -1170,10 +1170,22 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delSafe = async () => {
-    const op = new SafeOperation('$DelSafe', mySafeStore.value)
+    const shk = await Crypt.strongHash(keyK.value, false, false)
+    let op = new MDOperation('$mdUserDel')
     try {
       op.args['userId'] = userId.value
-      op.args['shK'] = await Crypt.strongHash(keyK.value, false, false)
+      op.args['shK'] = shk
+      const ret = await op.post()
+      if (ret.status) return ret.status
+    } catch(e) {
+      op.ko(e)
+      return -1
+    }
+
+    op = new SafeOperation('$DelSafe', mySafeStore.value)
+    try {
+      op.args['userId'] = userId.value
+      op.args['shK'] = shk
       const ret = await op.post()
       return ret.status
     } catch (e) {
@@ -1503,9 +1515,8 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  /*
-  const getBinSafe = async () : Promise<Uint8Array | null> => {
-    const op = new SafeOperation('$GetBinSafe', mySafeStore.value)
+  const getSafe = async () : Promise<number | Object> => {
+    const op = new SafeOperation('$GetSafe', mySafeStore.value)
     let ret
     try {
       op.args = {
@@ -1513,13 +1524,12 @@ export const useSafeStore = defineStore('safe', () => {
         shK: await Crypt.strongHash(keyK.value, false, false) as string
       }
       ret = await op.post()
+      return ret.status || ret.safe
     } catch(e) {
       op.ko(e)
-      return null
+      return -1
     }
-    return ret.status ? null : ret.safe
   }
-  */
 
   type Suas = {
     n: number
@@ -1725,13 +1735,13 @@ export const useSafeStore = defineStore('safe', () => {
     managedOrgs, managedOrgs2, isManager, sponsorOf,
     getCreds,
     sessionOfProfId, profileOfProfId,
-    createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS /* ??? */, delSafe,
+    createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS, 
     openSafeByAP, openSafeByPin,
     setAlias, setTrust,setUntrust,setAdmins, setUntrustAll,
-    reloadSafe /* ??? */,
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,
+    getSafe, delSafe, reloadSafe /* ??? */,
     pingStore
   }
 })
