@@ -212,7 +212,6 @@ export default {
   op_$GetBinSafe: 'Backup d\'un coffre-fort',
   op_$GetUserCVO: 'Obtention des clés publiques et du safe store d\'un utilisateur',
   op_$UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
-  op_$RestoreSafe: 'Restauration d\'un "coffre fort"',
   op_GrantNewManager: 'Enregistre un utilisateur en tant que "manager".',
   op_RevokeManager: 'Réqvoque un utilisateur en tant que "manager".',
   op_ListManagers: 'Liste les droits attribués de "manager".',
@@ -307,6 +306,7 @@ export default {
   UAPdiag_3: 'Au moins une phrase secrète est requise.',
   UAPdiag_4: 'Deux phrases secrètes au plus peuvent être déclarées.',
   UAPdiag_5: 'Aucun changement à valider',
+  UAPdiag_6: 'Un alias est requis pour importer la Safe Box.',
 
   UAPl_a: 'Aucun alias déclaré | Alias déclaré | Alias déclarés',
   UAPl_p: 'Aucune phrase déclarée | Phrase déclarée | Phrases déclarées',
@@ -1130,7 +1130,8 @@ bla bla
   SFXps_label: 'Phrase secrète d\'ouverture de votre Safe Box (1 ou 2)',
   SFXps_ko: 'Cette phrase n\'est pas reconnue',
   SFXcfex_tit: 'Confirmer la sauvagarde',
-  SFXcfex_txt: `### Sauvegarde de votre Safe Box
+  SFXcfex_txt: `### Restauration de votre Safe Box
+- 
 - sa clé de cryptage est votre phrase secrèté #{0}.
 - elle n'a aucun _alias_: il sera à fournir à la restauration.
 - le fichier aura pour nom [{1}].
@@ -1152,7 +1153,19 @@ bla bla
 
   SFXskull_9: 'Votre Safe Box va être irrémédiablement supprimée. Avez-vous effectué une "sauvegarde" par précaution ?',
   SFXskull_8: 'Renoncer ou confirmer.',
-  SFXdel: 'Votre Safe Box est définitivement supprimée: l\'application va s\'arrêter.',
+  SFXdel: 'Votre Safe Box est définitivement supprimée: la session va s\'arrêter.',
+
+  SFXcfimp_tit: 'Confirmer la restauration',
+  SFXcfimp_txt: `### Restauration de votre Safe Box
+- site hébergeant votre Safe Box: [{0}]
+- alias de connexion: [{1}]
+- phrase(s) secrète(s) inchangée(s).
+
+Vous pourrez vous connecter après succès de la restauration.
+`,
+  SFXcfimp_0: 'Je renonce',
+  SFXcfimp_1: 'Je confirme "LA RESTAURATION"',
+  SFXimpok: 'Succès de la restauration, vous pouvez vous connecter.',
 
   EXPexport: 'Sauvegarder',
   EXPrestore: 'Restaurer',

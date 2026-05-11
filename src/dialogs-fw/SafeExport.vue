@@ -27,6 +27,7 @@ Events: close done
     <div v-if="tab === 'restore'" class="column items-center">
     <div class="q-pa-xs wsm">
       <bar-open passive :title="$t('HPimpsafe_1')" :bubbleleft="$t('HPimpsafe_2')"/>
+      <btn-cond class="q-my-md" :label="$t('reset')" icon="undo" @ok="reset"/>
 
       <q-file class="q-my-md full-width" dense filled v-model="fileList"
         :label="$t('pickfile')" max-file-size="50000000" max-file="1"/>
@@ -43,61 +44,23 @@ Events: close done
             {{ icvs.s ? $t('SFXsafeexists_1', [icvs.s]) : $t('SFXsafeexists_0') }}
           </div>
         </div>
+        <div v-else> <!-- v-else -->
+          <safestore-select v-model="store"/>
+
+          <div class="titre-lg q-mt-md text-italic">{{ $t(initA ? 'UAPv_a' : 'UAPs_a') }}</div>
+
+          <input-b v-model="entryA" size="alias" prefix="Alias"
+            @validate="valA"/>
+          <div v-if="!initA && !freeA" class="msg">{{ $t('UAPm1_a') }}</div>
+          <div v-if="initA && errVA">
+            <div class="msg">{{ $t('UAPm3_a') }}</div>
+            <btn-cond flat color="primary" :label="$t('UAPc_a')"
+              @ok="correcA"/>
+          </div>
+          <div v-if="!alias" class="msg">{{ $t('UAPdiag_6') }}</div>
+        </div>
       </div>
 
-      <div v-if="statusSafe" class="q-my-sm bord q-pa-sm">
-        <div v-if="statusSafe.lm !== -1">
-          <div class='titre-lg q-mb-sm'>{{$t('HPsafest_1')}}</div>
-          <bar-open class="q-my-sm" :title="$t('HPsafest_6')" :bubbleleft="$t('HPsafest_7')"
-            icon="open_in_new" hasopen @open="openChgCodes"/>
-          <div v-if="safe.lm < statusSafe.lm" class='q-ml-sm titre-md'>
-            {{$t('HPsafest_2gt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
-          </div>
-          <div v-if="safe.lm > statusSafe.lm" class='q-ml-sm titre-md'>
-            {{$t('HPsafest_2lt', [dhcool(statusSafe.lm*1000), dhcool(safe.lm*1000)])}}
-          </div>
-          <div v-if="safe.lm === statusSafe.lm" class='q-ml-sm titre-md'>
-            {{$t('HPsafest_2eq', [dhcool(statusSafe.lm*1000)])}}
-          </div>
-          <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
-            {{$t('HPsafest_5p')}}
-          </div>
-          <div v-if="!statusSafe.xr" class='q-ml-sm titre-md msg2'>
-            {{$t('HPsafest_5r')}}
-          </div>
-          <div v-if="!statusSafe.xr || !statusSafe.xp">
-            <div class='q-ml-sm titre-lg msg2'>{{$t('HPsafest_5a')}}</div>
-          </div>
-          <div v-else>
-            <div class="column items-center q-gutter-sm q-my-sm">
-              <btn-cond :label="$t('HPsafest_r')" @ok="cfImp = true"/>
-              <btn-cond :label="$t('iconfirm')" confirm :disable="!cfImp" @ok="importBackup"/>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <div class='titre-lg q-mb-sm'>{{$t('HPsafest_3')}}</div>
-          <bar-open class="q-my-sm" :title="$t('HPsafest_6')" :bubbleleft="$t('HPsafest_7')"
-            icon="open_in_new" hasopen @open="dialogs.SafeCr = true"/>
-          <div v-if="!statusSafe.xp" class='q-ml-sm titre-md msg2'>
-            {{$t('HPsafest_5p')}}
-          </div>
-          <div v-if="!statusSafe.xr" class='q-ml-sm titre-md msg2'>
-            {{$t('HPsafest_5r')}}
-          </div>
-          <div v-if="!statusSafe.xr || !statusSafe.xp">
-            <div class='q-ml-sm titre-lg msg2'>{{$t('HPsafest_5b')}}</div>
-          </div>
-          <div v-else>
-            <div class="column items-center q-gutter-sm q-my-sm">
-              <btn-cond :label="$t('HPsafest_i')" @ok="cfImp = true"/>
-              <btn-cond :disable="!cfImp" confirm @ok="importBackup"/>
-            </div>
-          </div>
-        </div>
-      </div>
-      <btn-cond class="q-my-md" :label="$t('reset')"
-        icon="undo" @ok="reset"/>
     </div>
     </div>
 
@@ -108,9 +71,10 @@ Events: close done
     prefix="SFXcfex" options="pw" 
     :args="[entryP.np, filename]" @giveup="backupCf(0)" @option="backupCf"/>
 
-  <!-- Changement des codes du backup
-  <safe-cr v-if="dialogs.SafeCr" v-model="dialogs.SafeCr" @done="chgCodes" mode="p"/>
-  -->
+  <choose-it v-if="dialogs.importCf" v-model="dialogs.importCf" 
+    prefix="SFXcfimp" options="pw" 
+    :args="[store || $t('SECsite_std'), alias]" @giveup="importCf(0)" @option="importCf"/>
+
 </div>
 </template>
 
@@ -124,27 +88,29 @@ import { encode, decode } from '@msgpack/msgpack'
 import { saveAs } from 'file-saver'
 
 import stores from '../stores/all'
-import { Auth } from '../stores/safe-store'
+import { Auth, MDuser } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
-import { SafeOperation } from '../src-fw/operation'
-import { $t, dhcool, readFile, coolBye } from '../src-fw/util'
+import { $t, quarter, readFile, coolBye } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 
 import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import InputB from '../components-fw/InputB.vue'
+import SafestoreSelect from 'src/components-fw/SafestoreSelect.vue'
 
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
+const encoder = new TextEncoder()
+
 const ui = stores.ui
-const session = stores.session
 const sf = stores.safe
 
 const model = defineModel()
 const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
-  backupCf: false
+  backupCf: false,
+  importCf: false
 })
 
 const props = defineProps({
@@ -173,7 +139,6 @@ onMounted(async () => {
   await init()
 })
 
-const safe = ref(null)
 const entryP = reactive( { inp: '', err: '', np: 0, shp: null } )
 const filename = ref('')
 
@@ -203,20 +168,25 @@ const backupCf = async (n) => {
 
 const fileList = ref(null)
 const fd = ref(null)
-const keyK = ref(null)
 const icvs = ref(null)
-
-const diag = ref('')
-const statusSafe = ref(null)
-const cfImp = ref(false)
-const impSafeStore = ref('')
+const userId = ref('')
+const keyK = ref(null)
+const shp = ref(null)
+const hshp = ref(null)
+const safe = ref(null)
+const store = ref('')
 
 const reset = () => {
   fileList.value = null
   fd.value = null
-  keyK.value = null
   safe.value = null
   icvs.value = null
+  userId.value = ''
+  keyK.value = null
+  shp.value = null
+  hshp.value = null
+  store.value = ''
+  resetA()
 }
 
 watch(fileList, async (file: any) : Promise<void> => {
@@ -234,16 +204,16 @@ watch(fileList, async (file: any) : Promise<void> => {
 const doImport = async () => {
   safe.value = null
   try {
-    const shp = await Crypt.strongHash(entryP.inp, true, true) as Uint8Array
-    const hshp = Crypt.shaS(shp)
-    const bin = await Crypt.decrypt(shp, fd.value.u8)
+    shp.value = await Crypt.strongHash(entryP.inp, true, true) as Uint8Array
+    hshp.value = Crypt.shaS(shp.value)
+    const bin = await Crypt.decrypt(shp.value, fd.value.u8)
     safe.value = decode(bin)
-    console.log(safe.value.userId)
+    userId.value = safe.value.userId
     const a = safe.value.auth as Auth
-    const K = a.hshp1 === hshp ? a.K1 : (a.hshp2 === hshp ? a.K2 : null)
+    const K = a.hshp1 === hshp.value ? a.K1 : (a.hshp2 === hshp.value ? a.K2 : null)
     try {
-      keyK.value = K === null ? null : await Crypt.decrypt(shp, keyFromB64(K))
-      console.log(keyToB64(keyK.value))
+      keyK.value = K === null ? null : await Crypt.decrypt(shp.value, keyFromB64(K))
+      // console.log(keyToB64(keyK.value))
     } catch (e: any) {
       await ui.diagDisplay($t('SFXimpsafe_ko2'))
       keyK.value = null
@@ -261,65 +231,87 @@ const doImport = async () => {
   }
 }
 
-const authPS = async (args) => {
-  const _id = safe.value.id
-  const _hp0 = safe.value.hp0
-  const _Ka = keyFromB64(safe.value.Ka)
-  const _hr0 = safe.value.hr0
-  const sh = args.sh
-  const sh0 = args.sh0
-  const hp0 = keyToB64(sh0)
-  const _hhp1 = safe.value.hhp1
-  const sh1 = args.sh1
-  const hhp1 = Crypt.shaS(sh1)
-  diag.value = (_hp0 !== hp0 || _hhp1 !== hhp1)  ? $t('HPimpsafe_4') : ''
-  if (!diag.value) {
-    keyK.value = await Crypt.decrypt(sh, _Ka)
-    await getStatus(_id, _hp0, _hr0)
+const alias = ref('')
+const freeA = ref(true)
+const errVA = ref(false)
+const initA = ref('')
+const entryA = reactive({ inp: '', err: '' })
+
+const resetA = () => {
+  alias.value = ''
+  entryA.inp = ''
+  entryA.err = ''
+  initA.value = ''
+  freeA.value = true
+  errVA.value = false
+}
+
+const valA = async () => {
+  if (!initA.value) {
+    freeA.value = await sf.mdAliasFree(entryA.inp)
+    if (freeA.value === -1) { // exception op
+      resetA()
+      return
+    }
+    if (freeA.value) { // OK: libre
+      initA.value = entryA.inp
+      errVA.value = false
+      entryA.inp = ''
+    }
+  } else { // vérification
+    if (initA.value === entryA.inp) { // OK
+      alias.value = initA.value
+      dialogs.importCf = true
+    }
+    errVA.value = true
   }
 }
 
-const getStatus = async (id, hp0, hr0) => {
-  cfImp.value = false
-  const op = new SafeOperation('$StatusSafe', sf.myStore)
-  try {
-    op.args = { id, hp0, hr0 }
-    const ret = await op.post()
-    statusSafe.value = ret.statusSafe
-    // statusSafe.value = { lm: -1, xp: false, xr: false }
-  } catch (e) {
-    op.ko(e)
-  }
-  console.log('status : ' + JSON.stringify(statusSafe.value))
+const correcA = () => {
+  entryA.inp = initA.value
+  entryA.err = ''
+  initA.value = ''
+  freeA.value = true
+  errVA.value = false
 }
 
-const importBackup = async () => {
-  console.log('importBackup')
-  const op = new SafeOperation('$RestoreSafe', sf.mySafeStore)
-  let ret
-  try {
-    op.args = { safe: safe.value }
-    ret = await op.post()
-    await ui.diagDisplay($t('HPcsret_2' + ret.status))
-    await sf.resetAllLocal()
-    coolBye()
-  } catch (e) {
-    op.ko(e)
-    return -1
+const importCf = async (n) => {
+  if (n === 0) return
+  const d = new Date()
+  const llq = quarter(d)
+  safe.value.auth.lm = d.getTime()
+  safe.value.auth.llq = llq
+
+  const hsha1 = Crypt.shaS(await Crypt.strongHash(alias.value, false, true))
+  const a1K = keyToB64(await Crypt.crypt(keyK.value, encoder.encode(alias.value)))
+  safe.value.actual = {
+    a1K, hsha1, a2K: '', hsha2: ''
   }
+  safe.value.future = null
+
+  const mdUser: MDuser = {
+    userId: userId.value,
+    hshK: safe.value.auth.hshK, 
+    hsha1, 
+    hsha2: '',
+    C: safe.value.auth.C, 
+    V: safe.value.auth.D, 
+    llq,
+    store: store.value
+  }
+
+  const status = await sf.restoreSafe(store.value, safe.value, mdUser)
+  if (status === -1) return
+  if (status)
+    await ui.diagDisplay($t('STSF_' + status))
+  else {
+    await ui.diagDisplay($t('SFXimpok'))
+    model.value = false
+    ui.backToOpenSession()
+  }
+
 }
 
-const chgCodes = async (arg) => {
-  console.log('chgCodes')
-  const s = safe.value
-  s.hp0 = keyToB64(arg.cash0)
-  s.hr0 = keyToB64(arg.crsh0)
-  s.hhp1 = Crypt.shaS(arg.cash1)
-  s.hhr1 = Crypt.shaS(arg.crsh1)
-  s.Ka = keyToB64(await Crypt.crypt(arg.cash, keyK.value))
-  s.Kr = keyToB64(await Crypt.crypt(arg.crsh, keyK.value))
-  await getStatus(s.id, s.hp0, s.hr0)
-}
 </script>
 
 <style lang="scss" scoped>

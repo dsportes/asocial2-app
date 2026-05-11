@@ -195,7 +195,8 @@ const delSafe = async () => {
   if (status === 0) {
     await ui.diagDisplay($t('SFXdel'))
     dialogs.SafeTools = false
-    coolBye()
+    emit('close', true)
+    ui.backToOpenSession()
   } else {
     if (status !== -1) await ui.diagDisplay($t('STSF_' + status))
   }

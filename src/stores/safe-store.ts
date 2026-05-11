@@ -111,6 +111,17 @@ export type LocPref = {
   obj: Uint8Array
 }
 
+export type MDuser = {
+  userId: string // ID de l'utilisateur`
+  hshK: string // SHA raccourci du Strong Hash de la clé K
+  hsha1: string // SHA raccourci du Strong Hash de l'alias 1 (s'il existe). En base 64.
+  hsha2: string // SHA raccourci du Strong Hash de l'alias 2 (s'il existe). En base 64.
+  C: string // clé publique de cryptage de U. En base 64.
+  V: string // clé publique de vérification de U. En base 64.
+  llq: number // _last quarter login_. Numéro du trimestre de dernier login, 0 étant le premier de l'an 2000.
+  store: string // code du store où est stocké à l'instant actuel le _safe_ de U.
+}
+
 export type Alias = {
   a1K: string // alias 1 crypté par la clé K (en base 64).
   hsha1: string // SHA raccourci du Strong Hash de l'alias 1.
@@ -1015,17 +1026,6 @@ export const useSafeStore = defineStore('safe', () => {
     return mySafeProfiles.value.get(profId)
   }
 
-  type MDuser = {
-    userId: string // ID de l'utilisateur`
-    hshK: string // SHA raccourci du Strong Hash de la clé K
-    hsha1: string // SHA raccourci du Strong Hash de l'alias 1 (s'il existe). En base 64.
-    hsha2: string // SHA raccourci du Strong Hash de l'alias 2 (s'il existe). En base 64.
-    C: string // clé publique de cryptage de U. En base 64.
-    V: string // clé publique de vérification de U. En base 64.
-    llq: number // _last quarter login_. Numéro du trimestre de dernier login, 0 étant le premier de l'an 2000.
-    store: string // code du store où est stocké à l'instant actuel le _safe_ de U.
-  }
-
   const createSafe = async (
     store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
     userId.value = Crypt.rnd(15)
@@ -1076,7 +1076,15 @@ export const useSafeStore = defineStore('safe', () => {
       store: store
     }
 
-    // Enregistrement dans le Master Directory
+    const status = await restoreSafe(store, safe, mdUser)
+    if (!status)
+      await compileSafe(safe)
+    return status
+  }
+
+  const restoreSafe = async (store: string, safe: Safe, mdUser: MDuser) 
+    : Promise<number> => {
+        // Enregistrement dans le Master Directory
     let op = new MDOperation('$mdUserNew')
     try {
       op.args.mdUser = mdUser
@@ -1100,13 +1108,11 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['safe'] = safe
       await op.post()
       // pas de status, mais exception toujours possible ("duplicate key ...")
+      return 0
     } catch (e) {
       op.ko(e)
       return -1
     }
-
-    await compileSafe(safe)
-    return 0
   }
 
   const setPhraseSafe = async (shp1: Uint8Array, shp2: Uint8Array) : Promise<number> => {
@@ -1133,6 +1139,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  /* Retourne true / false / -1 */
   const mdAliasFree = async (alias: string) => {
     const op = new MDOperation('$mdAliasFree')
     try {
@@ -1741,7 +1748,7 @@ export const useSafeStore = defineStore('safe', () => {
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,
-    getSafe, delSafe, reloadSafe /* ??? */,
+    getSafe, delSafe, restoreSafe, reloadSafe /* ??? */,
     pingStore
   }
 })

@@ -17,7 +17,7 @@ Résultat en v-model.
   </template>
   <div class="q-ml-md q-mr-xs q-my-sm bordl bordb">
     <input-a prefix="SECsitech"
-      @validate="checkStore" :initval="def" :list="vals"
+      @validate="check" :initval="def" :list="vals"
       v-model="store"/>
   </div>
 </q-expansion-item>
