@@ -175,9 +175,9 @@
       <q-card-section class="q-pa-md fs-md text-center">
         {{$t('MLAcf', [$t('op_' + session.opEncours.opName)])}}</q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
-        <btn-cond flat :label="$t('MLAcf3')" 
+        <btn-cond flat :label="$t('MLAcf_3')" 
           @ok="dialogs.confirmStopop = false"/>
-        <btn-cond flat :label="$t('MLAcf4')" 
+        <btn-cond flat :label="$t('MLAcf_4')" 
           @ok="dialogs.confirmStopop = false; session.opEncours.abort()"/>
       </q-card-actions>
     </q-card>
