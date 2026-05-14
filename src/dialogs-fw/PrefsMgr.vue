@@ -4,12 +4,9 @@ Events: close done
 <template>
 <div>
 <dialog-std2 v-model="model" :title="$t('HPprefs_1')" vue="PrefsMgr">
-  <template #hdr>
-    <div class="row justify-end q-px-xs q-mb-sm">
-      <btn-cond flat size="lg" icon="check" color="warning"
-        :label="$t('validate')" @ok="validate"
-        :disable="deletedCodes.size === 0 && updatedPrefs.size === 0"/>
-    </div>
+  <template #btn>
+    <btn-cond icon="check" :label="$t('validate')" @ok="validate"
+      :disable="deletedCodes.size === 0 && updatedPrefs.size === 0"/>
   </template>
 
 <template #default>

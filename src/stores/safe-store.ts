@@ -725,7 +725,7 @@ export const useSafeStore = defineStore('safe', () => {
       delprefs : delprefs || []
     }
     const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
-    op.args = { updatePrefs }
+    op.args.updatePrefs = updatePrefs
     return await doOpSafe(op)
   }
   /***************************************************************************/
@@ -786,12 +786,12 @@ export const useSafeStore = defineStore('safe', () => {
       cred: credSer
     }
     const op = new SafeOperation('$CreateCred', mySafeStore.value)
-    op.args = { setCred }
+    op.args.setCred = setCred
     return await doOpSafe(op)
   }
 
   /* Mise à jour du commentaire d'un Cred en safe */
-  const updateCredComment = async ( credId: string, comment: string ) 
+  const updateCredComment = async ( credId: string, comment: string )
     : Promise<boolean> => {
     const setCred : SetCred = {
       userId: userId.value,
@@ -800,7 +800,7 @@ export const useSafeStore = defineStore('safe', () => {
       comment: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(comment)))
     }
     const op = new SafeOperation('$UpdateCredComment', mySafeStore.value)
-    op.args = { setCred }
+    op.args.setCred = setCred
     try {
       await doOpSafe(op)
       return true
@@ -823,10 +823,10 @@ export const useSafeStore = defineStore('safe', () => {
       ids
     }
     const op = new SafeOperation('$AutoRevokeCreds', mySafeStore.value)
-    op.args = {revokeCreds}
+    op.args.revokeCreds = revokeCreds
     return await doOpSafe(op)
   }
-  
+
   /* Profiles ****************************************************************
   Section organisée avec une **sous-section par application** regroupant une liste d'items
   ayant un identifiant généré aléatoirement à sa création.
@@ -885,7 +885,7 @@ export const useSafeStore = defineStore('safe', () => {
       delprofs: delprofs || []
     }
     const op = new SafeOperation('$UpdateProfiles', mySafeStore.value)
-    op.args = { setProfiles }
+    op.args.setProfiles = setProfiles
     return await doOpSafe(op)
   }
 
@@ -906,7 +906,7 @@ export const useSafeStore = defineStore('safe', () => {
       about: keyToB64(await ecX(about))
     }
     const op = new SafeOperation('$SetAboutProfile', mySafeStore.value)
-    op.args = { aboutProfile }
+    op.args.aboutProfile = aboutProfile
     return await doOpSafe(op)
   }
   /****************************************************************************/
@@ -993,7 +993,7 @@ export const useSafeStore = defineStore('safe', () => {
   /* Retourne:
   - '' : PAS sponsor du major
   - 'M' : sponsor du "major"
-  - 'M/m' : sponsor du "major/minor" 
+  - 'M/m' : sponsor du "major/minor"
   */
   const sponsorOf = (svc, org, major, minor) : string => {
     const majmin = major + '/' + 'minor'
@@ -1001,7 +1001,7 @@ export const useSafeStore = defineStore('safe', () => {
       if (c.role === 'Sponsor.') {
         if (c.docId === major) return major
         if (minor && c.docId === majmin) return majmin
-      } 
+      }
     return ''
   }
 
@@ -1082,7 +1082,7 @@ export const useSafeStore = defineStore('safe', () => {
     return status
   }
 
-  const restoreSafe = async (store: string, safe: Safe, mdUser: MDuser) 
+  const restoreSafe = async (store: string, safe: Safe, mdUser: MDuser)
     : Promise<number> => {
         // Enregistrement dans le Master Directory
     let op = new MDOperation('$mdUserNew')
@@ -1246,7 +1246,7 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['userId'] = t.userId
       op.args['devId'] = devId.value
       op.args['pincx'] = pincx
-      ret = await op.post() 
+      ret = await op.post()
     } catch (e) {
       op.ko(e)
       return -1
@@ -1495,7 +1495,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
     let ret
     try {
-      op.args = {untrustDev}
+      op.args.untrustDev = untrustDev
       ret = await op.post()
     } catch(e) {
       op.ko(e)
@@ -1526,10 +1526,8 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$GetSafe', mySafeStore.value)
     let ret
     try {
-      op.args = {
-        userId: userId.value,
-        shK: await Crypt.strongHash(keyK.value, false, false) as string
-      }
+      op.args.userId = userId.value
+      op.args.shK = await Crypt.strongHash(keyK.value, false, false) as string
       ret = await op.post()
       return ret.status || ret.safe
     } catch(e) {
@@ -1742,7 +1740,7 @@ export const useSafeStore = defineStore('safe', () => {
     managedOrgs, managedOrgs2, isManager, sponsorOf,
     getCreds,
     sessionOfProfId, profileOfProfId,
-    createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS, 
+    createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,
     setAlias, setTrust,setUntrust,setAdmins, setUntrustAll,
     getAllSessions, synthUsers,

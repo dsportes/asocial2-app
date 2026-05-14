@@ -57,6 +57,7 @@ class AOperation {
   args: OpArgs | any = {}
 
   constructor (opName: string) {
+    this.args['opName'] = opName
     this.opName = opName
   }
 
@@ -129,7 +130,7 @@ export class Operation extends AOperation {
     return await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
   }
 
-  /* Si noAuth est true, l'opération N'INCLUE PAS 
+  /* Si noAuth est true, l'opération N'INCLUE PAS
   la signature du user dans AuthRecord.
   */
   async post (noAuth?: boolean) : Promise<any> {
@@ -139,11 +140,12 @@ export class Operation extends AOperation {
 
       let u = await this.getBaseUrl()
       if (!u.endsWith('/')) u += '/'
-      this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
+      // this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
+      this.url = u + 'op/'
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
 
       session.opStart(this)
-      if (!noAuth) 
+      if (!noAuth)
         await this.authRecord.signUser()
       this.args.authRecord = this.authRecord.toObj
       const body = new Uint8Array(encode(this.args))
@@ -210,9 +212,9 @@ abstract class A2Operation extends AOperation {
     const session = stores.session
     try {
       session.opStart(this)
-      if (!this.url) 
+      if (!this.url)
         this.url = await this.urlSafeStore()
-      this.url += this.opName
+      // this.url += this.opName
       this.controller = new AbortController()
       this.aborted = false
 
@@ -302,12 +304,12 @@ export class AuthRecord {
 
   async signUser () {
     const sf = stores.safe
-    this.userSign = sf.auth && sf.auth.S ? 
+    this.userSign = sf.auth && sf.auth.S ?
       await Crypt.sign(keyFromB64(sf.auth.S), this.challenge) : null
   }
 
   get toObj() {
-    return { userId: this.userId, sessionId: this.sessionId, time: this.time, 
+    return { userId: this.userId, sessionId: this.sessionId, time: this.time,
       signatures: this.signatures, userSign: this.userSign }
   }
 

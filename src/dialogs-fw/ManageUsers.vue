@@ -4,16 +4,13 @@ Event: close
 <template>
 <dialog-std2 v-model="model" :title="$t('HPmanusers')"  vue="ManageUsers"
   noclose @close="closeIt">
+<template #btn>
+  <btn-cond :label="$t('validate') + ' (' + nbdel2 + ')'"
+    :disable="nbdel2 === 0" icon="check"
+    @ok="dialogs.valcf = true"/>
+</template>
 <template #hdr>
-  <div>
-    <div class="row q-mx-md full-width justify-end">
-      <btn-cond flat size="lg" class="col-auto q-mr-md"
-        :label="$t('validate') + ' (' + nbdel2 + ')'"
-        :disable="nbdel2 === 0" 
-        @ok="dialogs.valcf = true"/>
-    </div>
-    <div v-if="diag !== ''" class="col q-ml-md msg2">{{diag}}</div>
-  </div>
+  <div v-if="diag !== ''" class=" msg2">{{diag}}</div>
 </template>
 
 <template #default>
@@ -129,7 +126,7 @@ const dialogs = reactive({
   valcf: false
 })
 
-const closeIt = () => { 
+const closeIt = () => {
   emit('close', true)
   model.value = false
 }

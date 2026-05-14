@@ -148,7 +148,7 @@ export default {
   - lister mes invitations _en cours_:
     - mes demandes n'ayant pas encore été prises en compte par un sponsor,
     - les invitations qu'un sponsor m'a faite, soit suite à une de mes demandes, soit de sa propre inititiative.
-  
+
   `,
   PAGEsponsorings: 'Mes sponsorings',
   PAGEsponsorings_label: 'Mes sponsorings: mes propositions, création et suivi',
@@ -221,6 +221,8 @@ export default {
   op_$CreateCred: 'Création d\'un credential',
   op_GetCredLimitCond: 'Obtention des conditions d\'un credential',
   op_$UpdateCredComment: 'Mise à jour du commentaire d\'un droit d\'accès',
+  op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
+  op_$UpdatePrefs: 'Mise à jour des préférences',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -339,7 +341,7 @@ Une **liste de drois**,
 - est une simple liste de certains de vos droits d'accès.
 
 La liste (virtuelle) **Générale** est définie par défaut,
-- contient à tout instant tous vos droits (elle ne peut pas être modifiée), 
+- contient à tout instant tous vos droits (elle ne peut pas être modifiée),
 - porte le nom _Général_ qui ne peut pas changer.
 
 Quant une session de l'application s'ouvre, elle référence toujours une liste de droits (le cas échéant _Générale):
@@ -1086,7 +1088,7 @@ bla bla
   SFXps_ko: 'Cette phrase n\'est pas reconnue',
   SFXcfex_tit: 'Confirmer la sauvagarde',
   SFXcfex_txt: `### Restauration de votre Safe Box
-- 
+-
 - sa clé de cryptage est votre phrase secrèté #{0}.
 - elle n'a aucun _alias_: il sera à fournir à la restauration.
 - le fichier aura pour nom [{1}].
@@ -1243,7 +1245,7 @@ bla bla
   INVtabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
   INVtabu_bub: `### Ardoise partagée avec les sponsors
 - qui suis-je, ma motivation ...
-- les remarques des sponsors successifs 
+- les remarques des sponsors successifs
 `,
 
   INVcomment_c_label: 'Commentaire',
@@ -1267,19 +1269,19 @@ bla bla
 En cas de confirmation, l\'invitation sera validée selon les termes affichés puis supprimée.
 
 Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
-`, 
+`,
   INVvalCf_0: 'Je la laisse vivre encore (sans la valider)',
   INVvalCf_1: 'Je la VALIDE',
 
   INVrecCf_tit: 'Confimer ce changement ?',
   INVrecCf_txt: `### Confimer ce changement
-En cas de confirmation, 
+En cas de confirmation,
 - l'ardoise de l\'invitation sera modifiée,
 - la durée de vie de l'invitation sera prolongée,
 - ça laissera le temps à un _sponser_ de faire une nouvelle (ou première) proposition d'invitation.
 
 Sinon ce dialogue s'effacera et l'invitation continuera d'exister telle quelle (du moins quelques jours).
-`, 
+`,
   INVrecCf_0: 'Je renonce aux modifications de l\'ardoise',
   INVrecCf_1: 'Je confirme vouloir les enregistrer',
 
@@ -1307,7 +1309,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   Détecté par l'application
   1: erreur fonctionnelle APP
   2: erreur fonctionnelle FW
-  3: assertion FW - BUG: 
+  3: assertion FW - BUG:
   4: assertion APP - BUG:
   8: FW : Exception technique DB / réseau
   9: APP: Exception technique DB / réseau
@@ -1342,7 +1344,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX3_bub: `### Une situation inattendue des données a été détectée
   - les données ne sont pas dans un état _normal_ pour supporter cette opération.
   - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
-  
+
   Vous pouvez continuer, l'opération ne s'est pas terminée correctement mais _a priori_ sans conséquences futures.
   Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
   `,
@@ -1354,7 +1356,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   - ce peut être aussi un BUG.
 
   L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
-  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
+  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée.
   La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
   `,
 
@@ -1365,7 +1367,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   - _a priori_, il s'agit d'un incident **technique** sans rapport direct avec l'opération demandée, une base de données non lisible, un accès à un service distant interrompu, etc.
 
   L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
-  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée. 
+  Relancer l'opération après un certain délai _peut_ être bénéfique, les incidents techniques sont souvent fugitifs ou de courte durée.
   La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
   `,
 
@@ -1373,7 +1375,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX105_bub: `### Une situation inattendue des données a été détectée par le serveur
   - les données ne sont pas dans un état _normal_ pour supporter cette opération.
   - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
-  
+
   L'opération ne s'est **PAS** terminée correctement et ceci **PEUT** avoir des conséquences sur le comportement futur de votre session.
   Recharger l'application _peut_ être bénéfique, comme sa relance ultérieure, les données peuvent avoir évolué favorablement (en étant optimiste).
   `,
@@ -1382,7 +1384,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX99_bub: `### Interruption volontaire d\'une opération
   - par appui volontaire sur le bouton rouge.
   - il est impossible de savoir si l\'opération s\'est bien effectuée ou non.
-  
+
   Regarder les données affichées pour en déduire si l\'opération est allée à son terme ou a été interrompue avant.
   `,
 
@@ -1435,6 +1437,9 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX105_masterdir_unexpected_exception: 'Opération Master Directory en échec inattendu. Détail: [{0}]',
   EX105_service_unexpected_exception: 'Opération Service en échec inattendu. Détail: [{0}]',
   EX105_safe_unexpected_exception: 'Opération Safe Box en échec inattendu. Détail: [{0}]',
+  EX105_masterdir_arguments_notdecodable: 'Opération Master Directory: impossible de décoder les arguments.',
+  EX105_service_arguments_notdecodable: 'Opération Service en échec inattendu. impossible de décoder les arguments.',
+  EX105_safe_arguments_notdecodable: 'Opération Safe Box en échec inattendu. impossible de décoder les arguments.',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
@@ -1510,14 +1515,14 @@ bla bla
   INV$Auteur_categ_label: 'Catégorie d\'auteurs',
   INV$Auteur_t1: `Un **auteur** sera créé:
   - ID: _{0}_
-`,  
+`,
   INV$Auteur_t0: `Auncun **auteur** ne sera créé.
 `,
-  INV$Auteur_t2: `### Droit de _Sponsoring_ 
+  INV$Auteur_t2: `### Droit de _Sponsoring_
 - un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur.
 - il pourra être transmis.
 `,
-  INV$Auteur_t3: `### Droit de _Sponsoring_ 
+  INV$Auteur_t3: `### Droit de _Sponsoring_
 - un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur de la seule catégorie **{0}**.
 - il pourra être transmis.
 `,
