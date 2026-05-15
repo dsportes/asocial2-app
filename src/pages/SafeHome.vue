@@ -10,53 +10,46 @@
       <login-block @logged="sf.setStep(2)"/>
     </div>
 
-    <div v-if="sf.step === 2" class="column items-center q-pa-sm">
-      <mode-incognito/>
-
-      <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
-      <scroll-area size="lg" class="full-width q-mb-lg">
-        <template #default>
-        <div :class="dkli(idx)" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
-          <div v-if="sOfP(profId)">
-            <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
-              <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
-                @ok="selSession(sOfP(profId), true)"/>
-              <div class="col">
-                <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
-                <div>
-                  <q-img :src="database" style="height: 18px; max-width: 18px"/>
-                  <span class="font-mono text-italic q-ml-md">{{dhcool(sOfP(profId).time)}}</span>
-                </div>
-                <div class="row q-gutter-sm">
-                  <div class="text-italic">{{$t('HPstartpref')}}</div>
-                  <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionS(sOfP(profId), '', 0, null)"/>
-                  <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-                    :label="code" padding="none xs"
-                    @ok="validateSessionS(sOfP(profId), code, time, obj)"/>
-                </div>
+    <div v-if="sf.step === 2" class="column items-center">
+      <div :class="dkli(idx) + ' full-width'" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
+        <div v-if="sOfP(profId)">
+          <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selSession(sOfP(profId), true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div>
+                <q-img :src="database" style="height: 18px; max-width: 18px"/>
+                <span class="font-mono text-italic q-ml-md">{{dhcool(sOfP(profId).time)}}</span>
               </div>
-            </div>
-          </div>
-          <div v-else>
-            <div :class="clSel(p) + 'row q-my-sm'">
-              <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
-                @ok="selProfile(p, true)"/>
-              <div class="col">
-                <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
-                <div class="fs-md text-italic">{{$t('HPnotpinned')}}</div>
-                <div class="row q-gutter-sm">
-                  <div class="text-italic">{{$t('HPstartpref')}}</div>
-                  <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionP(p, '', 0, null)"/>
-                  <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-                    :label="code" padding="none xs"
-                    @ok="validateSessionP(p, code, time, obj)"/>
-                </div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic text-bold">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionS(sOfP(profId), '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionS(sOfP(profId), code, time, obj)"/>
               </div>
             </div>
           </div>
         </div>
-        </template>
-      </scroll-area>
+        <div v-else>
+          <div :class="clSel(p) + 'row q-my-sm'">
+            <btn-cond class="col-auto q-mr-sm" round icon="more_vert"
+              @ok="selProfile(p, true)"/>
+            <div class="col">
+              <div class="fs-md text-bold">{{p.about || $t('HPpstar')}}</div>
+              <div class="fs-md text-italic">{{$t('HPnotpinned')}}</div>
+              <div class="row q-gutter-sm">
+                <div class="text-italic">{{$t('HPstartpref')}}</div>
+                <btn-cond no-caps :label="$t('HPpref_1')" @ok="validateSessionP(p, '', 0, null)"/>
+                <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
+                  :label="code" padding="none xs"
+                  @ok="validateSessionP(p, code, time, obj)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="sf.tab === 'guest' && sf.step === 1" class="q-pa-xs">

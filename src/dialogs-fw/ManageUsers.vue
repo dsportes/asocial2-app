@@ -9,45 +9,47 @@ Event: close
     :disable="nbdel2 === 0" icon="check"
     @ok="dialogs.valcf = true"/>
 </template>
+
 <template #hdr>
-  <div v-if="diag !== ''" class=" msg2">{{diag}}</div>
+  <div :class="sty() + ' q-pa-xs'">
+    <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPunpin_1')"/>
+
+    <div v-if="diag !== ''" class=" msg2">{{diag}}</div>
+
+    <div class="colum wsm justify-center">
+      <div class="row titre-md text-italic q-my-sm">
+        <div class="col-6 text-center">{{$t('HPsize_1')}}</div>
+        <div class="col-6 text-center">{{$t('HPsize_2')}}</div>
+      </div>
+      <div v-for="i in nbc" :key="i" class="row font-mono">
+        <div class="col-6 text-center">{{edvol(size[i-1])}}</div>
+        <div class="col-6 text-center">{{edvol(delSize[i-1])}}</div>
+      </div>
+    </div>
+
+    <q-separator class="q-mt-xs q-mb-sm"/>
+
+    <div v-if="usersNo && usersNo.size">
+      <div class="titre-md text-italic text-center q-mb-xs">{{$t('HPusersN')}}</div>
+      <div class="row q-gutter-sm justify-center">
+        <btn-cond v-for="[u, p] in usersNo" :key="u" no-caps
+          :icon="tDel2.has(u) ? 'undo' : 'delete'"
+          :color="tDel2.has(u) ? 'warning' : 'primary'"
+          :label="p + ' ['+ u.substring(0, 5) + ']'"
+          padding="none xs" @ok="delUserNo(u)"/>
+      </div>
+    </div>
+    <div class="titre-md text-center text-italic q-mt-sm">{{$t('HPusersY')}}</div>
+    <q-separator class="q-mt-xs"/>
+
+  </div>
 </template>
 
 <template #default>
-<div class="q-mt-sm column items-center">
+<div class="q-pa-xs column items-center">
 <div class="wmd full-width">
-  <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPunpin_1')"/>
-
-  <q-separator class="q-mt-xs q-mb-sm"/>
-
-  <div class="colum wsm justify-center">
-    <div class="row titre-md text-italic q-my-sm">
-      <div class="col-6 text-center">{{$t('HPsize_1')}}</div>
-      <div class="col-6 text-center">{{$t('HPsize_2')}}</div>
-    </div>
-    <div v-for="i in nbc" :key="i" class="row font-mono">
-      <div class="col-6 text-center">{{edvol(size[i-1])}}</div>
-      <div class="col-6 text-center">{{edvol(delSize[i-1])}}</div>
-    </div>
-  </div>
-
-  <q-separator class="q-mt-xs q-mb-sm"/>
-
-  <div v-if="usersNo && usersNo.size">
-    <div class="titre-md text-italic q-mb-xs">{{$t('HPusersN')}}</div>
-    <div class="row q-gutter-sm">
-      <btn-cond v-for="[u, p] in usersNo" :key="u" no-caps
-        :icon="tDel2.has(u) ? 'undo' : 'delete'"
-        :color="tDel2.has(u) ? 'warning' : 'primary'"
-        :label="p + ' ['+ u.substring(0, 5) + ']'"
-        padding="none xs" @ok="delUserNo(u)"/>
-    </div>
-    <q-separator class="q-mt-xs q-mb-sm"/>
-  </div>
-
-  <div class="titre-md text-italic q-mt-md q-mb-xs">{{$t('HPusersY')}}</div>
-  <div v-for="[id, u] of synthU" :key="u.id">
-    <div class="row font-mono fs-md items-start bg-primary q-mt-md">
+  <div v-for="[id, u] of synthU" :key="u.id" class="q-my-sm">
+    <div class="row font-mono fs-md items-start bg-primary">
       <div class="col-9 q-pr-xs">{{u.pseudo}}</div>
       <div class="col-2 column justify-center">
         <div v-for="i in nbc">{{edvol(u.size[i-1])}}</div>
@@ -55,20 +57,18 @@ Event: close
       <q-checkbox class="col-1" dense size="md" v-model="u.ck"
         @click="cku(u)"/>
     </div>
-    <div v-for="[id, a] of u.ma" :key="a.app">
-      <div class="row font-mono fs-md items-start bg-secondary q-mt-sm">
-        <div class="col-1"></div>
-        <div class="col-8 q-pr-xs">{{a.app}}</div>
+    <div v-for="[id, a] of u.ma" :key="a.app" class="q-my-sm q-ml-md">
+      <div class="row font-mono fs-md items-start bg-secondary">
+        <div class="col-9 q-pr-xs ">{{a.app}}</div>
         <div class="col-2 column justify-center">
           <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
         </div>
         <q-checkbox class="col-1" dense size="md" v-model="a.ck"
           @click="cka(a)"/>
       </div>
-      <div v-for="[id, s] of a.ms" :key="s.id">
-        <div class="row font-mono fs-md items-start q-my-xs">
-          <div class="col-2"></div>
-          <div class="col-7 q-pr-xs column">
+      <div v-for="([id, s], idx) of a.ms" :key="s.id" class="q-my-xs q-ml-md">
+        <div :class="dkli(idx) + ' row font-mono fs-md items-start'">
+          <div class="col-9 q-pr-xs column">
             <div>{{s.about}}</div>
             <div class="q-ml-lg text-italic">{{dhcool(s.time)}}</div>
           </div>
@@ -111,7 +111,7 @@ Event: close
 // @ts-ignore
 import { ref, computed, Ref, reactive, watch, onMounted } from 'vue'
 import stores from '../stores/all'
-import { $t, sty, edvol, dhcool } from '../src-fw/util'
+import { $t, sty, dkli, edvol, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarOpen from '../components-fw/BarOpen.vue'

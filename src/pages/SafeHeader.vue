@@ -24,22 +24,27 @@
     </q-tab>
   </q-tabs>
 
-  <div v-if="sf.step === 2" 
+  <div v-if="sf.step === 2"
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
       @ok="sf.setStep(1)"/>
     <safe-tools/>
   </div>
+  <div v-if="sf.step === 2" :class="sty() + ' q-pa-xs'">
+    <mode-incognito/>
+    <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
+  </div>
+
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
 
-  <div v-if="sf.step === 3"> 
+  <div v-if="sf.step === 3">
     <div :class="sty() + ' row justify-between q-pa-xs items-center'">
       <btn-cond icon="chevron_left" :label="$t('LOGback')"
         @ok="sf.setStep(1)"/>
       <btn-cond icon="chevron_right" :label="$t('LOGsession')"
         @ok="sf.setStep(2)"/>
     </div>
-    <q-tabs dense v-model="sf.tab3" 
+    <q-tabs dense v-model="sf.tab3"
       class="full-width bg-primary text-white shadow-2">
       <btn-cond icon="add_box" color="none" :label="$t('SFHnewr')"
         @ok="dialogs.NewReq = true"/>
@@ -68,6 +73,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
 import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
+import ModeIncognito from '../components-fw/ModeIncognito.vue'
 
 import SafeTools from '../components-fw/SafeTools.vue'
 // @ts-ignore

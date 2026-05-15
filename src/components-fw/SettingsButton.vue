@@ -45,7 +45,7 @@
         <q-item  v-if="stores.safe.step !== 1" @click="dialogs.userProfile = true"
           clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="person"/></q-item-section>
-          <q-item-section class="fs-lg">{{$t('UPtitle')}}</q-item-section>
+          <q-item-section class="fs-lg">{{$t('SButtitle')}}</q-item-section>
         </q-item>
 
         <q-item  v-if="stores.safe.step === 0" @click="dialogs.edprf = true"
@@ -107,7 +107,7 @@
     full-height persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
-        <btn-cond flat :label="$t('gotit')" icon="check" color="none" 
+        <btn-cond flat :label="$t('gotit')" icon="check" color="none"
           @ok="dialogs.ServiceStatus = false"/>
         <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
       </q-toolbar>
@@ -175,9 +175,9 @@
       <q-card-section class="q-pa-md fs-md text-center">
         {{$t('MLAcf', [$t('op_' + session.opEncours.opName)])}}</q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
-        <btn-cond flat :label="$t('MLAcf_3')" 
+        <btn-cond flat :label="$t('MLAcf_3')"
           @ok="dialogs.confirmStopop = false"/>
-        <btn-cond flat :label="$t('MLAcf_4')" 
+        <btn-cond flat :label="$t('MLAcf_4')"
           @ok="dialogs.confirmStopop = false; session.opEncours.abort()"/>
       </q-card-actions>
     </q-card>
@@ -395,14 +395,14 @@
   </dialog-std1>
 
   <!-- Profil de l'utilisateur -->
-  <dialog-std0 :title="$t('UPtitle')" v-model="dialogs.userProfile" vue="SettingsButton">
+  <dialog-std0 :title="$t('SButtitle')" v-model="dialogs.userProfile" vue="SettingsButton">
     <template #default>
       <user-profile/>
     </template>
   </dialog-std0>
 
   <choose-it v-model="dialogs.SessionClose"
-    prefix="HPbackopen" options="pw" 
+    prefix="HPbackopen" options="pw"
     @giveup="dialogs.SessionClose = false"
     @option="sessionClose"/>
 </div>

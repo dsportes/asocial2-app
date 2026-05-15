@@ -27,10 +27,10 @@ Event émis: logged
     <input-b v-if="stepAP===0" class="q-ml-lg"
       v-model="entryA" size="alias" prefix="Alias"
       @validate="valA"/>
-    <input-b v-if="stepAP===1" class="q-ml-lg" 
+    <input-b v-if="stepAP===1" class="q-ml-lg"
       v-model="entryP" size="p1" prefix="Phrase"
       @validate="valP"/>
-    <btn-cond v-if="stepAP===1" class="q-ml-lg self-end" 
+    <btn-cond v-if="stepAP===1" class="q-ml-lg self-end"
       flat color="warning" :label="$t('UAPt_p')" @ok="resetAP"/>
   </div>
 </div>
@@ -101,11 +101,8 @@ const valA = async () => {
 const valP = async () => {
   const shp = await Crypt.strongHash(entryP.inp, true, false)
   const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
-  if (status === 0) {
-    // await ui.diagDisplay($t('LOGok'))
-    emit('logged', null)
-  }
-  else if (status > 0) await ui.diagDisplay($t('STSF_' + status)) 
+  if (status === 0) emit('logged', null)
+  else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
 
 </script>

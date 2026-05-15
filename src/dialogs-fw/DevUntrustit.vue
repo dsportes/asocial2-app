@@ -18,7 +18,7 @@
       <div v-if="sf.mySessions.size" class="q-my-sm q-mx-md slist q-pa-xs">
         <scroll-area>
         <template #default>
-          <div v-for="([id,s], idx) in sf.mySessions" :key="id" 
+          <div v-for="([id,s], idx) in sf.mySessions" :key="id"
             :class="dkli(idx) + ' q-my-xs row'">
             <div class="col-3 q-pr-md text-right font-mono">{{s.app}}</div>
             <div class="col-9 fs-md">{{s.about}}</div>
@@ -40,7 +40,7 @@
 import { watch } from 'vue'
 
 import stores from '../stores/all'
-import { $t, sty } from '../src-fw/util'
+import { $t, sty, dkli } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'

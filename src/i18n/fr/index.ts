@@ -6,7 +6,7 @@ export default {
   service_label: 'Code su service',
   services_AS2: 'Auteurs et relecteurs',
   services_ASSO2: 'Gestion des associations',
-  services_SAFE: 'Gestion des coffres-forts',
+  services_SAFE: 'Gestion des Safe Boxes',
 
   lang: 'La langue est le Français',
   darkclear: 'Foncé / clair',
@@ -48,7 +48,7 @@ export default {
   svcStatus_no2: 'Service non sélectionné',
   svcStatus_no3: 'Vous n\'êtes "manager" d\'aucune organisation.',
   svcStatus_no4: 'Vous êtes "manager" des organisations ci-dessous. ' +
-    'Cliquer sur le bouton "corbeille" d\'un droit pour LE REVOQUER.',
+    'Cliquer sur le bouton "corbeille" d\'un pouvoir pour LE REVOQUER.',
   up: 'UP',
   down: 'DOWN',
   url_label: 'URL du service',
@@ -82,9 +82,10 @@ export default {
   toolong: 'Texte trop long',
   badform: 'Format non respecté',
   pressret: '"Entrée" pour valider',
+  operator_label: 'Code de l\'opérateur',
   orgcode_label: 'Code organisation',
   orgcode_ph: 'monorg',
-  aboutcred_label: 'A propos de ce droit d\'accès',
+  aboutcred_label: 'A propos de ce pouvoir',
 
   exui: 'Erreur inattendue : {0} \r détail: {1}',
 
@@ -175,19 +176,19 @@ export default {
 
   // op_$Shas: 'Test shaS en PHP',
   op_$CreateSafe: 'Enregistrement d\'un nouvel utilisateur',
-  op_$OpenSafeByPR: 'Ouverture du coffre fort de l\'utilisateur',
-  op_$OpenSafeById: 'Ouverture du coffre fort de l\'utilisateur par son id',
-  op_$OpenSafeByPin: 'Ouverture du coffre fort de l\'utilisateur par son code PIN',
-  op_$SetAboutProfile: 'mise à jour / création d\'un profil',
+  op_$OpenSafeByPR: 'Ouverture de la Safe Box de l\'utilisateur',
+  op_$OpenSafeById: 'Ouverture de la Safe Box de l\'utilisateur par son id',
+  op_$OpenSafeByPin: 'Ouverture de la Safe Box de l\'utilisateur par son code PIN',
+  op_$SetAboutProfile: 'Mise à jour / création d\'un profil',
   op_$UntrustDevices: 'Retrait de confiance aux terminaux',
   op_$TrustDevice: 'Ajout de confiance au terminal',
-  op_$UpdateCreds: 'Mise à jours des droits d\'accès et sessions',
-  op_$GetBinSafe: 'Backup d\'un coffre-fort',
+  op_$UpdateCreds: 'Mise à jour des pouvoirs',
+  op_$GetBinSafe: 'Backup d\'une Safe Box',
   op_$GetUserCVO: 'Obtention des clés publiques et du safe store d\'un utilisateur',
-  op_$UpdCodesSafe: 'Mise à jour des codes d\'accès à un coffre fort',
+  op_$UpdCodesSafe: 'Mise à jour des phrases secrètes d\'ouverture de votre Safe Box',
   op_GrantNewManager: 'Enregistre un utilisateur en tant que "manager".',
   op_RevokeManager: 'Réqvoque un utilisateur en tant que "manager".',
-  op_ListManagers: 'Liste les droits attribués de "manager".',
+  op_ListManagers: 'Liste les pouvoirs attribués de "manager".',
   op_GetSvcOpStatus: 'Obtention du status du service / opérateur',
   op_GetSvcOrgStatus: 'Obtention du status d\'une organisation (pour un service / opérateur)',
   op_GrantSvcOpOrg: 'Autoiser le service d\'une organisation par un opérateur',
@@ -205,7 +206,7 @@ export default {
   op_InvitAR: 'Acceptation ou rejet d\'une invitation',
   op_InvitValidate: 'Validation d\'une invitation',
   op_InvitDC: 'Annulation ou refus d\'une invitation',
-  op_RevokeCred: 'Révocation d\'un droit d\'accès',
+  op_RevokeCred: 'Révocation d\'un pouvoir',
   op_ListUserCreds: 'Liste des credentials de l\'utilisateur',
   op_$GrantSvcOpOrg: 'Autoriser / révoquer un service pour une organisation',
   op_$SetUserICVO: 'Enregistrement du compte dans le Master Directory.',
@@ -220,7 +221,7 @@ export default {
   op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
   op_$CreateCred: 'Création d\'un credential',
   op_GetCredLimitCond: 'Obtention des conditions d\'un credential',
-  op_$UpdateCredComment: 'Mise à jour du commentaire d\'un droit d\'accès',
+  op_$UpdateCredComment: 'Mise à jour du commentaire d\'un pouvoir',
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',
 
@@ -333,32 +334,30 @@ export default {
   `,
   Phrase_ph: 'Les1sanglots2Longs3du4Printemps',
 
-  LCRtit_btn: 'Gérer les "listes de droits"',
-  LCRtit_label: 'Gérer mes "listes de droits d\'accès"',
-  LCRtit_bub: `### Gérer mes "listes de droits d'accès"
-Une **liste de drois**,
+  LCRtit_btn: 'Gérer mes "listes de pouvoirs"',
+  LCRtit_label: 'Gérer mes "listes de pouvoirs"',
+  LCRtit_bub: `### Gérer mes "listes de pouvoirs"
+Une **liste de pouvoirs**,
 - porte un nom (court) de votre choix explicitant l\'usage que vous en faites,
-- est une simple liste de certains de vos droits d'accès.
+- est une simple liste de certains de vos pouvoirs.
 
-La liste (virtuelle) **Générale** est définie par défaut,
-- contient à tout instant tous vos droits (elle ne peut pas être modifiée),
-- porte le nom _Général_ qui ne peut pas changer.
+La liste (virtuelle) **Générale** est définie par défaut et contient à tout instant tous vos pouvoirs (elle ne peut pas être modifiée),
 
-Quant une session de l'application s'ouvre, elle référence toujours une liste de droits (le cas échéant _Générale):
-- elle se déroulera comme si vous n'aviez QUE ces droits,
+Quant une session de l'application s'ouvre, elle référence toujours une liste de pouvoirs (le cas échéant _tous_):
+- elle se déroulera comme si vous n'aviez QUE ces pouvoirs,
 - de ce fait elle concentre la session sur un sujet d'intérêt précis: par exemple un _magasin_ (une organisation), un _employé_ ...
 
 `,
-  LCRbtnnew: 'Nouvelle liste avec droits d\'accès...',
+  LCRbtnnew: 'Nouvelle liste avec les pouvoirs...',
   LCRbtnnew_e: 'Aucun',
   LCRbtnnew_f: 'Tous',
   LCRnosel: 'Sélectionner une liste existante ci-dessus, ou créer une nouvelle liste.',
-  LCRonlylc: 'Ne voir QUE les droits d\'accès référencés dans la liste',
-  LCRonlycr: 'Ne voir QUE les listes référençant ce droit d\'accès',
+  LCRonlylc: 'Ne voir QUE les pouvoirs référencés dans la liste',
+  LCRonlycr: 'Ne voir QUE les listes référençant ce pouvoir',
   LCRtab_l: 'Mes listes',
-  LCRtab_c: 'Droit courant',
+  LCRtab_c: 'Pouvoir courant',
   LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
-  LCRok: 'Mises à jour des listes de droits enregistrées.',
+  LCRok: 'Mises à jour des "listes de pouvoirs" enregistrées.',
 
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
@@ -396,32 +395,12 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
   APrevcf_tit: 'Révoquer ce rôle "manager" ?',
   APrevcf_0: 'Je renonce à la révocation',
   APrevcf_1: 'Je confirme la révocation',
+  APtarget_label: 'Pseudo de l\'utilisateur cible',
+  APtarget_bub: `# Pseudo de l\'utilisateur cible
+bla bla
+`,
 
-// TODO révision en cours
-
-
-  PSpseudo: 'Mon pseudo, nom, email, mobile ... ',
-  PSpseudo_label: 'Mon pseudo, nom, email, mobile ... ',
-  PSpseudo_ph: 'Duke Ellington',
-  PSphrase: 'Ma phrase secrète',
-  PSphrase_label: 'Ma phrase secrète',
-  PSphrase_ph: 'les 1 sanglots 2 longs 3 etc',
-  /*
-  PSphrase_bub: `Une bonne phrase secrète ... bla bla ...
-  `,
-  */
-  PSdup: 'Nom déjà utilisé',
-  PSpin: 'Code PIN',
-  PSpin_label: 'Code PIN',
-  PSpin_ph: 'PIN35-zx',
-  PSdevname_label: 'Nom du terminal',
-  PSdevname_ph: 'MonPC/bob/ff',
-  PStrig: 'Initiales, trigramme ... :',
-  PStrig_label: 'Initiales, trigramme ... :',
-  PStrig_ph: 'Bob',
-  PSsn: 'A propos de la session ... :',
-  PSsnh: 'Accès à mon compte ...',
-
+  SButtitle: 'Profil utilisateur',
   SBphrase_label: 'Phrase secrète',
   SBphrase_ph: 'bla bla',
   SBphrase_sh: 'SH en base64:',
@@ -430,22 +409,11 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
   SBgensv: 'Générer un couple de clés de signature / vérification',
   SBgensv2: 'Signature: PEM "private" - Vérification: PEM "public"',
   SBmanorg: 'Autoriser / révoquer une organisation pour ce service et cet opérateur',
-
-  SBprivpem: 'Coller le PEM (private) de signature',
-  SBgencred: 'Générer le credential',
-  SBcredres: 'Credential normalisé et identifié',
-  SBentid_label: 'ID de l\'entité (fac)',
-  SBentkey_label: 'Clé AES (base 64) de l\'entité (fac)',
   SBhot: 'HOT!',
   SBhot_info: 'Ces actions requièrent d\'être enregistré comme Administrtaur du "MASTERDIR".',
   SBnotauth: 'Ces actions requièrent d\'être authentifié',
 
-  HPstartpref: 'Ouvrir avec préférences ...',
-  HPstore_label: 'Dépôt SPECIFIQUE du "coffre-fort"',
-  HPstore_bub: `# Dépôt SPECIFIQUE du "coffre-fort"
-  bla bla
-  `,
-
+  HPstartpref: 'Préférences ...',
   HPbackopen_txt: `### Confirmation de clôture de cette session.
 - en cas de confirmation la session sera fermée et la page de "login" s'affichera.
 - sinon ce dialogue s'effacera et la session se poursuivra normalement.
@@ -453,14 +421,6 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
   HPbackopen_tit: 'Fin de session ?',
   HPbackopen_0: 'Je laisse ma session se poursuivre',
   HPbackopen_1: "Je ferme ma session",
-
-  HPchgcodes_1: 'Changer les codes d\'authentification',
-  HPchgcodes_2: `### Changer les codes d'authentification
-  bla bla
-`,
-  HPchgcodes_2d: `### Changement des codes d'authentification
-Pour changer les codes d'authentification, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
-`,
   HPtrust_1: 'Ce terminal N\'EST PAS certifié, le certifier',
   HPtrust_2: `### Certifier ce terminal
 bla bla
@@ -496,49 +456,12 @@ bla bla
   HPprefcode_label: 'Code de la "préférence"',
   HPprefcode_ph: 'Ecran large',
   HPprefdup: 'Ce code est déjà attribué à une "préférence", en saisir un libre.',
-  HPauthentif: 'Authentification',
-  HPnet_1: 'Accès à Internet',
-  HPnet_2: 'Mode AVION: pas d\'accès à Internet',
-  HPincognito_1: 'Accès aux données stockées sur ce terminal',
-  HPincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
+
   HPterminal: 'Ce terminal a été nommé ',
-
-  HPpstar: '(Défaut: tous droits d\'accès)',
-  HPenreg_0: 'Enregistrement',
-  HPenreg_1: 'Modification de mes codes d\'accès',
-  HPenreg_2: 'Modification des codes d\'accès du "backup"',
-  HPcode_1: 'Déclaration du code d\'accès principal',
-  HPcode_2: 'Vérification du code d\'accès principal',
-  HPcode_3: 'Déclaration du code d\'accès secondaire',
-  HPcode_4: 'Vérification du code d\'accès secondaire',
-  HPerr_1: 'Initiales / trigramme absent ou incorrect',
-  HPerr_2: 'Code d\'accès principal absent ou invalide',
-  HPerr_3: 'Code d\'accès principal: vérification échouée',
-  HPerr_4: 'Code d\'accès secondaire absent ou invalide',
-  HPerr_5: 'Code d\'accès secondaire: vérification échouée',
-  HPtrig: 'Pseudo, nom ... : {0}',
-  HPps: 'Phrase secrète : {0}',
-
-  HPopsret_0: 'Authentification réussie.',
-  HPopsret_1: 'Authentification en échec: code d\'accès invalide.',
-  HPopsret_2: 'Authentification en échec: code d\'accès invalide.',
-  HPopsret_3: 'Authentification en échec: code d\'accès invalide.',
-  HPcsret_20: 'Importation effectuée avec succès.',
-  HPcsret_21: 'Echec de l\'importation: changer le "pseudo du code d\'accès principal".',
-  HPcsret_22: 'Echec de l\'importation: changer le "pseudo du code d\'accès secondaire".',
-
-  /*
-  HPauthby_0: 'Utilisateur anonyme',
-  HPauthby_1: '{0} [principal]',
-  HPauthby_2: '{0} [secondaire]',
-  HPauthby_3: '{0} [PIN]',
-  HPauthby_9: 'Phase d\'authentification',
-  */
+  HPpstar: '(Défaut: tous pouvoirs)',
 
   HPopnotpin_0: 'Succès de l\'opération.',
   HPopnotpin_1: 'Echecs de l\'opération: utilisateur non authentifié.',
-  HPopnotpin_2: 'Echecs de l\'opération: l\'utilisateur doit être authentifié par phrase secrète (pas par code PIN).',
-
   HPsfop_0: 'Succès de l\'opération.',
   HPsfop_1: 'Echec de l\'opération: utilisateur non enregistré.',
   HPsfop_2: 'Echec de l\'opération: utilisateur non authentifié.',
@@ -562,22 +485,10 @@ bla bla
   HPutc2: 'A propos de la session ...',
   HPsize_1: 'Volumes libérables',
   HPsize_2: 'A supprimer',
-
-  /*
-  HPupc_1: 'Utilisateur',
-  HPupc_2: 'Application',
-  HPupc_3: 'Volume',
-  HPupc_4: 'Dernière connexion ici',
-  */
   HPskull_0: '{0} sessions(s) et {1} utilisateur(s) seront supprimé(s)',
   HPskull_1: 'Leurs données enregistrées localement seront supprimées. Les sessions "épinglées" ' +
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour les utilisateurs supprimés.',
-
-  HPskull: 'TOUTES les données enregistrées localement seront supprimées. Toutes les sessions "épinglées" ' +
-    'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour personne.',
-  HP3ps: 'Phrase secrète vous identifiant sur ce terminal',
   HPclicksession: 'Choisir la session ou profil à ouvrir / rouvrir.',
-  HPnoclick: 'Aucune session sélectionnée',
 
   HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
   HPresetdb_1: `### Attention !
@@ -598,12 +509,10 @@ La base locale sera effacée ce qui provoquera le rechargement _intégral_ de se
 - accélère sa réouverture ultérieure sur ce terminal.
 - autorise son ouverture en mode AVION sur ce terminal.
 `,
-  HPwprfs: 'Ouvrir cette session avec les préférences de présentation ...',
   HPpref_1: 'par défaut',
   HPnotpinned: '(non épinglée)',
-  HPexpname_label: 'Nom du fichier de backup',
-  HPexpsafe_1: 'Sauvegarde / Restauration de sa Safe Box',
-  HPexpsafe_2: `# Faire un backup de sa Safe Box
+  HPexpsafe_1: 'Sauvegarde / Restauration de ma Safe Box',
+  HPexpsafe_2: `# Faire un backup de ma Safe Box
 bla bla
 `,
   HPdelsafe_1: 'Suppression irrémédiable de ma Safe Box',
@@ -613,208 +522,19 @@ bla bla
   HPdelsafe_3: `# Suppression irrémédiable de ma Safe Box
 bla bla
 `,
-
-  HPmanuser: 'Utilisateurs',
-  HPdanger: 'DANGER',
-  HPimpsafe_1: 'Importer le backup d\'un "coffre-fort"',
-  HPimpsafe_2: `# Importer le backup d\'un "coffre-fort"
+  HPimpsafe_1: 'Importer un backup de ma Safe Box',
+  HPimpsafe_2: `# Importer un backup de ma Safe Box"
 bla bla
 `,
-  HPimpsafe_3: 'Fichier importé et décrypté : vérification du propriétaire',
-  HPimpsafe_4: 'Vous n\'êtes pas authentifié comme propriétaire (pseudo ou phrase incorrecte)',
-
-  HPsafest_1: 'Un "coffre-fort" est déjà enregistré pour cet utilisateur. Vous êtes sur le point de le remplacer.',
-  HPsafest_r: 'Restaurer le "backup" en remplacement de l\'actuel',
-  HPsafest_i: 'Importer le "backup"',
-  HPsafest_2gt: 'Il est PLUS récent [{0}] que celui du backup [{1}].',
-  HPsafest_2lt: 'Il est MOINS récent [{0}] que celui du backup [{1}].',
-  HPsafest_2eq: 'Il est de la même date [{0}] que celui du backup.',
-  HPsafest_3: 'Aucun "coffre-fort" n\'est actuellement enregistré pour cet utilisateur.',
-  HPsafest_4a: 'Le backup PEUT être restauré en remplaçant l\'actuel.',
-  HPsafest_4b: 'Le backup PEUT être importé.',
-  HPsafest_5p: 'Le pseudo "principal" est déjà celui d\'un autre utilisateur.',
-  HPsafest_5r: 'Le pseudo "secondaire" est déjà celui d\'un autre utilisateur.',
-  HPsafest_5a: 'Le backup NE PEUT PAS remplacer l\'actuel.',
-  HPsafest_5b: 'Le backup NE PEUT PAS être importé.',
-  HPsafest_6: 'Je veux changer les codes d\'accès contenus dans le "backup"',
-  HPsafest_7: `# Changer les codes d\'accès contenus dans le "backup"
-  bla bla
-`,
-
   HPmanusers: 'Gérer les utilisateurs et leurs sessions',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
-  HPregist_1: 'Je suis ENREGISTRÉ ...',
-  HPregist_2: `# Être ENREGISTRÉ ...
-c'est disposer d'un **coffre-fort** centralisé, sécurisé et crypté spécifiquement pour soi où sont mémorisées des informations _critiques_.
-
-### Une liste de _droits d'accès_
-Chacun est consitué d'éléments cryptographiques complexes autorisant l'exécution de certaines opérations et d'accès à certaines données.
-
-### Une liste de _sessions nommées_
-Chacune reprend quelques uns des droits d'accès ci-dessus et pertinents pour la rouvrir dans les mêmes conditions.
-
-### Des jeux de **préférences d'adffichage**
-On peut choisir par confort d'appliquer un jeu ou un autre selon la session à ouvrir et le terminal sur lequel on l'ouvre.
-
-### Une liste de _terminaux de confiance_
-On peut y rouvrir une session avec un code PIN simple.
-Ouvrir une session en **mode AVION** (sans accès à Internet) n'est possible que depuis un terminal déclaré _de confiance_.
-`,
-  HPregist_3: 'Je NE suis PAS ENREGISTRÉ mais je le fais',
-  HPregist_4: `# Je ne peux pas m'enregistrer ...
-Il n'y a pas de réseau et l'enregistrement requiert d'accéder au serveur qui gère les _coffres forts_ des utilisateurs.
-`,
-  HPregist_5: 'Ouverture en mode CALCULETTE',
-  HPregist_6: `# Ouverture en mode CALCULETTE
-bla bla
-`,
-  HPauthbypin_1a: 'Je suis l\'utilisateur [{0}] confiant dans ce terminal',
-  HPauthbypin_1b: 'Je suis un des {0} utilisateurs confiants dans ce terminal...',
-  HPauthstrong_1: 'Authentification "forte"',
-  HPsaisirpin: 'Saisir votre code PIN',
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
 `,
-  HPmode_1: `# Ouvrir une session AVEC ou SANS Internet ...
-C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
-
-# Ouvrir une session SANS Internet ...
-Deux possibilités:
-
-### (1) Rouvrir en **mode AVION** une session qui a été _ÉPINGLÉE_
-Quand une session a été _épinglée_ sur ce terminal, elle dispose d'un **cache** local crypté de documents et de fichiers.
-La rouvrir en mode _AVION_ lui donne accès en lecture à ceux-ci, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
-
-### (2) Mode _CALCULETTE_
-Sans accès Internet ni accès à aucun document ni fichier des bases centrales l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
-`,
-  HPmode_2: `# Ouvrir une session en accédant aux données stockées localement ...
-C'est le mode _normal et optimal_.
-
-Les utilisateurs ayant déclaré ce terminal **de CONFIANCE**,
-- _peuvent_ s'authentifier par un simple code PIN,
-- _peuvent_ **ÉPINGLER** leurs sessions ce qui accélère leur rouverture et permet d'y accéder en **mode AVION**.
-
-# Ouvrir une session INCOGNITO ...
-En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
-
-### (1) Si l'utilisateur a **ÉPINGLÉ** préalablement certaines de ses sessions
-Il peut les rouvrir et accéder aux documents et fichiers selon les _droits d'accès_ attachés à cette session.
-- il peut ouvrir aussi des sessions _vierges de tous droits_ et les acquérir en cours de session en fonction de ses besoins.
-
-### (2) Sinon l'application peut être ouverte en **Mode _CALCULETTE_**
-Sans avoir connaissance d'aucun document ni fichier de l'application, les fonctionnalités proposées sont en général très restreintes (celà dépend de l'application).
-`,
-  HPmode_3: `# Ouvrir une session SANS Internet et INCOGNITO ...
-En **mode INCOGNITO**, l'application n'accède, _ni en lecture ni en écriture_, à aucune donnée stockée localement sur le terminal considéré comme absolument non digne de confiance.
-
-Les sessions sont ouvertes en **Mode _CALCULETTE_**, sans avoir connaissance d'aucun document ni fichier de l'application.
-Les fonctionnalités proposées peuvent être très restreintes (celà dépend de l'application).
-`,
-  HPauthbypin_2: `# Authentification par code PIN
-Si vous avez déclaré ce terminal **de confiance**, vous _pouvez_ vous authentifier en donnant simplement votre code PIN.
-
-Cliquer sur le pseudo de la liste correspondant aux initiales que vous avez donné lors de la déclaration de confiance.
-S'il n'y est pas, c'est que la confiance a été retiré à ce terminal.
-
-> La seconde saisie consécutive erronnée d'un code PIN retire la confiance dans ce terminal.
-
-> Vous _pouvez_ aussi utiliser l'authentification **forte**. Si vous avez l'intention de gérer ensuite la confiance dans ce terminal ou de changer vos codes d'authentification forte, c'est même requis.
-`,
-  HPauthstrong_2: `# Authentification "forte"
-bla bla
-`,
-  HPcredsmgr_1: 'Voir / gérer les droits d\'accès',
-  HPcredsmgr_2: `# Gérer les droits d'accès
-bla bla
-`,
-  HPcredslst_1: 'Liste des droits d\'accès enregistrés',
-  HPcredslst_2: `# Liste des droits d'accès enregistrés
-A propos du status ...
-`,
-  HPcredsdet_1: 'Détail du droit d\'accès',
-  HPcredsdet_2: `# Détail d'un droit d'accès enregistré
-A propos du status ...
-`,
-
-  HPcredcl_tit: 'Des mises à jour n\'ont pas été validées. Fermer quand même ?',
-  HPcredcl_txt: `### Des mises à jour n\'ont pas été validées.
-  Si vous fermez ce dialogue, **elles seront perdues**.
-  Fermer quand même ?
-  `,
-  HPcredcl_0: 'Je ne ferme pas ce dialogue',
-  HPcredcl_1: "J\'assume et ferme ce dialogue",
-
-  HPcredno: 'Aucun droit d\'accès sélectionné dans la liste',
-  HPpsno: 'Aucune session sélectionnée dans la liste',
-  HPcreddet_0: 'Service: [{0}] - Organisation:[{1}] - Rôle: {2}',
-  HPcredac_1: 'Supprimer ce droit d\'accès, supposé ne plus devoir être utilisé',
-  HPcredac_2: 'Le droit d\'accès a été supprimé: le rétablir',
-  HPcreddis: 'Contenu technique',
-  HPlisted: 'Cité dans les sessions',
-  HPlisted_C: 'Droits d\'accès cités dans la session',
-  HPlisted_O: 'Droits d\'accès cités dans la session MAIS n\'existant pas dans la liste des droits. Cliquer sur ceux à retirer de la session.',
-  HPnotlisted: 'NON cité dans les sessions',
-  HPnotlisted_C: 'Droits d\'accès NON cités dans la session',
-  HPimport_0: 'Importer',
-  HPexport_0: 'Exporter',
-  HPbackup_0: 'Backup',
-  HPexportsafe_ko: 'Le coffre-fort n\'a pas pu être obtenu. Etes-vous bien authentifié et connecté à Internet ?',
-  HPimport_clear: 'Depuis un fichier JSON en clair',
-  HPimport_crypt: 'Depuis un fichier JSON crypté',
-  HPimport_txt: 'Depuis un texte JSON saisi',
-  HPexport_clear: 'Dans un fichier JSON en clair',
-  HPexport_crypt: 'Dans un fichier JSON crypté',
-  HPimport_label: 'Clé de cryptage du fichier',
-  HPimport_ph: 'mon secret',
-  HPimport_bf0: 'Clé de cryptage non saisie ou incorrecte',
-  HPimport_bf1: 'Fichier illisible.',
-  HPimport_bf2: 'Clé de cryptage incorrecte ? Fichier illisible.',
-  HPexport_bf2: 'Clé de cryptage incorrecte ? Echec d\'encryption.',
-  HPimport_bf3: 'Fichier mal formé, ne contient pas des droits d\'accès.',
-  HPimport_disp: 'Voir le texte brut',
-  HPimport_unck: 'Décocher les droits d\'accès à ne pas importer, puis "Valider" pour importer.',
-  HPexport_unck: 'Décocher les droits d\'accès à ne pas exporter, puis "Valider" pour exporter.',
-  HPimport_inp: 'Saisir le texte JSON',
-  HPexport_ok: 'Fichier sauvegardé dans le répertoire de _Téléchargements_ sous le nom [`{0}`].',
-  HPcrab: 'A propos du droit d\'accès ...',
-  HPcrab_label: 'A propos du droit d\'accès ...',
-  HPcrab_ph: 'mon droit à ...',
-  // HPpsab: 'A propos de la session ...',
   HPpsab_label: 'A propos de la session ...',
   HPpsab_ph: 'ma session pour ...',
-  HPtab_c: 'Droits d\'accès',
-  HPtab_s: 'Sessions',
-  HPtab_ctc: 'Information de contact',
-  HPtab_adm: 'Administrateur de ...',
-  HPpslst_1: 'Liste des sessions',
-  HPpslst_2: `# Liste des sessions
-bla bla
-`,
   HPoptstart: 'Options de lancement ...',
-  HPnewps_0: 'Nouvelle session ...',
-  HPnewps_1: 'AVEC tous les droits d\'accès',
-  HPnewps_2: 'SANS AUCUN droit d\'accès',
-  HPnewps_3: 'AVEC les droits d\'accès de la session courante',
-  HPcfgPS: 'Ajouter ou configuer des sessions',
-  HPcfupd: 'Rapport des mises à jour des droits',
-  HPstcr_1: 'Droits d\'accès ajoutés : {0}',
-  HPstcr_2: 'Droits d\'accès supprimés : {0}',
-  HPstcr_3: 'Droits d\'accès mis à jour (à propos) : {0}',
-  HPps_1: 'Sessions créées: {0}',
-  HPps_2: 'Sessions supprimées: {0}',
-  HPps_3: 'Sessions mises à jour (à propos) : {0}',
-  HPps_4: 'Sessions mises à jour (droits d\'accès changés) : {0}',
-  HPps_5: 'Sessions sans droits d\'accès : {0}',
-  HPps_6: 'Sessions référençant des droits d\'accès inconnus : {0}',
-  HPnothing: 'Aucun changement à valider',
-  HPtransmit_test: 'TEST de transmission d\'un droit d\'accès',
-  HPtransmit_label: 'Cible de la transmission (TEST)',
-  HPexpinfo: 'Information',
-  HPexpexport: 'Export',
-
-  HPexporgid: 'ID localisée pour une organisation',
   HPusersN: 'Utilisateur(s) sans sessions épinglées:',
   HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
 
@@ -826,9 +546,6 @@ bla bla
   HPadminA_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
   HPadminA_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
   HPadminkosvc: 'Ce service n\'est assuré par cet opérateur.',
-  HPctc_label: 'Pseudo / phrase de contact',
-  HPctc_ph: 'Les framboises sont bleues cet hiver',
-  HPctc_del: 'Supprimer le pseudo / phrase de contact',
 
   // SafeHome
   SFHnewr: 'Nouvelle demande',
@@ -855,48 +572,6 @@ bla bla
   DHCnondate: '(non daté)',
   DHCdansjours: 'aujourd\'hui | demain | dans {count} jours',
 
-  // FormCred
-  FCentid_label: 'ID de l\'entité cible',
-  FCentid_bub: `# ID de l\'entité cible
-bla bla
-`,
-  FChpems_label: 'Hash court du PEM de signature',
-  FChpems_bub: `# Hash court du PEM de signature
-bla bla
-`,
-  FCpemv_label: 'PEM de vérification',
-  FCpemv_bub: `# PEM de vérification
-bla bla
-`,
-  FCdtime_label: 'Date-Heure UTC de fin de validité',
-  FCdtime_bub: `# Date-Heure UTC de fin de validité
-bla bla
-`,
-  FCinfou_label: 'Texte informatif pour l\'utilisateur cible',
-  FCinfou_bub: `# Texte informatif pour l\'utilisateur cible
-bla bla
-`,
-  FCinfos_label: 'Texte informatif pour le déclarant',
-  FCinfos_bub: `# Texte informatif pour le déclarant
-bla bla
-`,
-  FCtarget_label: 'Pseudo de l\'utilisateur cible',
-  FCtarget_bub: `# Pseudo de l\'utilisateur cible
-bla bla
-`,
-  FCmissing: 'Le champ [{0}] ne doit pas être vide',
-  FCroleko: 'Le champ "rôle" n\'a pas une valeur reconnue',
-  FCdtimeko: 'Le champ "dtime" est mal formé, date-heure non reconnue',
-
-  // User Profile
-  UPtitle: 'Profil utilisateur',
-  UPid: 'ID',
-  UPpseudo: 'Pseudo local à ce terminal',
-  UPnone: '(aucun)',
-  UPcontact: 'Pseudo ou phrase de contact externe',
-  UPsessionid: 'ID de synchronisation de la session',
-  UPadmins: 'Administrateur technique de',
-
   SECsite_std: 'standard',
   SECsite_msg1: 'INACCESSIBLE',
   SECsite_msg2: 'ATTENTE VERIF',
@@ -905,7 +580,6 @@ bla bla
 - soit: Sélectionner l'un des sites répertoriés par l'application
 - soit saisir son URL comme https://notresite.org
 `,
-
   SECsite_label: 'Site de confiance',
   SECsite_bub: `## Site de confiance
 Le _site de confiance_ choisi par un utilisateur héberge son **dossier personnel d\'authentification**.
@@ -915,9 +589,9 @@ Le _site de confiance_ choisi par un utilisateur héberge son **dossier personne
 - Le dossier personnel contient,
   - les éléments cryptographiques d'authentification de son détenteur.
   - la liste des _terminaux de confiance_ sur lesquels les applications peuvent laisser des données, cryptées, en mémoire cache afin d'accéler la reprise de leurs sessions et pouvoir les utiliser en mode _AVION_.
-  - la liste des _droits d'accès aux diverses données et opérations_ acquis au cours du temps.
+  - la liste des _pouvoirs sur diverses données et opérations_ acquis au cours du temps.
   - des _préférences_ facilitant le déroulé des sessions:
-    - _sessions nommées_ avec une liste de droits adaptée à certaines activités fréquentes,
+    - _sessions nommées_ avec une liste de pouvoirs adaptée à certaines activités fréquentes,
     _ jeux _d'options et réglages_ préférentiels de comportement et d'affichage applicables selon le profil d'activité souhaité et le type de terminal utilisé.
 
 #### Site standard
@@ -937,7 +611,6 @@ Pour désigner un site non répertorié, l'utilisateur est convié à donner son
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
 `,
-
 LOGauthbypin_label: 'Login par code PIN possible pour:',
 LOGauthbypin_bub: `# Authentification par code PIN
 Si vous avez **certifié** ce terminal, votre code PIN suffit à vous authentifier.
@@ -951,21 +624,14 @@ S'il n'y est pas, c'est que la certification a été retirée à ce terminal.
 `,
   LOGauthbypin_1a: 'Je suis l\'utilisateur [{0}] certifié sur ce terminal',
   LOGauthbypin_1b: 'Je suis un des {0} utilisateurs certifiés sur ce terminal...',
-  LOGapreset: 'Je saisis un autre alias pour ma Safe Box',
   LOGapdiag_1: 'Un des alias de la Safe Box est requis.',
   LOGapdiag_2: 'Une des phrases secrètes d\'ouverture de la Safe Box est requise.',
   LOGapdiag_3: 'Aucune "Safe Box" n\'est enregistrée sous cet alias.',
   LOGapdiag_4: 'Cette phrase n\'ouvre pas la Safe Box',
-  LOGok: 'Safe Box ouverte !',
   LOGap_label: 'Ouvrir une Safe Box par "alias / phrase"',
   LOGap_bub: `# Ouvrir une Safe Box par "alias / phrase"
 bla bla
 `,
-  LOGbypin_1: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
-  LOGbypin_2: 'Ouverture par code PIN en échec: utilisateur non enregistré.',
-  LOGbypin_3: 'Ouverture par code PIN en échec: le terminal n\'est pas "certifié".',
-  LOGbypin_4: 'Ouverture par code PIN en échec: CODE PIN INCORRECT, le corriger et réessayer.',
-  LOGbypin_5: 'Ouverture par code PIN en échec: nombre de tentatives supérieur à 2, le TERMINAL A PERDU SA CERTIFICATION.',
   LOGback: 'Retour au Login',
   LOGsession: 'Ouvrir une session',
   LOGnet_1: 'Accès à Internet',
@@ -979,7 +645,7 @@ Les utilisateurs peuvent **certifier** des terminaux:
 > Une session _épinglée_ bénéficie d'un **cache** local crypté de documents et de fichiers qui accélère son démarrage et réduit le trafic sur le réseau et les coûts de calcul.
 
 ## Ouvrir une session AVEC Internet
-C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _droits d'accès_ de la session ouverte.
+C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _pouvoirs_ de la session ouverte.
 Quand la session est _épinglée_ la mémoire locale _cache_ des documents est chargée.
 
 ## Rouvrir SANS Internet une session qui a été _ÉPINGLÉE_: mode **AVION**
@@ -989,7 +655,6 @@ La session a accès en lecture aux documents et certains fichiers, dans l'état 
 Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centrales, NI d'une mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 
 `,
-
   SEStit: 'Données de sécurité sur site',
   SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
   SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
@@ -1008,63 +673,28 @@ une session ignore complètement l'existence d'une mémoire _cache_ locale de do
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 `,
-  SESconfig: 'Droits d\'accès et sessions épinglées',
 
-  CRRnocred: 'Aucun droit d\'accès n\'est enregistré.',
-  CRRtit_label: 'Revue des droits d\'accès',
-  CRRtit_bub: `### Revue des droits d\'accès
+  CRRnocred: 'Aucun pouvoir n\'est enregistré.',
+  CRRtit_label: 'Revue de mes pouvoirs',
+  CRRtit_bub: `### Revue de mes pouvoirs
 Vue par service / organisation
 bla bla
 `,
-  CRRstep_1_label: 'Sélection d\'un "service / organisation"',
-  CRRstep_1_bub: `### Sélection d\'un "service / organisation"
-Vous pouvez ajouter un couple service / organisation n'ayant pas actuellement de droits d'accès enregistrés dans vos données de sécurité.
+  CRRstep_2: 'Pouvoirs enregistrés pour {0} / {1}',
+  CRRcond: 'Propriétés spécifiques de ce pouvoir:',
+  CRRobs1: 'Ce pouvoir est obsolète, il a été supprimé en central. Il sera nettoyé.',
+  CRRobs2: 'Ce pouvoir a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
+  CRRobs3: 'Ce pouvoir a une limite de validité dépassé. Vous avez décidé de le supprimer. Voulez-vous finalement le garder ?',
+  CRRdel: 'Ce pouvoir est applicable. Voulez-vous cependant y renoncer?',
+  CRRdel2: 'Ce pouvoir est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
 
-Cliquer sur le couple souhaité pour voir la liste des droits enregistrés.
-`,
-  CRRstep_2: 'Droits d\'accès enregistrés pour {0} / {1}',
-  CRRcond: 'Propriétés spécifiques de ce droit d\'accès:',
-  CRRobs1: 'Ce droit d\'accès est obsolète, il a été supprimé en central. Il sera nettoyé.',
-  CRRobs2: 'Ce droit d\'accès a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
-  CRRobs3: 'Ce droit d\'accès a une limite de validité dépassé. Vous avez décidé de le supprimer. Voulez-vous finalement le garder ?',
-  CRRdel: 'Ce droit d\'accès est applicable. Voulez-vous cependant y renoncer?',
-  CRRdel2: 'Ce droit d\'accès est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
-
-  CRRabout_label : 'Commentaire privé à propos du droit d\'accès',
-  CRRabout_bub : `### Commentaire privé à propos du droit d\'accès
-  Il aide à retrouver à qui sert ce droit, en particulier pour constituer des profils de sessions ayant une liste réduite de droits.
+  CRRabout_label : 'Commentaire privé à propos du pouvoir',
+  CRRabout_bub : `### Commentaire privé à propos du pouvoir
+  Il aide à retrouver à qui sert ce pouvoir, en particulier pour constituer des profils de sessions ayant une liste réduite de pouvoirs.
   Ce texte est éditable.
   Il est strictement privé et crypté (vous seul le voyez).
 `,
-
-  SCRsec_2: 'Je ne déclare pas de pseudo / phrase "de secours"',
-  SCRsec_1: 'Je déclare un pseudo / phrase "de secours"',
-  SCRsec_bub: `### Ne pas utiliser pas de code "de secours" est un choix
-... qui suppose de ne jamais oublier son code principal.
-**En pratique le code de secours (pseudo / phrase) sera fixé égal au code principal.**`,
-  SCRenreg_0: 'Création de mon compte',
-  SCRenreg_1: 'Modification de mes codes d\'accès',
-  SCRenreg_2: 'Modification des codes d\'accès du "backup"',
-  SCRcode_1: 'Déclaration de l\'accès principal',
-  SCRcode_2: 'Vérification de l\'accès principal',
-  SCRcode_3: 'Déclaration de l\'accès secondaire',
-  SCRcode_4: 'Vérification de l\'accès secondaire',
-  SCRerr_2: 'Accès principal absent ou invalide',
-  SCRerr_3: 'Accès principal: vérification échouée',
-  SCRerr_4: 'Accès secondaire absent ou invalide',
-  SCRerr_5: 'Accès secondaire: vérification échouée',
-  SCRcsret_00: 'Enregistrement effectué avec succès.',
-  SCRcsret_01: 'Echec de l\'enregistrement: changer le "pseudo" de l\'accès principal".',
-  SCRcsret_02: 'Echec de l\'enregistrement: changer le "pseudo" de l\'accès secondaire".',
-  SCRcsret_09: 'BUG - Echec de l\'enregistrement, l\'utilisateur a déjà été créé.',
-  SCRcsret_10: 'Mise à jour des codes d\'accès effectuée avec succès.',
-  SCRcsret_11: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
-  SCRcsret_12: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès principal".',
-  SCRcsret_13: 'Echec de la mise à jour des codes d\'accès: changer le "pseudo" de l\'accès secondaire".',
-  SCRcsret_19: 'Echec de la mise à jour des codes d\'accès: l\'utilisateur n\'est pas enregistré.',
-
   SFTtit: 'Ma Safe Box',
-  SFTtits: 'Ma Safe Box',
   SFTus: 'Identifiant:',
   SFTps: 'Terminal certifié - Pseudo local:',
   SFTnops: 'Terminal NON certifié (pas de pseudo local).',
@@ -1128,22 +758,14 @@ Vous pourrez vous connecter après succès de la restauration.
   EXPrestore: 'Restaurer',
 
   MNOorgs: 'Service / organisation "managés"',
-  MNOtab1: 'Managers des organisations',
-  MNOtab2: 'Traiter les invitations',
-  MNOtit1: 'Liste des managers de l\'organisation',
-  MNOtit2: 'Traitement des invitations en attente',
   MNOnoinvits: 'Pas d\'invitation trouvée',
   MNOsearch0: '(pas de recherche en cours)',
   MNOsearch1: 'Recherche en cours ...',
-  MNOmajor_label: 'Classe d\'invitation recherchée',
-  MNOmajor_bub: `### Classe d\'invitation recherchée
-bla bla
-`,
-  MNOinvalid: 'Un administrateur a révoqué certains de vos droits de "manager": ils vont être "nettoyés.',
+  MNOinvalid: 'Un administrateur a révoqué certains de vos pouvoirs de "manager": ils vont être "nettoyés.',
 
   STINV_1: 'Invitation inconnue (peut-être un BUG).',
   STINV_2: 'Tentative d\'accès à une invitation qui n\'est pas la votre (peut-être un BUG).',
-  STINV_3: 'Tentative d\'accès à une invitation sans en avoir un droit de sponsoring (peut-être un BUG).',
+  STINV_3: 'Tentative d\'accès à une invitation sans en avoir le pouvoir de sponsoring correspondant (peut-être un BUG).',
 
   INVop_1: 'Nouvelle invitation créée.',
   INVop_2: 'Invitation mise à jour.',
@@ -1151,24 +773,18 @@ bla bla
   INVop_4: 'Invitation validée (et de fait supprimée).',
   INVop_5: 'L\'invitation a été validée par le service central. ' +
     ' Toutefois suite à un incident technique elle pourrait encore apparaître "à valider".',
-
   INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".(BUG probable [etc]',
   INVvalOMst_2: 'Echec de validation de l\'invitation à être "manager".(BUG probable [args]',
-
   INVvalbug: 'BUG : fonction ["{0}"] de validation de l\'invitation non trouvée.',
-  INVinvbug: 'BUG : fonction ["{0}"] de génération de l\'invitation non trouvée.',
-
-  INVcred: 'Droit d\'accès insuffisant ("manager" ou "sponsor" requis)',
-
+  INVcred: 'Pouvoir insuffisant ("manager" ou "sponsor" requis)',
   INVopret_1: '(BUG probable) - L\'invitation est inconnue.',
-  INVopret_2: '(BUG probable) - Vous n\'avez aucun des droits d\'accès l\'autorisant.',
+  INVopret_2: '(BUG probable) - Vous n\'avez aucun des pouvoirs l\'autorisant.',
   INVopret_3: '(BUG probable) - Opération réservée à l\'utilisateur ayant demandé l\'invitation.',
   INVopret_4: '(BUG probable) - L\'invitation n\'est pas dans un état qui permette cette opération.',
 
   INVtitzoom: 'Invitation "{0}"',
   INVdetail: 'Détail de l\'invitation',
   INVtitval: 'Validation de l\'invitation "{0}"',
-  INVtitlst: 'Liste',
   INVx_v: 'Date-heure de dernière mise à jour (ou création):',
   INVbyU: 'Dernière mise à jour:',
   INVbyU_t: 'par l\'utilisateur demandeur',
@@ -1179,37 +795,25 @@ bla bla
   INVx_minor: 'Type mineur:',
   INVx_user: 'ID du demandeur:',
   INVx_label: 'Label associé:',
-  INVx_me: 'Je suis le sponsor ayant traité la demande',
   INVx_tab: 'Ardoise partagée utilisateur / sponsor(s)',
   INVx_opts: 'Options de l\'invitation',
   INVx_none: '#### (aucune)',
   INVxnotv_s: 'Version pas encore consultée par l\'utilisateur.',
   INVxnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
-  INVnchU: 'Vous n\'avez par édité l\'ardoise, il n\'y a rien à enregistrer.',
   INVbtn_val: 'Valider',
   INVbtn_rec: 'Editer l\'ardoise',
   INVbtn_del: 'Renoncer et supprimer',
   INVbtn_inv: 'Proposer une invitation',
   INVbtn_rev: 'Réviser l\'invitation',
-
   INVnoinvits: 'Pas d\'invitation en cours actuellement.',
-
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
-  INVac_rej_1: 'Rejet de l\'invitation',
-  INVac_rej_2: 'Justification (au moins {0} signes)',
-  INVac_dec_1: 'Décliner l\'invitation proposée',
-  INVac_dec_2: 'Justification (au moins {0} signes)',
-
-  INVbtn1: 'Demande d\'invitation',
-  INVbtn2: 'Suivre mes invitations',
-
-  INVspons_no: 'Vous n\'avez pas de droit pour traiter aucune demande',
-  INVspons_on: 'Demandes que vous avez le droit de traiter',
+  INVspons_no: 'Vous n\'avez pas de pouvoir pour traiter aucune demande',
+  INVspons_on: 'Demandes que vous avez le pouvoir de traiter',
 
   INVtit_1: 'Nouvelle demande',
   INVtit_1_label: 'Nouvelle demande d\'invitation',
   INVtit_1_bub: `### Déposer une nouvelle demande...
-- d'invitation, de création d'une entité, de droit d'accès ...
+- d'invitation, de création d'une entité, de pouvoir ...
 bla bla
 `,
   INVtit_2: 'Lister',
@@ -1217,45 +821,26 @@ bla bla
   INVtit_2_bub: `## Suivre mes demandes d'invitation
 bla bla
 `,
-  INVtit_3: 'Traiter',
-  INVtit_3_label: 'Traiter les demandes en attente',
-  INVtit_3_bub: `## Traiter les demandes en attente
-bla bla
-`,
 
   INVco_1: 'Je n\'ai pas de compte',
   INVco_2: 'J\'ai un compte',
   INVco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',
-  INVco_cr: 'Je créé mon compte',
   INVnc_bub: `## Disposer d'un compte est nécessaire...
 pour déposer et suivre des demandes d'invitation.
-Un **coffre fort** est créé pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
+Une **Safe Box** est créée pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
 - qui est le seul à connaître la clé qui **crypte** son contenu,
-- le _coffre_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
+- la _Safe Box_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
 `,
-  INVcrok: 'Demande d\'invitation enregistrée.',
-  INVcrko: 'Echec de l\'enregistrement de la dDemande d\'invitation.',
   INVmajor_c: 'Code majeur',
   INVmajor_label: 'Quelle invitation sollicitez-vous ?',
   INVmajor_bub: `## Quelle invitation sollicitez-vous ?
 bla bla
 `,
-
   INVtabedit: 'Changer le texte de l\'ardoise',
   INVtabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
   INVtabu_bub: `### Ardoise partagée avec les sponsors
 - qui suis-je, ma motivation ...
 - les remarques des sponsors successifs
-`,
-
-  INVcomment_c_label: 'Commentaire',
-  INVcomment_label: 'Commentaire strictement personnel',
-  INVcomment_bub: `### Commentaire strictement personnel
-bla bla
-`,
-  INVmotiv_label: 'Qui suis-je, ma motivation (10c au moins) ...',
-  INVmotiv_bub: `### Qui suis-je, ma motivation ...
-bla bla
 `,
   INVminor_c_label: 'Code "sponsoring"',
   INVminor_label: 'Spécifiquement pour quel "sponsor" ?',
@@ -1263,27 +848,11 @@ bla bla
 bla bla
 `,
   INVrec: 'Enregistrer la demande',
-
-  INVvalCf_tit: 'Valider cette invitation ?',
   INVvalCf_txt: `### Valider cette invitation.
 En cas de confirmation, l\'invitation sera validée selon les termes affichés puis supprimée.
 
 Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
 `,
-  INVvalCf_0: 'Je la laisse vivre encore (sans la valider)',
-  INVvalCf_1: 'Je la VALIDE',
-
-  INVrecCf_tit: 'Confimer ce changement ?',
-  INVrecCf_txt: `### Confimer ce changement
-En cas de confirmation,
-- l'ardoise de l\'invitation sera modifiée,
-- la durée de vie de l'invitation sera prolongée,
-- ça laissera le temps à un _sponser_ de faire une nouvelle (ou première) proposition d'invitation.
-
-Sinon ce dialogue s'effacera et l'invitation continuera d'exister telle quelle (du moins quelques jours).
-`,
-  INVrecCf_0: 'Je renonce aux modifications de l\'ardoise',
-  INVrecCf_1: 'Je confirme vouloir les enregistrer',
 
   INVcancelCf_txt: `### Supprimer cette invitation.
 En cas de confirmation,
@@ -1295,15 +864,10 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   INVcancelCf_tit: 'Supprimer cette invitation ?',
   INVcancelCf_0: 'Je la laisse vivante',
   INVcancelCf_1: 'Je la supprime',
-  INVsponsor_0: 'Vous n\'avez pas les droits requis pour traiter cette demande d\'invitation.',
+  INVsponsor_0: 'Vous n\'avez pas les pouvoirs requis pour traiter cette demande d\'invitation.',
   INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
-  INVsponsor_2: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0}].',
-  INVsponsor_3: 'Vous avez un droit de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
-  INVverif: 'Vérifier avant de valider',
-  INVlabels: 'Aucune autre information n\'est attendue de votre part avant validation.| ' +
-    'Vous avez un texte à saisir avant de pouvoir valider. |' +
-    'Vous avez {count} textes à saisir avant de pouvoir valider. |',
-
+  INVsponsor_2: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0}].',
+  INVsponsor_3: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
 
   /*
   Détecté par l'application
@@ -1466,25 +1030,17 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   HLPmenu: 'Voir le détail dans le menu ci-dessus, rubrique _{0}_',
   HLPrm1: 'Note à propos de la révision de l\'application: quels sources ...',
 
+    // TODO révision en cours
   // Showdown
   SHed: 'Editer',
   SHpe: 'Plein écran',
   SHre: 'Réduire',
 
-  moins1: 'Moins 1',
-  plus1: 'Plus 1',
-  pickfile: 'Choisir un fichier local',
-  blabla: 'bla bla', // Test surcharge traductions
-  blabla1: 'bla1 bla1', // Test surcharge traductions
-  titre: 'Test très simple - compteur: {0}',
-
-  noopts: 'Aucune option à saisir.',
-
   INVsponsoring: `### Qui peut traiter une demande d'invitation ?
 Un utilisateur est un "sponsor" valide pour une demande quand,
 - c'est un "manager" de l'organisation: il est _sponsor universel_.
-- il a un droit d'accès **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
-- il a un droit d'accès **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
+- il a un pouvoir **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
+- il a un pouvoir **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
 `,
   INVvalidable: `### Une demande d'invitation peut être validée ...
 par l'utilisateur concerné quand un sponsor a traité la demande (ou proposer de lui-même une invitation.
@@ -1506,24 +1062,24 @@ bla bla
   INV$Auteur_nom_ph: 'Victor Hugo',
 
   INV$Auteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
-  INV$Auteur_1: 'SANS création de droit d\'accès de "sponsoring"',
-  INV$Auteur_2: 'Droit d\'accès de "sponsoring" générale "Auteur"',
-  INV$Auteur_3: 'Droit d\'accès de "sponsoring" pour une catégorie "d\'Auteur"',
+  INV$Auteur_1: 'SANS création de pouvoir de "sponsoring"',
+  INV$Auteur_2: 'Pouvoir de "sponsoring" générale "Auteur"',
+  INV$Auteur_3: 'Pouvoir de "sponsoring" pour une catégorie "d\'Auteur"',
   INV$Auteur_4: 'Création d\'un nouvel auteur',
   INV$Auteur_5: 'SANS nouvel auteur',
-  INV$Auteur_e: 'Une invitation SANS nouvel auteur et SANS création de droit d\'accès, n\'a pas de sens.',
+  INV$Auteur_e: 'Une invitation SANS nouvel auteur et SANS création de pouvoir, n\'a pas de sens.',
   INV$Auteur_categ_label: 'Catégorie d\'auteurs',
   INV$Auteur_t1: `Un **auteur** sera créé:
   - ID: _{0}_
 `,
   INV$Auteur_t0: `Auncun **auteur** ne sera créé.
 `,
-  INV$Auteur_t2: `### Droit de _Sponsoring_
-- un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur.
+  INV$Auteur_t2: `### Pouvoir de _Sponsoring_
+- un pouvoir sera accordé afin de pouvoir répondre aux demandes de création d'auteur.
 - il pourra être transmis.
 `,
-  INV$Auteur_t3: `### Droit de _Sponsoring_
-- un droit sera accordé afin de pouvoir répondre aux demandes de création d'auteur de la seule catégorie **{0}**.
+  INV$Auteur_t3: `### Pouvoir de _Sponsoring_
+- un pouvoir sera accordé afin de pouvoir répondre aux demandes de création d'auteur de la seule catégorie **{0}**.
 - il pourra être transmis.
 `,
 
@@ -1555,6 +1111,15 @@ blu blu
   ROLE$Relecteur_: 'Relecteur d\'articles',
   ROLE$Groupe_: 'Groupe de relecteurs',
 
-  COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"'
+  COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"',
+
+  moins1: 'Moins 1',
+  plus1: 'Plus 1',
+  pickfile: 'Choisir un fichier local',
+  blabla: 'bla bla', // Test surcharge traductions
+  blabla1: 'bla1 bla1', // Test surcharge traductions
+  titre: 'Test très simple - compteur: {0}',
+
+  noopts: 'Aucune option à saisir.'
 
 }

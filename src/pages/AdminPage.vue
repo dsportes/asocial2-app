@@ -61,7 +61,7 @@
         <div v-if="sf.auth.admins" class="q-my-md">
           <q-separator color="orange"/>
           <div class="titre-lg text-italic text-center q-my-sm">{{$t('APdeclmgr')}}</div>
-          <input-b class="full-width" prefix="FCtarget" size="alias" noval
+          <input-b class="full-width" prefix="APtarget" size="alias" noval
             v-model="targetUser"/>
           <div class="titre-md text-italic q-mt-md">{{ $t('APtab') }}</div>
           <q-input class="q-pa-xs bord1 q-mb-md" v-model="tab" type="textarea" :rows="5"/>

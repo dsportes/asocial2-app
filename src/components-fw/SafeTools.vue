@@ -6,7 +6,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <btn-cond v-if="short" class="q-mb-sm" flat color="primary"
     @ok="dialogs.SafeTools = true">
     <img :src="safebox" class="q-mr-xs" width="24px"/>
-    <div>{{ $t('SFTtits') }}</div>
+    <div>{{ $t('SFTtit') }}</div>
   </btn-cond>
   <btn-cond v-else color="primary"
     @ok="dialogs.SafeTools = true" size="lg" padding="xs sm">
@@ -14,11 +14,15 @@ tous les dialogues de gestion des "dsonnées de sécurité".
     <div>{{ $t('SFTtit') }}</div>
   </btn-cond>
 
-  <dialog-std0 v-model="dialogs.SafeTools" :title="$t('SFTtit')" vue="SafeTools"
-    vh="90" @close="emit('close', true)">
+  <dialog-std2 v-model="dialogs.SafeTools" :title="$t('SFTtit')" vue="SafeTools"
+    @close="emit('close', true)">
+    <template #hdr>
+      <div :class="sty() + ' bordb'">
+        <user-profile/>
+      </div>
+    </template>
+
     <template #default>
-      <user-profile/>
-      <q-separator color="orange" class="q-my-xs"/>
 
       <bar-open :bubble="$t('SFTalias_bub')" :disbubble="$t('SFTalias_bub')"
         :title="$t('SFTalias_label')"
@@ -46,7 +50,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('HPtrustings_1')"
         :disable="!session.hasNet || session.incognito"
         @open="dialogs.DevTrustings = true"/>
-        
+
       <bar-open :bubble="$t('HPadminA_bub')" :disbubble="$t('HPadminA_bub')"
         :title="$t('HPadminA_label')"
         :disable="!session.hasNet"
@@ -63,7 +67,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('CRRtit_label')"
         :disable="!session.hasNet"
         @open="dialogs.CredsReview = true"/>
-      
+
       <bar-open :bubble="$t('LCRtit_bub')" :disbubble="$t('LCRtit_bub')"
         :title="$t('LCRtit_label')"
         :disable="!session.hasNet"
@@ -88,7 +92,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         @open="dialogs.delSafe = true"/>
 
     </template>
-  </dialog-std0>
+  </dialog-std2>
 
   <safe-cr v-if="dialogs.SafeCrA" v-model="dialogs.SafeCrA" mode="a" @close="fnc"/>
   <safe-cr v-if="dialogs.SafeCrP" v-model="dialogs.SafeCrP" mode="p" @close="fnc"/>
@@ -134,7 +138,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import AdminMgr from '../dialogs-fw/AdminMgr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
@@ -206,4 +210,5 @@ const delSafe = async () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.bordb { border-bottom: 1px solid $grey-5 }
 </style>
