@@ -884,7 +884,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   11: APP: Exception technique DB / réseau : configuration suspectée
   99: Interruption actionnée par l'utilisateur
 
-  Remonté d'un service - assertions 13...16 transmises à l'adiministarteur
+  Remonté d'un service - [103, 104, 108, 109, 110, 111] transmises à l'adiministarteur
   101: erreur fonctionnelle FW : non détectable par l'application
   102: erreur fonctionnelle APP : non détectable par l'application
   103: assertion FW - BUG: l'erreur fonctionnelle est censée avoir été bloquée par l'application
@@ -976,6 +976,8 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   EX101_operation_no_user_keys_cv: 'operation_no_user_keys_cv',
   EX101_operation_bad_signature: 'operation_bad_signature',
   EX101_operation_bad_credentials: 'Rôles KO: [{0}]',
+  EX101_invalid_json_topic_update: 'Détail: [{0}]',
+  EX101_invalid_key_topic: 'Topic: [{0}] - Key: [{1}]',
 
   EX102_error_test: 'Test d\'erreur. Arg1: [{0}] - Arg1: [{1}]',
 
