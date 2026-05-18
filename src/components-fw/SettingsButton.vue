@@ -334,8 +334,13 @@
 
         <q-separator class="q-my-md" color="orange" />
 
-        <btn-cond class="q-mb-md" :label="$t('SBgensv')" @ok="genSV"/>
-        <div class="q-mt-md titre-md text-italic">{{$t('SBgensv2')}}</div>
+        <div class="text-italic titre-md q-my-xs text-center">{{ $t('SBgencc') }}</div>
+        <div class="row justify-around q-my-xs">
+          <btn-cond class="q-mb-md" :label="$t('SBgensv')" @ok="genSV"/>
+          <btn-cond class="q-mb-md" :label="$t('SBgendc')" @ok="genDC"/>
+        </div>
+        <div v-if="cr.x" class="q-my-sm titre-md text-italic">
+          {{$t('SBgen_' + cr.x)}}</div>
         <q-input class="q-pa-xs bord1" v-model="cr.pems" type="textarea"
          :rows="15"/>
       </div>
@@ -518,7 +523,7 @@ const edValid = async () => {
   dialogs.edpref = false
 }
 
-const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '' })
+const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '', x: 0 })
 const ps = reactive({ inp: '', err: ''})
 
 const validPs = async () => {
@@ -530,10 +535,18 @@ const validPs = async () => {
 
 const genSV = async () => {
   const { pub, priv } = await Crypt.getSVKeyPair()
-  cr.pems = JSON.stringify([
-    toPem(pub, true),
-    toPem(priv)
-  ], null, '\t')
+  const t1 = toPem(pub, true)
+  const t2 = toPem(priv)
+  cr.x = 1
+  cr.pems = t1 + '\n\n' + t2 + '\n'
+}
+
+const genDC = async () => {
+  const { pub, priv } = await Crypt.getKeyPair()
+  const t1 = toPem(pub, true)
+  const t2 = toPem(priv)
+  cr.x = 2
+  cr.pems = t1 + '\n\n' + t2 + '\n'
 }
 
 const setGrantRevoke = async (grant: boolean) => {
