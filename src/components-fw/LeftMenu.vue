@@ -1,5 +1,5 @@
 <!-- Barre de menu à gauche (component)
-Contrôlé par ui.leftMenu
+Contrôlé par ui.leftMenu 
 -->
 <template>
 <q-layout container view="hHh lpR fFf">
