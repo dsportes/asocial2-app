@@ -1,6 +1,12 @@
 <template>
 <div class="column items-center q-pa-xs">
 
+  <div v-if="ui.adminPage.tab === 'topics'" class="pwsm">
+    <topics-editor v-if="ui.adminPage.SVC && ui.adminPage.$OP"
+        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
+    <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
+  </div>
+
   <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
     <div v-if="sf.auth.admins">
       <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
@@ -95,6 +101,7 @@ import { Crypt } from '../src-fw/crypt'
 import { MDOperation } from 'src/src-fw/operation'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
+import TopicsEditor from '../components-fw/TopicsEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
 import { ListManagers, RevokeCred } from '../src-fw/operations'

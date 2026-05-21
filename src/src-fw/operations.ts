@@ -63,6 +63,38 @@ export class  GetSvcOpStatus extends Operation {
   }
 }
 
+export class  GetTopics extends Operation {
+  constructor (SVC: string, $OP: string) { super('GetTopics$', SVC, '', $OP) }
+
+  async run () {
+    try {
+      const svc = stores.service
+      const res = await this.post(true)
+      const topics = res['topics']
+      svc.loadTopics(this.SVC, topics, true)
+      return topics.length
+    } catch(e) {
+      await this.ko(e)
+      throw e
+    }
+  }
+}
+
+export class  UpdTopics extends Operation {
+  constructor (SVC: string, $OP: string) { super('UpdTopics$', SVC, '', $OP) }
+
+  async run (json: string) {
+    try {
+      this.args['json'] = json
+      const res = await this.post()
+    } catch(e) {
+      await this.ko(e)
+      throw e
+    }
+  }
+}
+
+
 export class  GetSvcOrgStatus extends Operation {
   constructor (SVC: string, org: string) { super('GetSvcOrgStatus', SVC, org) }
 

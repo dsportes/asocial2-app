@@ -36,6 +36,8 @@ export default {
   restartApp: 'Redémmarrer l\'application',
   nocomment: '(pas de commentaire)',
   svcorg: 'Service & Organisation',
+  topic: 'Thématiques des cas',
+  service: 'Service',
   servicestatus: 'Status des services',
   svcStatus_label: 'Commentaire ...',
   svcStatus_now: 'Statut observé à: {0}',
@@ -224,6 +226,7 @@ export default {
   op_$UpdateCredComment: 'Mise à jour du commentaire d\'un pouvoir',
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',
+  op_GetTopics$: 'Chargements des topics d\'un service',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -243,6 +246,15 @@ export default {
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
   RLopt1: 'Première Option : en général efficace. ',
   RLopt2: 'Seconde option : fermer TOUS les onglets et fenêtres où s\'exécute l\'application puis l\'appeler à nouveau dans une nouvelle fenêtre / onglet.',
+
+  PSpin: 'Code PIN',
+  PSpin_label: 'Code PIN',
+  PSpin_ph: 'PIN35-zx',
+  PSdevname_label: 'Nom du terminal',
+  PSdevname_ph: 'MonPC/bob/ff',
+  PStrig: 'Initiales, trigramme ... :',
+  PStrig_label: 'Initiales, trigramme ... :',
+  PStrig_ph: 'Bob',
 
   THprimary: 'primary',
   THsecondary: 'secondary',
@@ -359,6 +371,19 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
   LCRok: 'Mises à jour des "listes de pouvoirs" enregistrées.',
 
+  APtopicload: '(Re) charger les thématiques',
+  APtopicjson: 'Afficher le descriptif JSON',
+  APupdtopics: 'Mettre à jour les thématiques',
+  APupddone: 'Thématiques mises à jour',
+  APnbtopics: 'Aucune thématique chargée pour ce service. ' +
+   '| Une thématique est déclarée pour ce service. ' + 
+   '| {count} thématiques sont déclarées pour ce service. ',
+  APtopicmenu: 'Sélectionner une thématique',
+  APtopicdet: `### ID: {0}
+  - key: {1}
+  - sujets: {2}
+  - pubC: {3}
+  `,
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',
@@ -1117,6 +1142,12 @@ blu blu
   ROLE$Groupe_: 'Groupe de relecteurs',
 
   COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"',
+
+  CATEG_ad: '01Administration générale',
+  CATEG_auteurs: '02Auteurs et relecteurs',
+  TOPIC_admin: '01Attribuer un pouvoir de "manager"',
+  TOPIC_crauteur: '02Création d\'un nouvel auteur',
+  TOPIC_joinauteur: '02Devenir co-auteur d\'un auteur',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',
