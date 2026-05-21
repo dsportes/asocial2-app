@@ -20,7 +20,7 @@
         @ok="dialogs.tabedit = true"/>
 
       <!-- L'utilisateur peut valider sa demande-->
-      <btn-cond :disable=" model.invit.etc === null"
+      <btn-cond v-if="model.invit" :disable="model.invit.etc === null"
         :label="$t('INVbtn_val')" icon="check" class="col-auto  q-ml-xs"
         @ok="dialogs.validate = true"/>
     </div>
