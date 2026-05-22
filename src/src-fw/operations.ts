@@ -258,7 +258,7 @@ export class AutoRevokeCred extends Operation {
 
   async run (credId: string, role: string, docId: string) : Promise<boolean> { 
     try {
-      this.setArgs({ credId, role, docId })
+      this.setArgs({ credId, role, docId: docId || '' })
       await this.sign(role, docId )
       await this.post()
       return true
@@ -314,7 +314,7 @@ export class GetCredLimitCond extends Operation {
 
   async run (c: Credential ) : Promise<[number, Object] | null> {
     try {
-      this.setArgs({ credId: c.credId, role: c.role, docId: c.docId})
+      this.setArgs({ credId: c.credId, role: c.role, docId: c.docId || ''})
       await this.sign(c.role, c.docId)
       const res = await this.post()
       return res.limitcond ? res.limitcond : null

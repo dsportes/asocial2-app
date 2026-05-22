@@ -226,7 +226,8 @@ export default {
   op_$UpdateCredComment: 'Mise à jour du commentaire d\'un pouvoir',
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',
-  op_GetTopics$: 'Chargements des topics d\'un service',
+  op_GetTopics$: 'Chargement des topics d\'un service',
+  op_GetSvcOpStatus$: 'Lecture du status d\'un service pour un opérateur',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
