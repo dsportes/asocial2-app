@@ -8,7 +8,7 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Credential } from '../src-fw/documents'
+import { Cred, CredSafe } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -256,10 +256,10 @@ export class RevokeCred extends Operation {
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
-  async run (credId: string, role: string, docId: string) : Promise<boolean> { 
+  async run (credId: string, docCl: string, docId: string) : Promise<boolean> { 
     try {
-      this.setArgs({ credId, role, docId: docId || '' })
-      await this.sign(role, docId )
+      this.setArgs({ credId, docCl, docId: docId || '' })
+      await this.sign(docCl, docId )
       await this.post()
       return true
     } catch(e) {
@@ -269,18 +269,12 @@ export class AutoRevokeCred extends Operation {
   }
 }
 
-export type ListMgrs = {
-  credId: string
-  time: number
-  name: string
-}
-
 export class ListManagers extends Operation {
   constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
-  async run () : Promise<ListMgrs[]>{
+  async run () : Promise<Cred[]>{
     try {
       const res = await this.post()
-      return res['list'] as ListMgrs[]
+      return res['creds'] as Cred[]
     } catch(e) {
       await this.ko(e)
       return []
@@ -309,18 +303,23 @@ export class InvitGet extends Operation {
   }
 }
 
-export class GetCredLimitCond extends Operation {
-  constructor (SVC: string, org: string) { super('GetCredLimitCond', SVC, org) }
+// Enrichit un CredSafe avec les données du Cred correspondant en DB
+export class EnrichCred extends Operation {
+  constructor (SVC: string, org: string) { super('GetCred', SVC, org) }
 
-  async run (c: Credential ) : Promise<[number, Object] | null> {
+  async run (c: CredSafe ) : Promise<boolean> {
     try {
-      this.setArgs({ credId: c.credId, role: c.role, docId: c.docId || ''})
-      await this.sign(c.role, c.docId)
+      this.setArgs({ credId: c.credId, docCl: c.docCl, docId: c.docId || ''})
+      await this.sign(c.docCl, c.docId)
       const res = await this.post()
-      return res.limitcond ? res.limitcond : null
+      const cred = res.cred as Cred
+      if (cred) {
+        await CredSafe.fromCred(cred, c)
+        return true
+      } else return false
     } catch(e) {
       await this.ko(e)
-      return null
+      return false
     }
   }
 }

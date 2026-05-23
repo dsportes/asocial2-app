@@ -71,7 +71,7 @@ const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 
 const revok = async (so) => {
   let op = new AutoRevokeCred(so.svc, so.org)
-  const ok = await op.run(so.credId, 'Org.manager', '')
+  const ok = await op.run(so.credId, 'Org', '1')
   if (!ok) {
     await ui.diagDisplay($t('APrevko'))
   } else {

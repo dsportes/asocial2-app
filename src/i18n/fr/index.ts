@@ -222,7 +222,7 @@ export default {
   op_InvitCancel: 'Suppression d\'une invitation par l\'utilisateur',
   op_$mdInvitSet: 'Mise à jour d\'une invitation dans le Master Directory',
   op_$CreateCred: 'Création d\'un credential',
-  op_GetCredLimitCond: 'Obtention des conditions d\'un credential',
+  op_GetCred: 'Obtention du détail d\'un credential',
   op_$UpdateCredComment: 'Mise à jour du commentaire d\'un pouvoir',
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',

@@ -1,7 +1,8 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { DocType } from './doctypes'
+import { DocType } from '../src-fw/doctypes'
+import { CredSafe } from '../src-fw/documents'
 
 export class DocRegistry {
   static regDoc = new Map()
@@ -12,6 +13,10 @@ export class DocRegistry {
   static newD (name: string) {
     const cl = DocRegistry.regDoc.get(name)
     return cl ? new cl() : null
+  }
+  static newCredDoc (name: string) {
+    const cl = DocRegistry.regDoc.get(name)
+    return cl ? new cl() : new CredDocument()
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
@@ -42,5 +47,18 @@ export abstract class Document {
   }
 
   async compile() { }
+
+}
+
+export class CredDocument {
+  cred: CredSafe | null = null
+
+  setCred (cred: CredSafe) {
+    this.cred = cred
+  }
+  async dispMore () { }
+  async dispLimit () { }
+  async dispDocKey () { }
+  async dispOpaque () { }
 
 }

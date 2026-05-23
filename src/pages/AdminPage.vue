@@ -94,19 +94,20 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, Ref, computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { ICVS } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
-import { MDOperation } from 'src/src-fw/operation'
+import { MDOperation } from '../src-fw/operation'
+import { ListManagers, RevokeCred } from '../src-fw/operations'
+import { Cred } from '../src-fw/documents'
+import { $t, dkli, dhcool } from '../src-fw/util'
+import { NewManager } from '../src-fw/invitation'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import TopicsEditor from '../components-fw/TopicsEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
-import { ListManagers, RevokeCred } from '../src-fw/operations'
-import { $t, dkli, dhcool } from '../src-fw/util'
-import { NewManager } from '../src-fw/invitation'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
@@ -126,7 +127,7 @@ watch(() => sf.mySafeCreds, () => {
 
 const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 const svcOrg = ref()
-const lstMgr = ref([]) // {credId userId limit name} []
+const lstMgr: Ref<Cred[]> = ref([]) // Cred []
 
 const targetUser = reactive({ inp: '', err: ''})
 
@@ -182,6 +183,7 @@ const resetAreq = () => {
 }
 
 const grantManager = async () => {
+  // TODO
   const targetId = targetUser.inp
   const sha = await Crypt.strongHash(targetId, false, true)
   const op = new MDOperation('$mdUserGetICVS')

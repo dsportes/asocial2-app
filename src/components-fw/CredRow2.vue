@@ -1,4 +1,5 @@
-<!-- Affiche le détail d'une ligne Credential -->
+<!-- Affiche le détail d'une ligne Credential 
+-->
 <template>
   <div class="full-width">
     <div class="row font-mono fs-md">
@@ -11,14 +12,27 @@
       <div class="col-11 q-pl-sm cursor-pointer" @click.stop="emit('select', true)">
         <div class="row">
           <div class="col-8">
-            <btn-bubbletxt :text="cred.$trole" :bub="cred.$trole_bub"/>
+            <btn-bubbletxt :text="$t('DOCCL_' + cred.docCl + '_label')" 
+              :bub="$t('DOCCL_' + cred.docCl + '_bub')"/>
           </div>
-          <div class="col-3 text-italic ellipsis">{{cred.docId || '(na)'}}</div>
-          <q-icon v-if="cred.cond" class="col-1 self-start" name="star" size="24px" color="green-5"/>
-          <div v-else class="col-1"></div>
+          <div class="col-2 text-italic ellipsis">{{cred.docId || '(na)'}}</div>
+          <div class="col-2 self-start row">
+            <btn-cond class="self-start" icon="star" size="md" round
+              :disable="!cred.more" @ok="credDoc.dispMore"
+              :color="cred.more ? 'green-5' : 'grey-5'"/>
+            <btn-cond class="self-start" icon="hourglass" size="md" round 
+              :disable="!cred.limit"  @ok="credDoc.dispLimit"
+              :color="cred.limit ? 'warning' : 'grey-5'"/>
+            <btn-cond class="self-start" icon="key" size="md" round
+              :disable="!cred.docKey" @ok="credDoc.dispDocKey"
+              :color="cred.docKey ? 'warning' : 'grey-5'"/>
+            <btn-cond class="self-start" icon="folder_info" size="md" round 
+              :disable="!cred.opaque" @ok="credDoc.dispOpaque"
+              :color="cred.opaque ? 'primary' : 'grey-5'"/>
+          </div>
         </div>
         <div class="row">
-          <div class="col-10 font-mono fs-md mh text-italic">{{cred.comment || $t('nocomment')}}</div>
+          <div class="col-10 font-mono fs-md mh text-italic">{{cred.name || '?'}}</div>
           <div class="col-2 ellipsis q-pr-sm">{{cred.credId}}</div>
         </div>
       </div>
@@ -28,13 +42,18 @@
 
 <script setup lang="ts">
 // @ts-ignore
-// import { computed} from 'vue'
+import { ref, Ref} from 'vue'
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import { DocRegistry, CredDocument } from '../src-fw/docregistry'
+import { CredSafe } from '../src-fw/documents'
 
 const props = defineProps({
   cred: Object
 })
+
+const credDoc: Ref<CredDocument> = ref(DocRegistry.newCredDoc(props.cred.docCl))
+credDoc.value.setCred(props.cred)
 
 const emit = defineEmits(['undo', 'select'])
 

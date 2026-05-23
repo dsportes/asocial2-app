@@ -16,7 +16,6 @@ import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { CredSafe } from '../src-fw/documents'
 
-
 /*
 ### Safes stockés dans un directory
 Dans un directory externe de "safes", chaque "safe" est enregistré et accessible par:
@@ -521,7 +520,7 @@ export const useSafeStore = defineStore('safe', () => {
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds": organisée avec une **sous-section par application** */
-  const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
+  const mySafeCreds: Ref<Map<string, CredSafe>> = ref() // ceux de l'app
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -704,7 +703,7 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shK: string
-    prefs: Object | null // clé: crId, valeur: Objet Credential sérialisé crypté
+    prefs: Object | null // clé: prefId, valeur: Objet Prefs sérialisé crypté
     delprefs: string[] // liste des crIds à supprimer
   }
 
@@ -747,14 +746,11 @@ export const useSafeStore = defineStore('safe', () => {
     const orgs = new Set<string>([])
     if (safe.creds) for (const xid in safe.creds)
       try {
-        // const [com, data] = decode(safe.creds[xid]) as [string, string]
-        const [com, data] = safe.creds[xid] as [string, string]
-        const comment = await dcX(keyFromB64(com))
+        const [nameK, data] = safe.creds[xid] as [string, string]
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
         if (msvc[obj['svc']]) {
+          obj['name'] = await dcX(keyFromB64(nameK))
           const c: CredSafe = new CredSafe(obj)
-          c.comment = comment
-          c.recK = !obj['recK'] ? null : decode(await Crypt.decrypt(keyK.value, keyFromB64(obj['recK'])))
           m.set(c.credId, c)
           orgs.add(c.org)
         }
@@ -769,20 +765,19 @@ export const useSafeStore = defineStore('safe', () => {
     userId: string //
     shK: string // shaS de la clé K en base 64
     credId: string // id du credential
-    comment: string // comment crypté par K et en base 64
+    nameK: string // nom (correspondant à docId) crypté par K et en base 64
     cred?: string // CredSafe sérialisé, crypté par K et en base64 (pour création)
   }
   /* Creation d'un Cred en safe */
   const createCred = async ( cred : CredSafe ) => {
     const obj = cred.toObj
-    delete obj['comment']
-    obj['recK'] = !cred.recK ? null : keyToB64(await Crypt.crypt(keyK.value, encode(cred.recK)))
+    delete obj['name']
     const credSer = keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
     const setCred : SetCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
       credId: cred.credId,
-      comment: keyToB64(await ecX(cred.comment)),
+      nameK: keyToB64(await ecX(cred.name)),
       cred: credSer
     }
     const op = new SafeOperation('$CreateCred', mySafeStore.value)
@@ -790,16 +785,16 @@ export const useSafeStore = defineStore('safe', () => {
     return await doOpSafe(op)
   }
 
-  /* Mise à jour du commentaire d'un Cred en safe */
-  const updateCredComment = async ( credId: string, comment: string )
+  /* Mise à jour du "name" d'un Cred en safe */
+  const updateCredName = async ( credId: string, name: string )
     : Promise<boolean> => {
     const setCred : SetCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
       credId,
-      comment: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(comment)))
+      nameK: keyToB64(await ecX(name)),
     }
-    const op = new SafeOperation('$UpdateCredComment', mySafeStore.value)
+    const op = new SafeOperation('$UpdateCredNamet', mySafeStore.value)
     op.args.setCred = setCred
     try {
       await doOpSafe(op)
@@ -986,7 +981,7 @@ export const useSafeStore = defineStore('safe', () => {
   /* Retourne true si l'utilisateur est "manager" du couple svc / org ***********/
   const isManager = (svc, org) : boolean => {
     for (const [,c] of mySafeCreds.value)
-      if (c.role === 'Org.manager' && c.org === org && c.svc === svc) return true
+      if (c.docCl === 'Org' && c.docId === '1' && c.org === org && c.svc === svc) return true
     return false
   }
 
@@ -1006,8 +1001,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Retourne la Map des CredSafe dont l'id est citée dans le profile *************/
-  const getCreds = (profile: Profile) : Map<string, Credential> => {
-    const x: Map<string, Credential> = new Map<string, Credential>()
+  const getCreds = (profile: Profile) : Map<string, CredSafe> => {
+    const x: Map<string, CredSafe> = new Map<string, CredSafe>()
     if (!stores.session.hasNet || !profile) return x
     if (profile.profId !== '*') for(const xid of profile.crIds) {
         const c = mySafeCreds.value.get(xid)
@@ -1733,7 +1728,7 @@ export const useSafeStore = defineStore('safe', () => {
     auth, devices, mySafePrefs, mySafeProfiles,
     mySafeCreds,
     updatePrefs,
-    createCred /* ??? */, updateCredComment /* ??? */,
+    createCred, updateCredName,
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     sponsorings,

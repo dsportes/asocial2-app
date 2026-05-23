@@ -1,46 +1,79 @@
+// @ts-ignore
+import { decode } from '@msgpack/msgpack'
 import { DocRegistry, Document } from '../src-fw/docregistry'
 import { Crypt } from '../src-fw/crypt'
-import { keyToB64 } from '../src-fw/b64'
+import { keyToB64, keyFromB64 } from '../src-fw/b64'
+import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-// import stores from '../stores/all'
 
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
+export type Cred = { // Credential attaché à un document
+  pubv: Uint8Array
+  pubc: Uint8Array
+  limit: number
+  docKey: Uint8Array | null
+  opaque: Uint8Array | null
+  more: any
+  credId: string
+}
 
 /* Credential en Safe */
 export class CredSafe {
-  static lp1 = [ 'credId', 'svc', 'org', 'role', 'docId', 'privs', 'comment' ]
+  static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docId', 'privs', 'privd', 'name' ]
 
   credId: string = '' // ID du credential.
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
-  role: string = '' // docClass.role : un des codes de rôle connu du service.
+  docCl: string = '' // docClass.role : un des codes de rôle connu du service.
   docId: string = '' // identifiant du document cible du credential.
   privs: string = '' // clé PRIVEE de signature en base64.
-  comment: string = '' // texte court libre de l'utilisateur.
-  recK: any = null // record libre (crypté par la clé K et en base64 en _safe_).
+  privd: string = '' // clé PRIVEE de decryptage en base64.
+  name: string = '' // "nom" associé au docId.
   
+  // Décoration après fusion avec Cred
+  limit?: number
+  docKey?: Uint8Array | null
+  opaque?: any | null
+  more?: any | null
+  alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
+
   constructor (obj?: Object) {
     if (obj)
       for (const p of CredSafe.lp1) this[p] = obj[p] || null
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
-  get $trole () : string { 
-    return $t('ROLE$' + (this.role || '').replace('.', '_'))}
-  get $trole_bub () : string { return $t('ROLE$' + (this.role || '').replace('.', '_') + '_bub')}
-
   get toObj () : Object {
     const obj = {}
     for (const p of CredSafe.lp1) obj[p] = this[p] || null
-    obj['credId'] = this.credId
     return obj
+  }
+
+  static async fromCred (cred: Cred, target: any) {
+    target.docKey = null
+    target.opaque = null
+    if (cred.docKey) try {
+        target.docKey = await Crypt.decrypt(stores.safe.keyK, cred.docKey)
+        if (cred.opaque) try {
+          const x = await Crypt.decrypt(target.docKey, cred.opaque)
+          target.opaque = decode(x)
+        } catch (e) {
+          console.log(e)
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    target.limit = cred.limit
+    target.more = cred.more || null
   }
 
   clone () : CredSafe { return new CredSafe(this.toObj) }
 
   get toJson () : string { return JSON.stringify(this.toObj, null, '\t') }
 
-  setComment (s: string) { this.comment = s }
-
+  /*
   static async buildCreds (
     svc: string,
     org: string,
@@ -54,8 +87,10 @@ export class CredSafe {
     const c = Credential.fromCredSafe(cs, keyToB64(pub), limit)
     return [cs, c]
   }
+  */
 }
 
+/*
 export type SCred = {
   credId: string
   role: string
@@ -63,6 +98,8 @@ export type SCred = {
   limit: number
   cond: any
 }
+*/
+
 
 /* Document Credential stocké en DB du service/org
 Rapprochement avec Cred par: svc org userId role docId (l'ID)
@@ -72,6 +109,7 @@ Schéma du document;
   - pk: ['userId', 'role', 'docId']
   - index: userId
 */
+/*
 export class Credential extends Document {
   async compile () {}
 
@@ -105,3 +143,4 @@ export class Credential extends Document {
   }
 }
 DocRegistry.registerD(Credential)
+*/

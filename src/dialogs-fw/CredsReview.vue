@@ -48,13 +48,10 @@
       <div v-if="step === 3" class="column items-center q-mt-sm q-mb-sm">
         <div class="pwmd">
 
-          <line-edit class="q-my-sm" prefix="CRRabout" :text="curcr.comment"
-            @change="chgComment"/>
+          <line-edit class="q-my-sm" prefix="CRRabout" :text="curcr.name"
+            @change="chgName"/>
 
-          <div v-if="curcr.cond" class="q-mb-sm">
-            <div class="titre-md text-bold text-italic">{{ $t('CRRcond') }}</div>
-            <cond-role class="q-ml-md" :cred="curcr"/>
-          </div>
+          <cred-row2 :cred="curcr" class="q-my-sm"/>
 
           <div v-if="curcr.alert === 1" 
             class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
@@ -97,8 +94,8 @@ import { ref, Ref } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
-import { GetCredLimitCond, AutoRevokeCred } from '../src-fw/operations'
-import { Credential } from '../src-fw/documents'
+import { EnrichCred, AutoRevokeCred } from '../src-fw/operations'
+import { CredSafe } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
@@ -120,7 +117,7 @@ const checkClose = async () => {
   emit('close', true)
 }
 
-const todel = ref(new Map<string, Credential>())
+const todel = ref(new Map<string, CredSafe>())
 
 const step = ref(1)
 
@@ -150,34 +147,38 @@ const cleanUp = async () => {
   reset(true)
 }
 
-/* Credential (fusion avec cond / limit)
+/* CredSafe (étendu par Cred)
   credId: string = '' // ID du credential.
-  role: string = '' // docClass.role : un des codes de rôle connu du service.
+  svc: string = '' // code du service
+  org: string = '' // le code de l'organisation.
+  docCl: string = '' // docClass.role : un des codes de rôle connu du service.
   docId: string = '' // identifiant du document cible du credential.
-  pubv: string = '' // clé PUBLIQUE de vérification (base64 sans bannière).
-  comment: string
-
-  limit?: number = 0 // date-heure en seconde de fin de validité (0 si toujors valide)
-  cond?: any = null // Objet contenant les conditions d'application
-
-  svc?: string
-  org?: string
+  privs: string = '' // clé PRIVEE de signature en base64.
+  privd: string = '' // clé PRIVEE de decryptage en base64.
+  name: string = '' // "nom" associé au docId.
+  
+  // Décoration après fusion avec Cred
+  limit?: number
+  docKey?: Uint8Array | null
+  opaque?: any | null
+  more?: any | null
+  alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 */
 type svcOrg = {
   k: string,
   svc: string,
   org: string,
-  creds: Credential[]
+  creds: CredSafe[]
 }
 
 const svcOrgs: Ref<svcOrg[]> = ref([])
 const curso: Ref<svcOrg> = ref()
-const curcr: Ref<Credential> = ref()
+const curcr: Ref<CredSafe> = ref()
 
 const reset = (keepCur: boolean) => {
   const before = curso.value ? curso.value.k : ''
   svcOrgs.value.length = 0
-  const m = sf.mySafeCreds as Map<string, Credential>
+  const m = sf.mySafeCreds as Map<string, CredSafe>
   const mx: Map<string, svcOrg> = new Map()
   const so: string[] = []
   for(const [credId, c] of m) {
@@ -211,7 +212,7 @@ const reset = (keepCur: boolean) => {
 
 const curSty = (x: svcOrg) =>
   !curso.value ? ' nocurrent' : (curso.value.svc === x.svc && curso.value.org === x.org ? ' current' : ' nocurrent')
-const curSty2 = (x: Credential) =>
+const curSty2 = (x: CredSafe) =>
   !curcr.value ? ' nocurrent' : (curcr.value.credId === x.credId ? ' current' : ' nocurrent')
 
 const selectSo = async (x: svcOrg) => {
@@ -225,17 +226,14 @@ const reset2 = async () => {
   const now = Date.now()
   const so = curso.value
   for(const c of so.creds) {
-    const op = new GetCredLimitCond(c.svc, c.org)
-    const x = await op.run(c)
-    if (x) {
-      c.limit = x[0]
-      c.cond = x[1]
-    }
-    c.alert = !c.cond ? 1 : (c.limit && c.limit * 1000 < now ? 2 : 0)
+    const op = new EnrichCred(c.svc, c.org)
+    const ok = await op.run(c)
+    if (!ok) c.alert = 1
+    else c.limit && c.limit * 1000 < now ? 2 : 0
     if (c.alert === 1) todel.value.set(c.credId, c)
   }
-  so.creds.sort((a: Credential, b: Credential) => 
-    a.role < b.role ? -1 : (a.role > b.role ? 1 : a.docId < b.docId ? -1 : (a.docId > b.docId ? 1 : 0)))
+  so.creds.sort((a: CredSafe, b: CredSafe) => 
+    a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docId < b.docId ? -1 : (a.docId > b.docId ? 1 : 0)))
   if (so.creds.length) selectCr(so.creds[0])
 }
 
@@ -260,12 +258,11 @@ const cftodel = () => {
   todel.value.set(curcr.value.credId, curcr.value)
 }
 
-const chgComment = async (text) => {
+const chgName = async (text) => {
   const c = curcr.value
   console.log('New comment', text)
-  if (sf.updateCredComment(c.credId, text)) {
-    c.comment = text
-  }
+  if (sf.updateCredName(c.credId, text))
+    c.name = text
 }
 
 reset(false)

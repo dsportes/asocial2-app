@@ -1,5 +1,5 @@
 
-import { DocRegistry, Document } from '../src-fw/docregistry'
+import { DocRegistry, Document, CredDocument } from '../src-fw/docregistry'
 
 class Article extends Document {
   async compile () {}
@@ -20,3 +20,9 @@ class Sujet extends Document {
   async compile () {}
 }
 DocRegistry.registerD(Sujet)
+
+class CredOrg extends CredDocument {
+  
+}
+DocRegistry.registerD(CredOrg)
+
