@@ -65,7 +65,7 @@
     <div v-else class="titre-md text-italic text-center q-mt-sm">{{ $t('INVspons_no') }}</div>
   </div>
 
-  <invit-newrequest v-if="dialogs.newrequest" v-model="dialogs.newrequest"/>
+  <case-newrequest v-if="dialogs.newrequest" v-model="dialogs.newrequest"/>
   <invit-sponsor v-if="dialogs.invitsponsor" v-model="dialogs.invitsponsor"
     :invit="ui.currentInvit.invit" @done="invitDone"/>
 
@@ -83,7 +83,7 @@ import SettingsButton from '../components-fw/SettingsButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import NavBar from '../components-fw/NavBar.vue'
-import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
+import CaseNewrequest from '../dialogs-fw/CaseNewrequest.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import InvitSponsor from '../dialogs/InvitSponsor.vue'
 

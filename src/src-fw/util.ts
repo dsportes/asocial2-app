@@ -17,13 +17,13 @@ export function gzipT (data: Uint8Array) : Uint8Array | undefined { return gzip(
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
 
-export function hasMessage (code: string) : boolean {
+export function hasMessage (code: string) : string {
   const k = stores.config.K
   for (const opt of k.localeOptions) {
     const mx = i18n.messages.value[opt.value]
-    if (mx && mx[code]) return true
+    if (mx && mx[code]) return mx[code]
   }
-  return false
+  return ''
 }
 
 let audioContext: AudioContext | null = null

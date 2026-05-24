@@ -922,6 +922,16 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   INVsponsor_2: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0}].',
   INVsponsor_3: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
 
+  CAStopic_c: 'Thématique',
+  CAStopic_label: 'Thématique de votre demande',
+  CAStopic_bub: `## Quelle est la thématique de votre demande 
+bla bla
+`,
+
+  SUBnosub: 'Cette thématique n\'a pas de "sujet" spécifique.',
+  SUBtype_1: 'Choisir un "sujet" spécifique de cette thématique dans liste.',
+  SUBlist: 'Sujets proposés',
+  
   /*
   Détecté par l'application
   1: erreur fonctionnelle APP

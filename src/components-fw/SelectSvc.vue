@@ -32,7 +32,7 @@ const model = defineModel()
 model.value = opts.value[0].svc
 watch(svcloc, (v) => {
   model.value = svcloc.value ? svcloc.value.svc : ''
-  session.currentSvc = model.value
+  session.setSvc(model.value)
   emit('change', model.value)
 })
 

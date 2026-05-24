@@ -8,7 +8,7 @@ export type TopicDef = {
   id: string
   categ: string
   key: string
-  subjects: string[] | null
+  subjects: string
   pubC: Uint8Array
 }
 export type LabVal = {

@@ -17,6 +17,19 @@ export type OpArgs = {
   authRecord?: AuthRecord
 }
 
+// Retourne l'opérateur servant le service svc pour l'organisation org
+export async function opOfSvcOrg (svc: string, org: string) : Promise<string> {
+  const orgs = AOperation.orgs
+  let e = orgs.get(org)
+  if (!e) {
+    await AOperation.loadOrg(org)
+    e = orgs.get(org)
+    if (!e) return ''
+  }
+  const op = e.get(svc)
+  return op || ''
+}
+
 class AOperation {
   // Map - clé: SVC - valeur Map de clé $OP donnat l'URL
   static services : Map<string, Map<string, string>> = new Map()
@@ -37,19 +50,6 @@ class AOperation {
 
   // Map - clé: org - valeur Map de clé SVC donnant $OP
   static orgs : Map<string, Map<string, string>> = new Map()
-
-  // Retourne l'opérateur servant le service svc pour l'organisation org
-  static async opOfSvcOrg (svc: string, org: string) : Promise<string> {
-    const orgs = AOperation.orgs
-    let e = orgs.get(org)
-    if (!e) {
-      await AOperation.loadOrg(org)
-      e = orgs.get(org)
-      if (!e) return ''
-    }
-    const op = e.get(svc)
-    return op || ''
-  }
 
   static async loadOrg (org: string) : Promise<Map<string, string>> {
     const safeop = new MDOperation('$GetOrgSvcs')

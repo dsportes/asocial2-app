@@ -25,7 +25,7 @@
     <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
   </div>
 
-  <invit-newrequest v-if="dialogs.newrequest" v-model="dialogs.newrequest"/>
+  <case-newrequest v-if="dialogs.newrequest" v-model="dialogs.newrequest"/>
 
 </div>
 </template>
@@ -41,7 +41,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
-import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
+import CaseNewrequest from '../dialogs-fw/CaseNewrequest.vue'
 
 const ui = stores.ui
 const session = stores.session

@@ -209,9 +209,11 @@ export const useSessionStore = defineStore('session', () => {
     orgs.c = org
     setOrgs(new Set([org]))
   }
+  const currentOrg = computed(() => orgs.c || '')
 
   const _currentSvc = ref()
   const currentSvc = computed(() => _currentSvc.value || stores.config.K.DEFAULT_SERVICE)
+  const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
@@ -222,8 +224,8 @@ export const useSessionStore = defineStore('session', () => {
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
     aboutProfile, creds, setStartContext, endSession,
-    svcOrgs, currentSvc,
-    orgs, setOrg, setOrgs
+    svcOrgs, currentSvc, setSvc, 
+    orgs, setOrg, setOrgs, currentOrg
     // focus, getFocus, lostFocus, closingApp
   }
 })

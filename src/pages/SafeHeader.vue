@@ -54,7 +54,7 @@
     <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
   </div>
 
-  <invit-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
+  <case-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
 
 </div>
 </template>
@@ -71,7 +71,7 @@ import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InvitHdr from '../components-fw/InvitHdr.vue'
-import InvitNewrequest from '../dialogs-fw/InvitNewrequest.vue'
+import CaseNewrequest from '../dialogs-fw/CaseNewrequest.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'
 
