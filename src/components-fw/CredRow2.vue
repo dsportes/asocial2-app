@@ -18,16 +18,16 @@
           <div class="col-2 text-italic ellipsis">{{cred.docId || '(na)'}}</div>
           <div class="col-2 self-start row">
             <btn-cond class="self-start" icon="star" size="md" round
-              :disable="!cred.more" @ok="credDoc.dispMore"
+              :disable="!cred.more" @ok="cred.dispMore"
               :color="cred.more ? 'green-5' : 'grey-5'"/>
             <btn-cond class="self-start" icon="hourglass" size="md" round 
-              :disable="!cred.limit"  @ok="credDoc.dispLimit"
+              :disable="!cred.limit"  @ok="cred.dispLimit"
               :color="cred.limit ? 'warning' : 'grey-5'"/>
             <btn-cond class="self-start" icon="key" size="md" round
-              :disable="!cred.docKey" @ok="credDoc.dispDocKey"
+              :disable="!cred.docKey" @ok="cred.dispDocKey"
               :color="cred.docKey ? 'warning' : 'grey-5'"/>
             <btn-cond class="self-start" icon="folder_info" size="md" round 
-              :disable="!cred.opaque" @ok="credDoc.dispOpaque"
+              :disable="!cred.opaque" @ok="cred.dispOpaque"
               :color="cred.opaque ? 'primary' : 'grey-5'"/>
           </div>
         </div>
@@ -41,19 +41,13 @@
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
-import { ref, Ref} from 'vue'
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import { DocRegistry, CredDocument } from '../src-fw/docregistry'
 import { CredSafe } from '../src-fw/documents'
 
 const props = defineProps({
-  cred: Object
+  cred: CredSafe
 })
-
-const credDoc: Ref<CredDocument> = ref(DocRegistry.newCredDoc(props.cred.docCl))
-credDoc.value.setCred(props.cred)
 
 const emit = defineEmits(['undo', 'select'])
 

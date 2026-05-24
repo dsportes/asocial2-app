@@ -314,7 +314,7 @@ export class EnrichCred extends Operation {
       const res = await this.post()
       const cred = res.cred as Cred
       if (cred) {
-        await CredSafe.fromCred(cred, c)
+        await c.enrichFromCred(cred)
         return true
       } else return false
     } catch(e) {

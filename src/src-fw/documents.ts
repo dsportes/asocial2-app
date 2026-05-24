@@ -1,13 +1,14 @@
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
-import { DocRegistry, Document } from '../src-fw/docregistry'
 import { Crypt } from '../src-fw/crypt'
+import { DocRegistry } from '../src-fw/docregistry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
-import { $t } from '../src-fw/util'
+import { $t, dhcool } from '../src-fw/util'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
+const ui = stores.ui
 
 export type Cred = { // Credential attaché à un document
   pubv: Uint8Array
@@ -19,7 +20,9 @@ export type Cred = { // Credential attaché à un document
   credId: string
 }
 
-/* Credential en Safe */
+/* Credential en Safe, possiblemernt enrichi 
+par les propriétés du record 'cred' du document maître
+*/
 export class CredSafe {
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docId', 'privs', 'privd', 'name' ]
 
@@ -51,96 +54,128 @@ export class CredSafe {
     return obj
   }
 
-  static async fromCred (cred: Cred, target: any) {
-    target.docKey = null
-    target.opaque = null
+  async enrichFromCred (cred: Cred) {
+    this.docKey = null
+    this.opaque = null
     if (cred.docKey) try {
-        target.docKey = await Crypt.decrypt(stores.safe.keyK, cred.docKey)
+        this.docKey = await Crypt.decrypt(stores.safe.keyK, cred.docKey)
         if (cred.opaque) try {
-          const x = await Crypt.decrypt(target.docKey, cred.opaque)
-          target.opaque = decode(x)
+          // @ts-expect-error
+          const x = await Crypt.decrypt(this.docKey, cred.opaque)
+          this.opaque = decode(x)
         } catch (e) {
           console.log(e)
         }
       } catch (e) {
         console.log(e)
       }
-    target.limit = cred.limit
-    target.more = cred.more || null
+    this.limit = cred.limit
+    this.more = cred.more || null
   }
-
-  clone () : CredSafe { return new CredSafe(this.toObj) }
 
   get toJson () : string { return JSON.stringify(this.toObj, null, '\t') }
 
-  /*
-  static async buildCreds (
-    svc: string,
-    org: string,
-    role: string,
-    docId: string,
-    comment: string,
-    limit: number,
-  ) : Promise<[CredSafe, Credential]> {
-    const { pub, priv } = await Crypt.getSVKeyPair()
-    const cs = new CredSafe({ svc, org, role, docId, privs: keyToB64(priv), comment })
-    const c = Credential.fromCredSafe(cs, keyToB64(pub), limit)
-    return [cs, c]
+  async dispMore () { 
+    await ui.diagDisplay($t('CRRmore', [JSON.stringify(this.more, null, '\t')]))
   }
+
+  async dispLimit () { 
+    const dh = dhcool((this.limit || 0) * 1000)
+    await ui.diagDisplay($t('CRRlimit', [dh]))
+  }
+
+  async dispDocKey () { 
+    await ui.diagDisplay($t('CRRdocKey', [keyToB64(this.docKey || null)]))
+  }
+
+  async dispOpaque () { 
+    await ui.diagDisplay($t('CRRopaque', [JSON.stringify(this.opaque, null, '\t')]))
+  }
+
+}
+
+class CredTopic extends CredSafe {
+  constructor (obj?: Object) {
+    super(obj)
+  }
+
+  /* more: propriété `subjects`:
+    - absent: le topic n'a pas de sujets.
+    - `"a b c "`. Valeurs séparées par un espace.
+    - `"@sujet35"` : ID du _singleton_ (du service) portant cette liste.
+    - `"$sujet35"` : ID du _Property_ (de l'organisation) portant cette liste.
+    - `"DocCl/alias"` : nom de classe des documents dont `alias` est la propriété définissant un code externe.
   */
-}
-
-/*
-export type SCred = {
-  credId: string
-  role: string
-  docId: string
-  limit: number
-  cond: any
-}
-*/
-
-
-/* Document Credential stocké en DB du service/org
-Rapprochement avec Cred par: svc org userId role docId (l'ID)
-- à condition que le time soit le même. Sinon le credential est "brisé" (inutilisable).
-- dans ce cas pems (Cred) / pemv (Credential) sont issus de la même génération du couple.
-Schéma du document;
-  - pk: ['userId', 'role', 'docId']
-  - index: userId
-*/
-/*
-export class Credential extends Document {
-  async compile () {}
-
-  static fromCredSafe (cs: CredSafe, pubv: string, limit: number) : Credential {
-    const c = new Credential()
-    c.credId = cs.credId; c.role= cs.role; c.docId = cs.docId
-    c.limit = limit; c.pubv = pubv; c.cond = {}
-    return c
-  }
-
-  // implicit: svc org
-  credId: string = '' // ID du credential.
-  role: string = '' // docClass.role : un des codes de rôle connu du service.
-  docId: string = '' // identifiant du document cible du credential.
-  pubv: string = '' // clé PUBLIQUE de vérification (base64 sans bannière).
-  limit: number = 0 // date-heure en seconde de fin de validité (0 si toujors valide)
-  cond: any = null // Objet contenant les conditions d'application
-
-  alert?: number // 0:safe et db,  1:safe pas db, 2:db pas safe 3: limit dépassée
-  svc?: string
-  org?: string
-  comment?: string
-
-  static fromSCred (cs: SCred, svc: string, org: string) {
-    const c = new Credential()
-    c.svc = svc; c.org = org
-    c.credId = cs.credId; c.role= cs.role; c.docId = cs.docId; c.comment = ''
-    c.limit = cs.limit; c.pubv = ''; c.cond = cs.cond; 
-    c.alert = cs.limit && (cs.limit * 1000 < Date.now()) ? 3 : 2
-    return c
+  async dispMore () {
+    const s = this.more.subjects
+    if (!s)
+      await ui.diagDisplay($t('CRRtopic1'))
+    else if (s.startsWith('@'))
+      await ui.diagDisplay($t('CRRtopic3', [s.substring(1)]))
+    else if (s.startsWith('$'))
+      await ui.diagDisplay($t('CRRtopic4', [s.substring(1)]))
+    else {
+      const i = s.indexOf('/')
+      if (i === -1)
+        await ui.diagDisplay($t('CRRtopic2', [s]))
+      else
+        await ui.diagDisplay($t('CRRtopic5', [s.substring(i + 1), s.substring(0, i)]))
+    }
   }
 }
-DocRegistry.registerD(Credential)
-*/
+DocRegistry.registerD(CredTopic)
+
+/********************************************************
+ * Case "générique": des classes spécifiques "CaseTTT"
+ * ont des méthodes particulières par topic TTT.
+ */
+export class Case {
+  static lp1 = [ 'svc', 'org', 'userId', 'topicId', 'caseId', 'aboutU' ]
+
+  svc: string = ''
+  org: string = ''
+  userId: string = ''
+  topicId: string = ''
+  caseId: string = '' // clé primaire dans ZZCASES `userId topicId caseId`.
+  v: number = 0 // version du document dans la DB du service. Elle détermine aussi la limite de validité du cas.
+  status: number = 0 // 0-annulé 1-actif-U 2-actif-H 3-finalisé
+  aboutU: string = '' // texte crypté de commentaire pour le seul usage de l'utilisateur.
+  lv: number = 0 // dernière version _lue_ par U. La comparaison avec `v` permet de savoir si U a eu connaissance de la dernière évolution produite par le service.
+
+  // Propriétés obtenues du document correspondant
+  subject?: string
+  tab?: string // texte de l'ardoise décrypté par `X`
+  etc?: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
+
+  async enrichFromDocCase (dc: DocCase, topicPubc: Uint8Array) {
+    /* La clé _virtuelle_ `X` d'un _case_ est une clé symétrique qui est obtenue indifféremment,
+    - depuis `[du, topicPubc]` dans une session de l'application:
+      - `du` : clé privée de decryptage de U détenue par la session.
+      - `topicPubc` : clé publique de cryptage du topic obtenu en session par la configuration des topics chargée en début de session.
+    */
+    this.subject = dc.subject
+    this.etc = dc.etc
+    this.v = dc.v // pertinence ?
+    this.status = dc.status // pertinence ?
+    if (!dc.tabX) this.tab = ''
+    else {
+      const du = keyFromB64(stores.safe.auth.D)
+      const aes = await Crypt.getAESKey(topicPubc, du)
+      // @ts-expect-error
+      this.tab = decoder.decode(await Crypt.decrypt(aes, dc.tabX))
+    }
+  }
+}
+
+// "Document" Case obtenu du service pour cette organisation
+export type DocCase = {
+  topicId: string
+  subject: string
+  caseId: string // clé primaire du document `topicId subject caseId`.
+  userId: string // Index en DB
+  v: number // version du document dans la DB du service. Elle détermine aussi la limite de validité du cas.
+  status: number // 0-annulé 1-actif-U 2-actif-H 3-finalisé
+  tabX: Uint8Array | null // texte de l'ardoise crypté par `X` (en base 64).
+  etc: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
+
+}

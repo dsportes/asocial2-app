@@ -69,7 +69,15 @@ export function aujhier () {
   hier = [h.getFullYear(), h.getMonth(), h.getDate()]
 }
 
-export function dhcool (timems, sec, pash) {
+/* 
+- sec: si true affiche les secondes
+- pash: si true mode "décoré" avec "le": "le xxx à yyy" 
+  DHCleah: 'le {0} à {1}',
+  DHClea: 'le {0}',
+  DHCjah: '{0} à {1}',
+  DHCja: '{0}',
+*/
+export function dhcool (timems: number, sec?: boolean, pash?: boolean) {
   if (!timems) return $t('DHCnondate')
   aujhier()
   const dx = new Date(timems)

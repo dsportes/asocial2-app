@@ -14,9 +14,10 @@ export class DocRegistry {
     const cl = DocRegistry.regDoc.get(name)
     return cl ? new cl() : null
   }
-  static newCredDoc (name: string) {
+  static newCred (obj: Object) : CredSafe {
+    const name = 'Cred' + obj['docCl']
     const cl = DocRegistry.regDoc.get(name)
-    return cl ? new cl() : new CredDocument()
+    return cl ? new cl() : new CredSafe()
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
@@ -47,18 +48,5 @@ export abstract class Document {
   }
 
   async compile() { }
-
-}
-
-export class CredDocument {
-  cred: CredSafe | null = null
-
-  setCred (cred: CredSafe) {
-    this.cred = cred
-  }
-  async dispMore () { }
-  async dispLimit () { }
-  async dispDocKey () { }
-  async dispOpaque () { }
 
 }
