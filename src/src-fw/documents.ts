@@ -8,7 +8,6 @@ import { $t, dhcool } from '../src-fw/util'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-const ui = stores.ui
 
 export type Cred = { // Credential attaché à un document
   pubv: Uint8Array
@@ -23,7 +22,7 @@ export type Cred = { // Credential attaché à un document
 /* Credential en Safe, possiblemernt enrichi 
 par les propriétés du record 'cred' du document maître
 */
-export class CredSafe {
+export class CredSafeA {
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docId', 'privs', 'privd', 'name' ]
 
   credId: string = '' // ID du credential.
@@ -44,13 +43,13 @@ export class CredSafe {
 
   constructor (obj?: Object) {
     if (obj)
-      for (const p of CredSafe.lp1) this[p] = obj[p] || null
+      for (const p of CredSafeA.lp1) this[p] = obj[p] || null
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
   get toObj () : Object {
     const obj = {}
-    for (const p of CredSafe.lp1) obj[p] = this[p] || null
+    for (const p of CredSafeA.lp1) obj[p] = this[p] || null
     return obj
   }
 
@@ -76,25 +75,29 @@ export class CredSafe {
   get toJson () : string { return JSON.stringify(this.toObj, null, '\t') }
 
   async dispMore () { 
+    const ui = stores.ui
     await ui.diagDisplay($t('CRRmore', [JSON.stringify(this.more, null, '\t')]))
   }
 
   async dispLimit () { 
+    const ui = stores.ui
     const dh = dhcool((this.limit || 0) * 1000)
     await ui.diagDisplay($t('CRRlimit', [dh]))
   }
 
   async dispDocKey () { 
+    const ui = stores.ui
     await ui.diagDisplay($t('CRRdocKey', [keyToB64(this.docKey || null)]))
   }
 
   async dispOpaque () { 
+    const ui = stores.ui
     await ui.diagDisplay($t('CRRopaque', [JSON.stringify(this.opaque, null, '\t')]))
   }
 
 }
 
-class CredTopic extends CredSafe {
+class CredTopic extends CredSafeA {
   constructor (obj?: Object) {
     super(obj)
   }
@@ -107,6 +110,7 @@ class CredTopic extends CredSafe {
     - `"DocCl/alias"` : nom de classe des documents dont `alias` est la propriété définissant un code externe.
   */
   async dispMore () {
+    const ui = stores.ui
     const s = this.more.subjects
     if (!s)
       await ui.diagDisplay($t('CRRtopic1'))
@@ -123,7 +127,6 @@ class CredTopic extends CredSafe {
     }
   }
 }
-DocRegistry.registerD(CredTopic)
 
 /********************************************************
  * Case "générique": des classes spécifiques "CaseTTT"

@@ -1,7 +1,7 @@
 
 import stores from '../stores/all'
 import { Invitation, MsgVal } from '../src-fw/invitation'
-import { CredSafe } from '../src-fw/documents'
+import { CredSafeA } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
@@ -54,7 +54,8 @@ export class Major {
   - un utilisateur qui a un credential Sponsor pour le "major.minor" de l'invitation
     est un sponsor valide (à condition bien sur que l'invitation ait un minor).
   */
-  static msgVal (self: Invitation) : MsgVal {
+  static msgVal (self: Invitation) {
+    /*
     let credOk : MsgVal | null = null
     const creds : Map<string, CredSafe> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
@@ -77,6 +78,7 @@ export class Major {
       }
     } 
     return { ok: false, txt: $t('INVsponsor_0'), role: '', docId: '' }
+    */
   }
 
   static editEtc_Org_manager (self: Invitation) : string {
@@ -84,6 +86,7 @@ export class Major {
   }
 
   static async validate_Org_manager (self: Invitation, args: any) : Promise<string> {
+    /*
     const op = new Operation('InvitValidate', self.svc, self.org)
     const { pub, priv } = await Crypt.getSVKeyPair()
     try {
@@ -107,6 +110,8 @@ export class Major {
       op.ko(e)
       return 'ko'
     }
+    */
+    return ''
   }
 
   static editEtc_Auteur (self: Invitation) : string {
@@ -125,7 +130,7 @@ export class Major {
     Puis, enregistrement,
       - du Credential Safe sur "Auteur"
       - optionnellement du credential "Sponsor".
-    */
+
     const op = new Operation('InvitValidate', self.svc, self.org)
     const sf = stores.safe
     try {
@@ -189,5 +194,7 @@ export class Major {
       await op.ko(e)
       return 'exc'
     }
+    */
+   return ''
   }
 }

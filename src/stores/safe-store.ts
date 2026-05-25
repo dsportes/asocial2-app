@@ -14,7 +14,7 @@ import { AppExc, $t, sleep, quarter } from '../src-fw/util'
 import { SafeOperation, MDOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { CredSafe } from '../src-fw/documents'
+import { CredSafeA } from '../src-fw/documents'
 
 /*
 ### Safes stockés dans un directory
@@ -520,7 +520,7 @@ export const useSafeStore = defineStore('safe', () => {
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds": organisée avec une **sous-section par application** */
-  const mySafeCreds: Ref<Map<string, CredSafe>> = ref() // ceux de l'app
+  const mySafeCreds: Ref<Map<string, CredSafeA>> = ref() // ceux de l'app
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -730,18 +730,18 @@ export const useSafeStore = defineStore('safe', () => {
   /***************************************************************************/
 
   /* Creds ************************************************************************
-  En safe la map safe.creds a une entrée par CredSafe:
+  En safe la map safe.creds a une entrée par CredSafeA:
   - clé: shaS de (svc + '/' + org + '/' + role + '/' + docId)
   - valeur: [ comment, data ]
     - comment: proprité comment cryptée par la clé K de U et en base 64.
       c'est la seule propriété qui peut être mise à jour par U ultérieurement.
     - data: la sérialisation des autres propriétés {id svc role docId time privs name rec}
       cryptées par la clé K de U et mis en base 64.
-  SEUL U peut créer et mettre à jour (le comment seulement) un CredSafe.
+  SEUL U peut créer et mettre à jour (le comment seulement) un CredSafeA.
     - lors de la validation d'une invitation.
   ***********************************************************************************/
   const loadCreds = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, CredSafe>()
+    const m = new Map<string, CredSafeA>()
     const msvc = stores.config.K.SERVICES
     const orgs = new Set<string>([])
     if (safe.creds) for (const xid in safe.creds)
@@ -750,7 +750,7 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
         if (msvc[obj['svc']]) {
           obj['name'] = await dcX(keyFromB64(nameK))
-          const c: CredSafe = new CredSafe(obj)
+          const c: CredSafeA = new CredSafeA(obj)
           m.set(c.credId, c)
           orgs.add(c.org)
         }
@@ -766,10 +766,10 @@ export const useSafeStore = defineStore('safe', () => {
     shK: string // shaS de la clé K en base 64
     credId: string // id du credential
     nameK: string // nom (correspondant à docId) crypté par K et en base 64
-    cred?: string // CredSafe sérialisé, crypté par K et en base64 (pour création)
+    cred?: string // CredSafeA sérialisé, crypté par K et en base64 (pour création)
   }
   /* Creation d'un Cred en safe */
-  const createCred = async ( cred : CredSafe ) => {
+  const createCred = async ( cred : CredSafeA ) => {
     const obj = cred.toObj
     delete obj['name']
     const credSer = keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
@@ -1000,9 +1000,9 @@ export const useSafeStore = defineStore('safe', () => {
     return ''
   }
 
-  /* Retourne la Map des CredSafe dont l'id est citée dans le profile *************/
-  const getCreds = (profile: Profile) : Map<string, CredSafe> => {
-    const x: Map<string, CredSafe> = new Map<string, CredSafe>()
+  /* Retourne la Map des CredSafeA dont l'id est citée dans le profile *************/
+  const getCreds = (profile: Profile) : Map<string, CredSafeA> => {
+    const x: Map<string, CredSafeA> = new Map<string, CredSafeA>()
     if (!stores.session.hasNet || !profile) return x
     if (profile.profId !== '*') for(const xid of profile.crIds) {
         const c = mySafeCreds.value.get(xid)

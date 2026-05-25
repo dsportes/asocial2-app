@@ -932,6 +932,18 @@ bla bla
   SUBtype_1: 'Choisir un "sujet" spécifique de cette thématique dans liste.',
   SUBlist: 'Sujets proposés',
   
+  SLCtit_bub: `### Sélection d'un code dans la liste proposée
+Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'intérieur du code recherché:
+- la liste affichée se rétrécit au fur et à mesure de la sélection demandée.
+- la sélection ignore les majuscules / minuscules.
+- cliquer sur le code de la liste affichée dès que celui attendu apparaît.
+- le premier code listé apparaît comme _sélectionné_.
+- appuyer sur le bouton **OK** dans la barre de titre le sélectionne.
+
+Fermer la fenêtre corespond à un NON sélection.
+`,
+  SLCsel: 'Quelques caractères dans le code recherché',
+  
   /*
   Détecté par l'application
   1: erreur fonctionnelle APP

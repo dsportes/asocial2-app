@@ -1,10 +1,8 @@
 
 import { DocRegistry, Document } from '../src-fw/docregistry'
-import { CredSafe } from '../src-fw/documents'
+import { CredSafeA } from '../src-fw/documents'
 import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
-
-const ui = stores.ui
 
 class Article extends Document {
   async compile () {}
@@ -26,9 +24,18 @@ class Sujet extends Document {
 }
 DocRegistry.registerD(Sujet)
 
+class CredSafe extends CredSafeA {
+  constructor (obj?: Object) {
+    super(obj)
+  }
+}
+DocRegistry.registerD(CredSafe)
+DocRegistry.registerD(CredSafeA)
+
 class CredOrg extends CredSafe {
   constructor (obj?: Object) {
     super(obj)
   }
 }
 DocRegistry.registerD(CredOrg)
+

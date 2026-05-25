@@ -43,10 +43,10 @@
 <script setup lang="ts">
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import { CredSafe } from '../src-fw/documents'
+import { CredSafeA } from '../src-fw/documents'
 
 const props = defineProps({
-  cred: CredSafe
+  cred: CredSafeA
 })
 
 const emit = defineEmits(['undo', 'select'])

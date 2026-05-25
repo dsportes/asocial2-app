@@ -2,6 +2,7 @@
 <div class="column items-center">
   <btn-cond v-if="hasBtn1" label="T1" class="q-ml-xs" @ok="t1"/>
   <btn-cond label="T2" class="q-ml-xs" @ok="t2"/>
+  <btn-cond label="SelCode" class="q-ml-xs" @ok="dialogs.selCode = true"/>
   <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
   <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
   <div class="font-mono q-pa-sm">{{echo}}</div>
@@ -12,6 +13,10 @@
       <btn-cond icon="download" :disable="fd.size === 0" @ok="downloadFile"/>
     </template>
   </q-file>
+
+  <select-code v-model="dialogs.selCode" :values="selValues"
+    title="Selection fleur"
+    @select="selC" @close="selC('RIEN')" />
 </div>
 </template>
 
@@ -31,6 +36,7 @@ import { SafeOperation } from '../src-fw/operation'
 import { getData, putData } from '../src-fw/net'
 import { Crypt, fromPem, u8ToHex, testECDH, testSH } from '../src-fw/crypt'
 import BtnCond from '../components-fw/BtnCond.vue'
+import SelectCode from '../dialogs-fw/SelectCode.vue'
 import stores from '../stores/all'
 
 const decoder = new TextDecoder()
@@ -40,12 +46,22 @@ const ui = stores.ui
 const dataSt = stores.data
 const session = stores.session
 
+const dialogs = reactive({
+  selCode: false
+})
+
 /* scripts de test *************************************************/
 const hasBtn1 = computed(() => session.pref.obj.btn1)
+
+const selValues = ref([])
+for (let i = 0; i < 10; i++)
+  for(const x of ['rose', 'lilas', 'JASmin', 'tuLIPe'])
+    selValues.value.push(x + '_' + i)
 
 function plus1 () : void { dataSt.setCpt(dataSt.cpt + 1)}
 function moins1 () : void { dataSt.setCpt(dataSt.cpt - 1)}
 
+function selC (c) { console.log('Selected:', c) }
 const echo = ref('')
 
 const fileList = ref(null)

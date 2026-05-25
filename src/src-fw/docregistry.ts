@@ -2,7 +2,6 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { DocType } from '../src-fw/doctypes'
-import { CredSafe } from '../src-fw/documents'
 
 export class DocRegistry {
   static regDoc = new Map()
@@ -14,10 +13,10 @@ export class DocRegistry {
     const cl = DocRegistry.regDoc.get(name)
     return cl ? new cl() : null
   }
-  static newCred (obj: Object) : CredSafe {
+  static newCred (obj: Object) {
     const name = 'Cred' + obj['docCl']
-    const cl = DocRegistry.regDoc.get(name)
-    return cl ? new cl() : new CredSafe()
+    const cl = DocRegistry.regDoc.get(name) || DocRegistry.regDoc.get('CredSafeA')
+    return cl ? new cl() : null
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
