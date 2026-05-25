@@ -928,8 +928,14 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
 bla bla
 `,
 
-  SUBnosub: 'Cette thématique n\'a pas de "sujet" spécifique.',
-  SUBtype_1: 'Choisir un "sujet" spécifique de cette thématique dans liste.',
+  SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',
+  SUBnosub_bub: `### Cette thématique n'a pas de "sujet" spécifique
+  bla bla
+`,
+  SUBtype_label: 'Choisir un "sujet" précisant la thématique.',
+  SUBtype_bub: `### Choisir un "sujet" précisant la thématique
+  bla bla
+`,
   SUBlist: 'Sujets proposés',
   
   SLCtit_bub: `### Sélection d'un code dans la liste proposée
@@ -943,7 +949,7 @@ Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'int�
 Fermer la fenêtre corespond à un NON sélection.
 `,
   SLCsel: 'Quelques caractères dans le code recherché',
-  
+
   /*
   Détecté par l'application
   1: erreur fonctionnelle APP
@@ -1195,6 +1201,7 @@ blu blu
   TOPIC_admin: '01Attribuer un pouvoir de "manager"',
   TOPIC_crauteur: '02Création d\'un nouvel auteur',
   TOPIC_joinauteur: '02Devenir co-auteur d\'un auteur',
+  SUBJECT_joinauteur_titi: 'Grand auteur titi',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

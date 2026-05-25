@@ -7,34 +7,31 @@
   :title="$t('INVtit_1_label')">
   <template #hdr>
     <div class="row justify-between items-center">
-      <btn-cond icon="close" :label="$t('giveup')"
-        @ok="model = false; emit('close', true)"/>
+      <btn-cond icon="undo" :label="$t('reset')"
+        @ok="reset"/>
       <btn-cond icon="check" :label="$t('validate')" color="warning"
         :disable="!completed"
         @ok="create"/>
     </div>
   </template>
   <template #default>
-    <div class="column items-center">
-      <div class="q-pa-xs">
-        <div class="row items-center justify-center q-gutter-sm">
+    <div style="max-width:30rem;width:95vw;margin:0 auto;padding: 0 5px">
+      <div class="column items-center">
+        <div class="row items-center justify-around q-gutter-sm full-width">
           <select-svc @change="svcorgSelected" v-model="svc"/>
           <select-org @change="svcorgSelected"/>
         </div>
 
-        <div v-if="svc && session.orgs.c">
-          <bar-title prefix="CAStopic"/>
+        <div v-if="svc && session.orgs.c" class="q-my-md column items-center">
+          <bar-title mini prefix="CAStopic"/>
           <topic-menu v-model="topic" @select="topicSel"/>
+          <div v-if="topic" class="titre-md text-bold q-mb-md q-mt-xs">
+            {{ $t('TOPIC_' + topic.id).substring(2) }}</div>
 
-          
+          <div v-if="topic">
+            <subject-menu v-model="topic" @select="onSubject"/>
 
-          <div v-if="major">
-            <div v-if="hasMinor" class="q-mt-sm full-width" >
-              <bar-title prefix="INVminor"/>
-              <input-b prefix="INVminor_c" v-model="minor" size="minor" noval/>
-            </div>
-
-            <div v-if="xerr === ''">
+            <div v-if="subject !== null">
               <bar-title class="q-mt-md" prefix="INVtabu"/>
               <md-editor class="full-width q-pa-xs" v-model="tab"
                 editable modetxt/>
@@ -58,11 +55,13 @@ import { Invitation } from '../src-fw/invitation'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
-import InputB from '../components-fw/InputB.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
+import TopicMenu from '../components-fw/TopicMenu.vue'
+import SubjectMenu from '../components-fw/SubjectMenu.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
+
 import { GetTopics, UpdTopics } from '../src-fw/operations'
 import { opOfSvcOrg } from '../src-fw/operation'
 import { TopicDef } from '../stores/service-store'
@@ -77,6 +76,16 @@ const config = stores.config
 const session = stores.session
 
 const svc = ref(config.K.DEFAULT_SERVICE)
+const topic: Ref<TopicDef> = ref()
+const subject = ref(null)
+const tab = ref('')
+
+const reset = () => {
+  svc.value = config.K.DEFAULT_SERVICE
+  topic.value = null
+  subject.value = null
+  tab.value = ''
+}
 
 const svcorgSelected = async () => {
   await loadTopics()
@@ -95,35 +104,23 @@ onMounted(async () => {
   await loadTopics()
 })
 
-const topic: Ref<TopicDef> = ref()
 const topicSel = (t: TopicDef) => {
   topic.value = t
+  subject.value = null
 }
 
-
-const minor = reactive({ inp: '', err: 'tooshort' })
-
-const tab = ref('')
-const majdescr = computed(() => config.K.majorInvits[major.value.value])
-
-const hasMinor = computed(() => major.value && majdescr && majdescr.hasMinor )
-
-const xerr = computed(() => !hasMinor.value ? '' : minor.err )
+const onSubject = (s) => {
+  console.log(s.label)
+  subject.value = s.value
+}
 
 const completed = computed(() => 
-  session.orgs.c && xerr.value === '' && tab.value.length > mintab)
-
-const reset = () => {
-  svc.value = config.K.DEFAULT_SERVICE
-  topic.value = null
-
-  minor.inp = ''; minor.err = 'tooshort'
-  tab.value = ''
-}
+  session.orgs.c && subject.value !== null && tab.value.length > mintab)
 
 reset()
 
 const create = async () => {
+  /*
   const invit = new Invitation({
     invitId: '',
     userId: sf.userId,
@@ -144,6 +141,7 @@ const create = async () => {
     const f = ui.currentInvit.fnOnUpdate
     if (f) f()
   }
+  */
 }
 </script>
 

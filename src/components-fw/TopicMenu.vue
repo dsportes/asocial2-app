@@ -1,6 +1,7 @@
 <template>
 <div>
-  <q-btn :label="$t('APtopicmenu')" icon-right="keyboard_arrow_down" outline no-caps
+  <q-btn :label="$t('APtopicmenu')" 
+    icon-right="keyboard_arrow_down" outline no-caps
     :disable="disable">
     <q-menu anchor="bottom left" self="top left"
       transition-show="scale" transition-hide="scale">
@@ -15,7 +16,7 @@
               <q-list dense style="min-width: 200px">
                 <q-item v-for="t in topics(c.value)" :key="t.value.id"
                   v-close-popup
-                  dense clickable @click="emit('select', t.value)">
+                  dense clickable @click="sel(t)">
                   <q-item-section>{{t.label}}</q-item-section>
                 </q-item>
               </q-list>
@@ -35,7 +36,7 @@ import { $t } from '../src-fw/util'
 import { LabVal } from '../stores/service-store'
 
 const svc = stores.service
-const ui = stores.ui
+const session = stores.session
 
 const props = defineProps({
   disable: Boolean
@@ -43,10 +44,14 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
-const categs: Ref<LabVal[]> = computed(() => svc.getCategs(ui.adminPage.SVC))
+const sel = (t) => {
+  emit('select', t.value)
+}
+
+const categs: Ref<LabVal[]> = computed(() => svc.getCategs(session.currentSvc))
 
 const topics: Ref<LabVal[]> = (categ: string) => 
-  svc.getTopics(ui.adminPage.SVC, categ)
+  svc.getTopics(session.currentSvc, categ)
 
 </script>
 

@@ -8,7 +8,7 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Cred, CredSafe } from '../src-fw/documents'
+import { Cred, CredSafeA } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -307,7 +307,7 @@ export class InvitGet extends Operation {
 export class EnrichCred extends Operation {
   constructor (SVC: string, org: string) { super('GetCred', SVC, org) }
 
-  async run (c: CredSafe ) : Promise<boolean> {
+  async run (c: CredSafeA ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docId: c.docId || ''})
       await this.sign(c.docCl, c.docId)

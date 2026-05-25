@@ -1,55 +1,28 @@
 <template>
 <div>
-  <div v-if="sType.type === 0" class="title-md text-italic text-center">
-    {{ $t('SUBnosub') }}
-  </div>
+  <bar-title v-if="sType.type === 0" mini prefix="SUBnosub"/>
 
-  <div v-if="sType.type === 1">
-    <div class="title-md text-italic text-center">{{ $t('SUBtype_1') }}</div>
-    <q-select class="q-my-xs" dense options-dense filled clearable
+  <div v-if="sType.type === 1" class="column items-center">
+    <bar-title prefix="SUBtype" mini/>
+    <q-select class="q-my-xs font-mono fs-lg" dense options-dense filled clearable
       transition-show="flip-up" transition-hide="flip-down" 
       style="width:300px"
       v-model="subject"
-      :options="options" emit-value :label="$t('SUBlist')">
-      <template v-slot:append>
-        <btn-cond :label="$t('ok')" padding="none xs" @ok="selectSub"/>
-      </template>
+      :options="options()" :label="$t('SUBlist')">
     </q-select>
   </div>
-
-  <q-btn :label="$t('APtopicmenu')" icon-right="keyboard_arrow_down" outline no-caps
-    :disable="disable">
-    <q-menu anchor="bottom left" self="top left"
-      transition-show="scale" transition-hide="scale">
-      <q-list dense style="min-width: 150px">
-        <q-item v-for="c in categs" :key="c.value" clickable>
-          <q-item-section>{{c.label}}</q-item-section>
-          <q-item-section side>
-            <q-icon name="keyboard_arrow_right" />
-          </q-item-section>
-            <q-menu anchor="center middle"
-              transition-show="flip-right" transition-hide="flip-left">
-              <q-list dense style="min-width: 200px">
-                <q-item v-for="t in topics(c.value)" :key="t.value.id"
-                  v-close-popup
-                  dense clickable @click="emit('select', t.value)">
-                  <q-item-section>{{t.label}}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, hasMessage } from '../src-fw/util'
-import { TopicDef } from '../stores/service-store'
+import BarTitle from '../components-fw/BarTitle.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+// import { TopicDef } from '../stores/service-store'
+import SelectCode  from '../dialogs-fw/SelectCode.vue'
 
 type sType = {
   type: number // 0:aucun 1:config 2:singleton 3:property 4:docCl/alias
@@ -100,27 +73,29 @@ const sType = computed(() => {
 
 const emit = defineEmits(['select'])
 
+const subject = ref()
+
 const options = () => {
   const opts: LabVal[] = []
   const ls = model.value.subjects.split(' ')
   for (const s of ls) {
-    const label = hasMessage('SUBJECTS_' + model.value.id + '_' + s) || s
+    const label = hasMessage('SUBJECT_' + model.value.id + '_' + s) || s
     opts.push({ label, value: s})
   }
   opts.sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? -1 : 0))
-  subject.value = opts[0]
   return opts
 }
 
-const selectSub = (sub: LabVal) => {
-  emit('select', sub.value)
+watch(subject, (v) => {
+  emit('select', subject.value)
+})
+
+const selectSub = () => {
+  emit('select', subject.value)
 }
 
-const subject = ref()
-
-const init = () => {
-  
-}
+if (sType.value.type === 0)
+  emit('select', '')
 
 </script>
 
