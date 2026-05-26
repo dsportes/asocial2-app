@@ -1087,6 +1087,7 @@ Fermer la fenêtre corespond à un NON sélection.
   EX105_masterdir_arguments_notdecodable: 'Opération Master Directory: impossible de décoder les arguments.',
   EX105_service_arguments_notdecodable: 'Opération Service en échec inattendu. impossible de décoder les arguments.',
   EX105_safe_arguments_notdecodable: 'Opération Safe Box en échec inattendu. impossible de décoder les arguments.',
+  EX105_masterdir_case_chk: 'Accès au masterdir "case" avec une clé d\'authentification "chk" non valide.',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
