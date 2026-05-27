@@ -39,7 +39,8 @@ import { Ref, ref, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t, dkli, dhcool } from '../src-fw/util'
 
-import { InvitGet } from '../src-fw/operations'
+import { CaseGet } from '../src-fw/operations'
+import { Case } from '../src-fw/documents'
 
 import InvitZoom from '../components-fw/InvitZoom.vue'
 import { MDOperation } from 'src/src-fw/operation'
@@ -70,6 +71,7 @@ const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:las
 }
 
 const invits: Ref<InvitS[]> = ref([])
+const cases: Ref<Case[]> = ref([])
 
 const mdInvits = async () => {
   const op = new MDOperation('$mdInvitList')
@@ -124,6 +126,7 @@ const selInv0 = () => {
 
 const selInv = async (inv, idx) => {
   // Get de l'invit par le service
+  /*
   const op = new InvitGet(inv.svc, inv.org)
   const invit = await op.run(inv.invitId, sf.userId)
   const u = ui.currentInvit
@@ -134,6 +137,21 @@ const selInv = async (inv, idx) => {
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = invits.value.length
+  */
+}
+
+const selCase = async (cas, idx) => {
+  // Get de l'invit par le service
+  const op = new CaseGet(cas.svc, cas.org)
+  const c = await op.run(cas.caseId)
+  const u = ui.currentCase
+  u.cas = cas
+  u.zoomed = true
+  u.newTab = ''
+  u.casS = c || null
+  const nb = ui.navBar
+  nb.idx = idx
+  nb.nb = cases.value.length
 }
 
 const init = async () => {

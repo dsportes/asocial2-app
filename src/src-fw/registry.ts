@@ -1,27 +1,36 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { DocType } from '../src-fw/doctypes'
+import { DocType } from './doctypes'
 
-export class DocRegistry {
+export class Registry {
   static regDoc = new Map()
-  static sizeD () { return DocRegistry.regDoc.size }
+  static sizeD () { return Registry.regDoc.size }
 
-  static registerD (cl: Function) { DocRegistry.regDoc.set(cl.name, cl) }
-  static getD (name: string) { return DocRegistry.regDoc.get(name) }
+  static registerD (cl: Function) { Registry.regDoc.set(cl.name, cl) }
+
+  static getD (name: string) { return Registry.regDoc.get(name) }
+
   static newD (name: string) {
-    const cl = DocRegistry.regDoc.get(name)
+    const cl = Registry.regDoc.get(name)
     return cl ? new cl() : null
   }
+
   static newCred (obj: Object) {
-    const name = 'Cred' + obj['docCl']
-    const cl = DocRegistry.regDoc.get(name) || DocRegistry.regDoc.get('CredSafeA')
+    const name = 'Cred_' + obj['docCl']
+    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('CredSafe')
     return cl ? new cl() : null
+  }
+
+  static newCase (obj: any) {
+    const name = 'Case_' + obj['topicId']
+    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('Case')
+    return cl ? new cl(obj) : null
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
     const dt = DocType.get(clazz)
-    const doc = DocRegistry.newD(clazz)
+    const doc = Registry.newD(clazz)
     if (!doc) return null
     doc._clazz = clazz
     doc._dt = dt || null

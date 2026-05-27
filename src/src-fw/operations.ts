@@ -8,7 +8,8 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Cred, CredSafeA } from '../src-fw/documents'
+import { Cred, CredSafe, DocCase, Case } from '../src-fw/documents'
+import { Registry } from './registry'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -282,32 +283,32 @@ export class ListManagers extends Operation {
   }
 }
 
-/* Lecture d'une invitation par son ID par son propriétaire */
-export class InvitGet extends Operation {
-  constructor (SVC: string, org: string) { super('InvitGet', SVC, org) }
+/* Lecture d'un document Case par son propriétaire */
+export class CaseGet extends Operation {
+  constructor (SVC: string, org: string) { super('CaseGet', SVC, org) }
 
-  async run ( invitId: string, userId: string ) : Promise<Invitation | null> {
+  async run ( caseId: string ) : Promise<Case | null> {
     try {
-      this.args.invitId = invitId
-      this.args.userId = userId
+      this.args.caseId = caseId
       const res = await this.post()
-      const inv = res.invitation as InvObj | null
-      if (!inv) return null
-      inv.svc = this.SVC
-      inv.org = this.args.org
-      return new Invitation(inv)
+      const c = res.case as DocCase | null
+      if (!c) return null
+      c.svc = this.SVC
+      c.org = this.args.org
+      return Registry.newCase(c)
     } catch(e) {
       await this.ko(e)
       return null
     }
   }
+
 }
 
 // Enrichit un CredSafe avec les données du Cred correspondant en DB
 export class EnrichCred extends Operation {
   constructor (SVC: string, org: string) { super('GetCred', SVC, org) }
 
-  async run (c: CredSafeA ) : Promise<boolean> {
+  async run (c: CredSafe ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docId: c.docId || ''})
       await this.sign(c.docCl, c.docId)

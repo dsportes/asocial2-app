@@ -7,7 +7,7 @@ import stores from '../stores/all'
 import { Crypt } from './crypt'
 import { AppExc, sleep } from './util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { DocRegistry } from '../src-fw/docregistry'
+import { Registry } from './registry'
 import { Subscription, Subs } from '../src-fw/subscription'
 
 const STORES = {
@@ -164,7 +164,7 @@ export class IDB {
   async loadAllDocs (cb: Function) : Promise<void> {
     await this.db.documents.each(async ({org, id, bin }) => {
       const rec = await this.decryptRecord(bin) as docRecord
-      const doc = await DocRegistry.compile(rec.clazz, rec.data)
+      const doc = await Registry.compile(rec.clazz, rec.data)
       cb(org, doc)
     })
   }

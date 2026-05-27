@@ -1,10 +1,11 @@
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { DocRegistry } from '../src-fw/docregistry'
+import { Registry } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
+import { Operation } from '../src-fw/operation'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -22,7 +23,7 @@ export type Cred = { // Credential attaché à un document
 /* Credential en Safe, possiblemernt enrichi 
 par les propriétés du record 'cred' du document maître
 */
-export class CredSafeA {
+export class CredSafe {
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docId', 'privs', 'privd', 'name' ]
 
   credId: string = '' // ID du credential.
@@ -43,13 +44,13 @@ export class CredSafeA {
 
   constructor (obj?: Object) {
     if (obj)
-      for (const p of CredSafeA.lp1) this[p] = obj[p] || null
+      for (const p of CredSafe.lp1) this[p] = obj[p] || null
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
   get toObj () : Object {
     const obj = {}
-    for (const p of CredSafeA.lp1) obj[p] = this[p] || null
+    for (const p of CredSafe.lp1) obj[p] = this[p] || null
     return obj
   }
 
@@ -96,8 +97,9 @@ export class CredSafeA {
   }
 
 }
+Registry.registerD(CredSafe)
 
-class CredTopic extends CredSafeA {
+class Cred_Topic extends CredSafe {
   constructor (obj?: Object) {
     super(obj)
   }
@@ -127,13 +129,14 @@ class CredTopic extends CredSafeA {
     }
   }
 }
+Registry.registerD(Cred_Topic)
 
 /********************************************************
  * Case "générique": des classes spécifiques "CaseTTT"
  * ont des méthodes particulières par topic TTT.
  */
 export class Case {
-  static lp1 = [ 'svc', 'org', 'userId', 'topicId', 'caseId', 'aboutU' ]
+  static lp1 = [ 'userId', 'topicId', 'caseId' ]
 
   svc: string = ''
   org: string = ''
@@ -168,17 +171,56 @@ export class Case {
       this.tab = decoder.decode(await Crypt.decrypt(aes, dc.tabX))
     }
   }
+
+  async cryptTab (tab) {
+    const svc = stores.service
+    const td = await svc.getTopic(this.svc)
+
+  }
+
+  async createByU (svc: string, org: string, about: string, topicId: string, subject: string) : Promise<boolean> {
+    const sf = stores.safe
+    const aboutU = keyToB64(await Crypt.crypt(sf.keyK, encoder.encode(about)))
+
+    const caseObj = {
+      caseId: Crypt.rnd(15),
+      userId: sf.userId,
+      
+
+    }
+    this.status = 1
+    const ui = stores.ui
+    const op = new Operation('CaseCreateByU', this.svc, this.org)
+    op.args['invObj'] = this.toObj
+    try {
+      const res = await op.post()
+      if (res.status !== 0) {
+        await ui.diagDisplay($t('STINV_' + res.status))
+        return false
+      }
+      if (await this.mdInvitSet(true)) {
+        ui.diagDisplay($t('INVop_1'), 2)
+        return true
+      } else return false
+    } catch (e: any) {
+      op.ko(e)
+      return false
+    }
+  }
 }
 
 // "Document" Case obtenu du service pour cette organisation
 export type DocCase = {
-  topicId: string
-  subject: string
-  caseId: string // clé primaire du document `topicId subject caseId`.
-  userId: string // Index en DB
-  v: number // version du document dans la DB du service. Elle détermine aussi la limite de validité du cas.
-  status: number // 0-annulé 1-actif-U 2-actif-H 3-finalisé
-  tabX: Uint8Array | null // texte de l'ardoise crypté par `X` (en base 64).
-  etc: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
+  caseId: string  // ID universel généré aléatoirement à la création.
+  v: number  // version du document. Elle détermine aussi la limite de validité du document.
+  userId: string // ID de l'utilisateur détenteur du cas. Depuis une opération du service la clé publique de cryptage `CU` est donc accessible.
+  topicId: string // ID du topic auquel le cas se rapporte.
+  subject: string // code (facultatif) désignant une cible plus précise permettant à un utilisateur _sponsor_ de se concentrer sur un sujet précis. 
+  status: number // 0-annulé 1-actif-U 2-actif-H 3-finalisé.
+  tabX: Uint8Array | null // texte de l'ardoise crypté par `X`
+  etc: any  // objet qui ne peut être écrit configuré que par une opération d'un _sponsor_ autorisé.
+  maxLife: number // epoch en MINUTES
 
+  svc?: string
+  org?: string
 }

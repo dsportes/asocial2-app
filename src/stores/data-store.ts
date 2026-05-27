@@ -18,7 +18,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
 import { isSameSet } from '../src-fw/util'
-import { Document, DocRegistry } from '../src-fw/docregistry'
+import { Document, Registry } from '../src-fw/registry'
 import { Subscription, Subs, versions } from '../src-fw/subscription'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
@@ -494,13 +494,13 @@ export const useDataStore = defineStore('data', () => {
     const binDocs: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     const delPks: string[] = []
     if (Array.isArray(x)) for (const data of x) {
-      const doc = await DocRegistry.compile(clazz, data)
+      const doc = await Registry.compile(clazz, data)
       if (!doc) continue // impensable
       const docInfo: docInfo | null = setDoc(org, doc)
       if (docInfo) binDocs.set(doc._pk, data) // document utile et existant
       else delPks.push(doc._pk)
     } else {
-      const doc = await DocRegistry.compile(clazz, x)
+      const doc = await Registry.compile(clazz, x)
       if (doc) { // null impensable
         const docInfo: docInfo | null = setDoc(org, doc)
         if (docInfo) binDocs.set(doc._pk, x) // document utile et existant

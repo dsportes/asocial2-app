@@ -1,41 +1,33 @@
 
-import { DocRegistry, Document } from '../src-fw/docregistry'
-import { CredSafeA } from '../src-fw/documents'
-import stores from '../stores/all'
-import { $t, dhcool } from '../src-fw/util'
+import { Registry, Document } from '../src-fw/registry'
+import { CredSafe } from '../src-fw/documents'
+// import stores from '../stores/all'
+// import { $t, dhcool } from '../src-fw/util'
 
 class Article extends Document {
   async compile () {}
 }
-DocRegistry.registerD(Article)
+Registry.registerD(Article)
 
 class Auteur extends Document {
   async compile () {}
 }
-DocRegistry.registerD(Auteur)
+Registry.registerD(Auteur)
 
 class Chat extends Document {
   async compile () {}
 }
-DocRegistry.registerD(Chat)
+Registry.registerD(Chat)
 
 class Sujet extends Document {
   async compile () {}
 }
-DocRegistry.registerD(Sujet)
+Registry.registerD(Sujet)
 
-class CredSafe extends CredSafeA {
+class Cred_Org extends CredSafe {
   constructor (obj?: Object) {
     super(obj)
   }
 }
-DocRegistry.registerD(CredSafe)
-DocRegistry.registerD(CredSafeA)
-
-class CredOrg extends CredSafe {
-  constructor (obj?: Object) {
-    super(obj)
-  }
-}
-DocRegistry.registerD(CredOrg)
+Registry.registerD(Cred_Org)
 
