@@ -176,10 +176,10 @@ export const useUiStore = defineStore('ui', () => {
     nb: 0,
     fnnav: null,
   })
-  const currentInvit = reactive({
+
+  const currentCase = reactive({
     zoomed: false,
-    invit: null, // Invitation (service)
-    inv: null, // Invit (safe)
+    cas: null, // cas du Master Directory, enrichi ou non par le document
     newTab: '',
     fnOnUpdate: null,
     msgVal: null
@@ -200,7 +200,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    currentInvit, navBar, adminPage, sponsoringsPage,
+    currentCase, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
   }
 })

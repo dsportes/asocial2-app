@@ -1,9 +1,9 @@
 <template>
-  <invit-scanrequests/>
+  <case-scanrequests/>
 </template>
 
 <script setup lang="ts">
-import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
+import CaseScanrequests from '../components-fw/CaseScanrequests.vue'
 
 // @ts-ignore
 // import { ref, watch } from 'vue'

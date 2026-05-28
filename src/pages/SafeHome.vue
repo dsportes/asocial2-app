@@ -87,7 +87,7 @@
   </div>
 
   <div v-if="sf.tab3 === 'scan' && sf.step === 3" class="q-pa-xs">
-    <invit-scanrequests/>
+    <case-scanrequests/>
   </div>
 
   <!-- Dialogue d'options de lancement -->
@@ -160,7 +160,7 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
-import InvitScanrequests from '../components-fw/InvitScanrequests.vue'
+import CaseScanrequests from '../components-fw/CaseScanrequests.vue'
 // import { Bug } from '../src-fw/operations'
 
 // @ts-ignore

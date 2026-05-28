@@ -32,9 +32,12 @@
             <subject-menu v-model="topic" @select="onSubject"/>
 
             <div v-if="subject !== null">
-              <bar-title class="q-mt-md" prefix="INVtabu"/>
+              <bar-title class="q-mt-md" prefix="CAStabu"/>
               <md-editor class="full-width q-pa-xs" v-model="tab"
                 editable modetxt/>
+              <bar-title class="q-mt-md" prefix="CASabout"/>
+              <md-editor class="full-width q-pa-xs" v-model="about"
+                editable modetxt mh="5rem"/>
             </div>
           </div>
         </div>
@@ -51,7 +54,8 @@ import { ref, Ref, reactive, computed, onMounted } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { Invitation } from '../src-fw/invitation'
+import { Case } from '../src-fw/documents'
+import { Registry } from '../src-fw/registry'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -79,6 +83,7 @@ const svc = ref(config.K.DEFAULT_SERVICE)
 const topic: Ref<TopicDef> = ref()
 const subject = ref(null)
 const tab = ref('')
+const about = ref('')
 
 const reset = () => {
   svc.value = config.K.DEFAULT_SERVICE
@@ -120,28 +125,18 @@ const completed = computed(() =>
 reset()
 
 const create = async () => {
-  /*
-  const invit = new Invitation({
-    invitId: '',
-    userId: sf.userId,
-    svc: svc.value,
-    org: session.orgs.c,
-    v: 0,
-    major: major.value.value,
-    minor: hasMinor ? minor.inp : '',
-    byU: true,
-    tab: tab.value,
-    etc: null
-  })
-  if (await invit.createByU()) {
+  const obj = { svc: svc.value, org: session.currentOrg, 
+    topicId: topic.value.id, subject: subject.value || ''}
+  const cas = Registry.newCase(obj)
+  const ok = await cas.createByU(tab.value, about.value)
+  if (ok) {
     emit('done', true)
     model.value = false
     emit('close', true)
-    ui.currentInvit.invit = invit
-    const f = ui.currentInvit.fnOnUpdate
+    ui.currentCase.cas = cas
+    const f = ui.currentCase.fnOnUpdate
     if (f) f()
   }
-  */
 }
 </script>
 

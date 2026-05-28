@@ -816,9 +816,6 @@ Vous pourrez vous connecter après succès de la restauration.
   MNOsearch1: 'Recherche en cours ...',
   MNOinvalid: 'Un administrateur a révoqué certains de vos pouvoirs de "manager": ils vont être "nettoyés.',
 
-  STINV_1: 'Invitation inconnue (peut-être un BUG).',
-  STINV_2: 'Tentative d\'accès à une invitation qui n\'est pas la votre (peut-être un BUG).',
-  STINV_3: 'Tentative d\'accès à une invitation sans en avoir le pouvoir de sponsoring correspondant (peut-être un BUG).',
 
   INVop_1: 'Nouvelle invitation créée.',
   INVop_2: 'Invitation mise à jour.',
@@ -840,8 +837,8 @@ Vous pourrez vous connecter après succès de la restauration.
   INVtitval: 'Validation de l\'invitation "{0}"',
   INVx_v: 'Date-heure de dernière mise à jour (ou création):',
   INVbyU: 'Dernière mise à jour:',
-  INVbyU_t: 'par l\'utilisateur demandeur',
-  INVbyU_f: 'par le sponsor',
+  INVbyU_u: 'par l\'utilisateur demandeur',
+  INVbyU_s: 'par le sponsor',
   INVval_y: 'Invitation validable',
   INVval_n: 'Invitation NON validable',
   INVx_major: 'Type majeur:',
@@ -858,7 +855,6 @@ Vous pourrez vous connecter après succès de la restauration.
   INVbtn_del: 'Renoncer et supprimer',
   INVbtn_inv: 'Proposer une invitation',
   INVbtn_rev: 'Réviser l\'invitation',
-  INVnoinvits: 'Pas d\'invitation en cours actuellement.',
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vielle ?).',
   INVspons_no: 'Vous n\'avez pas de pouvoir pour traiter aucune demande',
   INVspons_on: 'Demandes que vous avez le pouvoir de traiter',
@@ -927,6 +923,21 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
   CAStopic_bub: `## Quelle est la thématique de votre demande 
 bla bla
 `,
+  CASST_1: 'Cas inconnu (peut-être un BUG).',
+  CASST_2: 'Tentative d\'accès à un cas qui n\'est pas le votre (peut-être un BUG).',
+  CASST_3: 'Tentative d\'accès à un cas sans en avoir le pouvoir de sponsoring correspondant (peut-être un BUG).',
+  CAStabedit: 'Changer le texte de l\'ardoise',
+  CAStabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
+  CAStabu_bub: `### Ardoise partagée avec les sponsors
+- qui suis-je, ma motivation ...
+- les remarques des sponsors successifs
+`,
+  CASabout_label: 'Commentaire strictement personnel',
+  CASabout_bub: `### Commentaire strictement personnel
+Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de votre _Safe Box_.
+`,
+  CASnocases: 'Pas de cas en cours actuellement.',
+
 
   SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',
   SUBnosub_bub: `### Cette thématique n'a pas de "sujet" spécifique
