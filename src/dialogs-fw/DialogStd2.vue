@@ -1,7 +1,6 @@
 <template>
 <q-dialog v-model="model" maximized persistent transition-show="slide-right">
-<q-card :class="sty() + ' full-width'">
-<q-layout container view="hHh lpR fFf">
+<q-layout container view="hHh lpR fFf" :class="sty()" :style="styc">
   <q-header>
     <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
       <btn-cond color="none" size="lg" icon="chevron_left" flat 
@@ -14,10 +13,9 @@
     <slot name="hdr"/>
   </q-header>
   <q-page-container>
-    <slot/>
+    <slot name="default"/>
   </q-page-container>
 </q-layout>
-</q-card>
 </q-dialog>
 </template>
 

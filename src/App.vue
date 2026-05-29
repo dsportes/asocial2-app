@@ -117,6 +117,8 @@ import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
+import { nbdoc } from '../src/app/documents'
+
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
 const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
@@ -132,6 +134,8 @@ const $t = i18n.t // Pour rendre accessible $t dans le code
 const $q = useQuasar()
 set$t($t, i18n)
 ui.set$t$q($t, $q)
+
+console.log(nbdoc + ' documents') // Pour forcer le chargement des documents dans Registry
 
 onMounted(async () => { // Sur onMounted parce que async
   await session.setRegistration(keyFromB64(fromUrl(config.K.vapidPublicKey)), config.location, config.K.APPNAME)

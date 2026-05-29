@@ -1,11 +1,10 @@
 <template>
-<q-dialog v-model="model" persistent
-  transition-show="slide-up">
-<q-card :class="sty()" :style="styc">
-<q-layout container view="hHh lpR fFf">
+<q-dialog v-model="model" persistent transition-show="slide-up">
+<q-layout container view="hHh lpR fFf" :class="sty()" :style="styc">
   <q-header>
     <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
-      <btn-cond color="none" size="lg" icon="chevron_left" flat @ok="onClose"/>
+      <btn-cond color="none" size="lg" icon="chevron_left" flat 
+        @ok="onClose"/>
       <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
       <slot name="btn"/>
       <btn-bubble v-if="help" :text="help"/>
@@ -14,10 +13,9 @@
     <slot name="hdr"/>
   </q-header>
   <q-page-container>
-    <slot/>
+    <slot name="default"/>
   </q-page-container>
 </q-layout>
-</q-card>
 </q-dialog>
 </template>
 

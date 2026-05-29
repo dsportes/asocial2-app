@@ -51,7 +51,7 @@
       <!--q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" /-->
       <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
     </q-tabs>
-    <invit-hdr v-if="ui.currentInvit.zoomed" v-model="ui.currentInvit"/>
+    <case-hdr v-if="ui.currentCase.zoomed" v-model="ui.currentCase"/>
   </div>
 
   <case-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
@@ -70,7 +70,7 @@ import { sty } from '../src-fw/util'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import InvitHdr from '../components-fw/InvitHdr.vue'
+import CaseHdr from '../components-fw/CaseHdr.vue'
 import CaseNewrequest from '../dialogs-fw/CaseNewrequest.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'

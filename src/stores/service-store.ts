@@ -3,6 +3,8 @@ import { ref, Ref } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { $t } from '../src-fw/util'
+import { opOfSvcOrg } from '../src-fw/operation'
+import { GetTopics } from '../src-fw/operations'
 
 export type TopicDef = {
   id: string
@@ -96,10 +98,18 @@ export const useServiceStore = defineStore('service', () => {
     return l
   }
 
+  const getSvcOrgTopics = async (svc: string, org: string) => {
+      const oper = await opOfSvcOrg(svc, org)
+      const op = new GetTopics(svc, oper)
+      await op.run()
+      // console.log(n)
+  }
+
   const reset = () => { topics.value = new Map() }
 
   return {
-    reset, loadTopics, getCategs, getTopics, getTopicsJSON, nbTopics, getTopic
+    reset, loadTopics, getCategs, getTopics, getTopicsJSON,
+    nbTopics, getTopic, getSvcOrgTopics
   }
 })
 

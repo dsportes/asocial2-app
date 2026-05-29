@@ -1,7 +1,8 @@
 <template>
 <div ref="root">
-  <div v-if="!max" :class="sty() + ' full-width'">
-
+  <div v-if="!max" :class="sty()">
+    <q-layout container view="hHh lpR fFf" :style="mhs">
+      <q-header>
         <q-toolbar class="fs-md full-width tbs bar">
           <btn-cond class="q-mr-xs" @ok="max=true" icon="zoom_out_map" flat color="nb"/>
           <btn-cond flat color="nb" :icon="md ? 'edit' : 'visibility'"
@@ -19,17 +20,20 @@
             @ok="emit('ok', true)" :disable="!modifie" :label="$t('ok')"/>
           <help-button page="dial_editeur"/>
         </q-toolbar>
+      </q-header>
 
-        <q-input v-if="!md" type="textarea"
-          class="q-pa-xs font-mono" v-model="textelocal" :rows="rows || 10"
+      <q-page-container :class="sty()" :style="mhs">
+        <q-input v-if="!md" type="textarea" 
+          class="q-pa-xs font-mono" v-model="textelocal"
           :readonly="!editable" :placeholder="textelocal==='' ? (placeholder || $t('EMDph')) : ''"/>
-        <sd-nb v-else :text="textelocal" class="q-pa-xs bord1" :style="mhs(0)"/>
-
+        <sd-nb v-else :text="textelocal" class="q-pa-xs bord1"/>
+      </q-page-container>
+    </q-layout>
   </div>
 
   <q-dialog v-model="max" full-height full-width
     transition-show="slide-up" transition-hide="slide-down">
-    <div ref="root2" :class="sty() + ' column'" :style="mhst">
+    <div ref="root2" :class="sty()">
     <q-layout container view="hHh lpR fFf">
       <q-header elevated>
         <q-toolbar class="fs-md full-width tbs">
@@ -51,7 +55,7 @@
       </q-header>
 
       <q-page-container>
-        <q-input v-if="!md" type="textarea" v-model="textelocal" autogrow
+        <q-input v-if="!md" type="textarea" v-model="textelocal"
           :class="sty() + ' font-mono'"
           :readonly="!editable" :placeholder="textelocal==='' ? (placeholder || $t('EMDph')) : ''"/>
         <sd-nb v-else :class="sty() + ' bord1'" :text="textelocal"/>
@@ -94,8 +98,10 @@ const props = defineProps({
   idx: Number,
   modetxt: Boolean,
   okbtn: Boolean,
-  rows: Number
+  mh: Number
 })
+
+const mhs = computed(() => 'height:' + (props.mh || 150) + 'px')
 
 const ui = stores.ui
 

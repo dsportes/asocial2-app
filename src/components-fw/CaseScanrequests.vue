@@ -5,12 +5,12 @@
 <div class="pwsm">
   <div v-if="!ui.currentCase.zoomed" class="full-width">
     <div v-if="!cases.length" class="titre-md text-italic q-pa-md">{{ $t('CASnocases') }}</div>
-    <div v-else v-for="(cas, idx) of invits" :key="cas.caseId"
+    <div v-else v-for="(cas, idx) of cases" :key="cas.caseId"
       :class="clcase(cas, idx) + ' q-my-sm full-width cursor-pointer select'"
       @click="selCase(cas, idx)">
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + cas.svc)}}</div>
-        <div class="col-4 ellipsis text-right text-bold">{{ $t('TOIPC_' + cas.topicId) }}</div>
+        <div class="col-4 ellipsis text-right text-bold">{{ ($t('TOPIC_' + cas.topicId)).substring(2) }}</div>
         <div class="col-3 ellipsis q-pl-sm">{{cas.subject || ''}}</div>
         <div class="col-1 row items-center justify-end ellipsis">
           <q-icon v-if="cas.lv < cas.v"
@@ -25,7 +25,7 @@
   </div>
 
   <div v-if="ui.currentCase.zoomed" class="pwsm">
-    <invit-zoom v-if="ui.currentCase.invit" class="q-mt-sm"/>
+    <case-zoom v-if="ui.currentCase.cas" class="q-mt-sm"/>
     <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
   </div>
 </div>
@@ -40,13 +40,14 @@ import stores from '../stores/all'
 import { $t, dkli, dhcool } from '../src-fw/util'
 
 import { CaseGet } from '../src-fw/operations'
-import { Case } from '../src-fw/documents'
+import { Case, DocCase, CaseData } from '../src-fw/documents'
 
-import InvitZoom from '../components-fw/InvitZoom.vue'
+import CaseZoom from '../components-fw/CaseZoom.vue'
 import { MDOperation } from 'src/src-fw/operation'
 
 const ui = stores.ui
 const sf = stores.safe
+const svc = stores.service
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const u = ui.navBar
@@ -68,8 +69,14 @@ const mdCases = async () => {
   const res = await op.post()
   const l = res && res.caselist ? res.caselist : []
   if (l.length === 0) cases.value = l
-  else for(const c of l) l.push(Case.newFromMD(c))
-  cases.value = l
+  else {
+    const lx: any[] = []
+    for(const c of l) {
+      lx.push(await Case.newFromMD(c))
+      await svc.getSvcOrgTopics(c.svc, c.org)
+    }
+    cases.value = lx
+  }
 }
 
 const isCurrent = (cas) => 
@@ -118,10 +125,8 @@ const selCase0 = () => {
 
 const selCase = async (cas: Case, idx: number) => {
   // Get du Case document
-  const sf = stores.safe
   const op = new CaseGet(cas.svc, cas.org)
-  const res = await op.run(cas.caseId)
-  const c = res ? res['case'] : null
+  const c = await op.run(cas.caseId) as DocCase
   if (c) {
     cas.v = c.v
     cas.status = c.status

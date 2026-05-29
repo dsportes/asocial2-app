@@ -58,6 +58,7 @@ const ui = stores.ui
 const model = defineModel() // TopicDef
 
 const sType = computed(() => {
+  if (!model.value) return { type: 0 }
   const s = model.value.subjects
   const st: sType = { type: 0 }
   if (!s) return st

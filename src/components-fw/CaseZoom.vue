@@ -64,7 +64,8 @@ const props = defineProps({
   editable: Boolean
 })
 
-const cas: Ref<Case> = computed(() => ui.currentCase.cas)
+const cas: Ref<Case> = computed(() => 
+  ui.currentCase.cas)
 const notView = computed(() => cas.value.userId === sf.userId
   && (cas.value.lv < cas.value.v) )
 const etcEd = computed(() => cas.value.editEtc() || $t('INVx_none'))

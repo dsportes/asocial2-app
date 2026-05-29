@@ -191,6 +191,7 @@ export class Case {
     c.lv = cd.lv
     // @ts-expect-error
     c.about = cd.aboutU ? decoder.decode(await Crypt.decrypt(sf.keyK, cd.aboutU)) : ''
+    return c
   }
 
   constructor (obj: CaseMin) {
@@ -246,17 +247,17 @@ export class Case {
     if (!tab) return null
     const sf = stores.safe
     const svc = stores.service
-    const td = await svc.getTopic(this.svc)
-    const aes = await Crypt.getAESKey(sf.auth.D, td.pubC)
+    const td = svc.getTopic(this.svc, this.topicId)
+    const aes = await Crypt.getAESKey( td.pubC, keyFromB64(sf.auth.D))
     return await Crypt.crypt(aes, encoder.encode(tab))
   }
 
-  async decryptTab (tabX: Uint8Array) : Promise<string> {
+  async decryptTab (tabX: Uint8Array | null) : Promise<string> {
     if (!tabX) return ''
     const sf = stores.safe
     const svc = stores.service
-    const td = await svc.getTopic(this.svc)
-    const aes = await Crypt.getAESKey(sf.auth.D, td.pubC)
+    const td = svc.getTopic(this.svc, this.topicId)
+    const aes = await Crypt.getAESKey(td.pubC, keyFromB64(sf.auth.D))
     // @ts-expect-error
     return decoder.decode(await Crypt.decrypt(aes, tabX))
   }

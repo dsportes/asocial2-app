@@ -94,3 +94,5 @@ class Case_joinauteur extends Case { // TOPIC_joinauteur: '02Devenir co-auteur d
   }
 }
 Registry.registerD(Case_joinauteur)
+
+export const nbdoc = Registry.regDoc.size

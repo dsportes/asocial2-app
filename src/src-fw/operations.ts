@@ -287,7 +287,7 @@ export class ListManagers extends Operation {
 export class CaseGet extends Operation {
   constructor (SVC: string, org: string) { super('CaseGet', SVC, org) }
 
-  async run ( caseId: string ) : Promise<Case | null> {
+  async run ( caseId: string ) : Promise<DocCase | null> {
     try {
       this.args.caseId = caseId
       const res = await this.post()
@@ -295,7 +295,7 @@ export class CaseGet extends Operation {
       if (!c) return null
       c.svc = this.SVC
       c.org = this.args.org
-      return Registry.newCase(c)
+      return c
     } catch(e) {
       await this.ko(e)
       return null

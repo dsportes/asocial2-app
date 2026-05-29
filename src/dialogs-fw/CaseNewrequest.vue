@@ -15,35 +15,35 @@
     </div>
   </template>
   <template #default>
-    <div style="max-width:30rem;width:95vw;margin:0 auto;padding: 0 5px">
-      <div class="column items-center">
-        <div class="row items-center justify-around q-gutter-sm full-width">
-          <select-svc @change="svcorgSelected" v-model="svc"/>
-          <select-org @change="svcorgSelected"/>
-        </div>
-
-        <div v-if="svc && session.orgs.c" class="q-my-md column items-center">
-          <bar-title mini prefix="CAStopic"/>
-          <topic-menu v-model="topic" @select="topicSel"/>
-          <div v-if="topic" class="titre-md text-bold q-mb-md q-mt-xs">
-            {{ $t('TOPIC_' + topic.id).substring(2) }}</div>
-
-          <div v-if="topic">
-            <subject-menu v-model="topic" @select="onSubject"/>
-
-            <div v-if="subject !== null">
-              <bar-title class="q-mt-md" prefix="CAStabu"/>
-              <md-editor class="full-width q-pa-xs" v-model="tab"
-                editable modetxt/>
-              <bar-title class="q-mt-md" prefix="CASabout"/>
-              <md-editor class="full-width q-pa-xs" v-model="about"
-                editable modetxt mh="5rem"/>
-            </div>
-          </div>
-        </div>
+    <div class="items-center full-width">
+      <div class="row items-center justify-around q-gutter-sm full-width">
+        <select-svc @change="svcorgSelected" v-model="svc"/>
+        <select-org @change="svcorgSelected"/>
       </div>
+      
+      <div v-if="svc && session.orgs.c" class="q-my-md column items-center">
+        <bar-title mini prefix="CAStopic"/>
+        <topic-menu v-model="topic" @select="topicSel"/>
+      </div>
+
+      <div v-if="topic">
+        <div class="titre-md text-bold q-mb-md q-mt-xs">
+        {{ $t('TOPIC_' + topic.id).substring(2) }}</div>
+
+        <subject-menu v-model="topic" @select="onSubject"/>
+      </div>
+
+      <div v-if="subject !== null">
+        <bar-title class="q-mt-md" prefix="CAStabu"/>
+        <md-editor class="full-width q-pa-xs" v-model="tab"
+          editable modetxt :mh="170" :rows="8"/>
+        <bar-title class="q-mt-md" prefix="CASabout"/>
+        <md-editor class="full-width q-pa-xs" v-model="about"
+          editable modetxt :mh="40" :rows="3"/>
+      </div>
+
     </div>
-  </template>
+</template>
 </dialog-std1>
 </div>
 </template>
@@ -66,7 +66,7 @@ import SubjectMenu from '../components-fw/SubjectMenu.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
-import { GetTopics, UpdTopics } from '../src-fw/operations'
+import { GetTopics } from '../src-fw/operations'
 import { opOfSvcOrg } from '../src-fw/operation'
 import { TopicDef } from '../stores/service-store'
 
@@ -93,21 +93,14 @@ const reset = () => {
 }
 
 const svcorgSelected = async () => {
-  await loadTopics()
+  await svc.getSvcOrgTopics(svc.value, session.currentOrg)
 }
 
-const loadTopics = async () => {
-  if (svc.value && session.currentOrg) {
-    const oper = await opOfSvcOrg(svc.value, session.currentOrg)
-    const op = new GetTopics(svc.value, oper)
-    const n = await op.run()
-    console.log(n)
-  }
-}
-
+/*
 onMounted(async () => {
-  await loadTopics()
+  await locLoadTopics()
 })
+*/
 
 const topicSel = (t: TopicDef) => {
   topic.value = t
@@ -127,7 +120,7 @@ reset()
 const create = async () => {
   const obj = { svc: svc.value, org: session.currentOrg, 
     topicId: topic.value.id, subject: subject.value || ''}
-  const cas = Registry.newCase(obj)
+  const cas = Registry.newCase(obj) as Case
   const ok = await cas.createByU(tab.value, about.value)
   if (ok) {
     emit('done', true)

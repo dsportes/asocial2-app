@@ -78,7 +78,9 @@ import superman from '../assets/superman.jpg'
 // @ts-ignore
 import invitation from '../assets/invitation.png'
 
-const svcsel = (v) => {console.log(v)}
+const svcsel = (v) => {
+  /* console.log(v) */
+}
 
 const sf = stores.safe
 const ui = stores.ui
