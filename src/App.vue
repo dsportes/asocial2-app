@@ -50,7 +50,7 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'demands'" class="column">
-        <demands-page class="q-mt-sm"/>
+        <case-scanrequests class="q-mt-sm"/>
       </q-page>
     </transition>
     <transition name="anim1">
@@ -99,7 +99,7 @@ import SafeHome from './pages/SafeHome.vue'
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
 
-import DemandsPage from './pages/DemandsPage.vue'
+import CaseScanrequests from './components-fw/CaseScanrequests.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
 
 import SponsoringsPage from './pages/SponsoringsPage.vue'

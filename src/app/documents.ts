@@ -31,6 +31,13 @@ class Cred_Org extends CredSafe {
 }
 Registry.registerD(Cred_Org)
 
+class Cred_Auteur extends CredSafe {
+  constructor (obj?: Object) {
+    super(obj)
+  }
+}
+Registry.registerD(Cred_Auteur)
+
 class Case_admin extends Case { //TOPIC_admin: '01Attribuer un pouvoir de "manager"'
   constructor (obj: CaseMin) {
     super(obj)

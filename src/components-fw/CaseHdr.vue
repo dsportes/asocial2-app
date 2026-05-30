@@ -5,7 +5,7 @@
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
         @back="model.zoomed = false"/>
       <div v-if="model.cas" class="titre-sm q-mr-xs">
-        {{($t('TOPIC_' + model.cas.topicId)).substring(2)}}</div>
+        {{model.cas.topicEd}}</div>
       <div v-else class="titre-md text-italic diag q-mr-xs">
         {{$t('INVnotfound')}}</div>
     </div>

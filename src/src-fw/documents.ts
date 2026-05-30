@@ -205,6 +205,8 @@ export class Case {
     return hasMessage('SUBJECT_' + this.topicId + '_' + this.subject) || this.subject || ''
   }
 
+  get topicEd () : string { return $t('TOPIC_' + this.topicId).substring(2)}
+
   chk () { 
     return Crypt.shaS([this.caseId, this.userId, this.topicId, this.subject, this.svc, this.org].join('/'))
   }

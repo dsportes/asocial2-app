@@ -10,7 +10,7 @@
       @click="selCase(cas, idx)">
       <div class="row items-center full-width">
         <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + cas.svc)}}</div>
-        <div class="col-4 ellipsis text-right text-bold">{{ ($t('TOPIC_' + cas.topicId)).substring(2) }}</div>
+        <div class="col-4 ellipsis text-right text-bold">{{ cas.topicEd }}</div>
         <div class="col-3 ellipsis q-pl-sm">{{cas.subject || ''}}</div>
         <div class="col-1 row items-center justify-end ellipsis">
           <q-icon v-if="cas.lv < cas.v"

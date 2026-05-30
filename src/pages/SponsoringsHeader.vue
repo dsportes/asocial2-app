@@ -14,7 +14,7 @@
     <div style="color:transparent;width:3px">*<q-tooltip>SponsoringsPage</q-tooltip></div>
   </q-toolbar>
 
-  <q-toolbar v-if="!ui.currentInvit.zoomed" 
+  <q-toolbar v-if="!ui.currentCase.zoomed" 
     class="tbp dense row q-gutter-xs items-center justify-end">
     <btn-cond :label="$t('INVtit_1')" icon="add" @ok="dialogs.newrequest = true"/>
     <btn-bubble class="q-ml-md" clear :text="$t('INVtit_1_bub')"/>
@@ -22,27 +22,27 @@
   <div v-else>
     <div class="tbp row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
-        @back="ui.currentInvit.zoomed = false"/>
-      <div v-if="ui.currentInvit.invit" class="titre-sm q-mr-xs">
-        {{$t('INVtitzoom', [ui.currentInvit.invit.$t()])}}</div>
+        @back="ui.currentCase.zoomed = false"/>
+      <div v-if="ui.currentCase.cas" class="titre-sm q-mr-xs">
+        {{ model.cas.topicEd }}</div>
       <div v-else class="titre-md text-italic diag q-mr-xs">
         {{$t('INVnotfound')}}</div>
     </div>
     <div class="tbp row items-center q-gutter-xs justify-end">
       <!-- un sponsor peut éditer la demande / invitation -->
-      <btn-cond :label="$t('INVbtn_' + (ui.currentInvit.invit.etc !== null ? 'rev' : 'inv'))" 
+      <btn-cond :label="$t('INVbtn_' + (ui.currentCase.cas.etc !== null ? 'rev' : 'inv'))" 
         icon="edit" class="col-auto"
-        @ok="dialogs.invitsponsor = true"/>
+        @ok="dialogs.casesponsor = true"/>
     </div>
-    <div v-if="ui.currentInvit.msgVal" class="row items-start q-my-sm">
+    <div v-if="ui.currentCase.msgVal" class="row items-start q-my-sm">
       <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
-      <div :class="ui.currentInvit.msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
-        {{ui.currentInvit.msgVal.txt}}
+      <div :class="ui.currentCase.msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
+        {{ui.currentCase.msgVal.txt}}
       </div>
     </div>
   </div>
 
-  <div v-if="!ui.currentInvit.zoomed">
+  <div v-if="!ui.currentCase.zoomed">
     <div v-if="sponsorings.length" :class="sty()">
       <div class="titre-md text-italic text-center q-pt-sm">{{ $t('INVspons_on') }}</div>
       <scroll-area class="full-width" size="sm"><template #default>
@@ -51,8 +51,8 @@
           @click="selSp(sp)">
           <div class="col-3 font-mono ellipsis text-center">{{$t('services_' + sp.svc)}}</div>
           <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.org}}</div>
-          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.major || '[manager]'}}</div>
-          <div class="col-3 font-mono ellipsis text-center">{{sp.minor || (sp.major ? '*' : '')}}</div>
+          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.topicEd}}</div>
+          <div class="col-3 font-mono ellipsis text-center">{{sp.subjectEd }}</div>
         </div>
       </template #default></scroll-area>
       <div v-if="selM" class="column items-center">
