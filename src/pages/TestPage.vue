@@ -2,6 +2,8 @@
 <div class="column items-center">
   <btn-cond v-if="hasBtn1" label="T1" class="q-ml-xs" @ok="t1"/>
   <btn-cond label="T2" class="q-ml-xs" @ok="t2"/>
+  <btn-cond label="TCAS" class="q-ml-xs" @ok="tcas"/>
+  <btn-cond label="TCASLIST" class="q-ml-xs" @ok="tclist"/>
   <btn-cond label="SelCode" class="q-ml-xs" @ok="dialogs.selCode = true"/>
   <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
   <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
@@ -32,7 +34,7 @@ import { saveAs } from 'file-saver'
 import ext2mime from 'ext2mime'
 import { readFile, fileDescr } from '../src-fw/util'
 import { keyToB64 } from '../src-fw/b64'
-import { SafeOperation } from '../src-fw/operation'
+import { SafeOperation, Operation } from '../src-fw/operation'
 import { getData, putData } from '../src-fw/net'
 import { Crypt, fromPem, u8ToHex, testECDH, testSH } from '../src-fw/crypt'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -175,6 +177,24 @@ wu3pz2zpU3mrRKCjucw=
   verify.args = args
   const ret = await verify.post()
   console.log(v, ret)
+}
+
+const tcas = async () => {
+  const op = new Operation('Case2Test', 'AS2', 'doda')
+  try {
+    await op.post()
+  } catch (e) {
+    op.ko(e)
+  }
+}
+const tclist = async () => {
+  const op = new Operation('Case2List', 'AS2', 'doda')
+  try {
+    const res = await op.post()
+    console.log(res.list)
+  } catch (e) {
+    op.ko(e)
+  }
 }
 </script>
 
