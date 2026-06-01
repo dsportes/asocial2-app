@@ -857,8 +857,8 @@ Vous pourrez vous connecter après succès de la restauration.
   INVbtn_inv: 'Proposer une invitation',
   INVbtn_rev: 'Réviser l\'invitation',
   INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vieille ?).',
-  INVspons_no: 'Vous n\'avez pas de pouvoir pour traiter aucune demande',
-  INVspons_on: 'Demandes que vous avez le pouvoir de traiter',
+  INVsvcorg_no: 'Vous ne pouvez traiter aucune demande ni faire des propositions.',
+  INVsvcorg_on: 'Services et organisations dont vous pouvez traiter les demandes ou faire des propositions.',
 
   INVtit_1: 'Nouvelle demande',
   INVtit_1_label: 'Nouvelle demande d\'invitation',

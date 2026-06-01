@@ -105,6 +105,13 @@ const dlv = (time: number) : boolean => {
   return  Math.floor(time / 86400) < (d - 7)
 }
 
+export type SvcOrg = {
+  k: string
+  svc: string
+  svcL: string
+  org: string
+}
+
 export type LocPref = {
   code: string
   time: number
@@ -936,6 +943,20 @@ export const useSafeStore = defineStore('safe', () => {
       return 0
     })
     return lst
+  }
+
+
+
+  /* Liste des triplets {svc, svcL, org} trouvés dans les credentials */
+  const svcOrgs = () : SvcOrg[] => {
+    const m : Map<string, any> = new Map()
+    for (const [,c] of mySafeCreds.value) {
+      const k = c.svc + '/' + c.org
+      m.set(k, { k: k, svc: c.svc, svcL: $t('services_' + c.svc), org: c.org })
+    }
+    const l = Array.from(m.values())
+    l.sort((a,b) => a.svcL < b.svcL ? -1 : (a.svcL > b.svcL ? 1 : (a.org < b.org ? -1 : (a.org > b.org ? 1 : 0))))
+    return l
   }
 
   /* Options des organisations managées *****************************************/

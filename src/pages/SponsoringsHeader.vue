@@ -43,26 +43,18 @@
   </div>
 
   <div v-if="!ui.currentCase.zoomed">
-    <div v-if="sponsorings.length" :class="sty()">
-      <div class="titre-md text-italic text-center q-pt-sm">{{ $t('INVspons_on') }}</div>
+    <div v-if="svcOrgs.length" :class="sty()">
+      <div class="titre-md text-italic text-center q-pt-sm">{{ $t('INVsvcorg_on') }}</div>
       <scroll-area class="full-width" size="sm"><template #default>
-        <div v-for="(sp, idx) in sponsorings" :key="sp.id" 
-          :class="dkli(idx) + ' row q-my-xs cursor-pointer select' + (spons && spons.id === sp.id ? ' cur' : '')"
-          @click="selSp(sp)">
-          <div class="col-3 font-mono ellipsis text-center">{{$t('services_' + sp.svc)}}</div>
-          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.org}}</div>
-          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{sp.topicEd}}</div>
-          <div class="col-3 font-mono ellipsis text-center">{{sp.subjectEd }}</div>
+        <div v-for="(so, idx) in svcOrgs" :key="x.k" 
+          :class="dkli(idx) + ' row q-my-xs cursor-pointer select' + (isCur(so) ? ' cur' : '')"
+          @click="selSo(so)">
+          <div class="col-9 font-mono ellipsis text-center">{{so.svcL}}</div>
+          <div class="col-3 font-mono ellipsis text-center q-px-sm">{{so.org}}</div>
         </div>
       </template #default></scroll-area>
-      <div v-if="selM" class="column items-center">
-        <q-select class="q-my-md" style="width:300px"
-          dense filled options-dense clearable
-          v-model="majOpt"
-          :options="majOpts" :label="$t('INVmajor_c')"/>
-      </div>
     </div>
-    <div v-else class="titre-md text-italic text-center q-mt-sm">{{ $t('INVspons_no') }}</div>
+    <div v-else class="titre-md text-italic text-center q-mt-sm">{{ $t('INVsvcorg_no') }}</div>
   </div>
 
   <case-newrequest v-if="dialogs.newrequest" v-model="dialogs.newrequest"/>
@@ -74,10 +66,11 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, watch, reactive } from 'vue'
+import { ref, Ref, watch, reactive } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
+import { SvcOrg } from '../stores/safe-store'
 import { Invitation } from '../src-fw/invitation'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -96,6 +89,11 @@ const dialogs = reactive({
   newrequest: false,
   invitsponsor: false
 })
+
+const svcOrgs: Ref<SvcOrg[]> = ref()
+
+const isCur = (so: SvcOrg) : boolean => so.svc === session.currentSvc && so.org === session.currentOrg
+
 
 const majors = Array.from(Object.keys(config.K.majorInvits))
 const majOpts = ref([])
@@ -130,6 +128,8 @@ watch(majOpt, (v) => {
 })
 
 const reset = () => {
+  svcOrgs.value = sf.svcOrgs()
+
   ui.sponsoringsPage.spons = null
   sorgs.value = sf.managedOrgs()
   sponsorings.value = sf.sponsorings()
