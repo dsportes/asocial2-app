@@ -1,6 +1,6 @@
 
 import { Registry, Document } from '../src-fw/registry'
-import { CredSafe, Case, CaseMin, MsgVal } from '../src-fw/documents'
+import { Credential, Case, CaseMin, MsgVal } from '../src-fw/documents'
 // import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
 
@@ -24,14 +24,14 @@ class Sujet extends Document {
 }
 Registry.registerD(Sujet)
 
-class Cred_Org extends CredSafe {
+class Cred_Org extends Credential {
   constructor (obj?: Object) {
     super(obj)
   }
 }
 Registry.registerD(Cred_Org)
 
-class Cred_Auteur extends CredSafe {
+class Cred_Auteur extends Credential {
   constructor (obj?: Object) {
     super(obj)
   }

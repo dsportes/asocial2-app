@@ -1,9 +1,10 @@
 // @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { encode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
 import { Registry } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
+import { TopicDef } from '../stores/service-store'
 import { $t, dhcool, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation } from '../src-fw/operation'
 
@@ -20,60 +21,46 @@ export type Cred = { // Credential attaché à un document
   credId: string
 }
 
-/* Credential en Safe, possiblemernt enrichi 
-par les propriétés du record 'cred' du document maître
+/* Credential: possiblemernt mis à jour depuis le document (v more).
 */
-export class CredSafe {
-  static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docId', 'privs', 'privd', 'name' ]
+export class Credential {
+  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docId', 
+    'privs', 'privd', 'name', 'docKey', 'opaque', 'more' ]
 
   credId: string = '' // ID du credential.
+  v: number = 0 // version du document
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
+
   docCl: string = '' // docClass.role : un des codes de rôle connu du service.
   docId: string = '' // identifiant du document cible du credential.
-  privs: string = '' // clé PRIVEE de signature en base64.
-  privd: string = '' // clé PRIVEE de decryptage en base64.
+
+  pubv?: Uint8Array | null = null // clé publique de vérification: doc seulement
+  privs?: Uint8Array | null = null // clé PRIVEE de signature en base64: safe seulement
+  pubc?: Uint8Array | null = null // clé publique de cryptage: doc seulement
+  privd?: Uint8Array | null = null // clé PRIVEE de decryptage en base64: safe seulement
+
   name: string = '' // "nom" associé au docId.
   
-  // Décoration après fusion avec Cred
-  limit?: number
   docKey?: Uint8Array | null
   opaque?: any | null
   more?: any | null
+
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
+
+  get limit () { return this.more && this.more.limit ? this.more.limit : 0 }
 
   constructor (obj?: Object) {
     if (obj)
-      for (const p of CredSafe.lp1) this[p] = obj[p] || null
+      for (const p of Credential.lp1) this[p] = obj[p] || null
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
-  get toObj () : Object {
+  get serial () : Uint8Array {
     const obj = {}
-    for (const p of CredSafe.lp1) obj[p] = this[p] || null
-    return obj
+    for (const p of Credential.lp1) obj[p] = this[p] || null
+    return encode(obj)
   }
-
-  async enrichFromCred (cred: Cred) {
-    this.docKey = null
-    this.opaque = null
-    if (cred.docKey) try {
-        this.docKey = await Crypt.decrypt(stores.safe.keyK, cred.docKey)
-        if (cred.opaque) try {
-          // @ts-expect-error
-          const x = await Crypt.decrypt(this.docKey, cred.opaque)
-          this.opaque = decode(x)
-        } catch (e) {
-          console.log(e)
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    this.limit = cred.limit
-    this.more = cred.more || null
-  }
-
-  get toJson () : string { return JSON.stringify(this.toObj, null, '\t') }
 
   async dispMore () { 
     const ui = stores.ui
@@ -81,9 +68,8 @@ export class CredSafe {
   }
 
   async dispLimit () { 
-    const ui = stores.ui
-    const dh = dhcool((this.limit || 0) * 1000)
-    await ui.diagDisplay($t('CRRlimit', [dh]))
+    if (this.limit)
+      await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 1000)]))
   }
 
   async dispDocKey () { 
@@ -97,9 +83,9 @@ export class CredSafe {
   }
 
 }
-Registry.registerD(CredSafe)
+Registry.registerD(Credential)
 
-class Cred_Topic extends CredSafe {
+class Cred_Topic extends Credential {
   constructor (obj?: Object) {
     super(obj)
   }
@@ -168,18 +154,25 @@ export class Case {
 
   svc: string = ''
   org: string = ''
-  userId: string = ''
-  topicId: string = ''
+
   caseId: string = '' // clé primaire dans ZZCASES `userId topicId caseId`.
   v: number = 0 // version du document dans la DB du service. Elle détermine aussi la limite de validité du cas.
-  status: number = 0 // 0-annulé 1-actif-U 2-actif-S 3-finalisé
-  lv: number = 0 // dernière version _lue_ par U. La comparaison avec `v` permet de savoir si U a eu connaissance de la dernière évolution produite par le service.
+  userId: string = ''
 
-  // Propriétés obtenues du document correspondant
+  topicId: string = ''
   subject?: string
-  tab?: string // texte de l'ardoise décrypté par `X`
+  status: number = 0 // 0-annulé 1-actif-U 2-actif-S 3-finalisé
+
+  // Proprités ne figurant que dans le Master Directory
+  lv: number = 0 // dernière version _lue_ par U. La comparaison avec `v` permet de savoir si U a eu connaissance de la dernière évolution produite par le service.
   about?: string = '' // texte de commentaire pour le seul usage de l'utilisateur.
+
+  // Propriétés ne figurant PAS dans le Master Directory mais obtenues du document correspondant
+  tab?: string // texte de l'ardoise décrypté par `X`
   etc?: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
+  creds?: string[] // liste de [docCl/docId docCl/1 A]
+
+  okCreds?: Map<string, Credential> // credentials de U aptes (a priori) à traiter le case
 
   static async newFromMD (cd: CaseData) {
     const sf = stores.safe
@@ -197,6 +190,31 @@ export class Case {
   constructor (obj: CaseMin) {
     this.svc = obj.svc; this.org = obj.org; this.topicId = obj.topicId; this.subject = obj.subject || ''
     this.userId = obj.userId || stores.safe.userId
+    this.setCreds()
+  }
+
+  /* export type TopicDef = {
+    id: string
+    categ: string
+    key: string
+    subjects: string
+    pubC: Uint8Array
+    creds: string[] // [A docCl/S docCl/1]
+  }
+  */
+  setCreds () {
+    const td: TopicDef | null = stores.service.getTopic(this.svc, this.topicId)
+    if (!td || !td.creds || ! td.creds.length) return
+    const cr: string[] = []
+    for (const c of td.creds) {
+      if (c === 'A') cr.push('A')
+      else {
+        const s1 = c.charAt(c.length - 1)
+        if (s1 === '1') cr.push(c)
+        else cr.push(c.substring(0, c.length - 2) + this.subject)
+      }
+    }
+    this.creds = cr
   }
 
   get byU () : boolean { return this.status !== 2 }
@@ -215,17 +233,12 @@ export class Case {
   /* Retourne un "état" MD affichable du etc */
   editEtc () : string { return '' }
 
-  /* Retourne un message d'erreur disant pourquoi le "sponsor"
-  ne peut pas intervenir sur l'invitation.
-  Logique applicative choisie ici:
-  - un "manager" est toujours un sponsor valide.
-  - un utilisateur qui a un credential Sponsor pour le "major" de l'invitation
-    est un sponsor valide (quelque soit le "minor").
-  - un utilisateur qui a un credential Sponsor pour le "major.minor" de l'invitation
-    est un sponsor valide (à condition bien sur que l'invitation ait un minor).
-  */
-  msgVal () : MsgVal {
-    return { ok: false, txt: 'KO', docCl: '', docId: ''}
+  allowedCreds () {
+    this.okCreds = new Map()
+    const creds: Map<string, Credential> = stores.safe.mySafeCreds
+    const s = new Set(this.creds)
+    for(const [credId, cred] of creds)
+      if (s.has(cred.docCl + '/' + cred.docId)) this.okCreds.set(credId, cred)
   }
 
   /* validation du case. Retourne: 
@@ -237,14 +250,6 @@ export class Case {
     return 0
   }
   
-  /* export type TopicDef = {
-    id: string
-    categ: string
-    key: string
-    subjects: string
-    pubC: Uint8Array
-  }
-  */
   async encryptTab (tab: string) : Promise<Uint8Array | null> {
     if (!tab) return null
     const sf = stores.safe
@@ -283,12 +288,13 @@ export class Case {
       topicId: this.topicId,
       subject: this.subject,
       tabX: await this.encryptTab(tab),
+      creds: this.creds
     }
 
     const caseData: CaseData = {
-      caseId: this.caseId,
       svc: this.svc,
       org: this.org,
+      caseId: this.caseId,
       topicId: this.topicId,
       subject: this.subject || '',
       status: this.status,

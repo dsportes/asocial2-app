@@ -16,9 +16,9 @@ export class Registry {
     return cl ? new cl() : null
   }
 
-  static newCred (obj: Object) {
+  static newCredential (obj: Object) {
     const name = 'Cred_' + obj['docCl']
-    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('CredSafe')
+    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('Credential')
     return cl ? new cl() : null
   }
 

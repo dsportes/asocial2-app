@@ -11,11 +11,11 @@
 // import { ref, Ref, computed, watch } from 'vue'
 // @ts-ignore
 import { $t } from '../src-fw/util'
-import { CredSafe } from '../src-fw/documents'
+import { Credential } from '../src-fw/documents'
 // import stores from '../stores/all'
 
 const props = defineProps({
-  cred: CredSafe
+  cred: Credential
 })
 
 </script>

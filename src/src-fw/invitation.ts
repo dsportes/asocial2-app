@@ -246,8 +246,8 @@ export class Invitation {
   ne peut pas "valider / rejeter" l'invitation en status 1.
   Bref pourquoi il n'est pas un SPONSOR acceptable
   */
-  msgVal () : MsgVal {
-    return Major.msgVal(this)
+  msgVal () {
+    Major.msgVal(this)
   }
 
   editEtc () : string {

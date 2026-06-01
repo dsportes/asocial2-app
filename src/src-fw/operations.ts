@@ -8,7 +8,7 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Cred, CredSafe, DocCase, Case } from '../src-fw/documents'
+import { Cred, Credential, DocCase, Case } from '../src-fw/documents'
 import { Registry } from './registry'
 
 export class Bug extends Operation {
@@ -304,18 +304,19 @@ export class CaseGet extends Operation {
 
 }
 
-// Enrichit un CredSafe avec les données du Cred correspondant en DB
-export class EnrichCred extends Operation {
-  constructor (SVC: string, org: string) { super('GetCred', SVC, org) }
+// Met à jour un Credential avec les données [v, more] de son document en DB
+export class SyncCred extends Operation {
+  constructor (SVC: string, org: string) { super('GetCredUpdates', SVC, org) }
 
-  async run (c: CredSafe ) : Promise<boolean> {
+  async run (c: Credential ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docId: c.docId || ''})
       await this.sign(c.docCl, c.docId)
       const res = await this.post()
-      const cred = res.cred as Cred
-      if (cred) {
-        await c.enrichFromCred(cred)
+      const x = res.more
+      if (x) {
+        c.v = x[0]
+        c.more = x[1]
         return true
       } else return false
     } catch(e) {

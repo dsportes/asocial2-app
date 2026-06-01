@@ -12,6 +12,7 @@ export type TopicDef = {
   key: string
   subjects: string
   pubC: Uint8Array
+  creds: string[] // [A docCl/S docCl/1]
 }
 export type LabVal = {
   label: string
@@ -48,7 +49,7 @@ export const useServiceStore = defineStore('service', () => {
     if (mc) {
       for(const [, mt] of mc) {
         for(const [, t] of mt) {
-          x.push({ id: t.id, categ: t.categ, key: t.key, subjects: t.subjects})
+          x.push({ id: t.id, categ: t.categ, key: t.key, subjects: t.subjects, creds: t.creds})
         }
       }
     }
