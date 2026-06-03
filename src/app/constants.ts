@@ -28,6 +28,8 @@ export const K = {
   ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
 
+  MANAGERCLASSES: new Set(['Org', 'Redaction']),
+  
   sizes: {
     alias: [10, 24],
     p1: [24, 40],

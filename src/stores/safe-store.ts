@@ -106,10 +106,11 @@ const dlv = (time: number) : boolean => {
 }
 
 export type SvcOrg = {
-  k: string
+  k: string // svc / org
+  label: string // label de svc
   svc: string
-  svcL: string
   org: string
+  creds: Credential[]
 }
 
 export type LocPref = {
@@ -945,17 +946,25 @@ export const useSafeStore = defineStore('safe', () => {
     return lst
   }
 
-
-
-  /* Liste des triplets {svc, svcL, org} trouvés dans les credentials */
-  const svcOrgs = () : SvcOrg[] => {
+  /* Liste des {k, svc, label, org, creds: Credential[]} trouvés dans les credentials 
+  regroupés par k : svc / org
+  - soit pour toutes les classes de document
+  - soit pour la classe citée seulement
+  */
+  const credsBySO = (docCl?: string) : SvcOrg[] => {
     const m : Map<string, any> = new Map()
-    for (const [,c] of mySafeCreds.value) {
-      const k = c.svc + '/' + c.org
-      m.set(k, { k: k, svc: c.svc, svcL: $t('services_' + c.svc), org: c.org })
-    }
+    for (const [,c] of mySafeCreds.value)
+      if (!docCl || docCl === c.docCl) {
+        const k = c.svc + '/' + c.org
+        let e: SvcOrg = m.get(k)
+        if (!e) {
+          e = { k: k, svc: c.svc, label: $t('services_' + c.svc), org: c.org, creds: [] }
+          m.set(k, e)
+        }
+        e.creds.push(c)
+      }
     const l = Array.from(m.values())
-    l.sort((a,b) => a.svcL < b.svcL ? -1 : (a.svcL > b.svcL ? 1 : (a.org < b.org ? -1 : (a.org > b.org ? 1 : 0))))
+    l.sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : (a.org < b.org ? -1 : (a.org > b.org ? 1 : 0))))
     return l
   }
 
@@ -1746,7 +1755,7 @@ export const useSafeStore = defineStore('safe', () => {
     selectedProfile, selectedSession, users,
 
     auth, devices, mySafePrefs, mySafeProfiles,
-    mySafeCreds,
+    mySafeCreds, credsBySO,
     updatePrefs,
     createCredential, updateCredName,
     autoRevokeCreds,
