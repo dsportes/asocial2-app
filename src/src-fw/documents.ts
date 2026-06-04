@@ -24,7 +24,7 @@ export type Cred = { // Credential attaché à un document
 /* Credential: possiblemernt mis à jour depuis le document (v more).
 */
 export class Credential {
-  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docId', 
+  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk', 
     'privs', 'privd', 'name', 'docKey', 'opaque', 'more' ]
 
   credId: string = '' // ID du credential.
@@ -33,7 +33,7 @@ export class Credential {
   org: string = '' // le code de l'organisation.
 
   docCl: string = '' // docClass.role : un des codes de rôle connu du service.
-  docId: string = '' // identifiant du document cible du credential.
+  docPk: string = '' // clé primaire du document maitre du credential.
 
   pubv?: Uint8Array | null = null // clé publique de vérification: doc seulement
   privs?: Uint8Array | null = null // clé PRIVEE de signature en base64: safe seulement
@@ -182,7 +182,6 @@ export class Case {
     c.status = cd.status
     c.v = cd.v || 0
     c.lv = cd.lv
-    // @ts-expect-error
     c.about = cd.aboutU ? decoder.decode(await Crypt.decrypt(sf.keyK, cd.aboutU)) : ''
     return c
   }
@@ -238,7 +237,7 @@ export class Case {
     const creds: Map<string, Credential> = stores.safe.mySafeCreds
     const s = new Set(this.creds)
     for(const [credId, cred] of creds)
-      if (s.has(cred.docCl + '/' + cred.docId)) this.okCreds.set(credId, cred)
+      if (s.has(cred.docCl + '/' + cred.docPk)) this.okCreds.set(credId, cred)
   }
 
   /* validation du case. Retourne: 
@@ -265,7 +264,6 @@ export class Case {
     const svc = stores.service
     const td = svc.getTopic(this.svc, this.topicId)
     const aes = await Crypt.getAESKey(td.pubC, keyFromB64(sf.auth.D))
-    // @ts-expect-error
     return decoder.decode(await Crypt.decrypt(aes, tabX))
   }
 

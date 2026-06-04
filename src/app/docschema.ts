@@ -1,15 +1,13 @@
 import { propType, collection, idx, DocType } from '../src-fw/doctypes'
 
-export function loadingTypes (alert?: boolean) {
-  if (DocType.errors.length) {
-    console.error(DocType.errors.join('\n'))
-    if (alert) window.alert('appconfig: ' + DocType.errors.length + ' compile schema errors')
-  } else
-    console.log(DocType.docTypes.size + ' document classes found')
-}
+new DocType(
+  { name: 'Org', sync: true, pk: [] }, //header
+  null, // collections
+  null
+)
 
 new DocType(
-  { name: 'Org', sync: true, pk: ['org'] }, //header
+  { name: 'Property', sync: true, pk: ['id'], nohash: true }, //header
   null, // collections
   null
 )
@@ -37,21 +35,37 @@ new DocType(
 )
 
 new DocType(
+  { name: 'Credential', sync: false, pk: ['credId'] }, // header
+  null, // collections
+  new Map<string, idx>([
+    ['doc', { type: propType.HASH, key: ['docCl', 'docPk'], nohash: true }],
+  ])
+)
+
+new DocType(
+  { name: 'Case', sync: true, pk: ['caseId'] /*, nohash: true */ }, // header
+  null, // collections
+  new Map<string, idx>([
+    ['creds', { type: propType.LIST /*, nohash: true */ }]
+  ])
+)
+
+new DocType(
   { name: 'Article', sync: true, pk: ['artid'] }, //header
   new Map<string, collection>([
     ['sujet', { key: ['sujet', 'sousSujet'], mutable: true }],
     ['auteurs', { key: ['autid'], mutable: true, list: true }]
   ]), // collections
   new Map<string, idx>([
-    ['volume',  { type: propType.FLOAT, global: true }]
+    ['volume',  { type: propType.FLOAT }]
   ]) // index 
 )
 
 new DocType(
-  { name: 'Auteur', sync: true, pk: ['autid'] }, //header
+  { name: 'Auteur', sync: true, pk: ['autid'], embedCreds: true }, //header
   null, // collections
   new Map<string, idx>([
-    ['nom',  { type: propType.STRING }]
+    ['nom',  { type: propType.STRING, testable: true }]
   ])
 )
 
@@ -72,3 +86,5 @@ new DocType(
     ['titre', {type: propType.INTEGER} ]
   ])
 )
+
+export const docTypeErrors = DocType.errors

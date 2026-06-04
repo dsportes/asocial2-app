@@ -623,15 +623,7 @@ export const useSafeStore = defineStore('safe', () => {
     const [hsha1, hsha2, store] = aas
     const a = safe.auth.actual // jamais null
     const f = safe.auth.future // jamais null
-    let ac: Alias
-    if (a.hsha1 === hsha1 && (a.hsha2 && a.hsha2 === a.hsha2)) {
-      // c'est actual qui est enregistré dans MD -> delete future
-      ac = a
-    } else {
-      // c'est future qui est enregistré -> future remplace actual
-      // @ts-expect-error // f jamais null ici
-      ac = f
-    }
+    const ac: Alias = (a.hsha1 === hsha1 && (a.hsha2 && a.hsha2 === a.hsha2)) ? a : f
     op = new SafeOperation('$SetAliasSafe', mySafeStore.value)
     try {
       op.args['userId'] = userId.value

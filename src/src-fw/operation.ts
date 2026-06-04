@@ -2,6 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { AppExc, $t } from '../src-fw/util'
+import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
@@ -326,15 +327,17 @@ export class AuthRecord {
       signatures: this.signatures, userSign: this.userSign }
   }
 
-  async sign (svc: string, org: string, role: string, docId?: string) : Promise<boolean> {
+  // docPk: propriéts de la pk - { p1:..., p2: ... }
+  async sign (svc: string, org: string, docCl: string, docPk: Object) : Promise<boolean> {
     const sf = stores.safe
     for(const [id, c] of sf.mySafeCreds) {
+      const pk = DocType.getPk(docCl, docPk)
       if (c.svc === svc && c.org === org
-        && c.role === role && (docId ? c.docId === docId : true)) {
+        && c.docCl === docCl && c.docPk === pk) {
         const x = await Crypt.sign(keyFromB64(c.privs), this.challenge)
         const sign = new Uint8Array(x)
         if (!this.signatures) this.signatures = {}
-        this.signatures[c.role + '/' + (c.docId || '')] = [c.credId, sign]
+        this.signatures[docCl + '/' + pk] = [c.credId, sign]
         return true
       }
     }

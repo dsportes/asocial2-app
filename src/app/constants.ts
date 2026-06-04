@@ -27,8 +27,6 @@ export const K = {
     { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', name: 'Français' }
   ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
-
-  MANAGERCLASSES: new Set(['Org', 'Redaction']),
   
   sizes: {
     alias: [10, 24],
