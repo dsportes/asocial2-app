@@ -117,6 +117,8 @@ const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
 
+ui.adminPage.tab = 'svcstatus'
+
 const dialogs = reactive({ confirmrevoke: false })
 
 const sorgs = ref(sf.managedOrgs())

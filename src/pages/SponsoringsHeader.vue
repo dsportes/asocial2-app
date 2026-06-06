@@ -14,35 +14,50 @@
     <div style="color:transparent;width:3px">*<q-tooltip>SponsoringsPage</q-tooltip></div>
   </q-toolbar>
 
-  <q-toolbar v-if="!ui.currentCase.zoomed" 
+  <q-toolbar v-if="!zoomed" 
     class="tbp dense row q-gutter-xs items-center justify-end">
     <btn-cond :label="$t('INVtit_1')" icon="add" @ok="dialogs.newrequest = true"/>
     <btn-bubble class="q-ml-md" clear :text="$t('INVtit_1_bub')"/>
   </q-toolbar>
-  <div v-else>
-    <div class="tbp row items-center justify-between">
-      <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
-        @back="ui.currentCase.zoomed = false"/>
-      <div v-if="ui.currentCase.cas" class="titre-sm q-mr-xs">
-        {{ model.cas.topicEd }}</div>
-      <div v-else class="titre-md text-italic diag q-mr-xs">
-        {{$t('INVnotfound')}}</div>
-    </div>
-    <div class="tbp row items-center q-gutter-xs justify-end">
-      <!-- un sponsor peut éditer la demande / invitation -->
-      <btn-cond :label="$t('INVbtn_' + (ui.currentCase.cas.etc !== null ? 'rev' : 'inv'))" 
-        icon="edit" class="col-auto"
-        @ok="dialogs.casesponsor = true"/>
-    </div>
-    <div v-if="ui.currentCase.msgVal" class="row items-start q-my-sm">
-      <btn-bubble :text="$t('INVsponsoring')" class="q-mr-md col-auto"/>
-      <div :class="ui.currentCase.msgVal.ok ? 'col titre-sm text-italic' : 'col titre-md msg'">
-        {{ui.currentCase.msgVal.txt}}
+
+  <div v-if="admin" class="row items-center wmd full-width">
+    <q-tabs dense v-model="ui.adminPage.tab" class="col bg-primary text-white shadow-2">
+      <q-tab name="othercases" :label="$t('CASmanager_n')" />
+      <q-tab name="admincases">
+        <img :src="superman" width="24px"/>
+        <div>{{ $t('CASmanager_y') }}</div>
+      </q-tab>
+    </q-tabs>
+  </div>
+
+  <div v-if="zoomed" class="tbp row items-center justify-between">
+    <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
+      @back="ui.currentCase.zoomed = false"/>
+    <btn-cond v-if="ui.currentCase.cas" :label="model.cas.topicEd" 
+      icon="edit" class="col-auto"
+      @ok="dialogs.casesponsor = true"/>
+  </div>
+
+  <div v-if="ui.adminPage.tab === 'admincases' && !zoomed">
+    <div class="column items-center">
+      <div class="titre-md text-italic text-center">{{ $t('APservices') }}</div>
+      <scroll-area size="xs" class="pwsm">
+        <div v-for="[k,svcOp] of svcOps" :key="k" 
+          :class="'row items-center cursor-pointer ' + (svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'current': 'nocurrent')"
+          @click="setSvcOp(svcOp)">
+          <div class="col-6 text-center">{{ $t('services_' + svcOp.svc) }}</div>
+          <div class="col-6 text-center">{{ svcOp.op }}</div>
+        </div>
+      </scroll-area>
+
+      <div v-if="svcOpSel" class="q-my-md full-width row q-gutter-sm items-center">
+        <select-org @change="doOrgOk"/>
+        <btn-cond round icon="refresh" @ok="doOrgOk" size="lg"/>
       </div>
     </div>
   </div>
 
-  <div v-if="!ui.currentCase.zoomed">
+  <div v-if="tab === 'othercases' && !zoomed">
     <div v-if="svcOrgs.length" :class="sty()">
       <div class="titre-md text-italic text-center q-pt-sm">{{ $t('INVsvcorg_on') }}</div>
       <scroll-area class="full-width" size="sm"><template #default>
@@ -66,7 +81,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, watch, reactive } from 'vue'
+import { ref, Ref, watch, reactive, computed } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
@@ -90,15 +105,54 @@ const dialogs = reactive({
   invitsponsor: false
 })
 
+ui.adminPage.tab = 'othercases' // 'admincases'
+
 const svcOrgs: Ref<SvcOrg[]> = ref()
 
 const isCur = (so: SvcOrg) : boolean => so.svc === session.currentSvc && so.org === session.currentOrg
 
-
+const admin = ref(sf.auth.admins.length)
+const zoomed = ref(ui.currentCase.zoomed)
 const majors = Array.from(Object.keys(config.K.majorInvits))
 const majOpts = ref([])
 for (const m of majors) 
   majOpts.value.push({ value: m, label: $t('INV$' + m)})
+
+type Elt = {
+  svc: string
+  op: string
+}
+const svcOps: Ref<Map<string, Elt>> = ref(new Map())
+
+const svcOpSel = computed(() => ui.adminPage.SVC !== '' && ui.adminPage.$OP !== '')
+
+const setSvcOp = (svcOp) => {
+  ui.adminPage.SVC = svcOp.svc
+  ui.adminPage.$OP = svcOp.op
+}
+
+const reset2 = () => {
+  if (!sf.auth || !sf.auth.admins) return
+  svcOps.value.clear()
+  const x = sf.auth.admins
+  if (x) {
+    const y = x.split('/')
+    let first = true
+    for (const k of y) {
+      const z = k.split('.')
+      svcOps.value.set(k, { svc: z[0], op: z[1]})
+      if (first) {
+        ui.adminPage.SVC = z[0]
+        ui.adminPage.$OP = z[1]
+        first = false
+      }
+    }
+  }
+}
+
+const doOrgOk = async () => { // Liste des cases "manager" en attente
+
+}
 
 const sorgs = ref()
 const sponsorings = ref()

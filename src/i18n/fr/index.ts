@@ -854,9 +854,6 @@ Vous pourrez vous connecter après succès de la restauration.
   INVbtn_val: 'Valider',
   INVbtn_rec: 'Editer l\'ardoise',
   INVbtn_del: 'Renoncer et supprimer',
-  INVbtn_inv: 'Proposer une invitation',
-  INVbtn_rev: 'Réviser l\'invitation',
-  INVnotfound: 'L\'invitation n\'est pas / plus enregistrée (trop vieille ?).',
   INVsvcorg_no: 'Vous ne pouvez traiter aucune demande ni faire des propositions.',
   INVsvcorg_on: 'Services et organisations dont vous pouvez traiter les demandes ou faire des propositions.',
 
@@ -938,7 +935,8 @@ bla bla
 Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de votre _Safe Box_.
 `,
   CASnocases: 'Pas de cas en cours actuellement.',
-
+  CASmanager_y: 'Cas "manager"',
+  CASmanager_n: 'Autres cas',
 
   SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',
   SUBnosub_bub: `### Cette thématique n'a pas de "sujet" spécifique
@@ -1211,7 +1209,8 @@ blu blu
 
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
-  TOPIC_admin: '01Attribuer un pouvoir de "manager"',
+  TOPIC_manager: '01Attribuer un pouvoir de "manager"',
+  TOPIC_coredaction: '01Etre membre du comité de "Rédaction"',
   TOPIC_crauteur: '02Création d\'un nouvel auteur',
   TOPIC_joinauteur: '02Devenir co-auteur d\'un auteur',
   SUBJECT_joinauteur_titi: 'Grand auteur titi',

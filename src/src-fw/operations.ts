@@ -310,8 +310,8 @@ export class SyncCred extends Operation {
 
   async run (c: Credential ) : Promise<boolean> {
     try {
-      this.setArgs({ credId: c.credId, docCl: c.docCl, docId: c.docId || ''})
-      await this.sign(c.docCl, c.docId)
+      this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk || ''})
+      await this.sign(c.docCl, c.docPk)
       const res = await this.post()
       const x = res.more
       if (x) {

@@ -170,7 +170,7 @@ export class Case {
   // Propriétés ne figurant PAS dans le Master Directory mais obtenues du document correspondant
   tab?: string // texte de l'ardoise décrypté par `X`
   etc?: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
-  creds?: string[] // liste de [docCl/docId docCl/1 A]
+  creds?: string[] // liste de [docCl/docId docCl/1]
 
   okCreds?: Map<string, Credential> // credentials de U aptes (a priori) à traiter le case
 
@@ -205,13 +205,10 @@ export class Case {
     const td: TopicDef | null = stores.service.getTopic(this.svc, this.topicId)
     if (!td || !td.creds || ! td.creds.length) return
     const cr: string[] = []
-    for (const c of td.creds) {
-      if (c === 'A') cr.push('A')
-      else {
-        const s1 = c.charAt(c.length - 1)
-        if (s1 === '1') cr.push(c)
-        else cr.push(c.substring(0, c.length - 2) + this.subject)
-      }
+    if (td.creds.indexOf('A') !== -1) cr.push('A')
+    else for (const c of td.creds) {
+      if (c.charAt(c.length - 1) === '1') cr.push(c)
+      else cr.push(c.substring(0, c.length - 2) + this.subject)
     }
     this.creds = cr
   }
