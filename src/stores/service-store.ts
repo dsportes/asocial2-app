@@ -100,10 +100,10 @@ export const useServiceStore = defineStore('service', () => {
   }
 
   const getSvcOrgTopics = async (svc: string, org: string) => {
-      const oper = await opOfSvcOrg(svc, org)
-      const op = new GetTopics(svc, oper)
-      await op.run()
-      // console.log(n)
+    const oper = await opOfSvcOrg(svc, org)
+    const op = new GetTopics(svc, oper)
+    await op.run()
+    // console.log(n)
   }
 
   const reset = () => { topics.value = new Map() }

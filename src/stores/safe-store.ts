@@ -11,7 +11,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { AppExc, $t, sleep, quarter } from '../src-fw/util'
-import { SafeOperation, MDOperation } from '../src-fw/operation'
+import { SafeOperation, MDOperation, opOfSvcOrg } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
@@ -565,6 +565,19 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  /* Teste le couple svc / org. Retourne:
+  1 si org est non défini
+  2 si aucun opérateur ne supporte svc org
+  3 si l'utilisateur n'est pas administrateur
+  0 : sinon
+  */
+  const checkSvcOrg = async (svc, org) : Promise<number> => { 
+    if (!org) return 1
+    const op = await opOfSvcOrg(svc, org)
+    if (!op) return 2
+    return auth.admins.indexOf(svc + '.' + org) === -1 ? 3 : 0
+  }
+
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur:
     - auth, devices, creds, prefs, profiles, invits
@@ -906,6 +919,10 @@ export const useSafeStore = defineStore('safe', () => {
   /****************************************************************************/
 
   /* Extractions / consultations **********************************************/
+
+  const listTopics = () => {
+
+  }
 
   const sponsorings = () : Sponsoring[]  => {
     const lst: Sponsoring[] = []
@@ -1753,7 +1770,7 @@ export const useSafeStore = defineStore('safe', () => {
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     sponsorings,
-    managedOrgs, managedOrgs2, isManager, sponsorOf,
+    managedOrgs, managedOrgs2, isManager, sponsorOf, checkSvcOrg,
     getCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,

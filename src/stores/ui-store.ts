@@ -167,6 +167,7 @@ export const useUiStore = defineStore('ui', () => {
 
   const sponsoringsPage = reactive({
     spons: null,
+    err: 0,
     time: Date.now()
   })
 

@@ -937,6 +937,13 @@ Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de v
   CASnocases: 'Pas de cas en cours actuellement.',
   CASmanager_y: 'Cas "manager"',
   CASmanager_n: 'Autres cas',
+  CASso_1: 'Organisation non définie',
+  CASso_2: 'Pour cette organisation aucun opérateur ne supporte ce service.',
+  CASso_3: 'Impoosible de traiter les propositions de "managers", vous n\'êtes pas "administrateur" de ce service pour l\'opérateur gérant cette organisation.',
+  CASaddprop: 'Nouvelle proposition',
+  CASlistprop: 'Lister les cas ouverts',
+  
+  CASeditprop: 'Modifier la proposition',
 
   SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',
   SUBnosub_bub: `### Cette thématique n'a pas de "sujet" spécifique
