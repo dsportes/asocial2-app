@@ -73,7 +73,7 @@ const mdCases = async () => {
     const lx: any[] = []
     for(const c of l) {
       lx.push(await Case.newFromMD(c))
-      await svc.getSvcOrgTopics(c.svc, c.org)
+      await svc.loadSvcOrgTopics(c.svc, c.org)
     }
     cases.value = lx
   }
@@ -103,7 +103,6 @@ const onUpdate = () => {
       cas = cases.value[i]
       if (cas && cas['caseId'] === acId) { idx = i; break}
     }
-    // @ts-expect-error
     if (idx !== -1) await selCase(cas, idx)
     else {
       if (cases.value.length)

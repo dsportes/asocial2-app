@@ -93,7 +93,7 @@ const reset = () => {
 }
 
 const svcorgSelected = async () => {
-  await svc.getSvcOrgTopics(svc.value, session.currentOrg)
+  await svc.loadSvcOrgTopics(svc.value, session.currentOrg)
 }
 
 /*

@@ -6,6 +6,17 @@ import { $t } from '../src-fw/util'
 import { opOfSvcOrg } from '../src-fw/operation'
 import { GetTopics } from '../src-fw/operations'
 
+/*
+- `subjects`:
+  - absent: le topic n'a pas de sujets.
+  - `"a b c "`. Valeurs des codes séparées par un espace. Un libellé traduit chacun dans la langue choisie en session.
+  - `"@sujet35"` : ID du _singleton_ (du service) portant la liste des codes.
+  - `"$sujet35"` : ID du _Property_ (de l'organisation) portant la liste des codes.
+  - `"DocCl/alias"` : nom de classe `DocCl` des documents dont `alias` est un propriété dont les valeurs constituent la liste des codes valides.
+- `creds`: credentials requis listés par une expression de la forme `A` (_administrateur_) ou  `"c1 c2 c3 ..."` où les `ci` peuvent être:
+  - `docCl/1` : les credentials ayant le couple `docCl 1` comme `docCl docId` sont candidats.
+  - `docCl/S` : les credentials ayant un couple `docCl docId` où `docId` est égal au `subject` du case sont candidats.
+*/
 export type TopicDef = {
   id: string
   categ: string
@@ -33,6 +44,15 @@ export const useServiceStore = defineStore('service', () => {
       if (!c) { c = new Map(); s.set(t.categ, c)}
       c.set(t.id, t)
     }
+  }
+
+  const getTopicDefs = (svc: string) : TopicDef[] => {
+    const l: TopicDef[] = []
+    const mc = topics.value.get(svc)
+    if (mc)
+      for(const [, mt] of mc)
+        for(const [, t] of mt) l.push(t)
+    return l
   }
 
   const nbTopics = (svc: string) : number => {
@@ -66,9 +86,9 @@ export const useServiceStore = defineStore('service', () => {
   }
 
   /* Retourne la liste des categories triée [ label: value: ]
-    - ordre de tri: le label traduit. les 2 premiers sont ensuite enlevés
-      01Administration ...
-    - value est le code
+  - ordre de tri: le label traduit. les 2 premiers sont ensuite enlevés
+    01Administration ...
+  - value est le code
   */ 
   const getCategs = (svc: string) : LabVal[] => {
     const lcategs: string[] = Array.from(topics.value.get(svc).keys())
@@ -80,10 +100,10 @@ export const useServiceStore = defineStore('service', () => {
     return l
   }
 
-    /* Retourne la liste des topics d'une catégorie triée [ label: value: ]
-    - ordre de tri: le label traduit. les 2 premiers sont ensuite enlevés
-      01Demande de pouvoir "manager" ...
-    - value est le topic
+  /* Retourne la liste des topics d'une catégorie triée [ label: value: ]
+  - ordre de tri: le label traduit. les 2 premiers sont ensuite enlevés
+    01Demande de pouvoir "manager" ...
+  - value est le topic
   */ 
   const getTopics = (svc: string, categ: string) : LabVal[] => {
     const e = topics.value.get(svc)
@@ -99,18 +119,20 @@ export const useServiceStore = defineStore('service', () => {
     return l
   }
 
-  const getSvcOrgTopics = async (svc: string, org: string) => {
-    const oper = await opOfSvcOrg(svc, org)
-    const op = new GetTopics(svc, oper)
-    await op.run()
-    // console.log(n)
+  const loadSvcOrgTopics = async (svc: string, org: string, forceReload?: boolean) => {
+    if (!topics.value.has(svc) || forceReload) {
+      const oper = await opOfSvcOrg(svc, org)
+      const op = new GetTopics(svc, oper)
+      const defs = await op.run()
+      loadTopics(svc, defs, forceReload)
+    }
   }
 
   const reset = () => { topics.value = new Map() }
 
   return {
     reset, loadTopics, getCategs, getTopics, getTopicsJSON,
-    nbTopics, getTopic, getSvcOrgTopics
+    nbTopics, getTopic, loadSvcOrgTopics, getTopicDefs
   }
 })
 

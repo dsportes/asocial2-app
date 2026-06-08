@@ -9,7 +9,7 @@ import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
 import { Cred, Credential, DocCase, Case } from '../src-fw/documents'
-import { Registry } from './registry'
+import { TopicDef } from 'src/stores/service-store'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -67,16 +67,14 @@ export class  GetSvcOpStatus extends Operation {
 export class  GetTopics extends Operation {
   constructor (SVC: string, $OP: string) { super('GetTopics$', SVC, '', $OP) }
 
-  async run () {
+  async run () : Promise<TopicDef[]> {
     try {
       const svc = stores.service
       const res = await this.post(true)
-      const topics = res['topics']
-      svc.loadTopics(this.SVC, topics, true)
-      return topics.length
+      return res['topics'] || []
     } catch(e) {
       await this.ko(e)
-      throw e
+      return []
     }
   }
 }

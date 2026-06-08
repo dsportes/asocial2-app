@@ -16,6 +16,7 @@ import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
 import { Credential } from '../src-fw/documents'
+import { TopicDef } from './service-store'
 
 /*
 ### Safes stockés dans un directory
@@ -924,63 +925,32 @@ export const useSafeStore = defineStore('safe', () => {
 
   }
 
-  /*
-  const sponsorings = () : Sponsoring[]  => {
-    const lst: Sponsoring[] = []
-    if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
-      if (c.role === 'Org.manager')
-        lst.push({ svc: c.svc, org: c.org, major: '', minor: '', isSp: false})
-      else if (c.role === 'Sponsor.') {
-        const i = c.docId.indexOf('/')
-        if (i === -1) lst.push({ svc: c.svc, org: c.org, major: c.docId, minor: '', isSp: true})
-        else lst.push({ svc: c.svc, org: c.org,
-          major: c.docId.substring(0, i) || '',
-          minor: c.docId.substring(i + 1) || '',
-          isSp: true })
+  // Liste des topics pour lesquels l'utilisateur peut être sponsor
+  const sponsorOf = async (svc: string, org: string) : Promise<Set<string>> => {
+    const ss = stores.service
+    await ss.loadSvcOrgTopics(svc, org)
+    const l: TopicDef[] = ss.getTopicDefs(svc)
+    const mdoc: Map<string, Set<string>> = new Map() // docCl : set des topicId qui le ref
+    for(const td of l) {
+      for(const cr of td.creds) {
+        if (cr === 'A') continue
+        const docCl = cr.substring(0, cr.length - 2)
+        let s = mdoc.get(docCl); if (!s) { s = new Set(); mdoc.set(docCl, s) }
+        s.add(td.id)
       }
     }
-    for(const s of lst)
-      s.id = s.svc + '/' + s.org + '/' + s.major + '/' + s.minor
-
-    lst.sort((a, b) => {
-      if (a.svc > b.svc) return 1
-      if (a.svc < b.svc) return -1
-      if (a.org > b.org) return 1
-      if (a.org < b.org) return -1
-      if (a.major > b.major) return 1
-      if (a.major < b.major) return -1
-      if (a.minor > b.minor) return 1
-      if (a.minor < b.minor) return -1
-      return 0
-    })
-    return lst
-  }
-  */
-
-  /* Liste des {k, svc, label, org, creds: Credential[]} trouvés dans les credentials 
-  regroupés par k : svc / org
-  - soit pour toutes les classes de document
-  - soit pour la classe citée seulement
-  */
-  const credsBySO = (docCl?: string) : SvcOrg[] => {
-    const m : Map<string, any> = new Map()
-    for (const [,c] of mySafeCreds.value)
-      if (!docCl || docCl === c.docCl) {
-        const k = c.svc + '/' + c.org
-        let e: SvcOrg = m.get(k)
-        if (!e) {
-          e = { k: k, svc: c.svc, label: $t('services_' + c.svc), org: c.org, creds: [] }
-          m.set(k, e)
-        }
-        e.creds.push(c)
+    const stopics: Set<string> = new Set()
+    for (const [,c] of mySafeCreds.value) {
+      if (c.svc === svc && c.org === org) {
+        const s = mdoc.get(c.docCl)
+        if (s) for(const tid of s) stopics.add(tid)
       }
-    const l = Array.from(m.values())
-    l.sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : (a.org < b.org ? -1 : (a.org > b.org ? 1 : 0))))
-    return l
+    }
+    return stopics
   }
 
   const caseFilter = (svc: string, org: string) : string[] => {
-    const m : Map<string, Set<string>> = new Map()
+    const m : Map<string, Set<string>> = new Map() // par docCl, set des docPk
     for (const [,c] of mySafeCreds.value) {
       if (c.svc === svc && c.org === org) {
         let s = m.get(c.docCl); if (!s) { s = new Set(); m.set(c.docCl, s) }
@@ -1039,21 +1009,6 @@ export const useSafeStore = defineStore('safe', () => {
     for (const [,c] of mySafeCreds.value)
       if (c.docCl === 'Org' && c.docId === '1' && c.org === org && c.svc === svc) return true
     return false
-  }
-
-  /* Retourne:
-  - '' : PAS sponsor du major
-  - 'M' : sponsor du "major"
-  - 'M/m' : sponsor du "major/minor"
-  */
-  const sponsorOf = (svc, org, major, minor) : string => {
-    const majmin = major + '/' + 'minor'
-    for (const [,c] of mySafeCreds.value)
-      if (c.role === 'Sponsor.') {
-        if (c.docId === major) return major
-        if (minor && c.docId === majmin) return majmin
-      }
-    return ''
   }
 
   /* Retourne la Map des Credential dont l'id est citée dans le profile *************/
@@ -1782,13 +1737,13 @@ export const useSafeStore = defineStore('safe', () => {
     selectedProfile, selectedSession, users,
 
     auth, devices, mySafePrefs, mySafeProfiles,
-    mySafeCreds, credsBySO,
+    mySafeCreds,
     updatePrefs,
     createCredential, updateCredName,
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     caseFilter,
-    managedOrgs, managedOrgs2, isManager, sponsorOf, checkSvcOrg,
+    managedOrgs, managedOrgs2, isManager, checkSvcOrg,
     getCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
