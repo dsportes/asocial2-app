@@ -174,6 +174,29 @@ export class Case {
 
   okCreds?: Map<string, Credential> // credentials de U aptes (a priori) à traiter le case
 
+  // Liste les cases auquel un sponsor peut proposer une réponse
+  static async getList(svc: string, org: string, filter: string[] | null) : Promise<Case[]> {
+    const op = new Operation(!filter ? 'caseManagerList' : 'caseFilteredList', svc, org)
+    if (filter) op.args.filter = filter
+    try {
+      const res = await op.post()
+      const lst: Case[] = []
+      const cases = res['cases']
+      if (cases) for(const c of cases) {
+        const cas = Registry.newCase(c) as Case
+        cas.caseId = c.caseId
+        cas.v = c.V
+        cas.status = c.status
+        cas.tab = c.tabX ? decoder.decode(c.tabX) : ''
+        if (cas) cases.push(cas)
+      }
+      return lst
+    } catch (e) {
+      op.ko(e)
+      return []
+    }
+  }
+
   static async newFromMD (cd: CaseData) {
     const sf = stores.safe
     const obj = { svc: cd.svc, org: cd.org, topicId: cd.topicId, subject: cd.subject}
@@ -189,7 +212,6 @@ export class Case {
   constructor (obj: CaseMin) {
     this.svc = obj.svc; this.org = obj.org; this.topicId = obj.topicId; this.subject = obj.subject || ''
     this.userId = obj.userId || stores.safe.userId
-    this.setCreds()
   }
 
   /* export type TopicDef = {
@@ -198,7 +220,7 @@ export class Case {
     key: string
     subjects: string
     pubC: Uint8Array
-    creds: string[] // [A docCl/S docCl/1]
+    creds: string[] // [A] ou [docCl/S docCl/1]
   }
   */
   setCreds () {
@@ -212,8 +234,6 @@ export class Case {
     }
     this.creds = cr
   }
-
-  get byU () : boolean { return this.status !== 2 }
 
   get subjectEd () : string {
     return hasMessage('SUBJECT_' + this.topicId + '_' + this.subject) || this.subject || ''
@@ -229,6 +249,7 @@ export class Case {
   /* Retourne un "état" MD affichable du etc */
   editEtc () : string { return '' }
 
+  /*
   allowedCreds () {
     this.okCreds = new Map()
     const creds: Map<string, Credential> = stores.safe.mySafeCreds
@@ -236,8 +257,17 @@ export class Case {
     for(const [credId, cred] of creds)
       if (s.has(cred.docCl + '/' + cred.docPk)) this.okCreds.set(credId, cred)
   }
+  */
 
-  /* validation du case. Retourne: 
+
+  /* SURCHARGE selon le Topic - validation du case. 
+  Retourne le diagnostic d'erreur ou ''
+  */
+  async checkEtc () : Promise<string> {
+    return ''
+  }
+
+  /* SURCHARGE selon le Topic - validation du case. Retourne: 
   - 0 : si OK
   - -1 : en cas d'exception de l'opération
   - 1..99 : status SFST d'une erreur retournée par une opération
@@ -275,6 +305,7 @@ export class Case {
     this.lv = 0
     this.v = Date.now()
     this.etc = {}
+    this.setCreds()
     const aboutU = about ? await Crypt.crypt(sf.keyK, encoder.encode(about)) : null
 
     const caseObj = { // pour le _document_
@@ -336,6 +367,7 @@ export type DocCase = {
   tabX: Uint8Array | null // texte de l'ardoise crypté par `X`
   etc: any  // objet qui ne peut être écrit configuré que par une opération d'un _sponsor_ autorisé.
   maxLife: number // epoch en MINUTES
+  creds: string[] // [A] ou [docCl/docPk docCl/1 ...]
 
   svc?: string
   org?: string

@@ -166,9 +166,9 @@ export const useUiStore = defineStore('ui', () => {
   })
 
   const sponsoringsPage = reactive({
-    spons: null,
     err: 0,
-    time: Date.now()
+    time: Date.now(),
+    manOpt: null
   })
 
   const navBar = reactive({

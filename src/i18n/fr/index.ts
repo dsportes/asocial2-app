@@ -837,9 +837,6 @@ Vous pourrez vous connecter après succès de la restauration.
   INVdetail: 'Détail de l\'invitation',
   INVtitval: 'Validation de l\'invitation "{0}"',
   INVx_v: 'Date-heure de dernière mise à jour (ou création):',
-  INVbyU: 'Dernière mise à jour:',
-  INVbyU_u: 'par l\'utilisateur demandeur',
-  INVbyU_s: 'par le sponsor',
   INVval_y: 'Invitation validable',
   INVval_n: 'Invitation NON validable',
   INVx_major: 'Type majeur:',
@@ -942,7 +939,11 @@ Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de v
   CASso_3: 'Impoosible de traiter les propositions de "managers", vous n\'êtes pas "administrateur" de ce service pour l\'opérateur gérant cette organisation.',
   CASaddprop: 'Nouvelle proposition',
   CASlistprop: 'Lister les cas ouverts',
-  
+  CASstatus_0: 'Status annulé',
+  CASstatus_1: 'Dernière édition par U',
+  CASstatus_2: 'Dernière édition par un sponsor',
+  CASstatus_3: 'Status traité',
+
   CASeditprop: 'Modifier la proposition',
 
   SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',

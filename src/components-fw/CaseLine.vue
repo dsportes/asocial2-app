@@ -2,18 +2,15 @@
   <div :class="clinv" @click="emit('zoom', model)">
     <div class="row full-width">
       <div class="col-1 row items-center">
-        <q-icon v-if="model.etc !== null" name="check_circle" size="24px" color="green-5"/>
+        <q-icon :name="icons[model.status]" size="24px" :color="colors[model.status]"/>
       </div>
-      <div class="col-1 row items-center">
-        <q-icon v-if="model.byU" name="person" size="24px" color="primary"/>
-      </div>
-      <div class="col-4">{{dhcool(model.v)}}</div>
-      <div class="col-3 ellipsis text-right text-bold">{{$t('INV$' + model.major)}}</div>
-      <div class="col-3 text-center">{{ model.minor || '-'}}</div>
+      <div class="col-3">{{dhcool(model.v)}}</div>
+      <div class="col-5 ellipsis text-right text-bold">{{model.topicEd}}</div>
+      <div class="col-3 text-center">{{ model.subjectEd }}</div>
     </div>
     <div class="row full-width">
-      <div class="col-2"></div>
-      <div class="col-10 text-italic ellipsis">{{ model.tab }}</div>
+      <div class="col-1"></div>
+      <div class="col-11 text-italic ellipsis">{{ model.tab }}</div>
     </div>
   </div>
 </template>
@@ -22,7 +19,7 @@
 // @ts-ignore
 import { ref, watch } from 'vue'
 
-import { $t, dhcool } from '../src-fw/util'
+import { dhcool } from '../src-fw/util'
 
 const emit = defineEmits(['zoom'])
 const model = defineModel()
@@ -30,6 +27,9 @@ const model = defineModel()
 const props = defineProps({
   selected: Boolean
 })
+
+const icons = ['cancel', 'person', 'badge', 'check_box']
+const colors = ['warning', 'primary', 'primary', 'green-5']
 
 const clinv = ref()
 

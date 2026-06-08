@@ -924,6 +924,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   }
 
+  /*
   const sponsorings = () : Sponsoring[]  => {
     const lst: Sponsoring[] = []
     if (mySafeCreds.value) for (const [,c] of mySafeCreds.value) {
@@ -954,6 +955,7 @@ export const useSafeStore = defineStore('safe', () => {
     })
     return lst
   }
+  */
 
   /* Liste des {k, svc, label, org, creds: Credential[]} trouvés dans les credentials 
   regroupés par k : svc / org
@@ -975,6 +977,22 @@ export const useSafeStore = defineStore('safe', () => {
     const l = Array.from(m.values())
     l.sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : (a.org < b.org ? -1 : (a.org > b.org ? 1 : 0))))
     return l
+  }
+
+  const caseFilter = (svc: string, org: string) : string[] => {
+    const m : Map<string, Set<string>> = new Map()
+    for (const [,c] of mySafeCreds.value) {
+      if (c.svc === svc && c.org === org) {
+        let s = m.get(c.docCl); if (!s) { s = new Set(); m.set(c.docCl, s) }
+        s.add(c.docPk)
+      }
+    }
+    const f: string[] = []
+    for(const [docCl, s] of m) {
+      if (s.has('1')) f.push(docCl + '/1')
+      else f.push(...Array.from(s))
+    }
+    return f
   }
 
   /* Options des organisations managées *****************************************/
@@ -1769,7 +1787,7 @@ export const useSafeStore = defineStore('safe', () => {
     createCredential, updateCredName,
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
-    sponsorings,
+    caseFilter,
     managedOrgs, managedOrgs2, isManager, sponsorOf, checkSvcOrg,
     getCreds,
     sessionOfProfId, profileOfProfId,

@@ -9,10 +9,7 @@
     <div class='font-mono'>{{$t('TOPIC_' + cas.topicId)}}</div>
   </div>
   
-  <div class="row q-mt-sm items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVbyU')}}</div>
-    <div class="text-bold">{{$t('INVbyU_' + (cas.byU ? 'u' : 's'))}}</div>
-  </div>
+  <div class="q-mt-sm text-bold">{{$t('CASstatus_' + cas.status)}}</div>
 
   <div class="q-mt-sm row items-center">
     <div class='titre-md text-italic q-mr-md'>{{$t('INVx_v')}}</div>
