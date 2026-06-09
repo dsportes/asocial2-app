@@ -32,7 +32,7 @@ export class Credential {
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
 
-  docCl: string = '' // docClass.role : un des codes de rôle connu du service.
+  docCl: string = '' // classe du document "maître"  du credential
   docPk: string = '' // clé primaire du document maitre du credential.
 
   pubv?: Uint8Array | null = null // clé publique de vérification: doc seulement
