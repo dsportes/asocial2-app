@@ -17,7 +17,7 @@
 
   <div v-if="maySetSt" class="q-mt-sm">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
-    <input-a prefix="svcStatus" v-model="newComment"/>
+    <input-a prefix="svcStatus" v-model="newComment1"/>
     <div class="q--mt-sm row justify-end q-gutter-sm">
       <btn-cond color="primary" :label="$t('up')" padding="none sm"
         @ok="setSvcOpStatus(1)"/>
@@ -49,7 +49,7 @@
   <div v-if="maySetSt && session.orgs.c" class="column q-mt-sm q-gutter-sm">
     <div class="titre-md text-italic text-bold">{{$t('svcStatus_maj')}}</div>
 
-    <input-a prefix="svcStatus" v-model="newComment"/>
+    <input-a prefix="svcStatus" v-model="newComment2"/>
 
     <div class="row justify-end q-gutter-sm">
       <btn-cond color="primary" :label="$t('up')" padding="none sm"
@@ -116,7 +116,7 @@
 import { ref, Ref, reactive, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { dhcool } from '../src-fw/util'
-import { GetSvcOpStatus, GetSvcOrgStatus, SetSvcOpStatus, SetSvcOrgStatus,
+import { GetStatus$, GetStatus, SetStatus$, SetStatus,
   GetOrgConfig, SetOrgConfig } from '../src-fw/operations'
 
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -156,12 +156,14 @@ const services2: Ref<string> = ref(new Set())
 
 const resping = ref(null)
 const resping2 = ref(null)
-const newComment = ref('')
+const newComment1 = ref('')
+const newComment2 = ref('')
 
 const reset = () => {
   resping.value = null
   resping2.value = null
-  newComment.value = ''
+  newComment1.value = ''
+  newComment2.value = ''
   services2.value.clear()
   svcOps.value.clear()
   const x = sf.auth && sf.auth.admins ? sf.auth.admins : ''
@@ -182,7 +184,7 @@ const maySetSt = computed(() => svcOps.value.has(svcop.SVC + '.' + svcop.$OP))
 const svcOpStatus = async () => {
   resping.value = null
   try {
-    resping.value = await new GetSvcOpStatus(svcop.SVC, svcop.$OP).run()
+    resping.value = await new GetStatus$(svcop.SVC, svcop.$OP).run()
   } catch (e) { }
 }
 
@@ -190,7 +192,7 @@ const svcOrgStatus = async () => {
   await svcOpStatus()
   resping2.value = null
   try {
-    resping2.value = await new GetSvcOrgStatus(svcop.SVC, session.orgs.c).run()
+    resping2.value = await new GetStatus(svcop.SVC, session.orgs.c).run()
   } catch (e) { }
 }
 
@@ -200,11 +202,11 @@ const svcOrgStatus = async () => {
   ADMINISTRATEUR
 */
 async function setSvcOpStatus (stx) : Promise<void> {
-  const op = new SetSvcOpStatus(svcop.SVC, svcop.$OP)
-  const res = await op.run(stx, newComment.value)
+  const op = new SetStatus$(svcop.SVC, svcop.$OP)
+  const res = await op.run(stx, newComment1.value)
   // res.svcOpStatus contient le status mis à jour
   await svcOpStatus()
-  newComment.value = ''
+  newComment1.value = ''
 }
 
 /* SetSvcOrgStatus fixe le status de l'organisation pour le service: { st, at, txt }
@@ -213,11 +215,11 @@ async function setSvcOpStatus (stx) : Promise<void> {
   ADMINISTRATEUR
 */
 async function setSvcOrgStatus (stx) : Promise<void> {
-  const op = new SetSvcOrgStatus(svcop.SVC, session.orgs.c)
-  const res = await op.run(stx, newComment.value)
+  const op = new SetStatus(svcop.SVC, session.orgs.c)
+  const res = await op.run(stx, newComment2.value)
   // res.svcOrgStatus contient le status mis à jour
   await svcOrgStatus()
-  newComment.value = ''
+  newComment2.value = ''
 }
 
 const oc = reactive({ ac : {db: '', st: '', dbs: [], sts: []}, dbn: '', stn: '' })

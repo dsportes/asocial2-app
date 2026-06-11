@@ -1,19 +1,13 @@
-import { propType, collection, idx, DocType } from '../src-fw/doctypes'
+import { propType, collection, idx, DocType, FormType } from '../src-fw/doctypes'
 
 new DocType(
-  { name: 'Org', sync: true, pk: [] }, //header
+  { name: '$Status', sync: true }, //header
   null, // collections
   null
 )
 
 new DocType(
-  { name: 'Property', sync: true, pk: ['id'], nohash: true }, //header
-  null, // collections
-  null
-)
-
-new DocType(
-  { name: 'Task', sync: false, pk: ['process', 'target'] }, //header
+  { name: '$Task', sync: false, pk: ['process', 'target'] }, //header
   null, // collections
   new Map<string, idx>([
     ['startTime',  { type: propType.STRING, global: true }]
@@ -21,13 +15,13 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Subs', sync: false, pk: ['sessionId'] }, //header
+  { name: '$Subs', sync: false, pk: ['sessionId'] }, //header
   null, // collections
   null // index  
 )
 
 new DocType(
-  { name: 'SubsItem', sync: false, pk: ['sessionId', 'def'] }, //header
+  { name: '$SubsItem', sync: false, pk: ['sessionId', 'def'] }, //header
   null, // collections
   new Map<string, idx>([
     ['def',  { type: propType.STRING }]
@@ -35,7 +29,7 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Credential', sync: false, pk: ['credId'] }, // header
+  { name: '$Credential', sync: false, pk: ['credId'] }, // header
   null, // collections
   new Map<string, idx>([
     ['doc', { type: propType.HASH, key: ['docCl', 'docPk'], nohash: true }],
@@ -43,7 +37,7 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Case', sync: true, pk: ['caseId'], nohash: true }, // header
+  { name: '$Form', sync: true, pk: ['formId'], nohash: true }, // header
   null, // collections
   new Map<string, idx>([
     ['creds', { type: propType.LIST, nohash: true }]
@@ -51,10 +45,28 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Readaction', virtual: true, manager: true }, // header
+  { name: 'Readaction', virtual: true, manager: true },
   null,
   null
 )
+
+new DocType(
+  { name: 'CoDir', virtual: true, manager: true },
+  null,
+  null
+)
+
+new DocType(
+  { name: 'Section', virtual: true, enum: ['roman', 'histoire', 'sf'] },
+  null,
+  null
+)
+
+new FormType('membrecodir', 'k1', ['A'])
+new FormType('membreredaction', 'k1', ['A'])
+new FormType('auteur', 'k2', ['Readction/1'])
+// Un Auteur peut aussi nommer un co-auteur
+new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 new DocType(
   { name: 'Article', sync: true, pk: ['artid'] }, //header
@@ -94,3 +106,4 @@ new DocType(
 )
 
 export const docTypeErrors = DocType.errors
+export const docTypeNb = DocType.docTypes.size

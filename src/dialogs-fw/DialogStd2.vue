@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-// import { watch } from 'vue'
+import { ref } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
@@ -39,6 +39,9 @@ const props = defineProps({
   hdrclass: String,
   noclose: Boolean
 })
+
+const wx = {sm: '30', md: '40', lg: '50'}
+const styc = ref('max-width: ' + wx[props.width || 'md'] + 'rem !important; width: 95vw !important;')
 
 const onClose = () => { 
   if (!props.noclose) model.value = false

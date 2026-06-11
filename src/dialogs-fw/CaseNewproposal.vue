@@ -66,7 +66,6 @@ import SubjectMenu from '../components-fw/SubjectMenu.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
-import { GetTopics } from '../src-fw/operations'
 import { opOfSvcOrg } from '../src-fw/operation'
 import { TopicDef } from '../stores/service-store'
 

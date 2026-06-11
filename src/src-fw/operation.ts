@@ -155,7 +155,7 @@ export class Operation extends AOperation {
       let u = await this.getBaseUrl()
       if (!u.endsWith('/')) u += '/'
       // this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
-      this.url = u + 'op/'
+      this.url = u + 'op/' + this.opName
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
 
       session.opStart(this)

@@ -50,8 +50,37 @@ export class  SvcOpIsAdmin extends Operation {
   }
 }
 
-export class  GetSvcOpStatus extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetSvcOpStatus$', SVC, '', $OP) }
+export class  GetStatus$ extends Operation {
+  constructor (SVC: string, $OP: string) { super('GetStatus$', SVC, '', $OP) }
+
+  async run () {
+    try {
+      const res = await this.post(true)
+      return res['status']
+    } catch(e) {
+      await this.ko(e)
+      throw e
+    }
+  }
+}
+
+export class SetStatus$ extends Operation {
+  constructor (SVC: string, $OP: string) { super('SetStatus$', SVC, '', $OP) }
+
+  async run (st: number, txt: string) {
+    try {
+      this.args.st = st
+      this.args.txt = txt || ''
+      const res = await this.post()
+      return res['status']
+    } catch(e) {
+      await this.ko(e)
+    }
+  }
+}
+
+export class  GetStatus extends Operation {
+  constructor (SVC: string, org: string) { super('GetStatus', SVC, org, '') }
 
   async run () {
     try {
@@ -64,14 +93,29 @@ export class  GetSvcOpStatus extends Operation {
   }
 }
 
-export class  GetTopics extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetTopics$', SVC, '', $OP) }
+export class SetStatus extends Operation {
+  constructor (SVC: string, org: string) { super('SetStatus', SVC, org, '') }
 
-  async run () : Promise<TopicDef[]> {
+  async run (st: number, txt: string) {
     try {
-      const svc = stores.service
+      this.args.st = st
+      this.args.txt = txt || ''
+      const res = await this.post()
+      return res['svcOpStatus']
+    } catch(e) {
+      await this.ko(e)
+    }
+  }
+}
+
+export class  GetEnum extends Operation {
+  constructor (SVC: string, $OP: string) { super('GetEnum$', SVC, '', $OP) }
+
+  async run (name: string) : Promise<TopicDef[]> {
+    try {
+      this.args.name = name
       const res = await this.post(true)
-      return res['topics'] || []
+      return res['enum'] || []
     } catch(e) {
       await this.ko(e)
       return []
@@ -79,61 +123,17 @@ export class  GetTopics extends Operation {
   }
 }
 
-export class  UpdTopics extends Operation {
-  constructor (SVC: string, $OP: string) { super('UpdTopics$', SVC, '', $OP) }
+export class  SetEnum extends Operation {
+  constructor (SVC: string, $OP: string) { super('SetEnum$', SVC, '', $OP) }
 
-  async run (json: string) {
+  async run (name: string, values: string[]) {
     try {
-      this.args['json'] = json
+      this.args.name = name
+      this.args.values = values
       const res = await this.post()
     } catch(e) {
       await this.ko(e)
       throw e
-    }
-  }
-}
-
-
-export class  GetSvcOrgStatus extends Operation {
-  constructor (SVC: string, org: string) { super('GetSvcOrgStatus', SVC, org) }
-
-  async run () {
-    try {
-      const res = await this.post(true)
-      return res['orgStatus']
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
-  }
-}
-
-export class SetSvcOpStatus extends Operation {
-  constructor (SVC: string, $OP: string) { super('SetSvcOpStatus$', SVC, '', $OP) }
-
-  async run (st: number, txt: string) {
-    try {
-      this.args.st = st
-      this.args.txt = txt || ''
-      const res = await this.post()
-      return res['svcOpStatus']
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-export class SetSvcOrgStatus extends Operation {
-  constructor (SVC: string, org: string) { super('SetSvcOrgStatus', SVC, org) }
-
-  async run (st: number, txt: string) {
-    try {
-      this.args.st = st
-      this.args.txt = txt || ''
-      const res = await this.post()
-      return res['svcOpStatus']
-    } catch(e) {
-      await this.ko(e)
     }
   }
 }
@@ -143,6 +143,7 @@ export class GetOrgConfig extends Operation {
 
   async run () {
     try {
+      this.args.torg = this.args.org
       const res = await this.post()
       return res['orgconfig']
     } catch(e) {
@@ -156,6 +157,7 @@ export class SetOrgConfig extends Operation {
 
   async run (db?: string, st?: string ) {
     try {
+      this.args.torg = this.args.org
       this.args.db = db || ''
       this.args.st = st || ''
       const res = await this.post()
@@ -362,5 +364,25 @@ export class InvitList extends Operation {
       await this.ko(e)
       return []
     }
+  }
+}
+
+export class GetTopics extends Operation {
+  constructor (SVC: string, org: string) { super('GetTopics', SVC, org) }
+
+  async run ( ) : Promise<TopicDef[]> {
+    try {
+      return []
+    } catch(e) {
+      await this.ko(e)
+      return []
+    }
+  }
+}
+
+export class UpdTopics extends Operation {
+  constructor (SVC: string, org: string) { super('UpdTopics', SVC, org) }
+
+  async run ( x: string) {
   }
 }
