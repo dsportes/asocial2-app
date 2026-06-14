@@ -566,17 +566,10 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  /* Teste le couple svc / org. Retourne:
-  1 si org est non défini
-  2 si aucun opérateur ne supporte svc org
-  3 si l'utilisateur n'est pas administrateur
-  0 : sinon
-  */
-  const checkSvcOrg = async (svc, org) : Promise<number> => { 
-    if (!org) return 1
+  /* Teste le si user est admin pour svc / org. */
+  const adminForSvcOrg = async (svc, org) : Promise<boolean> => { 
     const op = await opOfSvcOrg(svc, org)
-    if (!op) return 2
-    return auth.admins.indexOf(svc + '.' + org) === -1 ? 3 : 0
+    return op && auth.admins.indexOf(svc + '.' + op) !== -1
   }
 
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
@@ -765,7 +758,7 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
         if (msvc[obj['svc']]) {
           obj['name'] = await dcX(keyFromB64(nameK))
-          const c: Credential = Registry.newCredential(obj) as Credential
+          const c: Credential = Credential.new(obj)
           m.set(c.credId, c)
           orgs.add(c.org)
         }
@@ -774,6 +767,14 @@ export const useSafeStore = defineStore('safe', () => {
       }
     mySafeCreds.value = m
     stores.session.setOrgs(orgs)
+  }
+
+  const getCredOn = (svc: string, org: string, docCl: string, docId: string) : Credential | null => {
+    for(const [,c] of mySafeCreds.value)
+      if (c.svc === svc && c.org === org && c.docCl === docCl) {
+        if (c.docId === '1' || c.docId === docId) return c 
+      }
+    return null
   }
 
   type SetCred = {
@@ -1743,8 +1744,8 @@ export const useSafeStore = defineStore('safe', () => {
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     caseFilter,
-    managedOrgs, managedOrgs2, isManager, checkSvcOrg,
-    getCreds,
+    managedOrgs, managedOrgs2, isManager, adminForSvcOrg,
+    getCreds, getCredOn,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,

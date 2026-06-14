@@ -6,7 +6,7 @@ import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { TopicDef } from '../stores/service-store'
 import { $t, dhcool, hasMessage } from '../src-fw/util'
-import { MDOperation, Operation } from '../src-fw/operation'
+import { MDOperation, Operation, CVKeys } from '../src-fw/operation'
 import { FormType } from '../src-fw/doctypes'
 
 const encoder = new TextEncoder()
@@ -48,6 +48,13 @@ export class Credential {
   more?: any | null
 
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
+
+  static new (obj): Credential {
+    const c = Registry.newD('$Credential', obj) as  Credential
+    for (const p of Credential.lp1) this[p] = obj[p] || null
+    if (!c.credId) c.credId = Crypt.rnd(15)
+    return c
+  }
 
   get limit () { return this.more && this.more.limit ? this.more.limit : 0 }
 
@@ -135,22 +142,21 @@ export class $Form extends Document {
   ch?: string = '' // challenge random de synchronisation initiale avec MDEvent
   lv?: number = 0 // lastView par U
 
+  _aesU?: Uint8Array | null = null
+
   /* Traitement final: surchargé par type :Retourne un statut de validation,
   - 0 si OK, N > 10 selon la cause d'échec
   */
   async checkEtc () : Promise<number> { return 0 }
   async validate () : Promise<number> { return 0 }
 
-  static lp1 = ['formId', 'type', 'userId', 'v', 'maxLife', 'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
+  static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife', 'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
   static lp2 = ['type', 'userId', 'v', 'maxLife', 'status', 'comment', 'lv' ]
 
-  constructor (obj?: $FormObj) {
-    super()
-    if (obj) for (const p of $Form.lp1) this[p] = obj[p]
-    if (obj.comment) this.comment = obj.comment
-    if (obj.creds) this.creds = obj.creds
-    if (obj.ch) this.ch = obj.ch
-    if (obj.lv) this.lv = obj.lv
+  static new (obj) : $Form {
+    const f = Registry.newD('$Form', obj)
+    for (const p of $Form.lp1) f[p] = obj[p]
+    return f
   }
 
   toFormObj () : $FormObj {
@@ -164,45 +170,28 @@ export class $Form extends Document {
   }
 
   get ft () : FormType { return FormType.formTypes.get(this.type) || FormType.formTypes.get('default')}
-  get kp () : { pub: Buffer, priv: Buffer } { 
-    const x = config['DCkeys'][this.ft.key]
-    return { pub: keyFromB64(x.pub), priv: keyFromB64(x.pub) }
-  }
-  async uPub (op: OperationWC) : Promise<Buffer> {
-    const [c, v] = await MDOperation.getCV(op, this.userId)
-    return keyFromB64(c)
+
+  async aesU () : Promise<Uint8Array> { 
+    if (!this._aesU) {
+      const fk = await CVKeys.getCKey(this.svc, this.org, this.ft.key) 
+      const sf = stores.safe
+      this._aesU = await Crypt.getAESKey(sf.auth.D, fk)
+    }
+    return this._aesU
   }
 
   /* Une opération de lecture du formulaire peut décrypter `msgU` en utilisant le couple, 
   de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service)
   et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U). 
   */
-  async decryptMsgU (op: OperationWC) : Promise<void> {
-    if (!this.msgT) {
-      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
-      this.msgU = await Crypt.decrypt(aes, this.msgU)
-    }
+  async decryptMsgU () : Promise<void> {
+    if (this.msgU)
+      this.msgU = await Crypt.decrypt(await this.aesU(), this.msgU)
   }
 
-  /* `msgT` est le texte écrit par T: il est envoyé en clair à l'opération d'enregistrement du formulaire ou il est crypté par le couple, 
-  - de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service) 
-  - et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
-  Une opération de lecture peut décrypter `msgT` en utilisant le couple, 
-  - de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service)
-  - et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
-  */
-  async cryptMsgT (op: OperationWC) : Promise<void> {
-    if (this.msgT) {
-      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
-      this.msgT = await Crypt.crypt(aes, this.msgT)
-    }
-  }
-
-  async decryptMsgT (op: OperationWC) : Promise<void> {
-    if (this.msgT) {
-      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
-      this.msgT = await Crypt.decrypt(aes, this.msgT as Uint8Array)
-    }
+  async cryptMsgU () : Promise<void> {
+    if (this.msgU)
+      this.msgU = await Crypt.crypt(await this.aesU(), this.msgU)
   }
 
   // Calcul this.creds depuis le template du type et les arguments $x dans etc
@@ -220,34 +209,83 @@ export class $Form extends Document {
     this.creds = creds
   }
 
-  // vérifie si le tiers est habilité
-  checkAuthTP (op: Operation) : boolean {
+  // vérifie si le user est habilité en tant que tiers
+  async checkAuthTP () : Promise<boolean> {
+    const sf = stores.safe
     const t = this.ft.creds
-    if (t && t.length === 1 && t[0] === 'A') op.requireAuth()
-    else for (const c of this.creds) {
+    if (t && t.length === 1 && t[0] === 'A')
+      return await sf.adminForSvcOrg(this.svc, this.org)
+    for (const c of this.creds) {
       const x = c.split('/')
-      const cred = op.getCred(x[0], x[1] || '1')
+      const cred = sf.getCredOn(this.svc, this.org, x[0], x[1])
       if (cred) return true
     }
     return false
   }
 
+  static credsForTP (svc: string, org: string) : Set<Credential> {
+    const creds: Set<Credential> = new Set()
+    const sf = stores.safe
+    for(const [,c] of sf.mySafeCreds.value)
+      if (c.svc === svc && c.org === org &&
+        (FormType.refClasses1.has(c.docCl) || FormType.refClasses$.has(c.docCl)))
+        creds.add(c)
+    return creds
+  }
+
+  static async get(svc: string, org: string, formId: string, type: string) : Promise<$Form> {
+    const creds = $Form.credsForTP(svc, org)
+    if (!creds.size) return null
+    const op = new Operation('FormGet', svc, org)
+    for(const cred of creds)
+      await op.sign(cred.docCl, { pk: cred.docPk })
+    op.args.formId = formId
+    op.args.type = type
+    const res = await op.post()
+    const obj = res.form
+    if (!obj) return null
+    obj.svc = svc
+    obj.org = org
+    const f = $Form.new(obj)
+    await f.decryptMsgU()
+    return f
+  }
+
   /* Retourne une liste de $Form pour un utilisateur tiers
   si f = ['A'] retourne les forms devant être traitées par un administrateur
   */
-  static async filteredList (op: Operation, f: string[]) : Promise<$FormObj[]> {    
-    const l: $FormObj[] = []
-    await op.db.selectDocs('$Form', 'creds', filter.CONTAINSANY, f, '', 0, 
-      async (bin) => {
-      const obj = decode(bin) as $FormObj
-      const f = Registry.newD('$Form', obj) as $Form
-      if (!f.isOld) {
-        await f.decryptMsgT(op)
-        await f.decryptMsgU(op)
-        l.push(f.toFormObj())
+  static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {    
+    let filter: string[]
+    const sf = stores.safe
+    if (asAdmin) {
+      if (!await sf.adminForSvcOrg(svc, org)) return []
+      filter = ['A']
+    } else {
+      const fi: Set<string> = new Set()
+      for(const [,c] of sf.mySafeCreds.value) {
+        if (c.svc !== svc || c.org !== org) continue
+        if (c.docId === '1') {
+          if (FormType.refClasses1.has(c.docCl)) fi.add(c.docCl + '/1')
+        } else {
+          if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docId)
+        }
       }
-    })
-    return l
+      if (fi.size === 0) return []
+      filter = Array.from(fi)
+    }
+    const op = new Operation('FormFilteredList', svc, org)
+    op.args.filter = filter
+    const res = await op.post()
+    const lst = res.forms as $FormObj[]
+    if (!lst || !lst.length) return []
+    const lf: $Form[] = []
+    for(const obj of lst) {
+      obj.svc = svc
+      obj.org = org
+      const f = $Form.new(obj)
+      await f.decryptMsgU()
+    }
+    return lf
   }
 
 }

@@ -10,6 +10,37 @@ import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
 
+export class CVKeys {
+  static mc: Map<string, Uint8Array> = new Map()
+  static mv: Map<string, Uint8Array> = new Map()
+
+  static async getCKey (svc: string, org: string, name: string) : Promise<Uint8Array> {
+    const oper = await opOfSvcOrg(svc, org)
+    let k = CVKeys.mc.get(svc + '/' + oper + '/' + name)
+    if (k) return k
+    const op = new Operation('getCKey$', svc, null, oper)
+    const res = op.post(true)
+    const s = res['key']
+    if (!s) return null
+    k = keyFromB64(s)
+    CVKeys.mc.set(svc + '/' + oper + '/' + name, k)
+    return k
+  }
+
+  static async getVKey (svc: string, org: string, name: string) : Promise<Uint8Array> {
+    const oper = await opOfSvcOrg(svc, org)
+    let k = CVKeys.mv.get(svc + '/' + oper + '/' + name)
+    if (k) return k
+    const op = new Operation('getVKey$', svc, null, oper)
+    const res = op.post(true)
+    const s = res['key']
+    if (!s) return null
+    k = keyFromB64(s)
+    CVKeys.mv.set(svc + '/' + oper + '/' + name, k)
+    return k
+  }
+}
+
 export type OpArgs = {
   org?: string
   $OP?: string
@@ -140,8 +171,8 @@ export class Operation extends AOperation {
   }
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
-  async sign (role: string, docId?: string) {
-    return await this.authRecord.sign(this.SVC, this.args.org, role, docId || '')
+  async sign (docCl: string, docPk: Object) {
+    return await this.authRecord.sign(this.SVC, this.args.org, docCl, docPk)
   }
 
   /* Si noAuth est true, l'opération N'INCLUE PAS

@@ -8,7 +8,7 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Cred, Credential, DocCase, Case } from '../src-fw/documents'
+import { Cred, Credential } from '../src-fw/documents'
 import { TopicDef } from 'src/stores/service-store'
 
 export class Bug extends Operation {
@@ -283,27 +283,6 @@ export class ListManagers extends Operation {
   }
 }
 
-/* Lecture d'un document Case par son propriétaire */
-export class CaseGet extends Operation {
-  constructor (SVC: string, org: string) { super('CaseGet', SVC, org) }
-
-  async run ( caseId: string ) : Promise<DocCase | null> {
-    try {
-      this.args.caseId = caseId
-      const res = await this.post()
-      const c = res.case as DocCase | null
-      if (!c) return null
-      c.svc = this.SVC
-      c.org = this.args.org
-      return c
-    } catch(e) {
-      await this.ko(e)
-      return null
-    }
-  }
-
-}
-
 // Met à jour un Credential avec les données [v, more] de son document en DB
 export class SyncCred extends Operation {
   constructor (SVC: string, org: string) { super('GetCredUpdates', SVC, org) }
@@ -323,66 +302,5 @@ export class SyncCred extends Operation {
       await this.ko(e)
       return false
     }
-  }
-}
-
-/* InvitList liste, pour un sponsor, les invitations enregistrées pour un "major"
-- soit toutes, avec le credential 'Org.manager' ou 'Sponsor.major'
-- soit uniquement celles du "minor" indiqué pour un 'Sponsor.minor'
-Retourne une liste d'invitations 
-*/
-export class InvitList extends Operation {
-  constructor (SVC: string, org: string) { super('InvitList', SVC, org) }
-
-  async run ( major: string, minor: string, isSp: boolean ) : Promise<Invitation[]> {
-    try {
-      this.args.major = major
-      this.args.minor = minor
-      if (!isSp) this.sign('Org.manager')
-      else { // sponsor
-        // On tente toujours le "major" seul
-        this.sign('Sponsor.', major) 
-        // Le cas échéant on tente le major.minor
-        if (minor !== '') this.sign('Sponsor.', major + '/' + minor)
-      }
-      const res = await this.post()
-      const status = res.status
-      if (status !== 0) {
-        await stores.ui.diagDisplay($t('INVcred'))
-        return []
-      }
-      const lst: Invitation[] = []
-      for(const data of res.list) {
-        const obj = decode(data)
-        obj.svc = this.SVC
-        obj.org = this.args.org
-        const inv = new Invitation(obj)
-        lst.push(inv)
-      }
-      return lst
-    } catch(e) {
-      await this.ko(e)
-      return []
-    }
-  }
-}
-
-export class GetTopics extends Operation {
-  constructor (SVC: string, org: string) { super('GetTopics', SVC, org) }
-
-  async run ( ) : Promise<TopicDef[]> {
-    try {
-      return []
-    } catch(e) {
-      await this.ko(e)
-      return []
-    }
-  }
-}
-
-export class UpdTopics extends Operation {
-  constructor (SVC: string, org: string) { super('UpdTopics', SVC, org) }
-
-  async run ( x: string) {
   }
 }
