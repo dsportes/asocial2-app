@@ -7,6 +7,7 @@ import stores from '../stores/all'
 import { TopicDef } from '../stores/service-store'
 import { $t, dhcool, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation } from '../src-fw/operation'
+import { FormType } from '../src-fw/doctypes'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -85,290 +86,169 @@ export class Credential {
 }
 Registry.registerD(Credential)
 
-class Cred_Topic extends Credential {
-  constructor (obj?: Object) {
-    super(obj)
-  }
 
-  /* more: propriété `subjects`:
-    - absent: le topic n'a pas de sujets.
-    - `"a b c "`. Valeurs séparées par un espace.
-    - `"@sujet35"` : ID du _singleton_ (du service) portant cette liste.
-    - `"$sujet35"` : ID du _Property_ (de l'organisation) portant cette liste.
-    - `"DocCl/alias"` : nom de classe des documents dont `alias` est la propriété définissant un code externe.
-  */
-  async dispMore () {
-    const ui = stores.ui
-    const s = this.more.subjects
-    if (!s)
-      await ui.diagDisplay($t('CRRtopic1'))
-    else if (s.startsWith('@'))
-      await ui.diagDisplay($t('CRRtopic3', [s.substring(1)]))
-    else if (s.startsWith('$'))
-      await ui.diagDisplay($t('CRRtopic4', [s.substring(1)]))
-    else {
-      const i = s.indexOf('/')
-      if (i === -1)
-        await ui.diagDisplay($t('CRRtopic2', [s]))
-      else
-        await ui.diagDisplay($t('CRRtopic5', [s.substring(i + 1), s.substring(0, i)]))
-    }
-  }
-}
-Registry.registerD(Cred_Topic)
-
-export type CaseData = {
-  chk: string // SHA raccourci des données immuables `caseId, userId topicId subject svc org`. Permet de vérifier que la demande vient bien d'un détenteur légitime (session ou opération).
-  svc: string //
-  org: string // service détenteur de l'ardoise.
-  topicId: string // topic du _cas_.
-  subject: string // sujet du cas si requis.
-  status: number // 0 1 2 3
-  aboutU: Uint8Array | null // texte crypté de commentaire pour le seul usage de l'utilisateur.
-  lv: number // dernière version _lue_ par U. La comparaison avec `v` permet de savoir si U a eu connaissance de la dernière évolution produite par le service.
-
-  caseId?: string
-  v?: number
-}
-
-export type CaseMin = {
-  svc: string, 
-  org: string, 
-  topicId: string, 
-  subject: string, 
-  userId?: string
-}
-
-export type MsgVal = {
-  ok: boolean
-  txt: string // texte de l'erreur
-  docCl: string
-  docId: string
-}
-
-/********************************************************
- * Case "générique": des classes spécifiques "Case_TTT"
- * ont des méthodes particulières par topic TTT.
- */
-export class Case {
-
-  svc: string = ''
-  org: string = ''
-
-  caseId: string = '' // clé primaire dans ZZCASES `userId topicId caseId`.
-  v: number = 0 // version du document dans la DB du service. Elle détermine aussi la limite de validité du cas.
-  userId: string = ''
-
-  topicId: string = ''
-  subject?: string
-  status: number = 0 // 0-annulé 1-actif-U 2-actif-S 3-finalisé
-
-  // Proprités ne figurant que dans le Master Directory
-  lv: number = 0 // dernière version _lue_ par U. La comparaison avec `v` permet de savoir si U a eu connaissance de la dernière évolution produite par le service.
-  about?: string = '' // texte de commentaire pour le seul usage de l'utilisateur.
-
-  // Propriétés ne figurant PAS dans le Master Directory mais obtenues du document correspondant
-  tab?: string // texte de l'ardoise décrypté par `X`
-  etc?: Object // objet qui ne peut être écrit configuré que par une opération d'un _helper_ autorisé.
-  creds?: string[] // liste de [docCl/docId docCl/1]
-
-  okCreds?: Map<string, Credential> // credentials de U aptes (a priori) à traiter le case
-
-  // Liste les cases auquel un sponsor peut proposer une réponse
-  static async getList(svc: string, org: string, filter: string[] | null) : Promise<Case[]> {
-    const op = new Operation(!filter ? 'caseManagerList' : 'caseFilteredList', svc, org)
-    if (filter) op.args.filter = filter
-    try {
-      const res = await op.post()
-      const lst: Case[] = []
-      const cases = res['cases']
-      if (cases) for(const c of cases) {
-        const cas = Registry.newCase(c) as Case
-        cas.caseId = c.caseId
-        cas.v = c.V
-        cas.status = c.status
-        cas.tab = c.tabX ? decoder.decode(c.tabX) : ''
-        if (cas) cases.push(cas)
-      }
-      return lst
-    } catch (e) {
-      op.ko(e)
-      return []
-    }
-  }
-
-  static async newFromMD (cd: CaseData) {
-    const sf = stores.safe
-    const obj = { svc: cd.svc, org: cd.org, topicId: cd.topicId, subject: cd.subject}
-    const c = Registry.newCase(obj)
-    c.caseId = cd.caseId || ''
-    c.status = cd.status
-    c.v = cd.v || 0
-    c.lv = cd.lv
-    c.about = cd.aboutU ? decoder.decode(await Crypt.decrypt(sf.keyK, cd.aboutU)) : ''
-    return c
-  }
-
-  constructor (obj: CaseMin) {
-    this.svc = obj.svc; this.org = obj.org; this.topicId = obj.topicId; this.subject = obj.subject || ''
-    this.userId = obj.userId || stores.safe.userId
-  }
-
-  /* export type TopicDef = {
-    id: string
-    categ: string
-    key: string
-    subjects: string
-    pubC: Uint8Array
-    creds: string[] // [A] ou [docCl/S docCl/1]
-  }
-  */
-  setCreds () {
-    const td: TopicDef | null = stores.service.getTopic(this.svc, this.topicId)
-    if (!td || !td.creds || ! td.creds.length) return
-    const cr: string[] = []
-    if (td.creds.indexOf('A') !== -1) cr.push('A')
-    else for (const c of td.creds) {
-      if (c.charAt(c.length - 1) === '1') cr.push(c)
-      else cr.push(c.substring(0, c.length - 2) + this.subject)
-    }
-    this.creds = cr
-  }
-
-  get subjectEd () : string {
-    return hasMessage('SUBJECT_' + this.topicId + '_' + this.subject) || this.subject || ''
-  }
-
-  get topicEd () : string { return $t('TOPIC_' + this.topicId).substring(2)}
-
-  chk () { 
-    return Crypt.shaS([this.caseId, this.userId, this.topicId, this.subject, this.svc, this.org].join('/'))
-  }
-
-  // Méthodes surchargées pour chaque topic ******************************************
-  /* Retourne un "état" MD affichable du etc */
-  editEtc () : string { return '' }
-
-  /*
-  allowedCreds () {
-    this.okCreds = new Map()
-    const creds: Map<string, Credential> = stores.safe.mySafeCreds
-    const s = new Set(this.creds)
-    for(const [credId, cred] of creds)
-      if (s.has(cred.docCl + '/' + cred.docPk)) this.okCreds.set(credId, cred)
-  }
-  */
-
-
-  /* SURCHARGE selon le Topic - validation du case. 
-  Retourne le diagnostic d'erreur ou ''
-  */
-  async checkEtc () : Promise<string> {
-    return ''
-  }
-
-  /* SURCHARGE selon le Topic - validation du case. Retourne: 
-  - 0 : si OK
-  - -1 : en cas d'exception de l'opération
-  - 1..99 : status SFST d'une erreur retournée par une opération
-  */
-  async validate (args: any) : Promise<number> {
-    return 0
-  }
-  
-  async encryptTab (tab: string) : Promise<Uint8Array | null> {
-    if (!tab) return null
-    const sf = stores.safe
-    const svc = stores.service
-    const td = svc.getTopic(this.svc, this.topicId)
-    const aes = await Crypt.getAESKey( td.pubC, keyFromB64(sf.auth.D))
-    return await Crypt.crypt(aes, encoder.encode(tab))
-  }
-
-  async decryptTab (tabX: Uint8Array | null) : Promise<string> {
-    if (!tabX) return ''
-    const sf = stores.safe
-    const svc = stores.service
-    const td = svc.getTopic(this.svc, this.topicId)
-    const aes = await Crypt.getAESKey(td.pubC, keyFromB64(sf.auth.D))
-    return decoder.decode(await Crypt.decrypt(aes, tabX))
-  }
-
-  async createByU (tab: string, about: string) : Promise<boolean> {
-    const sf = stores.safe
-    const ui = stores.ui
-    const now = Date.now()
-    this.caseId = Crypt.rnd(15)
-    this.tab = tab
-    this.about = about
-    this.status = 1
-    this.lv = 0
-    this.v = Date.now()
-    this.etc = {}
-    this.setCreds()
-    const aboutU = about ? await Crypt.crypt(sf.keyK, encoder.encode(about)) : null
-
-    const caseObj = { // pour le _document_
-      caseId: this.caseId,
-      userId: this.userId,
-      topicId: this.topicId,
-      subject: this.subject,
-      tabX: await this.encryptTab(tab),
-      creds: this.creds
-    }
-
-    const caseData: CaseData = {
-      svc: this.svc,
-      org: this.org,
-      caseId: this.caseId,
-      topicId: this.topicId,
-      subject: this.subject || '',
-      status: this.status,
-      lv: now,
-      aboutU,
-      chk: this.chk()
-    }
-
-    const mdop = new MDOperation('$mdCaseNew')
-    mdop.args['caseId'] = this.caseId
-    mdop.args['userId'] = this.userId
-    mdop.args['v'] = now
-    mdop.args['caseData'] = caseData
-    try {
-      await mdop.post()
-      const op = new Operation('CaseCreateByU', this.svc, this.org)
-      op.args['caseObj'] = caseObj
-      try {
-        const res = await op.post()
-        if (res.status !== 0) {
-          await ui.diagDisplay($t('CASST_' + res.status))
-          return false
-        }
-        return true
-      } catch (e: any) {
-        op.ko(e)
-        return false
-      }
-    } catch (e: any) {
-      mdop.ko(e)
-      return false
-    }
-  }
-}
-
-// "Document" Case obtenu du service pour cette organisation
-export type DocCase = {
-  caseId: string  // ID universel généré aléatoirement à la création.
-  v: number  // version du document. Elle détermine aussi la limite de validité du document.
-  userId: string // ID de l'utilisateur détenteur du cas. Depuis une opération du service la clé publique de cryptage `CU` est donc accessible.
-  topicId: string // ID du topic auquel le cas se rapporte.
-  subject: string // code (facultatif) désignant une cible plus précise permettant à un utilisateur _sponsor_ de se concentrer sur un sujet précis. 
-  status: number // 0-annulé 1-actif-U 2-actif-H 3-finalisé.
-  tabX: Uint8Array | null // texte de l'ardoise crypté par `X`
-  etc: any  // objet qui ne peut être écrit configuré que par une opération d'un _sponsor_ autorisé.
-  maxLife: number // epoch en MINUTES
-  creds: string[] // [A] ou [docCl/docPk docCl/1 ...]
-
+export type $FormObj = {
   svc?: string
   org?: string
+  formId: string  // ID universel aléatoire.
+  type: string  // type du formulaire.
+  userId: string  // utilisateur cible.
+  v: number  //  version du document (_epoch_).
+  maxLife: number //  EPOCH en MINUTES de suppression automatique du formulaire.
+  status: number // de 1 à 4.
+  etc: Object | null  // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
+  etcB: Object | null  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
+  msgU: Uint8Array | null  // message écrit par U.
+  msgT: Uint8Array | null  // message écrit par le tiers.
+
+  /* liste des credentials permettant à un tiers d'agir quand il possède l'un de ceux-là:
+  [ docCl1/docPk1 ... ]
+  La liste dépende la valeur de etc : depuis la liste template [ docCl1/$x ... ]
+  $x est remplacé par la valeur de etc.$x
+  */
+  creds?: string[]
+  comment?: Uint8Array | null // commentaire écrit et crypté par U.
+  ch?: string // challenge random de synchronisation initiale avec MDEvent
+  lv?: number // lastView par U
 }
+
+/*
+Document `Form` hébergé dans la DB spécifique de `svc / org`.
+Sous-classes applicatives $Form_type par "type"
+*/
+export class $Form extends Document {
+  svc?: string
+  org?: string
+  formId: string = '' // ID universel aléatoire.
+  type: string = '' // type du formulaire.
+  userId: string = '' // utilisateur cible.
+  v: number = 0 //  version du document (_epoch_).
+  maxLife: number = 0 //  EPOCH en SECONDES de suppression automatique du formulaire.
+  status: number = 0 // de 1 à 4.
+  etcU: Object | null = null // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
+  etcT: Object | null = null // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
+  msgU: Uint8Array | null = null // message écrit par U.
+  msgT: Uint8Array | null = null // message écrit par le tiers.
+
+  creds: string[] = [] // liste des credentials permettant à un tiers d'agir quand il possède l'un de ceux-là: `[ docCl1/docPk1 ... ]`.
+  comment?: Uint8Array | null = null // commentaire écrit et crypté par U.
+  ch?: string = '' // challenge random de synchronisation initiale avec MDEvent
+  lv?: number = 0 // lastView par U
+
+  /* Traitement final: surchargé par type :Retourne un statut de validation,
+  - 0 si OK, N > 10 selon la cause d'échec
+  */
+  async checkEtc () : Promise<number> { return 0 }
+  async validate () : Promise<number> { return 0 }
+
+  static lp1 = ['formId', 'type', 'userId', 'v', 'maxLife', 'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
+  static lp2 = ['type', 'userId', 'v', 'maxLife', 'status', 'comment', 'lv' ]
+
+  constructor (obj?: $FormObj) {
+    super()
+    if (obj) for (const p of $Form.lp1) this[p] = obj[p]
+    if (obj.comment) this.comment = obj.comment
+    if (obj.creds) this.creds = obj.creds
+    if (obj.ch) this.ch = obj.ch
+    if (obj.lv) this.lv = obj.lv
+  }
+
+  toFormObj () : $FormObj {
+    const obj = {}
+    for (const p of $Form.lp1) obj[p] = this[p]
+    return obj as $FormObj
+  }
+
+  chk () { 
+    return Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/')) 
+  }
+
+  get ft () : FormType { return FormType.formTypes.get(this.type) || FormType.formTypes.get('default')}
+  get kp () : { pub: Buffer, priv: Buffer } { 
+    const x = config['DCkeys'][this.ft.key]
+    return { pub: keyFromB64(x.pub), priv: keyFromB64(x.pub) }
+  }
+  async uPub (op: OperationWC) : Promise<Buffer> {
+    const [c, v] = await MDOperation.getCV(op, this.userId)
+    return keyFromB64(c)
+  }
+
+  /* Une opération de lecture du formulaire peut décrypter `msgU` en utilisant le couple, 
+  de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service)
+  et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U). 
+  */
+  async decryptMsgU (op: OperationWC) : Promise<void> {
+    if (!this.msgT) {
+      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
+      this.msgU = await Crypt.decrypt(aes, this.msgU)
+    }
+  }
+
+  /* `msgT` est le texte écrit par T: il est envoyé en clair à l'opération d'enregistrement du formulaire ou il est crypté par le couple, 
+  - de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service) 
+  - et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
+  Une opération de lecture peut décrypter `msgT` en utilisant le couple, 
+  - de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service)
+  - et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
+  */
+  async cryptMsgT (op: OperationWC) : Promise<void> {
+    if (this.msgT) {
+      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
+      this.msgT = await Crypt.crypt(aes, this.msgT)
+    }
+  }
+
+  async decryptMsgT (op: OperationWC) : Promise<void> {
+    if (this.msgT) {
+      const aes = await Crypt.getAESKey(await this.uPub(op), this.kp.priv)
+      this.msgT = await Crypt.decrypt(aes, this.msgT as Uint8Array)
+    }
+  }
+
+  // Calcul this.creds depuis le template du type et les arguments $x dans etc
+  setCreds () {
+    const etc = this.status === 1 ? this.etcU : this.etcT
+    const creds = []
+    for(const c of this.ft.creds) {
+      const i = c.indexOf('$')
+      if (i !== -1) {
+        const arg = c.substring(i, i + 1)
+        const val = etc[arg] || ''
+        creds.push(c.replace(arg, val))
+      } else creds.push(c)
+    }
+    this.creds = creds
+  }
+
+  // vérifie si le tiers est habilité
+  checkAuthTP (op: Operation) : boolean {
+    const t = this.ft.creds
+    if (t && t.length === 1 && t[0] === 'A') op.requireAuth()
+    else for (const c of this.creds) {
+      const x = c.split('/')
+      const cred = op.getCred(x[0], x[1] || '1')
+      if (cred) return true
+    }
+    return false
+  }
+
+  /* Retourne une liste de $Form pour un utilisateur tiers
+  si f = ['A'] retourne les forms devant être traitées par un administrateur
+  */
+  static async filteredList (op: Operation, f: string[]) : Promise<$FormObj[]> {    
+    const l: $FormObj[] = []
+    await op.db.selectDocs('$Form', 'creds', filter.CONTAINSANY, f, '', 0, 
+      async (bin) => {
+      const obj = decode(bin) as $FormObj
+      const f = Registry.newD('$Form', obj) as $Form
+      if (!f.isOld) {
+        await f.decryptMsgT(op)
+        await f.decryptMsgU(op)
+        l.push(f.toFormObj())
+      }
+    })
+    return l
+  }
+
+}
+Registry.registerD($Form)

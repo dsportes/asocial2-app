@@ -39,7 +39,6 @@ for (let n = 0; n <= 0xff; ++n) {
 export function arrayBuffertohex (arrayBuffer: ArrayBuffer) : string {
     const buff = new Uint8Array(arrayBuffer)
     const hexOctets = [] // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
-    // @ts-expect-error
     for (let i = 0; i < buff.length; ++i) hexOctets.push(byteToHex[buff[i]])
     return hexOctets.join("")
 }

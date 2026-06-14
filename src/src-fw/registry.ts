@@ -9,32 +9,26 @@ export class Registry {
 
   static registerD (cl: Function) { Registry.regDoc.set(cl.name, cl) }
 
-  static getD (name: string) { return Registry.regDoc.get(name) }
-
-  static newD (name: string) {
-    const cl = Registry.regDoc.get(name)
-    return cl ? new cl() : null
+  static getD (name: string, data: Object) { 
+    const dt = DocType.get(name)
+    if (!dt) return null
+    return dt.subClassBy
+      ? Registry.regDoc.get(name + '_' + data[dt.subClassBy]) || Registry.regDoc.get(name)
+      : Registry.regDoc.get(name) 
   }
 
-  static newCredential (obj: Object) {
-    const name = 'Cred_' + obj['docCl']
-    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('Credential')
+  static newD (name: string, data: Object) {
+    const cl = Registry.getD(name, data)
     return cl ? new cl() : null
-  }
-
-  static newCase (obj: any) {
-    const name = 'Case_' + obj['topicId']
-    const cl = Registry.regDoc.get(name) || Registry.regDoc.get('Case')
-    return cl ? new cl(obj) : null
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
     const dt = DocType.get(clazz)
-    const doc = Registry.newD(clazz)
+    const d = data ? decode(data) : {}
+    const doc = Registry.newD(clazz, d)
     if (!doc) return null
     doc._clazz = clazz
     doc._dt = dt || null
-    const d = data ? decode(data) : {}
     for(const f in d) doc[f] = d[f]
     doc._pk = d._pk || (doc._dt ? doc._dt.pkValue(doc) : '')
     await doc.compile()
