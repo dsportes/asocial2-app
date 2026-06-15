@@ -74,7 +74,7 @@ import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
 import InvitValidate from '../components/InvitValidate.vue'
-import CaseZoom from '../components-fw/CaseZoom.vue'
+import CaseZoom from './FormZoom.vue/index.js'
 
 const ui = stores.ui
 const sf = stores.safe

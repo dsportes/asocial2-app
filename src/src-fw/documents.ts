@@ -94,7 +94,7 @@ export class $Credential {
 Registry.registerD($Credential)
 
 
-export class MDEvent {
+export class $MDEvent {
   // Immuables
   eventId: string // (PK) identifiant universel de l’événement / processus (formId pour un Form).
   type: string // code du type d'événement / processus.
@@ -110,24 +110,26 @@ export class MDEvent {
   comment: string // commentaire de l'utilisateur cible crypté par lui.
   lv: number // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
 
-  static async new (obj: any) : Promise<MDEvent> {
+  get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
+
+  static async new (obj: any) : Promise<$MDEvent> {
     const sf = stores.safe
-    const e = new MDEvent()
+    const e = new $MDEvent()
     for(const p of Object.keys(obj)) if (p !== 'comment') e[p] = obj[p]
     e.comment = obj.comment === null ? '' : 
       decoder.decode(await Crypt.decrypt(sf.keyK, obj.comment))
     return e
   }
  
-  static async listEvents () : Promise<MDEvent[]> {
+  static async listEvents () : Promise<$MDEvent[]> {
     const sf = stores.safe
     const op = new MDOperation('$mdEventList')
     op.args.userId = sf.userId
     const res = await op.post()
     const lst = res.mdevents
-    const l: MDEvent[] = []
+    const l: $MDEvent[] = []
     if (lst && lst.length) for(const x of lst)
-      l.push(await MDEvent.new(x))
+      l.push(await $MDEvent.new(x))
     return l
   }
 
@@ -187,7 +189,7 @@ export type $FormObj = {
   msgT: Uint8Array | null  // message écrit par le tiers.
 
   comment?: Uint8Array | null // commentaire écrit et crypté par U.
-  ch?: string // challenge random de synchronisation initiale avec MDEvent
+  ch?: string // challenge random de synchronisation initiale avec $MDEvent
   lv?: number // lastView par U
 }
 
@@ -213,11 +215,12 @@ export class $Form extends Document {
   msgT: Uint8Array | null = null // message écrit par le tiers.
 
   comment?: Uint8Array | null = null // commentaire écrit et crypté par U.
-  ch?: string = '' // challenge random de synchronisation initiale avec MDEvent
+  ch?: string = '' // challenge random de synchronisation initiale avec $MDEvent
   lv?: number = 0 // lastView par U
-
   _aesU?: Uint8Array | null = null
 
+  get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
+  
   /* Traitement final: surchargé par type :Retourne un statut de validation,
   - 0 si OK, N > 10 selon la cause d'échec
   */

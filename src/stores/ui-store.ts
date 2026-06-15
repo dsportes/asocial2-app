@@ -178,10 +178,11 @@ export const useUiStore = defineStore('ui', () => {
     fnnav: null,
   })
 
-  const currentCase = reactive({
+  const currentEvent = reactive({
     zoomed: false,
-    cas: null, // cas du Master Directory, enrichi ou non par le document
-    newTab: '',
+    event: null,
+    form: null,
+    newComment: String,
     fnOnUpdate: null,
     msgVal: null
   })
@@ -201,7 +202,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    currentCase, navBar, adminPage, sponsoringsPage,
+    currentEvent, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
   }
 })

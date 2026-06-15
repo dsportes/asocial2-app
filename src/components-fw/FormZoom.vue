@@ -49,7 +49,7 @@ import { $t, dhcool } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
-import { Case } from '../src-fw/documents'
+import { $Form, $MDEvent } from '../src-fw/documents'
 import { MDOperation } from 'src/src-fw/operation'
 
 const encoder = new TextEncoder()
@@ -61,25 +61,13 @@ const props = defineProps({
   editable: Boolean
 })
 
-const cas: Ref<Case> = computed(() => 
-  ui.currentCase.cas)
-const notView = computed(() => cas.value.userId === sf.userId
-  && (cas.value.lv < cas.value.v) )
-const etcEd = computed(() => cas.value.editEtc() || $t('INVx_none'))
+const event: Ref<$MDEvent> = computed(() => ui.currentEvent.event )
+const form: Ref<$Form> = computed(() => ui.currentEvent.form )
 
-/*
-const trace = () => {
-  if (cas.value) {
-    const val = Crypt.shaS(encoder.encode(cas.value.topicId))
-    const pk = Crypt.shaS(encoder.encode(cas.value.caseId))
-    console.log('cas change topic-index', pk, val)
-  }
-}
-*/
+const notView = computed(() => form.value && form.value.userId === sf.userId
+  && (form.value.lv < form.value.v) )
 
 const init = async () => {
-  ui.currentCase.newTab = cas.value.tab
-  // trace()
   if (notView.value) await vu()
 }
 
@@ -93,7 +81,7 @@ watch(cas, async (v) => {
 const emit = defineEmits(['tabchange'])
 
 const vu = async () => {
-  await ui.diagDisplay($t('INVxnotv_u'))
+  await ui.diagDisplay($t('FORMnotv_u'))
 
   const about = ui.currentCase.newTab || cas.value.tab || '' 
   const aboutU = about ? await Crypt.crypt(sf.keyK, encoder.encode(about)) : null

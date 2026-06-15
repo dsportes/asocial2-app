@@ -144,21 +144,21 @@ export default {
   PAGEhome: 'Connexion',
   PAGEadmin: 'Administration Technique',
   PAGEapp: 'Auteurs et relecteurs',
-  PAGEdemands: 'Mes demandes d\'invitation',
-  PAGEdemands_label: 'Mes demandes d\'invitation: création / suivi',
-  PAGEdemands_bub: `### Mes demandes d\'invitation: création / suivi
-  - faire une nouvelle demande d\'invitation: solliciter des sponsors pour que l\'un d'entre eux étabblisse une invitaion.
-  - lister mes invitations _en cours_:
-    - mes demandes n'ayant pas encore été prises en compte par un sponsor,
-    - les invitations qu'un sponsor m'a faite, soit suite à une de mes demandes, soit de sa propre inititiative.
+  PAGEdemands: 'Mes demandes / propositions reçues',
+  PAGEdemands_label: 'Mes demandes, création et suivi',
+  PAGEdemands_bub: `### Mes demandes, création et suivi des propositions reçues:
+  - faire une nouvelle demande d\'invitation: solliciter des tiers pour que l\'un d'entre eux fasse une proposition.
+  - lister mes procédures _en cours_:
+    - mes demandes n'ayant pas encore été prises en compte par un tiers,
+    - les propositions faites par tiers, soit suite à une de mes demandes, soit de leur propre inititiative.
 
   `,
-  PAGEsponsorings: 'Mes sponsorings',
-  PAGEsponsorings_label: 'Mes sponsorings: mes propositions, création et suivi',
-  PAGEsponsorings_bub: `### Mes sponsorings: mes propositions, création et suivi
-  - répondre à une demande d'invitation en faisant une proposition.
-  - proposer une invitation à un utilisateur sans qu'il l'ai sollicitée.
-  - lister les invitations _en cours_ que j'ai lancé et le cas échant les modifier.
+  PAGEsponsorings: 'Demandes des autres, suivi',
+  PAGEsponsorings_label: 'Mes propositions aux demandes des autres, création et suivi',
+  PAGEsponsorings_bub: `### Mes propositions aux demandes des autres, création et suivi
+  - répondre à une demande d'un utilisateur en faisant une proposition selon mes pouvoirs.
+  - prendre l'initiative d'une proposition à un utilisateur avant qu'il l'ai sollicitée forellement.
+  - suivre les procédures ouvertes et le cas échant y intervenir.
 
   `,
 
@@ -846,7 +846,6 @@ Vous pourrez vous connecter après succès de la restauration.
   INVx_opts: 'Options de l\'invitation',
   INVx_none: '#### (aucune)',
   INVxnotv_s: 'Version pas encore consultée par l\'utilisateur.',
-  INVxnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   INVbtn_val: 'Valider',
   INVbtn_rec: 'Editer l\'ardoise',
   INVbtn_del: 'Renoncer et supprimer',
@@ -966,6 +965,28 @@ Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'int�
 Fermer la fenêtre corespond à un NON sélection.
 `,
   SLCsel: 'Quelques caractères dans le code recherché',
+
+  // DialogueHelp.vue
+  HLPaidebd: 'Page "{0}" bientôt disponible',
+  HLPfermer: 'Fermer l\'aide',
+  HLPprec: 'Page d\'aide précédente',
+  HLPfiltre: 'Filtre sur les titres',
+  HLPdg: 'Site de documentation de l\'application',
+  HLPmenu: 'Voir le détail dans le menu ci-dessus, rubrique _{0}_',
+  HLPrm1: 'Note à propos de la révision de l\'application: quels sources ...',
+
+  // Showdown
+  SHed: 'Editer',
+  SHpe: 'Plein écran',
+  SHre: 'Réduire',
+
+  FORMstatus_1: 'Maj par U',
+  FORMstatus_2: 'Maj par T', 
+  FORMstatus_3: 'Validé', 
+  FORMstatus_4: 'Annulé',
+
+  FORMnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
+  FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
 
   /*
   Détecté par l'application
@@ -1122,20 +1143,7 @@ Fermer la fenêtre corespond à un NON sélection.
   EX_reload: 'Relancer l\'application',
   EX_continue: 'Poursuivre la session quand même',
 
-  // DialogueHelp.vue
-  HLPaidebd: 'Page "{0}" bientôt disponible',
-  HLPfermer: 'Fermer l\'aide',
-  HLPprec: 'Page d\'aide précédente',
-  HLPfiltre: 'Filtre sur les titres',
-  HLPdg: 'Site de documentation de l\'application',
-  HLPmenu: 'Voir le détail dans le menu ci-dessus, rubrique _{0}_',
-  HLPrm1: 'Note à propos de la révision de l\'application: quels sources ...',
 
-    // TODO révision en cours
-  // Showdown
-  SHed: 'Editer',
-  SHpe: 'Plein écran',
-  SHre: 'Réduire',
 
   INVsponsoring: `### Qui peut traiter une demande d'invitation ?
 Un utilisateur est un "sponsor" valide pour une demande quand,
@@ -1195,32 +1203,14 @@ bla bla
 
   INVERR$tab: 'Le texte de l\'ardoise doit avoir au moins 10 signes.',
 
-  ROLE: 'Rôle',
-  ROLE$Org_manager: 'Manager de l\'organisation',
-  ROLE$Org_manager_bub: `### Manager de l\'organisation
-`,
-  ROLE$Sponsor_: 'Sponsor traitant les demandes d\'invitation',
-  ROLE$Sponsor__bub: `### Sponsor traitant les demandes d\'invitation
-bla bla
-blu blu
 
-`,
-
-  ROLE$Auteur_: 'Auteur d\'articles',
-  ROLE$Auteur__bub: `### Auteur d\'articles
-`,
-  ROLE$Relecteur_: 'Relecteur d\'articles',
-  ROLE$Groupe_: 'Groupe de relecteurs',
-
-  COND_orgm_1: 'Alias utilisé par l\'administrateur pour identifier le bénéficiaire: "{0}"',
 
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
-  TOPIC_manager: '01Attribuer un pouvoir de "manager"',
-  TOPIC_coredaction: '01Etre membre du comité de "Rédaction"',
-  TOPIC_crauteur: '02Création d\'un nouvel auteur',
-  TOPIC_joinauteur: '02Devenir co-auteur d\'un auteur',
-  SUBJECT_joinauteur_titi: 'Grand auteur titi',
+  TYPE_membrecodir: '01Nomination au Comité de Direction',
+  TYPE_membreredaction: '01Nomination au Comité de Rédaction',
+  TYPE_auteur: '02Création d\'un nouvel auteur',
+  TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

@@ -1,9 +1,9 @@
 <template>
-  <case-scanrequests/>
+  <events-scan/>
 </template>
 
 <script setup lang="ts">
-import CaseScanrequests from '../components-fw/CaseScanrequests.vue'
+import EventsScan from '../components-fw/EventsScan.vue'
 
 </script>
 

@@ -27,7 +27,7 @@ import stores from '../stores/all'
 import { $t, dkli } from '../src-fw/util'
 import { Case } from '../src-fw/documents'
 import CaseLine from '../components-fw/CaseLine.vue'
-import CaseZoom from '../components-fw/CaseZoom.vue'
+import CaseZoom from '../components-fw/FormZoom.vue/index.js'
 
 const ui = stores.ui
 const session = stores.session
