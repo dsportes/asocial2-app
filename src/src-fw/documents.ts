@@ -12,7 +12,7 @@ import { FormType } from '../src-fw/doctypes'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-export type Cred = { // Credential attaché à un document
+export type $Cred = { // Credential attaché à un document
   pubv: Uint8Array
   pubc: Uint8Array
   limit: number
@@ -22,9 +22,9 @@ export type Cred = { // Credential attaché à un document
   credId: string
 }
 
-/* Credential: possiblemernt mis à jour depuis le document (v more).
+/* $Credential: possiblemernt mis à jour depuis le document (v more).
 */
-export class Credential {
+export class $Credential {
   static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk', 
     'privs', 'privd', 'name', 'docKey', 'opaque', 'more' ]
 
@@ -49,9 +49,9 @@ export class Credential {
 
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 
-  static new (obj): Credential {
-    const c = Registry.newD('$Credential', obj) as  Credential
-    for (const p of Credential.lp1) this[p] = obj[p] || null
+  static new (obj): $Credential {
+    const c = Registry.newD('$$Credential', obj) as  $Credential
+    for (const p of $Credential.lp1) this[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
   }
@@ -60,13 +60,13 @@ export class Credential {
 
   constructor (obj?: Object) {
     if (obj)
-      for (const p of Credential.lp1) this[p] = obj[p] || null
+      for (const p of $Credential.lp1) this[p] = obj[p] || null
     if (!this.credId) this.credId = Crypt.rnd(15)
   }
 
   get serial () : Uint8Array {
     const obj = {}
-    for (const p of Credential.lp1) obj[p] = this[p] || null
+    for (const p of $Credential.lp1) obj[p] = this[p] || null
     return encode(obj)
   }
 
@@ -91,7 +91,7 @@ export class Credential {
   }
 
 }
-Registry.registerD(Credential)
+Registry.registerD($Credential)
 
 
 export class MDEvent {
@@ -275,39 +275,8 @@ export class $Form extends Document {
       this.msgU = await Crypt.crypt(await this.aesU(), this.msgU)
   }
 
-  /*
-  // Calcul this.creds depuis le template du type et les arguments $x dans etc
-  setCreds () { // TODO: utilité ???????
-    const etc = this.status === 1 ? this.etcU : this.etcT
-    const creds = []
-    for(const c of this.ft.creds) { // Scan du template des credentials requis
-      const i = c.indexOf('$')
-      if (i !== -1) {
-        const arg = c.substring(i, i + 1)
-        const val = etc[arg] || ''
-        creds.push(c.replace(arg, val))
-      } else creds.push(c)
-    }
-    this.creds = creds // tous les ...$x.. du template remplacés par les $x de etc
-  }
-
-  // vérifie si le user est habilité en tant que tiers
-  async checkAuthTP () : Promise<boolean> {
-    const sf = stores.safe
-    const t = this.ft.creds
-    if (t && t.length === 1 && t[0] === 'A')
-      return await sf.adminForSvcOrg(this.svc, this.org)
-    for (const c of this.creds) {
-      const x = c.split('/')
-      const cred = sf.getCredOn(this.svc, this.org, x[0], x[1], true)
-      if (cred) return true
-    }
-    return false
-  }
-  */
-
-  static credsForTP (svc: string, org: string) : Set<Credential> {
-    const creds: Set<Credential> = new Set()
+  static credsForTP (svc: string, org: string) : Set<$Credential> {
+    const creds: Set<$Credential> = new Set()
     const sf = stores.safe
     for(const [, c] of sf.mySafeCreds.value)
       if (c.svc === svc && c.org === org &&

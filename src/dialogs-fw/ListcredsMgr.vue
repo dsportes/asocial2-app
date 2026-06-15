@@ -140,7 +140,7 @@ import { ref, reactive, onMounted } from 'vue'
 
 import { $t, sty, dkli, isSameSet, cloneSet } from '../src-fw/util'
 import stores from '../stores/all'
-import { Credential } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
 
@@ -164,7 +164,7 @@ type ListCreds = {
 type CredItem = {
   chk: boolean
   chkB: boolean
-  cred: Credential
+  cred: $Credential
   k: string
 }
 

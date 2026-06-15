@@ -1,4 +1,4 @@
-<!-- Affiche le détail d'une ligne Credential 
+<!-- Affiche le détail d'une ligne $Credential 
 -->
 <template>
   <div class="full-width">

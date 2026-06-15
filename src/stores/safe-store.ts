@@ -15,7 +15,7 @@ import { SafeOperation, MDOperation, opOfSvcOrg } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
-import { Credential } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 import { TopicDef } from './service-store'
 
 /*
@@ -111,7 +111,7 @@ export type SvcOrg = {
   label: string // label de svc
   svc: string
   org: string
-  creds: Credential[]
+  creds: $Credential[]
 }
 
 export type LocPref = {
@@ -530,7 +530,7 @@ export const useSafeStore = defineStore('safe', () => {
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds": organisée avec une **sous-section par application** */
-  const mySafeCreds: Ref<Map<string, Credential>> = ref() // ceux de l'app
+  const mySafeCreds: Ref<Map<string, $Credential>> = ref() // ceux de l'app
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -749,7 +749,7 @@ export const useSafeStore = defineStore('safe', () => {
     - lors de la validation d'une invitation.
   ***********************************************************************************/
   const loadCreds = async (safe: Safe) : Promise<void> => {
-    const m = new Map<string, Credential>()
+    const m = new Map<string, $Credential>()
     const msvc = stores.config.K.SERVICES
     const orgs = new Set<string>([])
     if (safe.creds) for (const xid in safe.creds)
@@ -758,7 +758,7 @@ export const useSafeStore = defineStore('safe', () => {
         const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
         if (msvc[obj['svc']]) {
           obj['name'] = await dcX(keyFromB64(nameK))
-          const c: Credential = Credential.new(obj)
+          const c: $Credential = $Credential.new(obj)
           m.set(c.credId, c)
           orgs.add(c.org)
         }
@@ -1013,8 +1013,8 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Retourne la Map des Credential dont l'id est citée dans le profile *************/
-  const getCreds = (profile: Profile) : Map<string, Credential> => {
-    const x: Map<string, Credential> = new Map<string, Credential>()
+  const getCreds = (profile: Profile) : Map<string, $Credential> => {
+    const x: Map<string, $Credential> = new Map<string, $Credential>()
     if (!stores.session.hasNet || !profile) return x
     if (profile.profId !== '*') for(const xid of profile.crIds) {
         const c = mySafeCreds.value.get(xid)

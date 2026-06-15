@@ -8,7 +8,7 @@ import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
-import { Cred, Credential } from '../src-fw/documents'
+import { $Cred, $Credential } from '../src-fw/documents'
 import { TopicDef } from 'src/stores/service-store'
 
 export class Bug extends Operation {
@@ -257,7 +257,7 @@ export class RevokeCred extends Operation {
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
-  async run (c: Credential) : Promise<boolean> { 
+  async run (c: $Credential) : Promise<boolean> { 
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk })
       await this.sign(c)
@@ -272,10 +272,10 @@ export class AutoRevokeCred extends Operation {
 
 export class ListManagers extends Operation {
   constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
-  async run () : Promise<Cred[]>{
+  async run () : Promise<$Cred[]>{
     try {
       const res = await this.post()
-      return res['creds'] as Cred[]
+      return res['creds'] as $Cred[]
     } catch(e) {
       await this.ko(e)
       return []
@@ -283,11 +283,11 @@ export class ListManagers extends Operation {
   }
 }
 
-// Met à jour un Credential avec les données [v, more] de son document en DB
+// Met à jour un $Credential avec les données [v, more] de son document en DB
 export class SyncCred extends Operation {
   constructor (SVC: string, org: string) { super('GetCredUpdates', SVC, org) }
 
-  async run (c: Credential ) : Promise<boolean> {
+  async run (c: $Credential ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk || ''})
       await this.sign(c)

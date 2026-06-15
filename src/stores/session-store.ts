@@ -167,14 +167,14 @@ export const useSessionStore = defineStore('session', () => {
 
   const _aboutProfile: Ref<string> = ref('')
   const aboutProfile = computed(() => _aboutProfile.value)
-  const _creds: Ref<Map<string, Credential>> = ref(null)
+  const _creds: Ref<Map<string, $Credential>> = ref(null)
   const creds = computed(() => _creds.value)
   const svcOrgs = ref(new Set())
 
   const setStartContext = (
       userId: string,
       aboutProfile: string,
-      creds: Map<string, Credential>) => {
+      creds: Map<string, $Credential>) => {
     setPhase(0)
     _aboutProfile.value = aboutProfile
     _creds.value = creds

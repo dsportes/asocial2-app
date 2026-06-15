@@ -1,7 +1,7 @@
 
 import stores from '../stores/all'
 import { Invitation, MsgVal } from '../src-fw/invitation'
-// import { CredentialA } from '../src-fw/documents'
+// import { $CredentialA } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
 import { Operation } from '../src-fw/operation'
 
@@ -57,7 +57,7 @@ export class Major {
   static msgVal (self: Invitation) {
     /*
     let credOk : MsgVal | null = null
-    const creds : Map<string, Credential> = stores.safe.mySafeCreds
+    const creds : Map<string, $Credential> = stores.safe.mySafeCreds
     for (const [,c] of creds) {
       if (c.org !== self.org || c.svc !== self.svc) continue
       if (c.role === 'Org.manager') {
@@ -94,7 +94,7 @@ export class Major {
       op.args.validArgs = { pubV: keyToB64(pub) }
       const res = await op.post()
       if (res.status !== 0) return $t('INVvalOMst_' + res.status)
-      const credSafe = new Credential({
+      const credSafe = new $Credential({
         credId: self.etc.credId,
         svc: self.svc,
         org: self.org,
@@ -128,7 +128,7 @@ export class Major {
     /* 
     Post: invVal avec les pemvA, pemvS, time des credentials
     Puis, enregistrement,
-      - du Credential Safe sur "Auteur"
+      - du $Credential Safe sur "Auteur"
       - optionnellement du credential "Sponsor".
 
     const op = new Operation('InvitValidate', self.svc, self.org)
@@ -161,7 +161,7 @@ export class Major {
       if (res.status) return $t('INVopret_' + res.status)
       else {
         if (self.etc.newA === 1) {
-          const c = new Credential({ // Credential "Safe"
+          const c = new $Credential({ // $Credential "Safe"
             svc: op.SVC || '',
             org: self.org,
             credId: invVal.credIdA,
@@ -176,7 +176,7 @@ export class Major {
 
         if (self.etc.option > 1) {
           const docId = 'Auteur' + (self.etc.option === 2 ? '' : ('/' + self.etc.categ))
-          const c = new Credential({ // Credential "Safe"
+          const c = new $Credential({ // $Credential "Safe"
             svc: op.SVC || '',
             org: self.org,
             credId: invVal.credIdS,

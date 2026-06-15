@@ -95,7 +95,7 @@ import { ref, Ref } from 'vue'
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
 import { SyncCred, AutoRevokeCred } from '../src-fw/operations'
-import { Credential } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
@@ -117,7 +117,7 @@ const checkClose = async () => {
   emit('close', true)
 }
 
-const todel = ref(new Map<string, Credential>())
+const todel = ref(new Map<string, $Credential>())
 
 const step = ref(1)
 
@@ -147,7 +147,7 @@ const cleanUp = async () => {
   reset(true)
 }
 
-/* Credential (étendu par Cred)
+/* $Credential (étendu par Cred)
   credId: string = '' // ID du credential.
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
@@ -168,17 +168,17 @@ type svcOrg = {
   k: string,
   svc: string,
   org: string,
-  creds: Credential[]
+  creds: $Credential[]
 }
 
 const svcOrgs: Ref<svcOrg[]> = ref([])
 const curso: Ref<svcOrg> = ref()
-const curcr: Ref<Credential> = ref()
+const curcr: Ref<$Credential> = ref()
 
 const reset = (keepCur: boolean) => {
   const before = curso.value ? curso.value.k : ''
   svcOrgs.value.length = 0
-  const m = sf.mySafeCreds as Map<string, Credential>
+  const m = sf.mySafeCreds as Map<string, $Credential>
   const mx: Map<string, svcOrg> = new Map()
   const so: string[] = []
   for(const [credId, c] of m) {
@@ -212,7 +212,7 @@ const reset = (keepCur: boolean) => {
 
 const curSty = (x: svcOrg) =>
   !curso.value ? ' nocurrent' : (curso.value.svc === x.svc && curso.value.org === x.org ? ' current' : ' nocurrent')
-const curSty2 = (x: Credential) =>
+const curSty2 = (x: $Credential) =>
   !curcr.value ? ' nocurrent' : (curcr.value.credId === x.credId ? ' current' : ' nocurrent')
 
 const selectSo = async (x: svcOrg) => {
@@ -232,7 +232,7 @@ const reset2 = async () => {
     else c.limit && c.limit * 1000 < now ? 2 : 0
     if (c.alert === 1) todel.value.set(c.credId, c)
   }
-  so.creds.sort((a: Credential, b: Credential) => 
+  so.creds.sort((a: $Credential, b: $Credential) => 
     a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docPk < b.docPk ? -1 : (a.docPk > b.docPk ? 1 : 0)))
   if (so.creds.length) selectCr(so.creds[0])
 }

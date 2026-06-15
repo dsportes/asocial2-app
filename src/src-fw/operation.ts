@@ -6,7 +6,7 @@ import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
-import { Credential } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
@@ -172,7 +172,7 @@ export class Operation extends AOperation {
   }
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
-  async sign (c: Credential) {
+  async sign (c: $Credential) {
     return await this.authRecord.sign(c)
   }
 
@@ -359,7 +359,7 @@ export class AuthRecord {
       signatures: this.signatures, userSign: this.userSign }
   }
 
-  async sign (c: Credential) : Promise<void> {
+  async sign (c: $Credential) : Promise<void> {
     const x = await Crypt.sign(c.privs, this.challenge)
     const sign = new Uint8Array(x)
     if (!this.signatures) this.signatures = {}
