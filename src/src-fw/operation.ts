@@ -6,6 +6,7 @@ import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
+import { Credential } from '../src-fw/documents'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
@@ -171,8 +172,8 @@ export class Operation extends AOperation {
   }
 
   /* Ajoute au AuthRecord une signature pour ce role / docId */
-  async sign (docCl: string, docPk: Object) {
-    return await this.authRecord.sign(this.SVC, this.args.org, docCl, docPk)
+  async sign (c: Credential) {
+    return await this.authRecord.sign(c)
   }
 
   /* Si noAuth est true, l'opération N'INCLUE PAS
@@ -358,21 +359,11 @@ export class AuthRecord {
       signatures: this.signatures, userSign: this.userSign }
   }
 
-  // docPk: propriéts de la pk - { p1:..., p2: ... }
-  async sign (svc: string, org: string, docCl: string, docPk: Object) : Promise<boolean> {
-    const sf = stores.safe
-    for(const [id, c] of sf.mySafeCreds) {
-      const pk = DocType.getPk(docCl, docPk)
-      if (c.svc === svc && c.org === org
-        && c.docCl === docCl && c.docPk === pk) {
-        const x = await Crypt.sign(keyFromB64(c.privs), this.challenge)
-        const sign = new Uint8Array(x)
-        if (!this.signatures) this.signatures = {}
-        this.signatures[docCl + '/' + pk] = [c.credId, sign]
-        return true
-      }
-    }
-    return false
+  async sign (c: Credential) : Promise<void> {
+    const x = await Crypt.sign(c.privs, this.challenge)
+    const sign = new Uint8Array(x)
+    if (!this.signatures) this.signatures = {}
+    this.signatures[c.docCl + '/' + c.docPk] = [c.credId, sign]
   }
 
 }

@@ -769,11 +769,11 @@ export const useSafeStore = defineStore('safe', () => {
     stores.session.setOrgs(orgs)
   }
 
-  const getCredOn = (svc: string, org: string, docCl: string, docId: string) : Credential | null => {
-    for(const [,c] of mySafeCreds.value)
-      if (c.svc === svc && c.org === org && c.docCl === docCl) {
-        if (c.docId === '1' || c.docId === docId) return c 
-      }
+  const getCredOn = (svc: string, org: string, docCl: string, docPk: string, or1: boolean) 
+    : Credential | null => {
+    for(const [id, c] of mySafeCreds.value)
+      if (c.svc === svc && c.org === org && c.docCl === docCl && 
+        (c.docPk === docPk || (or1 && c.docId === '1'))) return c
     return null
   }
 

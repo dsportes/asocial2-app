@@ -70,6 +70,8 @@ const sorgs = ref(sf.managedOrgs2())
 const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 
 const revok = async (so) => {
+  // TODO - A revoir sur le fond
+  /*
   let op = new AutoRevokeCred(so.svc, so.org)
   const ok = await op.run(so.credId, 'Org', '1')
   if (!ok) {
@@ -79,6 +81,7 @@ const revok = async (so) => {
     await ui.diagDisplay($t('APrevok'))
     sorgs.value = sf.managedOrgs2()
   }
+  */
 }
 
 </script>

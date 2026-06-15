@@ -135,7 +135,7 @@ const cleanUp = async () => {
       lst.push(credId)
     if (c.alert === 3 || c.alert === 4) {
       const op = new AutoRevokeCred(c.svc, c.org)
-      if (!await op.run(c.credId, c.role, c.docId)) {
+      if (!await op.run(c)) {
         todel.value.clear()
         return
       }
@@ -152,10 +152,10 @@ const cleanUp = async () => {
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
   docCl: string = '' // docClass.role : un des codes de rôle connu du service.
-  docId: string = '' // identifiant du document cible du credential.
+  docPk: string = '' // identifiant du document cible du credential.
   privs: string = '' // clé PRIVEE de signature en base64.
   privd: string = '' // clé PRIVEE de decryptage en base64.
-  name: string = '' // "nom" associé au docId.
+  name: string = '' // "nom" associé au docPk.
   
   // Décoration après fusion avec Cred
   limit?: number
@@ -233,7 +233,7 @@ const reset2 = async () => {
     if (c.alert === 1) todel.value.set(c.credId, c)
   }
   so.creds.sort((a: Credential, b: Credential) => 
-    a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docId < b.docId ? -1 : (a.docId > b.docId ? 1 : 0)))
+    a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docPk < b.docPk ? -1 : (a.docPk > b.docPk ? 1 : 0)))
   if (so.creds.length) selectCr(so.creds[0])
 }
 

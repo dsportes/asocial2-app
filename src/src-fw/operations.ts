@@ -1,7 +1,7 @@
 // @ts-ignore
 import { decode } from '@msgpack/msgpack'
 
-import { Operation } from './operation'
+import { MDOperation, Operation } from './operation'
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 
@@ -257,10 +257,10 @@ export class RevokeCred extends Operation {
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
-  async run (credId: string, docCl: string, docId: string) : Promise<boolean> { 
+  async run (c: Credential) : Promise<boolean> { 
     try {
-      this.setArgs({ credId, docCl, docId: docId || '' })
-      await this.sign(docCl, docId )
+      this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk })
+      await this.sign(c)
       await this.post()
       return true
     } catch(e) {
@@ -290,7 +290,7 @@ export class SyncCred extends Operation {
   async run (c: Credential ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk || ''})
-      await this.sign(c.docCl, c.docPk)
+      await this.sign(c)
       const res = await this.post()
       const x = res.more
       if (x) {

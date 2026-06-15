@@ -94,26 +94,98 @@ export class Credential {
 Registry.registerD(Credential)
 
 
+export class MDEvent {
+  // Immuables
+  eventId: string // (PK) identifiant universel de l’événement / processus (formId pour un Form).
+  type: string // code du type d'événement / processus.
+  userId: string // utilisateur cible (INDEX).
+  svc: string // service concerné.
+  org: string // organisation concernée.
+  // Modifiables par les opérations seulement:
+  v: number // version, date-heure (_epoch_) du _document_. 
+  maxLife: number // time-to-live calculé depuis `v` et `type`. (INDEX pour purges périodiques).
+  status: number // son statut courant.
+  detail: Object // objet de structure dépendant de _type_.
+  // Lisibles et modifiables par U seulement:
+  comment: string // commentaire de l'utilisateur cible crypté par lui.
+  lv: number // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
+
+  static async new (obj: any) : Promise<MDEvent> {
+    const sf = stores.safe
+    const e = new MDEvent()
+    for(const p of Object.keys(obj)) if (p !== 'comment') e[p] = obj[p]
+    e.comment = obj.comment === null ? '' : 
+      decoder.decode(await Crypt.decrypt(sf.keyK, obj.comment))
+    return e
+  }
+ 
+  static async listEvents () : Promise<MDEvent[]> {
+    const sf = stores.safe
+    const op = new MDOperation('$mdEventList')
+    op.args.userId = sf.userId
+    const res = await op.post()
+    const lst = res.mdevents
+    const l: MDEvent[] = []
+    if (lst && lst.length) for(const x of lst)
+      l.push(await MDEvent.new(x))
+    return l
+  }
+
+  /* Ne passer comment que si changé. Pour effacer passer ''
+  Si setlv est true, mettre à jour lv à v */
+  async mdEventUser (setlv: boolean, comment?: string) {
+    const sf = stores.safe
+    const op = new MDOperation('$mdEventUser')
+    /*
+    const eventId = this.args['eventId'] as string
+    const setlv = this.args['setlv'] as boolean
+    const comment = this.args['comment'] as Uint8Array | null
+    const chk = this.args['chk'] as string
+    */
+    op.args.eventId = this.eventId
+    op.args.setlv = setlv
+    op.args.comment = comment === undefined ? null : await Crypt.crypt(sf.keyK, encoder.encode(comment))
+    op.args.chk = Crypt.shaS([this.eventId, this.type, this.userId, this.svc, this.org].join('/'))
+    await op.post()
+  }
+
+  async mdEventSync () {
+    const sf = stores.safe
+    const op = new MDOperation('$mdEventSync')
+    /*
+    const eventId = this.args['eventId'] as string
+    const chk = this.args['chk'] as string
+    */
+    op.args.eventId = this.eventId
+    op.args.chk = Crypt.shaS([this.eventId, this.type, this.userId, this.svc, this.org].join('/'))
+    await op.post()
+  }
+
+  async mdEventDel () {
+    const sf = stores.safe
+    const op = new MDOperation('$mdEventDel')
+    /*
+    const eventId = this.args['eventId'] as string
+    const chk = this.args['chk'] as string
+    */
+    op.args.eventId = this.eventId
+    op.args.chk = Crypt.shaS([this.eventId, this.type, this.userId, this.svc, this.org].join('/'))
+    await op.post()
+  }
+}
+
 export type $FormObj = {
-  svc?: string
-  org?: string
   formId: string  // ID universel aléatoire.
   type: string  // type du formulaire.
   userId: string  // utilisateur cible.
   v: number  //  version du document (_epoch_).
   maxLife: number //  EPOCH en MINUTES de suppression automatique du formulaire.
   status: number // de 1 à 4.
-  etc: Object | null  // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
-  etcB: Object | null  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
+  etcU: Object | null  // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
+  etcT: Object | null  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null  // message écrit par U.
   msgT: Uint8Array | null  // message écrit par le tiers.
 
-  /* liste des credentials permettant à un tiers d'agir quand il possède l'un de ceux-là:
-  [ docCl1/docPk1 ... ]
-  La liste dépende la valeur de etc : depuis la liste template [ docCl1/$x ... ]
-  $x est remplacé par la valeur de etc.$x
-  */
-  creds?: string[]
   comment?: Uint8Array | null // commentaire écrit et crypté par U.
   ch?: string // challenge random de synchronisation initiale avec MDEvent
   lv?: number // lastView par U
@@ -124,8 +196,11 @@ Document `Form` hébergé dans la DB spécifique de `svc / org`.
 Sous-classes applicatives $Form_type par "type"
 */
 export class $Form extends Document {
+  /* Par commodité svc et org sont ajoutés au $Form lu (par Get ou List)
+  du service. */
   svc?: string
   org?: string
+
   formId: string = '' // ID universel aléatoire.
   type: string = '' // type du formulaire.
   userId: string = '' // utilisateur cible.
@@ -137,7 +212,6 @@ export class $Form extends Document {
   msgU: Uint8Array | null = null // message écrit par U.
   msgT: Uint8Array | null = null // message écrit par le tiers.
 
-  creds: string[] = [] // liste des credentials permettant à un tiers d'agir quand il possède l'un de ceux-là: `[ docCl1/docPk1 ... ]`.
   comment?: Uint8Array | null = null // commentaire écrit et crypté par U.
   ch?: string = '' // challenge random de synchronisation initiale avec MDEvent
   lv?: number = 0 // lastView par U
@@ -150,8 +224,14 @@ export class $Form extends Document {
   async checkEtc () : Promise<number> { return 0 }
   async validate () : Promise<number> { return 0 }
 
-  static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife', 'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
-  static lp2 = ['type', 'userId', 'v', 'maxLife', 'status', 'comment', 'lv' ]
+  /* Pour création de l'instance à réception par le service
+  OU pour création explicite par UI */
+  static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife', 
+    'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
+
+  /* Pour transmission au service à la création par $FormObj */
+  static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife', 
+    'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
 
   static new (obj) : $Form {
     const f = Registry.newD('$Form', obj)
@@ -159,6 +239,7 @@ export class $Form extends Document {
     return f
   }
 
+  // Pour création: envoi au service
   toFormObj () : $FormObj {
     const obj = {}
     for (const p of $Form.lp1) obj[p] = this[p]
@@ -194,11 +275,12 @@ export class $Form extends Document {
       this.msgU = await Crypt.crypt(await this.aesU(), this.msgU)
   }
 
+  /*
   // Calcul this.creds depuis le template du type et les arguments $x dans etc
-  setCreds () {
+  setCreds () { // TODO: utilité ???????
     const etc = this.status === 1 ? this.etcU : this.etcT
     const creds = []
-    for(const c of this.ft.creds) {
+    for(const c of this.ft.creds) { // Scan du template des credentials requis
       const i = c.indexOf('$')
       if (i !== -1) {
         const arg = c.substring(i, i + 1)
@@ -206,7 +288,7 @@ export class $Form extends Document {
         creds.push(c.replace(arg, val))
       } else creds.push(c)
     }
-    this.creds = creds
+    this.creds = creds // tous les ...$x.. du template remplacés par les $x de etc
   }
 
   // vérifie si le user est habilité en tant que tiers
@@ -217,16 +299,17 @@ export class $Form extends Document {
       return await sf.adminForSvcOrg(this.svc, this.org)
     for (const c of this.creds) {
       const x = c.split('/')
-      const cred = sf.getCredOn(this.svc, this.org, x[0], x[1])
+      const cred = sf.getCredOn(this.svc, this.org, x[0], x[1], true)
       if (cred) return true
     }
     return false
   }
+  */
 
   static credsForTP (svc: string, org: string) : Set<Credential> {
     const creds: Set<Credential> = new Set()
     const sf = stores.safe
-    for(const [,c] of sf.mySafeCreds.value)
+    for(const [, c] of sf.mySafeCreds.value)
       if (c.svc === svc && c.org === org &&
         (FormType.refClasses1.has(c.docCl) || FormType.refClasses$.has(c.docCl)))
         creds.add(c)
@@ -237,16 +320,15 @@ export class $Form extends Document {
     const creds = $Form.credsForTP(svc, org)
     if (!creds.size) return null
     const op = new Operation('FormGet', svc, org)
-    for(const cred of creds)
-      await op.sign(cred.docCl, { pk: cred.docPk })
+    for(const cred of creds) await op.sign(cred)
     op.args.formId = formId
     op.args.type = type
     const res = await op.post()
     const obj = res.form
     if (!obj) return null
-    obj.svc = svc
-    obj.org = org
     const f = $Form.new(obj)
+    f.svc = svc
+    f.org = org
     await f.decryptMsgU()
     return f
   }
@@ -255,6 +337,8 @@ export class $Form extends Document {
   si f = ['A'] retourne les forms devant être traitées par un administrateur
   */
   static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {    
+    const creds = $Form.credsForTP(svc, org)
+    if (!creds.size) return []
     let filter: string[]
     const sf = stores.safe
     if (asAdmin) {
@@ -264,25 +348,26 @@ export class $Form extends Document {
       const fi: Set<string> = new Set()
       for(const [,c] of sf.mySafeCreds.value) {
         if (c.svc !== svc || c.org !== org) continue
-        if (c.docId === '1') {
+        if (c.docPk === '1') {
           if (FormType.refClasses1.has(c.docCl)) fi.add(c.docCl + '/1')
         } else {
-          if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docId)
+          if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docPk)
         }
       }
       if (fi.size === 0) return []
       filter = Array.from(fi)
     }
     const op = new Operation('FormFilteredList', svc, org)
+    for(const cred of creds) await op.sign(cred)
     op.args.filter = filter
     const res = await op.post()
     const lst = res.forms as $FormObj[]
     if (!lst || !lst.length) return []
     const lf: $Form[] = []
     for(const obj of lst) {
-      obj.svc = svc
-      obj.org = org
       const f = $Form.new(obj)
+      f.svc = svc
+      f.org = org
       await f.decryptMsgU()
     }
     return lf
