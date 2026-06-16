@@ -1,11 +1,10 @@
 // @ts-ignore
-import { encode } from '@msgpack/msgpack'
+import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
 import { Registry } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
-import { TopicDef } from '../stores/service-store'
-import { $t, dhcool, hasMessage } from '../src-fw/util'
+import { $t, dhcool, equ8 } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys } from '../src-fw/operation'
 import { FormType } from '../src-fw/doctypes'
 
@@ -26,7 +25,7 @@ export type $Cred = { // Credential attaché à un document
 */
 export class $Credential {
   static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk', 
-    'privs', 'privd', 'name', 'docKey', 'opaque', 'more' ]
+    'privs', 'privd', 'name', 'docKey', 'aboutme', 'more' ]
 
   credId: string = '' // ID du credential.
   v: number = 0 // version du document
@@ -44,19 +43,19 @@ export class $Credential {
   name: string = '' // "nom" associé au docId.
   
   docKey?: Uint8Array | null
-  opaque?: any | null
-  more?: any | null
+  aboutme?: any | null
+  power?: any | null
 
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 
   static new (obj): $Credential {
-    const c = Registry.newD('$$Credential', obj) as  $Credential
+    const c = Registry.newD('$Credential', obj) as  $Credential
     for (const p of $Credential.lp1) this[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
   }
 
-  get limit () { return this.more && this.more.limit ? this.more.limit : 0 }
+  get limit () { return this.power && this.power.limit ? this.power.limit : 0 }
 
   constructor (obj?: Object) {
     if (obj)
@@ -70,9 +69,14 @@ export class $Credential {
     return encode(obj)
   }
 
-  async dispMore () { 
+  async dispPower () { 
     const ui = stores.ui
-    await ui.diagDisplay($t('CRRmore', [JSON.stringify(this.more, null, '\t')]))
+    await ui.diagDisplay($t('CRRpower', [JSON.stringify(this.power, null, '\t')]))
+  }
+
+  async dispAboutme () { 
+    const ui = stores.ui
+    await ui.diagDisplay($t('CRRaboutme', [JSON.stringify(this.aboutme, null, '\t')]))
   }
 
   async dispLimit () { 
@@ -83,11 +87,6 @@ export class $Credential {
   async dispDocKey () { 
     const ui = stores.ui
     await ui.diagDisplay($t('CRRdocKey', [keyToB64(this.docKey || null)]))
-  }
-
-  async dispOpaque () { 
-    const ui = stores.ui
-    await ui.diagDisplay($t('CRRopaque', [JSON.stringify(this.opaque, null, '\t')]))
   }
 
 }
@@ -221,11 +220,35 @@ export class $Form extends Document {
 
   get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
   
-  /* Traitement final: surchargé par type :Retourne un statut de validation,
-  - 0 si OK, N > 10 selon la cause d'échec
-  */
-  async checkEtc () : Promise<number> { return 0 }
-  async validate () : Promise<number> { return 0 }
+  /* Méthodes surchargées par type *******************************
+  ****************************************************************/
+  async initEtc (byU: boolean) : Promise<Object> { 
+    return {}
+  } 
+
+  cloneEtc (byU: boolean) : Object | null { 
+    const etc = byU ? this.etcU : this.etcT
+    return etc === null ? null : decode(encode(etc))
+  } 
+
+  chgEtc (byU: boolean, etc: Object) : boolean { 
+    const etcB = byU ? this.etcU : this.etcT
+    if (etc === null) return false
+    return !equ8(encode(etc), encode(etcB))
+  } 
+
+  emptyEtc (etc: Object | null) { 
+    return etc === null || !Array.from(Object.keys(etc)).length }
+
+  async checkEtc (byU: boolean, etc: Object) : Promise<number> { 
+    return 0
+  }
+
+  async validate () : Promise<number> { 
+    return 0
+  }
+  /***************************************************************
+  ****************************************************************/
 
   /* Pour création de l'instance à réception par le service
   OU pour création explicite par UI */

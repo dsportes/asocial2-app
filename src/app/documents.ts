@@ -1,8 +1,9 @@
 
 import { Registry, Document } from '../src-fw/registry'
-import { $Credential } from '../src-fw/documents'
+import { regForms } from '../app/forms'
+import { regCredentials } from '../app/credentials'
 // import stores from '../stores/all'
-import { $t, dhcool } from '../src-fw/util'
+// import { $t, dhcool } from '../src-fw/util'
 
 class Article extends Document {
   async compile () {}
@@ -24,18 +25,6 @@ class Sujet extends Document {
 }
 Registry.registerD(Sujet)
 
-class Cred_Org extends $Credential {
-  constructor (obj?: Object) {
-    super(obj)
-  }
-}
-Registry.registerD(Cred_Org)
-
-class Cred_Auteur extends $Credential {
-  constructor (obj?: Object) {
-    super(obj)
-  }
-}
-Registry.registerD(Cred_Auteur)
-
+regForms()
+regCredentials()
 export const nbdoc = Registry.regDoc.size

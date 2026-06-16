@@ -47,7 +47,7 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Readaction', virtual: true, manager: true },
+  { name: 'Redaction', virtual: true, manager: true },
   null,
   null
 )

@@ -998,7 +998,11 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMcomment: 'Votre commentaire',
   FORMeditcom: 'Edition de votre commentaire personnel',
   FORMnocomment: '(aucun)',
-
+  FORMbtncancel: 'Annuler ma demande',
+  FORMbtnrecd: 'Enregistrer ma demande',
+  FORMbtnrecp: 'Enregistrer ma proposition',
+  FORMbtnokp: 'J\'accepte la proposition telle quelle',
+  FORMbtnokd: 'J\'accepte la demande telle quelle',
 
   /*
   Détecté par l'application
