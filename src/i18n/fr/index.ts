@@ -987,6 +987,18 @@ Fermer la fenêtre corespond à un NON sélection.
 
   FORMnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
+  FORMnoform: 'Incident inattendu probablement temporaire: la demande / proposition n\'a pas été trouvée, l\'ignorer pour l\'instant.',
+  FORMtype: 'Type de demande',
+  FORMorg: 'Organisation',
+  FORMsvc: 'Service',
+  FORMversion: 'Dernière mise à jour',
+  FORMlimit: 'Expiration',
+  FORMstatus: 'Statut',
+  FORMuser: 'Utilisateur cible',
+  FORMcomment: 'Votre commentaire',
+  FORMeditcom: 'Edition de votre commentaire personnel',
+  FORMnocomment: '(aucun)',
+
 
   /*
   Détecté par l'application

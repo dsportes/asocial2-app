@@ -50,7 +50,7 @@
       </div>
     </template>
     <template #default>
-      <case-zoom editable/>
+      <form-zoom editable/>
     </template>
   </dialog-std0>
 
@@ -74,7 +74,7 @@ import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
 import InvitValidate from '../components/InvitValidate.vue'
-import CaseZoom from './FormZoom.vue/index.js'
+import FormZoom from '../components-fw/FormZoom.vue'
 
 const ui = stores.ui
 const sf = stores.safe

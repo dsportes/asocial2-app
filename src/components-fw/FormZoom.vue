@@ -1,71 +1,100 @@
 <template>
 <div>
-  <div v-if="notView" 
-    class='titre-md text-bold text-warning text-italic'>
-    {{$t('INVxnotv_s')}}</div>
-
-  <div class="row q-mt-sm items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_major')}}</div>
-    <div class='font-mono'>{{$t('TOPIC_' + cas.topicId)}}</div>
+  <div v-if="!form" class="msg">{{ $t('FORMnoform') }}</div>
+  <div v-else class="q-ma-sm a-pa-sm bord1 full-width">
+    <div class="font-mono fs-sm">{{ form.formId }}</div>
+    <div class="q-my-sm text-bold titre-lg">{{ form.typeEd }}</div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ form.org }}</div>
+    </div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMsvc') }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + form.svc)}}</div>
+    </div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
+      <div class="col-7 q-pl-sm font-mono">
+        <div class="font-mono">{{ dhcool(form.v) }}</div>
+        <div v-if="notView" class='titre-md text-bold text-warning text-italic'>
+          {{$t('FORMnotv_u')}}</div>
+      </div>
+    </div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ dhcool(form.maxLife * 1000) }}</div>
+    </div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
+      <div class="col-7 row items-center q-gutter-xs">
+        <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
+        <div class="font-mono text-bold" :color="stclr[form.status]">
+          {{ $t('FORMstatus_' + form.status) }}</div>
+        </div>    
+    </div>
+    <div v-if="form.userId !== sf.userId" class="row items-center">
+      <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ event.userId }}</div>
+    </div>
+    <div class="row items-center">
+      <div class="col-5 titre-md text-italic">
+        <span>{{ $t('FORMcomment') }}</span>
+        <btn-cond v-if="editable" class="q-ml-sm" icon="edit" round 
+          @ok="edCom"/>
+      </div>
+      <div class="col-7 q-pl-sm font-mono">
+        <div v-if="!event.comment">{{ $t('FORMnocomment') }}</div>
+        <scroll-md v-else height="50px" :text="event.comment"/>
+      </div>
+    </div>
   </div>
-  
-  <div class="q-mt-sm text-bold">{{$t('CASstatus_' + cas.status)}}</div>
 
-  <div class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_v')}}</div>
-    <div class='font-mono'>{{dhcool(cas.v)}}</div>
-  </div>
-
-  <div v-if="cas.subject" class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_minor')}}</div>
-    <div class='font-mono'>{{cas.subjectEd}}</div>
-  </div>
-
-  <div class="q-mt-sm row items-center">
-    <div class='titre-md text-italic q-mr-md'>{{$t('INVx_user')}}</div>
-    <span class="q-ml-xs font-mono">{{cas.userId}}</span>
-    <span v-if="cas.userId === sf.userId" class="q-ml-xs font-mono">({{$t('me')}})</span>
-  </div>
-
-  <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_tab')}}</div>
-  <md-editor class="full-width q-pa-xs" v-model="ui.currentCase.newTab"
-    :text="cas.tab" :editable="editable" modetxt/>
-
-  <div v-if="cas.etc !== null">
-    <div class='q-mt-sm titre-md text-italic'>{{$t('INVx_opts')}}</div>
-    <scroll-md class="full-width bord1 q-pa-xs" height="150px" 
-      :text="etcEd" />
-  </div>
+  <dialog-std0 :title="$t('FORMeditcom')" v-model="dialogs.editcomment">
+    <template #default>
+      <md-editor model="newcom" editable :lgmax="250" :text="newcom" modetxt
+        @ok="chgcomment"/>
+    </template>
+  </dialog-std0>
 
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { Ref, computed, onMounted, watch } from 'vue'
+import { Ref, ref, computed, onMounted, watch, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
-import { Crypt } from '../src-fw/crypt'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
 import { $Form, $MDEvent } from '../src-fw/documents'
-import { MDOperation } from 'src/src-fw/operation'
 
-const encoder = new TextEncoder()
+const stic = ['', 'person', 'person_shield', 'check', 'close']
+const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const sf = stores.safe
 const ui = stores.ui
 
-const props = defineProps({
-  editable: Boolean
-})
+// const props = defineProps({ })
 
 const event: Ref<$MDEvent> = computed(() => ui.currentEvent.event )
 const form: Ref<$Form> = computed(() => ui.currentEvent.form )
+const editable = computed(() => form.value.status < 3 )
 
 const notView = computed(() => form.value && form.value.userId === sf.userId
   && (form.value.lv < form.value.v) )
+
+const dialogs = reactive({
+  editcomment: false
+})
+
+const newcom = ref('')
+
+const edCom = () => {
+  newcom.value = event.comment || ''
+  dialogs.editcomment = true
+}
 
 const init = async () => {
   if (notView.value) await vu()
@@ -73,8 +102,11 @@ const init = async () => {
 
 onMounted(async () => { await init() })
 
-watch(cas, async (v) => { 
-  // trace()
+watch(form, async (v) => { 
+  await init() 
+})
+
+watch(event, async (v) => { 
   await init() 
 })
 
@@ -82,21 +114,14 @@ const emit = defineEmits(['tabchange'])
 
 const vu = async () => {
   await ui.diagDisplay($t('FORMnotv_u'))
+  await form.mdEventUser(true)
+}
 
-  const about = ui.currentCase.newTab || cas.value.tab || '' 
-  const aboutU = about ? await Crypt.crypt(sf.keyK, encoder.encode(about)) : null
-
-  const op = new MDOperation('$mdCaseUser')
-  op.args.caseId = cas.value.caseId
-  op.args.chk = cas.value.chk()
-  op.args.lv = cas.value.v
-  op.args.aboutU = aboutU
-  try {
-    await op.post()
-    cas.value.lv = cas.value.v // pas très réglo !
-  } catch(e: any) {
-    console.log(e.toString())
+const chgcomment = async () => {
+  if (newcom.value !== event.comment) {
+    await form.mdEventUser(true, newcom.value)
   }
+  dialogs.editcomment = false
 }
 
 </script>
