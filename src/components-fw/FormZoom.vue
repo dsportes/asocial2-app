@@ -50,13 +50,19 @@
   </div>
 
   <div v-if="form" class="q-my-sm column items-center q-gutter-xs">
-    <btn-cond v-if="editable" nocaps
+    <btn-cond v-if="editable" no-caps
       :label="$t('FORMbtncancel')" @ok="cancel" color="warning"/>
-    <btn-cond v-if="byU" nocaps :disable="!hasChg"
+    <btn-cond v-if="byU" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="record"/>
-    <btn-cond v-if="byU" nocaps :disable="!validU"
+    <btn-cond v-if="byU" no-caps :disable="!validU"
+      :label="$t('FORMbtnokp')" @ok="okval"/>
+    <btn-cond v-if="byT" no-caps :disable="!hasChg"
+      :label="$t('FORMbtnrecd')" @ok="record"/>
+    <btn-cond v-if="byT" no-caps :disable="!validT"
       :label="$t('FORMbtnokp')" @ok="okval"/>
   </div>
+
+  <form-etc :etc="ed.etc" :form="form" @change="onChange"/>
 
   <dialog-std0 :title="$t('FORMeditcom')" v-model="dialogs.editcomment">
     <template #default>
@@ -75,7 +81,7 @@ import { Ref, ref, computed, onMounted, watch, reactive } from 'vue'
 // import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { $t, dhcool, equ8 } from '../src-fw/util'
+import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
