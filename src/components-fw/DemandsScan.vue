@@ -56,6 +56,8 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 const ui = stores.ui
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+  const b = await ui.mayClose()
+  if (!b) return
   const u = ui.navBar
   switch (n) {
     case 1 : { if (u.idx < events.value.length - 1) u.idx++; break }

@@ -1,9 +1,9 @@
 <template>
-  <events-scan/>
+  <demands-scan/>
 </template>
 
 <script setup lang="ts">
-import EventsScan from '../components-fw/EventsScan.vue'
+import DemandsScan from '../components-fw/DemandsScan.vue'
 
 </script>
 

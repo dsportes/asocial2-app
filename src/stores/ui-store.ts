@@ -128,10 +128,39 @@ export const useUiStore = defineStore('ui', () => {
     else helpstack.value.splice(helpstack.value.length - 1, 1)
   }
 
+  const editing = reactive({
+    flag: false,
+    resolve: null
+  })
+
+  const resolveEditing = (b: boolean) => {
+    appDialogs.ConfirmClose = false
+    if (b) resetEditing()
+    const f = editing.resolve
+    if (f) f(b)
+  }
+  const setEditing = () => { editing.flag = true }
+  const resetEditing = () => { editing.flag = false }
+
+  const mayClose = async () => {
+    if (!editing.flag) return true
+    return new Promise((resolve) => {
+      editing.resolve = resolve
+      appDialogs.ConfirmClose = true
+    })
+  }
+
   // Gestion des pages
   const page = ref(HOME)
 
   const setPage = (p: string) => {
+    if (editing.flag) {
+      setTimeout(async () => {
+        const b = await mayClose()
+        if (b) setPage(p)
+      })
+      return
+    }
     page.value = ''
     setTimeout(() => { 
       page.value = p 
@@ -142,6 +171,7 @@ export const useUiStore = defineStore('ui', () => {
   // dialogues permanents rattachés à App.vue
   const appDialogs = reactive({
     ConfirmQuit: false,
+    ConfirmClose: false,
     DialogExc: false,
     DialogHelp: false,
     GotIt: false
@@ -185,8 +215,7 @@ export const useUiStore = defineStore('ui', () => {
     etc: null,
     msg: null,
     newComment: String,
-    fnOnUpdate: null,
-    msgVal: null
+    fnOnUpdate: null
   })
 
   const emojiIndex = ref()
@@ -203,7 +232,8 @@ export const useUiStore = defineStore('ui', () => {
     exc, displayExc, hideExc,
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage, backToOpenSession,
+    page, setPage, backToOpenSession, 
+    setEditing, resetEditing, resolveEditing,
     currentEvent, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
   }

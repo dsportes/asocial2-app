@@ -95,6 +95,14 @@ export default {
   quitQuit: 'Je confirme quitter l\'application',
   quitReload: 'Je confirme relancer l\'application',
   quitCont: 'Je continue ma session',
+  closeCf: 'Saisies en cours, confirmer ...',
+  closeCf_label: `### Des saisies sont en cours ...
+  - Si vous confirmez votre _fermeture_, elles seront perdues.
+  - Sinon vous pouvez continuer votre travail normalement.
+  `,
+  closeCf_1: 'Je confirme',
+  closeCf_2: 'Je renonce et poursuis mon travail',
+
 
   ORG_label: 'Code organisation',
   ORG_ph: 'monorg',
@@ -985,6 +993,8 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMstatus_3: 'Validé', 
   FORMstatus_4: 'Annulé',
 
+  FORMnewd: 'Nouvelle demande',
+  FORMnewp: 'Nouvelle proposition',
   FORMnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
   FORMnoform: 'Incident inattendu probablement temporaire: la demande / proposition n\'a pas été trouvée, l\'ignorer pour l\'instant.',
@@ -1003,6 +1013,8 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMbtnrecp: 'Enregistrer ma proposition',
   FORMbtnokp: 'J\'accepte la proposition telle quelle',
   FORMbtnokd: 'J\'accepte la demande telle quelle',
+  FORMmsgU: 'Message de l\'utilisateur "demandeur"',
+  FORMmsgT: 'Message de l\'utilisateur "tiers proposant"',
 
   /*
   Détecté par l'application

@@ -12,14 +12,21 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
     <btn-cond v-if="editable" no-caps
       :label="$t('FORMbtncancel')" @ok="emit('action', 1)" color="warning"/>
     <btn-cond v-if="byU" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', 1)"/>
+      :label="$t('FORMbtnrecd')" @ok="emit('action', 2)"/>
     <btn-cond v-if="byU" no-caps :disable="!validU"
-      :label="$t('FORMbtnokp')" @ok="emit('action', 2)"/>
+      :label="$t('FORMbtnokp')" @ok="emit('action', 3)"/>
     <btn-cond v-if="byT" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', 3)"/>
+      :label="$t('FORMbtnrecd')" @ok="emit('action', 4)"/>
     <btn-cond v-if="byT" no-caps :disable="!validT"
-      :label="$t('FORMbtnokp')" @ok="emit('action', 4)"/>
+      :label="$t('FORMbtnokp')" @ok="emit('action', 5)"/>
   </div>
+
+  <div class="titre-md q-mt-md">{{  $t('') }}</div>
+  <md-editor model="curev.msg" :lgmax="500" :text="curev.msg" modetxt
+    :editable="byU" @ok="chgMsg"/>
+  <div class="titre-md q-my-sm">{{  $t('') }}</div>
+  <md-editor class="q-mb-md"model="curev.msg" :lgmax="500" :text="newcom" modetxt
+    :editable="byT" @ok="chgMsg"/>
 
   <div v-if="form.type === 'membrecodir'">
   </div>
@@ -70,22 +77,28 @@ const validT = computed(() =>
 const hasChg = ref(false)
 const diag = ref(0)
 
+const chgMsg = async () => {
+  if (byU.value) form.msgU = curev.msg
+  if (byT.value) form.msgU = curev.msg
+  await onChange()
+}
+
 const onChange = async () => {
   hasChg.value = false
   diag.value = ''
   if (byU.value) {
     diag.value = await form.value.checkEtc(curev.etc)
     hasChg.value = curev.msg !== form.value.msgU || form.value.eqEtc(form.value.etcU, curev.etc)
-    return
   }
   if (byT.value) {
     diag.value = await form.value.checkEtc(curev.etc)
     hasChg.value = curev.msg !== form.value.msgT || form.value.eqEtc(form.value.etcT, curev.etc)
-    return
   }
+  if (hasChg.value) ui.setEditing(); else ui.resetEditing()
 }
 
 const init = async () => {
+  ui.resetEditing()
   if (byU.value) {
     curev.msg = form.value.msgU
     curev.etc = form.value.etcU !== null ? form.value.cloneEtc(form.value.etcU) :

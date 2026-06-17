@@ -44,17 +44,14 @@
       <btn-cond icon="chevron_right" :label="$t('LOGsession')"
         @ok="sf.setStep(2)"/>
     </div>
-    <q-tabs dense v-model="sf.tab3"
+    <!--q-tabs dense v-model="sf.tab3"
       class="full-width bg-primary text-white shadow-2">
       <btn-cond icon="add_box" color="none" :label="$t('SFHnewr')"
         @ok="dialogs.NewReq = true"/>
-      <!--q-tab name="newr" icon="add_box" :label="$t('SFHnewr')" /-->
       <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
-    </q-tabs>
-    <case-hdr v-if="ui.currentCase.zoomed" v-model="ui.currentCase"/>
+    </q-tabs-->
+    <demands-hdr/>
   </div>
-
-  <case-newrequest v-if="dialogs.NewReq" v-model="dialogs.NewReq"/>
 
 </div>
 </template>
@@ -70,8 +67,7 @@ import { sty } from '../src-fw/util'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import CaseHdr from '../components-fw/CaseHdr.vue'
-import CaseNewrequest from '../dialogs-fw/CaseNewrequest.vue'
+import DemandsHdr from '../components-fw/DemandsHdr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import ModeIncognito from '../components-fw/ModeIncognito.vue'
 
