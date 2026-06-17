@@ -226,21 +226,19 @@ export class $Form extends Document {
     return {}
   } 
 
-  cloneEtc (byU: boolean) : Object | null { 
-    const etc = byU ? this.etcU : this.etcT
-    return etc === null ? null : decode(encode(etc))
-  } 
+  cloneEtc (etcX: Object | null) : Object | null { 
+    return etcX === null ? null : decode(encode(etcX))
+  }
 
-  chgEtc (byU: boolean, etc: Object) : boolean { 
-    const etcB = byU ? this.etcU : this.etcT
-    if (etc === null) return false
-    return !equ8(encode(etc), encode(etcB))
-  } 
+  eqEtc (etcX: Object | null, etcY: Object | null) : boolean { 
+    if (!etcX || !etcY) return false
+    return equ8(encode(etcX), encode(etcY))
+  }
 
-  emptyEtc (etc: Object | null) { 
-    return etc === null || !Array.from(Object.keys(etc)).length }
+  emptyEtc (etcX: Object | null) { 
+    return etcX === null || !Array.from(Object.keys(etcX)).length }
 
-  async checkEtc (byU: boolean, etc: Object) : Promise<number> { 
+  async checkEtc (etcX: Object | null) : Promise<number> { 
     return 0
   }
 

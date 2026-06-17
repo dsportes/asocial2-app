@@ -182,6 +182,8 @@ export const useUiStore = defineStore('ui', () => {
     zoomed: false,
     event: null,
     form: null,
+    etc: null,
+    msg: null,
     newComment: String,
     fnOnUpdate: null,
     msgVal: null

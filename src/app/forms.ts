@@ -43,18 +43,17 @@ class $Form_membrecodir extends $Form {
   async initEtc (byU: boolean) : Promise<Object> { 
     return { pseudo: '' }
   } 
-  cloneEtc (byU: boolean) : Object | null { 
-    const etc = byU ? this.etcU : this.etcT
-    return etc === null ? null : { pseudo: etc['pseudo'] }
+  cloneEtc (etcX: Object | null) : Object | null { 
+    return etcX === null ? null : { pseudo: etcX['pseudo'] }
   }
-  chgEtc (byU: boolean, etc: Object) : boolean { 
-    const etcB = byU ? this.etcU : this.etcT
-    if (etc === null) return false
-    return etc['pseudo'] !== etcB['pseudo']
+  eqEtc (etcX: Object | null, etcY: Object | null) : boolean { 
+    if (!etcX || !etcY) return false
+    return etcX['pseudo'] !== etcY['pseudo']
   } 
-  async checkEtc (byU: boolean, etc: Object) : Promise<number> {
-    const l = etc['pseudo'].length
-    return l < 8 || l > 24 ? 1 : 0
+  async checkEtc (etcX: Object | null) : Promise<number> {
+    if (!etcX) return 1
+    const l = etcX['pseudo'].length
+    return l < 8 || l > 24 ? 2 : 0
   }
   async validate () : Promise<number> { 
     return 0
