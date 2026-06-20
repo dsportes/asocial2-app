@@ -16,11 +16,11 @@ export enum propType { STRING, INTEGER, FLOAT, LIST, HASH }
 SIMPLE : index simple, dans une organisation
 GLOBAL : index global, toutes organisations (pour les tasks)
 COL : collection (notifiable / synchronisable)
-IMUTCOL : collection sur une propriété constante du document 
+IMUTCOL : collection sur une propriété constante du document
 */
 export enum idxUse { SIMPLE, GLOBAL, COL, IMUTCOL }
 
-/* Index: 
+/* Index:
 - type d'index
 - true si l'index est global (trans organisation)
 - testable: si true l'existence du document par cet "alias" A LE DROIT d'être testée
@@ -56,7 +56,7 @@ export type docHeader = {
 export type collection = {
   key: props,
   mutable: boolean,
-  list?: boolean 
+  list?: boolean
 }
 
 const regvar = /^[a-z][a-zA-Z0-9]*$/
@@ -135,12 +135,12 @@ export class DocType {
       case propType.STRING : { return src[name] || '' }
       case propType.INTEGER : { return src[name] || 0 }
       case propType.FLOAT : { return src[name] || 0 }
-      case propType.HASH : { 
+      case propType.HASH : {
         const x = []
         i.key.forEach(p => { x.push(src[p] || '') })
         return Crypt.shaS(x.join('/'))
       }
-      case propType.LIST : {         
+      case propType.LIST : {
         const x = []
         const v = src[name] as string[]
         if (v) v.forEach(t => { if (t) x.push(i.nohash ? t : Crypt.shaS(t))})
@@ -151,7 +151,7 @@ export class DocType {
 
   /* Map: traçant les collections
     - clé: nom de la collection
-    - valeur: valeur de la propriété clé de la collection dans le document 
+    - valeur: valeur de la propriété clé de la collection dans le document
   */
   extractColls (src: Object) : Map<string, string[]> {
     const m = new Map()
@@ -192,8 +192,8 @@ export class DocType {
   }
 
   constructor (
-    h: docHeader, 
-    colls: Map<string, collection>, 
+    h: docHeader,
+    colls: Map<string, collection>,
     indexes: Map<string, idx>) {
 
     this.n = DocType.ndt++
@@ -258,10 +258,11 @@ export class FormType {
   static refClasses$ : Set<string> = new Set()
 
   type: string
+  categ: string
   key: string
   creds: string[]
 
-  constructor (type: string, key: string, creds: string[]) {
+  constructor (type: string, categ: string, key: string, creds: string[]) {
     this.type = type
     this.key = key
     this.creds = creds

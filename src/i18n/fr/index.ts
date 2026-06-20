@@ -385,7 +385,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APupdtopics: 'Mettre à jour les thématiques',
   APupddone: 'Thématiques mises à jour',
   APnbtopics: 'Aucune thématique chargée pour ce service. ' +
-   '| Une thématique est déclarée pour ce service. ' + 
+   '| Une thématique est déclarée pour ce service. ' +
    '| {count} thématiques sont déclarées pour ce service. ',
   APtopicmenu: 'Sélectionner une thématique',
   APtopicdet: `### ID: {0}
@@ -725,28 +725,28 @@ bla bla
   CRRdel: 'Ce pouvoir est applicable. Voulez-vous cependant y renoncer?',
   CRRdel2: 'Ce pouvoir est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
   CRRlimit: 'Ce pouvoir a une limite de validité: {0}',
-  CRRdocKey: `Ce pouvoir détient la _clé secrète_ du document 
+  CRRdocKey: `Ce pouvoir détient la _clé secrète_ du document
   : [{0}]
 `,
-  CRRopaque: `Ce pouvoir détient des données qui ne sont accessibles que dans l'application terminale (cryptées par votre clé). Les opérations du service ne peuvent pas les déchiffrer. 
-  
+  CRRopaque: `Ce pouvoir détient des données qui ne sont accessibles que dans l'application terminale (cryptées par votre clé). Les opérations du service ne peuvent pas les déchiffrer.
+
   [{0}]
 `,
-  CRRmore: `Ce pouvoir détient des données spécifiques à sa classe de document. 
-  
+  CRRmore: `Ce pouvoir détient des données spécifiques à sa classe de document.
+
   [{0}]
 `,
   CRRtopic1: 'Cette thématique n\'a pas de _sujets_ qui la détaille.',
-  CRRtopic2: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille: 
+  CRRtopic2: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille:
 - codes: [{0}]
 `,
-  CRRtopic3: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille. 
+  CRRtopic3: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
 La liste est définie dans la configuration du service (code: [{0}]).
 `,
-  CRRtopic4: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille. 
+  CRRtopic4: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
 La liste est définie dans la configuration de l'organisation pour ce service (code: [{0}]).
 `,
-  CRRtopic5: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille. 
+  CRRtopic5: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
 La liste est définie par les valeurs de propriété [{0}] de tous les documents de classe [{1}] existants pour cette organisation.
 `,
   CRRabout_label : 'Commentaire privé à propos du pouvoir',
@@ -921,7 +921,7 @@ Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quel
 
   CAStopic_c: 'Thématique',
   CAStopic_label: 'Thématique de votre demande',
-  CAStopic_bub: `## Quelle est la thématique de votre demande 
+  CAStopic_bub: `## Quelle est la thématique de votre demande
 bla bla
 `,
   CASST_1: 'Cas inconnu (peut-être un BUG).',
@@ -961,7 +961,7 @@ Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de v
   bla bla
 `,
   SUBlist: 'Sujets proposés',
-  
+
   SLCtit_bub: `### Sélection d'un code dans la liste proposée
 Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'intérieur du code recherché:
 - la liste affichée se rétrécit au fur et à mesure de la sélection demandée.
@@ -989,11 +989,11 @@ Fermer la fenêtre corespond à un NON sélection.
   SHre: 'Réduire',
 
   FORMstatus_1: 'Maj par U',
-  FORMstatus_2: 'Maj par T', 
-  FORMstatus_3: 'Validé', 
+  FORMstatus_2: 'Maj par T',
+  FORMstatus_3: 'Validé',
   FORMstatus_4: 'Annulé',
 
-  FORMnewd: 'Nouvelle demande',
+  FORMnewd: 'Nouvelle demande: {0}',
   FORMnewp: 'Nouvelle proposition',
   FORMnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
@@ -1015,6 +1015,12 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMbtnokd: 'J\'accepte la demande telle quelle',
   FORMmsgU: 'Message de l\'utilisateur "demandeur"',
   FORMmsgT: 'Message de l\'utilisateur "tiers proposant"',
+  FORMcreat: 'en création',
+
+  FORMdem_label: 'Type de votre demande',
+  FORMdem_bub: `## Type de votre demande
+bla bla
+`,
 
   /*
   Détecté par l'application
@@ -1236,9 +1242,13 @@ bla bla
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
   TYPE_membrecodir: '01Nomination au Comité de Direction',
+  TYPE_membrecodir_det: 'Nom / pseudo: {1}',
   TYPE_membreredaction: '01Nomination au Comité de Rédaction',
+  TYPE_membreredaction_det: 'Nom / pseudo: {1}',
   TYPE_auteur: '02Création d\'un nouvel auteur',
+  TYPE_auteur_det: 'Mon d\'auteur: {1}',
   TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
+  TYPE_coauteur_det: 'Surnom: {1}',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

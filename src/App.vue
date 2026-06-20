@@ -30,7 +30,7 @@
       <q-page v-if="ui.page === 'p1'" class="column">
         <p1/>
       </q-page>
-    </transition> 
+    </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'p2'" class="column">
         <p2/>
@@ -50,7 +50,7 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'demands'" class="column">
-        <case-scanrequests class="q-mt-sm"/>
+        <demands-scan class="q-mt-sm"/>
       </q-page>
     </transition>
     <transition name="anim1">
@@ -99,7 +99,7 @@ import SafeHome from './pages/SafeHome.vue'
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
 
-import CaseScanrequests from './components-fw/CaseScanrequests.vue'
+import DemandsScan from './components-fw/DemandsScan.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
 
 import SponsoringsPage from './pages/SponsoringsPage.vue'
@@ -158,7 +158,7 @@ watchEffect(() => {
 .anim1-leave-to { opacity:0; transform: translateX(-50%);}
 
 .ano-b, .ano-w {
-  background-position: center center; 
+  background-position: center center;
   background-repeat: no-repeat;
   background-size:contain;
 }

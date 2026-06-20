@@ -9,7 +9,6 @@ import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { Invitation, InvObj } from './invitation'
 import { $Cred, $Credential } from '../src-fw/documents'
-import { TopicDef } from 'src/stores/service-store'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -111,7 +110,7 @@ export class SetStatus extends Operation {
 export class  GetEnum extends Operation {
   constructor (SVC: string, $OP: string) { super('GetEnum$', SVC, '', $OP) }
 
-  async run (name: string) : Promise<TopicDef[]> {
+  async run (name: string) : Promise<string[]> {
     try {
       this.args.name = name
       const res = await this.post(true)
@@ -179,7 +178,7 @@ export class SetSubscription extends Operation {
     try {
       // const subJSON = stores.session.subJSON
       this.args.subscription = subscription
-      this.args.longLife = longLife 
+      this.args.longLife = longLife
       const res = await this.post()
     } catch(e) {
       await this.ko(e)
@@ -243,7 +242,7 @@ export class Sync extends Operation {
 export class RevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
 
-  async run (userId: string, role: string, docId: string) { 
+  async run (userId: string, role: string, docId: string) {
     try {
       this.args.revokeReq = { userId, role, docId }
       const res = await this.post()
@@ -257,7 +256,7 @@ export class RevokeCred extends Operation {
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
-  async run (c: $Credential) : Promise<boolean> { 
+  async run (c: $Credential) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk })
       await this.sign(c)
@@ -295,7 +294,7 @@ export class SyncCred extends Operation {
       const x = res.more
       if (x) {
         c.v = x[0]
-        c.more = x[1]
+        c.power = x[1]
         return true
       } else return false
     } catch(e) {

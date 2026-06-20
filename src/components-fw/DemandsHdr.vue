@@ -1,26 +1,26 @@
 <template>
 <div>
-  <div class="column full-width">
+  <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')'">
     <div class="tbs row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
         @back="ui.currentEvent.zoomed = false"/>
-      <btn-cond :label="$t('FORMnewd')" icon="add" class='col-auto q-ma-xs'
-        @ok="dialogs.newdemand = true"/>
+      <type-menu v-model="formType" :title="FORMnewd" @select="selx = true"/>
+    </div>
+    <div v-if="selx" class="q-my-sm row items-center q-gutter-sm full-width">
+      <btn-cond class="col-1" icon="close" flat @ok="selx = false"/>
+      <select-svc class="col-6" v-model="svc"/>
+      <select-org class="col-4"/>
+      <btn-cond class="col-1" icon="check" :label="$('ok')"
+        :disable="!svc || !session.orgs.c"
+        padding="0 xs" @ok="oknew"/>
     </div>
   </div>
 
   <dialog-std0 v-if="dialogs.newdemand" v-model="dialogs.newdemand" width="pwsm" vh="80"
-    :title="$t('FORMnewd')" hdrclass="tbs" vue="DemandsHdr">
-    <template #hdr>
-      <div class="row justify-between items-center">
-        <btn-cond :label="$t('giveup')" icon="close" 
-          @ok="dialogs.tabedit = false" />
-        <btn-cond :label="$t('validate')" icon="check" @ok="tabchange"
-          :disable="true"/>
-      </div>
-    </template>
+    :title="$t('FORMnewd', [$t('TYPE_' + type).substring(0,2)])"
+    hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
-      <form-zoom/>
+      <form-zoom :form="form" comment="" @done="done"/>
     </template>
   </dialog-std0>
 
@@ -29,83 +29,64 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, Ref, reactive, computed, onMounted, watch } from 'vue'
 
 import stores from '../stores/all'
-
 import { $t } from '../src-fw/util'
+import { Crypt } from '../src-fw/crypt'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
-import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
-import InvitValidate from '../components/InvitValidate.vue'
+import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
+import { $Form, $FormObj } from '../src-fw/documents'
+import { FormType } from '../src-fw/doctypes'
 
 const ui = stores.ui
+const session = stores.session
 const sf = stores.safe
 
-const model = defineModel()
+const selx = ref(false)
+const svc = ref('')
+const formType: Ref<FormType> = ref(null)
 
-const chgU = computed(() => model.value.newTab && model.value.newTab !== model.value.cas.tab)
-
-/*
-const isU = computed(() => model.value.cas && model.value.cas.userId === sf.userId)
-const msgVal = ref({ ok: false, txt: 'KO' })
-const init = async () => {
-  if (!isU.value) msgVal.value = await model.value.cas.msgVal()
-}
-onMounted(async () => { await init() })
-watch(() => model.value.cas, async () => { await init() })
-*/
-
-const dialogs = reactive({ 
-  confirmcancel: false, 
-  tabedit: false, 
-  validate: false, 
-  sponsor: false
+const dialogs = reactive({
+  newdemand: false
 })
 
-// Confirmation de cancel
-const doConfirmCancel = async (n: number) => {
-  if (n === 1) {
-    if (await model.value.cas.cancel())
-      onUpdate()
+const form = ref(null)
+
+const oknew = () => {
+  // Création du Form
+  dialogs.newdemand = true
+  const obj: $FormObj = {
+    type: formType.type,
+    formId: Crypt.rnd(15),
+    userId: sf.auth.userId,
+    v: 0,
+    maxLife: 0,
+    status: 0,
+    etcU: null,
+    etcT: null,
+    msgU: null,
+    msgT: null
+  }
+  form.value = $Form.new(obj)
+}
+
+const close = async () => {
+  const b = await ui.mayClose()
+  if (b) {
+    dialogs.newdemand = false
+    formType.value = null
   }
 }
 
-// Validation
-const doValidate = async (args: any) => {
-  dialogs.validate = false
-  if (await model.value.cas.validate(args)) 
-    onUpdate()
-}
-
-/* Invitation par un sponsor */
-const doInvitation = async (args: any) => {
-  dialogs.sponsor = false
-  if (await model.value.cas.invitation(args))
-    onUpdate()
-}
-
-const tabchange = async () => {
-  if (await model.value.cas.updateByU(model.value.newTab)) {
-    onUpdate()
-  }
-}
-
-// Confirmation de maj ardoise
-const doConfirmRec = async (n: number) => {
-  if (n === 1) {
-    if (await model.value.cas.updateByU(model.value.newTab))
-      onUpdate()
-  }
-}
-
-const onUpdate = () => {
-  const f = model.value.fnOnUpdate
-  if (f) f()
+const done = async () => { // a = 6 ici
+  formType.value = ''
+  dialogs.newdemand = false
+  ui.currentEvent.fnUpdate(form.value.formId)
 }
 
 </script>

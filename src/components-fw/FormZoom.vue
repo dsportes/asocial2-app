@@ -15,22 +15,22 @@
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <div class="font-mono">{{ dhcool(form.v) }}</div>
+        <div class="font-mono">{{ form.v !== 0 ? dhcool(form.v) : $t('FORMcreat') }}</div>
         <div v-if="notView" class='titre-md text-bold text-warning text-italic'>
           {{$t('FORMnotv_u')}}</div>
       </div>
     </div>
-    <div class="row items-center">
+    <div v-if="!cru && !crt" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
       <div class="col-7 q-pl-sm font-mono">{{ dhcool(form.maxLife * 1000) }}</div>
     </div>
-    <div class="row items-center">
+    <div v-if="!cru && !crt" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
       <div class="col-7 row items-center q-gutter-xs">
         <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
         <div class="font-mono text-bold" :color="stclr[form.status]">
           {{ $t('FORMstatus_' + form.status) }}</div>
-        </div>    
+        </div>
     </div>
     <div v-if="form.userId !== sf.userId" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
@@ -39,7 +39,7 @@
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">
         <span>{{ $t('FORMcomment') }}</span>
-        <btn-cond v-if="editable" class="q-ml-sm" icon="edit" round 
+        <btn-cond v-if="editable" class="q-ml-sm" icon="edit" round
           @ok="edCom"/>
       </div>
       <div class="col-7 q-pl-sm font-mono">
@@ -78,13 +78,17 @@ import { $Form, $MDEvent } from '../src-fw/documents'
 const stic = ['', 'person', 'person_shield', 'check', 'close']
 const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
+const props = defineProps({
+  form: $Form,
+  comment: String
+})
+
+const emits = defineEmits(['done'])
+
 const sf = stores.safe
 const ui = stores.ui
-const curev = ui.currentEvent
 
-const event: Ref<$MDEvent> = computed(() => curev.event )
-const form: Ref<$Form> = computed(() => curev.form )
-const notView = computed(() => form.value.userId === sf.userId && form.value.lv < form.value.v)
+const notView = computed(() => props.form.userId === sf.userId && props.form.lv < props.form.v)
 
 const dialogs = reactive({
   editcomment: false
@@ -93,35 +97,22 @@ const dialogs = reactive({
 const newcom = ref('')
 
 const edCom = () => {
-  newcom.value = event.comment || ''
+  newcom.value = props.comment || ''
   dialogs.editcomment = true
 }
 
-const init = async () => {
-  if (notView.value) await vu()
-}
-
-onMounted(async () => { await init() })
-
-watch(form, async (v) => { 
-  await init() 
-})
-
-watch(event, async (v) => { 
-  await init() 
-})
-
-const vu = async () => {
-  await ui.diagDisplay($t('FORMnotv_u'))
-  await form.mdEventUser(true)
-}
-
 const chgcomment = async () => {
-  if (newcom.value !== event.comment) {
-    await form.mdEventUser(true, newcom.value)
+  if (newcom.value !== props.comment) {
+    await props.form.mdEventUser(true, newcom.value)
   }
   dialogs.editcomment = false
 }
+
+if (notView.value)
+  onMounted(async () => {
+    await ui.diagDisplay($t('FORMnotv_u'))
+    await props.form.mdEventUser(true)
+  })
 
 /* action:
 1: cancel
@@ -129,9 +120,21 @@ const chgcomment = async () => {
 3: validate U
 4: update T
 5: validate T
+6: create U
+7: create T
+curev {
+  etc: null,
+  msg: '',
+  msgc: false,
+  etcc: false
+)
 */
-const action = async (a) => {
+const action = async (ev) => {
+  const x = ev.curev || {}
+  const f = props.form
   // TODO
+
+  emits('done', true)
 }
 
 </script>

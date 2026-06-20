@@ -25,6 +25,10 @@
             name="fiber_new" size="24px" color="warning"/>
         </div>
       </div>
+      <div v-if="event.detailEd" class="row items-center full-width">
+        <div class="col-2"></div>
+        <div class="col-10 ellipsis">{{event.detailEd}}</div>
+      </div>
       <div v-if="event.comment" class="row items-center full-width">
         <div class="col-2"></div>
         <div class="col-10 text-italic ellipsis">{{dhcool(event.comment)}}</div>
@@ -33,7 +37,9 @@
   </div>
 
   <div v-if="ui.currentEvent.zoomed" class="pwsm">
-    <form-zoom class="q-mt-sm"/>
+    <form-zoom class="q-mt-sm"
+      form="ui.currentEvent.form"
+      comment="ui.currentEvent.event && ui.currentEvent.event.comment ? ui.currentEvent.event.comment : ''"/>
   </div>
 </div>
 </div>
@@ -65,17 +71,17 @@ const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:las
     case 3 : { if (u.idx !== 0) u.idx = 0; break }
     case 4 : { if (u.idx < events.value.length - 1) u.idx = events.value.length - 1; break }
   }
-  const event = events.value[u.idx] 
+  const event = events.value[u.idx]
   await selEvent(event, u.idx)
 }
 
 const events: Ref<$MDEvent[]> = ref([])
 
-const isCurrent = (event: $MDEvent) => 
+const isCurrent = (event: $MDEvent) =>
   ui.currentEvent.event && (ui.currentEvent.event.eventId === event.eventId)
 const clcase = (event: $MDEvent, idx: number) => dkli(idx) + (isCurrent(event) ? ' current ' : ' nocurrent ')
 
-/* Form mise à jour : 
+/* Form mise à jour :
 - récupère l'ID de l'event courant - old
 - recharge la liste
 - recherche dans la liste rafraichie l'indice de l'event d'ID acId
@@ -83,9 +89,9 @@ const clcase = (event: $MDEvent, idx: number) => dkli(idx) + (isCurrent(event) ?
 - si l'event a disparu (rarissime mais possible), rezoom sur le premier de la liste
   ou pas rezoom du tout si la liste rafraichie est vide.
 */
-const onUpdate = () => {
+const onUpdate = (newId?: string) => {
   const u = ui.currentEvent
-  const old = u.event.eventId
+  const old = newId || u.event.eventId
   u.zoomed = false
   setTimeout(async () => {
     events.value = $MDEvent.listEvents()

@@ -11,13 +11,13 @@ new DocType(
   null, // collections
   new Map<string, idx>([
     ['startTime',  { type: propType.STRING, global: true }]
-  ]) // index 
+  ]) // index
 )
 
 new DocType(
   { name: '$Subs', sync: false, pk: ['sessionId'] }, //header
   null, // collections
-  null // index  
+  null // index
 )
 
 new DocType(
@@ -25,7 +25,7 @@ new DocType(
   null, // collections
   new Map<string, idx>([
     ['def',  { type: propType.STRING }]
-  ]) // index 
+  ]) // index
 )
 
 new DocType(
@@ -38,7 +38,7 @@ new DocType(
 )
 
 new DocType(
-  { name: '$Form', sync: true, pk: ['formId'], 
+  { name: '$Form', sync: true, pk: ['formId'],
     nohash: true, subClassBy: 'type' }, // header
   null, // collections
   new Map<string, idx>([
@@ -47,7 +47,7 @@ new DocType(
 )
 
 new DocType(
-  { name: 'Redaction', virtual: true, manager: true },
+  { name: 'Readaction', virtual: true, manager: true },
   null,
   null
 )
@@ -64,12 +64,12 @@ new DocType(
   null
 )
 
-new FormType('default', 'k1', ['A'])
-new FormType('membrecodir', 'k1', ['A'])
-new FormType('membreredaction', 'k1', ['A'])
-new FormType('auteur', 'k2', ['Readction/1'])
+new FormType('default', 'ad', 'k1', ['A'])
+new FormType('membrecodir', 'ad', 'k1', ['A'])
+new FormType('membreredaction', 'c1', 'k1', ['A'])
+new FormType('auteur', 'auteurs', 'k2', ['Readction/1'])
 // Un Auteur peut aussi nommer un co-auteur
-new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
+new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
 
 new DocType(
   { name: 'Article', sync: true, pk: ['artid'] }, //header
@@ -79,7 +79,7 @@ new DocType(
   ]), // collections
   new Map<string, idx>([
     ['volume',  { type: propType.FLOAT }]
-  ]) // index 
+  ]) // index
 )
 
 new DocType(
@@ -92,7 +92,7 @@ new DocType(
 
 new DocType(
   { name: 'Chat', sync: true, pk: ['chatid'] }, //header
-  new Map<string, collection>([ 
+  new Map<string, collection>([
     ['participants', { key: ['autid'], mutable: true, list: true }]
   ]), // collections
   new Map<string, idx>([

@@ -4,7 +4,7 @@ import { Crypt } from '../src-fw/crypt'
 import { Registry } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
-import { $t, dhcool, equ8 } from '../src-fw/util'
+import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys } from '../src-fw/operation'
 import { FormType } from '../src-fw/doctypes'
 
@@ -24,7 +24,7 @@ export type $Cred = { // Credential attaché à un document
 /* $Credential: possiblemernt mis à jour depuis le document (v more).
 */
 export class $Credential {
-  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk', 
+  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk',
     'privs', 'privd', 'name', 'docKey', 'aboutme', 'more' ]
 
   credId: string = '' // ID du credential.
@@ -41,7 +41,7 @@ export class $Credential {
   privd?: Uint8Array | null = null // clé PRIVEE de decryptage en base64: safe seulement
 
   name: string = '' // "nom" associé au docId.
-  
+
   docKey?: Uint8Array | null
   aboutme?: any | null
   power?: any | null
@@ -69,22 +69,22 @@ export class $Credential {
     return encode(obj)
   }
 
-  async dispPower () { 
+  async dispPower () {
     const ui = stores.ui
     await ui.diagDisplay($t('CRRpower', [JSON.stringify(this.power, null, '\t')]))
   }
 
-  async dispAboutme () { 
+  async dispAboutme () {
     const ui = stores.ui
     await ui.diagDisplay($t('CRRaboutme', [JSON.stringify(this.aboutme, null, '\t')]))
   }
 
-  async dispLimit () { 
+  async dispLimit () {
     if (this.limit)
       await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 1000)]))
   }
 
-  async dispDocKey () { 
+  async dispDocKey () {
     const ui = stores.ui
     await ui.diagDisplay($t('CRRdocKey', [keyToB64(this.docKey || null)]))
   }
@@ -101,25 +101,30 @@ export class $MDEvent {
   svc: string // service concerné.
   org: string // organisation concernée.
   // Modifiables par les opérations seulement:
-  v: number // version, date-heure (_epoch_) du _document_. 
+  v: number // version, date-heure (_epoch_) du _document_.
   maxLife: number // time-to-live calculé depuis `v` et `type`. (INDEX pour purges périodiques).
   status: number // son statut courant.
-  detail: Object // objet de structure dépendant de _type_.
+  detail: string[] // objet de structure dépendant de _type_.
   // Lisibles et modifiables par U seulement:
   comment: string // commentaire de l'utilisateur cible crypté par lui.
   lv: number // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
 
   get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
 
+  get detailEd () {
+    return this.detail && this.detail.length > 0 && hasMessage(this.detail[0]) ?
+      $t(this.detail[0], this.detail) : ''
+  }
+
   static async new (obj: any) : Promise<$MDEvent> {
     const sf = stores.safe
     const e = new $MDEvent()
     for(const p of Object.keys(obj)) if (p !== 'comment') e[p] = obj[p]
-    e.comment = obj.comment === null ? '' : 
+    e.comment = obj.comment === null ? '' :
       decoder.decode(await Crypt.decrypt(sf.keyK, obj.comment))
     return e
   }
- 
+
   static async listEvents () : Promise<$MDEvent[]> {
     const sf = stores.safe
     const op = new MDOperation('$mdEventList')
@@ -219,30 +224,30 @@ export class $Form extends Document {
   _aesU?: Uint8Array | null = null
 
   get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
-  
+
   /* Méthodes surchargées par type *******************************
   ****************************************************************/
-  async initEtc (byU: boolean) : Promise<Object> { 
+  async initEtc (byU: boolean) : Promise<Object> {
     return {}
-  } 
+  }
 
-  cloneEtc (etcX: Object | null) : Object | null { 
+  cloneEtc (etcX: Object | null) : Object | null {
     return etcX === null ? null : decode(encode(etcX))
   }
 
-  eqEtc (etcX: Object | null, etcY: Object | null) : boolean { 
+  eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
     if (!etcX || !etcY) return false
     return equ8(encode(etcX), encode(etcY))
   }
 
-  emptyEtc (etcX: Object | null) { 
+  emptyEtc (etcX: Object | null) {
     return etcX === null || !Array.from(Object.keys(etcX)).length }
 
-  async checkEtc (etcX: Object | null) : Promise<number> { 
+  async checkEtc (etcX: Object | null) : Promise<number> {
     return 0
   }
 
-  async validate () : Promise<number> { 
+  async validate () : Promise<number> {
     return 0
   }
   /***************************************************************
@@ -250,11 +255,11 @@ export class $Form extends Document {
 
   /* Pour création de l'instance à réception par le service
   OU pour création explicite par UI */
-  static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife', 
+  static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife',
     'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
 
   /* Pour transmission au service à la création par $FormObj */
-  static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife', 
+  static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife',
     'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
 
   static new (obj) : $Form {
@@ -270,24 +275,24 @@ export class $Form extends Document {
     return obj as $FormObj
   }
 
-  chk () { 
-    return Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/')) 
+  chk () {
+    return Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
   }
 
   get ft () : FormType { return FormType.formTypes.get(this.type) || FormType.formTypes.get('default')}
 
-  async aesU () : Promise<Uint8Array> { 
+  async aesU () : Promise<Uint8Array> {
     if (!this._aesU) {
-      const fk = await CVKeys.getCKey(this.svc, this.org, this.ft.key) 
+      const fk = await CVKeys.getCKey(this.svc, this.org, this.ft.key)
       const sf = stores.safe
       this._aesU = await Crypt.getAESKey(sf.auth.D, fk)
     }
     return this._aesU
   }
 
-  /* Une opération de lecture du formulaire peut décrypter `msgU` en utilisant le couple, 
+  /* Une opération de lecture du formulaire peut décrypter `msgU` en utilisant le couple,
   de la clé _privée_ de décryptage du formulaire (accessible dans l'opération du service)
-  et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U). 
+  et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
   */
   async decryptMsgU () : Promise<void> {
     if (this.msgU)
@@ -329,7 +334,7 @@ export class $Form extends Document {
   /* Retourne une liste de $Form pour un utilisateur tiers
   si f = ['A'] retourne les forms devant être traitées par un administrateur
   */
-  static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {    
+  static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {
     const creds = $Form.credsForTP(svc, org)
     if (!creds.size) return []
     let filter: string[]

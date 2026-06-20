@@ -9,24 +9,35 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <template>
 <div>
   <div class="q-mb-sm column items-center q-gutter-xs">
-    <btn-cond v-if="editable" no-caps
-      :label="$t('FORMbtncancel')" @ok="emit('action', 1)" color="warning"/>
-    <btn-cond v-if="byU" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', 2)"/>
-    <btn-cond v-if="byU" no-caps :disable="!validU"
-      :label="$t('FORMbtnokp')" @ok="emit('action', 3)"/>
-    <btn-cond v-if="byT" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', 4)"/>
-    <btn-cond v-if="byT" no-caps :disable="!validT"
-      :label="$t('FORMbtnokp')" @ok="emit('action', 5)"/>
+    <btn-cond v-if="byU && creating" no-caps
+      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 6, chg: curev })"/>
+    <btn-cond v-if="byT && creating" no-caps
+      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 7, chg: curev })"/>
+    <btn-cond v-if="byU && editable" no-caps :disable="!hasChg"
+      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 2, chg: curev })"/>
+    <btn-cond v-if="byU && editable" no-caps :disable="!validU"
+      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 3, chg: curev })"/>
+    <btn-cond v-if="byT && editable" no-caps :disable="!hasChg"
+      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 4, chg: curev })"/>
+    <btn-cond v-if="byT && editable" no-caps :disable="!validT"
+      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 5, chg: curev })"/>
+    <btn-cond v-if="editable && byU" no-caps
+      :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1 })" color="warning"/>
   </div>
 
-  <div class="titre-md q-mt-md">{{  $t('') }}</div>
-  <md-editor model="curev.msg" :lgmax="500" :text="curev.msg" modetxt
-    :editable="byU" @ok="chgMsg"/>
-  <div class="titre-md q-my-sm">{{  $t('') }}</div>
-  <md-editor class="q-mb-md"model="curev.msg" :lgmax="500" :text="newcom" modetxt
-    :editable="byT" @ok="chgMsg"/>
+  <div v-if="(form.status === 0 && byU) || (form.status > 0)">
+    <div class="titre-md q-mt-md">{{  $t('') }}</div>
+    <md-editor v-if="byU" model="curev.msg" :lgmax="500" :text="form.msgU" modetxt
+      editable @ok="onChange"/>
+    <md-editor v-else model="form.msgU" :text="form.msgU" modetxt/>
+  </div>
+
+  <div v-if="(form.status === 0 && byT) || (form.status > 0)">
+    <div class="titre-md q-mt-md">{{  $t('') }}</div>
+    <md-editor v-if="byT" model="curev.msg" :lgmax="500" :text="form.msgT" modetxt
+      editable @ok="onChange"/>
+    <md-editor v-else model="form.msgT" :text="form.msgT" modetxt/>
+  </div>
 
   <div v-if="form.type === 'membrecodir'">
   </div>
@@ -45,7 +56,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, watch, onMounted } from 'vue'
+import { ref, Ref, reactive, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { $Form } from '../src-fw/documents'
@@ -56,43 +67,52 @@ import { $Form } from '../src-fw/documents'
 3: validate U
 4: update T
 5: validate T
+6: create U
+7: create T
 */
 const emit = defineEmits(['action'])
+
+const props = defineProps({
+  form: $Form
+})
 
 const sf = stores.safe
 const ui = stores.ui
 
-const curev = ui.currentEvent
-const form: Ref<$Form> = computed(() => curev.form )
+const curev = reactive({
+  etc: null,
+  msg: '',
+  msgc: false,
+  etcc: false
+})
 
-const editable = computed(() => form.value.status < 3 )
-const byU = computed(() => form.value.userId === sf.userId)
-const byT = computed(() => editable.value && form.value.userId !== sf.userId)
-
-const validU = computed(() => 
-  editable.value && form.value.etcT !== null && !hasChg.value && !diag.value)
-const validT = computed(() => 
-  editable.value && form.value.etcU !== null && !hasChg.value && !diag.value)
-
-const hasChg = ref(false)
+const hasChg = computed(() => curev.etcc || curev.msgc )
 const diag = ref(0)
 
-const chgMsg = async () => {
-  if (byU.value) form.msgU = curev.msg
-  if (byT.value) form.msgU = curev.msg
-  await onChange()
-}
+const editable = computed(() => props.form.status === 1 || props.form.status === 2 )
+const creating = computed(() => props.form.status === 0 )
+const byU = computed(() => props.form.userId === sf.userId)
+const byT = computed(() => props.form.userId !== sf.userId)
+
+const validU = computed(() =>
+  (props.form.status === 1 || props.form.status === 2) &&
+  !diag.value && props.form.eqEtc(curev.etc, props.form.etcT))
+const validT = computed(() =>
+  (props.form.status === 1 || props.form.status === 2) &&
+  !diag.value && props.form.eqEtc(curev.etc, props.form.etcU))
 
 const onChange = async () => {
   hasChg.value = false
   diag.value = ''
   if (byU.value) {
-    diag.value = await form.value.checkEtc(curev.etc)
-    hasChg.value = curev.msg !== form.value.msgU || form.value.eqEtc(form.value.etcU, curev.etc)
+    diag.value = await props.form.checkEtc(curev.etc)
+    curev.etcc = curev.msg !== props.form.msgU || props.form.eqEtc(props.form.etcU, curev.etc)
+    curev.msgc = curev.msg !== props.form.msgU
   }
   if (byT.value) {
-    diag.value = await form.value.checkEtc(curev.etc)
-    hasChg.value = curev.msg !== form.value.msgT || form.value.eqEtc(form.value.etcT, curev.etc)
+    diag.value = await props.form.checkEtc(curev.etc)
+    curev.etcc = curev.msg !== props.form.msgT || props.form.eqEtc(props.form.etcT, curev.etc)
+    curev.msgc = curev.msg !== props.form.msgT
   }
   if (hasChg.value) ui.setEditing(); else ui.resetEditing()
 }
@@ -100,23 +120,19 @@ const onChange = async () => {
 const init = async () => {
   ui.resetEditing()
   if (byU.value) {
-    curev.msg = form.value.msgU
-    curev.etc = form.value.etcU !== null ? form.value.cloneEtc(form.value.etcU) :
-      (form.value.etcT ? form.value.cloneEtc(form.value.etcT) : form.value.initEtc(true))
+    curev.msg = props.form.msgU
+    curev.etc = props.form.etcU !== null ? props.form.cloneEtc(props.form.etcU) :
+      (props.form.etcT ? props.form.cloneEtc(props.form.etcT) : props.form.initEtc(true))
   }
   if (byT.value) {
-    curev.msg = form.value.msgT
-    curev.etc = form.value.etcT !== null ? form.value.cloneEtc(form.value.etcT) :
-      (form.value.etcU ? form.value.cloneEtc(form.value.etcU) : form.value.initEtc(false))
+    curev.msg = props.form.msgT
+    curev.etc = props.form.etcT !== null ? props.form.cloneEtc(props.form.etcT) :
+      (props.form.etcU ? props.form.cloneEtc(props.form.etcU) : props.form.initEtc(false))
   }
   await onChange()
 }
 
 onMounted(async () => { await init() })
-
-watch(form, async (v) => { 
-  await init() 
-})
 
 </script>
 

@@ -1,7 +1,6 @@
 /* Retourne un string en base 64 depuis un binaire */
 export function keyToB64 (key: Uint8Array | null) : string {
   if (!key) return ''
-  // @ts-expect-error
   return window.btoa(String.fromCharCode.apply(null, key))
 }
 

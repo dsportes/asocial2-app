@@ -5,14 +5,14 @@
     <div v-if="!ui.currentCase.zoomed" class="pwmd">
 
       <div v-for="(cas, idx) in cases" :key="cas.caseId" :class="dkli(idx) + ' q-pa-xs'">
-        <case-line v-model="cases[idx]" :selected="isCurrent(cas)" 
+        <case-line v-model="cases[idx]" :selected="isCurrent(cas)"
           @zoom="selCas(cas, idx)"/>
       </div>
 
     </div>
 
     <div v-else class="pwmd">
-      <cas-zoom v-if="ui.currentCase.cas"/>
+      <form-zoom v-if="ui.currentCase.cas"/>
       <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
     </div>
   </div>
@@ -25,9 +25,9 @@ import { ref, Ref, watch, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dkli } from '../src-fw/util'
-import { Case } from '../src-fw/documents'
+import { $Form } from '../src-fw/documents'
 import CaseLine from '../components-fw/CaseLine.vue'
-import CaseZoom from '../components-fw/FormZoom.vue/index.js'
+import FormZoom from '../components-fw/FormZoom.vue'
 
 const ui = stores.ui
 const session = stores.session

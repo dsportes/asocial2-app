@@ -8,7 +8,8 @@ Emit:
 - 'navigate', n' quand navigation vers 1:next 2: previous, 3:first, 4:last
 -->
 <template>
-<div :class="'row justify-between items-center ' + sty()" style="width:200px">
+<div :class="'row justify-between items-center ' + sty() + (disable ? ' disabled' : '')"
+  style="width:200px">
   <btn-cond v-if="nav.hasback" icon="arrow_back" class="q-mr-sm" flat color="none"
     @ok="emit('back', true)"/>
   <btn-cond icon="first_page" flat @ok="navig(3)" color="none"
@@ -32,6 +33,10 @@ import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 const nav = defineModel()
+
+const props = defineProps({
+  disable: Boolean
+})
 
 const navig = async (n) => {
   const f = nav.value.fnnav

@@ -113,9 +113,9 @@ export const useUiStore = defineStore('ui', () => {
 
   const helpstack = ref([])
 
-  const fermerHelp = () => { 
+  const fermerHelp = () => {
     appDialogs.DialogHelp = false
-    helpstack.value.length = 0 
+    helpstack.value.length = 0
   }
 
   const pushhelp = (page) => {
@@ -162,8 +162,8 @@ export const useUiStore = defineStore('ui', () => {
       return
     }
     page.value = ''
-    setTimeout(() => { 
-      page.value = p 
+    setTimeout(() => {
+      page.value = p
       if (p === 'app') openMenu()
     }, 350)
   }
@@ -228,11 +228,11 @@ export const useUiStore = defineStore('ui', () => {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,
-    appDialogs, confirmQuit, 
+    appDialogs, confirmQuit,
     exc, displayExc, hideExc,
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage, backToOpenSession, 
+    page, setPage, backToOpenSession,
     setEditing, resetEditing, resolveEditing,
     currentEvent, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
