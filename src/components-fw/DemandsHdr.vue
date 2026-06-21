@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')'">
+  <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')">
     <div class="tbs row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
         @back="ui.currentEvent.zoomed = false"/>
@@ -20,7 +20,7 @@
     :title="$t('FORMnewd', [$t('TYPE_' + type).substring(0,2)])"
     hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
-      <form-zoom :form="form" comment="" @done="done"/>
+      <form-zoom :form="form" comment="" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -59,6 +59,7 @@ const form = ref(null)
 
 const oknew = () => {
   // Création du Form
+  ui.setEditing()
   dialogs.newdemand = true
   const obj: $FormObj = {
     type: formType.type,
@@ -79,14 +80,15 @@ const close = async () => {
   const b = await ui.mayClose()
   if (b) {
     dialogs.newdemand = false
-    formType.value = null
+    formType.value = ''
   }
 }
 
-const done = async () => { // a = 6 ici
+const onDone = (ok: boolean) => { // si false pas créé
   formType.value = ''
   dialogs.newdemand = false
-  ui.currentEvent.fnUpdate(form.value.formId)
+  if (ok)
+    ui.currentEvent.fnUpdate(form.value.formId)
 }
 
 </script>

@@ -9,10 +9,14 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <template>
 <div>
   <div class="q-mb-sm column items-center q-gutter-xs">
+    <btn-cond v-if="creating" no-caps
+      :label="$t('FORMbtnnocr' + (byU ? 'd' : 'p'))" @ok="noCreate"/>
+    <btn-cond v-if="!creating && ui.editingInCourse" no-caps
+      :label="$t('FORMbtnundo')" @ok="undo"/>
     <btn-cond v-if="byU && creating" no-caps
-      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 6, chg: curev })"/>
+      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 6, chg: curev })"/>
     <btn-cond v-if="byT && creating" no-caps
-      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 7, chg: curev })"/>
+      :label="$t('FORMbtnrecp')" @ok="emit('action', { a: 7, chg: curev })"/>
     <btn-cond v-if="byU && editable" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 2, chg: curev })"/>
     <btn-cond v-if="byU && editable" no-caps :disable="!validU"
@@ -22,32 +26,56 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
     <btn-cond v-if="byT && editable" no-caps :disable="!validT"
       :label="$t('FORMbtnokp')" @ok="emit('action', { a: 5, chg: curev })"/>
     <btn-cond v-if="editable && byU" no-caps
-      :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1 })" color="warning"/>
+      :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1, chg: {} })" color="warning"/>
   </div>
 
-  <div v-if="(form.status === 0 && byU) || (form.status > 0)">
-    <div class="titre-md q-mt-md">{{  $t('') }}</div>
+  <!-- Messages --------------------------------------------------------------->
+  <div v-if="visU">
+    <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
     <md-editor v-if="byU" model="curev.msg" :lgmax="500" :text="form.msgU" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgU" :text="form.msgU" modetxt/>
   </div>
 
-  <div v-if="(form.status === 0 && byT) || (form.status > 0)">
-    <div class="titre-md q-mt-md">{{  $t('') }}</div>
+  <div v-if="visT">
+    <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
     <md-editor v-if="byT" model="curev.msg" :lgmax="500" :text="form.msgT" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgT" :text="form.msgT" modetxt/>
   </div>
 
-  <div v-if="form.type === 'membrecodir'">
+  <!-- membrecodir --------------------------------------------------------------->
+  <div v-if="form.type === 'membrecodir'" class="q-my-md">
+    <div class="titre-md q-mt-md">{{  $t('TYPE_membrecodir_pseudo') }}</div>
+
+    <div v-if="visU" class="row" items-center>
+      <div class="col-1 titre-md text-italic">{{$t('FORMdem_1')}}</div>
+      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMdem_2')"
+        v-model="curev.etc.pseudo" :initval="form.etcU.pseudo"
+        :disable="!byU" @validate="onChange"/>
+      <btn-cond v-if="!byU" class="col-1" round icon="content_paste"
+        @ok="curev.etc.pseudo = form.etcT.pseudo"/>
+    </div>
+
+    <div v-if="visT" class="row" items-center>
+      <div class="col-1 titre-md text-italic">{{$t('FORMdprop_1')}}</div>
+      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMprop_2')"
+        v-model="curev.etc.pseudo" :initval="form.etcT.pseudo"
+        :disable="!byT" @validate="onChange"/>
+      <btn-cond v-if="!byT" class="col-1" round icon="content_paste"
+        @ok="curev.etc.pseudo = form.etcU.pseudo"/>
+    </div>
   </div>
 
+  <!-- membreredaction --------------------------------------------------------------->
   <div v-if="form.type === 'membreredaction'">
   </div>
 
+  <!-- auteur --------------------------------------------------------------->
   <div v-if="form.type === 'auteur'">
   </div>
 
+  <!-- coauteur --------------------------------------------------------------->
   <div v-if="form.type === 'coauteur'">
   </div>
 
@@ -69,6 +97,7 @@ import { $Form } from '../src-fw/documents'
 5: validate T
 6: create U
 7: create T
+8: renoncer à la création
 */
 const emit = defineEmits(['action'])
 
@@ -93,6 +122,8 @@ const editable = computed(() => props.form.status === 1 || props.form.status ===
 const creating = computed(() => props.form.status === 0 )
 const byU = computed(() => props.form.userId === sf.userId)
 const byT = computed(() => props.form.userId !== sf.userId)
+const visU = computed(() => props.form.status === 0 && byU) || (props.form.status > 0)
+const visT = computed(() => props.form.status === 0 && byT) || (props.form.status > 0)
 
 const validU = computed(() =>
   (props.form.status === 1 || props.form.status === 2) &&
@@ -100,6 +131,15 @@ const validU = computed(() =>
 const validT = computed(() =>
   (props.form.status === 1 || props.form.status === 2) &&
   !diag.value && props.form.eqEtc(curev.etc, props.form.etcU))
+
+const noCreate = async () => {
+  const b = await ui.mayClose()
+  if (b) emit('action', { a: 8, chg: {}})
+}
+
+const undo = async () => {
+  await init()
+}
 
 const onChange = async () => {
   hasChg.value = false
@@ -114,11 +154,13 @@ const onChange = async () => {
     curev.etcc = curev.msg !== props.form.msgT || props.form.eqEtc(props.form.etcT, curev.etc)
     curev.msgc = curev.msg !== props.form.msgT
   }
-  if (hasChg.value) ui.setEditing(); else ui.resetEditing()
+  if (!creating.value) {
+    if (hasChg.value) ui.setEditing(); else ui.resetEditing()
+  }
 }
 
 const init = async () => {
-  ui.resetEditing()
+  if (!creating.value) ui.resetEditing()
   if (byU.value) {
     curev.msg = props.form.msgU
     curev.etc = props.form.etcU !== null ? props.form.cloneEtc(props.form.etcU) :

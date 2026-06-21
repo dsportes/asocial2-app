@@ -97,8 +97,8 @@ export default {
   quitCont: 'Je continue ma session',
   closeCf: 'Saisies en cours, confirmer ...',
   closeCf_label: `### Des saisies sont en cours ...
-  - Si vous confirmez votre _fermeture_, elles seront perdues.
-  - Sinon vous pouvez continuer votre travail normalement.
+  - Si vous confirmez, elles seront perdues.
+  - Si vous renocez, vous pourrez continuer votre travail normalement.
   `,
   closeCf_1: 'Je confirme',
   closeCf_2: 'Je renonce et poursuis mon travail',
@@ -988,6 +988,7 @@ Fermer la fenêtre corespond à un NON sélection.
   SHpe: 'Plein écran',
   SHre: 'Réduire',
 
+  FORMstatus_0: 'En création',
   FORMstatus_1: 'Maj par U',
   FORMstatus_2: 'Maj par T',
   FORMstatus_3: 'Validé',
@@ -1009,6 +1010,9 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMeditcom: 'Edition de votre commentaire personnel',
   FORMnocomment: '(aucun)',
   FORMbtncancel: 'Annuler ma demande',
+  FORMbtnnocrd: 'Je renonce à créer ma demande',
+  FORMbtnnocrp: 'Je renonce à créer ma proposition',
+  FORMbtnundo: 'J\'annule les modifications en cours',
   FORMbtnrecd: 'Enregistrer ma demande',
   FORMbtnrecp: 'Enregistrer ma proposition',
   FORMbtnokp: 'J\'accepte la proposition telle quelle',
@@ -1016,6 +1020,13 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMmsgU: 'Message de l\'utilisateur "demandeur"',
   FORMmsgT: 'Message de l\'utilisateur "tiers proposant"',
   FORMcreat: 'en création',
+  FORMdem_1: 'Dem.',
+  FORMprop_1: 'Prop.',
+  FORMdem_2: 'Fixé par le "demandeur"',
+  FORMprop_2: 'Fixé par le "proposant"',
+  FORMmsg_d: 'Message de l\'utilisateur "demandeur"',
+  FORMmsg_p: 'Message de l\'utilisateur "proposant"',
+
 
   FORMdem_label: 'Type de votre demande',
   FORMdem_bub: `## Type de votre demande
@@ -1243,6 +1254,7 @@ bla bla
   CATEG_auteurs: '02Auteurs et relecteurs',
   TYPE_membrecodir: '01Nomination au Comité de Direction',
   TYPE_membrecodir_det: 'Nom / pseudo: {1}',
+  TYPE_membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
   TYPE_membreredaction: '01Nomination au Comité de Rédaction',
   TYPE_membreredaction_det: 'Nom / pseudo: {1}',
   TYPE_auteur: '02Création d\'un nouvel auteur',

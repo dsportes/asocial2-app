@@ -27,7 +27,7 @@ export const K = {
     { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', name: 'Français' }
   ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
-  
+
   sizes: {
     alias: [10, 24],
     p1: [24, 40],
@@ -47,7 +47,8 @@ export const K = {
     isotime: [24, 24],
     svc: [3, 8, 'svc'],
     auteur: [6, 24],
-    minor: [0, 12, 'an2']
+    minor: [0, 12, 'an2'],
+    pseudo: [3, 16]
   },
 
   regexp: {
@@ -60,12 +61,6 @@ export const K = {
   },
 
   phrasestar: { ps: 2, p1: 2, contact: 2},
-
-  majorInvits: {
-    Auteur: { hasKey: true, hasLabel: true, hasMinor: true },
-    Relecteur: { hasKey: false, hasLabel: true, hasMinor: true },
-    Cedit: { hasKey: false, hasLabel: false, hasMinor: false }
-  },
 
   theme: {
     primary: ['#0D47A1', '#0D47A1'],

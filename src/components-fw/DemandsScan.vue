@@ -31,7 +31,7 @@
       </div>
       <div v-if="event.comment" class="row items-center full-width">
         <div class="col-2"></div>
-        <div class="col-10 text-italic ellipsis">{{dhcool(event.comment)}}</div>
+        <scroll-md class="col-10" height="30px" :text="event.comment"/>
       </div>
     </div>
   </div>
@@ -39,7 +39,8 @@
   <div v-if="ui.currentEvent.zoomed" class="pwsm">
     <form-zoom class="q-mt-sm"
       form="ui.currentEvent.form"
-      comment="ui.currentEvent.event && ui.currentEvent.event.comment ? ui.currentEvent.event.comment : ''"/>
+      :comment="comment"
+      @done="onDone"/>
   </div>
 </div>
 </div>
@@ -47,7 +48,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { Ref, ref, onMounted } from 'vue'
+import { Ref, ref, onMounted, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dkli, dhcool } from '../src-fw/util'
@@ -80,6 +81,12 @@ const events: Ref<$MDEvent[]> = ref([])
 const isCurrent = (event: $MDEvent) =>
   ui.currentEvent.event && (ui.currentEvent.event.eventId === event.eventId)
 const clcase = (event: $MDEvent, idx: number) => dkli(idx) + (isCurrent(event) ? ' current ' : ' nocurrent ')
+const comment = computed(() => ui.currentEvent.event && ui.currentEvent.event.comment ?
+  ui.currentEvent.event.comment : '')
+
+const onDone = (ok: boolean) => {
+  if (ok) onUpdate() // ok: true - Maj effectuée.
+}
 
 /* Form mise à jour :
 - récupère l'ID de l'event courant - old
@@ -115,7 +122,6 @@ const selEvent0 = () => {
   u.event = null
   u.form = null
   u.zoomed = false
-  u.newComment = ''
   const nb = ui.navBar
   nb.idx = 0
   nb.nb = events.value.length
@@ -127,8 +133,7 @@ const selEvent = async (event: $MDEvent, idx: number) => {
   const f = await $Form.get(event.svc, event.org, event.eventId, event.type)
   u.form = f || null
   u.event = event
-  u.zoomed = true
-  u.newComment = ''
+  u.zoomed = f ? true : false
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = events.value.length

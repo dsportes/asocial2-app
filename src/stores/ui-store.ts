@@ -141,6 +141,7 @@ export const useUiStore = defineStore('ui', () => {
   }
   const setEditing = () => { editing.flag = true }
   const resetEditing = () => { editing.flag = false }
+  const editingInCourse = computed(() => editing.flag )
 
   const mayClose = async () => {
     if (!editing.flag) return true
@@ -212,9 +213,6 @@ export const useUiStore = defineStore('ui', () => {
     zoomed: false,
     event: null,
     form: null,
-    etc: null,
-    msg: null,
-    newComment: String,
     fnOnUpdate: null
   })
 
@@ -233,7 +231,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    setEditing, resetEditing, resolveEditing,
+    setEditing, resetEditing, resolveEditing, editingInCourse,
     currentEvent, navBar, adminPage, sponsoringsPage,
     emojiIndex, setEmoji
   }

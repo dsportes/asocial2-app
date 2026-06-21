@@ -180,6 +180,13 @@ export class $MDEvent {
   }
 }
 
+export type Curev = {
+  etc: Object,
+  msg: string,
+  msgc: boolean,
+  etcc: boolean
+}
+
 export type $FormObj = {
   formId: string  // ID universel aléatoire.
   type: string  // type du formulaire.
@@ -247,7 +254,7 @@ export class $Form extends Document {
     return 0
   }
 
-  async validate () : Promise<number> {
+  async validate (args: any) : Promise<number> {
     return 0
   }
   /***************************************************************
@@ -369,6 +376,10 @@ export class $Form extends Document {
       await f.decryptMsgU()
     }
     return lf
+  }
+
+  async createByU (args: Curev) {
+
   }
 
 }

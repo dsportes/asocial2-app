@@ -1,30 +1,34 @@
 <template>
 <div>
-  <div v-if="!form" class="msg">{{ $t('FORMnoform') }}</div>
-  <div v-else class="q-ma-sm a-pa-sm bord1 full-width">
+  <div class="q-ma-sm a-pa-sm bord1 full-width">
     <div class="font-mono fs-sm">{{ form.formId }}</div>
     <div class="q-my-sm text-bold titre-lg">{{ form.typeEd }}</div>
+
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
       <div class="col-7 q-pl-sm font-mono">{{ form.org }}</div>
     </div>
+
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMsvc') }}</div>
       <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + form.svc)}}</div>
     </div>
-    <div class="row items-center">
+
+    <div v-if="form.v !== 0" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <div class="font-mono">{{ form.v !== 0 ? dhcool(form.v) : $t('FORMcreat') }}</div>
+        <div class="font-mono">{{ dhcool(form.v) }}</div>
         <div v-if="notView" class='titre-md text-bold text-warning text-italic'>
           {{$t('FORMnotv_u')}}</div>
       </div>
     </div>
-    <div v-if="!cru && !crt" class="row items-center">
+
+    <div v-if="form.v !== 0" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
       <div class="col-7 q-pl-sm font-mono">{{ dhcool(form.maxLife * 1000) }}</div>
     </div>
-    <div v-if="!cru && !crt" class="row items-center">
+
+    <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
       <div class="col-7 row items-center q-gutter-xs">
         <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
@@ -32,21 +36,24 @@
           {{ $t('FORMstatus_' + form.status) }}</div>
         </div>
     </div>
-    <div v-if="form.userId !== sf.userId" class="row items-center">
+
+    <div v-if="!byU" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ event.userId }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ form.userId }}</div>
     </div>
-    <div class="row items-center">
+
+    <div v-if="byU" class="row items-center">
       <div class="col-5 titre-md text-italic">
         <span>{{ $t('FORMcomment') }}</span>
-        <btn-cond v-if="editable" class="q-ml-sm" icon="edit" round
+        <btn-cond class="q-ml-sm" icon="edit" round
           @ok="edCom"/>
       </div>
       <div class="col-7 q-pl-sm font-mono">
-        <div v-if="!event.comment">{{ $t('FORMnocomment') }}</div>
-        <scroll-md v-else height="50px" :text="event.comment"/>
+        <div v-if="!comment">{{ $t('FORMnocomment') }}</div>
+        <scroll-md v-else height="50px" :text="comment"/>
       </div>
     </div>
+
   </div>
 
   <form-etc v-if="form" @action="action"/>
@@ -73,10 +80,10 @@ import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import { $Form, $MDEvent } from '../src-fw/documents'
+import { $Form, Curev } from '../src-fw/documents'
 
-const stic = ['', 'person', 'person_shield', 'check', 'close']
-const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
+const stic = ['add', 'person', 'person_shield', 'check', 'close']
+const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']
 
 const props = defineProps({
   form: $Form,
@@ -88,7 +95,8 @@ const emits = defineEmits(['done'])
 const sf = stores.safe
 const ui = stores.ui
 
-const notView = computed(() => props.form.userId === sf.userId && props.form.lv < props.form.v)
+const byU = computed(() => props.form.userId === sf.userId)
+const notView = computed(() => byU.value && props.form.lv < props.form.v)
 
 const dialogs = reactive({
   editcomment: false
@@ -103,7 +111,10 @@ const edCom = () => {
 
 const chgcomment = async () => {
   if (newcom.value !== props.comment) {
-    await props.form.mdEventUser(true, newcom.value)
+    if (props.form.v !== 0)
+      await props.form.mdEventUser(true, newcom.value)
+    else // en création. On passe le comment à createByU
+      props.form.comment = newcom.value
   }
   dialogs.editcomment = false
 }
@@ -122,19 +133,26 @@ if (notView.value)
 5: validate T
 6: create U
 7: create T
-curev {
-  etc: null,
-  msg: '',
-  msgc: false,
-  etcc: false
-)
+8: renoncer à la création
 */
-const action = async (ev) => {
-  const x = ev.curev || {}
+const action = async (ev: { a: number, chg: Curev }) => {
+  const x = ev.chg
   const f = props.form
-  // TODO
-
-  emits('done', true)
+  let ok = true
+  switch (ev.a) {
+    case 1 : await f.cancelByU(); break
+    case 2 : await f.updateByU(x); break
+    case 3 : await f.validateByU(x); break
+    case 4 : await f.updateByT(x); break
+    case 5 : await f.validateByT(x); break
+    case 6 : await f.createByU(x); break
+    case 7 : await f.createByT(x); break
+    case 8 : // renoncer à créer
+      ui.resetEditing()
+      ok = false
+      break
+  }
+  emits('done', ok)
 }
 
 </script>
