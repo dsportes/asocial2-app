@@ -26,8 +26,8 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   emptyEtc (etcX: Object | null) {
     return etcX === null || !Array.from(Object.keys(etcX)).length }
 
-  async checkEtc (etcX: Object | null) : Promise<number> {
-    return 0
+  async checkEtc (etcX: Object | null) : Promise<string> {
+    return ''
   }
 
   async validate () : Promise<number> {
@@ -39,7 +39,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 class $Form_membrecodir extends $Form {
   constructor () { super() }
   async initEtc (byU: boolean) : Promise<Object> {
-    return { pseudo: 'toto' }
+    return { pseudo: this.opts && this.opts.alias ? this.opts.alias : 'toto' }
   }
   cloneEtc (etcX: Object | null) : Object | null {
     return etcX === null ? null : { pseudo: etcX['pseudo'] }
@@ -48,10 +48,11 @@ class $Form_membrecodir extends $Form {
     if (!etcX || !etcY) return false
     return etcX['pseudo'] !== etcY['pseudo']
   }
-  async checkEtc (etcX: Object | null) : Promise<number> {
-    if (!etcX) return 1
-    const l = etcX['pseudo'].length
-    return l < 8 || l > 24 ? 2 : 0
+  async checkEtc (etcX: Object | null) : Promise<string> {
+    if (etcX) {
+      const l = etcX['pseudo'].length
+      return l < 8 || l > 24 ? 'lgp' : ''
+    } else return ''
   }
   async validate (args: any) : Promise<number> {
     return 0

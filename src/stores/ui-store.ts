@@ -10,6 +10,12 @@ import { Help } from '../src-fw/help'
 const large = 900
 const HOME = 'safeHome'
 
+export type SOA = {
+   svc: string
+   org: string
+   admin: boolean
+}
+
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
   const $q = ref()
@@ -196,17 +202,21 @@ export const useUiStore = defineStore('ui', () => {
     $OP: ''
   })
 
-  const sponsoringsPage = reactive({
-    err: 0,
-    time: Date.now(),
-    manOpt: null
-  })
-
+  
   const navBar = reactive({
     hasback: true,
     idx: 0,
     nb: 0,
-    fnnav: null,
+    fnnav: null
+  })
+
+  const currentForm = reactive({
+    soa: { svc: '', org: '', admin: false },
+    asAdmin: false,
+    pft: new Set(), // possible form types
+    zoomed: false,
+    form: null,
+    fnOnUpdate: null
   })
 
   const currentEvent = reactive({
@@ -232,7 +242,7 @@ export const useUiStore = defineStore('ui', () => {
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
     setEditing, resetEditing, resolveEditing, editingInCourse,
-    currentEvent, navBar, adminPage, sponsoringsPage,
+    currentEvent, navBar, currentForm, adminPage,
     emojiIndex, setEmoji
   }
 })

@@ -1,12 +1,6 @@
 <template>
 <div class="column items-center q-pa-xs">
 
-  <div v-if="ui.adminPage.tab === 'topics'" class="pwsm">
-    <topics-editor v-if="ui.adminPage.SVC && ui.adminPage.$OP"
-        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
-    <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
-  </div>
-
   <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
     <div v-if="sf.auth.admins">
       <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
@@ -73,8 +67,6 @@
           <q-input class="q-pa-xs bord1 q-mb-md" v-model="tab" type="textarea" :rows="5"/>
 
           <div class="column items-center">
-            <btn-cond :label="$t('APgrantmgr')" icon="check"
-              :disable="targetUser.err !== ''" @ok="grantManager"/>
             <btn-cond class="q-mt-sm" flat :label="$t('APlstmgr')"
               @ok="dolist"/>
           </div>
@@ -100,12 +92,10 @@ import { ICVS } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
 import { MDOperation } from '../src-fw/operation'
 import { ListManagers, RevokeCred } from '../src-fw/operations'
-import { Cred } from '../src-fw/documents'
+import { $Cred } from '../src-fw/documents'
 import { $t, dkli, dhcool } from '../src-fw/util'
-import { NewManager } from '../src-fw/invitation'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
-import TopicsEditor from '../components-fw/TopicsEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
@@ -129,7 +119,7 @@ watch(() => sf.mySafeCreds, () => {
 
 const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 const svcOrg = ref()
-const lstMgr: Ref<Cred[]> = ref([]) // Cred []
+const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
 
 const targetUser = reactive({ inp: '', err: ''})
 
@@ -182,26 +172,6 @@ const resetAreq = () => {
   targetUser.inp = ''
   targetUser.err = ''
   tab.value = ''
-}
-
-const grantManager = async () => {
-  // TODO
-  const targetId = targetUser.inp
-  const sha = await Crypt.strongHash(targetId, false, true)
-  const op = new MDOperation('$mdUserGetICVS')
-  op.args['userId'] = Crypt.shaS(sha)
-  const ret = await op.post() as ICVS
-  const icvs = ret ? ret['icvs'] : null
-  if (!icvs) {
-    await ui.diagDisplay($t('APnouser'), true)
-    return
-  }
-  // (svc: string, org: string, tab: string, userId: string)
-  const ok = await NewManager(ui.adminPage.SVC, session.orgs.c, tab.value, icvs.i, targetId)
-  if (ok) {
-    await dolist()
-    resetAreq()
-  }
 }
 
 const revokeC = ref()

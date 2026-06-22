@@ -39,7 +39,7 @@
   <div v-if="ui.currentEvent.zoomed" class="pwsm">
     <form-zoom class="q-mt-sm"
       form="ui.currentEvent.form"
-      :comment="comment"
+      :comment="comment" isDemand
       @done="onDone"/>
   </div>
 </div>
@@ -54,7 +54,7 @@ import stores from '../stores/all'
 import { $t, dkli, dhcool } from '../src-fw/util'
 
 import { $Form, $MDEvent } from '../src-fw/documents'
-
+import ScrollMd from '../components-fw/ScrollMd.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 
 const stic = ['', 'person', 'person_shield', 'check', 'close']
@@ -123,7 +123,7 @@ const selEvent0 = () => {
   u.form = null
   u.zoomed = false
   const nb = ui.navBar
-  nb.idx = 0
+  nb.idx = -1
   nb.nb = events.value.length
 }
 
@@ -140,7 +140,7 @@ const selEvent = async (event: $MDEvent, idx: number) => {
 }
 
 const init = async () => {
-  events.value = $MDEvent.listEvents()
+  events.value = await $MDEvent.listEvents()
   selEvent0()
   ui.currentEvent.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav

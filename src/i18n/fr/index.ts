@@ -36,7 +36,7 @@ export default {
   restartApp: 'Redémmarrer l\'application',
   nocomment: '(pas de commentaire)',
   svcorg: 'Service & Organisation',
-  topic: 'Thématiques des cas',
+  nosvcorg: 'Ce service ne gère pas cette organisation.',
   service: 'Service',
   servicestatus: 'Status des services',
   svcStatus_label: 'Commentaire ...',
@@ -235,7 +235,7 @@ export default {
   op_$UpdateCredComment: 'Mise à jour du commentaire d\'un pouvoir',
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',
-  op_GetTopics$: 'Chargement des topics d\'un service',
+  op_$mdEventList: 'Lecture de mes demandes / propositions',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -938,8 +938,7 @@ bla bla
 Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de votre _Safe Box_.
 `,
   CASnocases: 'Pas de cas en cours actuellement.',
-  CASmanager_y: 'Cas "manager"',
-  CASmanager_n: 'Autres cas',
+
   CASso_1: 'Organisation non définie',
   CASso_2: 'Pour cette organisation aucun opérateur ne supporte ce service.',
   CASso_3: 'Impoosible de traiter les propositions de "managers", vous n\'êtes pas "administrateur" de ce service pour l\'opérateur gérant cette organisation.',
@@ -1026,8 +1025,9 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMprop_2: 'Fixé par le "proposant"',
   FORMmsg_d: 'Message de l\'utilisateur "demandeur"',
   FORMmsg_p: 'Message de l\'utilisateur "proposant"',
-
-
+  FORMadmin: 'Propositions requérant un privilège "administrateur"',
+  FORMnoprops: 'Vous n\'avez aucun pouvoir pour établir une proposition pour cette organisation et ce service.',
+  FORMuseralias: 'Un alias de l\'utilisateur destinataire',
   FORMdem_label: 'Type de votre demande',
   FORMdem_bub: `## Type de votre demande
 bla bla
@@ -1252,6 +1252,7 @@ bla bla
 
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
+
   TYPE_membrecodir: '01Nomination au Comité de Direction',
   TYPE_membrecodir_det: 'Nom / pseudo: {1}',
   TYPE_membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
@@ -1261,6 +1262,8 @@ bla bla
   TYPE_auteur_det: 'Mon d\'auteur: {1}',
   TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_coauteur_det: 'Surnom: {1}',
+
+  FORMdiag_lgp: 'Un "pseudo" doit avoir entre 8 et 24 caractères.',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

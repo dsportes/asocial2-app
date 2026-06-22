@@ -5,7 +5,7 @@ import { Registry } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
-import { MDOperation, Operation, CVKeys } from '../src-fw/operation'
+import { MDOperation, Operation, CVKeys, opOfSvcOrg } from '../src-fw/operation'
 import { FormType } from '../src-fw/doctypes'
 
 const encoder = new TextEncoder()
@@ -228,6 +228,7 @@ export class $Form extends Document {
   comment?: Uint8Array | null = null // commentaire écrit et crypté par U.
   ch?: string = '' // challenge random de synchronisation initiale avec $MDEvent
   lv?: number = 0 // lastView par U
+  opts?: any = null // options éventuelles de création
   _aesU?: Uint8Array | null = null
 
   get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
@@ -250,8 +251,8 @@ export class $Form extends Document {
   emptyEtc (etcX: Object | null) {
     return etcX === null || !Array.from(Object.keys(etcX)).length }
 
-  async checkEtc (etcX: Object | null) : Promise<number> {
-    return 0
+  async checkEtc (etcX: Object | null) : Promise<string> {
+    return ''
   }
 
   async validate (args: any) : Promise<number> {
@@ -338,30 +339,58 @@ export class $Form extends Document {
     return f
   }
 
+  /* Retourne le "filtre" qui permettra de sélectionner les $Forms enregistrés
+  pour lesquels l'utilisateur a au moins un credential pour un svc et org fixé.
+  Deux filtres différents:
+  - celui en tant qu'administrateur, pour retrouver les demandes "manager" auxquelles seul
+    un administrateur peutr répondre.
+  - celui des demandes standard (non "manager").
+  Si retour d'une liste vide, ce n'est pas la peine d'interroger ce svc / org.
+  */
+  static async getListFilter (svc: string, org: string, asAdmin: boolean) : Promise<string[]> {
+    const sf = stores.safe
+    const op = await opOfSvcOrg(svc, org)
+    if (!op) return []
+    if (asAdmin) 
+      return sf.auth.admins.indexOf(svc + '.' + op) === -1 ? [] : ['A']
+    const fi: Set<string> = new Set()
+    for(const [,c] of sf.mySafeCreds.value) {
+      if (c.svc !== svc || c.org !== org) continue
+      if (c.docPk === '1') {
+        if (FormType.refClasses1.has(c.docCl)) fi.add(c.docCl + '/1')
+      } else {
+        if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docPk)
+      }
+      return fi.size === 0 ? [] : Array.from(fi)
+    }   
+  }
+  
+  /* Set des FormTypes qui peuvent être créés par un utilisateur
+  */
+  static async possibleFormTypes (svc: string, org: string, asAdmin: boolean) : Promise<Set<string>> {
+    const ft: Set<string> = new Set()
+    const filter = await $Form.getListFilter(svc, org, asAdmin)
+    if (!filter.length) return ft
+    const docCls: Set<string> = new Set()
+    for (const x of filter)
+      docCls.add(x.substring(0, x.indexOf('/')))
+    for(const [t, e] of FormType.formTypes) {
+      for(const c of e.creds) {
+        const cl = c.substring(0, c.indexOf('/'))
+        if (docCls.has(cl)) ft.add(t)
+      }
+    }
+    return ft
+  }
+
   /* Retourne une liste de $Form pour un utilisateur tiers
   si f = ['A'] retourne les forms devant être traitées par un administrateur
   */
   static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {
     const creds = $Form.credsForTP(svc, org)
     if (!creds.size) return []
-    let filter: string[]
-    const sf = stores.safe
-    if (asAdmin) {
-      if (!await sf.adminForSvcOrg(svc, org)) return []
-      filter = ['A']
-    } else {
-      const fi: Set<string> = new Set()
-      for(const [,c] of sf.mySafeCreds.value) {
-        if (c.svc !== svc || c.org !== org) continue
-        if (c.docPk === '1') {
-          if (FormType.refClasses1.has(c.docCl)) fi.add(c.docCl + '/1')
-        } else {
-          if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docPk)
-        }
-      }
-      if (fi.size === 0) return []
-      filter = Array.from(fi)
-    }
+    const filter = await $Form.getListFilter(svc, org, asAdmin)
+    if (!filter.length) return []
     const op = new Operation('FormFilteredList', svc, org)
     for(const cred of creds) await op.sign(cred)
     op.args.filter = filter

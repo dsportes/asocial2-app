@@ -7,7 +7,6 @@ import stores from '../stores/all'
 
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
-import { Invitation, InvObj } from './invitation'
 import { $Cred, $Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {

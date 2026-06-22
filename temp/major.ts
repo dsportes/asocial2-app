@@ -1,12 +1,12 @@
 
-import stores from '../stores/all'
-import { Invitation, MsgVal } from '../src-fw/invitation'
+import stores from '../src/stores/all'
+import { Invitation, MsgVal } from '../src/src-fw/invitation'
 // import { $CredentialA } from '../src-fw/documents'
-import { $t } from '../src-fw/util'
-import { Operation } from '../src-fw/operation'
+import { $t } from '../src/src-fw/util'
+import { Operation } from '../src/src-fw/operation'
 
-import { Crypt } from '../src-fw/crypt'
-import { keyToB64 } from '../src-fw/b64'
+import { Crypt } from '../src/src-fw/crypt'
+import { keyToB64 } from '../src/src-fw/b64'
 
 const encoder = new TextEncoder()
 

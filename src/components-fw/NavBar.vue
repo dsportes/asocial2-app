@@ -13,9 +13,9 @@ Emit:
   <btn-cond v-if="nav.hasback" icon="arrow_back" class="q-mr-sm" flat color="none"
     @ok="emit('back', true)"/>
   <btn-cond icon="first_page" flat @ok="navig(3)" color="none"
-    :disable="nav.idx === 0"/>
+    :disable="nav.idx <= 0"/>
   <btn-cond icon="chevron_left" flat color="none" @ok="navig(2)"
-    :disable="nav.idx === 0"/>
+    :disable="nav.idx <= 0"/>
   <div class="q-mx-sm text-center" style="width:40px">
     {{ (nav.idx + 1) + ' / ' + nav.nb }}</div>
   <btn-cond icon="chevron_right" flat color="none" @ok="navig(1)"

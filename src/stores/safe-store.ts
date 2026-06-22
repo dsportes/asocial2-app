@@ -16,7 +16,7 @@ import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
 import { $Credential } from '../src-fw/documents'
-import { TopicDef } from './service-store'
+import { DocType } from '../src-fw/doctypes'
 
 /*
 ### Safes stockés dans un directory
@@ -104,6 +104,13 @@ Il existe une base de données IDB de nom `app_x` où `x` est le hash court de `
 const dlv = (time: number) : boolean => {
   const d = Math.floor(Date.now() / 86400000)
   return  Math.floor(time / 86400) < (d - 7)
+}
+
+export type Managements = { 
+  label: string, // label du service [ org ]
+  svc: string, 
+  org: string,
+  docCls: Set<string> // Set des classes de document "manager"
 }
 
 export type SvcOrg = {
@@ -922,34 +929,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Extractions / consultations **********************************************/
 
-  const listTopics = () => {
-
-  }
-
-  // Liste des topics pour lesquels l'utilisateur peut être sponsor
-  const sponsorOf = async (svc: string, org: string) : Promise<Set<string>> => {
-    const ss = stores.service
-    await ss.loadSvcOrgTopics(svc, org)
-    const l: TopicDef[] = ss.getTopicDefs(svc)
-    const mdoc: Map<string, Set<string>> = new Map() // docCl : set des topicId qui le ref
-    for(const td of l) {
-      for(const cr of td.creds) {
-        if (cr === 'A') continue
-        const docCl = cr.substring(0, cr.length - 2)
-        let s = mdoc.get(docCl); if (!s) { s = new Set(); mdoc.set(docCl, s) }
-        s.add(td.id)
-      }
-    }
-    const stopics: Set<string> = new Set()
-    for (const [,c] of mySafeCreds.value) {
-      if (c.svc === svc && c.org === org) {
-        const s = mdoc.get(c.docCl)
-        if (s) for(const tid of s) stopics.add(tid)
-      }
-    }
-    return stopics
-  }
-
   const caseFilter = (svc: string, org: string) : string[] => {
     const m : Map<string, Set<string>> = new Map() // par docCl, set des docPk
     for (const [,c] of mySafeCreds.value) {
@@ -967,49 +946,44 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Options des organisations managées *****************************************/
-  const managedOrgs = () => {
-    const lst : { label, svc, org }[] = []
-    if (mySafeCreds.value) {
-      const svcOrgs: Map<string, Set<string>> = new Map()
-      for (const [,c] of mySafeCreds.value) {
-        if (c.role === 'Org.manager') {
-          let e = svcOrgs.get(c.svc)
-          if (!e) { e = new Set(); svcOrgs.set(c.svc, e) }
-          e.add(c.org)
+  const managedOrgs = () : Managements[] => {
+    if (!mySafeCreds.value) return []
+    else {
+      const svcOrgs: Map<string, Managements> = new Map()
+      for (const [, c] of mySafeCreds.value) {
+        const dt = DocType.get(c.docCl)
+        if (dt && dt.manager) {
+          let e = svcOrgs.get(c.svc + '/' + c.org)
+          if (!e) { 
+            e = {
+              label: $t('services_' + c.svc) + ' [' + c.org + ']',
+              svc: c.svc,
+              org: c.org,
+              docCls: new Set<string>()
+            }
+            svcOrgs.set(c.svc + '/' + c.org, e)
+          }
+          e.docCls.add(c.docCl)
         }
       }
-      if (svcOrgs.size) {
-        for(const svc of svcOrgs.keys()) {
-          const s = svcOrgs.get(svc) || []
-          const t = $t('services_' + svc)
-          const l = Array.from(s.values()).sort()
-          for(const org of l)
-            lst.push( { label: t + ' [' + org + ']', svc: svc, org })
-        }
-      }
+      return Array.from(svcOrgs.values()).
+        sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : 0))
     }
-    return lst
   }
 
-  const managedOrgs2 = () => {
-    const lst : { label, svc, org, credId }[] = []
-    if (mySafeCreds.value) {
-      const svcOrgs: Map<string, Set<string>> = new Map()
-      for (const [,c] of mySafeCreds.value) {
-        if (c.role === 'Org.manager') {
-          const label = $t('services_' + c.svc)
-          lst.push({ label, org: c.org, svc: c.svc, credId: c.credId})
-        }
+  /* Retourne le set des docCl de type "manager" sur lesquelles l'utilisateur 
+  a un credential. Si la liste n'est pas vide, l'utilisateur est un "manager"
+  à au moins un titre.
+  TODO : utilité à vérifier
+  */
+  const isManager = (svc: string, org: string) : Set<string> => {
+    const s: Set<string> = new Set()
+     for (const [,c] of mySafeCreds.value)
+      if (c.org === org && c.svc === svc) {
+        const dt = DocType.get(c.docCl)
+        if (dt && dt.manager) s.add(c.docCl)
       }
-    }
-    return lst
-  }
-
-  /* Retourne true si l'utilisateur est "manager" du couple svc / org ***********/
-  const isManager = (svc, org) : boolean => {
-    for (const [,c] of mySafeCreds.value)
-      if (c.docCl === 'Org' && c.docId === '1' && c.org === org && c.svc === svc) return true
-    return false
+    return s
   }
 
   /* Retourne la Map des Credential dont l'id est citée dans le profile *************/
@@ -1744,7 +1718,7 @@ export const useSafeStore = defineStore('safe', () => {
     autoRevokeCreds,
     setAboutProfile, updateProfiles /* ??? */,
     caseFilter,
-    managedOrgs, managedOrgs2, isManager, adminForSvcOrg,
+    managedOrgs, isManager, adminForSvcOrg,
     getCreds, getCredOn,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,

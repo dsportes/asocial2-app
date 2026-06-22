@@ -264,6 +264,7 @@ export class FormType {
 
   constructor (type: string, categ: string, key: string, creds: string[]) {
     this.type = type
+    this.categ = categ
     this.key = key
     this.creds = creds
     FormType.formTypes.set(type, this)

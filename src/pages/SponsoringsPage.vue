@@ -2,18 +2,38 @@
 <div>
   <div class="column items-center q-pa-sm">
 
-    <div v-if="!ui.currentCase.zoomed" class="pwmd">
+    <div v-if="!ui.currentForm.zoomed" class="pwmd">
 
-      <div v-for="(cas, idx) in cases" :key="cas.caseId" :class="dkli(idx) + ' q-pa-xs'">
-        <case-line v-model="cases[idx]" :selected="isCurrent(cas)"
-          @zoom="selCas(cas, idx)"/>
+      <div v-for="(form, idx) in forms" :key="form.formId" 
+        :class="clcase(form, idx) + ' q-my-sm full-width cursor-pointer select'"
+        @click="selForm(form, idx)">
+      <div class="row items-center full-width">
+        <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + form.svc)}}</div>
+        <div class="col-5 ellipsis text-right text-bold">{{ form.typeEd }}</div>
+        <div class="col-3 row items-center q-gutter-xs">
+          <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
+          <div class="font-mono text-bold" :color="stclr[form.status]">
+            {{ $t('FORMstatus_' + form.status) }}</div>
+        </div>
       </div>
+      <div class="row items-center full-width">
+        <div class="col-4 text-center text-italic ellipsis">{{form.org}}</div>
+        <div class="col-8 text-right ellipsis">{{dhcool(form.v)}}</div>
+      </div>
+      <div class="row items-center">
+        <div class="col-5 titre-md text-italic ellipsis">{{ $t('FORMuser') }}</div>
+        <div class="col-7 q-pl-sm font-mono">
+          <span>{{ form.userId }}</span>
+          <span v-if="form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+        </div>
+      </div>
+    
+    </div>
 
     </div>
 
     <div v-else class="pwmd">
-      <form-zoom v-if="ui.currentCase.cas"/>
-      <div v-else class="titre-md diag">{{$t('INVnotfound')}}</div>
+      <form-zoom class="q-mt-sm" :formui.currentForm.form" @done="onDone"/>
     </div>
   </div>
 </div>
@@ -26,89 +46,82 @@ import { ref, Ref, watch, computed } from 'vue'
 import stores from '../stores/all'
 import { $t, dkli } from '../src-fw/util'
 import { $Form } from '../src-fw/documents'
-import CaseLine from '../components-fw/CaseLine.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 
+const stic = ['', 'person', 'person_shield', 'check', 'close']
+const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
+
 const ui = stores.ui
-const session = stores.session
-const sf = stores.safeStore
 
-const manager = computed(() => ui.sponsoringsPage.manOpt && ui.sponsoringsPage.manOpt.value)
-const filter = ref(null)
+const isCurrent = (form: $Form) =>
+  ui.currentForm.form && (ui.currentForm.form.formId === form.formId)
 
-const ok: Ref<boolean> = computed(() => {
-  const e = ui.sponsoringsPage.err
-  return (e === 0 || (manager.value && e === 3))
-})
+const clcase = (form: $Form, idx: number) => dkli(idx) + (isCurrent(form) ? ' current ' : ' nocurrent ')
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const u = ui.navBar
   switch (n) {
-    case 1 : { if (u.idx < cases.value.length - 1) u.idx++; break }
+    case 1 : { if (u.idx < forms.value.length - 1) u.idx++; break }
     case 2 : { if (u.idx > 0) u.idx--; break }
     case 3 : { if (u.idx !== 0) u.idx = 0; break }
-    case 4 : { if (u.idx < cases.value.length - 1) u.idx = cases.value.length - 1; break }
+    case 4 : { if (u.idx < forms.value.length - 1) u.idx = forms.value.length - 1; break }
   }
-  const cas = cases.value[u.idx]
-  selCas(cas, u.idx)
+  const form = forms.value[u.idx]
+  selForm(form, u.idx)
 }
 
-const cases: Ref<Case[]> = ref([])
+const forms: Ref<$Form[]> = ref([])
 
-const selCas = (cas: Case, idx: number) => {
-  const u = ui.currentCase
-  u.cas = cas
+const selForm = (form: $Form, idx: number) => {
+  const u = ui.currentForm
+  u.form = form
   u.zoomed = true
-  u.newTab = ''
   const nb = ui.navBar
   nb.idx = idx
-  nb.nb = cases.value.length
+  nb.nb = forms.value.length
 }
 
-const selCas0 = () => {
-  const u = ui.currentCas
-  u.cas = null
+const selForm0 = () => {
+  const u = ui.currentForm
+  u.form = null
   u.zoomed = false
-  u.newTab = ''
   const nb = ui.navBar
   nb.idx = 0
-  nb.nb = cases.value.length
+  nb.nb = forms.value.length
 }
 
-const isCurrent = (cas: Case) => ui.currentCase.cas && (ui.currentCase.cas.caseId === cas.caseId)
-
-// Cas mise à jour : rafraichir la liste
+// forms mise à jour : rafraichir la liste
 const onUpdate = () => {
-  const u = ui.currentCase
-  const acId = u.cas.caseId
+  const u = ui.currentForm
+  const acId = u.form.formId
   u.zoomed = false
   setTimeout(async () => {
-    cases.value = await Case.getList(session.currentSvc, session.currentOrg, manager.value)
+    forms.value = await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
     let idx = -1
-    let cas: Case = null
-    for(let i = 0; i < cases.value.length; i++) {
-      cas = cases.value[i]
-      if (cas && cas.caseId === acId) { idx = i; break}
+    let form: $Form = null
+    for(let i = 0; i < forms.value.length; i++) {
+      form = forms.value[i]
+      if (form && form.formId === acId) { idx = i; break}
     }
-    if (idx !== -1) selCas(cas, idx)
+    if (idx !== -1) selForm(form, idx)
     else {
-      if (cases.value.length)
-        selCas(cases.value[0], 0)
-      else selCas0()
+      if (forms.value.length)
+        selForm(forms.value[0], 0)
+      else selForm0()
     }
   }, 100)
 }
 
 const reset0 = () => {
-  selCas0()
-  filter.value = manager.value ? null : sf.caseFilter(session.svc, session.org)
-  ui.currentCase.fnOnUpdate = onUpdate
+  selForm0()
+  ui.currentForm.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
   ui.navBar.hasback = true
 }
 
-watch(() => ui.sponsoringsPage.time, async () => {
-  cases.value = !ok ? [] : await Case.getList(session.currentSvc, session.currentOrg, filter.value)
+watch(() => ui.currentForm.pft, async () => {
+  const u = ui.currentForm
+  forms.value = await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
   reset0()
 })
 

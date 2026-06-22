@@ -5,7 +5,7 @@
     :disable="disable">
     <q-menu anchor="bottom left" self="top left"
       transition-show="scale" transition-hide="scale">
-      <q-list dense style="min-width: 150px">
+      <q-list dense style="min-width: 250px">
         <q-item v-for="c in categs" :key="c.value" clickable>
           <q-item-section>{{c.label}}</q-item-section>
           <q-item-section side>
@@ -13,10 +13,10 @@
           </q-item-section>
             <q-menu anchor="center middle"
               transition-show="flip-right" transition-hide="flip-left">
-              <q-list dense style="min-width: 200px">
+              <q-list dense style="min-width: 250px">
                 <q-item v-for="ft in getFT(c.value)" :key="ft.value.type"
                   v-close-popup
-                  dense clickable @click="emit('select', ft.value)">
+                  dense clickable @click="sel(ft)">
                   <q-item-section>{{ft.label}}</q-item-section>
                 </q-item>
               </q-list>
@@ -41,16 +41,16 @@ type LabVal = {
 
 const props = defineProps({
   disable: Boolean,
-  title: String
+  title: String,
+  allow: Object // fac : set des FormTypes autorisés
 })
 
 const emit = defineEmits(['select'])
 
-const categs: Ref<LabVal[]> = []
+const categs: Ref<LabVal[]> = ref([])
 const ftmap: Ref<Map<string, Map<string, FormType>>> = ref(new Map())
 
 /*
-new FormType('default', 'ad', 'k1', ['A'])
 new FormType('membrecodir', 'ad', 'k1', ['A'])
 new FormType('membreredaction', 'c1', 'k1', ['A'])
 new FormType('auteur', 'auteurs', 'k2', ['Readction/1'])
@@ -60,9 +60,11 @@ new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
 
 const init = () => {
   for(const [type, ft] of FormType.formTypes) {
-    let e = ftmap.value.get(ft.categ)
-    if (!e) { e = new Map<string, FormType>(); ftmap.set(ft.categ, e)}
-    e.set(type, ft)
+    if (!props.allow || props.allow.has(type)) {
+      let e = ftmap.value.get(ft.categ)
+      if (!e) { e = new Map<string, FormType>(); ftmap.value.set(ft.categ, e)}
+      e.set(type, ft)
+    }
   }
   const l: LabVal[] = []
   for(const c of ftmap.value.keys()) l.push({ label: $t('CATEG_' + c), value: c })
@@ -74,10 +76,16 @@ const init = () => {
 const getFT = (c: string) : LabVal[] => {
   const l: LabVal[] = []
   const x = ftmap.value.get(c)
-  for(const [type, ft] of x) l.push({ label: $t('TYPE_' + type), value: ft })
+  for(const [type, ft] of x) 
+    if (!props.allow || props.allow.has(type))
+      l.push({ label: $t('TYPE_' + type), value: ft })
   l.sort((a, b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : 0))
   for(const x of l) x.label = x.label.substring(2)
   return l
+}
+
+const sel = (ft) => {
+  emit('select', ft.value)
 }
 
 init()

@@ -4,15 +4,14 @@
     <div class="tbs row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
         @back="ui.currentEvent.zoomed = false"/>
-      <type-menu v-model="formType" :title="FORMnewd" @select="selx = true"/>
+      <type-menu :title="$t('FORMnewd')" @select="selFt"/>
     </div>
-    <div v-if="selx" class="q-my-sm row items-center q-gutter-sm full-width">
-      <btn-cond class="col-1" icon="close" flat @ok="selx = false"/>
-      <select-svc class="col-6" v-model="svc"/>
-      <select-org class="col-4"/>
-      <btn-cond class="col-1" icon="check" :label="$('ok')"
-        :disable="!svc || !session.orgs.c"
-        padding="0 xs" @ok="oknew"/>
+    <div v-if="formType">
+      <div class="titre-md text-bold text-italic">{{ ($t('TYPE_' + formType.type)).substring(2) }}</div>
+      <div class="q-my-sm row items-center q-gutter-sm full-width">
+        <btn-cond class="col-1" icon="close" flat @ok="formType = null"/>
+        <select-svcorg class="col-11" @select="oknew"/>
+      </div>
     </div>
   </div>
 
@@ -20,7 +19,7 @@
     :title="$t('FORMnewd', [$t('TYPE_' + type).substring(0,2)])"
     hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
-      <form-zoom :form="form" comment="" @done="onDone"/>
+      <form-zoom :form="form" comment="" isDemand @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -41,15 +40,16 @@ import NavBar from '../components-fw/NavBar.vue'
 import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 import { $Form, $FormObj } from '../src-fw/documents'
-import { FormType } from '../src-fw/doctypes'
+import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 
 const ui = stores.ui
-const session = stores.session
 const sf = stores.safe
 
-const selx = ref(false)
-const svc = ref('')
-const formType: Ref<FormType> = ref(null)
+const formType = ref(null)
+
+const selFt = (ft) => {
+  formType.value = ft
+}
 
 const dialogs = reactive({
   newdemand: false
@@ -57,7 +57,7 @@ const dialogs = reactive({
 
 const form = ref(null)
 
-const oknew = () => {
+const oknew = (soa: { svc: string, org: string, admin: boolean}) => {
   // Création du Form
   ui.setEditing()
   dialogs.newdemand = true
@@ -74,6 +74,8 @@ const oknew = () => {
     msgT: null
   }
   form.value = $Form.new(obj)
+  form.value.svc = soa.svc
+  form.value.org = soa.org
 }
 
 const close = async () => {

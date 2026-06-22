@@ -10,36 +10,38 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <div>
   <div class="q-mb-sm column items-center q-gutter-xs">
     <btn-cond v-if="creating" no-caps
-      :label="$t('FORMbtnnocr' + (byU ? 'd' : 'p'))" @ok="noCreate"/>
+      :label="$t('FORMbtnnocr' + (isDemand ? 'd' : 'p'))" @ok="noCreate"/>
     <btn-cond v-if="!creating && ui.editingInCourse" no-caps
       :label="$t('FORMbtnundo')" @ok="undo"/>
-    <btn-cond v-if="byU && creating" no-caps
+    <btn-cond v-if="isDemand && creating" no-caps
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 6, chg: curev })"/>
-    <btn-cond v-if="byT && creating" no-caps
+    <btn-cond v-if="!isDemand && creating" no-caps
       :label="$t('FORMbtnrecp')" @ok="emit('action', { a: 7, chg: curev })"/>
-    <btn-cond v-if="byU && editable" no-caps :disable="!hasChg"
+    <btn-cond v-if="isDemand && editable" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 2, chg: curev })"/>
-    <btn-cond v-if="byU && editable" no-caps :disable="!validU"
+    <btn-cond v-if="isDemand && editable" no-caps :disable="!validU"
       :label="$t('FORMbtnokp')" @ok="emit('action', { a: 3, chg: curev })"/>
-    <btn-cond v-if="byT && editable" no-caps :disable="!hasChg"
+    <btn-cond v-if="!isDemand && editable" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 4, chg: curev })"/>
-    <btn-cond v-if="byT && editable" no-caps :disable="!validT"
+    <btn-cond v-if="!isDemand && editable" no-caps :disable="!validT"
       :label="$t('FORMbtnokp')" @ok="emit('action', { a: 5, chg: curev })"/>
-    <btn-cond v-if="editable && byU" no-caps
+    <btn-cond v-if="isDemand && editable" no-caps
       :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1, chg: {} })" color="warning"/>
   </div>
+
+  <div v-if="diag" class="q-my-sm msg">{{ $t('FORMdiag_' + diag) }}</div>
 
   <!-- Messages --------------------------------------------------------------->
   <div v-if="visU">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
-    <md-editor v-if="byU" model="curev.msg" :lgmax="500" :text="form.msgU" modetxt
+    <md-editor v-if="isDemand" model="curev.msg" :lgmax="500" :text="form.msgU" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgU" :text="form.msgU" modetxt/>
   </div>
 
   <div v-if="visT">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
-    <md-editor v-if="byT" model="curev.msg" :lgmax="500" :text="form.msgT" modetxt
+    <md-editor v-if="!isDemand" model="curev.msg" :lgmax="500" :text="form.msgT" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgT" :text="form.msgT" modetxt/>
   </div>
@@ -52,8 +54,8 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
       <div class="col-1 titre-md text-italic">{{$t('FORMdem_1')}}</div>
       <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMdem_2')"
         v-model="curev.etc.pseudo" :initval="form.etcU.pseudo"
-        :disable="!byU" @validate="onChange"/>
-      <btn-cond v-if="!byU" class="col-1" round icon="content_paste"
+        :disable="!isDemand || !editable" @validate="onChange"/>
+      <btn-cond v-if="!isDemand || !editable" class="col-1" round icon="content_paste"
         @ok="curev.etc.pseudo = form.etcT.pseudo"/>
     </div>
 
@@ -61,8 +63,8 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
       <div class="col-1 titre-md text-italic">{{$t('FORMdprop_1')}}</div>
       <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMprop_2')"
         v-model="curev.etc.pseudo" :initval="form.etcT.pseudo"
-        :disable="!byT" @validate="onChange"/>
-      <btn-cond v-if="!byT" class="col-1" round icon="content_paste"
+        :disable="isDemand || !editable" @validate="onChange"/>
+      <btn-cond v-if="isDemand || !editable" class="col-1" round icon="content_paste"
         @ok="curev.etc.pseudo = form.etcU.pseudo"/>
     </div>
   </div>
@@ -84,7 +86,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { $Form } from '../src-fw/documents'
@@ -102,7 +104,8 @@ import { $Form } from '../src-fw/documents'
 const emit = defineEmits(['action'])
 
 const props = defineProps({
-  form: $Form
+  form: $Form,
+  isDemand: Boolean
 })
 
 const sf = stores.safe
@@ -116,14 +119,12 @@ const curev = reactive({
 })
 
 const hasChg = computed(() => curev.etcc || curev.msgc )
-const diag = ref(0)
+const diag = ref('')
 
 const editable = computed(() => props.form.status === 1 || props.form.status === 2 )
 const creating = computed(() => props.form.status === 0 )
-const byU = computed(() => props.form.userId === sf.userId)
-const byT = computed(() => props.form.userId !== sf.userId)
-const visU = computed(() => props.form.status === 0 && byU) || (props.form.status > 0)
-const visT = computed(() => props.form.status === 0 && byT) || (props.form.status > 0)
+const visU = computed(() => props.form.status === 0 && props.isDemand) || (props.form.status > 0)
+const visT = computed(() => props.form.status === 0 && !props.isDemand) || (props.form.status > 0)
 
 const validU = computed(() =>
   (props.form.status === 1 || props.form.status === 2) &&
@@ -144,12 +145,11 @@ const undo = async () => {
 const onChange = async () => {
   hasChg.value = false
   diag.value = ''
-  if (byU.value) {
+  if (props.isDemand) {
     diag.value = await props.form.checkEtc(curev.etc)
     curev.etcc = curev.msg !== props.form.msgU || props.form.eqEtc(props.form.etcU, curev.etc)
     curev.msgc = curev.msg !== props.form.msgU
-  }
-  if (byT.value) {
+  } else {
     diag.value = await props.form.checkEtc(curev.etc)
     curev.etcc = curev.msg !== props.form.msgT || props.form.eqEtc(props.form.etcT, curev.etc)
     curev.msgc = curev.msg !== props.form.msgT
@@ -161,12 +161,11 @@ const onChange = async () => {
 
 const init = async () => {
   if (!creating.value) ui.resetEditing()
-  if (byU.value) {
+  if (props.isDemand) {
     curev.msg = props.form.msgU
     curev.etc = props.form.etcU !== null ? props.form.cloneEtc(props.form.etcU) :
       (props.form.etcT ? props.form.cloneEtc(props.form.etcT) : props.form.initEtc(true))
-  }
-  if (byT.value) {
+  } else {
     curev.msg = props.form.msgT
     curev.etc = props.form.etcT !== null ? props.form.cloneEtc(props.form.etcT) :
       (props.form.etcU ? props.form.cloneEtc(props.form.etcU) : props.form.initEtc(false))

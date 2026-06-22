@@ -37,12 +37,15 @@
         </div>
     </div>
 
-    <div v-if="!byU" class="row items-center">
+    <div v-if="!isDemand" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ form.userId }}</div>
+      <div class="col-7 q-pl-sm font-mono">
+        <span>{{ form.userId }}</span>
+        <span v-if="form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+      </div>
     </div>
 
-    <div v-if="byU" class="row items-center">
+    <div v-if="isDemand" class="row items-center">
       <div class="col-5 titre-md text-italic">
         <span>{{ $t('FORMcomment') }}</span>
         <btn-cond class="q-ml-sm" icon="edit" round
@@ -56,7 +59,7 @@
 
   </div>
 
-  <form-etc v-if="form" @action="action"/>
+  <form-etc v-if="form" @action="action" :form="form" :isDemand="isDemand"/>
 
   <dialog-std0 v-if="dialogs.editcomment" v-model="dialogs.editcomment"
     :title="$t('FORMeditcom')">
@@ -87,6 +90,7 @@ const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']
 
 const props = defineProps({
   form: $Form,
+  isDemand: Boolean,
   comment: String
 })
 
@@ -95,8 +99,7 @@ const emits = defineEmits(['done'])
 const sf = stores.safe
 const ui = stores.ui
 
-const byU = computed(() => props.form.userId === sf.userId)
-const notView = computed(() => byU.value && props.form.lv < props.form.v)
+const notView = computed(() => props.isDemand && props.form.lv < props.form.v)
 
 const dialogs = reactive({
   editcomment: false

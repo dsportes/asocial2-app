@@ -7,7 +7,7 @@ import { keyToB64, keyFromB64, toUrl, fromUrl } from './b64'
 import stores from '../stores/all'
 import { MDOperation, Operation } from './operation'
 import { $t } from './util'
-import { Major } from '../app/major'
+import { Major } from '../../temp/major'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
