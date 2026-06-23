@@ -14,7 +14,7 @@
     <div style="color:transparent;width:3px">*<q-tooltip>DemandsPage</q-tooltip></div>
   </q-toolbar>
  
-  <demands-hdr :class="sty() + 'q-my-sm'"/>
+  <demands-hdr :class="sty() + 'q-py-sm'"/>
 
 </div>
 </template>

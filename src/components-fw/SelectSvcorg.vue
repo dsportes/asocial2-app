@@ -2,12 +2,13 @@
 event : 'select', svc (org est session.orgs.c)
 -->
 <template>
-  <div class="row items-center q-gutter-xs">
-    <select-svc v-model="svc" class="col"/>
-    <select-org class="col-auto"/>
-    <btn-cond class="col-auto" icon="check" :label="$t('ok')"
-      :disable="!svc || !session.orgs.c"
-      padding="0 xs" @ok="ok"/>
+  <div class="row q-gutter-xs">
+    <btn-cond icon="close" round color="warning"
+      @ok="ko"/>
+    <select-svc v-model="svc"/>
+    <select-org v-model="org"/>
+    <btn-cond icon="check" round color="primary"
+      :disable="!svc || !org" @ok="ok"/>
   </div>
   <div v-if="diag" class="msg">{{ $t('nosvcorg') }}</div>
 </template>
@@ -24,20 +25,27 @@ import SelectOrg from '../components-fw/SelectOrg.vue'
 const session = stores.session
 const sf = stores.safe
 
-const svc = ref('')
-const diag = ref(false)
 const emit = defineEmits(['select'])
+
+const svc = ref(session.currentSvc)
+const org = ref(session.currentOrg)
+const diag = ref(false)
+
 const ok = async () => {
-  const op = await opOfSvcOrg(svc.value, session.orgs.c)
+  const op = await opOfSvcOrg(svc.value, org.value)
   if (op) {
     const soa = {
       svc: svc.value,
-      org: session.orgs.c,
+      org: org.value,
       admin: sf.auth.admins.indexOf(svc.value + '.' + op) !== -1
     }
     emit('select', soa)
   }
   else diag.value = true
+}
+
+const ko = () => {
+  emit('select', null)
 }
 
 </script>

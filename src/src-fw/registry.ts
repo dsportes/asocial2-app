@@ -19,7 +19,10 @@ export class Registry {
 
   static newD (name: string, data: Object) {
     const cl = Registry.getD(name, data)
-    return cl ? new cl() : null
+    if (cl) {
+      const obj = new cl()
+      return obj
+    } else return null
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
@@ -36,13 +39,17 @@ export class Registry {
   }
 }
 
-export abstract class Document {
+export class $Document {
 
   _clazz: string = ''
   _dt: DocType | null = null
   _pk: string = ''
   deleted?: boolean = false
   v: number = 0
+
+  constructor () {
+    // console.log('$Document')
+  }
 
   propertyAsSet (name: string) : Set<string> {
     const v = this[name]

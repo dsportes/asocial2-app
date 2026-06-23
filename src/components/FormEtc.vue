@@ -50,22 +50,22 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   <div v-if="form.type === 'membrecodir'" class="q-my-md">
     <div class="titre-md q-mt-md">{{  $t('TYPE_membrecodir_pseudo') }}</div>
 
-    <div v-if="visU" class="row" items-center>
+    <div v-if="visU && curev.etc" class="row" items-center>
       <div class="col-1 titre-md text-italic">{{$t('FORMdem_1')}}</div>
       <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMdem_2')"
-        v-model="curev.etc.pseudo" :initval="form.etcU.pseudo"
+        v-model="curev.etc.pseudo" :initval="form.etcU ? (form.etcU.pseudo || '') : ''"
         :disable="!isDemand || !editable" @validate="onChange"/>
       <btn-cond v-if="!isDemand || !editable" class="col-1" round icon="content_paste"
-        @ok="curev.etc.pseudo = form.etcT.pseudo"/>
+        @ok="curev.etc.pseudo = (form.etcT && form.etcT.pseudo ? form.etcT.pseudo : '')"/>
     </div>
 
-    <div v-if="visT" class="row" items-center>
+    <div v-if="visT && curev.etc" class="row" items-center>
       <div class="col-1 titre-md text-italic">{{$t('FORMdprop_1')}}</div>
-      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMprop_2')"
-        v-model="curev.etc.pseudo" :initval="form.etcT.pseudo"
+      <input-b class="col-10 font-mono text-bold" size="pseudo" :prefix="$t('FORMprop_2')"
+        v-model="curev.etc.pseudo" :initval="form.etcT ? (form.etcT.pseudo || '') : ''"
         :disable="isDemand || !editable" @validate="onChange"/>
       <btn-cond v-if="isDemand || !editable" class="col-1" round icon="content_paste"
-        @ok="curev.etc.pseudo = form.etcU.pseudo"/>
+        @ok="curev.etc.pseudo = (form.etcU && form.etcU.pseudo ? form.etcU.pseudo : '')"/>
     </div>
   </div>
 
@@ -89,6 +89,9 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 import { ref, reactive, computed, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
+import InputB from '../components-fw/InputB.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
+import MdEditor from '../components-fw/MdEditor.vue'
 import { $Form } from '../src-fw/documents'
 
 /* action:
@@ -143,37 +146,39 @@ const undo = async () => {
 }
 
 const onChange = async () => {
-  hasChg.value = false
+  const f = props.form
   diag.value = ''
   if (props.isDemand) {
-    diag.value = await props.form.checkEtc(curev.etc)
-    curev.etcc = curev.msg !== props.form.msgU || props.form.eqEtc(props.form.etcU, curev.etc)
-    curev.msgc = curev.msg !== props.form.msgU
+    diag.value = await f.checkEtc(curev.etc)
+    curev.etcc = curev.msg !== f.msgU || f.eqEtc(f.etcU, curev.etc)
+    curev.msgc = curev.msg !== f.msgU
   } else {
-    diag.value = await props.form.checkEtc(curev.etc)
-    curev.etcc = curev.msg !== props.form.msgT || props.form.eqEtc(props.form.etcT, curev.etc)
-    curev.msgc = curev.msg !== props.form.msgT
+    diag.value = await f.checkEtc(curev.etc)
+    curev.etcc = curev.msg !== f.msgT || f.eqEtc(f.etcT, curev.etc)
+    curev.msgc = curev.msg !== f.msgT
   }
   if (!creating.value) {
     if (hasChg.value) ui.setEditing(); else ui.resetEditing()
   }
 }
 
-const init = async () => {
+const init = () => {
+  const f = props.form
   if (!creating.value) ui.resetEditing()
   if (props.isDemand) {
-    curev.msg = props.form.msgU
-    curev.etc = props.form.etcU !== null ? props.form.cloneEtc(props.form.etcU) :
-      (props.form.etcT ? props.form.cloneEtc(props.form.etcT) : props.form.initEtc(true))
+    curev.msg = f.msgU
+    const x = f.initEtc(true)
+    curev.etc = f.etcU !== null ? f.cloneEtc(f.etcU) :
+      (f.etcT ? f.cloneEtc(f.etcT) : x)
   } else {
-    curev.msg = props.form.msgT
-    curev.etc = props.form.etcT !== null ? props.form.cloneEtc(props.form.etcT) :
-      (props.form.etcU ? props.form.cloneEtc(props.form.etcU) : props.form.initEtc(false))
+    curev.msg = f.msgT
+    curev.etc = f.etcT !== null ? f.cloneEtc(f.etcT) :
+      (f.etcU ? f.cloneEtc(f.etcU) : f.initEtc(false))
   }
-  await onChange()
+  setTimeout(async () => await onChange(), 1)
 }
 
-onMounted(async () => { await init() })
+init()
 
 </script>
 

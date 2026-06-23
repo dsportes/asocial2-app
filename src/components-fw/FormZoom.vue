@@ -2,7 +2,7 @@
 <div>
   <div class="q-ma-sm a-pa-sm bord1 full-width">
     <div class="font-mono fs-sm">{{ form.formId }}</div>
-    <div class="q-my-sm text-bold titre-lg">{{ form.typeEd }}</div>
+    <!--div class="q-my-sm text-bold titre-lg">{{ form.typeEd }}</div-->
 
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
@@ -31,7 +31,7 @@
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
       <div class="col-7 row items-center q-gutter-xs">
-        <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
+        <q-icon :name="stic[form.status]" :color="stclr[form.status]" size="24px"/>
         <div class="font-mono text-bold" :color="stclr[form.status]">
           {{ $t('FORMstatus_' + form.status) }}</div>
         </div>
@@ -83,6 +83,8 @@ import { $t, dhcool } from '../src-fw/util'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import FormEtc from '../components/FormEtc.vue'
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { $Form, Curev } from '../src-fw/documents'
 
 const stic = ['add', 'person', 'person_shield', 'check', 'close']

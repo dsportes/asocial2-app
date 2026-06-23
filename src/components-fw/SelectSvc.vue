@@ -2,10 +2,9 @@
 -->
 <template>
   <q-select v-model="svcloc" dense options-dense filled
-    style="width:150px"
+    style="width:150px; height:40px"
     transition-show="flip-up" transition-hide="flip-down"
     :options="opts"/>
-    <!--:label="$t('service')"-->
 </template>
 
 <script setup lang="ts">

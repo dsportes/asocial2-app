@@ -241,7 +241,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
-    setEditing, resetEditing, resolveEditing, editingInCourse,
+    setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage,
     emojiIndex, setEmoji
   }

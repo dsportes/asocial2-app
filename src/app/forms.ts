@@ -38,7 +38,8 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 class $Form_membrecodir extends $Form {
   constructor () { super() }
-  async initEtc (byU: boolean) : Promise<Object> {
+  
+  initEtc (byU: boolean) : Object {
     return { pseudo: this.opts && this.opts.alias ? this.opts.alias : 'toto' }
   }
   cloneEtc (etcX: Object | null) : Object | null {

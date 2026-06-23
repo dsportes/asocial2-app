@@ -1,7 +1,7 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { Registry } from './registry'
+import { Registry, $Document } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
@@ -208,7 +208,7 @@ export type $FormObj = {
 Document `Form` hébergé dans la DB spécifique de `svc / org`.
 Sous-classes applicatives $Form_type par "type"
 */
-export class $Form extends Document {
+export class $Form extends $Document {
   /* Par commodité svc et org sont ajoutés au $Form lu (par Get ou List)
   du service. */
   svc?: string
@@ -231,11 +231,15 @@ export class $Form extends Document {
   opts?: any = null // options éventuelles de création
   _aesU?: Uint8Array | null = null
 
-  get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
+  get typeEd () { 
+    return $t('TYPE_' + this.type).substring(2)
+  }
+
+  constructor () { super() }
 
   /* Méthodes surchargées par type *******************************
   ****************************************************************/
-  async initEtc (byU: boolean) : Promise<Object> {
+  initEtc (byU: boolean) : Object {
     return {}
   }
 

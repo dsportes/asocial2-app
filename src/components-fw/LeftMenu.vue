@@ -12,8 +12,8 @@ Contrôlé par ui.leftMenu
       <help-button page="help"/>
     </q-toolbar>
     <div class="row items-center q-gutter-sm">
-      <select-svc @change="svcsel"/>
-      <select-org @change="console.log(session.orgs.c)"/>
+      <select-svc v-model="svc" @change="console.log(svc)"/>
+      <select-org v-model="org" @change="console.log(org)"/>
     </div>
   </q-header>
   <q-page-container>
@@ -62,7 +62,7 @@ Contrôlé par ui.leftMenu
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed, reactive } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 import { ErrorTest } from '../src-fw/operations'
@@ -85,6 +85,9 @@ const svcsel = (v) => {
 const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
+
+const org = ref()
+const svc = ref()
 
 const dialogs = reactive({
   SessionClose: false
