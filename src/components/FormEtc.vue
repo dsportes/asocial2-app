@@ -8,28 +8,39 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 -->
 <template>
 <div>
+  
+  <div v-if="diag1 !== ''" class="q-my-sm msg byel">
+    {{ $t('FORMdiag_' + diag1) }}</div>
+  <div v-if="diag1 === '' && diag2 !== ''" class="q-my-sm msg bred">
+    {{ $t('FORMdiag_' + diag2) }}</div>
+
   <div class="q-mb-sm column items-center q-gutter-xs">
     <btn-cond v-if="creating" no-caps
       :label="$t('FORMbtnnocr' + (isDemand ? 'd' : 'p'))" @ok="noCreate"/>
     <btn-cond v-if="!creating && ui.editingInCourse" no-caps
       :label="$t('FORMbtnundo')" @ok="undo"/>
     <btn-cond v-if="isDemand && creating" no-caps
-      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 6, chg: curev })"/>
+      :label="$t('FORMbtnrecd')" :disable="diag1 !== ''"
+      @ok="emit('action', { a: 6, chg: curev })"/>
     <btn-cond v-if="!isDemand && creating" no-caps
-      :label="$t('FORMbtnrecp')" @ok="emit('action', { a: 7, chg: curev })"/>
-    <btn-cond v-if="isDemand && editable && !creating" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 2, chg: curev })"/>
-    <btn-cond v-if="isDemand && editable && !creating" no-caps :disable="!validU"
-      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 3, chg: curev })"/>
-    <btn-cond v-if="!isDemand && editable && !creating" no-caps :disable="!hasChg"
-      :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 4, chg: curev })"/>
-    <btn-cond v-if="!isDemand && editable && !creating" no-caps :disable="!validT"
-      :label="$t('FORMbtnokp')" @ok="emit('action', { a: 5, chg: curev })"/>
+      :label="$t('FORMbtnrecp')" :disable="diag1 !== ''"
+      @ok="emit('action', { a: 7, chg: curev })"/>
     <btn-cond v-if="isDemand && editable && !creating" no-caps
-      :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1, chg: {} })" color="warning"/>
+      :label="$t('FORMbtnrecd')" :disable="!hasChg || diag1 !== ''"
+      @ok="emit('action', { a: 2, chg: curev })"/>
+    <btn-cond v-if="isDemand && editable && !creating" no-caps 
+      :label="$t('FORMbtnokp')" :disable="!validU"
+      @ok="emit('action', { a: 3, chg: curev })"/>
+    <btn-cond v-if="!isDemand && editable && !creating" no-caps
+      :label="$t('FORMbtnrecd')" :disable="!hasChg || diag1 !== ''"
+      @ok="emit('action', { a: 4, chg: curev })"/>
+    <btn-cond v-if="!isDemand && editable && !creating" no-caps
+      :label="$t('FORMbtnokp')" :disable="!validT"
+      @ok="emit('action', { a: 5, chg: curev })"/>
+    <btn-cond v-if="isDemand && editable && !creating" no-caps
+      :label="$t('FORMbtncancel')" 
+      @ok="emit('action', { a: 1, chg: {} })" color="warning"/>
   </div>
-
-  <div v-if="diag" class="q-my-sm msg">{{ $t('FORMdiag_' + diag) }}</div>
 
   <!-- Messages --------------------------------------------------------------->
   <div v-if="visU">
@@ -54,7 +65,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
     <div v-if="visU" class="row q-px-xs" items-center>
       <input-b class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
-        v-model="pseudo" :initval="curev.etc.pseudo || ''"
+        v-model="pseudo" noval :initval="curev.etc.pseudo || ''"
         :disable="!isDemand || !editable"/>
       <btn-cond v-if="!isDemand || !editable" class="col-auto" round icon="content_paste"
         @ok="curev.etc.pseudo = (form.etcT && form.etcT.pseudo ? form.etcT.pseudo : ''); onChange()"/>
@@ -62,7 +73,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
     <div v-if="visT" class="row q-px-xs" items-center>
       <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="FORMprop_2"
-        v-model="pseudo" :initval="curev.etc.pseudo || ''"
+        v-model="pseudo" noval :initval="curev.etc.pseudo || ''"
         :disable="isDemand || !editable"/>
       <btn-cond v-if="isDemand || !editable" class="col-1" round icon="content_paste"
         @ok="curev.etc.pseudo = (form.etcU && form.etcU.pseudo ? form.etcU.pseudo : ''); onChange()"/>
@@ -122,13 +133,14 @@ const curev = reactive({
 })
 
 const pseudo = reactive({ inp: '', err: '' })
-watch(pseudo, (v) => {
+watch(pseudo, async (v) => {
   curev.etc.pseudo = v.inp
-  onChange()
+  await onChange()
 })
 
 const hasChg = computed(() => curev.etcc || curev.msgc )
-const diag = ref('')
+const diag1 = ref('')
+const diag2 = ref('')
 
 const editable = computed(() => props.form.status < 3 )
 const creating = computed(() => props.form.status === 0 )
@@ -137,10 +149,12 @@ const visT = computed(() => props.form.status === 0 && !props.isDemand) || (prop
 
 const validU = computed(() =>
   (props.form.status === 1 || props.form.status === 2) &&
-  !diag.value && props.form.eqEtc(curev.etc, props.form.etcT))
+  !diag1.value && !diag2.value &&
+  props.form.eqEtc(curev.etc, props.form.etcT))
 const validT = computed(() =>
   (props.form.status === 1 || props.form.status === 2) &&
-  !diag.value && props.form.eqEtc(curev.etc, props.form.etcU))
+  !diag1.value && !diag2.value &&
+  props.form.eqEtc(curev.etc, props.form.etcU))
 
 const noCreate = async () => {
   const b = await ui.mayClose()
@@ -153,13 +167,12 @@ const undo = () => {
 
 const onChange = async () => {
   const f = props.form
-  diag.value = ''
+  diag1.value = fnCheck[f.type]()
+  diag2.value = diag1.value ? '' : await f.checkEtc(curev.etc)
   if (props.isDemand) {
-    diag.value = await f.checkEtc(curev.etc)
     curev.etcc = curev.msg !== f.msgU || f.eqEtc(f.etcU, curev.etc)
     curev.msgc = curev.msg !== f.msgU
   } else {
-    diag.value = await f.checkEtc(curev.etc)
     curev.etcc = curev.msg !== f.msgT || f.eqEtc(f.etcT, curev.etc)
     curev.msgc = curev.msg !== f.msgT
   }
@@ -183,9 +196,31 @@ const init = () => {
 
 init()
 
+/**********************************************************************************/
+const fnCheck = {
+  membrecodir: () : string => {
+    return pseudo.err ? 'pseudo' : ''
+  },
+
+  membreredaction: () : string => {
+    return ''
+  },
+
+  auteur: () : string => {
+    return ''
+  },
+
+  coauteur: () : string => {
+    return ''
+  }
+
+}
+/**********************************************************************************/
+
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.bord1 { border: 1px solid $grey-5; border-radius: 5px; }
+.bred { border: 2px solid $negative; border-radius: 5px; }
+.byel { border: 2px solid var(--q-msgbg); border-radius: 5px; }
 </style>

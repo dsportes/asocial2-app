@@ -23,6 +23,7 @@
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
+import SdNb from '../components-fw/SdNb.vue'
 
 const ui = stores.ui
 

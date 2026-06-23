@@ -56,7 +56,7 @@
       <q-expansion-item v-model="g1m" group="g1"
         :class="g1m ? 'bord2' : ''">
         <template v-slot:header>
-          <bar-title prefix="INVtit_1" large/>
+          <bar-title prefix="HPinvtit_1" large/>
         </template>
         <div v-if="g1m" class="q-ml-sm">
           <login-create class="full-width"
@@ -68,7 +68,7 @@
       <q-expansion-item v-model="g2m" group="g1"
         :class="g2m ? 'bord2' : ''">
         <template v-slot:header>
-          <bar-title prefix="INVtit_2" large/>
+          <bar-title prefix="HPinvtit_2" large/>
         </template>
         <div v-if="g2m" class="q-ml-sm">
           <login-create class="full-width" hasaccount
@@ -151,11 +151,8 @@ import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
-import SafeTools from '../components-fw/SafeTools.vue'
 import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
-import ModeIncognito from '../components-fw/ModeIncognito.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'

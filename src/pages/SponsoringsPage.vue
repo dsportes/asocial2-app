@@ -91,9 +91,9 @@ const selForm0 = () => {
 }
 
 // forms mise à jour : rafraichir la liste
-const onUpdate = () => {
+const onUpdate = (newId?: string) => {
   const u = ui.currentForm
-  const acId = u.form.formId
+  const old = newId || u.form.formId
   u.zoomed = false
   setTimeout(async () => {
     forms.value = await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
@@ -101,7 +101,7 @@ const onUpdate = () => {
     let form: $Form = null
     for(let i = 0; i < forms.value.length; i++) {
       form = forms.value[i]
-      if (form && form.formId === acId) { idx = i; break}
+      if (form && form.formId === old) { idx = i; break}
     }
     if (idx !== -1) selForm(form, idx)
     else {

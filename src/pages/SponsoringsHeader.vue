@@ -67,9 +67,7 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 import NavBar from '../components-fw/NavBar.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 import { SOA } from '../stores/ui-store'
-import { ICVS } from '../stores/safe-store' 
 import { $Form, $FormObj } from '../src-fw/documents'
-import { MDOperation } from '../src-fw/operation'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -119,11 +117,8 @@ const openNewP = () => {
 
 const valA = async () => {
   userId.value = ''
-  const sha = await Crypt.strongHash(alias.value, false, true)
-  const op = new MDOperation('$mdUserGetICVS')
-  op.args['userId'] = Crypt.shaS(sha)
-  const ret = await op.post() as ICVS
-  const icvs = ret ? ret['icvs'] : null
+  const hsha = Crypt.shaS(await Crypt.strongHash(alias.value, false, true))
+  const icvs = await sf.mdUserGetICVS(hsha)
   if (!icvs) {
     await ui.diagDisplay($t('APnouser'), true)
     return
@@ -164,7 +159,7 @@ const onDone = (ok: boolean) => { // si false pas créé
   formType.value = ''
   dialogs.newproposal = false
   if (ok)
-    cf.value.fnUpdate(form.value.formId)
+    cf.value.fnOnUpdate(form.value.formId)
 }
 
 </script>

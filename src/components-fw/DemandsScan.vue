@@ -101,7 +101,7 @@ const onUpdate = (newId?: string) => {
   const old = newId || u.event.eventId
   u.zoomed = false
   setTimeout(async () => {
-    events.value = $MDEvent.listEvents()
+    events.value = await $MDEvent.listEvents()
     let idx = -1
     let event = null
     for(let i = 0; i < events.value.length; i++) {

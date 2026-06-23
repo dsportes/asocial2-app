@@ -72,6 +72,7 @@
 
   <got-it/>
   <confirm-quit/>
+  <confirm-close/>
   <dialog-exc/>
   <dialog-help/>
 
@@ -114,6 +115,7 @@ import BtnCond from './components-fw/BtnCond.vue'
 
 import GotIt from './dialogs-fw/GotIt.vue'
 import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
+import ConfirmClose from './dialogs-fw/ConfirmClose.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 

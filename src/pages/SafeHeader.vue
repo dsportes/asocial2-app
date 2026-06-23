@@ -60,7 +60,7 @@
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
-import { ref, reactive } from 'vue'
+import { reactive } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
@@ -79,7 +79,6 @@ import flowers from '../assets/flowers.png'
 
 const $t = useI18n().t
 const sf = stores.safe
-const config = stores.config
 const session = stores.session
 const ui = stores.ui
 

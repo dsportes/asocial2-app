@@ -87,7 +87,7 @@ const onDone = (ok: boolean) => { // si false pas créé
   formType.value = ''
   dialogs.newdemand = false
   if (ok)
-    ui.currentEvent.fnUpdate(form.value.formId)
+    ui.currentEvent.fnOnUpdate(form.value.formId)
 }
 
 </script>

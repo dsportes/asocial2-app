@@ -1,6 +1,6 @@
 
 import stores from '../src/stores/all'
-import { Invitation, MsgVal } from '../src/src-fw/invitation'
+import { Invitation, MsgVal } from './invitation'
 // import { $CredentialA } from '../src-fw/documents'
 import { $t } from '../src/src-fw/util'
 import { Operation } from '../src/src-fw/operation'

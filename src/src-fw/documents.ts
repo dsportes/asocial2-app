@@ -412,7 +412,7 @@ export class $Form extends $Document {
   }
 
   async createByU (args: Curev) {
-
+    console.log(args)
   }
 
 }

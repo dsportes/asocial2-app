@@ -583,6 +583,32 @@ Suppression sélective des utilisateurs et de leurs sessions.
   HPadminA_ko: 'Vous n\'êtes pas enregistré comme Administrtaur Technique par l\'opérateur [{0}] pour le service [{1}].',
   HPadminA_lst: 'Liste des couples service / opérateur dont vous êtes Administrateur Technique.',
   HPadminkosvc: 'Ce service n\'est assuré par cet opérateur.',
+  HPinvtit_1: 'Déposer une demande',
+  HPinvtit_1_label: 'Déposer une demande (invitation ...)',
+  HPinvtit_1_bub: `### Déposer une demande...
+- d'invitation à un groupe ... 
+- de création d'un compte ...
+- d'obtention d'un pouvoir ...
+- etc,
+en choisissant le type de demande, l'organisation concernée et les choix associés.
+`,
+  HPinvtit_2: 'Lister mes demandes',
+  HPinvtit_2_label: 'Suivre mes demandes en cours',
+  HPinvtit_2_bub: `## Suivre mes demandes
+- quelle proposition m'a été faite,
+- les adapter,
+- etc,
+`,
+
+  HPinvco_1: 'Je n\'ai pas de compte',
+  HPinvco_2: 'J\'ai un compte',
+  HPinvco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',
+  HPinvnc_bub: `## Disposer d'un compte est nécessaire...
+pour déposer et suivre des demandes d'invitation.
+Une **Safe Box** est créée pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
+- qui est le seul à connaître la clé qui **crypte** son contenu,
+- la _Safe Box_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
+`,
 
   // SafeHome
   SFHnewr: 'Nouvelle demande',
@@ -824,143 +850,6 @@ Vous pourrez vous connecter après succès de la restauration.
   MNOsearch1: 'Recherche en cours ...',
   MNOinvalid: 'Un administrateur a révoqué certains de vos pouvoirs de "manager": ils vont être "nettoyés.',
 
-
-  INVop_1: 'Nouvelle invitation créée.',
-  INVop_2: 'Invitation mise à jour.',
-  INVop_3: 'Invitation supprimée.',
-  INVop_4: 'Invitation validée (et de fait supprimée).',
-  INVop_5: 'L\'invitation a été validée par le service central. ' +
-    ' Toutefois suite à un incident technique elle pourrait encore apparaître "à valider".',
-  INVvalOMst_1: 'Echec de validation de l\'invitation à être "manager".(BUG probable [etc]',
-  INVvalOMst_2: 'Echec de validation de l\'invitation à être "manager".(BUG probable [args]',
-  INVvalbug: 'BUG : fonction ["{0}"] de validation de l\'invitation non trouvée.',
-  INVcred: 'Pouvoir insuffisant ("manager" ou "sponsor" requis)',
-  INVopret_1: '(BUG probable) - L\'invitation est inconnue.',
-  INVopret_2: '(BUG probable) - Vous n\'avez aucun des pouvoirs l\'autorisant.',
-  INVopret_3: '(BUG probable) - Opération réservée à l\'utilisateur ayant demandé l\'invitation.',
-  INVopret_4: '(BUG probable) - L\'invitation n\'est pas dans un état qui permette cette opération.',
-
-  INVtitzoom: 'Invitation "{0}"',
-  INVdetail: 'Détail de l\'invitation',
-  INVtitval: 'Validation de l\'invitation "{0}"',
-  INVx_v: 'Date-heure de dernière mise à jour (ou création):',
-  INVval_y: 'Invitation validable',
-  INVval_n: 'Invitation NON validable',
-  INVx_major: 'Type majeur:',
-  INVx_minor: 'Type mineur:',
-  INVx_user: 'ID du demandeur:',
-  INVx_label: 'Label associé:',
-  INVx_tab: 'Ardoise partagée utilisateur / sponsor(s)',
-  INVx_opts: 'Options de l\'invitation',
-  INVx_none: '#### (aucune)',
-  INVxnotv_s: 'Version pas encore consultée par l\'utilisateur.',
-  INVbtn_val: 'Valider',
-  INVbtn_rec: 'Editer l\'ardoise',
-  INVbtn_del: 'Renoncer et supprimer',
-  INVsvcorg_no: 'Vous ne pouvez traiter aucune demande ni faire des propositions.',
-  INVsvcorg_on: 'Services et organisations dont vous pouvez traiter les demandes ou faire des propositions.',
-
-  INVtit_1: 'Nouvelle demande',
-  INVtit_1_label: 'Nouvelle demande d\'invitation',
-  INVtit_1_bub: `### Déposer une nouvelle demande...
-- d'invitation, de création d'une entité, de pouvoir ...
-bla bla
-`,
-  INVtit_2: 'Lister',
-  INVtit_2_label: 'Suivre mes demandes récentes',
-  INVtit_2_bub: `## Suivre mes demandes d'invitation
-bla bla
-`,
-
-  INVco_1: 'Je n\'ai pas de compte',
-  INVco_2: 'J\'ai un compte',
-  INVco_3: 'Vous avez un compte puisque vous l\'avez utilisé pour déposer une demande d\'invitation il y a certain temps.',
-  INVnc_bub: `## Disposer d'un compte est nécessaire...
-pour déposer et suivre des demandes d'invitation.
-Une **Safe Box** est créée pour mémoriser en toute sécurité les données "de sécurité" de son propriétaire:
-- qui est le seul à connaître la clé qui **crypte** son contenu,
-- la _Safe Box_ est hébergé, soit sur le **Site générique**, soit sur le site spécifique de son choix.
-`,
-  INVmajor_c: 'Code majeur',
-  INVmajor_label: 'Quelle invitation sollicitez-vous ?',
-  INVmajor_bub: `## Quelle invitation sollicitez-vous ?
-bla bla
-`,
-  INVtabedit: 'Changer le texte de l\'ardoise',
-  INVtabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
-  INVtabu_bub: `### Ardoise partagée avec les sponsors
-- qui suis-je, ma motivation ...
-- les remarques des sponsors successifs
-`,
-  INVminor_c_label: 'Code "sponsoring"',
-  INVminor_label: 'Spécifiquement pour quel "sponsor" ?',
-  INVminor_bub: `## Spécifiquement pour quel "sponsor" ?
-bla bla
-`,
-  INVrec: 'Enregistrer la demande',
-  INVvalCf_txt: `### Valider cette invitation.
-En cas de confirmation, l\'invitation sera validée selon les termes affichés puis supprimée.
-
-Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
-`,
-
-  INVcancelCf_txt: `### Supprimer cette invitation.
-En cas de confirmation,
-- elle disparaitra définitivement,
-- elle ne pourra pas être réactivée ni traitée par un _sponsor_.
-
-Sinon ce dialogue s'effacera et l'invitation continuera d'exister (du moins quelques jours).
-`,
-  INVcancelCf_tit: 'Supprimer cette invitation ?',
-  INVcancelCf_0: 'Je la laisse vivante',
-  INVcancelCf_1: 'Je la supprime',
-  INVsponsor_0: 'Vous n\'avez pas les pouvoirs requis pour traiter cette demande d\'invitation.',
-  INVsponsor_1: 'En tant que "manager" vous pouvez traiter toutes les demandes d\'invitation.',
-  INVsponsor_2: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0}].',
-  INVsponsor_3: 'Vous avez un pouvoir de "sponsor" pour traiter les demandes d\'invitation [{0} / {1}].',
-
-  CAStopic_c: 'Thématique',
-  CAStopic_label: 'Thématique de votre demande',
-  CAStopic_bub: `## Quelle est la thématique de votre demande
-bla bla
-`,
-  CASST_1: 'Cas inconnu (peut-être un BUG).',
-  CASST_2: 'Tentative d\'accès à un cas qui n\'est pas le votre (peut-être un BUG).',
-  CASST_3: 'Tentative d\'accès à un cas sans en avoir le pouvoir de sponsoring correspondant (peut-être un BUG).',
-  CAStabedit: 'Changer le texte de l\'ardoise',
-  CAStabu_label: 'Ardoise partagée avec les sponsors (au moins 10 signes)',
-  CAStabu_bub: `### Ardoise partagée avec les sponsors
-- qui suis-je, ma motivation ...
-- les remarques des sponsors successifs
-`,
-  CASabout_label: 'Commentaire strictement personnel',
-  CASabout_bub: `### Commentaire strictement personnel
-Ce commentaire n'est lisible que par vous-même, il est crypté par la clé de votre _Safe Box_.
-`,
-  CASnocases: 'Pas de cas en cours actuellement.',
-
-  CASso_1: 'Organisation non définie',
-  CASso_2: 'Pour cette organisation aucun opérateur ne supporte ce service.',
-  CASso_3: 'Impoosible de traiter les propositions de "managers", vous n\'êtes pas "administrateur" de ce service pour l\'opérateur gérant cette organisation.',
-  CASaddprop: 'Nouvelle proposition',
-  CASlistprop: 'Lister les cas ouverts',
-  CASstatus_0: 'Status annulé',
-  CASstatus_1: 'Dernière édition par U',
-  CASstatus_2: 'Dernière édition par un sponsor',
-  CASstatus_3: 'Status traité',
-
-  CASeditprop: 'Modifier la proposition',
-
-  SUBnosub_label: 'Cette thématique n\'a pas de "sujet" spécifique.',
-  SUBnosub_bub: `### Cette thématique n'a pas de "sujet" spécifique
-  bla bla
-`,
-  SUBtype_label: 'Choisir un "sujet" précisant la thématique.',
-  SUBtype_bub: `### Choisir un "sujet" précisant la thématique
-  bla bla
-`,
-  SUBlist: 'Sujets proposés',
-
   SLCtit_bub: `### Sélection d'un code dans la liste proposée
 Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'intérieur du code recherché:
 - la liste affichée se rétrécit au fur et à mesure de la sélection demandée.
@@ -1188,68 +1077,6 @@ bla bla
   EX_reload: 'Relancer l\'application',
   EX_continue: 'Poursuivre la session quand même',
 
-
-
-  INVsponsoring: `### Qui peut traiter une demande d'invitation ?
-Un utilisateur est un "sponsor" valide pour une demande quand,
-- c'est un "manager" de l'organisation: il est _sponsor universel_.
-- il a un pouvoir **Sponsor** pour le code majeur de la demande: il peut traiter également toutes les demandes ayant un code _mineur_.
-- il a un pouvoir **Sponsor** spécifiquement pour le couple **code majeur . code mineur**.
-`,
-  INVvalidable: `### Une demande d'invitation peut être validée ...
-par l'utilisateur concerné quand un sponsor a traité la demande (ou proposer de lui-même une invitation.
-Quand une demande est validable, ses options retenues (s'il y en a) sont affichées ci-dessous.
-`,
-
-  'INV$Org.manager': 'Manager de l\'organisation',
-  'INV$Org.manager_label': 'Manager de l\'organisation',
-  'INV$Org.manager_bub': `### Manager de l\'organisation
-bla bla
-`,
-
-  INV$Auteur: 'Auteur',
-  INV$Auteur_label: 'Auteur d\'articles',
-  INV$Auteur_bub: `### Auteur d\'articles
-bla bla
-`,
-  INV$Auteur_nom_label: 'Nom ou pseudonyme de l\'auteur à créer',
-  INV$Auteur_nom_ph: 'Victor Hugo',
-
-  INV$Auteur_tit: 'Options \'acceptation d\'une demande d\'invitation "Auteur"',
-  INV$Auteur_1: 'SANS création de pouvoir de "sponsoring"',
-  INV$Auteur_2: 'Pouvoir de "sponsoring" générale "Auteur"',
-  INV$Auteur_3: 'Pouvoir de "sponsoring" pour une catégorie "d\'Auteur"',
-  INV$Auteur_4: 'Création d\'un nouvel auteur',
-  INV$Auteur_5: 'SANS nouvel auteur',
-  INV$Auteur_e: 'Une invitation SANS nouvel auteur et SANS création de pouvoir, n\'a pas de sens.',
-  INV$Auteur_categ_label: 'Catégorie d\'auteurs',
-  INV$Auteur_t1: `Un **auteur** sera créé:
-  - ID: _{0}_
-`,
-  INV$Auteur_t0: `Auncun **auteur** ne sera créé.
-`,
-  INV$Auteur_t2: `### Pouvoir de _Sponsoring_
-- un pouvoir sera accordé afin de pouvoir répondre aux demandes de création d'auteur.
-- il pourra être transmis.
-`,
-  INV$Auteur_t3: `### Pouvoir de _Sponsoring_
-- un pouvoir sera accordé afin de pouvoir répondre aux demandes de création d'auteur de la seule catégorie **{0}**.
-- il pourra être transmis.
-`,
-
-  INV$Relecteur: 'Relecteur',
-  INV$Relecteur_label: 'Relecteur d\'articles',
-  INV$Relecteur_bub: `### Relecteur d\'articles
-bla bla
-`,
-  INV$Cedit: 'Membre du comité éditorial',
-  INV$Cedit_label: 'Membre du comité éditorial',
-  INV$Cedit_bub: 'Membre du comité éditorial',
-
-  INVERR$tab: 'Le texte de l\'ardoise doit avoir au moins 10 signes.',
-
-
-
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
 
@@ -1263,7 +1090,8 @@ bla bla
   TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_coauteur_det: 'Surnom: {1}',
 
-  FORMdiag_lgp: 'Un "pseudo" doit avoir entre 8 et 24 caractères.',
+  FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
+  FORMdiag_pseudo: '"pseudo" non valide.',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

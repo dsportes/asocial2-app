@@ -1,11 +1,11 @@
 <template>
 <div>
   <div v-if="!hasaccount" class="row full-width items-center">
-    <btn-bubble :text="$t('INVnc_bub')"/>
-    <q-radio v-model="flag.f1" :val="true" :label="$t('INVco_1')" />
-    <q-radio v-model="flag.f2" :val="true" :label="$t('INVco_2')" />
+    <btn-bubble :text="$t('HPinvnc_bub')"/>
+    <q-radio v-model="flag.f1" :val="true" :label="$t('HPinvco_1')" />
+    <q-radio v-model="flag.f2" :val="true" :label="$t('HPinvco_2')" />
   </div>
-  <div v-else class="titre-md text-italic">{{$t('INVco_3')}}</div>
+  <div v-else class="titre-md text-italic">{{$t('HPinvco_3')}}</div>
 
   <login-block v-if="flag.f2" class="full-width q-pl-sm"
     @logged="emit('done', true)"/>

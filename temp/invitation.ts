@@ -1,13 +1,13 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { Crypt } from './crypt'
-import { keyToB64, keyFromB64, toUrl, fromUrl } from './b64'
+import { Crypt } from '../src/src-fw/crypt'
+import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src/src-fw/b64'
 
-import stores from '../stores/all'
-import { MDOperation, Operation } from './operation'
-import { $t } from './util'
-import { Major } from '../../temp/major'
+import stores from '../src/stores/all'
+import { MDOperation, Operation } from '../src/src-fw/operation'
+import { $t } from '../src/src-fw/util'
+import { Major } from './major'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()

@@ -141,6 +141,7 @@ if (notView.value)
 8: renoncer à la création
 */
 const action = async (ev: { a: number, chg: Curev }) => {
+  ui.resetEditing()
   const x = ev.chg
   const f = props.form
   let ok = true
@@ -153,7 +154,6 @@ const action = async (ev: { a: number, chg: Curev }) => {
     case 6 : await f.createByU(x); break
     case 7 : await f.createByT(x); break
     case 8 : // renoncer à créer
-      ui.resetEditing()
       ok = false
       break
   }
