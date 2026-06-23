@@ -2,7 +2,7 @@
 event : 'select', svc (org est session.orgs.c)
 -->
 <template>
-  <div class="row q-gutter-xs">
+  <div class="row q-gutter-xs items-center">
     <btn-cond icon="close" round color="warning"
       @ok="ko"/>
     <select-svc v-model="svc"/>

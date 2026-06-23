@@ -78,7 +78,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
         size="md" icon="undo" color="none" round
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK"
-        :disable="disable || model.err !== ''"
+        :disable="disable || model.err !== ''" padding="0 xs"
         @ok="emit('validate', true)" />
       <!--btn-cond v-if="mayStar"
         size="md" icon="star" color="warning" round
@@ -160,6 +160,9 @@ const fill = (v) => {
 }
 
 const hasInitVal = computed(() => props.initval && props.initval.length )
+
+if (hasInitVal.value) model.value.inp = props.initval
+
 const chg = computed(() => !props.disable && hasInitVal.value && props.initval.value !== model.value.inp)
 const hint = computed(() =>
   $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))

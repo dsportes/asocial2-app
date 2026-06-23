@@ -17,15 +17,15 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 6, chg: curev })"/>
     <btn-cond v-if="!isDemand && creating" no-caps
       :label="$t('FORMbtnrecp')" @ok="emit('action', { a: 7, chg: curev })"/>
-    <btn-cond v-if="isDemand && editable" no-caps :disable="!hasChg"
+    <btn-cond v-if="isDemand && editable && !creating" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 2, chg: curev })"/>
-    <btn-cond v-if="isDemand && editable" no-caps :disable="!validU"
+    <btn-cond v-if="isDemand && editable && !creating" no-caps :disable="!validU"
       :label="$t('FORMbtnokp')" @ok="emit('action', { a: 3, chg: curev })"/>
-    <btn-cond v-if="!isDemand && editable" no-caps :disable="!hasChg"
+    <btn-cond v-if="!isDemand && editable && !creating" no-caps :disable="!hasChg"
       :label="$t('FORMbtnrecd')" @ok="emit('action', { a: 4, chg: curev })"/>
-    <btn-cond v-if="!isDemand && editable" no-caps :disable="!validT"
+    <btn-cond v-if="!isDemand && editable && !creating" no-caps :disable="!validT"
       :label="$t('FORMbtnokp')" @ok="emit('action', { a: 5, chg: curev })"/>
-    <btn-cond v-if="isDemand && editable" no-caps
+    <btn-cond v-if="isDemand && editable && !creating" no-caps
       :label="$t('FORMbtncancel')" @ok="emit('action', { a: 1, chg: {} })" color="warning"/>
   </div>
 
@@ -34,14 +34,16 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   <!-- Messages --------------------------------------------------------------->
   <div v-if="visU">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
-    <md-editor v-if="isDemand" model="curev.msg" :lgmax="500" :text="form.msgU" modetxt
+    <md-editor v-if="isDemand" model="curev.msg" 
+      :lgmax="500" :rows="3" :text="form.msgU" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgU" :text="form.msgU" modetxt/>
   </div>
 
   <div v-if="visT">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
-    <md-editor v-if="!isDemand" model="curev.msg" :lgmax="500" :text="form.msgT" modetxt
+    <md-editor v-if="!isDemand" model="curev.msg" 
+      :lgmax="500" :rows="3" :text="form.msgT" modetxt
       editable @ok="onChange"/>
     <md-editor v-else model="form.msgT" :text="form.msgT" modetxt/>
   </div>
@@ -50,22 +52,20 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   <div v-if="form.type === 'membrecodir'" class="q-my-md">
     <div class="titre-md q-mt-md">{{  $t('TYPE_membrecodir_pseudo') }}</div>
 
-    <div v-if="visU && curev.etc" class="row" items-center>
-      <div class="col-1 titre-md text-italic">{{$t('FORMdem_1')}}</div>
-      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="$t('FORMdem_2')"
-        v-model="curev.etc.pseudo" :initval="form.etcU ? (form.etcU.pseudo || '') : ''"
-        :disable="!isDemand || !editable" @validate="onChange"/>
-      <btn-cond v-if="!isDemand || !editable" class="col-1" round icon="content_paste"
-        @ok="curev.etc.pseudo = (form.etcT && form.etcT.pseudo ? form.etcT.pseudo : '')"/>
+    <div v-if="visU" class="row q-px-xs" items-center>
+      <input-b class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
+        v-model="pseudo" :initval="curev.etc.pseudo || ''"
+        :disable="!isDemand || !editable"/>
+      <btn-cond v-if="!isDemand || !editable" class="col-auto" round icon="content_paste"
+        @ok="curev.etc.pseudo = (form.etcT && form.etcT.pseudo ? form.etcT.pseudo : ''); onChange()"/>
     </div>
 
-    <div v-if="visT && curev.etc" class="row" items-center>
-      <div class="col-1 titre-md text-italic">{{$t('FORMdprop_1')}}</div>
-      <input-b class="col-10 font-mono text-bold" size="pseudo" :prefix="$t('FORMprop_2')"
-        v-model="curev.etc.pseudo" :initval="form.etcT ? (form.etcT.pseudo || '') : ''"
-        :disable="isDemand || !editable" @validate="onChange"/>
+    <div v-if="visT" class="row q-px-xs" items-center>
+      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="FORMprop_2"
+        v-model="pseudo" :initval="curev.etc.pseudo || ''"
+        :disable="isDemand || !editable"/>
       <btn-cond v-if="isDemand || !editable" class="col-1" round icon="content_paste"
-        @ok="curev.etc.pseudo = (form.etcU && form.etcU.pseudo ? form.etcU.pseudo : '')"/>
+        @ok="curev.etc.pseudo = (form.etcU && form.etcU.pseudo ? form.etcU.pseudo : ''); onChange()"/>
     </div>
   </div>
 
@@ -86,7 +86,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
@@ -121,10 +121,16 @@ const curev = reactive({
   etcc: false
 })
 
+const pseudo = reactive({ inp: '', err: '' })
+watch(pseudo, (v) => {
+  curev.etc.pseudo = v.inp
+  onChange()
+})
+
 const hasChg = computed(() => curev.etcc || curev.msgc )
 const diag = ref('')
 
-const editable = computed(() => props.form.status === 1 || props.form.status === 2 )
+const editable = computed(() => props.form.status < 3 )
 const creating = computed(() => props.form.status === 0 )
 const visU = computed(() => props.form.status === 0 && props.isDemand) || (props.form.status > 0)
 const visT = computed(() => props.form.status === 0 && !props.isDemand) || (props.form.status > 0)
@@ -141,8 +147,8 @@ const noCreate = async () => {
   if (b) emit('action', { a: 8, chg: {}})
 }
 
-const undo = async () => {
-  await init()
+const undo = () => {
+  init()
 }
 
 const onChange = async () => {
@@ -167,13 +173,10 @@ const init = () => {
   if (!creating.value) ui.resetEditing()
   if (props.isDemand) {
     curev.msg = f.msgU
-    const x = f.initEtc(true)
-    curev.etc = f.etcU !== null ? f.cloneEtc(f.etcU) :
-      (f.etcT ? f.cloneEtc(f.etcT) : x)
+    curev.etc = f.etcU ? f.cloneEtc(f.etcU) : (f.etcT ? f.cloneEtc(f.etcT) : f.initEtc(true))
   } else {
     curev.msg = f.msgT
-    curev.etc = f.etcT !== null ? f.cloneEtc(f.etcT) :
-      (f.etcU ? f.cloneEtc(f.etcU) : f.initEtc(false))
+    curev.etc = f.etcT ? f.cloneEtc(f.etcT) : (f.etcU ? f.cloneEtc(f.etcU) : f.initEtc(false))
   }
   setTimeout(async () => await onChange(), 1)
 }

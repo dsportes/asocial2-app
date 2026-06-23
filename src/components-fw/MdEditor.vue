@@ -22,7 +22,7 @@
 
         <q-input v-if="!md" type="textarea"
           class="q-pa-xs font-mono" v-model="textelocal" :rows="rows || 10"
-          :readonly="!editable" :placeholder="textelocal==='' ? (placeholder || $t('EMDph')) : ''"/>
+          :readonly="!editable" :placeholder="placeholder"/>
         <sd-nb v-else :text="textelocal" class="q-pa-xs bord1" :style="mhs(0)"/>
 
   </div>
@@ -53,7 +53,7 @@
       <q-page-container>
         <q-input v-if="!md" type="textarea" v-model="textelocal" autogrow
           :class="sty() + ' font-mono'"
-          :readonly="!editable" :placeholder="textelocal==='' ? (placeholder || $t('EMDph')) : ''"/>
+          :readonly="!editable" :placeholder="placeholder"/>
         <sd-nb v-else :class="sty() + ' bord1'" :text="textelocal"/>
       </q-page-container>
     </q-layout>
