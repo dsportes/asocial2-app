@@ -1,65 +1,115 @@
 <template>
 <div>
   <div class="q-ma-sm a-pa-sm bord1 full-width">
-    <div class="font-mono fs-sm">{{ form.formId }}</div>
-    <!--div class="q-my-sm text-bold titre-lg">{{ form.typeEd }}</div-->
+    <div class="font-mono fs-sm">{{ fctx.form.formId }}</div>
+    <!--div class="q-my-sm text-bold titre-lg">{{ fctx.form.typeEd }}</div-->
 
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ form.org }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ fctx.form.org }}</div>
     </div>
 
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMsvc') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + form.svc)}}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + fctx.form.svc)}}</div>
     </div>
 
-    <div v-if="form.v !== 0" class="row items-center">
+    <div v-if="fctx.form.v !== 0" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <div class="font-mono">{{ dhcool(form.v) }}</div>
+        <div class="font-mono">{{ dhcool(fctx.form.v) }}</div>
         <div v-if="notView" class='titre-md text-bold text-warning text-italic'>
           {{$t('FORMnotv_u')}}</div>
       </div>
     </div>
 
-    <div v-if="form.v !== 0" class="row items-center">
+    <div v-if="fctx.form.v !== 0" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ dhcool(form.maxLife * 1000) }}</div>
+      <div class="col-7 q-pl-sm font-mono">{{ dhcool(fctx.form.maxLife * 1000) }}</div>
     </div>
 
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
       <div class="col-7 row items-center q-gutter-xs">
-        <q-icon :name="stic[form.status]" :color="stclr[form.status]" size="24px"/>
-        <div class="font-mono text-bold" :color="stclr[form.status]">
-          {{ $t('FORMstatus_' + form.status) }}</div>
+        <q-icon :name="stic[fctx.form.status]" :color="stclr[fctx.form.status]" size="24px"/>
+        <div class="font-mono text-bold" :color="stclr[fctx.form.status]">
+          {{ $t('FORMstatus_' + fctx.form.status) }}</div>
         </div>
     </div>
 
-    <div v-if="!isDemand" class="row items-center">
+    <div v-if="!fctx.isDemand" class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <span>{{ form.userId }}</span>
-        <span v-if="form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+        <span>{{ fctx.form.userId }}</span>
+        <span v-if="fctx.form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
       </div>
     </div>
 
-    <div v-if="isDemand" class="row items-center">
+    <div v-if="fctx.isDemand" class="row items-center">
       <div class="col-5 titre-md text-italic">
         <span>{{ $t('FORMcomment') }}</span>
         <btn-cond class="q-ml-sm" icon="edit" round
           @ok="edCom"/>
       </div>
       <div class="col-7 q-pl-sm font-mono">
-        <div v-if="!comment">{{ $t('FORMnocomment') }}</div>
-        <scroll-md v-else height="50px" :text="comment"/>
+        <div v-if="!fctx.comment">{{ $t('FORMnocomment') }}</div>
+        <scroll-md v-else height="50px" :text="fctx.comment"/>
       </div>
     </div>
 
   </div>
 
-  <form-etc v-if="form" @action="action" :form="form" :isDemand="isDemand"/>
+  <div v-if="fst.diag1 !== ''" class="q-my-sm msg byel">
+    {{ $t('FORMdiag_' + fst.diag1) }}</div>
+  <div v-if="fst.diag1 === '' && fst.diag2 !== ''" class="q-my-sm msg bred">
+    {{ $t('FORMdiag_' + fst.diag2) }}</div>
+
+  <div class="q-mb-sm column items-center q-gutter-xs">
+    <btn-cond v-if="fst.creating" no-caps
+      :label="$t('FORMbtnnocr' + (fctx.isDemand ? 'd' : 'p'))" @ok="action(8)"/>
+    <btn-cond v-if="!fst.creating && ui.editingInCourse" no-caps
+      :label="$t('FORMbtnundo')" @ok="fst.undo"/>
+    <btn-cond v-if="fctx.isDemand && fst.creating" no-caps
+      :label="$t('FORMbtnrecd')" :disable="fst.diag1 !== ''"
+      @ok="action(6)"/>
+    <btn-cond v-if="!fctx.isDemand && fst.creating" no-caps
+      :label="$t('FORMbtnrecp')" :disable="fst.diag1 !== ''"
+      @ok="action(7)"/>
+    <btn-cond v-if="fctx.isDemand && fst.editable && !fst.creating" no-caps
+      :label="$t('FORMbtnrecd')" :disable="!hasChg || fst.diag1 !== ''"
+      @ok="action(2)"/>
+    <btn-cond v-if="fctx.isDemand && fst.editable && !fst.creating" no-caps
+      :label="$t('FORMbtnokp')" :disable="!validU"
+      @ok="action(3)"/>
+    <btn-cond v-if="!fctx.isDemand && fst.editable && !fst.creating" no-caps
+      :label="$t('FORMbtnrecd')" :disable="!hasChg || fst.diag1 !== ''"
+      @ok="action(4)"/>
+    <btn-cond v-if="!fctx.isDemand && fst.editable && !fst.creating" no-caps
+      :label="$t('FORMbtnokp')" :disable="!validT"
+      @ok="action(5)"/>
+    <btn-cond v-if="fctx.isDemand && fst.editable && !fst.creating" no-caps
+      :label="$t('FORMbtncancel')"
+      @ok="action(1)" color="warning"/>
+  </div>
+
+  <!-- Messages --------------------------------------------------------------->
+  <div v-if="fst.visU">
+    <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
+    <md-editor v-if="fctx.isDemand" model="fst.upd.msg"
+      :lgmax="500" :rows="3" :text="fctx.form.msgU" modetxt
+      editable @ok="fst.onChange"/>
+    <md-editor v-else model="fctx.form.msgU" :text="fctx.form.msgU" modetxt/>
+  </div>
+
+  <div v-if="fst.visT">
+    <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
+    <md-editor v-if="!fctx.isDemand" model="fst.upd.msg"
+      :lgmax="500" :rows="3" :text="fctx.form.msgT" modetxt
+      editable @ok="fst.onChange"/>
+    <md-editor v-else model="fctx.form.msgT" :text="fctx.form.msgT" modetxt/>
+  </div>
+
+  <form-etc/>
 
   <dialog-std0 v-if="dialogs.editcomment" v-model="dialogs.editcomment"
     :title="$t('FORMeditcom')">
@@ -85,23 +135,26 @@ import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormEtc from '../components/FormEtc.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { $Form, Curev } from '../src-fw/documents'
+import { $Form } from '../src-fw/documents'
+
+export type FormCtx = {
+  form: $Form,
+  isDemand: boolean,
+  comment: string
+}
 
 const stic = ['add', 'person', 'person_shield', 'check', 'close']
 const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']
 
-const props = defineProps({
-  form: $Form,
-  isDemand: Boolean,
-  comment: String
-})
+const fctx = defineModel<FormCtx>()
 
 const emits = defineEmits(['done'])
 
 const sf = stores.safe
 const ui = stores.ui
+const fst = stores.form
 
-const notView = computed(() => props.isDemand && props.form.lv < props.form.v)
+const notView = computed(() => fctx.value.isDemand && fctx.value.form.lv < fctx.value.form.v)
 
 const dialogs = reactive({
   editcomment: false
@@ -110,25 +163,42 @@ const dialogs = reactive({
 const newcom = ref('')
 
 const edCom = () => {
-  newcom.value = props.comment || ''
+  newcom.value = fctx.value.comment || ''
   dialogs.editcomment = true
 }
 
+const validU = computed(() =>
+  (fctx.value.form.status === 1 || fctx.value.form.status === 2) &&
+  !fst.diag1.value && !fst.diag2.value &&
+  fctx.value.form.eqEtc(fst.upd.etc, fctx.value.form.etcT))
+
+const validT = computed(() =>
+  (fctx.value.form.status === 1 || fctx.value.form.status === 2) &&
+  !fst.diag1.value && !fst.diag2.value &&
+  fctx.value.form.eqEtc(fst.upd.etc, fctx.value.form.etcU))
+
 const chgcomment = async () => {
-  if (newcom.value !== props.comment) {
-    if (props.form.v !== 0)
-      await props.form.mdEventUser(true, newcom.value)
+  if (newcom.value !== fctx.value.comment) {
+    if (fctx.value.form.v !== 0)
+      await fctx.value.form.mdEventUser(true, newcom.value)
     else // en création. On passe le comment à createByU
-      props.form.comment = newcom.value
+      fctx.value.form.comment = newcom.value
   }
   dialogs.editcomment = false
 }
 
-if (notView.value)
-  onMounted(async () => {
+watch(fctx, (v) => {
+  fst.startEdit(v)
+})
+
+fst.startEdit(fctx.value)
+
+onMounted(async () => {
+  if (notView.value) {
     await ui.diagDisplay($t('FORMnotv_u'))
-    await props.form.mdEventUser(true)
-  })
+    await fctx.value.form.mdEventUser(true)
+  }
+})
 
 /* action:
 1: cancel
@@ -140,22 +210,23 @@ if (notView.value)
 7: create T
 8: renoncer à la création
 */
-const action = async (ev: { a: number, chg: Curev }) => {
+const action = async (a: number) => {
   ui.resetEditing()
-  const x = ev.chg
-  const f = props.form
+  const f = fctx.value.form
+  const upd = fctx.value.upd
   let ok = true
-  switch (ev.a) {
+  switch (a) {
     case 1 : await f.cancelByU(); break
-    case 2 : await f.updateByU(x); break
-    case 3 : await f.validateByU(x); break
-    case 4 : await f.updateByT(x); break
-    case 5 : await f.validateByT(x); break
-    case 6 : await f.createByU(x); break
-    case 7 : await f.createByT(x); break
+    case 2 : await f.updateByU(upd); break
+    case 3 : await f.validateByU(upd); break
+    case 4 : await f.updateByT(upd); break
+    case 5 : await f.validateByT(upd); break
+    case 6 : await f.createByU(upd); break
+    case 7 : await f.createByT(upd); break
     case 8 : // renoncer à créer
       ok = false
       break
+    default: return
   }
   emits('done', ok)
 }

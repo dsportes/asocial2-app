@@ -37,10 +37,7 @@
   </div>
 
   <div v-if="ui.currentEvent.zoomed" class="pwsm">
-    <form-zoom class="q-mt-sm"
-      form="ui.currentEvent.form"
-      :comment="comment" isDemand
-      @done="onDone"/>
+    <form-zoom class="q-mt-sm" v-model="fctx" @done="onDone"/>
   </div>
 </div>
 </div>
@@ -61,6 +58,10 @@ const stic = ['', 'person', 'person_shield', 'check', 'close']
 const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
+
+const fctx = computed(() => {
+  return { form: ui.currentEvent.form, isDemand: true, comment: comment }
+})
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()

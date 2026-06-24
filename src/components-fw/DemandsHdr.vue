@@ -16,7 +16,7 @@
     :title="$t('FORMnewd', [form.typeEd])"
     hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
-      <form-zoom :form="form" comment="" isDemand @done="onDone"/>
+      <form-zoom v-model="fctx" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -40,6 +40,10 @@ import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 
 const ui = stores.ui
 const sf = stores.safe
+
+const fctx = computed(() => {
+  return { form: form.value, isDemand: true, comment: '' }
+})
 
 const formType = ref(null)
 

@@ -34,7 +34,7 @@
     </div>
     <div v-else class="titre-md text-italic">{{ $t('svcStatus_no3') }}</div>
 
-    <text-zoom class="q-my-xs" :label="$t('SFTexppub')" 
+    <text-zoom class="q-my-xs" :label="$t('SFTexppub')"
       :text="infopub" :rows="15"/>
   </div>
   <div v-else class="titre-md text-italic">{{$t('SFTguest')}}</div>
@@ -66,7 +66,8 @@ if (sf.userId && sf.auth.admins) {
   admins.value = x
 }
 
-const sorgs = ref(sf.managedOrgs2())
+//const sorgs = ref(sf.managedOrgs2()) TODO
+const sorgs = ref([])
 const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
 
 const revok = async (so) => {
