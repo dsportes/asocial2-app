@@ -180,7 +180,7 @@ export class $MDEvent {
   }
 }
 
-export type Curev = {
+export type Upd = {
   etc: Object,
   msg: string,
   msgc: boolean,
@@ -225,13 +225,13 @@ export class $Form extends $Document {
   msgU: Uint8Array | null = null // message écrit par U.
   msgT: Uint8Array | null = null // message écrit par le tiers.
 
-  comment?: Uint8Array | null = null // commentaire écrit et crypté par U.
+  comment?: string = '' // commentaire écrit et crypté par U.
   ch?: string = '' // challenge random de synchronisation initiale avec $MDEvent
   lv?: number = 0 // lastView par U
   opts?: any = null // options éventuelles de création
   _aesU?: Uint8Array | null = null
 
-  get typeEd () { 
+  get typeEd () {
     return $t('TYPE_' + this.type).substring(2)
   }
 
@@ -283,13 +283,16 @@ export class $Form extends $Document {
   // Pour création: envoi au service
   toFormObj () : $FormObj {
     const obj = {}
-    for (const p of $Form.lp1) obj[p] = this[p]
+    for (const p of $Form.lp2) obj[p] = this[p]
+    if (this.ch) obj['ch'] = this.ch
     return obj as $FormObj
   }
 
   chk () {
     return Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
   }
+
+  getCh () { return Crypt.rnd(9) }
 
   get ft () : FormType { return FormType.formTypes.get(this.type) || FormType.formTypes.get('default')}
 
@@ -355,7 +358,7 @@ export class $Form extends $Document {
     const sf = stores.safe
     const op = await opOfSvcOrg(svc, org)
     if (!op) return []
-    if (asAdmin) 
+    if (asAdmin)
       return sf.auth.admins.indexOf(svc + '.' + op) === -1 ? [] : ['A']
     const fi: Set<string> = new Set()
     for(const [,c] of sf.mySafeCreds.value) {
@@ -366,9 +369,9 @@ export class $Form extends $Document {
         if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docPk)
       }
       return fi.size === 0 ? [] : Array.from(fi)
-    }   
+    }
   }
-  
+
   /* Set des FormTypes qui peuvent être créés par un utilisateur
   */
   static async possibleFormTypes (svc: string, org: string, asAdmin: boolean) : Promise<Set<string>> {
@@ -411,8 +414,50 @@ export class $Form extends $Document {
     return lf
   }
 
-  async createByU (args: Curev) {
-    console.log(args)
+  async createByU (upd: Upd) {
+    const sf = stores.safe
+    const ui = stores.ui
+    this.etcU = upd.etc
+    this.msgU = encoder.encode(upd.msg)
+    await this.cryptMsgU()
+    this.ch = this.getCh()
+    const op = new Operation('FormCreateByU', this.svc, this.org)
+    try {
+      op.args._formObj = this.toFormObj()
+      const ret = await op.post()
+      if (ret.status) {
+        await ui.diagDisplay($t('STFO_' + ret.status))
+        return
+      }
+      const op2 = new MDOperation('$mdEventNew')
+      /*
+      const eventId = this.args['eventId'] as string
+      const type = this.args['type'] as string
+      const userId = this.args['userId'] as string
+      const svc = this.args['svc'] as string
+      const org = this.args['org'] as string
+      const ch = this.args['ch'] as string
+      const comment = this.args['comment'] as Uint8Array
+      */
+      op2.setArgs({
+        eventId: this.formId,
+        type: this.type,
+        userId: sf.userId,
+        svc: this.svc,
+        org: this.org,
+        ch: this.ch,
+        comment: this.comment ? await Crypt.crypt(sf.keyK, encoder.encode(this.comment)) : null
+      })
+      try {
+        await op2.post()
+      } catch(e2) {
+        op.ko(e2)
+        // TODO ???
+      }
+    } catch (e) {
+      op.ko(e)
+      return
+    }
   }
 
 }

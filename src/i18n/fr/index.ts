@@ -251,6 +251,9 @@ export default {
   STSF_12: 'Alias 2 identifie déjà une autre Safe Box.',
   STSF_13: 'Safe Box déjà créée mais avec un contenu différent (BUG ?)',
 
+  STFO_1: 'Demande / proposition déjà créée. (BUG probable).',
+  STFO_2: 'Tentative de création d\'une demande en votre nom par un autre utilisateur. (BUG probable).',
+
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
   RLopt1: 'Première Option : en général efficace. ',
@@ -586,7 +589,7 @@ Suppression sélective des utilisateurs et de leurs sessions.
   HPinvtit_1: 'Déposer une demande',
   HPinvtit_1_label: 'Déposer une demande (invitation ...)',
   HPinvtit_1_bub: `### Déposer une demande...
-- d'invitation à un groupe ... 
+- d'invitation à un groupe ...
 - de création d'un compte ...
 - d'obtention d'un pouvoir ...
 - etc,
