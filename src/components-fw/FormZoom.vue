@@ -45,15 +45,16 @@
       </div>
     </div>
 
-    <div v-if="fctx.isDemand" class="row items-center">
-      <div class="col-5 titre-md text-italic">
+    <div v-if="fctx.isDemand" class="row items-start">
+      <div class="col-5 titre-md text-italic items-center">
         <span>{{ $t('FORMcomment') }}</span>
         <btn-cond class="q-ml-sm" icon="edit" round
           @ok="edCom"/>
       </div>
       <div class="col-7 q-pl-sm font-mono">
-        <div v-if="!fctx.comment">{{ $t('FORMnocomment') }}</div>
-        <scroll-md v-else height="50px" :text="fctx.comment"/>
+        <div v-if="!fctx.comment && !fctx.form.comment">{{ $t('FORMnocomment') }}</div>
+        <scroll-md v-else height="50px" class="q-mx-xs bord1 q-pa-xs"
+          :text="fctx.comment || fctx.form.comment || ''"/>
       </div>
     </div>
 
@@ -76,13 +77,13 @@
       :label="$t('FORMbtnrecp')" :disable="fst.diag1 !== ''"
       @ok="action(7)"/>
     <btn-cond v-if="fctx.isDemand && fst.editable && !fst.creating" no-caps
-      :label="$t('FORMbtnrecd')" :disable="!hasChg || fst.diag1 !== ''"
+      :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
       @ok="action(2)"/>
     <btn-cond v-if="fctx.isDemand && fst.editable && !fst.creating" no-caps
       :label="$t('FORMbtnokp')" :disable="!validU"
       @ok="action(3)"/>
     <btn-cond v-if="!fctx.isDemand && fst.editable && !fst.creating" no-caps
-      :label="$t('FORMbtnrecd')" :disable="!hasChg || fst.diag1 !== ''"
+      :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
       @ok="action(4)"/>
     <btn-cond v-if="!fctx.isDemand && fst.editable && !fst.creating" no-caps
       :label="$t('FORMbtnokp')" :disable="!validT"
@@ -95,27 +96,28 @@
   <!-- Messages --------------------------------------------------------------->
   <div v-if="fst.visU">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
-    <md-editor v-if="fctx.isDemand" model="fst.upd.msg"
+    <md-editor v-if="fctx.isDemand" v-model="fst.upd.msg"
       :lgmax="500" :rows="3" :text="fctx.form.msgU" modetxt
-      editable @ok="fst.onChange"/>
+      editable okbtn @ok="fst.onChange"/>
     <md-editor v-else model="fctx.form.msgU" :text="fctx.form.msgU" modetxt/>
   </div>
 
   <div v-if="fst.visT">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
-    <md-editor v-if="!fctx.isDemand" model="fst.upd.msg"
+    <md-editor v-if="!fctx.isDemand" v-model="fst.upd.msg"
       :lgmax="500" :rows="3" :text="fctx.form.msgT" modetxt
-      editable @ok="fst.onChange"/>
-    <md-editor v-else model="fctx.form.msgT" :text="fctx.form.msgT" modetxt/>
+      editable okbtn @ok="fst.onChange"/>
+    <md-editor v-else v-model="fctx.form.msgT" :text="fctx.form.msgT" modetxt/>
   </div>
 
   <form-etc/>
 
   <dialog-std0 v-if="dialogs.editcomment" v-model="dialogs.editcomment"
-    :title="$t('FORMeditcom')">
+    :title="$t('FORMeditcom')" :vh="sm">
     <template #default>
-      <md-editor model="newcom" editable :lgmax="250" :text="newcom" modetxt
-        @ok="chgcomment"/>
+      <md-editor v-model="newcom" editable :lgmax="250"
+        :text="fctx.comment" modetxt :row="3"
+        okbtn @ok="chgcomment"/>
     </template>
   </dialog-std0>
 
@@ -179,9 +181,10 @@ const validT = computed(() =>
 
 const chgcomment = async () => {
   if (newcom.value !== fctx.value.comment) {
-    if (fctx.value.form.v !== 0)
-      await fctx.value.form.mdEventUser(true, newcom.value)
-    else // en création. On passe le comment à createByU
+    if (fctx.value.form.v !== 0) {
+      const event = ui.currentEvent.event
+      if (event) await event.mdEventUser(true, newcom.value)
+    } else // en création. On passe le comment à createByU
       fctx.value.form.comment = newcom.value
   }
   dialogs.editcomment = false
@@ -196,7 +199,9 @@ fst.startEdit(fctx.value)
 onMounted(async () => {
   if (notView.value) {
     await ui.diagDisplay($t('FORMnotv_u'))
-    await fctx.value.form.mdEventUser(true)
+    const event = ui.currentEvent.event
+    if (event)
+      await event.mdEventUser(true)
   }
 })
 
@@ -212,8 +217,8 @@ onMounted(async () => {
 */
 const action = async (a: number) => {
   ui.resetEditing()
-  const f = fctx.value.form
-  const upd = fctx.value.upd
+  const f = fst.form
+  const upd = fst.upd
   let ok = true
   switch (a) {
     case 1 : await f.cancelByU(); break

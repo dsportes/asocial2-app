@@ -9,7 +9,7 @@
       :class="clcase(event, idx) + ' q-my-sm full-width cursor-pointer select'"
       @click="selEvent(event, idx)">
       <div class="row items-center full-width">
-        <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + event.svc)}}</div>
+        <div class="col-4 text-italic ellipsis">{{$t('services_' + event.svc)}}</div>
         <div class="col-5 ellipsis text-right text-bold">{{ event.typeEd }}</div>
         <div class="col-3 row items-center q-gutter-xs">
           <q-icon :name="stic[event.status]" :color="stclr[event.status]"/>
@@ -18,21 +18,15 @@
         </div>
       </div>
       <div class="row items-center full-width">
-        <div class="col-4 text-center text-italic ellipsis">{{event.org}}</div>
+        <div class="col-4 text-italic ellipsis">{{event.org}}</div>
         <div class="col-7 text-right ellipsis">{{dhcool(event.v)}}</div>
-        <div class="col-1 row items-center justify-end ellipsis">
+        <div class="col-1 row items-center justify-end">
           <q-icon v-if="event.lv < event.v"
             name="fiber_new" size="24px" color="warning"/>
         </div>
       </div>
-      <div v-if="event.detailEd" class="row items-center full-width">
-        <div class="col-2"></div>
-        <div class="col-10 ellipsis">{{event.detailEd}}</div>
-      </div>
-      <div v-if="event.comment" class="row items-center full-width">
-        <div class="col-2"></div>
-        <scroll-md class="col-10" height="30px" :text="event.comment"/>
-      </div>
+      <div v-if="event.detailEd" class="full-width ellipsis">{{event.detailEd}}</div>
+      <scroll-md v-if="event.comment" class="full-width" height="30px" :text="event.comment"/>
     </div>
   </div>
 
@@ -60,7 +54,7 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 const ui = stores.ui
 
 const fctx = computed(() => {
-  return { form: ui.currentEvent.form, isDemand: true, comment: comment }
+  return { form: ui.currentEvent.form, isDemand: true, comment: comment.value }
 })
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
@@ -131,7 +125,8 @@ const selEvent0 = () => {
 const selEvent = async (event: $MDEvent, idx: number) => {
   // Get du Form associé document
   const u = ui.currentEvent
-  const f = await $Form.get(event.svc, event.org, event.eventId, event.type)
+  const f = await $Form.get(event.svc, event.org, event.eventId, event.type, event.userId)
+  if (f) f.lv = event.lv
   u.form = f || null
   u.event = event
   u.zoomed = f ? true : false

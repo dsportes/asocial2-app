@@ -20,7 +20,8 @@ export class CVKeys {
     let k = CVKeys.mc.get(svc + '/' + oper + '/' + name)
     if (k) return k
     const op = new Operation('getCKey$', svc, null, oper)
-    const res = op.post(true)
+    op.args.name = name
+    const res = await op.post(true)
     const s = res['key']
     if (!s) return null
     k = keyFromB64(s)
@@ -187,7 +188,7 @@ export class Operation extends AOperation {
       let u = await this.getBaseUrl()
       if (!u.endsWith('/')) u += '/'
       // this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
-      this.url = u + 'op/' + this.opName
+      this.url = u + 'op/'
       this.args.APIVERSION = config.K.SERVICES[this.SVC].api
 
       session.opStart(this)

@@ -300,7 +300,7 @@ export class $Form extends $Document {
     if (!this._aesU) {
       const fk = await CVKeys.getCKey(this.svc, this.org, this.ft.key)
       const sf = stores.safe
-      this._aesU = await Crypt.getAESKey(sf.auth.D, fk)
+      this._aesU = await Crypt.getAESKey(fk, keyFromB64(sf.auth.D))
     }
     return this._aesU
   }
@@ -322,18 +322,19 @@ export class $Form extends $Document {
   static credsForTP (svc: string, org: string) : Set<$Credential> {
     const creds: Set<$Credential> = new Set()
     const sf = stores.safe
-    for(const [, c] of sf.mySafeCreds.value)
+    for(const [, c] of sf.mySafeCreds)
       if (c.svc === svc && c.org === org &&
         (FormType.refClasses1.has(c.docCl) || FormType.refClasses$.has(c.docCl)))
         creds.add(c)
     return creds
   }
 
-  static async get(svc: string, org: string, formId: string, type: string) : Promise<$Form> {
-    const creds = $Form.credsForTP(svc, org)
-    if (!creds.size) return null
+  static async get(svc: string, org: string, formId: string, type: string, userId: string) : Promise<$Form> {
+    const sf = stores.safe
+    const creds = userId === sf.userId ? null : $Form.credsForTP(svc, org)
     const op = new Operation('FormGet', svc, org)
-    for(const cred of creds) await op.sign(cred)
+    if (creds && creds.size)
+      for(const cred of creds) await op.sign(cred)
     op.args.formId = formId
     op.args.type = type
     const res = await op.post()
@@ -423,7 +424,7 @@ export class $Form extends $Document {
     this.ch = this.getCh()
     const op = new Operation('FormCreateByU', this.svc, this.org)
     try {
-      op.args._formObj = this.toFormObj()
+      op.args.formObj = this.toFormObj()
       const ret = await op.post()
       if (ret.status) {
         await ui.diagDisplay($t('STFO_' + ret.status))
@@ -450,6 +451,7 @@ export class $Form extends $Document {
       })
       try {
         await op2.post()
+        await ui.diagDisplay($t('FORMdemok'))
       } catch(e2) {
         op.ko(e2)
         // TODO ???

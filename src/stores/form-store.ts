@@ -4,6 +4,9 @@ import { ref, Ref, reactive, computed } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import stores from './all'
 
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
 export const useFormStore = defineStore('form', () => {
 
   const form = ref()
@@ -55,6 +58,9 @@ export const useFormStore = defineStore('form', () => {
   const startEdit = (formCtx) => {
     form.value = formCtx.form
     isDemand.value = formCtx.isDemand
+    const f = form.value
+    f.msgU = f.msgU ? decoder.decode(f.msgU) : ''
+    f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
     reset()
     setTimeout(async () => { await onChange()}, 1)
   }
