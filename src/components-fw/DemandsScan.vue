@@ -12,20 +12,23 @@
         <div class="col-4 text-italic ellipsis">{{$t('services_' + event.svc)}}</div>
         <div class="col-5 ellipsis text-right text-bold">{{ event.typeEd }}</div>
         <div class="col-3 row items-center q-gutter-xs">
-          <q-icon :name="stic[event.status]" :color="stclr[event.status]"/>
+          <q-icon :name="stic[event.status]" :color="stclr[event.status]" size="md"/>
           <div class="font-mono text-bold" :color="stclr[event.status]">
             {{ $t('FORMstatus_' + event.status) }}</div>
         </div>
       </div>
+
       <div class="row items-center full-width">
         <div class="col-4 text-italic ellipsis">{{event.org}}</div>
-        <div class="col-7 text-right ellipsis">{{dhcool(event.v)}}</div>
-        <div class="col-1 row items-center justify-end">
-          <q-icon v-if="event.lv < event.v"
-            name="fiber_new" size="24px" color="warning"/>
+        <div class="col-8 row justify-end">
+          <q-icon v-if="event.lv < event.v" class="col-auto q-mr-sm"
+            name="fiber_new" size="36px" color="warning"/>
+          <div class="col font-mono ellipsis">{{dhcool(event.v)}}</div>
         </div>
       </div>
+
       <div v-if="event.detailEd" class="full-width ellipsis">{{event.detailEd}}</div>
+
       <scroll-md v-if="event.comment" class="full-width" height="30px" :text="event.comment"/>
     </div>
   </div>
@@ -42,7 +45,7 @@
 import { Ref, ref, onMounted, computed } from 'vue'
 
 import stores from '../stores/all'
-import { $t, dkli, dhcool } from '../src-fw/util'
+import { $t, dkli, dhcool, sleep } from '../src-fw/util'
 
 import { $Form, $MDEvent } from '../src-fw/documents'
 import ScrollMd from '../components-fw/ScrollMd.vue'
@@ -53,9 +56,7 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
 
-const fctx = computed(() => {
-  return { form: ui.currentEvent.form, isDemand: true, comment: comment.value }
-})
+const fctx = ref()
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()
@@ -125,11 +126,19 @@ const selEvent0 = () => {
 const selEvent = async (event: $MDEvent, idx: number) => {
   // Get du Form associé document
   const u = ui.currentEvent
-  const f = await $Form.get(event.svc, event.org, event.eventId, event.type, event.userId)
-  if (f) f.lv = event.lv
-  u.form = f || null
   u.event = event
-  u.zoomed = f ? true : false
+  if (event.lv < event.v) {
+    await event.mdEventUser(true)
+    event.lv = event.v
+    // await sleep(3000)
+  }
+  const f = await $Form.get(event.svc, event.org, event.eventId, event.type, event.userId)
+  u.form = f || null
+  if (f) {
+    u.zoomed = true
+    fctx.value = { form: f, isDemand: true }
+  } else
+    u.zoomed = false
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = events.value.length

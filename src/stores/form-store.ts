@@ -26,8 +26,8 @@ export const useFormStore = defineStore('form', () => {
 
   const editable = computed(() => form.value.status < 3 )
   const creating = computed(() => form.value.status === 0 )
-  const visU = computed(() => form.value.status === 0 && isDemand.value) || (form.value.status > 0)
-  const visT = computed(() => form.value.status === 0 && !isDemand.value) || (form.value.status > 0)
+  const visU = ref()
+  const visT = ref()
 
   const onChange = async () => {
     const f = form.value
@@ -76,6 +76,9 @@ export const useFormStore = defineStore('form', () => {
       upd.msg = f.msgT
       upd.etc = f.etcT ? f.cloneEtc(f.etcT) : (f.etcU ? f.cloneEtc(f.etcU) : f.initEtc(false))
     }
+    visU.value = (f.status === 0 && isDemand.value) || (f.status > 0)
+    visT.value = (f.status === 0 && !isDemand.value) || (f.status > 0)
+    console.log('visU', visU.value)
   }
 
   const undo = async () => {

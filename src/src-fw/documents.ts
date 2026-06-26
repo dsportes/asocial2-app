@@ -156,7 +156,6 @@ export class $MDEvent {
   }
 
   async mdEventSync () {
-    const sf = stores.safe
     const op = new MDOperation('$mdEventSync')
     /*
     const eventId = this.args['eventId'] as string
@@ -201,7 +200,7 @@ export type $FormObj = {
 
   comment?: Uint8Array | null // commentaire écrit et crypté par U.
   ch?: string // challenge random de synchronisation initiale avec $MDEvent
-  lv?: number // lastView par U
+  // lv?: number // lastView par U
 }
 
 /*
@@ -227,7 +226,7 @@ export class $Form extends $Document {
 
   comment?: string = '' // commentaire écrit et crypté par U.
   ch?: string = '' // challenge random de synchronisation initiale avec $MDEvent
-  lv?: number = 0 // lastView par U
+  // lv?: number = 0 // lastView par U
   opts?: any = null // options éventuelles de création
   _aesU?: Uint8Array | null = null
 
@@ -314,9 +313,8 @@ export class $Form extends $Document {
       this.msgU = await Crypt.decrypt(await this.aesU(), this.msgU)
   }
 
-  async cryptMsgU () : Promise<void> {
-    if (this.msgU)
-      this.msgU = await Crypt.crypt(await this.aesU(), this.msgU)
+  async cryptMsgU (msg: Uint8Array) : Promise<Uint8Array> {
+    return !msg ? null : await Crypt.crypt(await this.aesU(), msg)
   }
 
   static credsForTP (svc: string, org: string) : Set<$Credential> {
@@ -415,12 +413,11 @@ export class $Form extends $Document {
     return lf
   }
 
-  async createByU (upd: Upd) {
+  async createByU (upd: Upd) : Promise<boolean> {
     const sf = stores.safe
     const ui = stores.ui
     this.etcU = upd.etc
-    this.msgU = encoder.encode(upd.msg)
-    await this.cryptMsgU()
+    this.msgU = await this.cryptMsgU(encoder.encode(upd.msg))
     this.ch = this.getCh()
     const op = new Operation('FormCreateByU', this.svc, this.org)
     try {
@@ -452,15 +449,47 @@ export class $Form extends $Document {
       try {
         await op2.post()
         await ui.diagDisplay($t('FORMdemok'))
+        return true
       } catch(e2) {
         op.ko(e2)
-        // TODO ???
+        return false
       }
     } catch (e) {
       op.ko(e)
-      return
+      return false
     }
   }
 
+  async updateByU (upd: Upd) : Promise<boolean> {
+    const sf = stores.safe
+    const ui = stores.ui
+    const event = ui.currentEvent.event
+    const op = new Operation('FormUpdByU', this.svc, this.org)
+    try {
+      op.setArgs({
+        formId: this.formId,
+        type: this.type,
+        etcU: upd.etc,
+        msgU: await this.cryptMsgU(encoder.encode(upd.msg))
+      })
+      const ret = await op.post()
+      if (ret.status) {
+        await ui.diagDisplay($t('STFO_' + ret.status))
+        return false
+      }
+      try {
+        await event.mdEventSync()
+        await ui.diagDisplay($t('FORMdemok'))
+        return true
+      } catch(e2) {
+        op.ko(e2)
+        return false
+      }
+    } catch (e) {
+      op.ko(e)
+      return false
+    }
+  }
 }
+
 Registry.registerD($Form)
