@@ -1,50 +1,53 @@
 <template>
 <div>
-  <div class="column items-center q-pa-sm">
+<div class="column items-center q-pa-sm">
 
     <div v-if="!ui.currentForm.zoomed" class="pwmd">
+      <div v-if="forms.length">
+        <div v-for="(form, idx) in forms" :key="form.formId"
+          :class="clcase(form, idx) + ' q-my-sm full-width cursor-pointer select'"
+          @click="selForm(form, idx)">
+          <div class="row items-center full-width">
+            <div class="col-4 text-italic ellipsis">{{$t('services_' + form.svc)}}</div>
+            <div class="col-5 ellipsis text-right text-bold">{{ form.typeEd }}</div>
+            <div class="col-3 row items-center q-gutter-xs">
+              <q-icon :name="stic[form.status]" :color="stclr[form.status]" size="md"/>
+              <div class="font-mono text-bold" :color="stclr[form.status]">
+                {{ $t('FORMstatus_' + form.status) }}</div>
+            </div>
+          </div>
 
-      <div v-for="(form, idx) in forms" :key="form.formId" 
-        :class="clcase(form, idx) + ' q-my-sm full-width cursor-pointer select'"
-        @click="selForm(form, idx)">
-      <div class="row items-center full-width">
-        <div class="col-4 text-center text-italic ellipsis">{{$t('services_' + form.svc)}}</div>
-        <div class="col-5 ellipsis text-right text-bold">{{ form.typeEd }}</div>
-        <div class="col-3 row items-center q-gutter-xs">
-          <q-icon :name="stic[form.status]" :color="stclr[form.status]"/>
-          <div class="font-mono text-bold" :color="stclr[form.status]">
-            {{ $t('FORMstatus_' + form.status) }}</div>
+          <div class="row items-center full-width">
+            <div class="col-4 text-italic ellipsis">{{form.org}}</div>
+            <div class="col-8 text-right ellipsis">{{dhcool(form.v)}}</div>
+          </div>
+
+          <div class="row items-center">
+            <div class="col-4 titre-md text-italic ellipsis">{{ $t('FORMuser') }}</div>
+            <div class="col-8 q-pl-sm font-mono">
+              <span>{{ form.userId }}</span>
+              <span v-if="form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="row items-center full-width">
-        <div class="col-4 text-center text-italic ellipsis">{{form.org}}</div>
-        <div class="col-8 text-right ellipsis">{{dhcool(form.v)}}</div>
-      </div>
-      <div class="row items-center">
-        <div class="col-5 titre-md text-italic ellipsis">{{ $t('FORMuser') }}</div>
-        <div class="col-7 q-pl-sm font-mono">
-          <span>{{ form.userId }}</span>
-          <span v-if="form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
-        </div>
-      </div>
-    
+      <div v-else class="titre-md text-italic">{{ $t('FORMnoforms') }}</div>
     </div>
 
+    <div v-else class="pwmd q-pt-sm">
+      <form-zoom v-model="fctx" @done="onDone"/>
     </div>
 
-    <div v-else class="pwmd">
-      <form-zoom class="q-mt-sm" :formui.currentForm.form" @done="onDone"/>
-    </div>
-  </div>
+</div>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, watch, computed } from 'vue'
+import { ref, Ref, watch } from 'vue'
 
 import stores from '../stores/all'
-import { $t, dkli } from '../src-fw/util'
+import { $t, dkli, dhcool } from '../src-fw/util'
 import { $Form } from '../src-fw/documents'
 import FormZoom from '../components-fw/FormZoom.vue'
 
@@ -52,13 +55,13 @@ const stic = ['', 'person', 'person_shield', 'check', 'close']
 const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
+const sf = stores.safe
 
-const isCurrent = (form: $Form) =>
-  ui.currentForm.form && (ui.currentForm.form.formId === form.formId)
-
-const clcase = (form: $Form, idx: number) => dkli(idx) + (isCurrent(form) ? ' current ' : ' nocurrent ')
+const fctx = ref()
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+  const b = await ui.mayClose()
+  if (!b) return
   const u = ui.navBar
   switch (n) {
     case 1 : { if (u.idx < forms.value.length - 1) u.idx++; break }
@@ -72,22 +75,12 @@ const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:las
 
 const forms: Ref<$Form[]> = ref([])
 
-const selForm = (form: $Form, idx: number) => {
-  const u = ui.currentForm
-  u.form = form
-  u.zoomed = true
-  const nb = ui.navBar
-  nb.idx = idx
-  nb.nb = forms.value.length
-}
+const isCurrent = (form: $Form) =>
+  ui.currentForm.form && (ui.currentForm.form.formId === form.formId)
+const clcase = (form: $Form, idx: number) => dkli(idx) + (isCurrent(form) ? ' current ' : ' nocurrent ')
 
-const selForm0 = () => {
-  const u = ui.currentForm
-  u.form = null
-  u.zoomed = false
-  const nb = ui.navBar
-  nb.idx = 0
-  nb.nb = forms.value.length
+const onDone = (ok: boolean) => {
+  if (ok) onUpdate() // ok: true - Maj effectuée.
 }
 
 // forms mise à jour : rafraichir la liste
@@ -112,7 +105,26 @@ const onUpdate = (newId?: string) => {
   }, 100)
 }
 
-const reset0 = () => {
+const selForm0 = () => {
+  const u = ui.currentForm
+  u.form = null
+  u.zoomed = false
+  const nb = ui.navBar
+  nb.idx = -1
+  nb.nb = forms.value.length
+}
+
+const selForm = (form: $Form, idx: number) => {
+  const u = ui.currentForm
+  u.form = form
+  u.zoomed = true
+  fctx.value = { form: u.form, isDemand: false }
+  const nb = ui.navBar
+  nb.idx = idx
+  nb.nb = forms.value.length
+}
+
+const init = () => {
   selForm0()
   ui.currentForm.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
@@ -121,11 +133,12 @@ const reset0 = () => {
 
 watch(() => ui.currentForm.pft, async () => {
   const u = ui.currentForm
-  forms.value = await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
-  reset0()
+  forms.value = u.soa && u.soa.svc && u.soa.org ?
+    await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin) : []
+  init()
 })
 
-reset0()
+init()
 
 </script>
 

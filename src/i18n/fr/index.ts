@@ -20,6 +20,7 @@ export default {
   iconfirm: 'Je confirme',
   ireject: 'Je refuse',
   giveup: 'Je renonce',
+  erase: 'Effacer',
   clickhere: 'Cliquer ici',
   genhelp: 'Aide générale',
   theme: 'Théme graphique',
@@ -236,6 +237,7 @@ export default {
   op_$mdUserGetICVS: 'Obtention de la localisation de la Safe Box',
   op_$UpdatePrefs: 'Mise à jour des préférences',
   op_$mdEventList: 'Lecture de mes demandes / propositions',
+  op_FormFilteredList: 'Lecture des demandes / propositions concernant les "autres"',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -887,8 +889,8 @@ Fermer la fenêtre corespond à un NON sélection.
 
   FORMnewd: 'Nouvelle demande: {0}',
   FORMnewp: 'Nouvelle proposition',
-  FORMnotv_u: 'Vous n\'avez pas encore vu cette nouvelle version.',
   FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
+  FORMnoforms: 'Aucune demande / proposition en cours ne peut être traitée par vous actuellement.',
   FORMnoform: 'Incident inattendu probablement temporaire: la demande / proposition n\'a pas été trouvée, l\'ignorer pour l\'instant.',
   FORMtype: 'Type de demande',
   FORMorg: 'Organisation',

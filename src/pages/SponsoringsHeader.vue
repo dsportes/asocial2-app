@@ -16,23 +16,25 @@
 
   <div :class="'column full-width' + (dialogs.newproposal ? ' disabled' : '')">
     <div class="row items-center q-gutter-sm">
-      <select-svcorg class="q-my-sm" @select="selsoa"/>
-      <btn-cond icon="close" round color="negative" @ok="reset"/>
+      <select-svcorg @select="selsoa"/>
+      <btn-cond icon="backspace" :label="$t('erase')"
+        color="warning" @ok="reset"/>
     </div>
 
-    <div v-if="cf.soa">
-      <div v-if="cf.soa.admin" class="row items-center q-gutter-sm">
-        <q-toggle v-model="cf.asAdmin" color="warning"/>
-        <img v-if="cf.asAdmin" :src="superman" width="24px"/>
+    <div v-if="ui.currentForm.soa">
+      <div v-if="ui.currentForm.soa.admin" class="row items-center q-gutter-sm">
+        <q-toggle v-model="ui.currentForm.asAdmin" color="warning"/>
+        <img v-if="ui.currentForm.asAdmin" :src="superman" width="32px"/>
         <div class="titre-md text-italic">{{ $t('FORMadmin') }}</div>
       </div>
 
-      <div v-if="!cf.pft.size" class="msg">{{ $t('FORMnoprops') }}</div>
+      <div v-if="!ui.currentForm.pft.size" class="msg">{{ $t('FORMnoprops') }}</div>
+
       <div v-else :class="'column full-width' + (dialogs.newproposal ? ' disabled' : '')">
         <div class="tbs row items-center justify-between">
           <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
             @back="ui.currentForm.zoomed = false"/>
-          <type-menu v-model="formType" :title="FORMnewp" :allow="cf.pft"
+          <type-menu v-model="formType" :title="$t('FORMnewp')" :allow="ui.currentForm.pft"
             @select="openNewP"/>
         </div>
       </div>
@@ -46,7 +48,7 @@
       <input-b class="q-my-sm"
         v-model="alias" size="alias" prefix="FORMuseralias"
         :disable="userId" @validate="valA"/>
-      <form-zoom v-if="userId" :form="form" @done="onDone"/>
+      <form-zoom v-if="userId" v-model="fctx" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -55,17 +57,21 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watchEffect } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import NavBar from '../components-fw/NavBar.vue'
+import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
+import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
+import InputB from '../components-fw/InputB.vue'
 import { SOA } from '../stores/ui-store'
 import { $Form, $FormObj } from '../src-fw/documents'
 
@@ -80,30 +86,33 @@ const dialogs = reactive({
   newproposal: false
 })
 
-const cf = computed(() => ui.currentForm )
+const fctx = computed(() => {
+  return { form: form.value, isDemand: false, comment: '' }
+})
+
 const formType = ref('')
 const form = ref(null)
 const userId = ref('')
 const alias = ref('')
 
-watch(() => cf.asAdmin, async (v) => {
-  cf.value.pft = await $Form.possibleFormTypes(cf.value.soa.svc, cf.value.soa.org, v)
+watchEffect(async () => {
+  const cf = ui.currentForm
+  cf.pft = !cf.soa || !cf.soa.svc || !cf.soa.org ? new Set() :
+    await $Form.possibleFormTypes(cf.soa.svc, cf.soa.org, cf.asAdmin)
 })
 
 const selsoa = async (soa: SOA) => {
-  cf.value.soa = soa
-  cf.value.asAdmin = false
-  cf.value.pft = await $Form.possibleFormTypes(soa.svc, soa.org, false)
-}
-
-watch(() => ui.currentForm.soa), async (soa) => {
-  cf.value.pft = !cf.value.soa ? new Set() : await $Form.possibleFormTypes(soa.svc, soa.org, false)
+  const cf = ui.currentForm
+  cf.soa = soa
+  cf.asAdmin = false
+  // cf.pft = await $Form.possibleFormTypes(soa.svc, soa.org, cf.asAdmin)
 }
 
 const reset = () => {
-  cf.value.soa = null
-  cf.value.form = null
-  cf.value.asAdmin = false
+  const cf = ui.currentForm
+  cf.soa = null
+  cf.form = null
+  cf.asAdmin = false
 }
 
 const openNewP = () => {
@@ -113,9 +122,9 @@ const openNewP = () => {
   userId.value = ''
   dialogs.newproposal = true
 }
-// const zoomed = computed(() => cf.value.zoomed)
 
 const valA = async () => {
+  const cf = ui.currentForm
   userId.value = ''
   const hsha = Crypt.shaS(await Crypt.strongHash(alias.value, false, true))
   const icvs = await sf.mdUserGetICVS(hsha)
@@ -139,9 +148,9 @@ const valA = async () => {
     msgT: null,
   }
   form.value = $Form.new(obj)
-  form.value.opts = { asAdmin: cf.value.asAdmin, alias: alias.value }
-  form.value.svc = sf.value.soa.svc
-  form.value.org = sf.soa.org
+  form.value.opts = { asAdmin: cf.asAdmin, alias: alias.value }
+  form.value.svc = cf.soa.svc
+  form.value.org = cf.soa.org
 }
 
 const close = async () => {
@@ -159,7 +168,7 @@ const onDone = (ok: boolean) => { // si false pas créé
   formType.value = ''
   dialogs.newproposal = false
   if (ok)
-    cf.value.fnOnUpdate(form.value.formId)
+    ui.currentForm.fnOnUpdate(form.value.formId)
 }
 
 </script>

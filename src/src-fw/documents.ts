@@ -309,8 +309,10 @@ export class $Form extends $Document {
   et de la clé _publique_ de cryptage de U (également accessible puisque `userId` est l'ID de U).
   */
   async decryptMsgU () : Promise<void> {
-    if (this.msgU)
-      this.msgU = await Crypt.decrypt(await this.aesU(), this.msgU)
+    if (this.msgU) {
+      const x = await Crypt.decrypt(await this.aesU(), this.msgU)
+      this.msgU = x
+    }
   }
 
   async cryptMsgU (msg: Uint8Array) : Promise<Uint8Array> {
@@ -360,15 +362,15 @@ export class $Form extends $Document {
     if (asAdmin)
       return sf.auth.admins.indexOf(svc + '.' + op) === -1 ? [] : ['A']
     const fi: Set<string> = new Set()
-    for(const [,c] of sf.mySafeCreds.value) {
+    for(const [,c] of sf.mySafeCreds) {
       if (c.svc !== svc || c.org !== org) continue
       if (c.docPk === '1') {
         if (FormType.refClasses1.has(c.docCl)) fi.add(c.docCl + '/1')
       } else {
         if (FormType.refClasses$.has(c.docCl)) fi.add(c.docCl + '/' + c.docPk)
       }
-      return fi.size === 0 ? [] : Array.from(fi)
     }
+    return fi.size === 0 ? [] : Array.from(fi)
   }
 
   /* Set des FormTypes qui peuvent être créés par un utilisateur
@@ -394,7 +396,6 @@ export class $Form extends $Document {
   */
   static async filteredList (svc: string, org: string, asAdmin: boolean) : Promise<$Form[]> {
     const creds = $Form.credsForTP(svc, org)
-    if (!creds.size) return []
     const filter = await $Form.getListFilter(svc, org, asAdmin)
     if (!filter.length) return []
     const op = new Operation('FormFilteredList', svc, org)
@@ -408,7 +409,8 @@ export class $Form extends $Document {
       const f = $Form.new(obj)
       f.svc = svc
       f.org = org
-      await f.decryptMsgU()
+      // await f.decryptMsgU()
+      lf.push(f)
     }
     return lf
   }

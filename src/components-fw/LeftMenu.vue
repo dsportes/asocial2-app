@@ -1,5 +1,5 @@
 <!-- Barre de menu à gauche (component)
-Contrôlé par ui.leftMenu 
+Contrôlé par ui.leftMenu
 -->
 <template>
 <q-layout container view="hHh lpR fFf">
@@ -19,12 +19,12 @@ Contrôlé par ui.leftMenu
   <q-page-container>
     <!--div><btn-cond label="Test Erreur" @ok="test"/></div-->
     <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
-      flat icon="exit_to_app" color="warning" :label="$t('endsession')" 
+      flat icon="exit_to_app" color="warning" :label="$t('endsession')"
       @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"
       @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
-      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" 
+      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)"
         class="q-mb-sm" flat color="warning"
         @ok="openAdmin">
         <img :src="superman" class="q-mr-xs" width="24px"/>
@@ -53,7 +53,7 @@ Contrôlé par ui.leftMenu
   </q-page-container>
 
   <choose-it v-model="dialogs.SessionClose"
-    prefix="HPbackopen" options="pw" 
+    prefix="HPbackopen" options="pw"
     @giveup="dialogs.SessionClose = false"
     @option="sessionClose"/>
 
@@ -116,8 +116,6 @@ const openDemands = (svc) => {
 const openSponsorings = (svc) => {
   ui.closeMenu()
   ui.setPage('sponsorings')
-  ui.sponsoringsPage.spons = null
-  ui.sponsoringsPage.time = Date.now()
 }
 
 </script>

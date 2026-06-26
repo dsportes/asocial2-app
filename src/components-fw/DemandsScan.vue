@@ -4,6 +4,7 @@
 <div class="column items-center">
 <div class="pwsm">
   <div v-if="!ui.currentEvent.zoomed" class="full-width">
+
     <div v-if="!events.length" class="titre-md text-italic q-pa-md">{{ $t('FORMnoevents') }}</div>
     <div v-else v-for="(event, idx) of events" :key="event.eventId"
       :class="clcase(event, idx) + ' q-my-sm full-width cursor-pointer select'"
@@ -77,8 +78,6 @@ const events: Ref<$MDEvent[]> = ref([])
 const isCurrent = (event: $MDEvent) =>
   ui.currentEvent.event && (ui.currentEvent.event.eventId === event.eventId)
 const clcase = (event: $MDEvent, idx: number) => dkli(idx) + (isCurrent(event) ? ' current ' : ' nocurrent ')
-const comment = computed(() => ui.currentEvent.event && ui.currentEvent.event.comment ?
-  ui.currentEvent.event.comment : '')
 
 const onDone = (ok: boolean) => {
   if (ok) onUpdate() // ok: true - Maj effectuée.

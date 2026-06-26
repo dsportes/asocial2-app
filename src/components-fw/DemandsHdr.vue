@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
