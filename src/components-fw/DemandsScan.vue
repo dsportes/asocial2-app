@@ -12,7 +12,7 @@
       <div class="row items-center full-width">
         <div class="col-4 text-italic ellipsis">{{$t('services_' + event.svc)}}</div>
         <div class="col-5 ellipsis text-right text-bold">{{ event.typeEd }}</div>
-        <div class="col-3 row items-center q-gutter-xs">
+        <div class="col-3 row items-center">
           <q-icon :name="stic[event.status]" :color="stclr[event.status]" size="md"/>
           <div class="font-mono text-bold" :color="stclr[event.status]">
             {{ $t('FORMstatus_' + event.status) }}</div>
@@ -34,8 +34,8 @@
     </div>
   </div>
 
-  <div v-if="ui.currentEvent.zoomed" class="pwsm">
-    <form-zoom class="q-mt-sm" v-model="fctx" @done="onDone"/>
+  <div v-if="ui.currentEvent.zoomed" class="pwsm q-pt-sm">
+    <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
   </div>
 </div>
 </div>
@@ -52,7 +52,7 @@ import { $Form, $MDEvent } from '../src-fw/documents'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 
-const stic = ['', 'person', 'person_shield', 'check', 'close']
+const stic = ['add', 'person', 'local_police', 'check', 'close']
 const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
@@ -116,6 +116,7 @@ const selEvent0 = () => {
   const u = ui.currentEvent
   u.event = null
   u.form = null
+  fctx.value = null
   u.zoomed = false
   const nb = ui.navBar
   nb.idx = -1
@@ -134,10 +135,14 @@ const selEvent = async (event: $MDEvent, idx: number) => {
   const f = await $Form.get(event.svc, event.org, event.eventId, event.type, event.userId)
   u.form = f || null
   if (f) {
-    u.zoomed = true
     fctx.value = { form: f, isDemand: true }
-  } else
+    u.zoomed = true
+  } else {
+    fctx.value = null
     u.zoomed = false
+  }
+  if (fctx.value === null)
+    console.log('fuck')
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = events.value.length

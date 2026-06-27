@@ -10,7 +10,7 @@
           <div class="row items-center full-width">
             <div class="col-4 text-italic ellipsis">{{$t('services_' + form.svc)}}</div>
             <div class="col-5 ellipsis text-right text-bold">{{ form.typeEd }}</div>
-            <div class="col-3 row items-center q-gutter-xs">
+            <div class="col-3 row items-center">
               <q-icon :name="stic[form.status]" :color="stclr[form.status]" size="md"/>
               <div class="font-mono text-bold" :color="stclr[form.status]">
                 {{ $t('FORMstatus_' + form.status) }}</div>
@@ -35,7 +35,7 @@
     </div>
 
     <div v-else class="pwmd q-pt-sm">
-      <form-zoom v-model="fctx" @done="onDone"/>
+      <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
     </div>
 
 </div>
@@ -51,7 +51,7 @@ import { $t, dkli, dhcool } from '../src-fw/util'
 import { $Form } from '../src-fw/documents'
 import FormZoom from '../components-fw/FormZoom.vue'
 
-const stic = ['', 'person', 'person_shield', 'check', 'close']
+const stic = ['add', 'person', 'local_police', 'check', 'close']
 const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
@@ -109,6 +109,7 @@ const selForm0 = () => {
   const u = ui.currentForm
   u.form = null
   u.zoomed = false
+  fctx.value = null
   const nb = ui.navBar
   nb.idx = -1
   nb.nb = forms.value.length

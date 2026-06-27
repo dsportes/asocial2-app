@@ -25,11 +25,11 @@
 
     <div class="row items-center">
       <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
-      <div class="col-7 row items-center q-gutter-xs">
-        <q-icon :name="stic[fst.form.status]" :color="stclr[fst.form.status]" size="32px"/>
+      <div class="col-7 row items-center">
+        <q-icon :name="stic[fst.form.status]" :color="stclr[fst.form.status]" size="28px"/>
         <div class="font-mono text-bold" :color="stclr[fst.form.status]">
           {{ $t('FORMstatus_' + fst.form.status) }}</div>
-        </div>
+      </div>
     </div>
 
     <div v-if="!fst.isDemand" class="row items-center">
@@ -79,7 +79,7 @@
       :label="$t('FORMbtnokp')" :disable="!validU"
       @ok="action(3)"/>
     <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
-      :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
+      :label="$t('FORMbtnrecp')" :disable="!fst.hasChg || fst.diag1 !== ''"
       @ok="action(4)"/>
     <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnokp')" :disable="!validT"
@@ -139,7 +139,7 @@ export type FormCtx = {
   isDemand: boolean
 }
 
-const stic = ['add', 'person', 'person_shield', 'check', 'close']
+const stic = ['add', 'person', 'local_police', 'check', 'close']
 const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']
 
 const emits = defineEmits(['done'])
@@ -153,8 +153,7 @@ const ui = stores.ui
 const fst = stores.form
 
 const fctx = defineModel<FormCtx>()
-watch(fctx, (v) => {
-  fst.startEdit(v) }) // ne sert à rien
+// watch(fctx, (v) => { fst.startEdit(v) }) // ne sert à rien. Surprenat.
 fst.startEdit(fctx.value)
 
 watch(() => fst.upd.msg, (v) => {

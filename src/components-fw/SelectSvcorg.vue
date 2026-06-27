@@ -3,10 +3,10 @@ event : 'select', svc (org est session.orgs.c)
 -->
 <template>
   <div class="row q-gutter-xs items-center">
-    <btn-cond icon="backspace" color="warning"  @ok="ko"/>
+    <btn-cond icon="backspace" flat color="warning" @ok="ko"/>
     <select-svc v-model="svc"/>
     <select-org v-model="org"/>
-    <btn-cond icon="check" round color="primary"
+    <btn-cond icon="check" round size="lg" color="green-5"
       :disable="!svc || !org" @ok="ok"/>
   </div>
   <div v-if="diag" class="msg">{{ $t('nosvcorg') }}</div>

@@ -238,10 +238,6 @@ export class $Form extends $Document {
 
   /* Méthodes surchargées par type *******************************
   ****************************************************************/
-  initEtc (byU: boolean) : Object {
-    return { }
-  }
-
   cloneEtc (etcX: Object | null) : Object | null {
     return etcX === null ? { } : decode(encode(etcX))
   }
@@ -313,7 +309,8 @@ export class $Form extends $Document {
   }
 
   async cryptMsgU (msg: Uint8Array) : Promise<Uint8Array> {
-    return !msg ? null : await Crypt.crypt(await this.aesU(), msg)
+    const x = !msg ? null : await Crypt.crypt(await this.aesU(), msg)
+    return x
   }
 
   static credsForTP (svc: string, org: string) : Set<$Credential> {
@@ -340,7 +337,6 @@ export class $Form extends $Document {
     const f = $Form.new(obj)
     f.svc = svc
     f.org = org
-    await f.decryptMsgU()
     return f
   }
 
@@ -471,7 +467,14 @@ export class $Form extends $Document {
         return false
       }
       try {
-        await event.mdEventSync()
+        const op2 = new MDOperation('$mdEventSync')
+        /*
+        const eventId = this.args['eventId'] as string
+        const chk = this.args['chk'] as string
+        */
+        op2.args.eventId = this.formId
+        op2.args.chk = Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
+        await op2.post()
         await ui.diagDisplay($t('FORMdemok'))
         return true
       } catch(e2) {

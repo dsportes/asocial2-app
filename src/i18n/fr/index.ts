@@ -238,6 +238,9 @@ export default {
   op_$UpdatePrefs: 'Mise à jour des préférences',
   op_$mdEventList: 'Lecture de mes demandes / propositions',
   op_FormFilteredList: 'Lecture des demandes / propositions concernant les "autres"',
+  op_FormUpdByT: 'Mise à jour d\'une proposition',
+  op_FormUpdByU: 'Mise à jour d\'une demande',
+  op_FormGet: 'Lecture d\`une demande / proposition',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
