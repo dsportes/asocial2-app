@@ -3,8 +3,7 @@ event : 'select', svc (org est session.orgs.c)
 -->
 <template>
   <div class="row q-gutter-xs items-center">
-    <btn-cond icon="close" round color="warning"
-      @ok="ko"/>
+    <btn-cond icon="backspace" color="warning"  @ok="ko"/>
     <select-svc v-model="svc"/>
     <select-org v-model="org"/>
     <btn-cond icon="check" round color="primary"
@@ -24,6 +23,7 @@ import SelectOrg from '../components-fw/SelectOrg.vue'
 
 const session = stores.session
 const sf = stores.safe
+const config = stores.config
 
 const emit = defineEmits(['select'])
 
@@ -45,6 +45,8 @@ const ok = async () => {
 }
 
 const ko = () => {
+  svc.value = config.K.DEFAULT_SERVICE
+  org.value = ''
   emit('select', null)
 }
 

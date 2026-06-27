@@ -38,16 +38,17 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 class $Form_membrecodir extends $Form {
   constructor () { super() }
-  
+
   initEtc (byU: boolean) : Object {
     return { pseudo: this.opts && this.opts.alias ? this.opts.alias : 'toto' }
   }
   cloneEtc (etcX: Object | null) : Object | null {
-    return etcX === null ? null : { pseudo: etcX['pseudo'] }
+    return { pseudo: !etcX ? '' : etcX['pseudo'] }
   }
   eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
-    if (!etcX || !etcY) return false
-    return etcX['pseudo'] !== etcY['pseudo']
+    const x = etcX || { pseudo: '' }
+    const y = etcY || { pseudo: '' }
+    return x['pseudo'] === y['pseudo']
   }
   async checkEtc (etcX: Object | null) : Promise<string> {
     if (etcX) {

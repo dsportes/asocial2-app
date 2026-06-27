@@ -61,30 +61,30 @@
     {{ $t('FORMdiag_' + fst.diag2) }}</div>
 
   <div class="q-mb-sm column items-center q-gutter-xs">
-    <btn-cond v-if="fst.creating" no-caps
+    <btn-cond v-if="fst.creating" icon="check"
       :label="$t('FORMbtnnocr' + (fst.isDemand ? 'd' : 'p'))" @ok="action(8)"/>
-    <btn-cond v-if="!fst.creating" no-caps
-      :disable="!ui.editingInCourse"
-      :label="$t('FORMbtnundo')" @ok="fst.undo"/>
-    <btn-cond v-if="fst.isDemand && fst.creating" no-caps
+    <btn-cond v-if="!fst.creating" icon="undo"
+      :disable="!ui.editingInCourse" color="warning"
+      :label="$t('FORMbtnundo')" @ok="doUndo"/>
+    <btn-cond v-if="fst.isDemand && fst.creating" icon="add"
       :label="$t('FORMbtnrecd')" :disable="fst.diag1 !== ''"
       @ok="action(6)"/>
-    <btn-cond v-if="!fst.isDemand && fst.creating" no-caps
+    <btn-cond v-if="!fst.isDemand && fst.creating" icon="add"
       :label="$t('FORMbtnrecp')" :disable="fst.diag1 !== ''"
       @ok="action(7)"/>
-    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" no-caps
+    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
       @ok="action(2)"/>
-    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" no-caps
+    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnokp')" :disable="!validU"
       @ok="action(3)"/>
-    <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" no-caps
+    <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
       @ok="action(4)"/>
-    <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" no-caps
+    <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnokp')" :disable="!validT"
       @ok="action(5)"/>
-    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" no-caps
+    <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" icon="close"
       :label="$t('FORMbtncancel')"
       @ok="action(1)" color="warning"/>
   </div>
@@ -93,15 +93,18 @@
   <div v-if="fst.visU">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
     <md-editor v-if="fst.isDemand" v-model="fst.upd.msg"
-      :lgmax="500" :rows="3" :text="fst.form.msgU" modetxt editable/>
-    <md-editor v-else model="fst.form.msgU" :rows="3" :text="fst.form.msgU" modetxt/>
+      :lgmax="500" :rows="3" :text="fst.form.msgU || ''" modetxt editable/>
+    <md-editor v-else model="fst.form.msgU" :rows="3"
+      :text="fst.form.msgU || ''" modetxt/>
   </div>
 
   <div v-if="fst.visT">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
+    <!--div>{{ fst.upd.msg }} / {{ fst.form.msgT }}</div-->
     <md-editor v-if="!fst.isDemand" v-model="fst.upd.msg"
-      :lgmax="500" :rows="3" :text="fst.form.msgT" modetxt editable/>
-    <md-editor v-else v-model="fst.form.msgT" :rows="3" :text="fst.form.msgT" modetxt/>
+      :lgmax="500" :rows="3" :text="fst.form.msgT || ''" modetxt editable/>
+    <md-editor v-else v-model="fst.form.msgT" :rows="3"
+      :text="fst.form.msgT || ''" modetxt/>
   </div>
 
   <form-etc/>
@@ -120,9 +123,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { Ref, ref, computed, onMounted, watch, reactive } from 'vue'
-// @ts-ignore
-// import { encode, decode } from '@msgpack/msgpack'
+import { ref, computed, watch, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
@@ -152,7 +153,8 @@ const ui = stores.ui
 const fst = stores.form
 
 const fctx = defineModel<FormCtx>()
-// watch(fctx, (v) => { fst.startEdit(v) }) // ne sert à rien
+watch(fctx, (v) => {
+  fst.startEdit(v) }) // ne sert à rien
 fst.startEdit(fctx.value)
 
 watch(() => fst.upd.msg, (v) => {
@@ -170,12 +172,12 @@ const edCom = () => {
 
 const validU = computed(() =>
   (fst.form.status === 1 || fst.form.status === 2) &&
-  !fst.diag1.value && !fst.diag2.value &&
+  !fst.diag1 && !fst.diag2 &&
   fst.form.eqEtc(fst.upd.etc, fst.form.etcT))
 
 const validT = computed(() =>
   (fst.form.status === 1 || fst.form.status === 2) &&
-  !fst.diag1.value && !fst.diag2.value &&
+  !fst.diag1 && !fst.diag2 &&
   fst.form.eqEtc(fst.upd.etc, fst.form.etcU))
 
 const chgcomment = async () => {
@@ -188,6 +190,10 @@ const chgcomment = async () => {
   } else // en création. On passe le comment à createByU
     fst.form.comment = newcom.value
   dialogs.editcomment = false
+}
+
+const doUndo = async () => {
+  await fst.undo()
 }
 
 const action = async (a: number) => {

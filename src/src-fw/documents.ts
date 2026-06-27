@@ -239,20 +239,17 @@ export class $Form extends $Document {
   /* Méthodes surchargées par type *******************************
   ****************************************************************/
   initEtc (byU: boolean) : Object {
-    return {}
+    return { }
   }
 
   cloneEtc (etcX: Object | null) : Object | null {
-    return etcX === null ? null : decode(encode(etcX))
+    return etcX === null ? { } : decode(encode(etcX))
   }
 
   eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
     if (!etcX || !etcY) return false
     return equ8(encode(etcX), encode(etcY))
   }
-
-  emptyEtc (etcX: Object | null) {
-    return etcX === null || !Array.from(Object.keys(etcX)).length }
 
   async checkEtc (etcX: Object | null) : Promise<string> {
     return ''
@@ -462,18 +459,12 @@ export class $Form extends $Document {
     }
   }
 
-  async updateByU (upd: Upd) : Promise<boolean> {
-    const sf = stores.safe
+  async updateByUT (args: Object, opName: string) : Promise<boolean> {
     const ui = stores.ui
     const event = ui.currentEvent.event
-    const op = new Operation('FormUpdByU', this.svc, this.org)
+    const op = new Operation(opName, this.svc, this.org)
     try {
-      op.setArgs({
-        formId: this.formId,
-        type: this.type,
-        etcU: upd.etc,
-        msgU: await this.cryptMsgU(encoder.encode(upd.msg))
-      })
+      op.setArgs(args)
       const ret = await op.post()
       if (ret.status) {
         await ui.diagDisplay($t('STFO_' + ret.status))
@@ -491,6 +482,26 @@ export class $Form extends $Document {
       op.ko(e)
       return false
     }
+  }
+
+  async updateByU (upd: Upd) : Promise<boolean> {
+    const args = {
+      formId: this.formId,
+      type: this.type,
+      etcU: upd.etc,
+      msgU: await this.cryptMsgU(encoder.encode(upd.msg))
+    }
+    return await this.updateByUT(args, 'FormUpdByU')
+  }
+
+  async updateByT (upd: Upd) : Promise<boolean> {
+    const args = {
+      formId: this.formId,
+      type: this.type,
+      etcT: upd.etc,
+      msgT: encoder.encode(upd.msg)
+    }
+    return await this.updateByUT(args, 'FormUpdByT')
   }
 }
 

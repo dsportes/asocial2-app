@@ -3,7 +3,7 @@
   <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')">
     <div class="tbs row items-center justify-between">
       <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
-        @back="ui.currentEvent.zoomed = false"/>
+        @back="back"/>
       <type-menu :title="$t('FORMnewd')" @select="selFt"/>
     </div>
     <div v-if="formType" class="column items-center">
@@ -85,6 +85,12 @@ const close = async () => {
     dialogs.newdemand = false
     formType.value = ''
   }
+}
+
+const back = async () => {
+  const b = await ui.mayClose()
+  if (b)
+    ui.currentEvent.zoomed = false
 }
 
 const onDone = (ok: boolean) => { // si false pas créé

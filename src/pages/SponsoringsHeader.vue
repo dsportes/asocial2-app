@@ -14,15 +14,14 @@
     <div style="color:transparent;width:3px">*<q-tooltip>SponsoringsPage</q-tooltip></div>
   </q-toolbar>
 
-  <div :class="'column full-width' + (dialogs.newproposal ? ' disabled' : '')">
-    <div class="row items-center q-gutter-sm">
-      <select-svcorg @select="selsoa"/>
-      <btn-cond icon="backspace" :label="$t('erase')"
-        color="warning" @ok="reset"/>
-    </div>
+  <div :class="'column full-width items-center' + (dialogs.newproposal ? ' disabled' : '')">
+    <select-svcorg @select="selsoa"/>
+    <div v-if="!ui.currentForm.soa || !ui.currentForm.soa.org"
+      class="full-width msg">{{ $t('FORMnosoa') }}</div>
 
-    <div v-if="ui.currentForm.soa">
-      <div v-if="ui.currentForm.soa.admin" class="row items-center q-gutter-sm">
+    <div v-else class="full-width">
+      <div v-if="ui.currentForm.soa.admin"
+        class="row items-center q-gutter-sm">
         <q-toggle v-model="ui.currentForm.asAdmin" color="warning"/>
         <img v-if="ui.currentForm.asAdmin" :src="superman" width="32px"/>
         <div class="titre-md text-italic">{{ $t('FORMadmin') }}</div>
@@ -30,10 +29,10 @@
 
       <div v-if="!ui.currentForm.pft.size" class="msg">{{ $t('FORMnoprops') }}</div>
 
-      <div v-else :class="'column full-width' + (dialogs.newproposal ? ' disabled' : '')">
+      <div v-else :class="'column' + (dialogs.newproposal ? ' disabled' : '')">
         <div class="tbs row items-center justify-between">
           <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
-            @back="ui.currentForm.zoomed = false"/>
+            @back="back"/>
           <type-menu v-model="formType" :title="$t('FORMnewp')" :allow="ui.currentForm.pft"
             @select="openNewP"/>
         </div>
@@ -101,11 +100,17 @@ watchEffect(async () => {
     await $Form.possibleFormTypes(cf.soa.svc, cf.soa.org, cf.asAdmin)
 })
 
-const selsoa = async (soa: SOA) => {
+const back = async () => {
+  const b = await ui.mayClose()
+  if (b)
+    ui.currentForm.zoomed = false
+}
+
+const selsoa = (soa: SOA) => {
+  if (!soa) { reset(); return }
   const cf = ui.currentForm
   cf.soa = soa
   cf.asAdmin = false
-  // cf.pft = await $Form.possibleFormTypes(soa.svc, soa.org, cf.asAdmin)
 }
 
 const reset = () => {

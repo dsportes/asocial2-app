@@ -34,10 +34,10 @@ export const useFormStore = defineStore('form', () => {
     diag1.value = doCheck()
     diag2.value = diag1.value ? '' : await f.checkEtc(upd.etc)
     if (isDemand.value) {
-      upd.etcc = upd.msg !== f.msgU || f.eqEtc(f.etcU, upd.etc)
+      upd.etcc = !f.eqEtc(f.etcU, upd.etc)
       upd.msgc = upd.msg !== f.msgU
     } else {
-      upd.etcc = upd.msg !== f.msgT || f.eqEtc(f.etcT, upd.etc)
+      upd.etcc = !f.eqEtc(f.etcT, upd.etc)
       upd.msgc = upd.msg !== f.msgT
     }
     if (!creating.value) {
@@ -59,26 +59,21 @@ export const useFormStore = defineStore('form', () => {
     form.value = formCtx.form
     isDemand.value = formCtx.isDemand
     const f = form.value
-    f.msgU = f.msgU ? decoder.decode(f.msgU) : ''
-    f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
+    if (typeof f.msgU !== 'string') f.msgU = f.msgU ? decoder.decode(f.msgU) : ''
+    if (typeof f.msgT !== 'string') f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
     reset()
-    setTimeout(async () => { await onChange()}, 1)
+    setTimeout(async () => {
+      await onChange()}, 1)
   }
 
-  const reset = async () => {
+  const reset = () => {
     const f = form.value
     const ui = stores.ui
     if (f.status !== 0) ui.resetEditing()
-    if (isDemand.value) {
-      upd.msg = f.msgU
-      upd.etc = f.etcU ? f.cloneEtc(f.etcU) : (f.etcT ? f.cloneEtc(f.etcT) : f.initEtc(true))
-    } else {
-      upd.msg = f.msgT
-      upd.etc = f.etcT ? f.cloneEtc(f.etcT) : (f.etcU ? f.cloneEtc(f.etcU) : f.initEtc(false))
-    }
+    upd.msg = isDemand.value ? f.msgU || '' : f.msgT || ''
+    upd.etc = isDemand.value ? f.cloneEtc(f.etcU) : f.cloneEtc(f.etcT)
     visU.value = (f.status === 0 && isDemand.value) || (f.status > 0)
     visT.value = (f.status === 0 && !isDemand.value) || (f.status > 0)
-    console.log('visU', visU.value)
   }
 
   const undo = async () => {
@@ -91,7 +86,6 @@ export const useFormStore = defineStore('form', () => {
     form, isDemand, diag1, diag2,
     upd,
     hasChg, editable, creating, visU, visT
-
   }
 
 })

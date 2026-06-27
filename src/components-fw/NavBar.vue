@@ -26,9 +26,6 @@ Emit:
 </template>
 
 <script setup lang="ts">
-// @ts-ignore
-import { ref, watch, computed } from 'vue'
-import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 

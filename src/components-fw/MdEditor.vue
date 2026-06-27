@@ -11,8 +11,8 @@
           <btn-cond v-if="modifie" class="q-mr-xs" @ok="undo" icon="undo" flat color="nb"/>
           <slot/>
           <q-space/>
-          <div :class="'font-mono fs-sm' + (textelocal && textelocal.length >= maxlg ? ' text-bold text-warning bg-yellow-5':'')">
-            {{textelocal ? textelocal.length : 0}}/{{maxlg}}c
+          <div :class="'font-mono fs-sm' + (model.length >= maxlg ? ' text-bold text-warning bg-yellow-5':'')">
+            {{model.length}}/{{maxlg}}c
           </div>
           <btn-cond class="q-mx-xs" @ok="print" icon="print" flat color="nb"/>
           <btn-cond v-if="okbtn && editable" class="q-mx-xs" padding="xs" color="warning"
@@ -21,9 +21,9 @@
         </q-toolbar>
 
         <q-input v-if="!md" type="textarea"
-          class="q-pa-xs font-mono" v-model="textelocal" :rows="rows || 10"
+          class="q-pa-xs font-mono" v-model="model" :rows="rows || 10"
           :readonly="!editable" :placeholder="placeholder"/>
-        <sd-nb v-else :text="textelocal" class="q-pa-xs bord1" :style="mhs(0)"/>
+        <sd-nb v-else :text="model" class="q-pa-xs bord1" :style="mhs(0)"/>
 
   </div>
 
@@ -51,10 +51,10 @@
       </q-header>
 
       <q-page-container>
-        <q-input v-if="!md" type="textarea" v-model="textelocal" autogrow
+        <q-input v-if="!md" type="textarea" v-model="model" autogrow
           :class="sty() + ' font-mono'"
           :readonly="!editable" :placeholder="placeholder"/>
-        <sd-nb v-else :class="sty() + ' bord1'" :text="textelocal"/>
+        <sd-nb v-else :class="sty() + ' bord1'" :text="model"/>
       </q-page-container>
     </q-layout>
     </div>
@@ -97,6 +97,11 @@ const props = defineProps({
   rows: Number
 })
 
+model.value = props.text || ''
+/* valeur initiale. Change quand text change.
+Permet de savoir si model a été réellement changé */
+const initial = ref(props.text || '')
+
 const ui = stores.ui
 
 const config = stores.config
@@ -107,29 +112,26 @@ const max = ref(false)
 
 const maxlg = ref(props.lgmax || config.maxlgtextegen)
 
-const textelocal = ref(props.text)
-const texteinp = ref(props.text) // dernière valeur source passée sur la prop 'texte'
 const md = ref(!props.modetxt)
-const inp = ref(null)
 
-watch(() => props.text, (ap, av) => { // quand texte change, textelocal ne change pas si en édition
-  if (textelocal.value === texteinp.value && textelocal.value !== ap) {
-    // textelocal n'était PAS modifié, ni égal à la nouvelle valeur : alignement sur la nouvelle valeur
-    textelocal.value = ap
-  }
-  texteinp.value = ap
+watch(() => props.text, (ap, av) => {
+  if (model.value === initial.value) model.value = ap
+  initial.value = ap
 })
 
 watch(() => props.modetxt, (ap, av) => {
   if (ap) md.value = false
 })
 
-watch(textelocal, (ap, av) => {
-  if (ap && ap.length > maxlg.value) textelocal.value = ap.substring(0, maxlg.value)
-  model.value = textelocal.value
+watch(model, (ap, av) => {
+  if (ap && ap.length > maxlg.value) model.value = ap.substring(0, maxlg.value)
 })
 
-const modifie = computed(() => textelocal.value !== texteinp.value)
+const undo = () => {
+  model.value = props.text
+}
+
+const modifie = computed(() => model.value !== initial.value)
 
 const ouvriremojimd1 = () => {
   inp.value = root.value.querySelector('textarea')
@@ -164,11 +166,7 @@ const print = async () => {
   }
 }
 
-function undo () {
-  textelocal.value = texteinp.value
-}
-
-function emojiDone (pos) {
+const emojiDone = (pos) => {
   const ta = inp.value
   textelocal.value = ta.value
   dialogs.emoji = false

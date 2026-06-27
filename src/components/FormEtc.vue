@@ -12,20 +12,30 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   <div v-if="fst.form.type === 'membrecodir'" class="q-my-md">
     <div class="titre-md q-mt-md">{{  $t('TYPE_membrecodir_pseudo') }}</div>
 
-    <div v-if="fst.visU" class="row q-px-xs" items-center>
-      <input-b class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
-        v-model="pseudo" noval :initval="fst.upd.etc.pseudo || ''"
-        :disable="!fst.isDemand || !fst.editable"/>
-      <btn-cond v-if="!fst.isDemand || !fst.editable" class="col-auto" round icon="content_paste"
-        @ok="fst.upd.etc.pseudo = (fst.form.etcT && fst.form.etcT.pseudo ? fst.form.etcT.pseudo : ''); onChange()"/>
+    <div v-if="fst.visU" class="row q-px-xs items-center">
+      <input-b v-if="fst.isDemand && fst.editable"
+        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
+        v-model="pseudo" noval :initval="psU"/>
+      <input-b v-else
+        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
+        v-model="pseudo2" noval :initval="pseudo2.inp" disable/>
+      <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
+        flat icon="content_paste" @ok="copyPseudoU"/>
+      <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
+        flat icon="star" @ok="initPseudoU"/>
     </div>
 
-    <div v-if="fst.visT" class="row q-px-xs" items-center>
-      <input-b class="col-10 font-mono text-bold" size="pseudo" prefix="FORMprop_2"
-        v-model="pseudo" noval :initval="fst.upd.etc.pseudo || ''"
-        :disable="fst.isDemand || !fst.editable"/>
-      <btn-cond v-if="fst.isDemand || !fst.editable" class="col-1" round icon="content_paste"
-        @ok="fst.upd.etc.pseudo = (fst.form.etcU && fst.form.etcU.pseudo ? fst.form.etcU.pseudo : ''); onChange()"/>
+    <div v-if="fst.visT" class="row q-px-xs items-center">
+      <input-b v-if="!fst.isDemand && fst.editable"
+        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
+        v-model="pseudo" noval :initval="psT"/>
+      <input-b v-else
+        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
+        v-model="pseudo2" noval :initval="pseudo2.inp" disable/>
+      <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
+        flat icon="content_paste" @ok="copyPseudoT"/>
+      <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
+        flat icon="star" @ok="initPseudoT"/>
     </div>
   </div>
 
@@ -51,17 +61,27 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-// import MdEditor from '../components-fw/MdEditor.vue'
-// import { $Form } from '../src-fw/documents'
 
 const fst = stores.form
-// const ui = stores.ui
 
+const psU = computed(() => fst.form.cloneEtc(fst.form.etcU).pseudo)
+const psT = computed(() => fst.form.cloneEtc(fst.form.etcT).pseudo)
 const pseudo = reactive({ inp: '', err: '' })
 watch(pseudo, async (v) => {
   fst.upd.etc.pseudo = v.inp
   await fst.onChange()
 })
+watch(() => fst.upd.etc, (v) => {
+  pseudo.inp = v.pseudo
+})
+const pseudo2 = reactive({ inp: '', err: '' })
+pseudo.inp = fst.upd.etc.pseudo
+pseudo2.inp = fst.isDemand ? psT.value : psU.value
+const copyPseudoU = () => { pseudo.inp = psT.value }
+const copyPseudoT = () => { pseudo.inp = psU.value }
+const initPseudoU = () => { pseudo.inp = fst.form.initEtc(true).pseudo }
+const initPseudoT = () => { pseudo.inp = fst.form.initEtc(false).pseudo }
+
 
 /**********************************************************************************/
 fst.setFnCheck({
