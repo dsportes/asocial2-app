@@ -33,21 +33,22 @@
         <div class="tbs row items-center justify-between">
           <nav-bar class="col-auto q-ma-xs" v-model="ui.navBar"
             @back="back"/>
-          <type-menu v-model="formType" :title="$t('FORMnewp')" :allow="ui.currentForm.pft"
+          <type-menu :title="$t('FORMnewp')" :allow="ui.currentForm.pft"
             @select="openNewP"/>
         </div>
       </div>
     </div>
   </div>
 
-  <dialog-std0 v-if="dialogs.newproposal" v-model="dialogs.newproposal" width="pwsm" vh="80"
-    :title="$t('FORMnewp', [$t('TYPE_' + formType).substring(0,2)])"
+  <dialog-std0 v-if="dialogs.newproposal" v-model="dialogs.newproposal"
+    width="pwsm" vh="80"
+    :title="$t('FORMnewp', [ftLabel])"
     hdrclass="tbs" vue="SponsoringsHeader" @close="close">
     <template #default>
       <input-b class="q-my-sm"
         v-model="alias" size="alias" prefix="FORMuseralias"
-        :disable="userId" @validate="valA"/>
-      <form-zoom v-if="userId" v-model="fctx" @done="onDone"/>
+        :disable="userId !== ''" @validate="valA"/>
+      <form-zoom v-if="userId && fctx" v-model="fctx" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -56,11 +57,12 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, watchEffect } from 'vue'
+import { ref, Ref, reactive, computed, watchEffect } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
+import { FormType } from '../src-fw/doctypes'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import SettingsButton from '../components-fw/SettingsButton.vue'
@@ -89,10 +91,15 @@ const fctx = computed(() => {
   return { form: form.value, isDemand: false, comment: '' }
 })
 
-const formType = ref('')
+const formType: Ref<FormType> = ref()
+const ftLabel = computed(() => {
+  if (!formType.value) return '?'
+  const y = $t('TYPE_' + formType.value.type)
+  return y.substring(2)
+})
 const form = ref(null)
 const userId = ref('')
-const alias = ref('')
+const alias = reactive({ inp: '', err: '' })
 
 watchEffect(async () => {
   const cf = ui.currentForm
@@ -120,10 +127,9 @@ const reset = () => {
   cf.asAdmin = false
 }
 
-const openNewP = () => {
-  formType.value = ''
-  form.value = null
-  alias.value = ''
+const openNewP = (ft) => {
+  formType.value = ft
+  alias.inp = ''; alias.err = ''
   userId.value = ''
   dialogs.newproposal = true
 }
@@ -131,7 +137,7 @@ const openNewP = () => {
 const valA = async () => {
   const cf = ui.currentForm
   userId.value = ''
-  const hsha = Crypt.shaS(await Crypt.strongHash(alias.value, false, true))
+  const hsha = Crypt.shaS(await Crypt.strongHash(alias.inp, false, true))
   const icvs = await sf.mdUserGetICVS(hsha)
   if (!icvs) {
     await ui.diagDisplay($t('APnouser'), true)
@@ -141,7 +147,7 @@ const valA = async () => {
   userId.value = icvs.i
   ui.setEditing()
   const obj: $FormObj = {
-    type: formType.type,
+    type: formType.value.type,
     formId: Crypt.rnd(15),
     userId: userId.value,
     v: 0,
@@ -153,7 +159,7 @@ const valA = async () => {
     msgT: null,
   }
   form.value = $Form.new(obj)
-  form.value.opts = { asAdmin: cf.asAdmin, alias: alias.value }
+  form.value.opts = { asAdmin: cf.asAdmin, alias: alias.inp }
   form.value.svc = cf.soa.svc
   form.value.org = cf.soa.org
 }
@@ -162,15 +168,15 @@ const close = async () => {
   const b = await ui.mayClose()
   if (b) {
     dialogs.newproposal = false
-    formType.value = ''
+    formType.value = null
     form.value = null
-    alias.value = ''
+    alias.inp = ''; alias.err = ''
     userId.value = ''
   }
 }
 
 const onDone = (ok: boolean) => { // si false pas créé
-  formType.value = ''
+  formType.value = null
   dialogs.newproposal = false
   if (ok)
     ui.currentForm.fnOnUpdate(form.value.formId)

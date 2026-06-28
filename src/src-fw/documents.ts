@@ -409,12 +409,25 @@ export class $Form extends $Document {
   }
 
   async createByU (upd: Upd) : Promise<boolean> {
-    const sf = stores.safe
-    const ui = stores.ui
     this.etcU = upd.etc
     this.msgU = await this.cryptMsgU(encoder.encode(upd.msg))
+    return await this.createByUT(true)
+  }
+
+  async createByT (upd: Upd) : Promise<boolean> {
+    this.etcT = upd.etc
+    this.msgT = encoder.encode(upd.msg)
+    return await this.createByUT(false)
+  }
+
+  async createByUT (byU: boolean) : Promise<boolean> {
+    const sf = stores.safe
+    const ui = stores.ui
     this.ch = this.getCh()
-    const op = new Operation('FormCreateByU', this.svc, this.org)
+    const op = new Operation('FormCreateBy' + (byU ? 'U' : 'T'), this.svc, this.org)
+    const creds = byU ? null : $Form.credsForTP(this.svc, this.org)
+    if (creds && creds.size)
+      for(const cred of creds) await op.sign(cred)
     try {
       op.args.formObj = this.toFormObj()
       const ret = await op.post()
@@ -423,24 +436,16 @@ export class $Form extends $Document {
         return
       }
       const op2 = new MDOperation('$mdEventNew')
-      /*
-      const eventId = this.args['eventId'] as string
-      const type = this.args['type'] as string
-      const userId = this.args['userId'] as string
-      const svc = this.args['svc'] as string
-      const org = this.args['org'] as string
-      const ch = this.args['ch'] as string
-      const comment = this.args['comment'] as Uint8Array
-      */
       op2.setArgs({
         eventId: this.formId,
         type: this.type,
-        userId: sf.userId,
+        userId: byU ? sf.userId : this.userId,
         svc: this.svc,
         org: this.org,
         ch: this.ch,
-        comment: this.comment ? await Crypt.crypt(sf.keyK, encoder.encode(this.comment)) : null
       })
+      if (byU)
+        op2.args.comment = this.comment ? await Crypt.crypt(sf.keyK, encoder.encode(this.comment)) : null
       try {
         await op2.post()
         await ui.diagDisplay($t('FORMdemok'))
@@ -457,7 +462,6 @@ export class $Form extends $Document {
 
   async updateByUT (args: Object, opName: string) : Promise<boolean> {
     const ui = stores.ui
-    const event = ui.currentEvent.event
     const op = new Operation(opName, this.svc, this.org)
     try {
       op.setArgs(args)
@@ -475,7 +479,8 @@ export class $Form extends $Document {
         op2.args.eventId = this.formId
         op2.args.chk = Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
         await op2.post()
-        await ui.diagDisplay($t('FORMdemok'))
+        await ui.diagDisplay($t(opName === 'FormCancel' ? 'FORMdemko' :
+           (opName === 'FormUpdByU' ? 'FORMdemok' : 'FORMpropok')))
         return true
       } catch(e2) {
         op.ko(e2)
@@ -505,6 +510,14 @@ export class $Form extends $Document {
       msgT: encoder.encode(upd.msg)
     }
     return await this.updateByUT(args, 'FormUpdByT')
+  }
+
+  async cancelByU () : Promise<boolean> {
+    const args = {
+      formId: this.formId,
+      type: this.type
+    }
+    return await this.updateByUT(args, 'FormCancel')
   }
 }
 

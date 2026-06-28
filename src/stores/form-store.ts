@@ -31,6 +31,11 @@ export const useFormStore = defineStore('form', () => {
 
   const onChange = async () => {
     const f = form.value
+    if (f.status > 2) {
+      diag1.value = ''
+      diag2.value = ''
+      return
+    }
     diag1.value = doCheck()
     diag2.value = diag1.value ? '' : await f.checkEtc(upd.etc)
     if (isDemand.value) {
@@ -63,7 +68,7 @@ export const useFormStore = defineStore('form', () => {
     if (typeof f.msgT !== 'string') f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
     reset()
     setTimeout(async () => {
-      await onChange()}, 1)
+        await onChange()}, 1)
   }
 
   const reset = () => {

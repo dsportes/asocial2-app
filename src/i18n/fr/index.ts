@@ -892,7 +892,8 @@ Fermer la fenêtre corespond à un NON sélection.
 
   FORMnosoa: 'Choisir une organisation',
   FORMnewd: 'Nouvelle demande: {0}',
-  FORMnewp: 'Nouvelle proposition',
+  FORMnewp: 'Nouvelle proposition: {0}',
+  FORMuseralias_label: 'Alias de l\'utilisateur cible',
   FORMnoevents: 'Aucune demande / proposition en cours pour vous actuellement.',
   FORMnoforms: 'Aucune demande / proposition en cours ne peut être traitée par vous actuellement.',
   FORMnoform: 'Incident inattendu probablement temporaire: la demande / proposition n\'a pas été trouvée, l\'ignorer pour l\'instant.',
@@ -932,6 +933,7 @@ bla bla
 `,
   FORMdemok: 'Demande enregistrée avec succès.',
   FORMpropok: 'Proposition enregistrée avec succès.',
+  FORMdemko: 'Demande annulée avec succès.',
 
   /*
   Détecté par l'application

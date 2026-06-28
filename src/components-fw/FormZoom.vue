@@ -60,7 +60,7 @@
   <div v-if="fst.diag1 === '' && fst.diag2 !== ''" class="q-my-sm msg bred">
     {{ $t('FORMdiag_' + fst.diag2) }}</div>
 
-  <div class="q-mb-sm column items-center q-gutter-xs">
+  <div v-if="fst.form.status <= 2" class="q-mb-sm column items-center q-gutter-xs">
     <btn-cond v-if="fst.creating" icon="check"
       :label="$t('FORMbtnnocr' + (fst.isDemand ? 'd' : 'p'))" @ok="action(8)"/>
     <btn-cond v-if="!fst.creating" icon="undo"
@@ -92,18 +92,18 @@
   <!-- Messages --------------------------------------------------------------->
   <div v-if="fst.visU">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
-    <md-editor v-if="fst.isDemand" v-model="fst.upd.msg"
+    <md-editor v-if="fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
       :lgmax="500" :rows="3" :text="fst.form.msgU || ''" modetxt editable/>
-    <md-editor v-else model="fst.form.msgU" :rows="3"
+    <md-editor v-else model="fst.form.msgU" :rows="3" disable
       :text="fst.form.msgU || ''" modetxt/>
   </div>
 
   <div v-if="fst.visT">
     <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
     <!--div>{{ fst.upd.msg }} / {{ fst.form.msgT }}</div-->
-    <md-editor v-if="!fst.isDemand" v-model="fst.upd.msg"
+    <md-editor v-if="!fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
       :lgmax="500" :rows="3" :text="fst.form.msgT || ''" modetxt editable/>
-    <md-editor v-else v-model="fst.form.msgT" :rows="3"
+    <md-editor v-else v-model="fst.form.msgT" :rows="3" disable
       :text="fst.form.msgT || ''" modetxt/>
   </div>
 
@@ -153,7 +153,8 @@ const ui = stores.ui
 const fst = stores.form
 
 const fctx = defineModel<FormCtx>()
-// watch(fctx, (v) => { fst.startEdit(v) }) // ne sert à rien. Surprenat.
+watch(() => fctx.value,
+  () => { fst.startEdit(fctx.value) }) // quand on navigue par suiv. prec.
 fst.startEdit(fctx.value)
 
 watch(() => fst.upd.msg, (v) => {
