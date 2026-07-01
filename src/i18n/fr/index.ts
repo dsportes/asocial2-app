@@ -1073,9 +1073,12 @@ bla bla
   EX105_service_arguments_notdecodable: 'Opération Service en échec inattendu. impossible de décoder les arguments.',
   EX105_safe_arguments_notdecodable: 'Opération Safe Box en échec inattendu. impossible de décoder les arguments.',
   EX105_masterdir_case_chk: 'Accès au masterdir "case" avec une clé d\'authentification "chk" non valide.',
+  EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
+  EX108_remote_md_safes_access_400: 'MasterDirectory ou Safe non accessible. Url:[{0}] status:[{1} texte:[{2}]',
+  EX108_remote_md_safes_access_exc: 'MasterDirectory ou Safe, accès en échec. Url:[{0}] status:[{1} texte:[{2}]',
 
   EX110_FilesystemStorage_path_not_found: 'Rootpath: [{0}]',
   EX110_DbConnector_credentials_not_found: 'DbConnector_credentials_not_found',
