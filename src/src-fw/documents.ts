@@ -29,9 +29,9 @@ export class $CredTempl {
 
   static async new (svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
     const sf = stores.safe
-    const K = sf.keyK
     const t = new $CredTempl()
     t.credId = Crypt.rnd(15)
+    t.signId = await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId))
     t.svc = svc
     t.org = org
     t.docCl = docCl
@@ -43,7 +43,6 @@ export class $CredTempl {
     const dc = await Crypt.getKeyPair()
     t.pubc = dc.pub
     t.privdK = await Crypt.crypt(sf.keyK, dc.priv)
-    t.signId = await Crypt.sign(sv.priv, encoder.encode(t.credId))
     return t
   }
 }
