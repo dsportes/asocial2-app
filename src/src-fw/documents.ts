@@ -7,28 +7,53 @@ import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, opOfSvcOrg } from '../src-fw/operation'
 import { FormType } from '../src-fw/doctypes'
+import { DocType } from '../src-fw/doctypes'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-export type $Cred = { // Credential attaché à un document
+/* Génératiuon d'un "template" comportant toutes les données (sauf userId)
+pour créer un Credential dans une opération */
+export class $CredTempl {
+  credId: string
+  svc: string
+  org: string
+  docCl: string
+  docPk: string
   pubv: Uint8Array
   pubc: Uint8Array
-  limit: number
-  docKey: Uint8Array | null
-  opaque: Uint8Array | null
-  more: any
-  credId: string
+  privsK: Uint8Array // crypté par clé K de U
+  privdK: Uint8Array // crypté par clé K de U
+  nameK: Uint8Array // crypté par clé K de U
+  signId: Uint8Array // signature de credId par privs
+
+  static async new (svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
+    const sf = stores.safe
+    const K = sf.keyK
+    const t = new $CredTempl()
+    t.credId = Crypt.rnd(15)
+    t.svc = svc
+    t.org = org
+    t.docCl = docCl
+    t.docPk = DocType.getPk(docCl, src)
+    t.nameK = await Crypt.crypt(sf.keyK, encoder.encode(name || ''))
+    const sv = await Crypt.getSVKeyPair()
+    t.pubv = sv.pub
+    t.privsK = await Crypt.crypt(sf.keyK, sv.priv)
+    const dc = await Crypt.getKeyPair()
+    t.pubc = dc.pub
+    t.privdK = await Crypt.crypt(sf.keyK, dc.priv)
+    t.signId = await Crypt.sign(sv.priv, encoder.encode(t.credId))
+    return t
+  }
 }
 
-/* $Credential: possiblemernt mis à jour depuis le document (v more).
+/* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
 export class $Credential {
-  static lp1 = [ 'credId', 'v', 'svc', 'org', 'docCl', 'docPk',
-    'privs', 'privd', 'name', 'docKey', 'aboutme', 'more' ]
+  static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk' ]
 
   credId: string = '' // ID du credential.
-  v: number = 0 // version du document
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
 
@@ -42,12 +67,13 @@ export class $Credential {
 
   name: string = '' // "nom" associé au docId.
 
-  docKey?: Uint8Array | null
-  aboutme?: any | null
-  power?: any | null
+  v: number = 0 // version du document
+  props?: any
 
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 
+  /* Factory similaire au constructor
+  mais créé la sous-classe correspondant à docCl */
   static new (obj): $Credential {
     const c = Registry.newD('$Credential', obj) as  $Credential
     for (const p of $Credential.lp1) this[p] = obj[p] || null
@@ -55,7 +81,7 @@ export class $Credential {
     return c
   }
 
-  get limit () { return this.power && this.power.limit ? this.power.limit : 0 }
+  get limit () { return this.props && this.props.limit ? this.props.limit : 0 }
 
   constructor (obj?: Object) {
     if (obj)
@@ -69,24 +95,14 @@ export class $Credential {
     return encode(obj)
   }
 
-  async dispPower () {
+  async dispProps () {
     const ui = stores.ui
-    await ui.diagDisplay($t('CRRpower', [JSON.stringify(this.power, null, '\t')]))
-  }
-
-  async dispAboutme () {
-    const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', [JSON.stringify(this.aboutme, null, '\t')]))
+    await ui.diagDisplay($t('CRRpower', [JSON.stringify(this.props, null, '\t')]))
   }
 
   async dispLimit () {
     if (this.limit)
       await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 1000)]))
-  }
-
-  async dispDocKey () {
-    const ui = stores.ui
-    await ui.diagDisplay($t('CRRdocKey', [keyToB64(this.docKey || null)]))
   }
 
 }
@@ -238,20 +254,34 @@ export class $Form extends $Document {
 
   /* Méthodes surchargées par type *******************************
   ****************************************************************/
+  /* Clone etc passé en argument OU s'il est null initilise un etc
+  avec des valeurs initiales / par défaut */
   cloneEtc (etcX: Object | null) : Object | null {
     return etcX === null ? { } : decode(encode(etcX))
   }
 
+  /* Test l'égalité entre 2 etc */
   eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
     if (!etcX || !etcY) return false
     return equ8(encode(etcX), encode(etcY))
   }
 
+  /* Retourne le code d'une erreur empâchant la "validation" du form */
   async checkEtc (etcX: Object | null) : Promise<string> {
     return ''
   }
 
-  async validate (args: any) : Promise<number> {
+  /* Compile / génère les données calculées de etc A CHAQUE ENREGISTREMENT
+  et AVANT VALIDATION.
+  - process différent pour une demande (byU est true) ou une proposition
+  */
+ async compileEtc (byU: boolean, etcX: Object) : Promise<void> {
+ }
+
+ /* Traitement de "validation": distinguable selon demande / proposition
+ - retourne un status, normalment à 0
+ */
+  async validate (byU: boolean, etcX: Object) : Promise<number> {
     return 0
   }
   /***************************************************************
@@ -409,12 +439,14 @@ export class $Form extends $Document {
   }
 
   async createByU (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(true, upd.etc)
     this.etcU = upd.etc
     this.msgU = await this.cryptMsgU(encoder.encode(upd.msg))
     return await this.createByUT(true)
   }
 
   async createByT (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(false, upd.etc)
     this.etcT = upd.etc
     this.msgT = encoder.encode(upd.msg)
     return await this.createByUT(false)
@@ -493,6 +525,7 @@ export class $Form extends $Document {
   }
 
   async updateByU (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(true, upd.etc)
     const args = {
       formId: this.formId,
       type: this.type,
@@ -503,6 +536,7 @@ export class $Form extends $Document {
   }
 
   async updateByT (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(false, upd.etc)
     const args = {
       formId: this.formId,
       type: this.type,

@@ -7,34 +7,7 @@ new FormType('membreredaction', 'k1', ['A'])
 new FormType('auteur', 'k2', ['Readction/1'])
 // Un Auteur peut aussi nommer un co-auteur
 new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
-
-/* Méthodes surchargées par type *******************************
-****************************************************************
-  async initEtc (byU: boolean) : Promise<Object> {
-    return {}
-  }
-
-  cloneEtc (etcX: Object | null) : Object | null {
-    return etcX === null ? null : decode(encode(etcX))
-  }
-
-  eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
-    if (!etcX || !etcY) return false
-    return equ8(encode(etcX), encode(etcY))
-  }
-
-  emptyEtc (etcX: Object | null) {
-    return etcX === null || !Array.from(Object.keys(etcX)).length }
-
-  async checkEtc (etcX: Object | null) : Promise<string> {
-    return ''
-  }
-
-  async validate () : Promise<number> {
-    return 0
-  }
-***************************************************************
-****************************************************************/
+*/
 
 class $Form_membrecodir extends $Form {
   constructor () { super() }
@@ -42,6 +15,8 @@ class $Form_membrecodir extends $Form {
   initEtc (byU: boolean) : Object {
     return { pseudo: this.opts && this.opts.alias ? this.opts.alias : 'toto' }
   }
+
+  /* Méthodes surchargées par type *******************************/
   cloneEtc (etcX: Object | null) : Object | null {
     return { pseudo: !etcX ? '' : etcX['pseudo'] }
   }
@@ -56,7 +31,12 @@ class $Form_membrecodir extends $Form {
       return l < 8 || l > 24 ? 'lgp' : ''
     } else return ''
   }
-  async validate (args: any) : Promise<number> {
+
+  async compileEtc (byU: boolean, etc: Object) : Promise<void> {
+    
+  }
+
+  async validate (byU: boolean, etc: Object) : Promise<number> {
     return 0
   }
 }

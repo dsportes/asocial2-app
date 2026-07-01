@@ -7,7 +7,7 @@ import stores from '../stores/all'
 
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
-import { $Cred, $Credential } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
