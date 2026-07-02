@@ -1,5 +1,5 @@
 import { Registry } from '../src-fw/registry'
-import { $Form } from '../src-fw/documents'
+import { $Form, $CredTempl } from '../src-fw/documents'
 
 /*
 new FormType('membrecodir', 'k1', ['A'])
@@ -32,8 +32,12 @@ class $Form_membrecodir extends $Form {
     } else return ''
   }
 
-  async compileEtc (byU: boolean, etc: Object) : Promise<void> {
-    
+  async compileEtc (byU: boolean) : Promise<void> {
+    if (!byU) return
+    if (!this.opts) this.opts = {}
+    // Template du credential d'accès à Codir/1
+    this.opts.credTempl = $CredTempl.new(
+      this.svc, this.org, 'CoDir', { pk: '1' }, this.opts.alias || '')
   }
 
   async validate (byU: boolean, etc: Object) : Promise<number> {

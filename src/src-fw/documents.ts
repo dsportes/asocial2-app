@@ -16,35 +16,42 @@ const decoder = new TextDecoder()
 pour créer un Credential dans une opération */
 export class $CredTempl {
   credId: string
-  svc: string
-  org: string
   docCl: string
   docPk: string
+  credK: string
+  nameK: string // crypté par clé K de U en base 64
+  signId: string // signature de credId par privs en base 64
   pubv: Uint8Array
   pubc: Uint8Array
-  privsK: Uint8Array // crypté par clé K de U
-  privdK: Uint8Array // crypté par clé K de U
-  nameK: Uint8Array // crypté par clé K de U
-  signId: Uint8Array // signature de credId par privs
+
 
   static async new (svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
     const sf = stores.safe
     const t = new $CredTempl()
     t.credId = Crypt.rnd(15)
-    t.signId = await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId))
-    t.svc = svc
-    t.org = org
+    t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
     t.docCl = docCl
-    t.docPk = DocType.getPk(docCl, src)
-    t.nameK = await Crypt.crypt(sf.keyK, encoder.encode(name || ''))
+    const docPk = DocType.getPk(docCl, src)
+    t.nameK = keyToB64(await Crypt.crypt(sf.keyK, encoder.encode(name || '')))
     const sv = await Crypt.getSVKeyPair()
     t.pubv = sv.pub
-    t.privsK = await Crypt.crypt(sf.keyK, sv.priv)
     const dc = await Crypt.getKeyPair()
     t.pubc = dc.pub
-    t.privdK = await Crypt.crypt(sf.keyK, dc.priv)
+
+    const cred = encode({
+      svc: svc,
+      org: org,
+      docCl: docCl,
+      docPk: docPk,
+      privs: sv.priv,
+      privd: dc.priv
+    })
+    t.credK = keyToB64(await Crypt.crypt(sf.keyK, cred))
+
     return t
   }
+
+  
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
@@ -212,6 +219,7 @@ export type $FormObj = {
   etcT: Object | null  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null  // message écrit par U.
   msgT: Uint8Array | null  // message écrit par le tiers.
+  opts?: any | null // options éventuelles de validation (calculées par compileEtc)
 
   comment?: Uint8Array | null // commentaire écrit et crypté par U.
   ch?: string // challenge random de synchronisation initiale avec $MDEvent
@@ -238,11 +246,11 @@ export class $Form extends $Document {
   etcT: Object | null = null // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null = null // message écrit par U.
   msgT: Uint8Array | null = null // message écrit par le tiers.
+  opts?: any = null // options éventuelles de validation (calculées par compileEtc)
 
   comment?: string = '' // commentaire écrit et crypté par U.
   ch?: string = '' // challenge random de synchronisation initiale avec $MDEvent
   // lv?: number = 0 // lastView par U
-  opts?: any = null // options éventuelles de création
   _aesU?: Uint8Array | null = null
 
   get typeEd () {
@@ -270,11 +278,11 @@ export class $Form extends $Document {
     return ''
   }
 
-  /* Compile / génère les données calculées de etc A CHAQUE ENREGISTREMENT
-  et AVANT VALIDATION.
+  /* Compile / génère les données calculées depuis etc dans opts
+  A CHAQUE ENREGISTREMENT et AVANT VALIDATION.
   - process différent pour une demande (byU est true) ou une proposition
   */
- async compileEtc (byU: boolean, etcX: Object) : Promise<void> {
+ async compileEtc (byU: boolean) : Promise<void> {
  }
 
  /* Traitement de "validation": distinguable selon demande / proposition
@@ -293,7 +301,7 @@ export class $Form extends $Document {
 
   /* Pour transmission au service à la création par $FormObj */
   static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife',
-    'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
+    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
 
   static new (obj) : $Form {
     const f = Registry.newD('$Form', obj)
@@ -438,14 +446,14 @@ export class $Form extends $Document {
   }
 
   async createByU (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(true, upd.etc)
+    await this.compileEtc(true)
     this.etcU = upd.etc
     this.msgU = await this.cryptMsgU(encoder.encode(upd.msg))
     return await this.createByUT(true)
   }
 
   async createByT (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(false, upd.etc)
+    await this.compileEtc(false)
     this.etcT = upd.etc
     this.msgT = encoder.encode(upd.msg)
     return await this.createByUT(false)
@@ -510,8 +518,7 @@ export class $Form extends $Document {
         op2.args.eventId = this.formId
         op2.args.chk = Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
         await op2.post()
-        await ui.diagDisplay($t(opName === 'FormCancel' ? 'FORMdemko' :
-           (opName === 'FormUpdByU' ? 'FORMdemok' : 'FORMpropok')))
+        await ui.diagDisplay($t('FORMok_' + opName))
         return true
       } catch(e2) {
         op.ko(e2)
@@ -524,7 +531,7 @@ export class $Form extends $Document {
   }
 
   async updateByU (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(true, upd.etc)
+    await this.compileEtc(true)
     const args = {
       formId: this.formId,
       type: this.type,
@@ -535,7 +542,7 @@ export class $Form extends $Document {
   }
 
   async updateByT (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(false, upd.etc)
+    await this.compileEtc(false)
     const args = {
       formId: this.formId,
       type: this.type,
@@ -552,6 +559,30 @@ export class $Form extends $Document {
     }
     return await this.updateByUT(args, 'FormCancel')
   }
-}
 
+  async validateByU (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(true)
+    const args = {
+      formId: this.formId,
+      type: this.type,
+      etcU: upd.etc,
+      msgU: await this.cryptMsgU(encoder.encode(upd.msg)),
+      opts: this.opts || {}
+    }
+    return await this.updateByUT(args, 'FormValidateByU')
+  }
+
+  async validateByT (upd: Upd) : Promise<boolean> {
+    await this.compileEtc(false)
+    const args = {
+      formId: this.formId,
+      type: this.type,
+      etcT: upd.etc,
+      msgT: encoder.encode(upd.msg),
+      opts: this.opts || {}
+    }
+    return await this.updateByUT(args, 'FormValidateByT')
+  }
+
+}
 Registry.registerD($Form)

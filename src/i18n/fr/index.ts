@@ -931,9 +931,11 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMdem_bub: `## Type de votre demande
 bla bla
 `,
-  FORMdemok: 'Demande enregistrée avec succès.',
-  FORMpropok: 'Proposition enregistrée avec succès.',
-  FORMdemko: 'Demande annulée avec succès.',
+  FORMok_FormUpdByU: 'Demande enregistrée avec succès.',
+  FORMok_FormUpdByT: 'Proposition enregistrée avec succès.',
+  FORMok__FormValidateByU: 'Demande enregistrée et VALIDEE avec succès.',
+  FORMok_FormValidateByT: 'Proposition enregistrée et VALIDEE avec succès.',
+  FORMok_FormCancel: 'Demande annulée avec succès.',
 
   /*
   Détecté par l'application
