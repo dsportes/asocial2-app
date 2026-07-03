@@ -37,7 +37,9 @@ class $Form_membrecodir extends $Form {
     if (!this.opts) this.opts = {}
     // Template du credential d'accès à Codir/1
     if (this.opts.credTemplates) this.opts.credTemplates = {}
-    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'CoDir', { pk: '1' }, this.opts.alias || '')
+    const name = this.opts.alias || ''
+    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'CoDir', 
+      { pk: '1' }, name, { name })
     this.opts.credTemplates[ct.credId] = ct
    }
 
