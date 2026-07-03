@@ -25,8 +25,10 @@ export class $CredTempl {
   
   pubv: Uint8Array
   pubc: Uint8Array
+  props: Object
 
-  static async new (userId: string, svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
+  static async new (userId: string, svc: string, org: string, 
+    docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const sf = stores.safe
     const t = new $CredTempl()
     t.userId = userId
@@ -39,6 +41,7 @@ export class $CredTempl {
     t.pubv = sv.pub
     const dc = await Crypt.getKeyPair()
     t.pubc = dc.pub
+    t.props = props
 
     const cred = encode({
       svc: svc,
