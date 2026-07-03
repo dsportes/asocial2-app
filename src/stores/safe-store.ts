@@ -20,31 +20,50 @@ import { DocType } from '../src-fw/doctypes'
 
 /*
 ### Safes stockés dans un directory
-Dans un directory externe de "safes", chaque "safe" est enregistré et accessible par:
-- clé primaire: soit son "id",
-- index unique: soit la propriété "hp0", pseudo "principal",
-- index unique: soit la propriété "hr0", pseudo "seconaire".
-La proriété "lam" (dernier mois d'accès) est gérée par le serveur et permet de récupérer
-tous les safes qui n'ont pas été accédés depuis longtemps et de les purger.
+Dans un directory externe de "safes", chaque "safe" est enregistré 
+et accessible par sa clé primaire "userId",
 
-La "valeur" accédée est la sérialisation par Msgpack d'un objet "Safe", (cryptée ou non par le serveur).
-Cette sérialisation est indépendante des implémentations à condition de respecter les contraintes suivantes:
+La proriété "llq" (_last login quarter_) est gérée par le serveur 
+et permet de récupérer tous les safes qui n'ont pas été accédés depuis longtemps
+et de les purger.
+
+La "valeur" accédée est la sérialisation par Msgpack d'un objet "Safe", 
+(cryptée ou non par le serveur) indépendante des implémentations 
+à condition de respecter les contraintes suivantes:
 - les "map" vides sont null (et non pas des object vides, mal gérés sous PHP).
 - les propriétés sont des "string / number / boolean".
 - les valeurs "binaires" sont passées en textes encodés en base64 (les binaires ne sont pas supportés en PHP).
 
 Les propriétés sont les suivantes:
 - celles cités dans le "type Auth". Les données "binaires" (clés, etc.) sont des string en base 64.
-- les maps "devices" "creds" "profiles" "prefs":
-  - chaque "map" est un object javascript (ou associative array PHP).
-  - la clé est un string:
-    - pour "devices" l'id d'un device,
-    - pour les autres un id d'applicatio: il y a donc une "sous-map" par application.
-- "devices" map les descriptifs de device.
-- "creds" a une sous-map par application dont chaque entrée est l'identifiant d'un credential.
-- "profiles" a une sous-map par application dont chaque entrée est l'identifiant d'un profile.
-- "prefs" a une sous-map par application dont chaque entrée est le code d'une préférence.
-- "invits" une map par invitation. Chaque entrée est cryptée par la clé K de l'utilisateur.
+- les maps "devices" "creds" "profiles" "prefs": chacune est un object javascript (ou associative array PHP).
+
+"devices" : Devices de confiance. Une entrée par device identifiée par `devid`:
+  - `about` : code / texte court **crypté par la clé K du _safe_**
+    donné par l'utilisateur pour qualifier le _device_ (par exemple `PC d'Alice`).
+  - `{ Va, cy, sign, nbe }` : propriétés cryptographiques permettant de valider
+    que ce _device_ est de confiance.
+
+"creds" : Credentials. Une entrée par "credId" : [nameK, credK, toCheck]
+  - nameK : name correspondant au docPk du credential, crypté par K en base 64
+  - credK : contenu du credential  { svc, org, docCl, docPk, privs privd } crypté par K en base 64
+  - toCheck : si true, credential _indécis_ (existence réelle à vérifier).
+
+"prefs" : Préférences avec une **sous-section par application** chacune donnant une
+map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
+  - `code` : texte court parlant pour l'utilisateur correspondant
+    à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
+  - `time`: date-heure de dernière mise à jour
+  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
+    à l'ouverture d'une session.
+
+"profiles" : Section organisée avec une **sous-section par application** regroupant une liste d'items
+ayant un identifiant généré aléatoirement à sa création.
+Chaque item est sérialisé en base64 et a les propriétés suivantes:
+  - `about`: texte significatif pour l'utilisateur **crypté par la clé K**
+    décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
+  - `creds`: liste des credId des _credentials_ qui sont attachés à une session
+    de ce profil lors de son ouverture.
 
 Le texte sérialisé d'un Safe est,
 - exportable dans un fichier externe (crypté à l'export),
@@ -66,8 +85,9 @@ Le texte lui-même n'est jamais renvoyé au serveur:
   - réécrit en DB une sérialisation de l'objet,
   - retourne à l'appelant le Safe qu'objet.
 
-  ### Micro base locale IDB `safe` d'un terminal
-Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données IDB nommée `safe` ayant les tables suivantes.
+### Micro base locale IDB `safe` d'un terminal
+Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données 
+IDB nommée `safe` ayant les tables suivantes.
 
 #### `header`
 Cette table _singleton_ a deux colonnes:
@@ -178,15 +198,6 @@ export type Profile = {
   profId: string
   about: string
   crIds: string[]
-}
-
-export type Sponsoring = {
-  id?: string
-  svc: string
-  org: string
-  major: string
-  minor: string
-  isSp: boolean
 }
 
 const encoder = new TextEncoder()
@@ -537,7 +548,9 @@ export const useSafeStore = defineStore('safe', () => {
   const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds": organisée avec une **sous-section par application** */
-  const mySafeCreds: Ref<Map<string, $Credential>> = ref() // ceux de l'app
+  const mySafeCreds: Ref<Map<string, $Credential>> = ref()
+
+  const credsToCheck: Ref<string[]> = ref()
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -616,8 +629,7 @@ export const useSafeStore = defineStore('safe', () => {
       await resetAliases(safe)
   }
 
-  /* Réalignement des alias actual / future sur la valeur
-  détenue dans Master Directory.
+  /* Réalignement des alias actual / future sur la valeur détenue dans Master Directory.
   Sans échec: au pire rien n'est mis à jour maintenant.
   */
   const resetAliases = async (safe: Safe) => {
@@ -745,26 +757,24 @@ export const useSafeStore = defineStore('safe', () => {
   /***************************************************************************/
 
   /* Creds ************************************************************************
-  En safe la map safe.creds a une entrée par Credential:
-  - clé: shaS de (svc + '/' + org + '/' + role + '/' + docId)
-  - valeur: [ comment, data ]
-    - comment: proprité comment cryptée par la clé K de U et en base 64.
-      c'est la seule propriété qui peut être mise à jour par U ultérieurement.
-    - data: la sérialisation des autres propriétés {id svc role docId time privs name rec}
-      cryptées par la clé K de U et mis en base 64.
-  SEUL U peut créer et mettre à jour (le comment seulement) un Credential.
-    - lors de la validation d'une invitation.
+  "creds" : Credentials. Une entrée par "credId" : [nameK, credK, toCheck]
+    - nameK : name correspondant au docPk du credential, crypté par K en base 64
+    - credK : contenu du credential  { svc, org, docCl, docPk, privs privd } crypté par K en base 64
+    - toCheck : si true, credential _indécis_ (existence réelle à vérifier).
   ***********************************************************************************/
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, $Credential>()
     const msvc = stores.config.K.SERVICES
     const orgs = new Set<string>([])
-    if (safe.creds) for (const xid in safe.creds)
+    const ctc = []
+    if (safe.creds) for (const credId in safe.creds)
       try {
-        const [nameK, data] = safe.creds[xid] as [string, string]
-        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(data))) as Object
+        const [nameK, credK, toCheck] = safe.creds[credId] as [string, string, boolean]
+        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(credK))) as Object
         if (msvc[obj['svc']]) {
           obj['name'] = await dcX(keyFromB64(nameK))
+          obj['toCheck'] = toCheck || false
+          if (toCheck) ctc.push(credId)
           const c: $Credential = $Credential.new(obj)
           m.set(c.credId, c)
           orgs.add(c.org)
@@ -773,50 +783,28 @@ export const useSafeStore = defineStore('safe', () => {
         console.log(e)
       }
     mySafeCreds.value = m
+    credsToCheck.value = ctc
     stores.session.setOrgs(orgs)
   }
 
-  const getCredOn = (svc: string, org: string, docCl: string, docPk: string, or1: boolean) 
-    : Credential | null => {
-    for(const [id, c] of mySafeCreds.value)
-      if (c.svc === svc && c.org === org && c.docCl === docCl && 
-        (c.docPk === docPk || (or1 && c.docId === '1'))) return c
-    return null
-  }
-
-  type SetCred = {
+  type SetNameCred = {
     userId: string //
     shK: string // shaS de la clé K en base 64
     credId: string // id du credential
     nameK: string // nom (correspondant à docId) crypté par K et en base 64
-    cred?: string // Credential sérialisé, crypté par K et en base64 (pour création)
-  }
-  /* Creation d'un Cred en safe */
-  const createCredential = async ( credId: string, name: string, bin: Uint8Array ) => {
-    const credSer = keyToB64(await Crypt.crypt(keyK.value, bin))
-    const setCred : SetCred = {
-      userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      credId: credId,
-      nameK: keyToB64(await ecX(name)),
-      cred: credSer
-    }
-    const op = new SafeOperation('$CreateCred', mySafeStore.value)
-    op.args.setCred = setCred
-    return await doOpSafe(op)
   }
 
   /* Mise à jour du "name" d'un Cred en safe */
   const updateCredName = async ( credId: string, name: string )
     : Promise<boolean> => {
-    const setCred : SetCred = {
+    const setNameCred : SetNameCred = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
       credId,
       nameK: keyToB64(await ecX(name)),
     }
     const op = new SafeOperation('$UpdateCredNamet', mySafeStore.value)
-    op.args.setCred = setCred
+    op.args.setNameCred = setNameCred
     try {
       await doOpSafe(op)
       return true
@@ -826,20 +814,21 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  type RevokeCreds = {
+  type FixCreds = {
     userId: string
     shK: string
-    ids: string[]
+    toDel: string[]
+    toFix: string[]
   }
-  /* Révocation (suppression) d'un Cred en safe */
-  const autoRevokeCreds = async (ids: string[]) => {
-    const revokeCreds: RevokeCreds = {
+  /* Fixe l'existence / révoque de credentials en safe */
+  const fixCreds = async (toFix: string[], toDel: string[]) => {
+    const fixCreds: FixCreds = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      ids
+      toFix, toDel
     }
-    const op = new SafeOperation('$AutoRevokeCreds', mySafeStore.value)
-    op.args.revokeCreds = revokeCreds
+    const op = new SafeOperation('$FixCreds', mySafeStore.value)
+    op.args.fixCreds = fixCreds
     return await doOpSafe(op)
   }
 
@@ -927,24 +916,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
   /****************************************************************************/
 
-  /* Extractions / consultations **********************************************/
-
-  const caseFilter = (svc: string, org: string) : string[] => {
-    const m : Map<string, Set<string>> = new Map() // par docCl, set des docPk
-    for (const [,c] of mySafeCreds.value) {
-      if (c.svc === svc && c.org === org) {
-        let s = m.get(c.docCl); if (!s) { s = new Set(); m.set(c.docCl, s) }
-        s.add(c.docPk)
-      }
-    }
-    const f: string[] = []
-    for(const [docCl, s] of m) {
-      if (s.has('1')) f.push(docCl + '/1')
-      else f.push(...Array.from(s))
-    }
-    return f
-  }
-
   /* Options des organisations managées *****************************************/
   const managedOrgs = () : Managements[] => {
     if (!mySafeCreds.value) return []
@@ -990,11 +961,11 @@ export const useSafeStore = defineStore('safe', () => {
   const getCreds = (profile: Profile) : Map<string, $Credential> => {
     const x: Map<string, $Credential> = new Map<string, $Credential>()
     if (!stores.session.hasNet || !profile) return x
-    if (profile.profId !== '*') for(const xid of profile.crIds) {
-        const c = mySafeCreds.value.get(xid)
-        if (c) x.set(xid, c)
+    if (profile.profId !== '*') for(const credId of profile.crIds) {
+        const c = mySafeCreds.value.get(credId)
+        if (c) x.set(credId, c)
       }
-    else for (const [xid, c] of mySafeCreds.value) x.set(xid, c)
+    else for (const [credId, c] of mySafeCreds.value) x.set(credId, c)
     return x
   }
 
@@ -1714,12 +1685,9 @@ export const useSafeStore = defineStore('safe', () => {
     auth, devices, mySafePrefs, mySafeProfiles,
     mySafeCreds,
     updatePrefs,
-    createCredential, updateCredName,
-    autoRevokeCreds,
+    updateCredName, fixCreds,
     setAboutProfile, updateProfiles /* ??? */,
-    caseFilter,
-    managedOrgs, isManager, adminForSvcOrg,
-    getCreds, getCredOn,
+    managedOrgs, isManager, adminForSvcOrg, getCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,

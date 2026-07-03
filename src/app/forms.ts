@@ -36,9 +36,10 @@ class $Form_membrecodir extends $Form {
     if (!byU) return
     if (!this.opts) this.opts = {}
     // Template du credential d'accès à Codir/1
-    this.opts.credTempl = $CredTempl.new(
-      this.svc, this.org, 'CoDir', { pk: '1' }, this.opts.alias || '')
-  }
+    if (this.opts.credTemplates) this.opts.credTemplates = {}
+    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'CoDir', { pk: '1' }, this.opts.alias || '')
+    this.opts.credTemplates[ct.credId] = ct
+   }
 
   async validate (byU: boolean, etc: Object) : Promise<number> {
     return 0

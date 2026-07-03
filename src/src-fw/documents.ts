@@ -15,19 +15,21 @@ const decoder = new TextDecoder()
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */
 export class $CredTempl {
+  userId: string
   credId: string
   docCl: string
   docPk: string
   credK: string
   nameK: string // crypté par clé K de U en base 64
   signId: string // signature de credId par privs en base 64
+  
   pubv: Uint8Array
   pubc: Uint8Array
 
-
-  static async new (svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
+  static async new (userId: string, svc: string, org: string, docCl: string, src: Object, name: string) : Promise<$CredTempl> {
     const sf = stores.safe
     const t = new $CredTempl()
+    t.userId = userId
     t.credId = Crypt.rnd(15)
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
     t.docCl = docCl
@@ -51,13 +53,12 @@ export class $CredTempl {
     return t
   }
 
-  
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
 export class $Credential {
-  static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk' ]
+  static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk', 'privs', 'privd', 'name', 'toCheck' ]
 
   credId: string = '' // ID du credential.
   svc: string = '' // code du service
@@ -71,6 +72,7 @@ export class $Credential {
   pubc?: Uint8Array | null = null // clé publique de cryptage: doc seulement
   privd?: Uint8Array | null = null // clé PRIVEE de decryptage en base64: safe seulement
 
+  toCheck?: boolean // si true l'existence du credential est à vérifier par rapport à son document
   name: string = '' // "nom" associé au docId.
 
   v: number = 0 // version du document
