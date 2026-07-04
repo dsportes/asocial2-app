@@ -94,7 +94,7 @@ import { ref, Ref } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
-import { SyncCred, AutoRevokeCred } from '../src-fw/operations'
+import { AutoRevokeCred } from '../src-fw/operations'
 import { $Credential } from '../src-fw/documents'
 
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -226,11 +226,13 @@ const reset2 = async () => {
   const now = Date.now()
   const so = curso.value
   for(const c of so.creds) {
+    /*
     const op = new SyncCred(c.svc, c.org)
     const ok = await op.run(c)
     if (!ok) c.alert = 1
     else c.limit && c.limit * 1000 < now ? 2 : 0
     if (c.alert === 1) todel.value.set(c.credId, c)
+    */
   }
   so.creds.sort((a: $Credential, b: $Credential) => 
     a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docPk < b.docPk ? -1 : (a.docPk > b.docPk ? 1 : 0)))

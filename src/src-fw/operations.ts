@@ -7,7 +7,7 @@ import stores from '../stores/all'
 
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
-import { $Credential } from '../src-fw/documents'
+import { $Credential, $Cred } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -237,13 +237,26 @@ export class Sync extends Operation {
   }
 }
 
-// TODO en discussion (vor service)
-export class RevokeCred extends Operation {
-  constructor (SVC: string, org: string) { super('RevokeCred', SVC, org) }
-
-  async run (userId: string, role: string, docId: string) {
+export class ListManagers extends Operation {
+  constructor (svc: string, org: string) { super('ListManagers', svc, org) }
+  async run () : Promise<$Cred[]>{
     try {
-      this.args.revokeReq = { userId, role, docId }
+      const res = await this.post()
+      return res['creds'] as $Cred[]
+    } catch(e) {
+      await this.ko(e)
+      return []
+    }
+  }
+}
+
+// TODO en discussion (vor service)
+export class UpdateCred extends Operation {
+  constructor (svc: string, org: string) { super('UpdateCred', svc, org) }
+
+  async run (credId: string, docCl: string, docPk: string, props: Object) {
+    try {
+      this.setArgs({ credId, docCl, docPk, props } )
       const res = await this.post()
       return res.status
     } catch(e) {
@@ -252,6 +265,7 @@ export class RevokeCred extends Operation {
   }
 }
 
+// TODO en discussion 
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
@@ -268,20 +282,8 @@ export class AutoRevokeCred extends Operation {
   }
 }
 
-export class ListManagers extends Operation {
-  constructor (SVC: string, org: string) { super('ListManagers', SVC, org) }
-  async run () : Promise<$Cred[]>{
-    try {
-      const res = await this.post()
-      return res['creds'] as $Cred[]
-    } catch(e) {
-      await this.ko(e)
-      return []
-    }
-  }
-}
-
-// Met à jour un $Credential avec les données [v, more] de son document en DB
+// TODO en discussion 
+/* Met à jour un $Credential avec les données [v, more] de son document en DB
 export class SyncCred extends Operation {
   constructor (SVC: string, org: string) { super('GetCredUpdates', SVC, org) }
 
@@ -302,3 +304,4 @@ export class SyncCred extends Operation {
     }
   }
 }
+*/

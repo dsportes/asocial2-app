@@ -437,10 +437,18 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
   APrevcf_tit: 'Révoquer ce rôle "manager" ?',
   APrevcf_0: 'Je renonce à la révocation',
   APrevcf_1: 'Je confirme la révocation',
-  APtarget_label: 'Pseudo de l\'utilisateur cible',
-  APtarget_bub: `# Pseudo de l\'utilisateur cible
+  APtarget_label: 'A propos de l\'utilisateur cible',
+  APtarget_bub: `# A propos de l\'utilisateur cible
 bla bla
 `,
+  APdelcred: 'Supprimer ce pouvoir',
+  APchglimit: 'Changer la limite de validité',
+  APaddlimit: 'Ajouter une limite de validité',
+  APdellimit: 'Supprimer la limite de validité',
+  APlimitpast: 'La date et l\'heure choisie sont dans le passé, ce qui équivaut à une suppression du pouvoir. Si c\'est ce qui est souhaité, cliquer sur le bouton "Supprimer ce pouvoir"',
+  APupdok: 'Le pouvoir a été mis à jour.',
+  APdelok: 'Le pouvoir a été supprimé.',
+  APupdko: 'Echec de mise à pouvoir qui n\'a pas été trouvé.', 
 
   SButtitle: 'Profil utilisateur',
   SBphrase_label: 'Phrase secrète',
@@ -1110,6 +1118,9 @@ bla bla
 
   FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
   FORMdiag_pseudo: '"pseudo" non valide.',
+
+  CREDON_CoDir: 'Membre du Comité Directeur',
+  CREDON_Rédaction: 'Membre du Comité de Rédaction',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

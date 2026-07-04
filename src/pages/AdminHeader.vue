@@ -27,7 +27,6 @@
 
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
-    <q-tab name="topics" icon="topic" :label="$t('topic')" />
     <q-tab name="svcstatus" icon="cloud" :label="$t('svcorg')" />
     <q-tab name="managers">
       <img :src="superman" width="24px"/>

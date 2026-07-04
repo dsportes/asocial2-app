@@ -30,12 +30,13 @@ export class $CredTempl {
   static async new (userId: string, svc: string, org: string, 
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const sf = stores.safe
+    const docPk = DocType.getPk(docCl, src)
     const t = new $CredTempl()
     t.userId = userId
     t.credId = Crypt.rnd(15)
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
     t.docCl = docCl
-    const docPk = DocType.getPk(docCl, src)
+    t.docPk = docPk
     t.nameK = keyToB64(await Crypt.crypt(sf.keyK, encoder.encode(name || '')))
     const sv = await Crypt.getSVKeyPair()
     t.pubv = sv.pub
@@ -56,6 +57,15 @@ export class $CredTempl {
     return t
   }
 
+}
+
+export type $Cred = {
+  credId: string
+  svc: string
+  org: string
+  docCl: string
+  docPk: string
+  props: any
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).

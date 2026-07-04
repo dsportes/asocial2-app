@@ -92,7 +92,7 @@ export class DocType {
   */
   static getPk (clazz: string, src?: Object, nohash?: boolean) : string {
     const dt = DocType.get(clazz)
-    if (!dt.pk || !src) return '1'
+    if (!dt.pk.length || !src) return '1'
     let p = src['pk']
     if (!p) {
       const x = []
@@ -204,10 +204,6 @@ export class DocType {
       if (isDocName(h.name)) this.name = h.name
       else this.er('invalid document name', h.name)
     } else this.er('Document header missing')
-    if (h.virtual) {
-      this.virtual = true
-      return
-    }
     if (!this.err) {
       if (DocType.docTypes.has(this.name)) { this.er('duplicate DocType', this.name); return this }
       DocType.docTypes.set(this.name, this)
@@ -217,6 +213,7 @@ export class DocType {
       if (!this.isProps(h.pk)) return this
       this.pk = h.pk
     }
+    this.virtual = h.virtual || false
     this.sync = h.sync || false
     this.nohash = h.nohash || false
     this.embedCreds = h.embedCreds || false
