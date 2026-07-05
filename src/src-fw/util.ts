@@ -58,7 +58,7 @@ export function quarter (d: Date) {
 type Date3 = [number, number, number] // full year, mont, date
 let auj: Date3 = [0, 0, 0], hier: Date3 = [0, 0, 0]
 
-function zp (n: number) { return n > 9 ? '' + n: '0' + n }
+export function zp (n: number) { return n > 9 ? '' + n: '0' + n }
 
 export function aujhier () {
   const now = new Date()

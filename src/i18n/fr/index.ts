@@ -390,19 +390,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
   LCRok: 'Mises à jour des "listes de pouvoirs" enregistrées.',
 
-  APtopicload: '(Re) charger les thématiques',
-  APtopicjson: 'Afficher le descriptif JSON',
-  APupdtopics: 'Mettre à jour les thématiques',
-  APupddone: 'Thématiques mises à jour',
-  APnbtopics: 'Aucune thématique chargée pour ce service. ' +
-   '| Une thématique est déclarée pour ce service. ' +
-   '| {count} thématiques sont déclarées pour ce service. ',
-  APtopicmenu: 'Sélectionner une thématique',
-  APtopicdet: `### ID: {0}
-  - key: {1}
-  - sujets: {2}
-  - pubC: {3}
-  `,
+  APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',
@@ -444,13 +432,16 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
 bla bla
 `,
   APdelcred: 'Supprimer ce pouvoir',
-  APchglimit: 'Changer la limite de validité',
-  APaddlimit: 'Ajouter une limite de validité',
-  APdellimit: 'Supprimer la limite de validité',
-  APlimitpast: 'La date et l\'heure choisie sont dans le passé, ce qui équivaut à une suppression du pouvoir. Si c\'est ce qui est souhaité, cliquer sur le bouton "Supprimer ce pouvoir"',
+  APvallimit: 'Limite de validité:',
+  APnovallimit: 'Pas de limite de validité.',
+  APundolimit: 'Rétablir',
+  APaddlimit: 'Ajouter',
+  APdellimit: 'Supprimer',
+  APlimitpast: 'La date et l\'heure sont dans le passé, ce qui équivaut à une suppression du pouvoir.',
   APupdok: 'Le pouvoir a été mis à jour.',
   APdelok: 'Le pouvoir a été supprimé.',
   APupdko: 'Echec de mise à pouvoir qui n\'a pas été trouvé.', 
+  APlistmgr: 'Mise à jour du pouvoir',
 
   SButtitle: 'Profil utilisateur',
   SBphrase_label: 'Phrase secrète',

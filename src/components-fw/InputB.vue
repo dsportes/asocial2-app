@@ -163,11 +163,11 @@ const hasInitVal = computed(() => props.initval && props.initval.length )
 
 if (hasInitVal.value) model.value.inp = props.initval
 
-const chg = computed(() => !props.disable && hasInitVal.value && props.initval.value !== model.value.inp)
+const chg = computed(() => !props.disable && hasInitVal.value && props.initval !== model.value.inp)
 const hint = computed(() =>
   $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))
 const undo = () => {
-  if (props.initVal) model.value = props.initVal }
+  if (props.initval) model.value = props.initVal }
 
 const xe = (inp) => {
   if (reg && inp.length && !reg.test(inp)) return 'badform'

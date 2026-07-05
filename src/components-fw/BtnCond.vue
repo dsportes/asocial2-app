@@ -34,7 +34,7 @@
     :round="round || false"
     @click="clok">
     <q-tooltip v-if="tp || diag" class="bg-white text-primary">{{diag || tp}}</q-tooltip>
-    <menu-confirm v-if="menu" v-model="confirmCode" @confirm="ok()"/>
+    <menu-confirm v-if="menu" v-model="confirmCode" @confirm="cf"/>
     <slot />
   </q-btn>
 </span>
@@ -97,6 +97,14 @@ const clr = computed(() => {
 const diag = ref('')
 
 // const diag = computed(() => props.cond && session[props.cond] ? $t(session[props.cond]) : '')
+
+async function cf (b) {
+  if (b) await ok()
+  else {
+    menu.value = false
+    emit('ok', false)
+  }
+}
 
 async function ok () {
   menu.value = false

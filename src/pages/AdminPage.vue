@@ -21,65 +21,66 @@
       <div v-if="!ui.adminPage.SVC" class="titre-md text-italic">{{ $t('svcStatus_no2') }}</div>
       <div v-else>
         <div class="q-my-md full-width row q-gutter-sm items-center">
-          <select-org @change="doOrgOk"/>
-          <btn-cond round icon="refresh" @ok="doOrgOk" size="lg"/>
+          <select-org v-model="org" @change="dolist"/>
+          <btn-cond round icon="refresh" @ok="dolist" size="lg"/>
         </div>
 
-        <div class="q-my-md">
-          <q-select v-if="hasManagedOrgs"
-            dense class="full-width" options-dense filled clearable
-            transition-show="flip-up" transition-hide="flip-down"
-            v-model="svcOrg"
-            :options="sorgs" :label="$t('MNOorgs')"/>
-          <div v-else class="titre-md text-italic">{{ $t('svcStatus_no3') }}</div>
-        </div>
-
-        <scroll-area v-if="hasManagedOrgs || sf.auth.admins"
-          class="full-width bord1">
-          <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
-            <div class="row">
-              <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
-              <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
-            </div>
-            <div class="row">
-              <div class="col-1"></div>
-              <div class="col-5 row">
-                <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-                <div class="col ellipsis">{{m.props.name || '?'}}</div>
+        <div v-if="org">
+          <scroll-area v-if="lstMgr.length"
+            class="full-width bord1">
+            <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
+              <div class="row">
+                <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
+                <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
               </div>
-              <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
+              <div class="row">
+                <div class="col-1"></div>
+                <div class="col-5 row">
+                  <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
+                  <div class="col ellipsis">{{m.props.name || '?'}}</div>
+                </div>
+                <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
+              </div>
             </div>
-          </div>
-        </scroll-area>
+          </scroll-area>
+          <div v-else class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false">
-    <template #btn>
-      <btn-cond :label="$t('confirm')" @ok="confirm" :disable="!changes || diag"/>
+  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
+    :title="$t('APlistmgr')" vh="75">
+    <template #hdr>
+      <div class="row justify-between q-pa-xs">
+        <btn-cond icon="close" :label="$t('APdelcred')" color="warning" @ok="delcred"/>
+        <btn-cond :label="$t('iconfirm')" confirm @ok="confirm" 
+          :disable="!changes"/>
+      </div>
+      <div class="row items-center q-my-xs q-gutter-xs">
+        <div class="titre-md text-italic text-bold">{{ $t('APvallimit') }}</div>
+        <btn-cond v-if="chgT"
+          icon="undo" :label="$t('APundolimit')" @ok="undolimit"/>
+        <btn-cond v-if="!current.props.limit && !curT"
+          icon="add" :label="$t('APaddlimit')" @ok="addlimit"/>
+        <btn-cond v-if="current.props.limit"
+          icon="delete" :label="$t('APdellimit')" @ok="dellimit"/>
+      </div>
     </template>
     <template #default>
-      <div class="colum items-center q-my-md">
-        <btn-cond icon="close" :label="$t('APdelcred')" color="warning" @ok="delcred"/>
-        <btn-cond v-if="!toDel && !hadLimit"
-          icon="add" :label="$t('APaddlimit')" @ok="addlimit"/>
-        <btn-cond v-if="!toDel && hadLimit"
-          icon="delete" :label="$t('APdellimit')" @ok="dellimit"/>
-        <btn-cond v-if="!toDel && hadLimit"
-          icon="check" :label="$t('APchglimit')" @ok="chglimit"/>
-      </div>
-
+      <div v-if="!toDel">
       <input-b class="full-width" prefix="APtarget" size="about" noval
+        :initval="initName"
         v-model="targetUser" :disable="toDel"/>
 
-      <div v-if="current.props.limit || edLimit" class="row justify-around">
-        <q-date v-model="dateed" minimal :disable="!edLimit || toDel"/>
-        <q-time v-model="timeed" format24h :disable="!edLimit || toDel"/>
+      <div v-if="curT" class="column items-center q-gutter-sm">
+        <div v-if="diagD" class="msg">{{  diagD }}</div>
+        <q-date v-model="dateed" :title="dhcool(curT)" today-btn/>
+        <q-time v-model="timeed" format24h/>
       </div>
-
-      <div v-if="diag" class="msg q-my-xs">{{  diag }}</div>
+      <div v-else class="titre-lg text-italic text-center q-my-md">{{$t('APnovallimit')}}</div>
+      </div>
     </template>
   </dialog-std0>
 
@@ -93,7 +94,7 @@ import { ref, Ref, computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { ListManagers, UpdateCred } from '../src-fw/operations'
 import { $Cred } from '../src-fw/documents'
-import { $t, dkli, dhcool } from '../src-fw/util'
+import { $t, dkli, dhcool, zp } from '../src-fw/util'
 
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -105,7 +106,6 @@ import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 
 const ui = stores.ui
 const sf = stores.safe
-const session = stores.session
 
 ui.adminPage.tab = 'svcstatus'
 
@@ -114,20 +114,9 @@ const dialogs = reactive({
   edit: false
 })
 
-const sorgs = ref(sf.managedOrgs())
-watch(() => sf.mySafeCreds, () => {
-  sorgs.value = sf.managedOrgs()
-  if (sorgs.value.length) svcOrg.value = sorgs.value[0]
-})
+const org = ref()
 
-const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
-
-const svcOrg = ref()
 const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
-watch(svcOrg, async (x) => {
-  if (x) await dolist()
-  else lstMgr.value = []
-})
 /* export type $Cred = {
   credId: string
   svc: string
@@ -137,92 +126,76 @@ watch(svcOrg, async (x) => {
   props: any
 }*/
 
-const doOrgOk = async () => {
-  await dolist()
-}
-
 const dolist = async () => {
   lstMgr.value = []
-  const op = new ListManagers(ui.adminPage.SVC, svcOrg.value.org)
+  const op = new ListManagers(ui.adminPage.SVC, org.value)
   lstMgr.value = await op.run()
 }
 
-const d2s = (d: Date) : [string, string] => {
-  const s0 = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate()
-  const s1 = d.getHours() + ':' + d.getMinutes()
-  return [s0, s1]
+const timeed = ref('')
+const dateed = ref('')
+const initName = ref('')
+const current = ref({ props: {} })
+const toDel = ref(false)
+
+const setD = (d: Date) => {
+  dateed.value = !d ? '' : d.getFullYear() + '/' + zp(d.getMonth() + 1) + '/' + zp(d.getDate())
+  timeed.value = !d ? '' : zp(d.getHours()) + ':' + zp(d.getMinutes())
 }
 
-const diag = ref('')
-const current = ref()
-const hadLimit = computed(() => current.value.props.limit ? true : false)
-const nextlimit: Ref<Date> = ref(null)
-const timeed = ref()
-const dateed = ref()
-const toDel = ref(false)
-const edLimit = ref(false)
-const resetLimit = ref(false)
+const curT = computed(() => 
+  dateed.value && timeed.value ? new Date(dateed.value + ' ' + timeed.value).getTime() : 0)
+const diagD = computed(() => 
+  !curT.value || curT.value > Date.now() ? '' : $t('APlimitpast'))
+const chgT = computed(() => 
+  (current.value.props.limit || 0) * 60000 !== curT.value)
 
 const edit = (m) => {
   current.value = m
+  initName.value = m.props.name || ''
   targetUser.inp = m.props.name || ''
   targetUser.err = ''
   dialogs.edit = true
   toDel.value = false
-  edLimit.value = false
-  resetLimit.value = false
+  undolimit()
 }
 
-const changes = computed(() => {
-  targetUser.inp !== (current.value.props.name || '') ||
-  (!nextlimit.value && hadLimit.value) ||
-  (nextlimit.value && !hadLimit.value) ||
-  (nextlimit.value.getTime() !== current.value.props.limit * 60000)
-})
+const undolimit = () => {
+  setD(current.value.props.limit ? new Date(current.value.props.limit * 60000) : null)
+}
 
-watch([dateed, timeed], () => {
-  const x = dateed.value + ' ' + timeed.value
-  nextlimit.value = new Date(x)
-  diag.value = nextlimit.value.getTime() < Date.now() ? $t('APlimitpast') : ''
-  changes()
-})
+const changes = computed(() =>
+  toDel.value || chgT.value || targetUser.inp !== (current.value.props.name || '') )
 
 const targetUser = reactive({ inp: '', err: ''})
-
-watch(() => targetUser.inp, () => {
-  changes()
-})
 
 const delcred = () => {
   toDel.value = true
 }
 
 const addlimit = () => {
-  edLimit.value = true
-  const dh = d2s(new Date(Date.now() + 8640000))
-  dateed.value = dh[0] 
-  timeed.value = dh[1]
-}
-
-const chglimit = () => {
-  edLimit.value = true
-  const dh = d2s(current.value.props.limit ? new Date(current.value.props.limit * 60000) : new Date())
-  dateed.value = dh[0] 
-  timeed.value = dh[1]
+  setD(new Date(Date.now() + 3600000))
 }
 
 const dellimit = () => {
-  resetLimit.value = true
+  setD(null)
 }
 
-const confirm = async () => {
+const undoAll = () => {
+  undolimit()
+  targetUser.inp = initName.value
+  toDel.value = false
+}
+
+const confirm = async (b) => {
+  if (b === false) {
+    undoAll()
+    return
+  }
   const c = current.value
   const props = c.props
   if (toDel.value) props.limit = 1
-  else {
-    if (nextlimit.value)
-      props.limit = Math.floor(nextlimit.value.getTime() / 60000)
-  }
+  else props.limit = Math.floor(curT.value / 60000)
   c.props.name = targetUser.inp
   const op = new UpdateCred(c.svc, c.org)
   const res = await op.run(c.credId, c.docCl, c.docPk, props)
