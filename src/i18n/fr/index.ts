@@ -241,6 +241,8 @@ export default {
   op_FormUpdByT: 'Mise à jour d\'une proposition',
   op_FormUpdByU: 'Mise à jour d\'une demande',
   op_FormGet: 'Lecture d\`une demande / proposition',
+  op_FormValidateByU: 'Mise à jour d\'une demande / proposition par l\'utilisateur cible',
+  op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -941,7 +943,7 @@ bla bla
 `,
   FORMok_FormUpdByU: 'Demande enregistrée avec succès.',
   FORMok_FormUpdByT: 'Proposition enregistrée avec succès.',
-  FORMok__FormValidateByU: 'Demande enregistrée et VALIDEE avec succès.',
+  FORMok_FormValidateByU: 'Demande enregistrée et VALIDEE avec succès.',
   FORMok_FormValidateByT: 'Proposition enregistrée et VALIDEE avec succès.',
   FORMok_FormCancel: 'Demande annulée avec succès.',
 
@@ -1073,9 +1075,10 @@ bla bla
   EX103_missing_credential: 'Credential recherché et non transmis à l\'opération. Organisation: [{0}] - Role: [{1}] - DocId: [{2}]',
   EX103_no_cred_owner: 'Tentative de révocation d\'un credential dont l\'utilisateur n\'est propriétaire. Role: [{1}] - DocId: [{2}]',
   EX103_missing_p1_and_p2: 'Tentative de remplacement des phrases secrètes sans les fournir.',
+  EX103_not_configured_doc_class: 'Classe de document non configurée: [{0}].',
+  EX103_unregistered_doc_class: 'Classe de document non enregistrée: [{0}].',
 
   EX105_Subscription_unknown_session: 'SessionId: [{0}]',
-  EX105_document_class_not_registered: 'Classe de document [{0}] non déclarée dans config.documentClasses',
   EX105_masterdir_unexpected_exception: 'Opération Master Directory en échec inattendu. Détail: [{0}]',
   EX105_service_unexpected_exception: 'Opération Service en échec inattendu. Détail: [{0}]',
   EX105_safe_unexpected_exception: 'Opération Safe Box en échec inattendu. Détail: [{0}]',

@@ -31,9 +31,10 @@ export class $CredTempl {
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const sf = stores.safe
     const docPk = DocType.getPk(docCl, src)
+    const credId = Crypt.rnd(15)
     const t = new $CredTempl()
     t.userId = userId
-    t.credId = Crypt.rnd(15)
+    t.credId = credId
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
     t.docCl = docCl
     t.docPk = docPk
@@ -47,6 +48,7 @@ export class $CredTempl {
     const cred = encode({
       svc: svc,
       org: org,
+      credId: credId,
       docCl: docCl,
       docPk: docPk,
       privs: sv.priv,
@@ -96,8 +98,8 @@ export class $Credential {
   /* Factory similaire au constructor
   mais créé la sous-classe correspondant à docCl */
   static new (obj): $Credential {
-    const c = Registry.newD('$Credential', obj) as  $Credential
-    for (const p of $Credential.lp1) this[p] = obj[p] || null
+    const c = Registry.newD('$Credential', obj) as $Credential
+    for (const p of $Credential.lp1) c[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
   }

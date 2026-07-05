@@ -1,8 +1,9 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { AppExc, $t } from '../src-fw/util'
-import { DocType } from '../src-fw/doctypes'
+import { $t } from '../src-fw/util'
+import { AppExc } from '../src-fw/log'
+// import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'

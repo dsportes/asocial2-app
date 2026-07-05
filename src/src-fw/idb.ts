@@ -4,10 +4,11 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { Crypt } from './crypt'
-import { AppExc, sleep } from './util'
+import { Crypt } from '../src-fw/crypt'
+import { AppExc } from '../src-fw/log'
+import { sleep } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { Registry } from './registry'
+import { Registry } from '../src-fw/registry'
 import { Subscription, Subs } from '../src-fw/subscription'
 
 const STORES = {
@@ -185,7 +186,6 @@ export class IDB {
       const cbinDocs = new Map<string, Uint8Array>()
       const binPks = new Map<string, string>()
       for(const [pk, binDoc] of binDocs) {
-        // @ts-expect-error
         cbinDocs.set(pk, await this.cryptRecord(binDoc))
         binPks.set(pk, await this.cryptId(pk))
       }
@@ -216,7 +216,6 @@ export class IDB {
       const bin = await this.cryptRecord(subscription.serial())
       const binSubs = new Map<string, Uint8Array>()
       for(const [clazz, subs] of msubs)
-        // @ts-expect-error
         if (subs) binSubs.set(clazz, await this.cryptRecord(subs.serial()))
       await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
         await this.db.subscriptions.put({ org, bin })

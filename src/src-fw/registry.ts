@@ -1,7 +1,8 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { DocType } from './doctypes'
+import { DocType } from '../src-fw/doctypes'
+import { AppExc } from '../src-fw/log'
 
 export class Registry {
   static regDoc = new Map()
@@ -11,18 +12,16 @@ export class Registry {
 
   static getD (name: string, data: Object) { 
     const dt = DocType.get(name)
-    if (!dt) return null
-    return dt.subClassBy
+    const cl = dt.subClassBy
       ? Registry.regDoc.get(name + '_' + data[dt.subClassBy]) || Registry.regDoc.get(name)
       : Registry.regDoc.get(name) 
+    if (!cl) throw new AppExc(103, 'unregistered_doc_class', null, [name])
+    return cl
   }
 
   static newD (name: string, data: Object) {
     const cl = Registry.getD(name, data)
-    if (cl) {
-      const obj = new cl()
-      return obj
-    } else return null
+    return new cl()
   }
 
   static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{

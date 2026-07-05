@@ -1,4 +1,4 @@
-import { AppExc } from './util'
+import { AppExc } from '../src-fw/log'
 
 const urls = new Map<string, string>()
 
