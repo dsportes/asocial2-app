@@ -251,8 +251,8 @@ export class ListManagers extends Operation {
 }
 
 // TODO en discussion (vor service)
-export class UpdateCred extends Operation {
-  constructor (svc: string, org: string) { super('UpdateCred', svc, org) }
+export class UpdateCredential extends Operation {
+  constructor (svc: string, org: string) { super('UpdateCredential', svc, org) }
 
   async run (credId: string, docCl: string, docPk: string, props: Object) {
     try {
@@ -265,7 +265,6 @@ export class UpdateCred extends Operation {
   }
 }
 
-// TODO en discussion 
 export class AutoRevokeCred extends Operation {
   constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
 
@@ -282,20 +281,19 @@ export class AutoRevokeCred extends Operation {
   }
 }
 
-// TODO en discussion 
-/* Met à jour un $Credential avec les données [v, more] de son document en DB
-export class SyncCred extends Operation {
-  constructor (SVC: string, org: string) { super('GetCredUpdates', SVC, org) }
+/* Met à jour un $Credential avec les données [v, more] de son document en DB */
+export class getCredProps extends Operation {
+  constructor (SVC: string, org: string) { super('getCredProps', SVC, org) }
 
   async run (c: $Credential ) : Promise<boolean> {
     try {
       this.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk || ''})
       await this.sign(c)
       const res = await this.post()
-      const x = res.more
+      const x = res.vprops
       if (x) {
         c.v = x[0]
-        c.power = x[1]
+        c.props = x[1]
         return true
       } else return false
     } catch(e) {
@@ -304,4 +302,3 @@ export class SyncCred extends Operation {
     }
   }
 }
-*/

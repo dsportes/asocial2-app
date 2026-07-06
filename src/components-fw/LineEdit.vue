@@ -1,14 +1,15 @@
 <!-- Saisie du couple Service / Organisation
 -->
 <template>
-<div class="full-width column">
+<div class="column">
   <div class="row items-center">
     <btn-bubble class="col-auto" :text="$t(prefix + '_bub')"/>
     <div class="col q-mx-sm mh titre-md text-italic ellipsis">{{ $t(prefix + '_label') }}</div>
     <btn-cond icon="edit" round :disable="disable || false" @ok="edit"/>
   </div>
-  <div class="q-pl-lg full-width font-mono ellipsis">{{ text }}
-    <q-menu v-model="menu" anchor="top left" self="top left" class="bord q-pa-sm"
+  <div class="q-pl-lg font-mono ellipsis">{{ text }}
+    <q-menu v-model="menu"
+      anchor="top left" self="top left" class="bord q-pa-sm"
       :style="styles[size || 'md']"
       transition-show="flip-up" transition-hide="flip-down">
       <div class="row items-center">
@@ -37,9 +38,9 @@ const props = defineProps({
 })
 
 const styles = {
-  sm: 'max-width: 30rem; width: 95vw',
-  md: 'max-width: 40rem; width: 95vw',
-  lg: 'max-width: 50rem; width: 95vw'
+  sm: 'max-width: 30rem; width: 30rem',
+  md: 'max-width: 40rem; width: 40rem',
+  lg: 'max-width: 50rem; width: 50rem'
 }
 
 const emit = defineEmits(['change'])

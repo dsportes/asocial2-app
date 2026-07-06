@@ -92,7 +92,7 @@
 // @ts-ignore
 import { ref, Ref, computed, reactive, watch } from 'vue'
 import stores from '../stores/all'
-import { ListManagers, UpdateCred } from '../src-fw/operations'
+import { ListManagers, UpdateCredential } from '../src-fw/operations'
 import { $Cred } from '../src-fw/documents'
 import { $t, dkli, dhcool, zp } from '../src-fw/util'
 
@@ -193,13 +193,12 @@ const confirm = async (b) => {
     return
   }
   const c = current.value
-  const props = c.props
-  if (toDel.value) props.limit = 1
-  else props.limit = Math.floor(curT.value / 60000)
-  c.props.name = targetUser.inp
-  const op = new UpdateCred(c.svc, c.org)
-  const res = await op.run(c.credId, c.docCl, c.docPk, props)
-  if (res.status) await ui.diagDisplay($t('APupdko'))
+  if (toDel.value) c.props.limit = 1
+  else c.props.limit = !curT.value ? 0 : Math.floor(curT.value / 60000)
+  if (targetUser.inp !== (c.props.name || '')) c.props.name = targetUser.inp
+  const op = new UpdateCredential(c.svc, c.org)
+  const status = await op.run(c.credId, c.docCl, c.docPk, c.props)
+  if (status) await ui.diagDisplay($t('APupdko'))
   else await ui.diagDisplay($t(toDel.value ? 'APdelok' : 'APupdok'))
   dialogs.edit = false
   await dolist()

@@ -47,7 +47,7 @@ import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { AutoRevokeCred } from '../src-fw/operations'
+// import { AutoRevokeCred } from '../src-fw/operations'
 import BtnCond from '../components-fw/BtnCond.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
 

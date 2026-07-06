@@ -755,34 +755,12 @@ bla bla
   CRRstep_2: 'Pouvoirs enregistrés pour {0} / {1}',
   CRRcond: 'Propriétés spécifiques de ce pouvoir:',
   CRRobs1: 'Ce pouvoir est obsolète, il a été supprimé en central. Il sera nettoyé.',
-  CRRobs2: 'Ce pouvoir a une limite de validité dépassé. Il n\'est plus effectif maintenant MAIS pourrait le redevenir si une action le réactivait. Le supprimer ?',
-  CRRobs3: 'Ce pouvoir a une limite de validité dépassé. Vous avez décidé de le supprimer. Voulez-vous finalement le garder ?',
   CRRdel: 'Ce pouvoir est applicable. Voulez-vous cependant y renoncer?',
   CRRdel2: 'Ce pouvoir est applicable mais vous l\'avez supprimé. Voulez-vous le rétablir?',
   CRRlimit: 'Ce pouvoir a une limite de validité: {0}',
-  CRRdocKey: `Ce pouvoir détient la _clé secrète_ du document
-  : [{0}]
-`,
-  CRRopaque: `Ce pouvoir détient des données qui ne sont accessibles que dans l'application terminale (cryptées par votre clé). Les opérations du service ne peuvent pas les déchiffrer.
-
-  [{0}]
-`,
   CRRmore: `Ce pouvoir détient des données spécifiques à sa classe de document.
 
   [{0}]
-`,
-  CRRtopic1: 'Cette thématique n\'a pas de _sujets_ qui la détaille.',
-  CRRtopic2: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille:
-- codes: [{0}]
-`,
-  CRRtopic3: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
-La liste est définie dans la configuration du service (code: [{0}]).
-`,
-  CRRtopic4: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
-La liste est définie dans la configuration de l'organisation pour ce service (code: [{0}]).
-`,
-  CRRtopic5: `Cette thématique n\'a une liste restreinte de _sujets_ qui la détaille.
-La liste est définie par les valeurs de propriété [{0}] de tous les documents de classe [{1}] existants pour cette organisation.
 `,
   CRRabout_label : 'Commentaire privé à propos du pouvoir',
   CRRabout_bub : `### Commentaire privé à propos du pouvoir
@@ -790,6 +768,7 @@ La liste est définie par les valeurs de propriété [{0}] de tous les documents
   Ce texte est éditable.
   Il est strictement privé et crypté (vous seul le voyez).
 `,
+
   SFTtit: 'Ma Safe Box',
   SFTus: 'Identifiant:',
   SFTps: 'Terminal certifié - Pseudo local:',
@@ -1114,7 +1093,13 @@ bla bla
   FORMdiag_pseudo: '"pseudo" non valide.',
 
   CREDON_CoDir: 'Membre du Comité Directeur',
-  CREDON_Rédaction: 'Membre du Comité de Rédaction',
+  CREDON_CoDir_bub: `### Membre du Comité Directeur
+  bla bla 
+  `,
+  CREDON_Redaction: 'Membre du Comité de Rédaction',
+  CREDON_Redaction_bub: `### Membre du Comité de Rédaction
+  bla bla 
+  `,
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

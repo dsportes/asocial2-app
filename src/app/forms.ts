@@ -1,5 +1,6 @@
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
+import { $t } from '../src-fw/util'
 
 /*
 new FormType('membrecodir', 'k1', ['A'])
@@ -37,15 +38,13 @@ class $Form_membrecodir extends $Form {
     if (!this.opts) this.opts = {}
     // Template du credential d'accès à Codir/1
     this.opts.credTemplates = {}
+    const comment = $t('CREDON_CoDir')
     const name = this.etcU['pseudo']
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'CoDir', 
-      { pk: '1' }, name, { name })
+      { pk: '1' }, comment, { name })
     this.opts.credTemplates[ct.credId] = ct
-   }
-
-  async validate (byU: boolean, etc: Object) : Promise<number> {
-    return 0
   }
+
 }
 Registry.registerD($Form_membrecodir)
 

@@ -19,9 +19,11 @@ class $Credential_CoDir extends $Credential {
   constructor (obj?: Object) {
     super(obj)
   }
+  get hasDispProps () { return true }
+
   async dispAboutme () { 
     const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', this.aboutme))
+    await ui.diagDisplay($t('CRRaboutme', this.props.name))
   }
 }
 Registry.registerD($Credential_CoDir)

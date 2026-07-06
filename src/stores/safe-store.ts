@@ -804,7 +804,7 @@ export const useSafeStore = defineStore('safe', () => {
       credId,
       nameK: keyToB64(await ecX(name)),
     }
-    const op = new SafeOperation('$UpdateCredNamet', mySafeStore.value)
+    const op = new SafeOperation('$UpdateCredName', mySafeStore.value)
     op.args.setNameCred = setNameCred
     try {
       await doOpSafe(op)

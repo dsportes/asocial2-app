@@ -6,7 +6,7 @@
 <template>
 <div>
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
-    hdrclass="tbs" noclose @close="checkClose">
+    hdrclass="tbs" noclose @close="checkClose" width="md">
     <template #btn>
       <btn-cond :label="$t('validate')" icon="check" :disable="!todel.size"
         @ok="cleanUp">
@@ -33,56 +33,45 @@
     </template>
 
     <template #default>
-    <q-separator color="orange" class="q-my-sm"/>
-    <div>
-      <div v-if="step >= 2" class="sep full-width column items-center q-my-sm">
-        <div class="itre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
-        <scroll-area size="sm" class="q-pa-xs pwmd" noborder>
-          <div v-for="(c, idx) in curso.creds" :key="c.credId"
-            :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)">
-            <cred-row2 :cred="c" @undo="undodel(c)" @select="selectCr(c)"/>
-          </div>
-        </scroll-area>
-      </div>
+      <q-separator color="orange" class="q-my-sm"/>
+      <div class="column items-center">
+        <div class="pwsm">
 
-      <div v-if="step === 3" class="column items-center q-mt-sm q-mb-sm">
-        <div class="pwmd">
-
-          <line-edit class="q-my-sm" prefix="CRRabout" :text="curcr.name"
-            @change="chgName"/>
-
-          <cred-row2 :cred="curcr" class="q-my-sm"/>
-
-          <div v-if="curcr.alert === 1" 
-            class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
-          <div v-if="curcr.alert === 2" class="row">
-            <div class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs2') }}</div>
-            <btn-cond class="col-auto q-ml-xs" round icon="delete" color="warning"
-              @ok="todelcr"/>
+          <div v-if="step >= 2" class="sep q-my-sm">
+            <div class="titre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
+            <scroll-area size="md" class="q-py-xs" noborder>
+              <div v-for="(c, idx) in curso.creds" :key="c.credId"
+                :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)">
+                <cred-row2 class="full-width" :cred="c" @undo="undodel(c)" @select="selectCr(c)"/>
+              </div>
+            </scroll-area>
           </div>
 
-          <div v-if="curcr.alert === 3" class="row">
-            <div class="col titre-md text-bold">{{ $t('CRRobs3') }}</div>
-            <btn-cond v-if="curcr.alert === 3" class="col-auto q-ml-xs" round 
-              icon="undo" color="primary"
-              @ok="undodel"/>
-          </div>
+          <div v-if="step === 3" class="q-mt-sm q-mb-sm">
+            <line-edit size="sm"
+              class="q-my-sm" prefix="CRRabout" :text="curcr.name || ''"
+              @change="chgName"/>
 
-          <div v-if="curcr.alert === 0" class="row">
-            <div class="col titre-md text-bold text-warning">{{ $t('CRRdel') }}</div>
-            <btn-cond class="col-auto q-ml-xs" round icon="delete" color="negative"
-              confirm @ok="cftodel"/>
-          </div>
+            <cred-row2 :cred="curcr" class="q-my-sm"/>
 
-          <div v-if="curcr.alert === 4" class="row">
-            <div class="col titre-md text-bold">{{ $t('CRRdel2') }}</div>
-            <btn-cond class="col-auto q-ml-xs" round 
-              icon="undo" color="primary"
-              @ok="undodel"/>
+            <div v-if="curcr.alert === 1" 
+              class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
+
+            <div v-if="curcr.alert === 2" class="row">
+              <div class="col titre-md text-bold">{{ $t('CRRdel2') }}</div>
+              <btn-cond class="col-auto q-ml-xs" round 
+                icon="undo" color="primary"
+                @ok="undodel"/>
+            </div>
+
+            <div v-if="curcr.alert === 0" class="row">
+              <div class="col titre-md text-bold text-warning">{{ $t('CRRdel') }}</div>
+              <btn-cond class="col-auto q-ml-xs" round icon="delete" color="negative"
+                confirm @ok="cftodel"/>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </template>
   </dialog-std2>
 </div>
@@ -101,8 +90,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-
-import CondRole from '../components/CondRole.vue'
+import { getCredProps } from '../src-fw/operations'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
@@ -122,28 +110,28 @@ const todel = ref(new Map<string, $Credential>())
 const step = ref(1)
 
 /* alert
-- 1: à supprimer du Safe - pas de cond
-- 2: limit dépassée
-- 3: à supprimer pour cause de limite
-- 4: à supprimer décision user
+- 1: à supprimer du Safe : le document n'existe plus / pas
+- 2: à supprimer sur décision user
 */
 const cleanUp = async () => {
   console.log('cleanup', todel.value.size)
   const lst: string[] = []
   for(const [credId, c] of todel.value) {
-    if (c.alert === 1 || c.alert === 3 || c.alert === 4)
+    if (c.alert === 1)
       lst.push(credId)
-    if (c.alert === 3 || c.alert === 4) {
+    if (c.alert === 2) {
       const op = new AutoRevokeCred(c.svc, c.org)
       if (!await op.run(c)) {
         todel.value.clear()
         return
       }
+      lst.push(credId)
     }
   }
-  if (lst.length)
-    await sf.autoRevokeCreds(lst)
+  if (lst.length) 
+    await sf.fixCreds([], lst)
   todel.value.clear()
+
   reset(true)
 }
 
@@ -151,17 +139,21 @@ const cleanUp = async () => {
   credId: string = '' // ID du credential.
   svc: string = '' // code du service
   org: string = '' // le code de l'organisation.
-  docCl: string = '' // docClass.role : un des codes de rôle connu du service.
-  docPk: string = '' // identifiant du document cible du credential.
-  privs: string = '' // clé PRIVEE de signature en base64.
-  privd: string = '' // clé PRIVEE de decryptage en base64.
-  name: string = '' // "nom" associé au docPk.
-  
-  // Décoration après fusion avec Cred
-  limit?: number
-  docKey?: Uint8Array | null
-  opaque?: any | null
-  more?: any | null
+
+  docCl: string = '' // classe du document "maître"  du credential
+  docPk: string = '' // clé primaire du document maitre du credential.
+
+  pubv?: Uint8Array | null = null // clé publique de vérification: doc seulement
+  privs?: Uint8Array | null = null // clé PRIVEE de signature en base64: safe seulement
+  pubc?: Uint8Array | null = null // clé publique de cryptage: doc seulement
+  privd?: Uint8Array | null = null // clé PRIVEE de decryptage en base64: safe seulement
+
+  toCheck?: boolean // si true l'existence du credential est à vérifier par rapport à son document
+  name: string = '' // "nom" associé au docId.
+
+  v: number = 0 // version du document
+  props?: any
+
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 */
 type svcOrg = {
@@ -223,16 +215,12 @@ const selectSo = async (x: svcOrg) => {
 
 const reset2 = async () => {
   if (todel.value.size) await cleanUp()
-  const now = Date.now()
   const so = curso.value
   for(const c of so.creds) {
-    /*
-    const op = new SyncCred(c.svc, c.org)
+    const op = new getCredProps(c.svc, c.org)
     const ok = await op.run(c)
-    if (!ok) c.alert = 1
-    else c.limit && c.limit * 1000 < now ? 2 : 0
+    c.alert = ok ? 0 : 1
     if (c.alert === 1) todel.value.set(c.credId, c)
-    */
   }
   so.creds.sort((a: $Credential, b: $Credential) => 
     a.docCl < b.docCl ? -1 : (a.docCl > b.docCl ? 1 : a.docPk < b.docPk ? -1 : (a.docPk > b.docPk ? 1 : 0)))
@@ -244,20 +232,16 @@ const selectCr = (c) => {
   step.value = 3
 }
 
-const todelcr = () => {
-  curcr.value.alert = 3
-  todel.value.set(curcr.value.credId, curcr.value)
-}
-
 const undodel = () => {
   const c = curcr.value
-  c.alert = c.alert === 3 ? 2 : 0
+  c.alert = 0
   todel.value.delete(c.credId)
 }
 
 const cftodel = () => {
-  curcr.value.alert = 4
-  todel.value.set(curcr.value.credId, curcr.value)
+  const c = curcr.value
+  c.alert = 2
+  todel.value.set(c.credId, c)
 }
 
 const chgName = async (text) => {

@@ -37,7 +37,8 @@ const props = defineProps({
   title: String, // titre de la top bar
   help: String,  // code de loa page d'aide s'il y en a une
   hdrclass: String,
-  noclose: Boolean
+  noclose: Boolean,
+  width: String
 })
 
 const wx = {sm: '30', md: '40', lg: '50'}

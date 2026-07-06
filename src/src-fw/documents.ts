@@ -118,6 +118,8 @@ export class $Credential {
     return encode(obj)
   }
 
+  get hasDispProps () { return false }
+
   async dispProps () {
     const ui = stores.ui
     await ui.diagDisplay($t('CRRpower', [JSON.stringify(this.props, null, '\t')]))
@@ -125,7 +127,7 @@ export class $Credential {
 
   async dispLimit () {
     if (this.limit)
-      await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 1000)]))
+      await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 60000)]))
   }
 
 }
@@ -302,12 +304,6 @@ export class $Form extends $Document {
  async compileEtc (byU: boolean) : Promise<void> {
  }
 
- /* Traitement de "validation": distinguable selon demande / proposition
- - retourne un status, normalment à 0
- */
-  async validate (byU: boolean, etcX: Object) : Promise<number> {
-    return 0
-  }
   /***************************************************************
   ****************************************************************/
 
