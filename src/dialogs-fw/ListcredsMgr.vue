@@ -97,12 +97,14 @@
           </div>
           <div class="row full-width items-conter">
             <div class="col-2"></div>
-            <div class="col-5 ellipsis">{{ item.cred.$trole }}</div>
-            <div class="col-5 ellipsis text-right">{{ item.cred.docId }}</div>
+            <div class="col-5 ellipsis">{{ $t('CREDON_' + item.cred.docCl )}}</div>
+            <div class="col-5 text-right">
+              {{ (item.cred.props.name || '') + '[' + item.cred.docPk + ']' }}
+            </div>
           </div>
-          <div v-if="item.cred.comment" class="row full-width items-center">
+          <div v-if="item.cred.name" class="row full-width items-center">
             <div class="col-2"></div>
-            <div class="col-10 font-mono text-italic fs-md text-right ellipsis">{{ item.cred.comment }}</div>
+            <div class="col-10 font-mono text-italic fs-md text-right ellipsis">{{ item.cred.name }}</div>
           </div>
         </div>
       </div>
@@ -143,6 +145,7 @@ import stores from '../stores/all'
 import { $Credential } from '../src-fw/documents'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
+import { getCredProps } from '../src-fw/operations'
 
 import LcRow from '../components-fw/LcRow.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -224,8 +227,8 @@ const init = async () => {
     const t = [
       c.org,
       $t('services_' + c.svc),
-      c.$trole,
-      c.docId
+      c.docCl,
+      c.docPk
     ]
     const it: CredItem = {
       chk: false,
@@ -236,6 +239,9 @@ const init = async () => {
     crmap[crId] = it
     cIds.add(crId)
     lst.push(it)
+    const op = new getCredProps(c.svc, c.org)
+    const ok = await op.run(c)
+    c.alert = ok ? 0 : 1
   }
   lst.sort((a,b) => a.k < b.k ? -1 : (a.k > b.k ? -1 : 0))
   allCreds.value = lst
