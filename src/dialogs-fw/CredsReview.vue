@@ -8,7 +8,7 @@
   <dialog-std2 v-model="model" :title="$t('CRRtit_label')" vue="CredsReview"
     hdrclass="tbs" noclose @close="checkClose" width="md">
     <template #btn>
-      <btn-cond :label="$t('validate')" icon="check" :disable="!todel.size"
+      <btn-cond :label="$t('validate')" icon="check" :disable="!ui.editingInCourse"
         @ok="cleanUp">
         <q-badge color="red" floating>{{ todel.size }}</q-badge>
       </btn-cond>
@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref } from 'vue'
+import { ref, Ref, watch } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
@@ -95,17 +95,26 @@ import { getCredProps } from '../src-fw/operations'
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const sf = stores.safe
+const ui = stores.ui
 
 const model = defineModel()
 const emit = defineEmits(['close'])
 
 const checkClose = async () => {
   if (todel.value.size) await cleanUp()
-  model.value = false
-  emit('close', true)
+  const b = await ui.mayClose()
+  if (b) {
+    model.value = false
+    emit('close', true)
+  }
 }
 
 const todel = ref(new Map<string, $Credential>())
+
+watch(() => todel.value.size, (v) => {
+  if (v) ui.setEditing()
+  else ui.resetEditing()
+})
 
 const step = ref(1)
 

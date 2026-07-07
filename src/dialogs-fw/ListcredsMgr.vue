@@ -4,7 +4,6 @@
   - done: après mise à jour
 -->
 <template>
-<div>
 <dialog-std2 v-model="model" :title="$t('LCRtit_label')" vue="ListcredsMgr"
   hdrclass="tbs" noclose @close="checkClose">
   <template #hdr>
@@ -16,7 +15,7 @@
       </div>
       <btn-cond class="col-auto"
         icon="check" color="warning"
-        :disable="changes.size === 0"
+        :disable="!ui.editingInCourse"
         :label="$t('validate')" @ok="validate">
         <q-badge color="red" floating>{{ changes.size }}</q-badge>
       </btn-cond>
@@ -128,11 +127,6 @@
 </template>
 </dialog-std2>
 
-<choose-it v-model="dialogs.close"
-  prefix="LCRcredcl" options="pw" 
-  @giveup="chooseBack(0)"
-  @option="chooseBack"/>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -152,7 +146,6 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 
 type ListCreds = {
   profId: string
@@ -185,15 +178,12 @@ const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
 })
 
-const checkClose = () => {
-  if (changes.value.size) dialogs.close = true
-  else { model.value = false; emit('close', true)}
-}
-
-const chooseBack = (n) => {
-  dialogs.close = false
-  if (n === 1)
-    { model.value = false; emit('close', true)}
+const checkClose = async () => {
+  const b = await ui.mayClose()
+  if (b) {
+    model.value = false
+    emit('close', true)
+  }
 }
 
 const tab = ref('lists') // cred
@@ -402,12 +392,14 @@ const checkChanges = () => {
   for(const x in lcmap) {
     const lc = lcmap[x]
     if ((lc.ex && !lc.exB) || (!lc.ex && lc.exB)) 
-      { changes.value.add(lc.profId); continue }
+      changes.value.add(lc.profId)
     if (lc.name !== lc.nameB)
-      { changes.value.add(lc.profId); continue }
+      changes.value.add(lc.profId)
     if (!isSameSet(lc.crIds, lc.crIdsB))
-      { changes.value.add(lc.profId); continue }
+      changes.value.add(lc.profId)
   }
+  if (changes.value.size) ui.setEditing()
+  else ui.resetEditing()
 }
 
 const validate = async () => {

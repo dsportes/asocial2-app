@@ -3,10 +3,13 @@ Events: close done
 -->
 <template>
 <div>
-<dialog-std2 v-model="model" :title="$t('HPprefs_1')" vue="PrefsMgr">
+<dialog-std2 v-model="model" :title="$t('HPprefs_1')" vue="PrefsMgr"
+  hdrclass="tbs" noclose @close="checkClose" width="md">
   <template #btn>
     <btn-cond icon="check" :label="$t('validate')" @ok="validate"
-      :disable="deletedCodes.size === 0 && updatedPrefs.size === 0"/>
+      :disable="!ui.editingInCourse">
+      <q-badge color="red" floating>{{ deletedCodes.size + updatedPrefs.size }}</q-badge>
+    </btn-cond>
   </template>
 
 <template #default>
@@ -57,7 +60,7 @@ Events: close done
         <div class="titre-md text-bold q-mr-md">{{session.edPref.code}}</div>
         <div class="font-mono fs-sm text-italic">[{{dhcool(session.edPref.time)}}]</div>
       </div>
-      <btn-cond class="q-ml-xs" icon="check" :label="$t('validate')" @ok="edValid"
+      <btn-cond class="q-ml-xs" icon="check" :label="$t('ok')" @ok="edValid"
         :color="session.edPref.chg ? 'warning' : 'primary'"
         :disable="diag !== ''"/>
     </div>
@@ -95,14 +98,12 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const myModule = 'PrefsMgr'
 const model = defineModel()
 const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
   edprf: false
 })
-// onMounted(() => console.log(myModule, "mounted"))
-// onUnmounted(() => console.log(myModule, "unMounted"))
+
 watch(model, (v) => {
   if(v) init()
   else  { emit('close', true) }
@@ -112,14 +113,33 @@ const diag = computed(() => session.edPref ? session.edPref.diag : '' )
 
 const myPrefs: Ref<Map<string, [number, Uint8Array]>> = ref(sf.mySafePrefs)
 const myPrefsOrig: Ref<Map<string, [number, Uint8Array]>> = ref(new Map())
-watch(() => sf.mySafePrefs, (p) => { myPrefs.value = p })
+watch(() => sf.mySafePrefs, () => { 
+  init()
+})
 
 const init = () => {
+  myPrefs.value = sf.mySafePrefs
   for(const [code, x] of myPrefs.value) myPrefsOrig.value.set(code, x)
+  deletedCodes.value.clear()
+  updatedPrefs.value.clear()
 }
 
 const updatedPrefs: Ref<Map<string, LocPref>> = ref(new Map())
 const deletedCodes = ref(new Set<string>())
+
+watch(() => [deletedCodes.value.size, updatedPrefs.value.size], () => {
+  if (deletedCodes.value.size + updatedPrefs.value.size) ui.setEditing()
+  else ui.resetEditing()
+})
+
+const checkClose = async () => {
+  const b = await ui.mayClose()
+  if (b) {
+    model.value = false
+    emit('close', true)
+  }
+}
+
 const selP: Ref<LocPref> = ref(null)
 const pSel = (code: string) => {
   const x = !code ? '' : (selP.value && selP.value.code === code ? 'bord2w ' : 'bord2c ')
