@@ -40,7 +40,8 @@ const props = defineProps({
 const model = defineModel()
 
 const opts = ref(new Array(props.options ? props.options.length : 0))
-for(let i = 0; i < (props.options ? props.options.length : 0); i++) opts.value[i] = props.options.charAt(i) === 'w'
+for(let i = 0; i < (props.options ? props.options.length : 0); i++) 
+  opts.value[i] = props.options.charAt(i) === 'w'
 
 const emit = defineEmits(['giveup', 'option'])
 

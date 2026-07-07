@@ -2,22 +2,25 @@
 -->
 <template>
 <div class="column">
-  <div class="row items-center">
+  <div v-if="prefix" class="row items-center">
     <btn-bubble class="col-auto" :text="$t(prefix + '_bub')"/>
     <div class="col q-mx-sm mh titre-md text-italic ellipsis">{{ $t(prefix + '_label') }}</div>
-    <btn-cond icon="edit" round :disable="disable || false" @ok="edit"/>
   </div>
-  <div class="q-pl-lg font-mono ellipsis">{{ text }}
+
+  <div :class="'font-mono ellipsis' + (disable ? ' disabled' : ' cursor-pointer')">{{ text }}
     <q-menu v-model="menu"
       anchor="top left" self="top left" class="bord q-pa-sm"
       :style="styles[size || 'md']"
       transition-show="flip-up" transition-hide="flip-down">
       <div class="row items-center">
-        <q-input class="col font-mono" standout v-model="ntext"/>
-        <btn-cond class="col-auto q-mx-xs" icon="undo" round 
-          :disable="disable || false" @ok="undo"/>
-        <btn-cond class="col-auto" :label="$t('ok')" color="warning" padding="2px"
-          :disable="text === ntext" @ok="doOk"/>
+        <q-input class="col font-mono" standout v-model="ntext"
+          @keydown.enter.prevent="doOk"
+          :disable="disable || false"/>
+        <btn-cond v-if="ntext !== text" 
+          class="col-auto q-mx-xs" icon="undo" round @ok="undo"/>
+        <btn-cond v-if="ntext !== text" 
+          class="col-auto" :label="$t('ok')" color="warning" padding="2px" @ok="doOk"/>
+        <btn-cond class="q-ml-xs col-auto" icon="close" @ok="menu = false"/>
       </div>
     </q-menu>
   </div>
@@ -46,7 +49,7 @@ const styles = {
 const emit = defineEmits(['change'])
 
 const menu = ref(false)
-const ntext = ref('')
+const ntext = ref(props.text)
 
 const edit = () => {
   ntext.value = props.text
@@ -54,14 +57,13 @@ const edit = () => {
 }
 
 const undo = () => {
-  ntext.value = ''
+  ntext.value = props.text
   menu.value = false
 }
 
 const doOk = () => {
   if (ntext.value !== props.text)
     emit('change', ntext.value)
-  ntext.value = ''
   menu.value = false
 }
 

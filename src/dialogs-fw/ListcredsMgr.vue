@@ -53,19 +53,8 @@
           :label="$t('LCRonlylc')"/>
       </div>
 
-      <div v-if="tab === 'cred'" class="full-width q-my-sm">
-        <div class="bord1 q-pa-xs">
-          <div class="row full-width items-center">
-            <div class="col-6 ellipsis">{{ curCred.org }}</div>
-            <div class="col-6 ellipsis text-right">{{ $t('services_' + curCred.svc) }}</div>
-          </div>
-          <div class="row full-width items-conter">
-            <div class="col-6 ellipsis">{{ curCred.$trole }}</div>
-            <div class="col-6 ellipsis text-right">{{ curCred.docId }}</div>
-          </div>
-          <div v-if="curCred.comment"
-            class="font-mono text-italic fs-md text-right ellipsis">{{ curCred.comment }}</div>
-        </div>
+      <div v-if="tab === 'cred'" class="full-width q-pa-xs">
+        <cred-row2 :cred="curCred" comment/>
         <q-checkbox class="q-mt-sm" left-label v-model="onlycr" 
           :label="$t('LCRonlycr')"/>
       </div>
@@ -81,11 +70,17 @@
     {{ $t('LCRnosel') }}
   </div>
 
-  <div v-if="tab === 'lists' && curLc" class="column items-center full-width">
+  <div v-if="tab === 'lists' && curLc" class="full-width q-px-xs">
     <div v-for="(item, idx) in allCreds" :key="item.cred.credId">
-      <div v-if="!onlylc || item.chk" class="row items-center q-my-xs pwsm">
-        <btn-cond class="col-1" icon="zoom_in" round @ok="selectCr(item)"/>
-        <div :class="dkli(idx) + ' col-11 ' + (curCred && item.cred.credId === curCred.credId ? 'current' : 'nocurrent')">
+      <div v-if="!onlylc || item.chk" :class="'row q-my-xs full-width items-start ' + dkli(idx)">
+        <q-icon v-if="!curCred || item.cred.credId !== curCred.credId" 
+          class="col-1 nocur cursor-pointer"
+          name="fast_forward" size="32px"
+          @click="selectCr(item)"/>
+        <q-icon v-else 
+          class="col-1"
+          name="fast_forward" size="32px" color="green-5"/>
+        <div class="col-11">
           <div class="row full-width items-center">
             <div class="col-2 row">
               <q-checkbox v-model="item.chk" dense size="sm" @click="clickCB(item)"
@@ -111,15 +106,19 @@
     </div>
   </div>
 
-  <div v-if="tab === 'cred'" class="column items-center full-width">
+  <div v-if="tab === 'cred'" class="full-width q-pa-xs">
     <div v-for="(it, idx) in lcItems" :key="it.lc.profId">
-      <div v-if="!onlycr || it.chk"
-        :class="dkli(idx) + ' q-py-xs row items-start pwsm'">
-        <div class="col-2 row">
-          <q-checkbox v-model="it.chk" dense size="sm" @click="clickLC(it)"/>
-          <q-checkbox v-model="it.chkB" dense size="sm" disable readonly/>
-        </div>
-        <lc-row class="col-10" restricted
+      <div v-if="!onlycr || it.chk" :class="dkli(idx) + ' q-py-xs row items-center q-gutter-xs'">
+        <q-icon v-if="!curLc || it.lc.profId === curLc" 
+          class="col-auto nocur cursor-pointer"
+          name="fast_forward" size="32px"
+          @click="selectPr(it)"/>
+        <q-icon v-else 
+          class="col-auto"
+          name="fast_forward" size="32px" color="green-5"/>
+        <q-checkbox class="col-auto" v-model="it.chk" dense size="sm" @click="clickLC(it)"/>
+        <q-checkbox class="col-auto" v-model="it.chkB" dense size="sm" disable readonly/>
+        <lc-row class="col" restricted
           v-model="it.lc" :lcmap="lcmap"
           @namechange="namechange" @delete="deleteLc"
           @undo="undoLc" @duplicate="duplicateLc"/>
@@ -148,6 +147,7 @@ import { Profile } from '../stores/safe-store'
 import { getCredProps } from '../src-fw/operations'
 
 import LcRow from '../components-fw/LcRow.vue'
+import CredRow2 from '../components-fw/CredRow2.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 
@@ -304,6 +304,11 @@ const select = (profId) => {
   }
 }
 
+const selectPr = (it) => {
+  tab.value = 'lists'
+  select(it.lc.profId)
+}
+
 const selectCr = (item) => {
   curCred.value = item.cred
   const cid = item.cred.credId
@@ -344,7 +349,11 @@ const namechange = (lc) => {
   checkChanges()
 }
 const deleteLc = (lc) => {
-  lc.ex = false
+  if (!lc.exB) {
+    delete lcmap[lc.profId]
+    curLc.value = ''
+    sortLc()
+  } else lc.ex = false
   checkChanges()
 }
 const undoLc = (lc) => {
@@ -358,8 +367,8 @@ const duplicateLc = (lc) => {
   const profId = Crypt.rnd(15)
   const newlc = {
     profId,
-    name: profId,
-    nameB: profId,
+    name: $t('LCRnew'),
+    nameB: '',
     ex: true,
     exB: false,
     crIds: new Set(cloneSet(lc.crIds)),
@@ -375,8 +384,8 @@ const newList = (full: boolean) => {
   const profId = Crypt.rnd(15)
   const lc = {
     profId,
-    name: profId,
-    nameB: profId,
+    name: $t('LCRnew'),
+    nameB: '',
     ex: true,
     exB: false,
     crIds: new Set(full ? cloneSet(allCredIds.value) : []),

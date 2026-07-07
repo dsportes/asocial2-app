@@ -29,6 +29,7 @@
             {{cred.props && cred.props.name ?  cred.props.name : '?'}}</div>
           <div class="col-2 ellipsis q-pr-sm">{{cred.credPk}}</div>
         </div>
+        <div v-if="comment && cred.name" class="font-mono text-bold">{{ cred.name }}</div>
       </div>
     </div>
 </template>
@@ -38,7 +39,8 @@ import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 const props = defineProps({
-  cred: Object
+  cred: Object,
+  comment: Boolean
 })
 
 const emit = defineEmits(['undo', 'select'])

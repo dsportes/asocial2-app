@@ -243,7 +243,8 @@ export default {
   op_FormGet: 'Lecture d\`une demande / proposition',
   op_FormValidateByU: 'Mise à jour d\'une demande / proposition par l\'utilisateur cible',
   op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
-
+  op_$UpdateProfiles: 'Mise à jour des listes de pouvoirs.',
+  
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété de la Safe Box non reconnue (phrase ou autre).',
@@ -365,6 +366,7 @@ export default {
   `,
   Phrase_ph: 'Les1sanglots2Longs3du4Printemps',
 
+  LCRnew: 'Nouvelle liste',
   LCRtit_btn: 'Gérer mes "listes de pouvoirs"',
   LCRtit_label: 'Gérer mes "listes de pouvoirs"',
   LCRtit_bub: `### Gérer mes "listes de pouvoirs"
@@ -389,6 +391,14 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   LCRtab_c: 'Pouvoir courant',
   LCRdupname: 'Nom déjà attribué à une autre liste ({0}).',
   LCRok: 'Mises à jour des "listes de pouvoirs" enregistrées.',
+  LCRcredcl_tit: 'Mises à jour non validées',
+  LCRcredcl_txt: `### Des mises à jour n'ont pas été validées:
+- Si vous confirmez vouloir quitter cette page, elles seont perdues.
+- Si vous restez sur cette page, vous pouvez poursuivre et valider vos mises à jour.
+
+`,
+  LCRcredcl_0: 'Je reste sur cette page',
+  LCRcredcl_1: 'Je quitte cette page',
 
   APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
