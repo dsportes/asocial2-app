@@ -24,12 +24,16 @@
       <div class="font-mono">{{ sf.auth.admins }}</div>
     </div>
 
-    <div class="q-my-sm" v-if="hasManagedOrgs">
+    <div class="q-my-sm" v-if="mgrCreds.size">
       <div class="titre-md text-italic">{{ $t('svcStatus_no4') }}</div>
-      <div v-for="so in sorgs" :key="so.label" class="row items-center q-ml-md">
-        <btn-cond class="col-auto q-mr-md" icon="delete" round color="warning"
-          confirm @ok="revok(so)"/>
-        <div class="col font-mono">{{ so.label }}</div>
+      <div v-for="[credId, c] in mgrCreds" :key="credId">
+        <div class="row items-center">
+          <btn-cond class="col-1" icon="delete" round color="warning"
+            confirm @ok="revok(c)"/>
+          <div class="col-5 font-mono ellipsis">{{ $t('CREDON_' + c.docCl) }}</div>
+          <div class="col-4 font-mono ellipsis">{{ $t('services_' + c.svc) }}</div>
+          <div class="col-2 font-mono ellipsis">{{c.org }}</div>
+        </div>
       </div>
     </div>
     <div v-else class="titre-md text-italic">{{ $t('svcStatus_no3') }}</div>
@@ -47,11 +51,9 @@ import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-// import { AutoRevokeCred } from '../src-fw/operations'
+import { AutoRevokeCred } from '../src-fw/operations'
 import BtnCond from '../components-fw/BtnCond.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-
-const decoder = new TextDecoder()
 
 const sf = stores.safe
 const ui = stores.ui
@@ -66,23 +68,18 @@ if (sf.userId && sf.auth.admins) {
   admins.value = x
 }
 
-//const sorgs = ref(sf.managedOrgs2()) TODO
-const sorgs = ref([])
-const hasManagedOrgs = computed(() => sorgs.value.length !== 0)
+const mgrCreds = ref(sf.managerCreds())
 
-const revok = async (so) => {
-  // TODO - A revoir sur le fond
-  /*
-  let op = new AutoRevokeCred(so.svc, so.org)
-  const ok = await op.run(so.credId, 'Org', '1')
+const revok = async (c) => {
+  let op = new AutoRevokeCred(c.svc, c.org)
+  const ok = await op.run(c)
   if (!ok) {
     await ui.diagDisplay($t('APrevko'))
   } else {
-    sf.autoRevokeCreds([so.credId])
+    await sf.fixCreds([], [c.credId])
     await ui.diagDisplay($t('APrevok'))
-    sorgs.value = sf.managedOrgs2()
+    mgrCreds.value = sf.managerCreds()
   }
-  */
 }
 
 </script>

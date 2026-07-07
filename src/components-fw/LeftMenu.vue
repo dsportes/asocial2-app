@@ -101,7 +101,7 @@ const sessionClose = (n) => {
   if (n === 1) ui.backToOpenSession()
 }
 
-const hasManagedOrgs = computed(() => sf.managedOrgs().length !== 0)
+const hasManagedOrgs = computed(() => sf.managerCreds().size !== 0)
 
 const openAdmin = (svc) => {
   ui.closeMenu()

@@ -18,7 +18,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
 import { isSameSet } from '../src-fw/util'
-import { Document, Registry } from '../src-fw/registry'
+import { $Document, Registry } from '../src-fw/registry'
 import { Subscription, Subs, versions } from '../src-fw/subscription'
 import { Sync } from '../src-fw/operations'
 import { IDB } from '../src-fw/idb'
@@ -90,7 +90,7 @@ export type subsToSync = {
 }
 
 type docInfo = {
-  doc: Document // son objet document
+  doc: $Document // son objet document
   defs: Set<string> 
   /* le set des souscriptions qui incluent ce document:
   '0': par convention, souscription de la collection de la classe
@@ -124,15 +124,15 @@ export const useDataStore = defineStore('data', () => {
   Retourne le document "stocké" (le nouveau ou l'ancien)
   ou null s'il a été supprimé
   */
-  const setDoc = (org: string, doc: Document) : docInfo | null => {
+  const setDoc = (org: string, doc: $Document) : docInfo | null => {
     let eorg = documents.value.get(org);
     if (!eorg) {
-      eorg = new Map<string, Map<string, Map<string, Document>>>()
+      eorg = new Map<string, Map<string, Map<string, $Document>>>()
       documents.value.set(org, eorg)
     }
     let ecl = eorg.get(doc._clazz)
     if (!ecl) {
-      ecl = new Map<string, Map<string, Document>>()
+      ecl = new Map<string, Map<string, $Document>>()
       eorg.set(doc._clazz, ecl)
     }
     let docInfo = ecl.get(doc._pk)
@@ -161,7 +161,7 @@ export const useDataStore = defineStore('data', () => {
   - 'pk' : fait partie de 'clazz/pk'
   - 'colName/colValue' : fait partie de 'clazz/colName/colValue'
   */
-  const deflocsOfDoc = (org: string, doc: Document) : Set<string> => {
+  const deflocsOfDoc = (org: string, doc: $Document) : Set<string> => {
     const defs = new Set<string>()
     const eorg: Map<string, Subs> = allSubs.value.get(org)
     if (!eorg) return defs
@@ -208,8 +208,8 @@ export const useDataStore = defineStore('data', () => {
 
   /* getClDocs() : retourne la liste des documents stockés d'une classe donnée */
   const getClDocs = (org: string, clazz: string)
-    : Document[] => {
-    const r: Document[] = []
+    : $Document[] => {
+    const r: $Document[] = []
     let eorg = documents.value.get(org)
     if (!eorg) return r
     let ecl = eorg.get(clazz)
@@ -248,8 +248,8 @@ export const useDataStore = defineStore('data', () => {
   dont la propriété colName contient (ou a) la valeur colValue
   */
   const getColl = (org: string, clazz: string, colName: string, colValue: string)
-    : Document[] => {
-    const r: Document[] = []
+    : $Document[] => {
+    const r: $Document[] = []
     let eorg = documents.value.get(org)
     if (!eorg) return r
     let ecl = eorg.get(clazz)
@@ -434,12 +434,9 @@ export const useDataStore = defineStore('data', () => {
     let sts : subsToSync | null = nextToSync()
     while (sts) {
       setTimeout(async () => {
-        // @ts-expect-error
         sts.order = 0
         // syncOp
-        // @ts-expect-error
         await new Sync('', sts.org).run(sts)
-        // @ts-expect-error
         syncQueue.value.delete(sts.org + '/' + sts.def)
         sts = nextToSync()
       }, 1)
@@ -494,7 +491,7 @@ export const useDataStore = defineStore('data', () => {
     const binDocs: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     const delPks: string[] = []
     if (Array.isArray(x)) for (const data of x) {
-      const doc = await Registry.compile(clazz, data)
+      const doc = await Registry.compile(clazz, data) as $Document
       if (!doc) continue // impensable
       const docInfo: docInfo | null = setDoc(org, doc)
       if (docInfo) binDocs.set(doc._pk, data) // document utile et existant

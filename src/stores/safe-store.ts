@@ -917,36 +917,19 @@ export const useSafeStore = defineStore('safe', () => {
   }
   /****************************************************************************/
 
-  /* Options des organisations managées *****************************************/
-  const managedOrgs = () : Managements[] => {
-    if (!mySafeCreds.value) return []
-    else {
-      const svcOrgs: Map<string, Managements> = new Map()
-      for (const [, c] of mySafeCreds.value) {
-        const dt = DocType.get(c.docCl)
-        if (dt && dt.manager) {
-          let e = svcOrgs.get(c.svc + '/' + c.org)
-          if (!e) { 
-            e = {
-              label: $t('services_' + c.svc) + ' [' + c.org + ']',
-              svc: c.svc,
-              org: c.org,
-              docCls: new Set<string>()
-            }
-            svcOrgs.set(c.svc + '/' + c.org, e)
-          }
-          e.docCls.add(c.docCl)
-        }
-      }
-      return Array.from(svcOrgs.values()).
-        sort((a,b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : 0))
+  /* Credential de type "manager" *****************************************/
+  const managerCreds = () : Map<string, $Credential> => {
+    const m = new Map()
+    for (const [, c] of mySafeCreds.value) {
+      const dt = DocType.get(c.docCl)
+      if (dt && dt.manager) m.set(c.credId, c)
     }
+    return m
   }
 
   /* Retourne le set des docCl de type "manager" sur lesquelles l'utilisateur 
   a un credential. Si la liste n'est pas vide, l'utilisateur est un "manager"
   à au moins un titre.
-  TODO : utilité à vérifier
   */
   const isManager = (svc: string, org: string) : Set<string> => {
     const s: Set<string> = new Set()
@@ -1612,7 +1595,6 @@ export const useSafeStore = defineStore('safe', () => {
     return [synthU, size, usersNo]
   }
 
-  // TODO
   const resetAllLocal = async () => {
     await Dexie.delete('safe')
     const x = localStorage.getItem('$DBLIST') || ''
@@ -1688,7 +1670,7 @@ export const useSafeStore = defineStore('safe', () => {
     updatePrefs,
     updateCredName, fixCreds,
     setAboutProfile, updateProfiles /* ??? */,
-    managedOrgs, isManager, adminForSvcOrg, getCreds,
+    managerCreds, isManager, adminForSvcOrg, getCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,

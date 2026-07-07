@@ -24,7 +24,7 @@ export class Registry {
     return new cl()
   }
 
-  static async compile (clazz: string, data: Uint8Array) : Promise<Document | null>{
+  static async compile (clazz: string, data: Uint8Array) : Promise<$Document | null>{
     const dt = DocType.get(clazz)
     const d = data ? decode(data) : {}
     const doc = Registry.newD(clazz, d)

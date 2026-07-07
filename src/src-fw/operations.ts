@@ -250,7 +250,6 @@ export class ListManagers extends Operation {
   }
 }
 
-// TODO en discussion (vor service)
 export class UpdateCredential extends Operation {
   constructor (svc: string, org: string) { super('UpdateCredential', svc, org) }
 
