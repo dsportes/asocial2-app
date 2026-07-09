@@ -13,10 +13,11 @@
   </div>
 
   <dialog-std0 v-if="dialogs.newdemand" v-model="dialogs.newdemand" width="pwsm" vh="80"
-    :title="$t('FORMnewd', [form.typeEd])"
+    :title="$t('FORMnewd', [$t('TYPE_' + formType.type).substring(2)])"
     hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
-      <form-zoom v-model="fctx" @done="onDone"/>
+      <form-new :form-type="formType" :isDemand="true" @done="onForm"/>
+      <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -29,21 +30,17 @@ import { ref, reactive, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { Crypt } from '../src-fw/crypt'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
 import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
-import { $Form, $FormObj } from '../src-fw/documents'
+import FormNew from '../components/FormNew.vue'
 import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 
 const ui = stores.ui
-const sf = stores.safe
-
-const fctx = computed(() => {
-  return { form: form.value, isDemand: true, comment: '' }
-})
+const fst = stores.form
+ui.navBar.hasback = false
 
 const formType = ref(null)
 
@@ -55,29 +52,7 @@ const dialogs = reactive({
   newdemand: false
 })
 
-const form = ref(null)
-
-const oknew = (soa: { svc: string, org: string, admin: boolean}) => {
-  if (!soa) return
-  // Création du Form
-  ui.setEditing()
-  dialogs.newdemand = true
-  const obj: $FormObj = {
-    type: formType.value.type,
-    formId: Crypt.rnd(15),
-    userId: sf.userId,
-    v: 0,
-    maxLife: 0,
-    status: 0,
-    etcU: null,
-    etcT: null,
-    msgU: null,
-    msgT: null
-  }
-  form.value = $Form.new(obj)
-  form.value.svc = soa.svc
-  form.value.org = soa.org
-}
+const fctx = ref(null)
 
 const close = async () => {
   const b = await ui.mayClose()
@@ -93,11 +68,23 @@ const back = async () => {
     ui.currentEvent.zoomed = false
 }
 
+const oknew = (soa) => {
+  ui.currentForm.soa = soa
+  fst.form = null
+  dialogs.newdemand = true
+}
+
+const onForm = (form) => {
+  ui.currentForm.form = form
+  fctx.value = { form, isDemand: true, comment: '' }
+  fst.startEdit(fctx.value)
+}
+
 const onDone = (ok: boolean) => { // si false pas créé
   formType.value = ''
   dialogs.newdemand = false
   if (ok)
-    ui.currentEvent.fnOnUpdate(form.value.formId)
+    ui.currentEvent.fnOnUpdate(fctx.value.form.formId)
 }
 
 </script>

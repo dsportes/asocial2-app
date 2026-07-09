@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { $t } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
-// import { DocType } from '../src-fw/doctypes'
+import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
@@ -11,6 +11,23 @@ import { $Credential } from '../src-fw/documents'
 import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
+
+export class DocEnums {
+  static m : Map<string, string[]> = new Map()
+
+  static async get (svc: string, org: string, docCl: string) : Promise<string[]> {
+    const k = svc + '/' + org + '/' + docCl
+    const dd = DocType.get(docCl)
+    if (dd.enum) return dd.enum
+    if (!dd.extenum) return []
+    let lst = DocEnums.m.get(k)
+    if (lst) return lst
+    const op = new GetEnum(svc, org)
+    lst = await op.run(docCl)
+    this.m.set(k, lst)
+    return lst
+  }
+}
 
 export class CVKeys {
   static mc: Map<string, Uint8Array> = new Map()
@@ -237,6 +254,36 @@ export class Operation extends AOperation {
     }
   }
 
+}
+
+export class  GetEnum extends Operation {
+  constructor (SVC: string, $OP: string) { super('GetEnum$', SVC, '', $OP) }
+
+  async run (name: string) : Promise<string[]> {
+    try {
+      this.args.name = name
+      const res = await this.post(true)
+      return res['enum'] || []
+    } catch(e) {
+      await this.ko(e)
+      return []
+    }
+  }
+}
+
+export class  SetEnum extends Operation {
+  constructor (SVC: string, $OP: string) { super('SetEnum$', SVC, '', $OP) }
+
+  async run (name: string, values: string[]) {
+    try {
+      this.args.name = name
+      this.args.values = values
+      const res = await this.post()
+    } catch(e) {
+      await this.ko(e)
+      throw e
+    }
+  }
 }
 
 abstract class A2Operation extends AOperation {

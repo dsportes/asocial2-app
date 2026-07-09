@@ -10,18 +10,19 @@ Emit:
 <template>
 <div :class="'row justify-between items-center ' + sty() + (disable ? ' disabled' : '')"
   style="width:200px">
-  <btn-cond v-if="nav.hasback" icon="arrow_back" class="q-mr-sm" flat color="none"
-    @ok="emit('back', true)"/>
+  <btn-cond icon="arrow_back" class="q-mr-sm" flat color="none"
+    :disable="!nav.hasBack" @ok="nav.hasBack = false; emit('back', true)"/>
   <btn-cond icon="first_page" flat @ok="navig(3)" color="none"
-    :disable="nav.idx <= 0"/>
+    :disable="!nav.hasBack || nav.idx <= 0"/>
   <btn-cond icon="chevron_left" flat color="none" @ok="navig(2)"
-    :disable="nav.idx <= 0"/>
+    :disable="!nav.hasBack || nav.idx <= 0"/>
   <div class="q-mx-sm text-center" style="width:40px">
-    {{ (nav.idx + 1) + ' / ' + nav.nb }}</div>
+    {{ nav.hasBack ? (nav.idx + 1) + ' / ' + nav.nb : ''}}
+  </div>
   <btn-cond icon="chevron_right" flat color="none" @ok="navig(1)"
-    :disable="nav.idx >= (nav.nb - 1)"/>
+    :disable="!nav.hasBack || nav.idx >= (nav.nb - 1)"/>
   <btn-cond icon="last_page" class="q-ml-sm" flat color="none" @ok="navig(4)"
-    :disable="nav.idx >= (nav.nb - 1)"/>
+    :disable="!nav.hasBack || nav.idx >= (nav.nb - 1)"/>
 </div>
 </template>
 

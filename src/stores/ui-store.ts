@@ -204,7 +204,7 @@ export const useUiStore = defineStore('ui', () => {
 
   
   const navBar = reactive({
-    hasback: true,
+    hasback: false,
     idx: 0,
     nb: 0,
     fnnav: null

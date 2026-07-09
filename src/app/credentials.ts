@@ -32,9 +32,16 @@ class $Credential_Redaction extends $Credential {
   constructor (obj?: Object) {
     super(obj)
   }
+  get hasDispProps () { return true }
+
+  async dispAboutme () { 
+    const ui = stores.ui
+    await ui.diagDisplay($t('CRRaboutme', this.props.name))
+  }
 }
 Registry.registerD($Credential_Redaction)
 
+// TODO ???????????????
 class $Credential_Section extends $Credential {
   constructor (obj?: Object) {
     super(obj)

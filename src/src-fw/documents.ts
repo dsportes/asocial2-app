@@ -282,7 +282,8 @@ export class $Form extends $Document {
   ****************************************************************/
   /* Clone etc passé en argument OU s'il est null initilise un etc
   avec des valeurs initiales / par défaut */
-  cloneEtc (etcX: Object | null) : Object | null {
+  cloneEtc (byU: boolean) : Object | null {
+    const etcX = byU ? this.etcU : this.etcT
     return etcX === null ? { } : decode(encode(etcX))
   }
 
@@ -500,7 +501,7 @@ export class $Form extends $Document {
         op2.args.comment = this.comment ? await Crypt.crypt(sf.keyK, encoder.encode(this.comment)) : null
       try {
         await op2.post()
-        await ui.diagDisplay($t('FORMdemok'))
+        await ui.diagDisplay($t('FORMok_FormUpdBy' + (byU ? 'U' : 'T')))
         return true
       } catch(e2) {
         op.ko(e2)
@@ -514,6 +515,7 @@ export class $Form extends $Document {
 
   async updateByUT (args: Object, opName: string) : Promise<boolean> {
     const ui = stores.ui
+    const sf = stores.safe
     const op = new Operation(opName, this.svc, this.org)
     try {
       op.setArgs(args)
@@ -524,14 +526,12 @@ export class $Form extends $Document {
       }
       try {
         const op2 = new MDOperation('$mdEventSync')
-        /*
-        const eventId = this.args['eventId'] as string
-        const chk = this.args['chk'] as string
-        */
         op2.args.eventId = this.formId
         op2.args.chk = Crypt.shaS([this.formId, this.type, this.userId, this.svc, this.org].join('/'))
         await op2.post()
         await ui.diagDisplay($t('FORMok_' + opName))
+        if (opName.startsWith('FormValidate'))
+          await sf.reloadSafe()
         return true
       } catch(e2) {
         op.ko(e2)

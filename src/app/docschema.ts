@@ -85,7 +85,8 @@ new DocType(
   { name: 'Auteur', sync: true, pk: ['autid'], embedCreds: true }, //header
   null, // collections
   new Map<string, idx>([
-    ['nom',  { type: propType.STRING, testable: true }]
+    ['nom',  { type: propType.STRING, key: ['nomAuteur'], testable: true }],
+    ['section',  { type: propType.HASH }]
   ])
 )
 

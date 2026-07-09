@@ -45,10 +45,8 @@
     :title="$t('FORMnewp', [ftLabel])"
     hdrclass="tbs" vue="SponsoringsHeader" @close="close">
     <template #default>
-      <input-b class="q-my-sm"
-        v-model="alias" size="alias" prefix="FORMuseralias"
-        :disable="userId !== ''" @validate="valA"/>
-      <form-zoom v-if="userId && fctx" v-model="fctx" @done="onDone"/>
+      <form-new :form-type="formType" :isDemand="false" @done="onForm"/>
+      <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
     </template>
   </dialog-std0>
 
@@ -61,7 +59,6 @@ import { ref, Ref, reactive, computed, watchEffect } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-import { Crypt } from '../src-fw/crypt'
 import { FormType } from '../src-fw/doctypes'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
@@ -72,23 +69,19 @@ import NavBar from '../components-fw/NavBar.vue'
 import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
-import InputB from '../components-fw/InputB.vue'
+import FormNew from '../components/FormNew.vue'
 import { SOA } from '../stores/ui-store'
-import { $Form, $FormObj } from '../src-fw/documents'
+import { $Form } from '../src-fw/documents'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
-const sf = stores.safe
+const fst = stores.form
 const session = stores.session
 
 const dialogs = reactive({
   newproposal: false
-})
-
-const fctx = computed(() => {
-  return { form: form.value, isDemand: false, comment: '' }
 })
 
 const formType: Ref<FormType> = ref()
@@ -97,9 +90,7 @@ const ftLabel = computed(() => {
   const y = $t('TYPE_' + formType.value.type)
   return y.substring(2)
 })
-const form = ref(null)
-const userId = ref('')
-const alias = reactive({ inp: '', err: '' })
+const fctx = ref(null)
 
 watchEffect(async () => {
   const cf = ui.currentForm
@@ -129,39 +120,9 @@ const reset = () => {
 
 const openNewP = (ft) => {
   formType.value = ft
-  alias.inp = ''; alias.err = ''
-  userId.value = ''
+  fst.form = null
+  fctx.value = null
   dialogs.newproposal = true
-}
-
-const valA = async () => {
-  const cf = ui.currentForm
-  userId.value = ''
-  const hsha = Crypt.shaS(await Crypt.strongHash(alias.inp, false, true))
-  const icvs = await sf.mdUserGetICVS(hsha)
-  if (!icvs) {
-    await ui.diagDisplay($t('APnouser'), true)
-    return
-  }
-
-  userId.value = icvs.i
-  ui.setEditing()
-  const obj: $FormObj = {
-    type: formType.value.type,
-    formId: Crypt.rnd(15),
-    userId: userId.value,
-    v: 0,
-    maxLife: 0,
-    status: 0,
-    etcU: null,
-    etcT: null,
-    msgU: null,
-    msgT: null,
-  }
-  form.value = $Form.new(obj)
-  form.value.opts = { asAdmin: cf.asAdmin, alias: alias.inp }
-  form.value.svc = cf.soa.svc
-  form.value.org = cf.soa.org
 }
 
 const close = async () => {
@@ -169,17 +130,21 @@ const close = async () => {
   if (b) {
     dialogs.newproposal = false
     formType.value = null
-    form.value = null
-    alias.inp = ''; alias.err = ''
-    userId.value = ''
+    fctx.value = null
   }
+}
+
+const onForm = (form) => {
+  ui.currentForm.form = form
+  fctx.value = { form, isDemand: false, comment: '' }
+  fst.startEdit(fctx.value)
 }
 
 const onDone = (ok: boolean) => { // si false pas créé
   formType.value = null
   dialogs.newproposal = false
   if (ok)
-    ui.currentForm.fnOnUpdate(form.value.formId)
+    ui.currentForm.fnOnUpdate(fctx.value.form.formId)
 }
 
 </script>

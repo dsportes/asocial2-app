@@ -1,5 +1,5 @@
 <template>
-<div>
+<div v-if="fctx">
   <div class="q-ma-sm a-pa-sm bord1 full-width">
     <div class="font-mono fs-sm">{{ fst.form.formId }}</div>
 
@@ -153,9 +153,9 @@ const ui = stores.ui
 const fst = stores.form
 
 const fctx = defineModel<FormCtx>()
+fst.startEdit(fctx.value)
 watch(() => fctx.value,
   () => { fst.startEdit(fctx.value) }) // quand on navigue par suiv. prec.
-fst.startEdit(fctx.value)
 
 watch(() => fst.upd.msg, (v) => {
   fst.onChange()

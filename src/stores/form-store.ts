@@ -68,7 +68,7 @@ export const useFormStore = defineStore('form', () => {
     if (typeof f.msgT !== 'string') f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
     reset()
     setTimeout(async () => {
-        await onChange()}, 1)
+      await onChange()}, 1)
   }
 
   const reset = () => {
@@ -76,7 +76,7 @@ export const useFormStore = defineStore('form', () => {
     const ui = stores.ui
     if (f.status !== 0) ui.resetEditing()
     upd.msg = isDemand.value ? f.msgU || '' : f.msgT || ''
-    upd.etc = isDemand.value ? f.cloneEtc(f.etcU) : f.cloneEtc(f.etcT)
+    upd.etc = isDemand.value ? f.cloneEtc(true) : f.cloneEtc(false)
     visU.value = (f.status === 0 && isDemand.value) || (f.status > 0)
     visT.value = (f.status === 0 && !isDemand.value) || (f.status > 0)
   }

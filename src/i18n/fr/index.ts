@@ -405,6 +405,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',
   APnouser: 'Utilisateur inconnu pour ce pseudo',
+  APnouser2: 'Ce pseudo n\'est pas l\'un des vôtres',
   APrevok: 'Révocation effectuée',
   APrevko: 'La révocation semble avoir déjà été faite',
   APgrantmgr: 'Déclarer',

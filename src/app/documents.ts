@@ -12,6 +12,10 @@ Registry.registerD(Article)
 
 class Auteur extends $Document {
   async compile () {}
+
+  nom: string // nom d'auteur
+  section: string // section du Comité de Rédaction en charge de l'auteur
+
 }
 Registry.registerD(Auteur)
 

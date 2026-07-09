@@ -57,7 +57,7 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 const ui = stores.ui
 const sf = stores.safe
 
-const fctx = ref()
+const fctx = ref(null)
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()
@@ -113,6 +113,7 @@ const selForm0 = () => {
   const nb = ui.navBar
   nb.idx = -1
   nb.nb = forms.value.length
+  nb.hasBack = false
 }
 
 const selForm = (form: $Form, idx: number) => {
@@ -123,13 +124,13 @@ const selForm = (form: $Form, idx: number) => {
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = forms.value.length
+  nb.hasBack = true
 }
 
 const init = () => {
-  selForm0()
   ui.currentForm.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
-  ui.navBar.hasback = true
+  selForm0()
 }
 
 watch(() => ui.currentForm.pft, async () => {

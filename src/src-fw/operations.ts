@@ -106,36 +106,6 @@ export class SetStatus extends Operation {
   }
 }
 
-export class  GetEnum extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetEnum$', SVC, '', $OP) }
-
-  async run (name: string) : Promise<string[]> {
-    try {
-      this.args.name = name
-      const res = await this.post(true)
-      return res['enum'] || []
-    } catch(e) {
-      await this.ko(e)
-      return []
-    }
-  }
-}
-
-export class  SetEnum extends Operation {
-  constructor (SVC: string, $OP: string) { super('SetEnum$', SVC, '', $OP) }
-
-  async run (name: string, values: string[]) {
-    try {
-      this.args.name = name
-      this.args.values = values
-      const res = await this.post()
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
-  }
-}
-
 export class GetOrgConfig extends Operation {
   constructor (SVC: string, org: string) { super('GetOrgConfig$', SVC, org) }
 

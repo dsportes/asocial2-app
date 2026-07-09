@@ -57,7 +57,7 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 
 const ui = stores.ui
 
-const fctx = ref()
+const fctx = ref(null)
 
 const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()
@@ -121,6 +121,7 @@ const selEvent0 = () => {
   const nb = ui.navBar
   nb.idx = -1
   nb.nb = events.value.length
+  nb.hasBack = false
 }
 
 const selEvent = async (event: $MDEvent, idx: number) => {
@@ -146,6 +147,7 @@ const selEvent = async (event: $MDEvent, idx: number) => {
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = events.value.length
+  nb.hasBack = u.zoomed
 }
 
 const init = async () => {
@@ -153,7 +155,7 @@ const init = async () => {
   selEvent0()
   ui.currentEvent.fnOnUpdate = onUpdate
   ui.navBar.fnnav = nav
-  ui.navBar.hasback = true
+  ui.navBar.hasBack = false
 }
 
 onMounted(async () => { await init() })
