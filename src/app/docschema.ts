@@ -66,9 +66,9 @@ new DocType(
 
 new FormType('membrecodir', 'ad', 'k1', ['A'])
 new FormType('membreredaction', 'ad', 'k1', ['A'])
-new FormType('auteur', 'auteurs', 'k2', ['Readction/1'])
+new FormType('auteur', 'auteurs', 'k2', ['Redaction/1'])
 // Un Auteur peut aussi nommer un co-auteur
-new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
+new FormType('coauteur', 'auteurs', 'k2', ['Redaction/1', 'Auteur/$1'])
 
 new DocType(
   { name: 'Article', sync: true, pk: ['artid'] }, //header

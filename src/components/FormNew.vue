@@ -39,20 +39,10 @@ const estComite = computed(() => props.formType.type === 'membrecodir' || props.
 // Proposition membrecodir membreredaction
 const alias = reactive({ inp: '', err: '' })
 
-const valA = async () => {
-  const cf = ui.currentForm
-  const type = props.formType.type
-  let userId = ''
-  if (!props.isDemand) {
-    const hsha = Crypt.shaS(await Crypt.strongHash(alias.inp, false, true))
-    const icvs = await sf.mdUserGetICVS(hsha)
-    if (!icvs) {
-      diag.value = $t('APnouser')
-      return
-    }
-    userId = icvs.i
-  } else userId = sf.userId
-  const obj: $FormObj = {
+const newForm = (userId) => {
+    const cf = ui.currentForm
+    const type = props.formType.type
+    const obj: $FormObj = {
     type,
     formId: Crypt.rnd(15),
     userId,
@@ -63,16 +53,52 @@ const valA = async () => {
     etcT: null,
     msgU: null,
     msgT: null,
+    opts: {}
   }
   const form = $Form.new(obj)
-  form.opts = { asAdmin: cf.asAdmin, alias: props.isDemand ? '?' : alias.inp }
   form.svc = cf.soa.svc
   form.org = cf.soa.org
-  emit('done', form)
+  if (cf.asAdmin) form.opts.asAdmin = true
+  return form
 }
 
-if (estComite.value && props.isDemand)
-  setTimeout(async () => { await valA() }, 1)
+const userIdFromAlias = async (alias) => {
+  let userId = ''
+  if (!props.isDemand) {
+    const hsha = Crypt.shaS(await Crypt.strongHash(alias, false, true))
+    const icvs = await sf.mdUserGetICVS(hsha)
+    if (!icvs) {
+      diag.value = $t('APnouser')
+      return
+    }
+    userId = icvs.i
+  } else userId = sf.userId
+  return userId
+}
+
+if (estComite.value) {
+  if (props.isDemand) {
+    const form = newForm(sf.userId)
+    form.opts.alias = '?'
+    emit('done', form)
+  } else setTimeout(async () => { 
+      const userId = await userIdFromAlias(alias.inp)
+      const form = newForm(userId)
+      form.opts.alias = alias.inp
+      emit('done', form)
+    }, 1)
+}
+
+if (props.formType.type === 'auteur') {
+    if (props.isDemand) {
+    const form = newForm(sf.userId)
+    emit('done', form)
+  } else setTimeout(async () => { 
+      const userId = await userIdFromAlias(alias.inp)
+      const form = newForm(userId)
+      emit('done', form)
+    }, 1)
+}
 
 </script>
 

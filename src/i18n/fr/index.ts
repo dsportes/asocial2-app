@@ -63,6 +63,7 @@ export default {
   org: 'Organisation',
   validate: 'Valider',
   confirm: 'Pour confirmer, taper', // BtnConfirm
+  containing: 'contenant abc ',
   edit: 'Editer',
   create: 'Nouveau',
   duplicate: 'Dupliquer',
@@ -1093,15 +1094,22 @@ bla bla
   TYPE_membrecodir: '01Nomination au Comité de Direction',
   TYPE_membrecodir_det: 'Nom / pseudo: {1}',
   TYPE_membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
+
   TYPE_membreredaction: '01Nomination au Comité de Rédaction',
   TYPE_membreredaction_det: 'Nom / pseudo: {1}',
+
   TYPE_auteur: '02Création d\'un nouvel auteur',
-  TYPE_auteur_det: 'Mon d\'auteur: {1}',
+  TYPE_auteur_det: 'Non d\'auteur: {1}',
+  TYPE_auteur_nomAuteur: 'Non d\'auteur:',
+  TYPE_auteur_section: 'Section concernée du Comité de Rédaction:',
+
   TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_coauteur_det: 'Surnom: {1}',
 
   FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
   FORMdiag_pseudo: '"pseudo" non valide.',
+  FORMdiag_nomAuteur: 'Un "nom d\'auteur" doit avoir entre 8 et 24 caractères.',
+  FORMdiag_section: 'Une "section" est requise.',
 
   CREDON_CoDir: 'Membre du Comité Directeur',
   CREDON_CoDir_bub: `### Membre du Comité Directeur

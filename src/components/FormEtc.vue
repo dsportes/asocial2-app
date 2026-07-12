@@ -9,42 +9,19 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <template>
 <div v-if="fst.form">
   <!-- membrecodir --------------------------------------------------------------->
-  <div v-if="estComite" class="q-my-md">
-    <div class="titre-md q-mt-md">{{  $t('TYPE_membrecodir_pseudo') }}</div>
-
-    <div v-if="fst.visU" class="row q-px-xs items-center">
-      <input-b v-if="fst.isDemand && fst.editable"
-        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
-        v-model="pseudo" noval :initval="psU"/>
-      <input-b v-else
-        class="col font-mono text-bold" size="pseudo" prefix="FORMdem_2"
-        v-model="pseudo2" noval :initval="pseudo2.inp" disable/>
-      <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
-        flat icon="content_paste" @ok="copyPseudoU"/>
-      <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
-        flat icon="star" @ok="initPseudoU"/>
-    </div>
-
-    <div v-if="fst.visT" class="row q-px-xs items-center">
-      <input-b v-if="!fst.isDemand && fst.editable"
-        class="col font-mono text-bold" size="pseudo" prefix="FORMprop_2"
-        v-model="pseudo" noval :initval="psT"/>
-      <input-b v-else
-        class="col font-mono text-bold" size="pseudo" prefix="FORMprop_2"
-        v-model="pseudo2" noval :initval="pseudo2.inp" disable/>
-      <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
-        flat icon="content_paste" @ok="copyPseudoT"/>
-      <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
-        flat icon="star" @ok="initPseudoT"/>
-    </div>
+  <div v-if="fst.form.type === 'membrecodir'">
+    <form-inp2 v-model="errs.pseudo" type="membrecodir" champ="pseudo" size="pseudo"/>
   </div>
 
   <!-- membreredaction --------------------------------------------------------------->
   <div v-if="fst.form.type === 'membreredaction'">
+    <form-inp2 v-model="errs.pseudo" type="membreredaction" champ="pseudo" size="pseudo"/>
   </div>
 
   <!-- auteur --------------------------------------------------------------->
   <div v-if="fst.form.type === 'auteur'">
+    <form-inp2 v-model="errs.nomAuteur" type="auteur" champ="nomAuteur" size="pseudo"/>
+    <form-enum2 v-model="errs.section" type="auteur" champ="section" enum="Section"/>
   </div>
 
   <!-- coauteur --------------------------------------------------------------->
@@ -56,47 +33,35 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, watch } from 'vue'
+import { reactive } from 'vue'
 import stores from '../stores/all'
-import { $t } from '../src-fw/util'
-import InputB from '../components-fw/InputB.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
+import FormInp2 from '../components/FormInp2.vue'
+import FormEnum2 from '../components/FormEnum2.vue'
+
+// import { $t } from '../src-fw/util'
+// import InputB from '../components-fw/InputB.vue'
+// import BtnCond from '../components-fw/BtnCond.vue'
 
 const fst = stores.form
-
-const estComite = computed(() => fst.form.type === 'membreredaction' || fst.form.type === 'membrecodir')
-
-const psU = computed(() => fst.form.cloneEtc(true).pseudo)
-const psT = computed(() => fst.form.cloneEtc(false).pseudo)
-const pseudo = reactive({ inp: '', err: '' })
-watch(pseudo, async (v) => {
-  fst.upd.etc.pseudo = v.inp
-  await fst.onChange()
+const errs = reactive({
+  pseudo: '',
+  nomAuteur: '',
+  section: ''
 })
-watch(() => fst.upd.etc, (v) => {
-  pseudo.inp = v.pseudo
-})
-const pseudo2 = reactive({ inp: '', err: '' })
-pseudo.inp = fst.upd.etc.pseudo
-pseudo2.inp = fst.isDemand ? psT.value : psU.value
-const copyPseudoU = () => { pseudo.inp = psT.value }
-const copyPseudoT = () => { pseudo.inp = psU.value }
-const initPseudoU = () => { pseudo.inp = psU.value }
-const initPseudoT = () => { pseudo.inp = psT.value }
 
 
 /**********************************************************************************/
 fst.setFnCheck({
   membrecodir: () : string => {
-    return pseudo.err ? 'pseudo' : ''
+    return errs.pseudo ? 'pseudo' : ''
   },
 
   membreredaction: () : string => {
-    return ''
+    return errs.pseudo ? 'pseudo' : ''
   },
 
   auteur: () : string => {
-    return ''
+    return errs.nomAuteur ? 'nomAuteur' : (errs.section ? 'section' : '')
   },
 
   coauteur: () : string => {
@@ -109,6 +74,4 @@ fst.setFnCheck({
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.bred { border: 2px solid $negative; border-radius: 5px; }
-.byel { border: 2px solid var(--q-msgbg); border-radius: 5px; }
 </style>

@@ -282,19 +282,19 @@ export class $Form extends $Document {
   ****************************************************************/
   /* Clone etc passé en argument OU s'il est null initilise un etc
   avec des valeurs initiales / par défaut */
-  cloneEtc (byU: boolean) : Object | null {
-    const etcX = byU ? this.etcU : this.etcT
-    return etcX === null ? { } : decode(encode(etcX))
+  cloneEtc (byU: boolean) : Object{
+    const etc = byU ? this.etcU : this.etcT
+    return etc === null ? { } : decode(encode(etc))
   }
 
   /* Test l'égalité entre 2 etc */
-  eqEtc (etcX: Object | null, etcY: Object | null) : boolean {
-    if (!etcX || !etcY) return false
-    return equ8(encode(etcX), encode(etcY))
+  eqEtc (x: Object | null, y: Object | null) : boolean {
+    if (!x || !y) return false
+    return equ8(encode(x), encode(y))
   }
 
   /* Retourne le code d'une erreur empâchant la "validation" du form */
-  async checkEtc (etcX: Object | null) : Promise<string> {
+  async checkEtc (etc: Object) : Promise<string> {
     return ''
   }
 
@@ -302,8 +302,8 @@ export class $Form extends $Document {
   A CHAQUE ENREGISTREMENT et AVANT VALIDATION.
   - process différent pour une demande (byU est true) ou une proposition
   */
- async compileEtc (byU: boolean) : Promise<void> {
- }
+  async compileEtc (etc: Object, byU: boolean) : Promise<void> {
+  }
 
   /***************************************************************
   ****************************************************************/
@@ -311,7 +311,7 @@ export class $Form extends $Document {
   /* Pour création de l'instance à réception par le service
   OU pour création explicite par UI */
   static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife',
-    'status', 'etcU', 'etcT', 'msgU', 'msgT' ]
+    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
 
   /* Pour transmission au service à la création par $FormObj */
   static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife',
@@ -460,14 +460,14 @@ export class $Form extends $Document {
   }
 
   async createByU (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(true)
+    await this.compileEtc(upd.etc, true)
     this.etcU = upd.etc
     this.msgU = await this.cryptMsgU(encoder.encode(upd.msg))
     return await this.createByUT(true)
   }
 
   async createByT (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(false)
+    await this.compileEtc(upd.etc, false)
     this.etcT = upd.etc
     this.msgT = encoder.encode(upd.msg)
     return await this.createByUT(false)
@@ -513,10 +513,13 @@ export class $Form extends $Document {
     }
   }
 
-  async updateByUT (args: Object, opName: string) : Promise<boolean> {
+  async updateByUT (args: Object, opName: string, byU: boolean) : Promise<boolean> {
     const ui = stores.ui
     const sf = stores.safe
     const op = new Operation(opName, this.svc, this.org)
+    const creds = byU ? null : $Form.credsForTP(this.svc, this.org)
+    if (creds && creds.size)
+      for(const cred of creds) await op.sign(cred)
     try {
       op.setArgs(args)
       const ret = await op.post()
@@ -544,25 +547,25 @@ export class $Form extends $Document {
   }
 
   async updateByU (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(true)
+    await this.compileEtc(upd.etc, true)
     const args = {
       formId: this.formId,
       type: this.type,
       etcU: upd.etc,
       msgU: await this.cryptMsgU(encoder.encode(upd.msg))
     }
-    return await this.updateByUT(args, 'FormUpdByU')
+    return await this.updateByUT(args, 'FormUpdByU', true)
   }
 
   async updateByT (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(false)
+    await this.compileEtc(upd.etc, false)
     const args = {
       formId: this.formId,
       type: this.type,
       etcT: upd.etc,
       msgT: encoder.encode(upd.msg)
     }
-    return await this.updateByUT(args, 'FormUpdByT')
+    return await this.updateByUT(args, 'FormUpdByT', false)
   }
 
   async cancelByU () : Promise<boolean> {
@@ -570,11 +573,11 @@ export class $Form extends $Document {
       formId: this.formId,
       type: this.type
     }
-    return await this.updateByUT(args, 'FormCancel')
+    return await this.updateByUT(args, 'FormCancel', true)
   }
 
   async validateByU (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(true)
+    await this.compileEtc(upd.etc, true)
     const args = {
       formId: this.formId,
       type: this.type,
@@ -582,11 +585,11 @@ export class $Form extends $Document {
       msgU: await this.cryptMsgU(encoder.encode(upd.msg)),
       opts: this.opts || {}
     }
-    return await this.updateByUT(args, 'FormValidateByU')
+    return await this.updateByUT(args, 'FormValidateByU', true)
   }
 
   async validateByT (upd: Upd) : Promise<boolean> {
-    await this.compileEtc(false)
+    await this.compileEtc(upd.etc, false)
     const args = {
       formId: this.formId,
       type: this.type,
@@ -594,7 +597,7 @@ export class $Form extends $Document {
       msgT: encoder.encode(upd.msg),
       opts: this.opts || {}
     }
-    return await this.updateByUT(args, 'FormValidateByT')
+    return await this.updateByUT(args, 'FormValidateByT', false)
   }
 
 }
