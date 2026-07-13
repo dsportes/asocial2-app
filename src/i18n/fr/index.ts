@@ -245,6 +245,7 @@ export default {
   op_FormValidateByU: 'Mise à jour d\'une demande / proposition par l\'utilisateur cible',
   op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
   op_$UpdateProfiles: 'Mise à jour des listes de pouvoirs.',
+  op_getCredProps: 'Lecture des propriétés d\'un pouvoir',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -262,6 +263,8 @@ export default {
 
   STFO_1: 'Demande / proposition déjà créée. (BUG probable).',
   STFO_2: 'Tentative de création d\'une demande en votre nom par un autre utilisateur. (BUG probable).',
+  STFO_98: 'Incident lors de l\'inscription d\'un pouvoir en Safe Box: l\'opération a échoué',
+  STFO_99: 'Incident lors de la création d\'un pouvoir: l\'opération a échoué',
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -1117,6 +1120,10 @@ bla bla
   `,
   CREDON_Redaction: 'Membre du Comité de Rédaction',
   CREDON_Redaction_bub: `### Membre du Comité de Rédaction
+  bla bla 
+  `,
+  CREDON_Auteur: 'Auteur',
+  CREDON_Auteur_bub: `### Auteur
   bla bla 
   `,
 

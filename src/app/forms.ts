@@ -32,9 +32,6 @@ class $Form_membrecomite extends $Form {
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> {
     if (!byU) return
-    if (!this.opts) this.opts = {}
-    // Template du credential d'accès à Codir/1
-    this.opts.credTemplates = {}
     const comment = $t('CREDON_' + this.docCl)
     const name = etc['pseudo']
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, this.docCl, 
@@ -81,7 +78,6 @@ class $Form_auteur extends $Form {
     const autid = Crypt.rnd(15)
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
       { autid: autid }, nomAuteur, { name: nomAuteur })
-    if (!this.opts) this.opts = { credTemplates: {}}
     this.opts.auteur = { autid, nomAuteur, section: etc['section'] },
     this.opts.credTemplates[ct.credId] = ct
   }

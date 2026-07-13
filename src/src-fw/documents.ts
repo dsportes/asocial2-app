@@ -320,6 +320,8 @@ export class $Form extends $Document {
   static new (obj) : $Form {
     const f = Registry.newD('$Form', obj)
     for (const p of $Form.lp1) f[p] = obj[p]
+    if (!f.opts) f.opts = {}
+    if (!f.opts.credTemplates) f.opts.credTemplates = {}
     return f
   }
 
