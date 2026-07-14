@@ -45,8 +45,8 @@
     :title="$t('FORMnewp', [ftLabel])"
     hdrclass="tbs" vue="SponsoringsHeader" @close="close">
     <template #default>
-      <form-new :form-type="formType" :isDemand="false" @done="onForm"/>
       <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
+      <form-new v-else :form-type="formType" :isDemand="false" @done="onForm"/>
     </template>
   </dialog-std0>
 

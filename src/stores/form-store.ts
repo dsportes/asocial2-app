@@ -29,7 +29,7 @@ export const useFormStore = defineStore('form', () => {
   const visU = ref()
   const visT = ref()
 
-  const onChange = async () => {
+  const onChange1 = () => {
     const f = form.value
     if (f.status > 2) {
       diag1.value = ''
@@ -37,6 +37,11 @@ export const useFormStore = defineStore('form', () => {
       return
     }
     diag1.value = doCheck()
+  }
+
+  const onChange = async () => {
+    const f = form.value
+    onChange1()
     diag2.value = diag1.value ? '' : await f.checkEtc(upd.etc)
     if (isDemand.value) {
       upd.etcc = !f.eqEtc(f.etcU, upd.etc)
@@ -87,7 +92,7 @@ export const useFormStore = defineStore('form', () => {
   }
 
   return {
-    setFnCheck, startEdit, reset, onChange, undo,
+    setFnCheck, startEdit, reset, onChange, onChange1, undo,
     form, isDemand, diag1, diag2,
     upd,
     hasChg, editable, creating, visU, visT

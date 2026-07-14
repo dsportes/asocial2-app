@@ -12,6 +12,12 @@ import { DocType } from '../src-fw/doctypes'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
+export type SOA = {
+  svc: string
+  org: string
+  admin? : boolean
+}
+
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */
 export class $CredTempl {
@@ -276,6 +282,17 @@ export class $Form extends $Document {
     return $t('TYPE_' + this.type).substring(2)
   }
 
+  get soa () : SOA { return { svc: this.svc, org: this.org }}
+
+  static basicForm (soa: SOA, type: string, userId: string) {
+    return $Form.new({
+      svc: soa.svc, org: soa.org, 
+      type, formId: Crypt.rnd(15), userId,
+      v: 0, maxLife: 0, status: 0,
+      etcU: null, etcT: null, msgU: null, msgT: null, opts: {}
+    })
+  }
+
   constructor () { super() }
 
   /* Méthodes surchargées par type *******************************
@@ -526,7 +543,10 @@ export class $Form extends $Document {
       op.setArgs(args)
       const ret = await op.post()
       if (ret.status) {
-        await ui.diagDisplay($t('STFO_' + ret.status))
+        if (ret.status < 100)
+          await ui.diagDisplay($t('STFO_' + ret.status))
+        else
+          await ui.diagDisplay($t('STFO_' + this.type + '_' + ret.status))
         return false
       }
       try {

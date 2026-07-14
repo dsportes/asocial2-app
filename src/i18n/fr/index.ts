@@ -246,6 +246,7 @@ export default {
   op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
   op_$UpdateProfiles: 'Mise à jour des listes de pouvoirs.',
   op_getCredProps: 'Lecture des propriétés d\'un pouvoir',
+  op_AutidDeNom: 'Recherche d\'un auteur par son nom',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1105,14 +1106,22 @@ bla bla
   TYPE_auteur_det: 'Non d\'auteur: {1}',
   TYPE_auteur_nomAuteur: 'Non d\'auteur:',
   TYPE_auteur_section: 'Section concernée du Comité de Rédaction:',
+  TYPE_coauteur_nomAuteur: 'Non d\'auteur:',
+  TYPE_coauteur_trigramme: 'Trigramme en tant que "co-auteur":',
 
   TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_coauteur_det: 'Surnom: {1}',
 
   FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
-  FORMdiag_pseudo: '"pseudo" non valide.',
-  FORMdiag_nomAuteur: 'Un "nom d\'auteur" doit avoir entre 8 et 24 caractères.',
-  FORMdiag_section: 'Une "section" est requise.',
+  FORMdiag_pseudo: 'Format incorrect du "pseudo": {0}.',
+  FORMdiag_nomAuteur: 'Format incorrect du "nom d\'auteur": {0}.',
+  FORMdiag_nomAuteur2: 'Saisie du "nom d\'auteur" non fixée par "OK".',
+  FORMdiag_section: 'Un "nom de section" est requis.',
+  FORMdiag_nomDupl: 'Ce "nom d\'auteur" est déjà celui d\'un auteur existant.',
+  FORMdiag_nomInexistant: 'Aucun auteur ne porte ce nom.',
+  FORMdiag_trigramme: 'Un "trigramme" est requis.',
+
+  STFO_auteur_101: 'Ce "nom d\'auteur" est déjà celui d\'un auteur existant.',
 
   CREDON_CoDir: 'Membre du Comité Directeur',
   CREDON_CoDir_bub: `### Membre du Comité Directeur

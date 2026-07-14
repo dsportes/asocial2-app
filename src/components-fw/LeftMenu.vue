@@ -11,25 +11,17 @@ Contrôlé par ui.leftMenu
       </q-toolbar-title>
       <help-button page="help"/>
     </q-toolbar>
-    <div class="row items-center q-gutter-sm">
-      <select-svc v-model="svc" @change="console.log(svc)"/>
-      <select-org v-model="org" @change="console.log(org)"/>
-    </div>
   </q-header>
   <q-page-container>
     <!--div><btn-cond label="Test Erreur" @ok="test"/></div-->
-    <btn-cond v-if="sf.step === 0" class="q-my-sm q-px-sm"
-      flat icon="exit_to_app" color="warning" :label="$t('endsession')"
-      @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
+    <div v-if="sf.step === 0" class="q-mt-sm q-mb-lg q-px-sm">
+      <btn-cond flat icon="exit_to_app" color="warning" :label="$t('endsession')"
+        @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
+    </div>
+
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"
       @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
-      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)"
-        class="q-mb-sm" flat color="warning"
-        @ok="openAdmin">
-        <img :src="superman" class="q-mr-xs" width="24px"/>
-        <div>{{ $t('PAGEadmin') }}</div>
-      </btn-cond>
       <btn-cond class="q-mb-sm" flat color="primary"
         @ok="openDemands">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
@@ -40,6 +32,18 @@ Contrôlé par ui.leftMenu
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEsponsorings') }}</div>
       </btn-cond>
+      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)"
+        class="q-mb-sm" flat color="warning"
+        @ok="openAdmin">
+        <img :src="superman" class="q-mr-xs" width="24px"/>
+        <div>{{ $t('PAGEadmin') }}</div>
+      </btn-cond>
+
+      <div class="row q-mt-md q-mb-sm items-center q-gutter-sm">
+        <select-svc v-model="svc" @change="console.log(svc)"/>
+        <select-org v-model="org" @change="console.log(org)"/>
+      </div>
+      
       <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>

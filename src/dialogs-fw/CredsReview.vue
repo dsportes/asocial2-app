@@ -41,8 +41,9 @@
             <div class="titre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
             <scroll-area size="md" class="q-py-xs" noborder>
               <div v-for="(c, idx) in curso.creds" :key="c.credId"
-                :class="'row cursor-pointer select q-my-xs ' + dkli(idx) + curSty2(c)">
-                <cred-row2 class="full-width" :cred="c" @undo="undodel(c)" @select="selectCr(c)"/>
+                :class="'row cursor-pointer select q-my-sm ' + dkli(idx) + curSty2(c)">
+                <cred-row2 class="full-width" :cred="c" comment
+                  @undo="undodel(c)" @select="selectCr(c)"/>
               </div>
             </scroll-area>
           </div>

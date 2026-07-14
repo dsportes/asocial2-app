@@ -271,9 +271,11 @@ export class FormType {
     this.creds = creds
     FormType.formTypes.set(type, this)
     for(const c of creds) {
-      const cl = c.substring(0, c.indexOf('/'))
-      if (c.endsWith('/1')) FormType.refClasses1.add(cl)
-      else FormType.refClasses$.add(cl)
+      if (c !== 'A') {
+        const cl = c.substring(0, c.indexOf('/'))
+        if (c.endsWith('/1')) FormType.refClasses1.add(cl)
+        else FormType.refClasses$.add(cl)
+      }
     }
   }
 }

@@ -48,7 +48,8 @@ export const K = {
     svc: [3, 8, 'svc'],
     auteur: [6, 24],
     minor: [0, 12, 'an2'],
-    pseudo: [3, 16]
+    pseudo: [3, 16],
+    trig: [3, 6, 'an1']
   },
 
   regexp: {

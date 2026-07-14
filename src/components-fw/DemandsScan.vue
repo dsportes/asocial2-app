@@ -3,7 +3,7 @@
 <template>
 <div class="column items-center">
 <div class="pwsm">
-  <div v-if="!ui.currentEvent.zoomed" class="full-width">
+  <div v-if="!ui.currentEvent.zoomed && !ui.currentForm.increation" class="full-width">
 
     <div v-if="!events.length" class="titre-md text-italic q-pa-md">{{ $t('FORMnoevents') }}</div>
     <div v-else v-for="(event, idx) of events" :key="event.eventId"

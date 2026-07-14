@@ -20,6 +20,7 @@ import { opOfSvcOrg } from '../src-fw/operation'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
+import { SOA } from '../src-fw/documents'
 
 const session = stores.session
 const sf = stores.safe
@@ -34,7 +35,7 @@ const diag = ref(false)
 const ok = async () => {
   const op = await opOfSvcOrg(svc.value, org.value)
   if (op) {
-    const soa = {
+    const soa : SOA = {
       svc: svc.value,
       org: org.value,
       admin: sf.auth.admins.indexOf(svc.value + '.' + op) !== -1

@@ -56,9 +56,9 @@
   </div>
 
   <div v-if="fst.diag1 !== ''" class="q-my-sm msg byel">
-    {{ $t('FORMdiag_' + fst.diag1) }}</div>
+    {{ fst.diag1 }}</div>
   <div v-if="fst.diag1 === '' && fst.diag2 !== ''" class="q-my-sm msg bred">
-    {{ $t('FORMdiag_' + fst.diag2) }}</div>
+    {{ fst.diag2 }}</div>
 
   <div v-if="fst.form.status <= 2" class="q-mb-sm column items-center q-gutter-xs">
     <btn-cond v-if="fst.creating" icon="check"

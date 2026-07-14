@@ -20,12 +20,17 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 
   <!-- auteur --------------------------------------------------------------->
   <div v-if="fst.form.type === 'auteur'">
-    <form-inp2 v-model="errs.nomAuteur" type="auteur" champ="nomAuteur" size="pseudo"/>
+    <form-inp2 v-model="errs.nomAuteur" type="auteur" champ="nomAuteur" 
+      size="auteur" valbtn />
     <form-enum2 v-model="errs.section" type="auteur" champ="section" enum="Section"/>
   </div>
 
   <!-- coauteur --------------------------------------------------------------->
   <div v-if="fst.form.type === 'coauteur'">
+    <form-inp2 v-model="errs.nomAuteur" type="coauteur" champ="nomAuteur" 
+      size="auteur" valbtn />
+    <form-inp2 v-model="errs.trigramme" type="coauteur" champ="trigramme" 
+      size="trig" />
   </div>
 
 </div>
@@ -38,7 +43,7 @@ import stores from '../stores/all'
 import FormInp2 from '../components/FormInp2.vue'
 import FormEnum2 from '../components/FormEnum2.vue'
 
-// import { $t } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 // import InputB from '../components-fw/InputB.vue'
 // import BtnCond from '../components-fw/BtnCond.vue'
 
@@ -46,25 +51,29 @@ const fst = stores.form
 const errs = reactive({
   pseudo: '',
   nomAuteur: '',
-  section: ''
+  section: '',
+  trigramme: ''
 })
-
 
 /**********************************************************************************/
 fst.setFnCheck({
   membrecodir: () : string => {
-    return errs.pseudo ? 'pseudo' : ''
+    return errs.pseudo ? $t('FORMdiag_pseudo', [$t(errs.pseudo)]) : ''
   },
 
   membreredaction: () : string => {
-    return errs.pseudo ? 'pseudo' : ''
+    return errs.pseudo ?  $t('FORMdiag_pseudo', [$t(errs.pseudo)]) : ''
   },
 
   auteur: () : string => {
-    return errs.nomAuteur ? 'nomAuteur' : (errs.section ? 'section' : '')
+    if (errs.nomAuteur) return $t('FORMdiag_nomAuteur', [$t(errs.nomAuteur)])
+    if (errs.section) return  $t('FORMdiag_section')
+    return ''
   },
 
   coauteur: () : string => {
+    if (errs.nomAuteur) return $t('FORMdiag_nomAuteur', [$t(errs.nomAuteur)])
+    if (errs.trigramme) return  $t('FORMdiag_trigramme')
     return ''
   }
 })

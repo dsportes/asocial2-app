@@ -2,6 +2,8 @@ import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
+import { Auteur } from '../app/documents'
+import { DocType } from '../src-fw/doctypes'
 
 /*
 new FormType('membrecodir', 'k1', ['A'])
@@ -66,10 +68,11 @@ class $Form_auteur extends $Form {
     return (x['nomAuteur'] === y['nomAuteur']) && (x['section'] === y['section'])
   }
   async checkEtc (etc: Object | null) : Promise<string> {
-    const a = etc['nomAuteur'] || ''
-    const s = etc['section'] || ''
-    if (a.length < 6 || a.length > 24) return 'nomAuteur'
-    return s.length < 2 ? 'section' : ''
+    const na = etc['nomAuteur']
+    if (!na) return $t('FORMdiag_nomAuteur2')
+    const autid = await Auteur.autidParNom(this.soa, na)
+    if (autid) return $t('FORMdiag_nomDupl')
+    return ''
   }
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
@@ -87,7 +90,38 @@ Registry.registerD($Form_auteur)
 
 
 class $Form_coauteur extends $Form {
+  autid: string = ''
+
   constructor () { super() }
+
+  cloneEtc (byU: boolean) : Object | null {
+    const etc = byU ? this.etcU : this.etcT
+    return { 
+      trigramme: !etc ? '' : etc['trigramme'],
+      nomAuteur: !etc ? '' : etc['nomAuteur']
+    }
+  }
+  eqEtc (x: Object | null, y: Object | null) : boolean {
+    if (!x || !y) return false
+    return (x['trigramme'] === y['trigramme']) && (x['nomAuteur'] === y['nomAuteur'])
+  }
+  async checkEtc (etc: Object | null) : Promise<string> {
+    const na = etc['nomAuteur']
+    if (!na) return $t('FORMdiag_nomAuteur2')
+    this.autid = await Auteur.autidParNom(this.soa, na)
+    if (!this.autid) return $t('FORMdiag_nomInexistant')
+    return ''
+  }
+
+  async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
+    const src = { autid: this.autid }
+    this.opts.$1 = DocType.getPk('Auteur', src)
+    if (!byU || !this.autid) return
+    const trigramme = etc['trigramme']
+    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
+      src , trigramme, { name: trigramme })
+    this.opts.credTemplates[ct.credId] = ct
+  }
 }
 Registry.registerD($Form_coauteur)
 

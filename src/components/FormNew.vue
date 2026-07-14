@@ -3,7 +3,7 @@ selon son type.
 -->
 <template>
 <div>
-  <div v-if="estComite && !isDemand">
+  <div v-if="!isDemand">
     <input-b class="q-my-sm"
       v-model="alias" size="alias" prefix="FORMuseralias" @validate="valA"/>
   </div>
@@ -13,14 +13,14 @@ selon son type.
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
-import { $Form, $FormObj } from '../src-fw/documents'
+import { $Form } from '../src-fw/documents'
 import { FormType } from '../src-fw/doctypes'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
+// import BtnCond from '../components-fw/BtnCond.vue'
 
 const emit = defineEmits(['done'])
 
@@ -36,68 +36,43 @@ ui.navBar.hasback = false
 const diag = ref()
 const estComite = computed(() => props.formType.type === 'membrecodir' || props.formType.type === 'membreredaction')
 
-// Proposition membrecodir membreredaction
+// Proposition par un tiers au user ayant cet alias
 const alias = reactive({ inp: '', err: '' })
 
-const newForm = (userId) => {
-    const cf = ui.currentForm
-    const type = props.formType.type
-    const obj: $FormObj = {
-    type,
-    formId: Crypt.rnd(15),
-    userId,
-    v: 0,
-    maxLife: 0,
-    status: 0,
-    etcU: null,
-    etcT: null,
-    msgU: null,
-    msgT: null,
-    opts: {}
+const valA = async () => {
+  const cf = ui.currentForm
+  const userId = await userIdFromAlias()
+  if (userId) {
+    const form = $Form.basicForm(cf.soa, props.formType.type, userId)
+    form.opts.alias = alias.inp
+    emit('done', form)
   }
-  const form = $Form.new(obj)
-  form.svc = cf.soa.svc
-  form.org = cf.soa.org
-  if (cf.asAdmin) form.opts.asAdmin = true
-  return form
 }
 
-const userIdFromAlias = async (alias) => {
-  let userId = ''
-  if (!props.isDemand) {
-    const hsha = Crypt.shaS(await Crypt.strongHash(alias, false, true))
-    const icvs = await sf.mdUserGetICVS(hsha)
-    if (!icvs) {
-      diag.value = $t('APnouser')
-      return
-    }
-    userId = icvs.i
-  } else userId = sf.userId
-  return userId
+const userIdFromAlias = async () => {
+  const hsha = Crypt.shaS(await Crypt.strongHash(alias.inp, false, true))
+  const icvs = await sf.mdUserGetICVS(hsha)
+  if (icvs) return icvs.i
+  diag.value = $t('APnouser')
+  return ''
 }
 
 if (estComite.value) {
+  const cf = ui.currentForm
   if (props.isDemand) {
-    const form = newForm(sf.userId)
+    const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)
+    if (cf.asAdmin) form.opts.asAdmin = true
     form.opts.alias = '?'
     emit('done', form)
-  } else setTimeout(async () => { 
-      const userId = await userIdFromAlias(alias.inp)
-      const form = newForm(userId)
-      form.opts.alias = alias.inp
-      emit('done', form)
-    }, 1)
+  }
 }
 
-if (props.formType.type === 'auteur') {
-    if (props.isDemand) {
-    const form = newForm(sf.userId)
+if (props.formType.type === 'auteur' || props.formType.type === 'coauteur') {
+  const cf = ui.currentForm
+  if (props.isDemand) {
+    const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)
     emit('done', form)
-  } else setTimeout(async () => { 
-      const userId = await userIdFromAlias(alias.inp)
-      const form = newForm(userId)
-      emit('done', form)
-    }, 1)
+  }
 }
 
 </script>

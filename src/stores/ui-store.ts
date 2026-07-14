@@ -145,8 +145,10 @@ export const useUiStore = defineStore('ui', () => {
     const f = editing.resolve
     if (f) f(b)
   }
-  const setEditing = () => { editing.flag = true }
-  const resetEditing = () => { editing.flag = false }
+  const setEditing = () => { 
+    editing.flag = true }
+  const resetEditing = () => { 
+    editing.flag = false }
   const editingInCourse = computed(() => editing.flag )
 
   const mayClose = async () => {
@@ -215,6 +217,7 @@ export const useUiStore = defineStore('ui', () => {
     asAdmin: false,
     pft: new Set(), // possible form types
     zoomed: false,
+    increation: false,
     form: null,
     fnOnUpdate: null
   })

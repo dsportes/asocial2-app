@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -59,20 +59,22 @@ const edv = (e) => {
 const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
 const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
 
-const loc1 = ref('')
-const loc2 = ref('')
+const loc1 = ref(fst.upd.etc[props.champ])
+const loc2 = ref(fst.isDemand ? psT.value : psU.value)
 
-watch(loc1, async (v) => {
+const chk = async (v) => {
   fst.upd.etc[props.champ] = v
   err.value = v.length < 2 ? props.enum + 'absent' : ''
   await fst.onChange()
+}
+watch(loc1, async (v) => {
+  await chk(v)
 })
 watch(() => fst.upd.etc, (v) => {
   loc1.value = v[props.champ]
 })
 
-loc1.value = fst.upd.etc[props.champ]
-loc2.value = fst.isDemand ? psT.value : psU.value
+onMounted(async () => { await chk(loc1.value) })
 
 const copyLocU = () => { loc1.value = psT.value }
 const copyLocT = () => { loc1.value = psU.value }
