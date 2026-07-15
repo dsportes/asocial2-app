@@ -12,6 +12,7 @@
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
+      <org-svc v-if="sf.step === 0"/>
       <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
       <help-button class="" page="DOCpg"/>
@@ -78,6 +79,7 @@
   <got-it/>
   <confirm-quit/>
   <confirm-close/>
+  <confirm-closesession/>
   <dialog-exc/>
   <dialog-help/>
 
@@ -89,7 +91,7 @@
 // import P2 from './tests/P2.vue'
 
 // @ts-ignore
-import { watchEffect, onMounted } from 'vue'
+import { watch, watchEffect, onMounted } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
@@ -118,10 +120,12 @@ import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import LeftMenu from './components-fw/LeftMenu.vue'
 import BtnCond from './components-fw/BtnCond.vue'
+import OrgSvc from './components-fw/OrgSvc.vue'
 
 import GotIt from './dialogs-fw/GotIt.vue'
 import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import ConfirmClose from './dialogs-fw/ConfirmClose.vue'
+import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
@@ -153,6 +157,12 @@ ui.setScreenWH($q.screen.width, $q.screen.height)
 watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
+
+/* Pour test
+watch(() => session.currentOrgSvc, (v) => {
+  console.log('Currrent svc / org', v.svc, v.org)
+})
+*/
 
 </script>
 

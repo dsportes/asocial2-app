@@ -19,12 +19,15 @@ import BarTitle from '../components-fw/BarTitle.vue'
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
 
-// const ui = stores.ui
+const ui = stores.ui
 // const session = stores.session
 
 const dialogs = reactive({
   selCode: false
 })
+
+ui.setEditing()
+
 </script>
 
 <style lang="scss" scoped>

@@ -19,7 +19,7 @@ Model: ui.appDialogs.ConfirmQuit
           :label="$t('quitReload')" @ok="reload"/>
         <btn-cond flat icon="arrow_forward" color="primary" size="lg"
           :label="$t('quitCont')" 
-          @ok="ui.dialogs.ConfirmQuit = false"/>
+          @ok="ui.appDialogs.ConfirmQuit = false"/>
       </q-card-actions>
     </q-card>
   </q-dialog>

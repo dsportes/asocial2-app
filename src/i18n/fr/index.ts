@@ -33,7 +33,7 @@ export default {
   app: 'Application:',
   build: 'Build',
   alias: 'Alias',
-  closeApp: 'Fermer l\'application',
+  closeApp: 'Fermer / Redémmarrer l\'application',
   restartApp: 'Redémmarrer l\'application',
   nocomment: '(pas de commentaire)',
   svcorg: 'Service & Organisation',
@@ -100,11 +100,15 @@ export default {
   closeCf: 'Saisies en cours, confirmer ...',
   closeCf_label: `### Des saisies sont en cours ...
   - Si vous confirmez, elles seront perdues.
-  - Si vous renocez, vous pourrez continuer votre travail normalement.
+  - Si vous renoncez, vous pourrez continuer votre travail normalement.
   `,
-  closeCf_1: 'Je confirme',
-  closeCf_2: 'Je renonce et poursuis mon travail',
-
+  closeCf_1: 'Je confirme fermer ma session',
+  closeCf_2: 'Je renonce, ma session se poursuit',
+  backopen: 'Fin de session ?',
+  backopen_label: `### Confirmation de clôture de cette session.
+- en cas de confirmation la session sera fermée et la page de "login" s'affichera.
+- sinon ce dialogue s'effacera et la session se poursuivra normalement.
+`,
 
   ORG_label: 'Code organisation',
   ORG_ph: 'monorg',
@@ -484,13 +488,7 @@ bla bla
   SBnotauth: 'Ces actions requièrent d\'être authentifié',
 
   HPstartpref: 'Préférences ...',
-  HPbackopen_txt: `### Confirmation de clôture de cette session.
-- en cas de confirmation la session sera fermée et la page de "login" s'affichera.
-- sinon ce dialogue s'effacera et la session se poursuivra normalement.
-`,
-  HPbackopen_tit: 'Fin de session ?',
-  HPbackopen_0: 'Je laisse ma session se poursuivre',
-  HPbackopen_1: "Je ferme ma session",
+
   HPtrust_1: 'Ce terminal N\'EST PAS certifié, le certifier',
   HPtrust_2: `### Certifier ce terminal
 bla bla

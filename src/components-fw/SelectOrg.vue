@@ -34,7 +34,7 @@ const m = ref()
 const val = () => {
   if (m.value !== model.value) {
     model.value = m.value
-    session.setOrg(m.value)
+    session.addOrg(m.value)
     emit('change', m.value)
   }
   menu.value = false

@@ -181,12 +181,23 @@ export const useUiStore = defineStore('ui', () => {
   const appDialogs = reactive({
     ConfirmQuit: false,
     ConfirmClose: false,
+    ConfirmCloseSession: false,
     DialogExc: false,
     DialogHelp: false,
     GotIt: false
   })
 
   const confirmQuit = () => { appDialogs.ConfirmQuit = true }
+
+  const sessionClose = () => {
+    appDialogs.ConfirmCloseSession = true
+  }
+
+  const cfSessionClose = () => {
+    appDialogs.ConfirmCloseSession = false
+    resetEditing()
+    backToOpenSession()
+  }
 
   const backToOpenSession = () => {
     stores.session.endSession()
@@ -246,7 +257,8 @@ export const useUiStore = defineStore('ui', () => {
     page, setPage, backToOpenSession,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage,
-    emojiIndex, setEmoji
+    emojiIndex, setEmoji,
+    sessionClose, cfSessionClose
   }
 })
 

@@ -16,14 +16,14 @@ Contrôlé par ui.leftMenu
     <!--div><btn-cond label="Test Erreur" @ok="test"/></div-->
     <div v-if="sf.step === 0" class="q-mt-sm q-mb-lg q-px-sm">
       <btn-cond flat icon="exit_to_app" color="warning" :label="$t('endsession')"
-        @ok="ui.closeMenu(); dialogs.SessionClose = true"/>
+        @ok="ui.closeMenu(); ui.sessionClose()"/>
     </div>
 
     <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"
       @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond class="q-mb-sm" flat color="primary"
-        @ok="openDemands" :disable="ui.page === 'demans'">
+        @ok="openDemands" :disable="ui.page === 'demands'">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEdemands') }}</div>
       </btn-cond>
@@ -38,11 +38,6 @@ Contrôlé par ui.leftMenu
         <img :src="superman" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEadmin') }}</div>
       </btn-cond>
-
-      <div class="row q-mt-md q-mb-sm items-center q-gutter-sm">
-        <select-svc v-model="svc" @change="console.log(svc)"/>
-        <select-org v-model="org" @change="console.log(org)"/>
-      </div>
       
       <btn-cond :disable="ui.page === 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
@@ -59,11 +54,6 @@ Contrôlé par ui.leftMenu
     </div>
   </q-page-container>
 
-  <choose-it v-model="dialogs.SessionClose"
-    prefix="HPbackopen" options="pw"
-    @giveup="dialogs.SessionClose = false"
-    @option="sessionClose"/>
-
 </q-layout>
 </template>
 
@@ -76,36 +66,19 @@ import { ErrorTest } from '../src-fw/operations'
 
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
-import SelectOrg from '../components-fw/SelectOrg.vue'
-import SelectSvc from '../components-fw/SelectSvc.vue'
+
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 // @ts-ignore
 import invitation from '../assets/invitation.png'
 
-const svcsel = (v) => {
-  /* console.log(v) */
-}
-
 const sf = stores.safe
 const ui = stores.ui
-const session = stores.session
-
-const org = ref()
-const svc = ref()
-
-const dialogs = reactive({
-  SessionClose: false
-})
+// const session = stores.session
 
 const test = async () => {
   await new ErrorTest('AS2', 'doda').run()
-}
-
-const sessionClose = (n) => {
-  if (n === 1) ui.backToOpenSession()
 }
 
 const hasManagedOrgs = computed(() => sf.managerCreds().size !== 0)

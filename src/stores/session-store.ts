@@ -169,25 +169,34 @@ export const useSessionStore = defineStore('session', () => {
   const aboutProfile = computed(() => _aboutProfile.value)
   const _creds: Ref<Map<string, any>> = ref(null) // $Credential
   const creds = computed(() => _creds.value)
-  const svcOrgs = ref(new Set())
+  const lstOrgSvc: Ref<[string, string, string][]> = ref([])
+  const currentOrgSvc = ref({ svc: '', org: '' })
 
-  const setStartContext = (
-      userId: string,
-      aboutProfile: string,
-      creds: Map<string, any>) => { // $Credential
+  const setStartContext = (aboutProfile: string, creds: Map<string, any>) => { 
     setPhase(0)
     _aboutProfile.value = aboutProfile
     _creds.value = creds
-    svcOrgs.value.clear()
-    for(const [,c] of _creds.value)
-      svcOrgs.value.add(c.svc + '/' + c.org)
+    const svcOrgs = new Set<string>()
+    for(const [,c] of _creds.value) svcOrgs.add(c.org + '/' + c.svc)
+    /* Pour test */
+    svcOrgs.add('doda/ASSO2')
+    svcOrgs.add('demo/AS2')
+    svcOrgs.add('demo/ASSO2')
+
+    const lst: string[] = Array.from(svcOrgs).sort((a,b) => a < b ? 1 :(a > b ? -1 : 0))
+    const lst2 = []; lst.forEach(t => { 
+      const x = t.split('/')
+      lst2.push([x[0], x[1], x[1]]) })
+    lstOrgSvc.value = lst2
+    currentOrgSvc.value = lst2.length ? 
+      { svc: lst2[0][1], org: lst2[0][0]} : { svc: '', org: '' }
     stores.ui.setPage('app')
   }
 
   const endSession = () => {
     _aboutProfile.value = ''
     _creds.value = null
-    svcOrgs.value.clear()
+    lstOrgSvc.value = []
   }
 
   const orgs = reactive({
@@ -205,11 +214,12 @@ export const useSessionStore = defineStore('session', () => {
       orgs.c = orgs.lst.length > 0 ? orgs.lst[0] : ''
     }
   }
-  const setOrg = (org: string) => {
+  const addOrg = (org: string) => {
     orgs.c = org
     setOrgs(new Set([org]))
   }
   const currentOrg = computed(() => orgs.c || '')
+  const setOrg = (org: string) => { orgs.c = org }
 
   const _currentSvc = ref()
   const currentSvc = computed(() => _currentSvc.value || stores.config.K.DEFAULT_SERVICE)
@@ -224,8 +234,8 @@ export const useSessionStore = defineStore('session', () => {
     hasIDB, hasNet, noNet, incognito,
     pref, edPref, setEdPref, updatePref,
     aboutProfile, creds, setStartContext, endSession,
-    svcOrgs, currentSvc, setSvc, 
-    orgs, setOrg, setOrgs, currentOrg
+    lstOrgSvc, currentOrgSvc, currentSvc, setSvc, 
+    orgs, addOrg, setOrg, setOrgs, currentOrg
     // focus, getFocus, lostFocus, closingApp
   }
 })

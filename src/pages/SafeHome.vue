@@ -340,19 +340,19 @@ const validateSession = async (prefCode, prefTime, prefObj) => {
   if (prefCode) session.updatePref(prefCode, prefTime, decode(prefObj))
   else session.updatePref('', 0, {})
   if (profile)
-    session.setStartContext(sf.userId, profile.about, sf.getCreds(profile))
+    session.setStartContext(profile.about, sf.getCreds(profile))
 }
 
 const opGuest = () => {
   session.noNet = false
   sf.setStep(0)
-  session.setStartContext('', '', new Map())
+  session.setStartContext('', new Map())
 }
 
 const opCalc = () => {
   session.noNet = true
   sf.setStep(0)
-  session.setStartContext('', '', new Map())
+  session.setStartContext('', new Map())
 }
 
 /* const bug = async () => {

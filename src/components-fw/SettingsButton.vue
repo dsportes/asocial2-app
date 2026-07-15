@@ -42,13 +42,13 @@
 
         <q-separator v-if="stores.safe.step === 0"/>
 
-        <q-item  v-if="stores.safe.step !== 1" @click="dialogs.userProfile = true"
+        <q-item v-if="sf.step !== 1" @click="dialogs.userProfile = true"
           clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="person"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('SButtitle')}}</q-item-section>
         </q-item>
 
-        <q-item  v-if="stores.safe.step === 0" @click="dialogs.edprf = true"
+        <q-item v-if="sf.step === 0" @click="dialogs.edprf = true"
           clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="settings"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('settings')}}</q-item-section>
@@ -68,14 +68,9 @@
 
         <q-separator/>
 
-        <q-item clickable dense v-close-popup @click="dialogs.SessionClose = true">
+        <q-item v-if="sf.step === 0" clickable dense v-close-popup @click="ui.sessionClose">
           <q-item-section avatar><q-avatar size="xl" icon="exit_to_app"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
-        </q-item>
-
-        <q-item clickable dense v-close-popup @click="ui.confirmQuit">
-          <q-item-section avatar><q-avatar size="xl" icon="restart_alt"/></q-item-section>
-          <q-item-section class="fs-lg">{{$t('restartApp')}}</q-item-section>
         </q-item>
 
         <q-item clickable dense v-close-popup @click="ui.confirmQuit">
@@ -350,12 +345,6 @@
         <div v-if="sf.step === 1" class="msg2 q-my-md self-center">{{$t('SBnotauth')}}</div>
         <div v-else class="column">
           <service-op v-model="svcop"/>
-          <!--div class="row q-mb-md">
-            <input-a class="col-6" prefix="service" v-model="SVC" size="svc"
-              :list="listSvc"/>
-            <input-a class="col-6" prefix="operator" v-model="$OP" size="oper"
-              :list="config.K.FAVORITE_OPERATORS"/>
-          </div-->
 
           <q-separator color="orange" class="q-my-md"/>
 
@@ -406,10 +395,6 @@
     </template>
   </dialog-std0>
 
-  <choose-it v-model="dialogs.SessionClose"
-    prefix="HPbackopen" options="pw"
-    @giveup="dialogs.SessionClose = false"
-    @option="sessionClose"/>
 </div>
 </template>
 
@@ -439,9 +424,8 @@ import ServiceOp from '../components-fw/ServiceOp.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
-import ChooseIt from '../dialogs-fw/ChooseIt.vue'
-
 import PrefEditor from '../components/PrefEditor.vue'
+
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 
@@ -458,8 +442,7 @@ const dialogs = reactive({
   edprf: false,
   ping: false,
   confirmStopop: false,
-  userProfile: false,
-  SessionClose: false
+  userProfile: false
 })
 
 const svcop = reactive({
@@ -476,10 +459,6 @@ const resetHot = () => {
   svcop.$OP = ''
   user.value = ''
   org.value = ''
-}
-
-const sessionClose = (n) => {
-  if (n === 1) ui.backToOpenSession()
 }
 
 const tab = ref('cred')

@@ -33,16 +33,22 @@ const org = ref(session.currentOrg)
 const diag = ref(false)
 
 const ok = async () => {
-  const op = await opOfSvcOrg(svc.value, org.value)
-  if (op) {
-    const soa : SOA = {
-      svc: svc.value,
-      org: org.value,
-      admin: sf.auth.admins.indexOf(svc.value + '.' + op) !== -1
+  if (session.hasNet) {
+    const op = await opOfSvcOrg(svc.value, org.value)
+    if (op) {
+      const soa : SOA = {
+        svc: svc.value,
+        org: org.value,
+        admin: sf.auth.admins.indexOf(svc.value + '.' + op) !== -1
+      }
+      emit('select', soa)
     }
-    emit('select', soa)
-  }
-  else diag.value = true
+    else diag.value = true
+  } else emit('select', {
+        svc: svc.value,
+        org: org.value,
+        admin: false
+    })
 }
 
 const ko = () => {
