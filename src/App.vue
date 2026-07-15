@@ -59,8 +59,8 @@
       </q-page>
     </transition>
     <transition name="anim1">
-      <q-page v-if="ui.page === 'test'" class="column">
-        <test-page class="q-mt-sm"/>
+      <q-page v-if="ui.page === 'auteur'">
+        <auteur-page/>
       </q-page>
     </transition>
     <transition name="anim1">
@@ -68,6 +68,11 @@
         <!--div class="titre-xxl">Hello world</div-->
       </q-page>
     </transition>
+    <!--transition name="anim1">
+      <q-page v-if="ui.page === 'test'" class="column">
+        <test-page class="q-mt-sm"/>
+      </q-page>
+    </transition-->
   </q-page-container>
 
   <got-it/>
@@ -106,7 +111,8 @@ import DemandsHeader from './pages/DemandsHeader.vue'
 import SponsoringsPage from './pages/SponsoringsPage.vue'
 import SponsoringsHeader from './pages/SponsoringsHeader.vue'
 
-import TestPage from './pages/TestPage.vue'
+import AuteurPage from './pages/AuteurPage.vue'
+// import TestPage from './pages/TestPage.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'

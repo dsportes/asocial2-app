@@ -23,18 +23,18 @@ Contrôlé par ui.leftMenu
       @close="ui.closeMenu()"/>
     <div v-if="sf.step === 0" class="column q-px-sm">
       <btn-cond class="q-mb-sm" flat color="primary"
-        @ok="openDemands">
+        @ok="openDemands" :disable="ui.page === 'demans'">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEdemands') }}</div>
       </btn-cond>
       <btn-cond class="q-mb-sm" flat color="primary"
-        @ok="openSponsorings">
+        @ok="openSponsorings" :disable="ui.page === 'sponsorings'">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEsponsorings') }}</div>
       </btn-cond>
       <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)"
         class="q-mb-sm" flat color="warning"
-        @ok="openAdmin">
+        @ok="openAdmin" :disable="ui.page === 'admin'">
         <img :src="superman" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEadmin') }}</div>
       </btn-cond>
@@ -44,12 +44,15 @@ Contrôlé par ui.leftMenu
         <select-org v-model="org" @change="console.log(org)"/>
       </div>
       
-      <btn-cond v-if="ui.page !== 'app'" class="q-mb-sm"
+      <btn-cond :disable="ui.page === 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
-      <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
+      <btn-cond :disable="ui.page === 'auteur'" class="q-mb-sm"
+        flat :label="$t('PAGEauteur')"
+        @ok="ui.closeMenu(); ui.setPage('auteur')"/>
+      <!--btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
         flat :label="$t('PAGEtest')"
-        @ok="ui.closeMenu(); ui.setPage('test')"/>
+        @ok="ui.closeMenu(); ui.setPage('test')"/-->
       <!--div class="q-my-lg q-pa-sm">
         <div v-for="n in 10" :key="n">Drawer {{ n }} / 50</div>
       </div-->

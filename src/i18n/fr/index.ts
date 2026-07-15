@@ -171,6 +171,14 @@ export default {
   - suivre les procédures ouvertes et le cas échant y intervenir.
 
   `,
+  PAGEauteur: 'Auteurs',
+  PAGEauteur_label: 'Mes interventions en tant "qu\'auteur"',
+  PAGEauteur_bub: `### Mes interventions en tant **qu'auteur**
+  - quels sont les _auteurs_ pour lesquels j'ai un pouvoir,
+  - mes _chats_ avec mes _co-auteurs_,
+  - liste des auteurs par section de rédaction,
+
+  `,
 
   PAGEtest: 'Page des tests',
 
