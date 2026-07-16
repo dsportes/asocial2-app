@@ -91,7 +91,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import { getCredProps } from '../src-fw/operations'
+import { GetCredProps } from '../src-fw/operations'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
@@ -227,7 +227,7 @@ const reset2 = async () => {
   if (todel.value.size) await cleanUp()
   const so = curso.value
   for(const c of so.creds) {
-    const op = new getCredProps(c.svc, c.org)
+    const op = new GetCredProps(c.svc, c.org)
     const ok = await op.run(c)
     c.alert = ok ? 0 : 1
     if (c.alert === 1) todel.value.set(c.credId, c)

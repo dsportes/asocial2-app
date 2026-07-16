@@ -138,7 +138,7 @@ import stores from '../stores/all'
 import { $Credential } from '../src-fw/documents'
 import { Crypt } from '../src-fw/crypt'
 import { Profile } from '../stores/safe-store'
-import { getCredProps } from '../src-fw/operations'
+import { GetCredProps } from '../src-fw/operations'
 
 import LcRow from '../components-fw/LcRow.vue'
 import CredRow2 from '../components-fw/CredRow2.vue'
@@ -229,7 +229,7 @@ const init = async () => {
     crmap[crId] = it
     cIds.add(crId)
     lst.push(it)
-    const op = new getCredProps(c.svc, c.org)
+    const op = new GetCredProps(c.svc, c.org)
     const ok = await op.run(c)
     c.alert = ok ? 0 : 1
   }

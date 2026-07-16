@@ -257,8 +257,10 @@ export default {
   op_FormValidateByU: 'Mise à jour d\'une demande / proposition par l\'utilisateur cible',
   op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
   op_$UpdateProfiles: 'Mise à jour des listes de pouvoirs.',
-  op_getCredProps: 'Lecture des propriétés d\'un pouvoir',
+  op_GetCredProps: 'Lecture des propriétés d\'un pouvoir',
   op_AutidDeNom: 'Recherche d\'un auteur par son nom',
+  op_PropsOfMyCreds: 'Lecture des propriétés de mes pouvoirs',
+  op_AuteurDeId: 'Lecture d\'un "auteur"',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1141,6 +1143,14 @@ bla bla
   CREDON_Auteur_bub: `### Auteur
   bla bla 
   `,
+
+  AUTcol_id: 'Identifiant',
+  AUTcol_na: 'Nom d\'auteur',
+  AUTcol_sec: 'Section',
+  AUTcol_trig: 'Votre trigramme de "co-auteur"',
+  AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',
+  AUTko: 'Auteur non trouvé (disparu ?, BUG ?)',
+  AUTnotrig: '(pas de trigramme)',
 
   moins1: 'Moins 1',
   plus1: 'Plus 1',

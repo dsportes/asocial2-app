@@ -12,7 +12,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import stores from './all'
 import { $t, sleep, quarter } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
-import { SafeOperation, MDOperation, opOfSvcOrg } from '../src-fw/operation'
+import { SafeOperation, MDOperation, opOfSvcOrg, Operation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
@@ -786,6 +786,43 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds.value = m
     credsToCheck.value = ctc
     stores.session.setOrgs(orgs)
+  }
+
+  /* Retourne une map des credentials de l'utilisateur
+  SANS les props des credentials
+  pour le svc / org courant de la session:
+  - soit tous,
+  - soit ceux du type spécifié.
+  */
+  const mySimpleCreds = (docCl?: string) : Map<string, $Credential> => {
+    const soa = stores.session.currentOrgSvc
+    const m : Map<string, $Credential> = new Map()
+    for(const [credId, cred] of mySafeCreds.value)
+      if (cred.svc === soa.svc && cred.org === soa.org 
+        && (!docCl || docCl === cred.docCl)) m.set(credId, cred)
+    return m
+  }
+
+  /* Retourne une map des credentials de l'utilisateur
+  AVEC les props des credentials obtenus du service
+  pour le svc / org courant de la session:
+  - soit tous,
+  - soit ceux du type spécifié.
+  */
+  const myFullCreds = async (docCl?: string) : Promise<Map<string, $Credential>> => {
+    const soa = stores.session.currentOrgSvc
+    const m : Map<string, $Credential> = mySimpleCreds(docCl)
+    const op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
+    try {
+      for(const [,cred] of m) await op.sign(cred)
+      const res = await op.post()
+      const props: Object = res.props
+      for(const credId of Object.keys(props)) {
+        const e = m.get(credId)
+        if (e) e.props = props[credId]
+      }
+      return m
+    } catch (e) { op.ko(e); return m }
   }
 
   type SetNameCred = {
@@ -1671,6 +1708,7 @@ export const useSafeStore = defineStore('safe', () => {
     updateCredName, fixCreds,
     setAboutProfile, updateProfiles /* ??? */,
     managerCreds, isManager, adminForSvcOrg, getCreds,
+    mySimpleCreds, myFullCreds,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,
@@ -1678,7 +1716,7 @@ export const useSafeStore = defineStore('safe', () => {
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,
-    getSafe, delSafe, restoreSafe, reloadSafe /* ??? */,
+    getSafe, delSafe, restoreSafe, reloadSafe,
     pingStore
   }
 })

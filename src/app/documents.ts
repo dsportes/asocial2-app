@@ -3,8 +3,8 @@ import { Registry, $Document } from '../src-fw/registry'
 import { regForms } from '../app/forms'
 import { regCredentials } from '../app/credentials'
 import { Operation } from '../src-fw/operation'
-import { SOA } from '../src-fw/documents'
-// import stores from '../stores/all'
+import { SOA, $Credential } from '../src-fw/documents'
+import stores from '../stores/all'
 // import { $t, dhcool } from '../src-fw/util'
 
 class Article extends $Document {
@@ -38,6 +38,17 @@ export class Auteur extends $Document {
       op.ko(e)
       return ''
     }
+  }
+
+  static async get (autid?: string, autPk?: string) : Promise<Auteur | null> {
+    const soa = stores.session.currentOrgSvc
+    const op = new Operation('AuteurDeId', soa.svc, soa.org)
+    if (autid) op.args.autid = autid
+    else op.args.autPk = autPk
+    try {
+      const res = await op.post()
+      return res.auteur
+    } catch (e) { op.ko(e); return null }
   }
 
 }

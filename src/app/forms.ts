@@ -117,9 +117,10 @@ class $Form_coauteur extends $Form {
     const src = { autid: this.autid }
     this.opts.$1 = DocType.getPk('Auteur', src)
     if (!byU || !this.autid) return
+    const na = etc['nomAuteur']
     const trigramme = etc['trigramme']
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
-      src , trigramme, { name: trigramme })
+      src , na, { name: na, trig: trigramme })
     this.opts.credTemplates[ct.credId] = ct
   }
 }

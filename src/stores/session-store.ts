@@ -178,11 +178,11 @@ export const useSessionStore = defineStore('session', () => {
     _creds.value = creds
     const svcOrgs = new Set<string>()
     for(const [,c] of _creds.value) svcOrgs.add(c.org + '/' + c.svc)
-    /* Pour test */
+    /* Pour test
     svcOrgs.add('doda/ASSO2')
     svcOrgs.add('demo/AS2')
     svcOrgs.add('demo/ASSO2')
-
+    */
     const lst: string[] = Array.from(svcOrgs).sort((a,b) => a < b ? 1 :(a > b ? -1 : 0))
     const lst2 = []; lst.forEach(t => { 
       const x = t.split('/')

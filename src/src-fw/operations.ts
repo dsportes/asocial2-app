@@ -251,8 +251,8 @@ export class AutoRevokeCred extends Operation {
 }
 
 /* Met à jour un $Credential avec les données [v, more] de son document en DB */
-export class getCredProps extends Operation {
-  constructor (SVC: string, org: string) { super('getCredProps', SVC, org) }
+export class GetCredProps extends Operation {
+  constructor (SVC: string, org: string) { super('GetCredProps', SVC, org) }
 
   async run (c: $Credential ) : Promise<boolean> {
     try {

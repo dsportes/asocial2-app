@@ -51,11 +51,6 @@ const emit = defineEmits(['change'])
 const menu = ref(false)
 const ntext = ref(props.text)
 
-const edit = () => {
-  ntext.value = props.text
-  menu.value = true
-}
-
 const undo = () => {
   ntext.value = props.text
   menu.value = false
