@@ -803,6 +803,15 @@ export const useSafeStore = defineStore('safe', () => {
     return m
   }
 
+  const myCredOfDoc = (docCl: string, docPk: string) : $Credential | null => {
+    const soa = stores.session.currentOrgSvc
+    for(const [, cred] of mySafeCreds.value)
+      if (cred.svc === soa.svc && cred.org === soa.org 
+        && cred.docCl === docCl && cred.docPk === docPk) 
+        return cred
+    return null
+  }
+
   /* Retourne une map des credentials de l'utilisateur
   AVEC les props des credentials obtenus du service
   pour le svc / org courant de la session:
@@ -812,8 +821,9 @@ export const useSafeStore = defineStore('safe', () => {
   const myFullCreds = async (docCl?: string) : Promise<Map<string, $Credential>> => {
     const soa = stores.session.currentOrgSvc
     const m : Map<string, $Credential> = mySimpleCreds(docCl)
-    const op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
+    let op
     try {
+      op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
       for(const [,cred] of m) await op.sign(cred)
       const res = await op.post()
       const props: Object = res.props
@@ -1708,7 +1718,7 @@ export const useSafeStore = defineStore('safe', () => {
     updateCredName, fixCreds,
     setAboutProfile, updateProfiles /* ??? */,
     managerCreds, isManager, adminForSvcOrg, getCreds,
-    mySimpleCreds, myFullCreds,
+    mySimpleCreds, myFullCreds, myCredOfDoc,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin,

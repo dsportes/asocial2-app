@@ -9,7 +9,7 @@
       :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
       @click="select(c)">
       <div class="col">{{ c.name }}</div>
-      <div class="col-2">{{ c.trig || '' }}</div>
+      <div class="col-2">{{ c.props.trig || '' }}</div>
       <div class="col-auto font-mono">{{ credId.substring(0,5) }}</div>
     </div>
   </scroll-area>
@@ -18,7 +18,7 @@
     <div class="row q-mb-sm">
       <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
       <div class="col-7 q-pl-sm ">
-        <line-edit :text="cred.trig || $t('AUTnotrig')" @change="editTrig"/>
+        <line-edit :text="cred.props.trig || $t('AUTnotrig')" @change="editTrig"/>
       </div>
     </div>
 
@@ -28,11 +28,17 @@
     </div>
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ aut.nomAuteur }}</div>
+      <div class="col-7 q-pl-sm font-mono">
+        <line-edit :text="aut.nomAuteur" @change="majNA"/>
+      </div>
     </div>
     <div class="row">
       <div class="col-5">{{ $t('AUTcol_sec') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ aut.section }}</div>
+      <div class="col-7 q-pl-sm font-mono">
+        <select-enum1 :svc="soa.svc" :org="soa.org"
+          v-model="aut.section" enum="Section" size="md"
+          @select="majSection"/>
+      </div>
     </div>
     <div class="row">
       <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
@@ -50,36 +56,29 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, Ref, computed, onMounted, reactive, watch } from 'vue'
-// @ts-ignore
-// import { encode, decode } from '@msgpack/msgpack'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
 import { Auteur } from '../app/documents'
-// import { keyToB64 } from '../src-fw/b64'
-// import { Operation } from '../src-fw/operation'
-// import { Crypt } from '../src-fw/crypt'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
-
-// const decoder = new TextDecoder()
-// const encoder = new TextEncoder()
+import SelectEnum1 from '../components-fw/SelectEnum1.vue'
+import { Operation } from 'src/src-fw/operation'
 
 const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
 
 const creds: Ref<Map<string, $Credential>> = ref()
+const soa = computed(() => session.currentOrgSvc )
 const cred = ref(null)
 const aut = ref(null)
 const coauts: Ref<$Cred[]> = ref([])
 
 const init = async () => { creds.value = await sf.myFullCreds('Auteur') }
 onMounted(async () => { await init()})
-
-const dialogs = reactive({ })
 
 const select = async (c: $Credential) => {
   cred.value = c
@@ -95,7 +94,48 @@ const select = async (c: $Credential) => {
 }
 
 const editTrig = async (trig: string) => {
-  console.log('select', trig)
+  const soa = session.currentOrgSvc
+  const op = new Operation('UpdPropsCred', soa.svc, soa.org)
+  const c = cred.value
+  op.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk, props: { trig: trig } })
+  await op.sign(c)
+  try {
+    const res = await op.post()
+    if (res.status) await ui.diagDisplay($t('STCR_' + res.status))
+    else creds.value.get(c.credId).props = res.props
+  } catch (e) { op.ko(e) }
+}
+
+const majNA = async (nomAuteur: string) => {
+  if (await majAut(nomAuteur, null)) {
+    if (await sf.updateCredName(cred.value.credId, nomAuteur))
+      cred.value.name = nomAuteur
+  }
+}
+
+const majSection = async (section: string) => {
+  await majAut(null, section)
+}
+
+const majAut = async (nomAuteur: string, section: string) => {
+  const soa = session.currentOrgSvc
+  const op = new Operation('MajAuteur', soa.svc, soa.org)
+  const a = aut.value
+  op.args.autid = a.autid
+  if (nomAuteur) op.args.nomAuteur = nomAuteur
+  if (section) op.args.section = section
+  await op.sign(cred.value)
+  try {
+    const res = await op.post()
+    if (res.status) {
+      await ui.diagDisplay($t('AUTko_' + res.status))
+      return false
+    } else { 
+      a.nomAuteur = res.maj.nomAuteur
+      a.section = res.maj.section
+      return true
+    }
+  } catch (e) { op.ko(e); return false }
 }
 
 const selCo = (cx: $Cred) => {

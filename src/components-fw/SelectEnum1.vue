@@ -2,7 +2,7 @@
 -->
 <template>
   <div class="row items-center justify-between w1 cursor-pointer q-pl-xs"
-    style="width:150px">
+    :style="'width:' + sizes[size || 'sm']">
     <div class="font-mono text-bold fs-lg">{{ edv(model) }}</div>
     <q-icon name="arrow_drop_down" size="24px"/>
     <q-menu v-model="menu" anchor="top left" self="top left"
@@ -27,10 +27,13 @@ import { ref, computed, onMounted } from 'vue'
 import { DocEnums } from '../src-fw/operation'
 import { $t, hasMessage } from '../src-fw/util'
 
+const sizes = { sm: '150px', md: '250px', lg: '350px '}
+
 const props = defineProps({
   svc: String,
   org: String,
-  enum: String
+  enum: String,
+  size: String
 })
 
 const model = defineModel()

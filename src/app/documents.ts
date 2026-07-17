@@ -4,6 +4,7 @@ import { regForms } from '../app/forms'
 import { regCredentials } from '../app/credentials'
 import { Operation } from '../src-fw/operation'
 import { SOA, $Credential } from '../src-fw/documents'
+import { DocType } from '../src-fw/doctypes'
 import stores from '../stores/all'
 // import { $t, dhcool } from '../src-fw/util'
 
@@ -43,8 +44,9 @@ export class Auteur extends $Document {
   static async get (autid?: string, autPk?: string) : Promise<Auteur | null> {
     const soa = stores.session.currentOrgSvc
     const op = new Operation('AuteurDeId', soa.svc, soa.org)
-    if (autid) op.args.autid = autid
-    else op.args.autPk = autPk
+    const pk = autPk || DocType.getPk('Auteur', { autid: autid })
+    op.sign(stores.safe.myCredOfDoc('Auteur', pk))
+    op.args.autPk = pk
     try {
       const res = await op.post()
       return res.auteur

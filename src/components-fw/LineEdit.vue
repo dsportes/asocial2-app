@@ -7,7 +7,9 @@
     <div class="col q-mx-sm mh titre-md text-italic ellipsis">{{ $t(prefix + '_label') }}</div>
   </div>
 
-  <div :class="'font-mono ellipsis' + (disable ? ' disabled' : ' cursor-pointer')">{{ text }}
+  <div :class="'font-mono ellipsis' + (disable ? ' disabled' : ' cursor-pointer')">
+    <q-icon v-if="!disable" size="20px" color="warning" class="q-mr-sm" name="edit"/>
+    <span>{{ text }}</span>
     <q-menu v-model="menu"
       anchor="top left" self="top left" class="bord q-pa-sm"
       :style="styles[size || 'md']"

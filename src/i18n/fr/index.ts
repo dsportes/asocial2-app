@@ -261,6 +261,7 @@ export default {
   op_AutidDeNom: 'Recherche d\'un auteur par son nom',
   op_PropsOfMyCreds: 'Lecture des propriétés de mes pouvoirs',
   op_AuteurDeId: 'Lecture d\'un "auteur"',
+  op_UpdPropsCred: 'Mise à jour des propriétés d\'un pouvoir',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -280,6 +281,11 @@ export default {
   STFO_2: 'Tentative de création d\'une demande en votre nom par un autre utilisateur. (BUG probable).',
   STFO_98: 'Incident lors de l\'inscription d\'un pouvoir en Safe Box: l\'opération a échoué',
   STFO_99: 'Incident lors de la création d\'un pouvoir: l\'opération a échoué',
+
+  STCR_1: 'Le pouvoir présenté pour cette opération n\'est pas acceptable. (BUG ?)',
+  STCR_2: 'Le pouvoir présenté pour cette opération porte sur un document disparu. (BUG ?)',
+  STCR_3: 'Le pouvoir présenté pour cette opération porte sur un document dont les propriétés ne peuvent pas être mises à jour par l\'utilisateur. (BUG ?)',
+
 
   RLtit1: 'Nouvelle version disponible',
   RLtit2: 'L\'installation d\'une nouvelle session redémarre l\'application.',
@@ -1149,9 +1155,13 @@ bla bla
   AUTcol_sec: 'Section',
   AUTcol_trig: 'Votre trigramme de "co-auteur"',
   AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',
-  AUTko: 'Auteur non trouvé (disparu ?, BUG ?)',
+  AUTko_1: 'Auteur non trouvé (disparu ?, BUG ?)',
   AUTnotrig: '(pas de trigramme)',
 
+  ENUM_Section_roman: 'Roman',
+  ENUM_Section_histoire: 'Histoire',
+  ENUM_Section_sf: 'Science fiction',
+  
   moins1: 'Moins 1',
   plus1: 'Plus 1',
   pickfile: 'Choisir un fichier local',
