@@ -38,16 +38,16 @@ Contrôlé par ui.leftMenu
         <img :src="superman" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEadmin') }}</div>
       </btn-cond>
-      
+
       <btn-cond :disable="ui.page === 'app'" class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
       <btn-cond :disable="ui.page === 'auteur'" class="q-mb-sm"
         flat :label="$t('PAGEauteur')"
         @ok="ui.closeMenu(); ui.setPage('auteur')"/>
-      <!--btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
+      <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
         flat :label="$t('PAGEtest')"
-        @ok="ui.closeMenu(); ui.setPage('test')"/-->
+        @ok="ui.closeMenu(); ui.setPage('test')"/>
       <!--div class="q-my-lg q-pa-sm">
         <div v-for="n in 10" :key="n">Drawer {{ n }} / 50</div>
       </div-->

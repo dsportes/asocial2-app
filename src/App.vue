@@ -69,11 +69,11 @@
         <!--div class="titre-xxl">Hello world</div-->
       </q-page>
     </transition>
-    <!--transition name="anim1">
+    <transition name="anim1">
       <q-page v-if="ui.page === 'test'" class="column">
         <test-page class="q-mt-sm"/>
       </q-page>
-    </transition-->
+    </transition>
   </q-page-container>
 
   <got-it/>
@@ -114,7 +114,7 @@ import SponsoringsPage from './pages/SponsoringsPage.vue'
 import SponsoringsHeader from './pages/SponsoringsHeader.vue'
 
 import AuteurPage from './pages/AuteurPage.vue'
-// import TestPage from './pages/TestPage.vue'
+import TestPage from './pages/TestPage.vue'
 
 import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
