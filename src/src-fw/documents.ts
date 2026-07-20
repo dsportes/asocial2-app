@@ -1,22 +1,15 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document } from './registry'
+import { Registry, $Document, SOA } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, opOfSvcOrg } from '../src-fw/operation'
-import { FormType } from '../src-fw/doctypes'
-import { DocType } from '../src-fw/doctypes'
+import { FormType } from '../src-fw/docDescriptor'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-
-export type SOA = {
-  svc: string
-  org: string
-  admin? : boolean
-}
 
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */
@@ -36,7 +29,7 @@ export class $CredTempl {
   static async new (userId: string, svc: string, org: string, 
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const sf = stores.safe
-    const docPk = DocType.getPk(docCl, src)
+    const docPk = Registry.getPk(svc, docCl, src)
     const credId = Crypt.rnd(15)
     const t = new $CredTempl()
     t.userId = userId
@@ -79,6 +72,10 @@ export type $Cred = {
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
 export class $Credential {
+  descriptor() { 
+    return this.constructor['docDescriptor']
+  }
+
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk', 'privs', 'privd', 'name', 'toCheck' ]
 
   credId: string = '' // ID du credential.
@@ -104,7 +101,7 @@ export class $Credential {
   /* Factory similaire au constructor
   mais créé la sous-classe correspondant à docCl */
   static new (obj): $Credential {
-    const c = Registry.newD('$Credential', obj) as $Credential
+    const c = Registry.newC(obj.svc, 'Credential', obj) as $Credential
     for (const p of $Credential.lp1) c[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
@@ -137,8 +134,6 @@ export class $Credential {
   }
 
 }
-Registry.registerD($Credential)
-
 
 export class $MDEvent {
   // Immuables
@@ -256,6 +251,10 @@ Document `Form` hébergé dans la DB spécifique de `svc / org`.
 Sous-classes applicatives $Form_type par "type"
 */
 export class $Form extends $Document {
+  descriptor() { 
+    return this.constructor['docDescriptor']
+  }
+
   /* Par commodité svc et org sont ajoutés au $Form lu (par Get ou List)
   du service. */
   svc?: string
@@ -335,7 +334,7 @@ export class $Form extends $Document {
     'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
 
   static new (obj) : $Form {
-    const f = Registry.newD('$Form', obj)
+    const f = Registry.newF(obj.svc, 'Form', obj)
     for (const p of $Form.lp1) f[p] = obj[p]
     if (!f.opts) f.opts = {}
     if (!f.opts.credTemplates) f.opts.credTemplates = {}
@@ -356,7 +355,7 @@ export class $Form extends $Document {
 
   getCh () { return Crypt.rnd(9) }
 
-  get ft () : FormType { return FormType.formTypes.get(this.type) || FormType.formTypes.get('default')}
+  get ft () : FormType { return FormType.get(this.svc, this.type) }
 
   async aesU () : Promise<Uint8Array> {
     if (!this._aesU) {
@@ -445,7 +444,7 @@ export class $Form extends $Document {
     const docCls: Set<string> = new Set()
     for (const x of filter)
       docCls.add(x.substring(0, x.indexOf('/')))
-    for(const [t, e] of FormType.formTypes) {
+    for(const [t, e] of FormType.all) {
       for(const c of e.creds) {
         const cl = c.substring(0, c.indexOf('/'))
         if (docCls.has(cl)) ft.add(t)
@@ -623,4 +622,4 @@ export class $Form extends $Document {
   }
 
 }
-Registry.registerD($Form)
+// Registry.registerD($Form)

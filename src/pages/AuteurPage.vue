@@ -59,7 +59,7 @@ import { ref, Ref, computed, onMounted, reactive, watch } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
-import { Auteur } from '../app/documents'
+import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
@@ -82,7 +82,7 @@ onMounted(async () => { await init()})
 
 const select = async (c: $Credential) => {
   cred.value = c
-  aut.value = await Auteur.get(null, c.docPk)
+  aut.value = await AS2$Auteur.get(null, c.docPk)
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {

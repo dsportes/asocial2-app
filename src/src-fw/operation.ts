@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { $t } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
-import { DocType } from '../src-fw/doctypes'
+import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
@@ -17,7 +17,7 @@ export class DocEnums {
 
   static async get (svc: string, org: string, docCl: string) : Promise<string[]> {
     const k = svc + '/' + org + '/' + docCl
-    const dd = DocType.get(docCl)
+    const dd = DocDescriptor.get(svc + '$' + docCl)
     if (dd.enum) return dd.enum
     if (!dd.extenum) return []
     let lst = DocEnums.m.get(k)

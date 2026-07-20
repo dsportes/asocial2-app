@@ -1,7 +1,7 @@
-import { Registry } from '../src-fw/registry'
-import { $Credential } from '../src-fw/documents'
-import stores from '../stores/all'
-import { $t, dhcool } from '../src-fw/util'
+import { Registry } from '../src/src-fw/registry'
+import { $Credential } from '../src/src-fw/documents'
+import stores from '../src/stores/all'
+import { $t, dhcool } from '../src/src-fw/util'
 
 /*
   async dispPower () { 
@@ -26,7 +26,7 @@ class $Credential_CoDir extends $Credential {
     await ui.diagDisplay($t('CRRaboutme', this.props.name))
   }
 }
-Registry.registerD($Credential_CoDir)
+// Registry.registerD($Credential_CoDir)
 
 class $Credential_Redaction extends $Credential {
   constructor (obj?: Object) {
@@ -39,7 +39,7 @@ class $Credential_Redaction extends $Credential {
     await ui.diagDisplay($t('CRRaboutme', this.props.name))
   }
 }
-Registry.registerD($Credential_Redaction)
+// Registry.registerD($Credential_Redaction)
 
 // TODO ???????????????
 class $Credential_Section extends $Credential {
@@ -47,14 +47,14 @@ class $Credential_Section extends $Credential {
     super(obj)
   }
 }
-Registry.registerD($Credential_Section) 
+// Registry.registerD($Credential_Section) 
 
 class $Credential_Auteur extends $Credential {
   constructor (obj?: Object) {
     super(obj)
   }
 }
-Registry.registerD($Credential_Auteur)
+// Registry.registerD($Credential_Auteur)
 
 export const regCredentials = () => {
   console.log('Credentials registered')

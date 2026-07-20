@@ -2,19 +2,21 @@ import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
-import { Auteur } from '../app/documents'
-import { DocType } from '../src-fw/doctypes'
+import { AS2$Auteur } from './documents'
 
 /*
-new FormType('membrecodir', 'k1', ['A'])
-new FormType('membreredaction', 'k1', ['A'])
-new FormType('auteur', 'k2', ['Redaction/1'])
+new FormType(svc, 'membrecodir', 'k1', ['A'])
+new FormType(svc, 'membreredaction', 'k1', ['A'])
+new FormType(svc, 'auteur', 'k2', ['Redaction/1'])
 // Un Auteur peut aussi nommer un co-auteur
-new FormType('coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
+new FormType(svc, 'coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
 */
 
-class $Form_membrecomite extends $Form {
+const n = Registry.classes.size
+
+class AS2$Form_membrecomite extends $Form {
   docCl: string
+
   constructor (docCl: string) { super(); this.docCl = docCl }
 
   /* Méthodes surchargées par type *******************************/
@@ -41,19 +43,19 @@ class $Form_membrecomite extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-Registry.registerD($Form_membrecomite)
+Registry.register(AS2$Form_membrecomite)
 
-class $Form_membrecodir extends $Form_membrecomite {
+class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }
 }
-Registry.registerD($Form_membrecodir)
+Registry.register(AS2$Form_membrecodir)
 
-class $Form_membreredaction extends $Form_membrecomite {
+class AS2$Form_membreredaction extends AS2$Form_membrecomite {
   constructor () { super('Redaction') }
 }
-Registry.registerD($Form_membreredaction)
+Registry.register(AS2$Form_membreredaction)
 
-class $Form_auteur extends $Form {
+class AS2$Form_auteur extends $Form {
   constructor () { super() }
 
   cloneEtc (byU: boolean) : Object | null {
@@ -70,7 +72,7 @@ class $Form_auteur extends $Form {
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
     if (!na) return $t('FORMdiag_nomAuteur2')
-    const autid = await Auteur.autidParNom(this.soa, na)
+    const autid = await AS2$Auteur.autidParNom(this.soa, na)
     if (autid) return $t('FORMdiag_nomDupl')
     return ''
   }
@@ -86,10 +88,10 @@ class $Form_auteur extends $Form {
   }
 
 }
-Registry.registerD($Form_auteur)
+Registry.register(AS2$Form_auteur)
 
 
-class $Form_coauteur extends $Form {
+class AS2$Form_coauteur extends $Form {
   autid: string = ''
 
   constructor () { super() }
@@ -108,14 +110,14 @@ class $Form_coauteur extends $Form {
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
     if (!na) return $t('FORMdiag_nomAuteur2')
-    this.autid = await Auteur.autidParNom(this.soa, na)
+    this.autid = await AS2$Auteur.autidParNom(this.soa, na)
     if (!this.autid) return $t('FORMdiag_nomInexistant')
     return ''
   }
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
     const src = { autid: this.autid }
-    this.opts.$1 = DocType.getPk('Auteur', src)
+    this.opts.$1 = Registry.getPk(this.svc, 'Auteur', src)
     if (!byU || !this.autid) return
     const na = etc['nomAuteur']
     const trigramme = etc['trigramme']
@@ -124,8 +126,8 @@ class $Form_coauteur extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-Registry.registerD($Form_coauteur)
+Registry.register(AS2$Form_coauteur)
 
-export const regForms = () => {
-  console.log('Forms registered')
+export const AS2formsLoading = () => {
+  console.log('Form classes loaded: ' + (Registry.classes.size - n))
 }

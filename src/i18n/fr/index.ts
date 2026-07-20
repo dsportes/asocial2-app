@@ -1032,6 +1032,16 @@ bla bla
 
   EX99_interrupted: 'Interrompu par l\'utilisateur',
 
+  EX3_not_configured_service: 'Service non configuré ou inconnu: [{0}].',
+  EX3_document_name_syntax: 'Nom de classe de document mal formé: [{0}].',
+  EX3_document_name_duplicated: 'Nom de classe de document dupliquée: [{0}].',
+  EX3_property_name_syntax: 'Nom de propriété de pk mal formé: [{0}].',
+  EX3_property_name_duplicated: 'Nom de propriété dupliquée: [{0}].',
+
+  EX3_invalid_class_name: 'Nom de classe de document pas sous la forme SVC$DocCl_subClassnon configurée: [{0}].',
+  EX3_not_configured_doc_class: 'Classe de document non configurée: [{0}].',
+
+
   EX3_IDB_keyK_not_declared: 'IDB_keyK_not_declared',
   EX3_svc_org_$OP_not_found: 'svc_org_$OP_not_found',
   EX3_svcopurl_not_found: 'svcopurl_not_found. Service: [{0}] - StatusText: [{1}]',
@@ -1075,8 +1085,10 @@ bla bla
   EX103_missing_credential: 'Credential recherché et non transmis à l\'opération. Organisation: [{0}] - Role: [{1}] - DocId: [{2}]',
   EX103_no_cred_owner: 'Tentative de révocation d\'un credential dont l\'utilisateur n\'est propriétaire. Role: [{1}] - DocId: [{2}]',
   EX103_missing_p1_and_p2: 'Tentative de remplacement des phrases secrètes sans les fournir.',
+
+  EX103_invalid_class_name: 'Nom de classe de document pas sous la forme SVC$DocCl_subClassnon configurée: [{0}].',
+  EX103_not_configured_service: 'Service non configurée: [{0}].',
   EX103_not_configured_doc_class: 'Classe de document non configurée: [{0}].',
-  EX103_unregistered_doc_class: 'Classe de document non enregistrée: [{0}].',
 
   EX105_Subscription_unknown_session: 'SessionId: [{0}]',
   EX105_masterdir_unexpected_exception: 'Opération Master Directory en échec inattendu. Détail: [{0}]',

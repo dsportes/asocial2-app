@@ -1,47 +1,110 @@
 // @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-
-import { DocType } from '../src-fw/doctypes'
+import { decode } from '@msgpack/msgpack'
+import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AppExc } from '../src-fw/log'
 
+export type SOA = {
+  svc: string
+  org: string
+  admin? : boolean
+}
+
 export class Registry {
-  static regDoc = new Map()
-  static sizeD () { return Registry.regDoc.size }
+  static classes : Map<string, Function> = new Map()
+  static managers : Set<string> = new Set()
 
-  static registerD (cl: Function) { Registry.regDoc.set(cl.name, cl) }
+  static register (clazz: Function) { 
+    let i = clazz.name.indexOf('_')
+    const topcl = i === -1 ? clazz.name : clazz.name.substring(0, i)
+    // const subCl = i === -1 ? '' : clazz.name.substring(i + 1)
+    i = clazz.name.indexOf('$')
+    const svc = topcl.substring(0, i)
+    const docCl = topcl.substring(i + 1)
+    if (!svc || !docCl)
+      throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
+    let dd = DocDescriptor.get(topcl)
+    if (!dd) 
+      throw new AppExc(103, 'not_configured_doc_class', null, [clazz.name])
+    clazz['docDescriptor'] = dd
+    if (clazz['manager']) Registry.managers.add(clazz.name)
+    this.classes.set(clazz.name, clazz)
+  }
 
-  static getD (name: string, data: Object) { 
-    const dt = DocType.get(name)
-    const cl = dt.subClassBy
-      ? Registry.regDoc.get(name + '_' + data[dt.subClassBy]) || Registry.regDoc.get(name)
-      : Registry.regDoc.get(name) 
-    if (!cl) throw new AppExc(103, 'unregistered_doc_class', null, [name])
+  static getCl (svc: string, docCl: string) : Function {
+    const k = svc + '$' + docCl
+    const cl = Registry.classes.get(k)
+    if (!cl) 
+      throw new AppExc(103, 'not_configured_doc_class', null, [k])
     return cl
   }
 
-  static newD (name: string, data: Object) {
-    const cl = Registry.getD(name, data)
-    return new cl()
+  static getDescr (svc: string, docCl: string) : DocDescriptor {
+    const k = svc + '$' + docCl
+    const cl = Registry.classes.get(k)
+    if (!cl) 
+      throw new AppExc(103, 'not_configured_doc_class', null, [k])
+    return cl['docDescriptor']
   }
 
-  static async compile (clazz: string, data: Uint8Array) : Promise<$Document | null>{
-    const dt = DocType.get(clazz)
+  static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
+    let i = docCl.indexOf('_')
+    const topcl = svc + '$' + (i === -1 ? docCl : docCl.substring(0, i))
+    const dd = DocDescriptor.get(topcl)
+    if (!dd) 
+      throw new AppExc(103, 'not_configured_doc_class', null, [topcl])
+    const sc = dd.subClassBy
+    const cln = topcl + (sc ? '_' + data[sc] : '')
+    const cl = Registry.classes.get(cln)
+    if (!cl) 
+      throw new AppExc(103, 'not_configured_doc_class', null, [cln])
+    return cl
+  }
+
+  static getPk (svc: string, docCl: string, data: Object, nohash?: boolean) : string {
+    const cl = Registry.getClass(svc, docCl, data)
+    return cl['docDescriptor'].pkValue(data, nohash)
+  }
+
+  static newD (svc: string, docCl: string, data: Object ) : $Document {
+    const cl = Registry.getClass(svc, docCl, data)
+    // @ts-expect-error
+    return new cl() as $Document
+  }
+
+  static newF (svc: string, docCl: string, data: Object ) {
+    const cl = Registry.getClass(svc, docCl, data)
+    // @ts-expect-error
+    return new cl(data)
+  }
+
+  static newC (svc: string, docCl: string, data: Object ) {
+    const cl = Registry.getClass(svc, docCl, data)
+    // @ts-expect-error
+    return new cl(data)
+  }
+
+  static async compile (svc: string, docCl: string, data: Uint8Array) : Promise<$Document | null>{
     const d = data ? decode(data) : {}
-    const doc = Registry.newD(clazz, d)
+    const doc = Registry.newD(svc, docCl, d)
     if (!doc) return null
-    doc._clazz = clazz
-    doc._dt = dt || null
+    doc._clazz = docCl
     for(const f in d) doc[f] = d[f]
-    doc._pk = d._pk || (doc._dt ? doc._dt.pkValue(doc) : '')
+    const dd = doc.descriptor()
+    doc._pk = d._pk || doc.descriptor().pkValue(doc)
     await doc.compile()
     return doc
   }
+
 }
 
 export class $Document {
 
+  descriptor() { 
+    return this.constructor['docDescriptor']
+  }
+
   _clazz: string = ''
-  _dt: DocType | null = null
+  // _dt: DocType | null = null
   _pk: string = ''
   deleted?: boolean = false
   v: number = 0

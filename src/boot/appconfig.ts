@@ -2,18 +2,24 @@
 import { defineBoot } from '#q-app/wrappers'
 
 import stores from '../stores/all'
-
-import { docTypeErrors, docTypeNb } from '../app/docschema'
 import { setHelp } from '../app/apphelp'
+import { AS2docLoading } from '../as2/documents'
+import { AS2formsLoading } from '../as2/forms'
+
+// import { Registry } from '../src-fw/registry'
 
 export default defineBoot(async ({ app }) => {
   stores.config.initK()
 
-  if (docTypeErrors.length) {
-    console.error(docTypeErrors.join('\n'))
-    if (alert) window.alert('appconfig: ' + docTypeErrors.length + ' compile schema errors')
-  } else
-    console.log(docTypeNb + ' document classes found')
-  
+  AS2docLoading()
+  AS2formsLoading()
+
+  /* Test
+  const cl = Registry.getClass('AS2', 'Credential', { docCl: 'Auteur' })
+  const cred = Registry.newC('AS2', 'Credential', { docCl: 'Auteur' })
+  console.log(cred.descriptor().subClassBy)
+  const pk = Registry.getPk('AS2', 'Credential', { docCl: 'Auteur', credId: 'toto'})
+  */
+
   setHelp()
 })

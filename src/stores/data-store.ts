@@ -491,13 +491,13 @@ export const useDataStore = defineStore('data', () => {
     const binDocs: Map<string, Uint8Array> = new Map<string, Uint8Array>()
     const delPks: string[] = []
     if (Array.isArray(x)) for (const data of x) {
-      const doc = await Registry.compile(clazz, data) as $Document
+      const doc = await Registry.compile('AS2', clazz, data) as $Document
       if (!doc) continue // impensable
       const docInfo: docInfo | null = setDoc(org, doc)
       if (docInfo) binDocs.set(doc._pk, data) // document utile et existant
       else delPks.push(doc._pk)
     } else {
-      const doc = await Registry.compile(clazz, x)
+      const doc = await Registry.compile('AS2', clazz, x)
       if (doc) { // null impensable
         const docInfo: docInfo | null = setDoc(org, doc)
         if (docInfo) binDocs.set(doc._pk, x) // document utile et existant

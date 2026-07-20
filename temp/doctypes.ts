@@ -1,5 +1,5 @@
-import { Crypt } from '../src-fw/crypt'
-import { AppExc } from '../src-fw/log'
+import { Crypt } from '../src/src-fw/crypt'
+import { AppExc } from '../src/src-fw/log'
 
 // Liste ordonnnée de noms de propriétés identifiantes
 export type props = string[]
@@ -196,8 +196,8 @@ export class DocType {
 
   constructor (
     h: docHeader,
-    colls: Map<string, collection>,
-    indexes: Map<string, idx>) {
+    colls: Map<string, collection> | null,
+    indexes: Map<string, idx> | null) {
 
     this.n = DocType.ndt++
     this.err = ''

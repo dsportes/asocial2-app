@@ -1,17 +1,17 @@
 
-import { Registry, $Document } from '../src-fw/registry'
-import { regForms } from '../app/forms'
-import { regCredentials } from '../app/credentials'
-import { Operation } from '../src-fw/operation'
-import { SOA, $Credential } from '../src-fw/documents'
-import { DocType } from '../src-fw/doctypes'
-import stores from '../stores/all'
+import { Registry, $Document } from '../src/src-fw/registry'
+import { regForms } from '../src/as2/forms'
+import { regCredentials } from './credentials'
+import { Operation } from '../src/src-fw/operation'
+import { SOA, $Credential } from '../src/src-fw/documents'
+import { DocType } from './doctypes'
+import stores from '../src/stores/all'
 // import { $t, dhcool } from '../src-fw/util'
 
 class Article extends $Document {
   async compile () {}
 }
-Registry.registerD(Article)
+// Registry.registerD(Article)
 
 export class Auteur extends $Document {
   // Donne le autid de svc/org/nom
@@ -54,18 +54,9 @@ export class Auteur extends $Document {
   }
 
 }
-Registry.registerD(Auteur)
+Registry.register(Auteur)
 
-class Chat extends $Document {
-  async compile () {}
-}
-Registry.registerD(Chat)
-
-class Sujet extends $Document {
-  async compile () {}
-}
-Registry.registerD(Sujet)
 
 regForms()
 regCredentials()
-export const nbdoc = Registry.regDoc.size
+export const nbdoc = 0 // Registry.regDoc.size

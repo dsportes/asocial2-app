@@ -31,7 +31,7 @@
 <script setup lang="ts">
 // @ts-ignore
 import { Ref, ref } from 'vue'
-import { FormType } from '../src-fw/doctypes'
+import { FormType } from '../src-fw/docDescriptor'
 import { $t } from '../src-fw/util'
 
 type LabVal = {
@@ -59,8 +59,8 @@ new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
 */
 
 const init = () => {
-  for(const [type, ft] of FormType.formTypes) {
-    if (!props.allow || props.allow.has(type)) {
+  for(const [type, ft] of FormType.all) {
+    if (!props.allow || props.allow.has(type)) { // TODO
       let e = ftmap.value.get(ft.categ)
       if (!e) { e = new Map<string, FormType>(); ftmap.value.set(ft.categ, e)}
       e.set(type, ft)

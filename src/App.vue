@@ -91,13 +91,14 @@
 // import P2 from './tests/P2.vue'
 
 // @ts-ignore
-import { watch, watchEffect, onMounted } from 'vue'
+import { watchEffect, onMounted } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
+
 import { set$t, sty } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
 
@@ -129,15 +130,12 @@ import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
-import { nbdoc } from '../src/app/documents'
-
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
 const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
 
 const config = stores.config
 const session = stores.session
-
 const ui = stores.ui
 const sf = stores.safe
 
@@ -147,8 +145,6 @@ const $q = useQuasar()
 set$t($t, i18n)
 ui.set$t$q($t, $q)
 
-console.log(nbdoc + ' documents') // Pour forcer le chargement des documents dans Registry
-
 onMounted(async () => { // Sur onMounted parce que async
   await session.setRegistration(keyFromB64(fromUrl(config.K.vapidPublicKey)), config.location, config.K.APPNAME)
 })
@@ -157,12 +153,6 @@ ui.setScreenWH($q.screen.width, $q.screen.height)
 watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
-
-/* Pour test
-watch(() => session.currentOrgSvc, (v) => {
-  console.log('Currrent svc / org', v.svc, v.org)
-})
-*/
 
 </script>
 

@@ -17,7 +17,6 @@ import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
 import { $Credential } from '../src-fw/documents'
-import { DocType } from '../src-fw/doctypes'
 
 /*
 ### Safes stockés dans un directory
@@ -967,10 +966,8 @@ export const useSafeStore = defineStore('safe', () => {
   /* Credential de type "manager" *****************************************/
   const managerCreds = () : Map<string, $Credential> => {
     const m = new Map()
-    for (const [, c] of mySafeCreds.value) {
-      const dt = DocType.get(c.docCl)
-      if (dt && dt.manager) m.set(c.credId, c)
-    }
+    for (const [, c] of mySafeCreds.value)
+      if (Registry.managers.has(c.svc + '$' + c.docCl)) m.set(c.credId, c)
     return m
   }
 
@@ -981,10 +978,8 @@ export const useSafeStore = defineStore('safe', () => {
   const isManager = (svc: string, org: string) : Set<string> => {
     const s: Set<string> = new Set()
      for (const [,c] of mySafeCreds.value)
-      if (c.org === org && c.svc === svc) {
-        const dt = DocType.get(c.docCl)
-        if (dt && dt.manager) s.add(c.docCl)
-      }
+      if (c.org === org && c.svc === svc)
+        if (Registry.managers.has(c.svc + '$' + c.docCl)) s.add(c.svc + '$' + c.docCl)
     return s
   }
 

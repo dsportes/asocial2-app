@@ -59,7 +59,7 @@ import { ref, Ref, reactive, computed, watchEffect } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-import { FormType } from '../src-fw/doctypes'
+import { FormType } from '../src-fw/docDescriptor'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import SettingsButton from '../components-fw/SettingsButton.vue'
