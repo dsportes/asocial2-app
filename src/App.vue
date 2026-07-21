@@ -130,6 +130,15 @@ import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
+// import { Registry } from '../src-fw/registry' // pour test
+
+/* Test
+const cl = Registry.getClass('AS2', 'Credential', { docCl: 'Auteur' })
+const cred = Registry.newC('AS2', 'Credential', { docCl: 'Auteur' })
+console.log(cred.descriptor().subClassBy)
+const pk = Registry.getPk('AS2', 'Credential', { docCl: 'Auteur', credId: 'toto'})
+*/
+
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()
 const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])

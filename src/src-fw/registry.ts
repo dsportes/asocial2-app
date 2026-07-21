@@ -39,7 +39,8 @@ export class Registry {
   }
 
   static getDescr (svc: string, docCl: string) : DocDescriptor {
-    const k = svc + '$' + docCl
+    const pfx = docCl.indexOf('$') === -1 ? svc + '$' : ''
+    const k = pfx + docCl
     const cl = Registry.classes.get(k)
     if (!cl) 
       throw new AppExc(103, 'not_configured_doc_class', null, [k])
@@ -47,8 +48,9 @@ export class Registry {
   }
 
   static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
+    const pfx = docCl.indexOf('$') === -1 ? svc + '$' : ''
     let i = docCl.indexOf('_')
-    const topcl = svc + '$' + (i === -1 ? docCl : docCl.substring(0, i))
+    const topcl = pfx + (i === -1 ? docCl : docCl.substring(0, i))
     const dd = DocDescriptor.get(topcl)
     if (!dd) 
       throw new AppExc(103, 'not_configured_doc_class', null, [topcl])

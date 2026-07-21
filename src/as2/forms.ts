@@ -1,8 +1,13 @@
+import { schemaExc } from '../as2/schema'
+
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { AS2$Auteur } from './documents'
+
+const ok = !schemaExc()
+let n = 0
 
 /*
 new FormType(svc, 'membrecodir', 'k1', ['A'])
@@ -11,8 +16,6 @@ new FormType(svc, 'auteur', 'k2', ['Redaction/1'])
 // Un Auteur peut aussi nommer un co-auteur
 new FormType(svc, 'coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
 */
-
-const n = Registry.classes.size
 
 class AS2$Form_membrecomite extends $Form {
   docCl: string
@@ -43,17 +46,17 @@ class AS2$Form_membrecomite extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-Registry.register(AS2$Form_membrecomite)
+if (ok) { n++; Registry.register(AS2$Form_membrecomite) }
 
 class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }
 }
-Registry.register(AS2$Form_membrecodir)
+if (ok) { n++; Registry.register(AS2$Form_membrecodir) }
 
 class AS2$Form_membreredaction extends AS2$Form_membrecomite {
   constructor () { super('Redaction') }
 }
-Registry.register(AS2$Form_membreredaction)
+if (ok) { n++; Registry.register(AS2$Form_membreredaction) }
 
 class AS2$Form_auteur extends $Form {
   constructor () { super() }
@@ -88,7 +91,7 @@ class AS2$Form_auteur extends $Form {
   }
 
 }
-Registry.register(AS2$Form_auteur)
+if (ok) { n++; Registry.register(AS2$Form_auteur) }
 
 
 class AS2$Form_coauteur extends $Form {
@@ -126,8 +129,6 @@ class AS2$Form_coauteur extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-Registry.register(AS2$Form_coauteur)
+if (ok) { n++; Registry.register(AS2$Form_coauteur) }
 
-export const AS2formsLoading = () => {
-  console.log('Form classes loaded: ' + (Registry.classes.size - n))
-}
+export const AS2nbForms = () : number => n

@@ -1,65 +1,11 @@
+import { schemaExc } from '../as2/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
-import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
-import { $t } from '../src-fw/util'
-import { $Credential } from '../src-fw/documents'
 import { Operation } from '../src-fw/operation'
 
-export const AS2docLoading = () => {
-  console.log('Document classes loaded: ' + Registry.classes.size)
-}
+const ok = !schemaExc()
 
-try {
-  const svc = 'AS2'
-
-  new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
-  new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
-  new DocDescriptor(svc, { name: 'Section', enum: ['roman', 'histoire', 'sf'] })
-  new DocDescriptor(svc, { name: 'Auteur', pk: ['autId'] })
-
-  new FormType(svc, 'membrecodir', 'ad', 'k1', ['A'])
-  new FormType(svc, 'membreredaction', 'ad', 'k1', ['A'])
-  new FormType(svc, 'auteur', 'auteurs', 'k2', ['Redaction/1'])
-  // Un Auteur peut aussi nommer un co-auteur
-  new FormType(svc, 'coauteur', 'auteurs', 'k2', ['Redaction/1', 'Auteur/$1'])
-
-  console.log('AS2 document descriptors:' + DocDescriptor.size() + ' forms descriptors:' + FormType.size())
-} catch (e) {
-  window.alert(e.toString())
-}
-
-/* Credentials **************************************************************************/
-class AS2$Credential_CoDir extends $Credential {
-  constructor (obj?: Object) { super(obj) }
-
-  get hasDispProps () { return true }
-
-  async dispAboutme () { 
-    const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', this.props.name))
-  }
-}
-Registry.register(AS2$Credential_CoDir)
-
-class AS2$Credential_Redaction extends $Credential {
-  constructor (obj?: Object) { super(obj) }
-
-  get hasDispProps () { return true }
-
-  async dispAboutme () { 
-    const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', this.props.name))
-  }
-}
-Registry.register(AS2$Credential_Redaction)
-
-export class AS2$Credential_Auteur extends $Credential {
-  constructor (obj?: Object) { super(obj) }
-
-}
-Registry.register(AS2$Credential_Auteur)
-
-/* Documents **************************************************************************/
+let n = 0
 
 export class AS2$Auteur extends $Document {
   // Donne le autid de svc/org/nom
@@ -102,4 +48,6 @@ export class AS2$Auteur extends $Document {
   }
 
 }
-Registry.register(AS2$Auteur)
+if (ok) { n++; Registry.register(AS2$Auteur)}
+
+export const AS2nbDocs = () : number => n
