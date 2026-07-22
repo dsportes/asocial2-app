@@ -1,52 +1,11 @@
-// @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { Operation } from '../src-fw/operation'
 
-import { MDOperation, Operation } from './operation'
-import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { $Credential, $Cred } from '../src-fw/documents'
 
-export class Bug extends Operation {
-  constructor (SVC: string, org: string) { super('Bug', SVC, org) }
-
-  async run () : Promise<void> {
-    try {
-      const res = await this.post(true)
-      return res
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-export class ErrorTest extends Operation {
-  constructor (SVC: string, org: string) { super('ErrorTest', SVC, org) }
-
-  async run () : Promise<void> {
-    try {
-      await this.post()
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-export class  SvcOpIsAdmin extends Operation {
-  constructor (SVC: string, $OP: string) { super('SvcOpIsAdmin', SVC, '', $OP) }
-
-  async run () {
-    try {
-      const res = await this.post()
-      return res['isadmin']
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
-  }
-}
+/* Operations d'administration *************************************************/
 
 export class  GetStatus$ extends Operation {
   constructor (SVC: string, $OP: string) { super('GetStatus$', SVC, '', $OP) }
@@ -71,6 +30,33 @@ export class SetStatus$ extends Operation {
       this.args.txt = txt || ''
       const res = await this.post()
       return res['status']
+    } catch(e) {
+      await this.ko(e)
+    }
+  }
+}
+
+/* Operations standard *********************************************************/
+
+export class Bug extends Operation {
+  constructor (SVC: string, org: string) { super('Bug', SVC, org) }
+
+  async run () : Promise<void> {
+    try {
+      const res = await this.post(true)
+      return res
+    } catch(e) {
+      await this.ko(e)
+    }
+  }
+}
+
+export class ErrorTest extends Operation {
+  constructor (SVC: string, org: string) { super('ErrorTest', SVC, org) }
+
+  async run () : Promise<void> {
+    try {
+      await this.post()
     } catch(e) {
       await this.ko(e)
     }

@@ -9,6 +9,12 @@ export type SOA = {
   admin? : boolean
 }
 
+const topCl = (svc: string, docCl: string) : string => {
+  const i = docCl.indexOf('_')
+  const d = i === -1 ? docCl : docCl.substring(0, i)
+  return d.indexOf('$') === -1 ? svc + '$' + d : d
+}
+
 export class Registry {
   static classes : Map<string, Function> = new Map()
   static managers : Set<string> = new Set()
@@ -30,55 +36,53 @@ export class Registry {
     this.classes.set(clazz.name, clazz)
   }
 
+  // Retourne le constructor de la classe MAJEURE (sans sous classe)
   static getCl (svc: string, docCl: string) : Function {
-    const k = svc + '$' + docCl
-    const cl = Registry.classes.get(k)
+    const cl = Registry.classes.get(topCl(svc, docCl))
     if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [k])
+      throw new AppExc(103, 'not_configured_doc_class', null, [topCl(svc, docCl)])
     return cl
   }
 
+  // Retourne le DocDescriptor de la classe MAJEURE (sans sous classe)
   static getDescr (svc: string, docCl: string) : DocDescriptor {
-    const pfx = docCl.indexOf('$') === -1 ? svc + '$' : ''
-    const k = pfx + docCl
-    const cl = Registry.classes.get(k)
-    if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [k])
+    const cl = Registry.getCl(svc, docCl)
     return cl['docDescriptor']
   }
 
+  // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
   static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
-    const pfx = docCl.indexOf('$') === -1 ? svc + '$' : ''
-    let i = docCl.indexOf('_')
-    const topcl = pfx + (i === -1 ? docCl : docCl.substring(0, i))
-    const dd = DocDescriptor.get(topcl)
-    if (!dd) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [topcl])
-    const sc = dd.subClassBy
-    const cln = topcl + (sc ? '_' + data[sc] : '')
+    const subClassBy = Registry.getDescr(svc, docCl).subClassBy
+    const cln = topCl(svc, docCl) + (subClassBy ? '_' + data[subClassBy] : '')
     const cl = Registry.classes.get(cln)
     if (!cl) 
       throw new AppExc(103, 'not_configured_doc_class', null, [cln])
     return cl
   }
 
+  // Retourne la pk de la SOUS-CLASSE de docCl selon la valeur de son data
   static getPk (svc: string, docCl: string, data: Object, nohash?: boolean) : string {
     const cl = Registry.getClass(svc, docCl, data)
     return cl['docDescriptor'].pkValue(data, nohash)
   }
 
+  // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
   static newD (svc: string, docCl: string, data: Object ) : $Document {
     const cl = Registry.getClass(svc, docCl, data)
     // @ts-expect-error
-    return new cl() as $Document
+    const d = new cl() as $Document
+    d._docDescriptor = cl['docDescriptor']
+    return d
   }
 
+  // Construit un Form
   static newF (svc: string, docCl: string, data: Object ) {
     const cl = Registry.getClass(svc, docCl, data)
     // @ts-expect-error
     return new cl(data)
   }
 
+  // Construit un Credential
   static newC (svc: string, docCl: string, data: Object ) {
     const cl = Registry.getClass(svc, docCl, data)
     // @ts-expect-error
@@ -106,7 +110,7 @@ export class $Document {
   }
 
   _clazz: string = ''
-  // _dt: DocType | null = null
+  _docDescriptor: DocDescriptor
   _pk: string = ''
   deleted?: boolean = false
   v: number = 0

@@ -220,7 +220,7 @@ export default {
   op_GrantSvcOpOrg: 'Autoiser le service d\'une organisation par un opérateur',
   op_RevokeSvcOpOrg: 'Révoquer le service d\'une organisation par un opérateur',
   op_SetAdmins: 'Déclarer les service / opérateur dont l\'utilisateur est Administrateur',
-  op_SvcOpIsAdmin$: 'Test si l\'utilisateur est Administrateur',
+  op_ADMIN$isAdmin: 'Test si l\'utilisateur est Administrateur',
   op_$SetAdmins: 'Enregistre la liste des service/opérateur dont l\'utilisateur est Administrateur.',
   op_GetOrgConfig: 'Récupération de la configuration d\'une organisation',
   op_SetOrgConfig: 'Enregistrement de la configuration d\'une organisation',

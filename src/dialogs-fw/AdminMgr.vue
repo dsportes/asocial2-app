@@ -32,7 +32,7 @@
 import { ref, Ref, computed, reactive, watch } from 'vue'
 
 import { $t, dkli } from '../src-fw/util'
-import { Operation } from '../src-fw/operation'
+import { AOperation, isAdmin } from '../src-fw/operation'
 import stores from '../stores/all'
 
 import ServiceOp from '../components-fw/ServiceOp.vue'
@@ -79,24 +79,17 @@ resetAdm()
 const addElt = async () => {
   const k = svcop.SVC + '.' + svcop.$OP
   if (lstAdmins.value.get(k)) return
-  const op = new Operation('SvcOpIsAdmin$', svcop.SVC, '', svcop.$OP)
-  try {
-    /* const u = */ await op.getBaseUrl()
-  } catch(e) {
+  const u = await AOperation.urlOfSvcOp(svcop.SVC, svcop.$OP)
+  if (!u) {
     await ui.diagDisplay($t('HPadminkosvc'))
     return
   }
-  try {
-    const ret = await op.post()
-    if (!ret.isadmin) {
-      ui.diagDisplay($t('HPadminA_ko', [svcop.$OP, svcop.SVC]))
-      return
-    }
-    lstAdmins.value.set(k, { svc: svcop.SVC, op: svcop.$OP})
-    await validate()
-  } catch (e: any) {
-    op.ko(e)
+  if (!await isAdmin(svcop.SVC, svcop.$OP)) {
+    ui.diagDisplay($t('HPadminA_ko', [svcop.$OP, svcop.SVC]))
+    return
   }
+  lstAdmins.value.set(k, { svc: svcop.SVC, op: svcop.$OP})
+  await validate()
 }
 
 const delElt = async (elt) => {

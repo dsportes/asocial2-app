@@ -15,15 +15,14 @@ const encoder = new TextEncoder()
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
-  static async get (svc: string, org: string, docCl: string) : Promise<string[]> {
-    const k = svc + '/' + org + '/' + docCl
-    const dd = DocDescriptor.get(svc + '$' + docCl)
+  static async get (svc: string, org: string, enumName: string) : Promise<string[]> {
+    const k = svc + '/' + org + '/' + enumName
+    const dd = DocDescriptor.get(svc + '$' + enumName)
     if (dd.enum) return dd.enum
     if (!dd.extenum) return []
     let lst = DocEnums.m.get(k)
     if (lst) return lst
-    const op = new GetEnum(svc, org)
-    lst = await op.run(docCl)
+    lst = await getEnum(svc, org, enumName)
     this.m.set(k, lst)
     return lst
   }
@@ -37,7 +36,7 @@ export class CVKeys {
     const oper = await opOfSvcOrg(svc, org)
     let k = CVKeys.mc.get(svc + '/' + oper + '/' + name)
     if (k) return k
-    const op = new Operation('getCKey$', svc, null, oper)
+    const op = new Operation('GetCKey$', svc, null, oper)
     op.args.name = name
     const res = await op.post(true)
     const s = res['key']
@@ -51,7 +50,7 @@ export class CVKeys {
     const oper = await opOfSvcOrg(svc, org)
     let k = CVKeys.mv.get(svc + '/' + oper + '/' + name)
     if (k) return k
-    const op = new Operation('getVKey$', svc, null, oper)
+    const op = new Operation('GetVKey$', svc, null, oper)
     const res = op.post(true)
     const s = res['key']
     if (!s) return null
@@ -61,6 +60,7 @@ export class CVKeys {
   }
 }
 
+/*
 export type OpArgs = {
   org?: string
   $OP?: string
@@ -68,6 +68,7 @@ export type OpArgs = {
   APIVERSION?: string
   authRecord?: AuthRecord
 }
+*/
 
 // Retourne l'opérateur servant le service svc pour l'organisation org
 export async function opOfSvcOrg (svc: string, org: string) : Promise<string> {
@@ -82,7 +83,7 @@ export async function opOfSvcOrg (svc: string, org: string) : Promise<string> {
   return op || ''
 }
 
-class AOperation {
+export class AOperation {
   // Map - clé: SVC - valeur Map de clé $OP donnat l'URL
   static services : Map<string, Map<string, string>> = new Map()
 
@@ -119,14 +120,14 @@ class AOperation {
   controller: AbortController | null = null
   aborted: boolean = false
   background: boolean = false
-  args: OpArgs | any = {}
+  args: any = {}
 
   constructor (opName: string) {
     this.args['opName'] = opName
     this.opName = opName
   }
 
-  urlOfSvcOp = async (svc: string, op: string) : Promise<string> => {
+  static urlOfSvcOp = async (svc: string, op: string) : Promise<string> => {
     const os = AOperation.services
     if (os.size === 0) await AOperation.loadServices()
     const x = os.get(svc)
@@ -144,19 +145,34 @@ class AOperation {
 }
 
 /* Opération générique ******************************************/
-export class Operation extends AOperation {
+export class OperationG extends AOperation {
 
-  authRecord: AuthRecord
-  SVC: string
+  authRecord: AuthRecord = new AuthRecord()
+  svc: string
 
   async GetSvcOrgUrl () : Promise<string> {
     let e = AOperation.orgs.get(this.args.org)
     if (!e) e = await AOperation.loadOrg(this.args.org)
     const $OP = e ? e.get(this.SVC) : ''
-    return !$OP ? '' : await this.urlOfSvcOp(this.SVC, $OP)
+    return !$OP ? '' : await AOperation.urlOfSvcOp(this.SVC, $OP)
   }
 
-  constructor (opName: string, SVC: string, org?: string, $OP?: string, background?: boolean) {
+  constructor (opName: string, background?: boolean) {
+    super(opName)
+    this.background = background || false
+  }
+
+  constructor2 (opName: string, orgOper: string, background?: boolean) {
+    super(opName)
+    const i = opName.indexOf('$')
+    this.svc = opName.substring(0, i)
+    this.args.svc = this.svc
+    if (this.args.svc === 'ADMIN') this.args.oper = orgOper
+    else this.args.org = orgOper
+    this.background = background || false
+  }
+
+  constructor3 (opName: string, SVC: string, org?: string, $OP?: string, background?: boolean) {
     super(opName)
     if (!SVC || (!org && !$OP))
       throw new AppExc(3, 'svc_org_$OP_not_found', this.opName)
@@ -177,14 +193,14 @@ export class Operation extends AOperation {
 
   async getBaseUrl () : Promise<string> {
     if (this.args.$OP) {
-      const u = await this.urlOfSvcOp(this.SVC, this.args.$OP)
+      const u = await AOperation.urlOfSvcOp(this.SVC, this.args.$OP)
       if (u) return u
       throw new AppExc(3, 'svcopurl_not_found', this.opName, [this.SVC, this.args.$OP])
     } else {
       let e = AOperation.orgs.get(this.args.org)
       if (!e) e = await AOperation.loadOrg(this.args.org)
       const $OP = e ? e.get(this.SVC) : ''
-      const u = !$OP ? '' : await this.urlOfSvcOp(this.SVC, $OP)
+      const u = !$OP ? '' : await AOperation.urlOfSvcOp(this.SVC, $OP)
       if (u) return u
       throw new AppExc(3, 'svcorgurl_not_found', this.opName, [this.args.org, this.SVC])
     }
@@ -256,33 +272,65 @@ export class Operation extends AOperation {
 
 }
 
-export class  GetEnum extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetEnum$', SVC, '', $OP) }
+export class Operation extends OperationG {
 
-  async run (name: string) : Promise<string[]> {
-    try {
-      this.args.name = name
-      const res = await this.post(true)
-      return res['enum'] || []
-    } catch(e) {
-      await this.ko(e)
-      return []
-    }
+  constructor (opName: string, org: string, background?: boolean) {
+    super(opName, background)
+    const i = opName.indexOf('$')
+    this.svc = opName.substring(0, i)
+    if (!stores.config.K.SERVICES[this.svc])
+      throw new AppExc(3, 'not_configured_service', opName, [this.svc])
+    this.args.org = org
   }
 }
 
-export class  SetEnum extends Operation {
-  constructor (SVC: string, $OP: string) { super('SetEnum$', SVC, '', $OP) }
+export class AdminOperation extends OperationG {
 
-  async run (name: string, values: string[]) {
-    try {
-      this.args.name = name
-      this.args.values = values
-      const res = await this.post()
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
+  constructor (opName: string, svc: string, oper: string, background?: boolean) {
+    super(opName, background)
+    this.svc = svc
+    if (!stores.config.K.SERVICES[this.svc])
+      throw new AppExc(3, 'not_configured_service', opName, [this.svc])
+    this.args.oper = oper
+  }
+}
+
+export const isAdmin = async (svc: string, oper: string) : Promise<boolean> => {
+
+  const op = new AdminOperation('ADMIN$isAdmin', svc, oper)
+  try {
+    const res = await op.post()
+    return res['isadmin']
+  } catch(e) {
+    await op.ko(e)
+    return false
+  }
+}
+
+export const getEnum = async (svc: string, org: string, enumName: string) 
+  : Promise<string[]> => { 
+  const op = new Operation('$GetEnum', svc, org)
+  try {
+    op.args.enumName = enumName
+    const res = await op.post(true)
+    return res['enum'] || []
+  } catch(e) {
+    await op.ko(e)
+    return []
+  }
+}
+
+export const setEnum = async (svc: string, oper: string, enumName: string, values: string[]) 
+  : Promise<boolean> => { 
+  const op = new AdminOperation('ADMIN$GetEnum', svc, oper)
+  try {
+    op.args.enumName = enumName
+    op.args.values = values
+    const res = await op.post(true)
+    return true
+  } catch(e) {
+    await op.ko(e)
+    return false
   }
 }
 
