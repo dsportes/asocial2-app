@@ -1040,7 +1040,9 @@ bla bla
 
   EX3_invalid_class_name: 'Nom de classe de document pas sous la forme SVC$DocCl_subClassnon configurée: [{0}].',
   EX3_not_configured_doc_class: 'Classe de document non configurée: [{0}].',
-
+  EX3_unknown_org: 'Org: [{0}]',
+  EX3_unknown_url_for_site: 'Site: [{0}]',
+  EX3_unknown_service_for_org: 'Org: [{0}] - Service: [{1}]',
 
   EX3_IDB_keyK_not_declared: 'IDB_keyK_not_declared',
   EX3_svc_org_$OP_not_found: 'svc_org_$OP_not_found',
@@ -1066,6 +1068,11 @@ bla bla
 
   EX102_error_test: 'Test d\'erreur. Arg1: [{0}] - Arg1: [{1}]',
 
+  EX103_unregistered_safestore_site: 'SafeStore: [{0}] - Site: [{1}]',
+  EX103_unregistered_safestore: 'SafeStore: [{0}]',
+  EX103_unregistered_org: 'Org: [{0}]',
+  EX103_unregistered_service_for_org: 'Service: [{0}] - Org: [{1}]',
+  EX103_unregistered_svc_org_site: 'Service: [{0}] - Org: [{1}] - Site: [{2}]',
   EX103_origin_not_authorized: 'Origine: [{0}]',
   EX103_unknown_operation: 'Opération: [{0}]',
   EX103_unknown_organisation: 'Opération: [{0}] - Organisation: [{1}]',
@@ -1101,6 +1108,9 @@ bla bla
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
+  EX108_masterdir_db_error_mdSetValue: 'Détail: [{0}]',
+  EX108_masterdir_db_error_mdGetValue: 'Détail: [{0}]',
+
   EX108_masterdir_challenge_too_old: 'masterdir_challenge_too_old',
   EX108_remote_md_safes_access_400: 'MasterDirectory ou Safe non accessible. Url:[{0}] status:[{1} texte:[{2}]',
   EX108_remote_md_safes_access_exc: 'MasterDirectory ou Safe, accès en échec. Url:[{0}] status:[{1} texte:[{2}]',
