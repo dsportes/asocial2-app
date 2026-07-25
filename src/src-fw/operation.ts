@@ -12,19 +12,65 @@ import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
 
+export async function getSite (svc: string, org: string) : Promise<string> {
+  const e = await AOperation.getOrgSvc(org)
+  return e ? e.get(svc) : undefined
+}
+
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
-  static async get (svc: string, org: string, enumName: string) : Promise<string[]> {
-    const k = svc + '/' + org + '/' + enumName
-    const dd = DocDescriptor.get(svc + '$' + enumName)
+  /* DocEnums.get retourne la liste des valeurs (string) 
+  de l'énumération enumName : svc$name OU svc$name_org
+  En l'absence du suffixe org, un nom de site est requis.
+  */
+  static async get (enumName: string, site?: string) : Promise<string[]> {
+    const dd = DocDescriptor.get(enumName)
     if (dd.enum) return dd.enum
-    if (!dd.extenum) return []
-    let lst = DocEnums.m.get(k)
-    if (lst) return lst
-    lst = await getEnum(svc, org, enumName)
-    this.m.set(k, lst)
-    return lst
+    let values = DocEnums.m.get(enumName)
+    if (values) return values
+    let s = site
+    if (!s) {
+    let i = enumName.indexOf('$')
+      const svc = enumName.substring(i + 1)
+      i = enumName.indexOf('_')
+      const org = i === -1 ? '' : enumName.substring(i + 1)
+      s = await getSite(svc, org)
+    }
+    const op = new AdminOperation('ADMIN$getEnum', s)
+    try {
+      op.args.enumName = enumName
+      const res = await op.post(true)
+      values = res['enum'] || []
+      this.m.set(enumName, values)
+      return values
+    } catch(e) {
+      await op.ko(e)
+      return []
+    }
+  }
+
+  static async set (enumName: string, values: string[], site?: string) 
+    : Promise<boolean> { 
+    let s = site
+    if (!s) {
+    let i = enumName.indexOf('$')
+      const svc = enumName.substring(i + 1)
+      i = enumName.indexOf('_')
+      const org = i === -1 ? '' : enumName.substring(i + 1)
+      s = await getSite(svc, org)
+    }
+    const op = new AdminOperation('ADMIN$GetEnum', s)
+    try {
+      op.args.enumName = enumName
+      op.args.values = values
+      await op.post(true)
+      this.m.set(enumName, values)
+      return true
+    } catch(e) {
+      await op.ko(e)
+      return false
+    }
   }
 }
 
@@ -61,31 +107,6 @@ export class CVKeys {
   }
 }
 
-/*
-export type OpArgs = {
-  org?: string
-  $OP?: string
-  SVC?: string
-  APIVERSION?: string
-  authRecord?: AuthRecord
-}
-*/
-
-/*
-// Retourne l'opérateur servant le service svc pour l'organisation org
-export async function opOfSvcOrg (svc: string, org: string) : Promise<string> {
-  const orgs = AOperation.orgs
-  let e = orgs.get(org)
-  if (!e) {
-    await AOperation.loadOrg(org)
-    e = orgs.get(org)
-    if (!e) return ''
-  }
-  const op = e.get(svc)
-  return op || ''
-}
-*/
-
 export class AOperation {
   // Map de clé site donnant son URL
   static urls : Map<string, string> = new Map()
@@ -93,17 +114,32 @@ export class AOperation {
   // Map - clé: org - valeur Map de clé svc donnant son site
   static orgs : Map<string, Map<string, string>> = new Map()
 
-  static async getSiteUrl (site: string) : Promise<string> {
-    if (AOperation.urls.size === 0) {
-      const op = new MDOperation('$GetSitesUrls')
-      try {
-        const res = await op.post()
-        for(const site in res.urls) 
-          AOperation.urls.set(site, res.urls[site])
-      } catch (e) {
-        await op.ko(e)
-      }
+  static adminSites: Map<string, boolean> = new Map()
+
+  static reset () { AOperation.adminSites.clear() }
+
+  static async loadUrls () : Promise<Map<string, string>> {
+    const m: Map<string, string> = new Map()
+    const op = new MDOperation('$GetSitesUrls')
+    try {
+      const res = await op.post()
+      for(const site in res.urls) 
+        m.set(site, res.urls[site])
+    } catch (e) {
+      await op.ko(e)
+      return new Map()
     }
+    return m
+  }
+
+  static async getSites (force?: boolean) : Promise<Map<string, string>> {
+    if (AOperation.urls.size === 0 || force) 
+      AOperation.urls = await AOperation.loadUrls()
+    return AOperation.urls
+  }
+
+  static async getSiteUrl (site: string) : Promise<string> {
+    if (AOperation.urls.size === 0) AOperation.urls = await AOperation.loadUrls()
     return AOperation.urls.get(site)
   }
 
@@ -119,11 +155,6 @@ export class AOperation {
       Operation.orgs.set(org, e)
     }
     return e
-  }
-
-  static async getSite (svc: string, org: string) : Promise<string> {
-    const e = await AOperation.getOrgSvc(org)
-    return e ? e.get(svc) : undefined
   }
 
   opName: string
@@ -252,10 +283,15 @@ export class OperationG extends AOperation {
 
 export class Operation extends OperationG {
 
-  constructor (opName: string, org: string, background?: boolean) {
+  /* Le service est donné,
+  - soit explicitement comme argument,
+  - sinon comme préfixe 'svc$op' du nom de l'opération.
+  */
+
+  constructor (opName: string, svc: string, org: string, background?: boolean) {
     super(opName, background)
     const i = opName.indexOf('$')
-    this.args.svc = opName.substring(0, i)
+    this.args.svc = svc || opName.substring(0, i)
     if (!stores.config.K.SERVICES[this.args.svc])
       throw new AppExc(3, 'not_configured_service', opName, [this.svc])
     this.args.org = org
@@ -271,37 +307,13 @@ export class AdminOperation extends OperationG {
 }
 
 export const isAdmin = async (site: string) : Promise<boolean> => {
+  if (AOperation.adminSites.has(site)) return AOperation.adminSites.get(site)
   const op = new AdminOperation('ADMIN$isAdmin', site)
   try {
     const res = await op.post()
-    return res['isadmin']
-  } catch(e) {
-    await op.ko(e)
-    return false
-  }
-}
-
-export const getEnum = async (svc: string, org: string, enumName: string) 
-  : Promise<string[]> => { 
-  const op = new Operation('$GetEnum', svc, org)
-  try {
-    op.args.enumName = enumName
-    const res = await op.post(true)
-    return res['enum'] || []
-  } catch(e) {
-    await op.ko(e)
-    return []
-  }
-}
-
-export const setEnum = async (svc: string, oper: string, enumName: string, values: string[]) 
-  : Promise<boolean> => { 
-  const op = new AdminOperation('ADMIN$GetEnum', svc, oper)
-  try {
-    op.args.enumName = enumName
-    op.args.values = values
-    const res = await op.post(true)
-    return true
+    const b = res['isadmin']
+    AOperation.adminSites.set(site, b)
+    return b
   } catch(e) {
     await op.ko(e)
     return false
@@ -311,16 +323,6 @@ export const setEnum = async (svc: string, oper: string, enumName: string, value
 abstract class A2Operation extends AOperation {
   safeStore: string = ''
 
-  urlSafeStore = async () : Promise<string> => {
-    const os = AOperation.services
-    if (os.size === 0) await AOperation.loadServices()
-    const x = os.get('SAFE')
-    const u = x?.get(this.safeStore)
-    if (!u)
-      throw new AppExc(3, 'safeStore_url_not_found', this.opName, [this.safeStore])
-    return u
-  }
-
   constructor (opName: string) {
     super(opName)
   }
@@ -329,11 +331,21 @@ abstract class A2Operation extends AOperation {
     const session = stores.session
     try {
       session.opStart(this)
-      if (!this.url)
-        this.url = await this.urlSafeStore()
-      // this.url += this.opName
+      if (!this.url) {
+        this.url = await AOperation.getSiteUrl(this.safeStore)
+        if (!this.url)
+          throw new AppExc(3, 'safeStore_url_not_found', this.opName, [this.safeStore])
+      }
       this.controller = new AbortController()
       this.aborted = false
+
+      if (this.args.params) {// signature par l'utilistaur
+        const sf = stores.safe
+        this.args.userId = sf.userId
+        this.args.time = Date.now()
+        const ch = encode([this.args.time, this.args.params])
+        this.args.sign = await Crypt.sign(keyFromB64(sf.auth.S), ch)
+      }
 
       const response = await fetch(this.url, {
         method: 'POST',
@@ -372,7 +384,7 @@ Le service Safe vérifie les authentifications par les paramètres
 comme hp0, hr0, etc.
 */
 export class SafeOperation extends A2Operation {
-  constructor (opName: string, safeStore: string) {
+  constructor (opName: string, safeStore?: string) {
     super(opName)
     if (!safeStore) this.url = stores.config.K.STDSAFE_URL
     else this.safeStore = safeStore
@@ -383,6 +395,18 @@ export class MDOperation extends A2Operation {
   constructor (opName: string) {
     super(opName)
     this.url = stores.config.K.MASTERDIR_URL
+  }
+}
+
+export const isMDAdmin = async () : Promise<boolean> => {
+  const op = new MDOperation('$IsMDAdmin')
+  try {
+    op.args.params = []
+    const res = await op.post()
+    return res['ismdadmin']
+  } catch(e) {
+    await op.ko(e)
+    return false
   }
 }
 

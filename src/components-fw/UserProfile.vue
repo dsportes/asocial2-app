@@ -5,6 +5,8 @@
     <div class="row items-center">
       <div class="titre-md text-italic q-mr-sm">{{ $t('SFTus') }}</div>
       <div class="fs-lg font-mono">{{ sf.userId }}</div>
+      <div v-if="isMdAdmin" class="bg-warning text-bold text-white q-ml-md">
+        {{ $t('SFTmdAdmin') }}</div>
     </div>
     <div class="row items-center">
       <div class="titre-md text-italic q-mr-sm">{{ $t('SFT' + (sf.userName !== '' ? 'ps' : 'nops')) }}</div>
@@ -19,10 +21,10 @@
       <div class="titre-md text-italic q-mr-sm">{{ $t('SFTa2') }}</div>
       <div class="font-mono">{{ sf.auth.actual.a2K }}</div>
     </div>
-    <div v-if="sf.auth.admins" class="row items-center">
+    <!--div v-if="sf.auth.admins" class="row items-center">
       <div class="titre-md text-italic q-mr-sm">{{ $t('SFTadmin')}}</div>
       <div class="font-mono">{{ sf.auth.admins }}</div>
-    </div>
+    </div-->
 
     <div class="q-my-sm" v-if="mgrCreds.size">
       <div class="titre-md text-italic">{{ $t('svcStatus_no4') }}</div>
@@ -47,19 +49,26 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { AutoRevokeCred } from '../src-fw/operations'
 import BtnCond from '../components-fw/BtnCond.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
+import { isMDAdmin } from 'src/src-fw/operation'
 
 const sf = stores.safe
 const ui = stores.ui
 
 const infopub = computed(() => JSON.stringify([sf.auth.C, sf.auth.V], null, '\t'))
 
+const isMdAdmin = ref(false)
+onMounted(async () => {
+  isMdAdmin.value = await isMDAdmin()
+})
+
+/*
 const admins = ref('')
 
 if (sf.userId && sf.auth.admins) {
@@ -67,6 +76,7 @@ if (sf.userId && sf.auth.admins) {
   x.replaceAll('/', ' ')
   admins.value = x
 }
+*/
 
 const mgrCreds = ref(sf.managerCreds())
 

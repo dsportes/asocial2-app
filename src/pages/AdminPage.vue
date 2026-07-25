@@ -1,6 +1,48 @@
 <template>
 <div class="column items-center q-pa-xs">
 
+  <div v-if="adp.tab === 'sites'" class="pwsm">
+    <div class="titre-md text-italic text-center">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
+    <scroll-area size="sm" class="pwsm">
+      <div v-for="([site, url], idx) of sites" :key="site" 
+        :class="'row items-center ' + dkli(idx) + (site === ui.adminPage.site ? ' current': ' nocurrent')">
+        <div class="col-1">
+          <btn-cond v-if="adp.mdAdmin" round color="warning" icon="delete" 
+            @ok="delSite(site)"/>
+        </div>
+        <div class="col-3 font-mono">{{ site }}</div>
+        <div class="col-8 font-mono">
+          <div v-if="!adp.mdAdmin" class="font-mono">{{ url }}</div>
+          <line-edit v-else size="sm" :text="url" :ctx="{site: site}"
+            @change="editSite"/>
+        </div>
+      </div>
+    </scroll-area>
+
+    <q-expansion-item v-model="newsite" v-if="adp.mdAdmin" class="q-my-sm" dense
+     icon="add" :label="$t('APnewsite')" header-class="tbs">
+     <div class="column">
+        <input-b class="q-my-sm" size="site" prefix="APsite" v-model="nsite"/>
+        <input-b class="q-my-sm" size="url" prefix="APurl" v-model="nurl"/>
+        <btn-cond icon="add" :label="$t('validate')" class="q-my-sm self-end"
+          :disable="nsite.err !== '' || nurl.err !== ''" @ok="newSite"/>
+     </div>
+    </q-expansion-item>
+  </div>
+
+  <!--
+    <div v-if="sf.auth.admins">
+      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
+        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
+      <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
+    </div>
+    <div v-else>
+      <service-op class="q-mb-md" v-model="ui.adminPage"/>
+      <q-separator color="orange" class="q-my-sm"/>
+      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
+        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
+    </div>
+
   <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
     <div v-if="sf.auth.admins">
       <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
@@ -49,6 +91,7 @@
     </div>
 
   </div>
+-->
 
   <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
     :title="$t('APlistmgr')" vh="75">
@@ -90,7 +133,7 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, Ref, computed, reactive, watch } from 'vue'
+import { ref, Ref, computed, reactive, onMounted } from 'vue'
 import stores from '../stores/all'
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
 import { $Cred } from '../src-fw/documents'
@@ -99,15 +142,64 @@ import { $t, dkli, dhcool, zp } from '../src-fw/util'
 import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
+import LineEdit from '../components-fw/LineEdit.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import { AOperation, MDOperation } from 'src/src-fw/operation'
 
 const ui = stores.ui
 const sf = stores.safe
 
-ui.adminPage.tab = 'svcstatus'
+const adp = computed(() => ui.adminPage )
+const sites: Ref<Map<string, string>> = ref(new Map())
+
+const loadSites = async (force?: boolean) => {
+  const ls = Array.from(await AOperation.getSites(force))
+  ls.sort((a,b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0))
+  sites.value = ls
+}
+
+onMounted(async () => {
+  await loadSites()
+})
+
+const newsite = ref(false)
+const nsite = reactive({ inp: '', err: ''})
+const nurl = reactive({ inp: '', err: ''})
+
+const delSite = async (site: string) => {
+  if (await setSite(site, ''))
+    adp.value.site = ''
+}
+
+const editSite = async ({site, value}: { site: string, value: string }) => {
+  if (await setSite(site, value))
+    adp.value.site = site
+}
+
+const newSite = async () => {
+  if (await setSite(nsite.inp, nurl.inp)) {
+    adp.value.site = nsite.inp
+    nsite.inp = ''; nsite.err = ''
+    nurl.inp = ''; nurl.err = ''
+    newsite.value = false
+  }
+}
+
+const setSite = async (site: string, url: string) => {
+  const op = new MDOperation('$SetSiteUrl')
+  op.args.params = [site, url]
+  try {
+    await op.post()
+    await loadSites(true)
+    return true
+  } catch (e) {
+    await op.ko(e)
+    return false
+  }
+}
 
 const dialogs = reactive({ 
   confirmrevoke: false,

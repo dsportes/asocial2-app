@@ -36,10 +36,11 @@ export const K = {
     pin: [8, 16],
     sn: [3, 40], // Nom des sessions
     about: [4, 64],
+    url: [4, 80],
     comment: [4, 80],
     pref: [4, 32],
     org: [3, 16, 'an1'],
-    oper: [3, 8, 'oper'],
+    site: [3, 8, 'an1'],
     stdb: [3, 16, 'b64'],
     file: [1, 32],
     ps: [8, 40],

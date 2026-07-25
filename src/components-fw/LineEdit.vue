@@ -39,7 +39,8 @@ const props = defineProps({
   prefix: String,
   text: String,
   disable: Boolean,
-  size: String
+  size: String,
+  ctx: Object
 })
 
 const styles = {
@@ -59,8 +60,10 @@ const undo = () => {
 }
 
 const doOk = () => {
-  if (ntext.value !== props.text)
-    emit('change', ntext.value)
+  if (ntext.value !== props.text) {
+    if (props.ctx) props.ctx.value = ntext.value
+    emit('change', props.ctx || ntext.value )
+  }
   menu.value = false
 }
 

@@ -16,11 +16,11 @@ event : 'select', svc (org est session.orgs.c)
 // @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'
-import { opOfSvcOrg } from '../src-fw/operation'
+import { getSite, isAdmin } from '../src-fw/operation'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
-import { SOA } from '../src-fw/documents'
+import { SOA } from '../src-fw/registry'
 
 const session = stores.session
 const sf = stores.safe
@@ -34,12 +34,12 @@ const diag = ref(false)
 
 const ok = async () => {
   if (session.hasNet) {
-    const op = await opOfSvcOrg(svc.value, org.value)
-    if (op) {
+    const site = await getSite(svc.value, org.value)
+    if (site) {
       const soa : SOA = {
         svc: svc.value,
         org: org.value,
-        admin: sf.auth.admins.indexOf(svc.value + '.' + op) !== -1
+        admin: await isAdmin(site)
       }
       emit('select', soa)
     }

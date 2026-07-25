@@ -5,7 +5,7 @@ import { Registry, $Document, SOA } from './registry'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
-import { MDOperation, Operation, CVKeys, opOfSvcOrg } from '../src-fw/operation'
+import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
 import { FormType } from '../src-fw/docDescriptor'
 
 const encoder = new TextEncoder()
@@ -359,7 +359,7 @@ export class $Form extends $Document {
 
   async aesU () : Promise<Uint8Array> {
     if (!this._aesU) {
-      const fk = await CVKeys.getCKey(this.svc, this.org, this.ft.key)
+      const fk = await CVKeys.getCKey(await getSite(this.svc, this.org), this.ft.key)
       const sf = stores.safe
       this._aesU = await Crypt.getAESKey(fk, keyFromB64(sf.auth.D))
     }
@@ -419,10 +419,10 @@ export class $Form extends $Document {
   */
   static async getListFilter (svc: string, org: string, asAdmin: boolean) : Promise<string[]> {
     const sf = stores.safe
-    const op = await opOfSvcOrg(svc, org)
-    if (!op) return []
+    const site = await getSite(svc, org)
+    if (!site) return []
     if (asAdmin)
-      return sf.auth.admins.indexOf(svc + '.' + op) === -1 ? [] : ['A']
+      return await isAdmin(site) ? [] : ['A']
     const fi: Set<string> = new Set()
     for(const [,c] of sf.mySafeCreds) {
       if (c.svc !== svc || c.org !== org) continue

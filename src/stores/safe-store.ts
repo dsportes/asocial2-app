@@ -12,7 +12,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import stores from './all'
 import { $t, sleep, quarter } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
-import { SafeOperation, MDOperation, opOfSvcOrg, Operation } from '../src-fw/operation'
+import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
@@ -173,7 +173,6 @@ export type Auth = {
   S: string // clé de signature cryptée par la clé `K` (en base 64).
   V: string // clé de vérification en clair (en base 64).
   hshK: string // SHA raccourci du Strong Hash de la clé K.
-  admins: string // liste des couples `SVC1.$OP1 / SVC2.$OP2 / ...` dont l'utilisateur a _déclaré_ être l'administrateur (cryptée par sa clé K et en base 64). La véracité de la _déclaration_ est vérifiée mais l'utilisateur peut se voir retiré cette qualité par l'opérateur sans que cette liste ne change.
   pseudo: string // dernier pseudo crypté par la clé K du _safe_ (en base 64) utilisé à la certification d'un terminal.
 
   hshp1: string // SHA raccourci du Strong Hash de la phrase 1 (en base 64).
@@ -586,12 +585,6 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  /* Teste le si user est admin pour svc / org. */
-  const adminForSvcOrg = async (svc, org) : Promise<boolean> => { 
-    const op = await opOfSvcOrg(svc, org)
-    return op && auth.admins.indexOf(svc + '.' + op) !== -1
-  }
-
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur:
     - auth, devices, creds, prefs, profiles, invits
@@ -611,7 +604,6 @@ export const useSafeStore = defineStore('safe', () => {
       S: privS,
       V: safe.auth.V,
       hshK: safe.auth.hshK,
-      admins: await dcX(keyFromB64(safe.auth.admins)),
       pseudo: await dcX(keyFromB64(safe.auth.pseudo)),
       hshp1: safe.auth.hshp1,
       K1: safe.auth.K1,
@@ -1006,6 +998,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const createSafe = async (
     store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
+    AOperation.reset()
     userId.value = Crypt.rnd(15)
     keyK.value = Crypt.random(32)
     const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
@@ -1033,7 +1026,7 @@ export const useSafeStore = defineStore('safe', () => {
       llq,
       lm: d.getTime(),
       C, D, S, V, hshK,
-      admins:'', pseudo: '',
+      pseudo: '',
       hshp1, K1, hshp2, K2,
       actual: { a1K, hsha1, a2K, hsha2 } as Alias,
       future: null
@@ -1062,7 +1055,8 @@ export const useSafeStore = defineStore('safe', () => {
 
   const restoreSafe = async (store: string, safe: Safe, mdUser: MDuser)
     : Promise<number> => {
-        // Enregistrement dans le Master Directory
+    AOperation.reset()
+    // Enregistrement dans le Master Directory
     let op = new MDOperation('$mdUserNew')
     try {
       op.args.mdUser = mdUser
@@ -1184,6 +1178,7 @@ export const useSafeStore = defineStore('safe', () => {
   Login a récupéré le userId et le store depuis le Master Directory et un alias
   */
   const openSafeByAP = async ( safeId: string, store: string, shp: string ) => {
+    AOperation.reset()
     const op = new SafeOperation('$GetSafe', store)
     let ret
     try {
@@ -1216,6 +1211,7 @@ export const useSafeStore = defineStore('safe', () => {
   - pin a été saisi par l'utilisateur
   */
   const openSafeByPin = async ( pin: string, t: Trusting) : Promise<number> => {
+    AOperation.reset()
     const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
 
     let ret
@@ -1712,7 +1708,7 @@ export const useSafeStore = defineStore('safe', () => {
     updatePrefs,
     updateCredName, fixCreds,
     setAboutProfile, updateProfiles /* ??? */,
-    managerCreds, isManager, adminForSvcOrg, getCreds,
+    managerCreds, isManager, getCreds,
     mySimpleCreds, myFullCreds, myCredOfDoc,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,

@@ -32,7 +32,8 @@ Contrôlé par ui.leftMenu
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEsponsorings') }}</div>
       </btn-cond>
-      <btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)"
+      <!-- btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" -->
+      <btn-cond v-if="sf.userId"
         class="q-mb-sm" flat color="warning"
         @ok="openAdmin" :disable="ui.page === 'admin'">
         <img :src="superman" class="q-mr-xs" width="24px"/>

@@ -132,7 +132,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 import { reactive, computed } from 'vue'
 
 import stores from '../stores/all'
-import { $t, sty, coolBye } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarOpen from '../components-fw/BarOpen.vue'

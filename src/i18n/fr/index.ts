@@ -37,6 +37,8 @@ export default {
   restartApp: 'Redémmarrer l\'application',
   nocomment: '(pas de commentaire)',
   svcorg: 'Service & Organisation',
+  sites: 'Sites',
+  orgs: 'Organisations',
   nosvcorg: 'Ce service ne gère pas cette organisation.',
   service: 'Service',
   servicestatus: 'Status des services',
@@ -262,6 +264,9 @@ export default {
   op_PropsOfMyCreds: 'Lecture des propriétés de mes pouvoirs',
   op_AuteurDeId: 'Lecture d\'un "auteur"',
   op_UpdPropsCred: 'Mise à jour des propriétés d\'un pouvoir',
+  op_$IsMDAdmin: 'Test si l\'utilisateur est administrateur du Master Directory',
+  op_$GetSitesUrls: 'Récupération des URLs des sites.',
+  op_$SetSiteUrl: 'Mise à jour d\'une URL d\'un site.',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -425,8 +430,15 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   LCRcredcl_0: 'Je reste sur cette page',
   LCRcredcl_1: 'Je quitte cette page',
 
+  APsites: 'Liste des sites gérés et leur URL',
+  APnosites: 'Aucun site n\'est géré actuellement.',
+
   APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
+  APnewsite: 'Créer un nouveau site',
+  APsite_label: "Code du site",
+  APurl_label: "URL du site",
+  
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',
   APnouser: 'Utilisateur inconnu pour ce pseudo',
@@ -800,6 +812,7 @@ bla bla
 `,
 
   SFTtit: 'Ma Safe Box',
+  SFTmdAdmin: 'Administrateur du Master Directory',
   SFTus: 'Identifiant:',
   SFTps: 'Terminal certifié - Pseudo local:',
   SFTnops: 'Terminal NON certifié (pas de pseudo local).',

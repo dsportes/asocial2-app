@@ -6,6 +6,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { setCssVar } from 'quasar'
 import stores from './all'
 import { Help } from '../src-fw/help'
+import { isMDAdmin } from 'src/src-fw/operation'
 
 const large = 900
 const HOME = 'safeHome'
@@ -210,11 +211,19 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   const adminPage = reactive({
-    tab: 'svcstatus', // svcstatus managers
-    SVC: '',
-    $OP: ''
+    tab: 'sites', // orgs
+    site: '',
+    org: '',
+    svc: '',
+    mdAdmin: false
   })
 
+  const resetAdminPage = async () => {
+    adminPage.site = ''
+    adminPage.org = ''
+    adminPage.org = ''
+    adminPage.mdAdmin = await isMDAdmin()
+  }
   
   const navBar = reactive({
     hasback: false,
@@ -256,7 +265,7 @@ export const useUiStore = defineStore('ui', () => {
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToOpenSession,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
-    currentEvent, navBar, currentForm, adminPage,
+    currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     emojiIndex, setEmoji,
     sessionClose, cfSessionClose
   }

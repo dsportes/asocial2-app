@@ -58,16 +58,24 @@ export class DocDescriptor {
   static isVarName (n: string) { return DocDescriptor.regvar.test(n)}
   static regdoc = /^[A-Z$][a-zA-Z_$0-9]*$/
   static isDocName (n: string) { return DocDescriptor.regdoc.test(n)}
-  static services: Set<string>
-  static declareService (svc: string) : string {
-    DocDescriptor.services.add(svc)
-    return svc
-  }
+
+  static services: Set<string> = new Set()
   static all: Map<string, DocDescriptor> = new Map()
 
   static size () { return DocDescriptor.all.size}
 
-  static get(clazz: string) { return this.all.get(clazz)}
+  static declareService (svc: string) : string {
+    DocDescriptor.services.add(svc)
+    return svc
+  }
+
+  /* clazz de la forme SVC@docCl_sub : 
+  - sub est ignoré si présent
+  */
+  static get(clazz: string) { 
+    let i = clazz.indexOf('_')
+    return this.all.get(i === -1 ? clazz : clazz.substring(0, i))
+  }
 
   svc: string
   name: string
@@ -85,7 +93,7 @@ export class DocDescriptor {
   colls : Map<string, collection> | null = null
   indexes: Map<string, idx> | null = null
 
-  get fullName () { return this.svc + '$' + this.name}
+  get fullName () { return this.svc + '$' + this.name }
 
   get hasColls () { return this.colls ? true : false }
 
@@ -100,6 +108,11 @@ export class DocDescriptor {
     if (src) this.pk.forEach(p => { x.push(src[p] || '') })
     p = x.join('/')
     return nohash || this.nohash ? p : Crypt.shaS(p)
+  }
+
+  isTestable (idxName: string) : boolean {
+    const idx = this.indexes.get(idxName)
+    return idx && idx.testable
   }
  
   /* Retourne la valeur d'une collection name d'une "source" ayant les propriétés citées */
@@ -173,7 +186,7 @@ export class DocDescriptor {
     indexes?: Map<string, idx> | null) {
 
     if (!DocDescriptor.services.has(svc))
-      throw new AppExc(3, 'EX3_not_configured_service', 'docDescriptor', [svc])
+      throw new AppExc(3, 'not_configured_service', 'docDescriptor', [svc])
     this.svc = svc
     if (!DocDescriptor.isDocName(arg.name)) 
       throw new AppExc(3, 'document_name_syntax', 'docDescriptor', [arg.name])
