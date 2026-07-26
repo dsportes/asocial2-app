@@ -82,6 +82,7 @@ export default {
   st_3: 'supprimé',
   settings: 'Préférences',
   endsession: 'Clore la session',
+  record: 'Enregistrer',
   recorded: 'Enregistrement effectué avec succès.',
   ltime: 'Valide jusqu\'à',
   noprint: 'Texte non affichable',
@@ -269,7 +270,9 @@ export default {
   op_$IsMDAdmin: 'Test si l\'utilisateur est administrateur du Master Directory',
   op_$GetSitesUrls: 'Récupération des URLs des sites.',
   op_$SetSiteUrl: 'Mise à jour d\'une URL d\'un site.',
-  
+  op_$GetServicesLabels: 'Récupération de la liste des services.',
+  op_$SetServicesLabels: 'Enrregistrement de la liste des services.',
+
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété de la Safe Box non reconnue (phrase ou autre).',
@@ -437,6 +440,8 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
 
   APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
+  APsvclabels: 'Liste des services',
+  APjsonerr: 'Erreur de syntaxe JSON: [{0}]',
   APnewsite: 'Créer un nouveau site',
   APsite_label: "Code du site",
   APurl_label: "URL du site",

@@ -108,6 +108,9 @@ export class CVKeys {
 }
 
 export class AOperation {
+  // Chaque propriété est un code service, sa valeur est son label dans la langue de dev
+  static labels : Object | null = null
+
   // Map de clé site donnant son URL
   static urls : Map<string, string> = new Map()
 
@@ -130,6 +133,36 @@ export class AOperation {
       return new Map()
     }
     return m
+  }
+
+  static async getServicesLabels (force?: boolean) : Promise<Object> {
+    if (!AOperation.labels || force) {
+      const op = new MDOperation('$GetServicesLabels')
+      try {
+        const res = await op.post()
+        const obj = JSON.parse(res.labels)
+        const ls = Array.from(Object.keys(obj))
+        ls.sort((a,b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0))
+        const x = {}
+        for(const svc of ls) x[svc] = obj[svc]
+        AOperation.labels = x
+        return AOperation.labels
+      } catch (e) {
+        await op.ko(e)
+        return {}
+      }
+    }
+    return AOperation.labels
+  }
+
+  static async setServicesLabels (json: string) {
+    const op = new MDOperation('$SetServicesLabels')
+    try {
+      op.args.params = [json]
+      await op.post()
+    } catch (e) {
+      await op.ko(e)
+    }
   }
 
   static async getSites (force?: boolean) : Promise<Map<string, string>> {

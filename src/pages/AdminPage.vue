@@ -2,7 +2,11 @@
 <div class="column items-center q-pa-xs">
 
   <div v-if="adp.tab === 'sites'" class="pwsm">
-    <div class="titre-md text-italic text-center">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
+    <text-zoom class="q-my-md q-mr-md" :label="$t('APsvclabels')"
+      :text="edLabels" :rows="15" :checklabel="$t('record')"
+      :rw="adp.mdAdmin" @done="saveLabels"/>
+
+    <div class="titre-md text-italic q-mb-sm">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
     <scroll-area size="sm" class="pwsm">
       <div v-for="([site, url], idx) of sites" :key="site" 
         :class="'row items-center cursor-pointer ' + dkli(idx) + (site === ui.adminPage.site ? ' current': ' nocurrent')"
@@ -38,23 +42,25 @@
           {{$t('svcStatus_' + status.st, [dhcool(status.at)])}}</div>
         <div>{{status.txt || $t('nocomment')}}</div>
 
-      <q-expansion-item v-model="setstat" v-if="siteadmin" 
-        class="q-my-sm" dense
-        :label="$t('APsetstsite')" icon="security" header-class="tbs">
-      <div class="column">
-        <input-a prefix="svcStatus" v-model="newComment"/>
-        <div class="row justify-end q-gutter-sm">
-          <btn-cond color="primary" :label="$t('up')" padding="none sm"
-            @ok="setSiteSt(1)"/>
-          <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
-            @ok="setSiteSt(2)"/>
-          <btn-cond color="warning" :label="$t('down')" padding="none sm"
-            @ok="setSiteSt(9)"/>
-        </div>
-      </div>
-      </q-expansion-item>
+        <q-expansion-item v-model="setstat" v-if="siteadmin" 
+          class="q-my-sm" dense
+          :label="$t('APsetstsite')" icon="security" header-class="tbs">
+          <div class="column">
+            <input-a prefix="svcStatus" v-model="newComment"/>
+            <div class="row justify-end q-gutter-sm">
+              <btn-cond color="primary" :label="$t('up')" padding="none sm"
+                @ok="setSiteSt(1)"/>
+              <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
+                @ok="setSiteSt(2)"/>
+              <btn-cond color="warning" :label="$t('down')" padding="none sm"
+                @ok="setSiteSt(9)"/>
+            </div>
+          </div>
+        </q-expansion-item>
       </div>
     </div>
+
+    <select-svc @change="selSvc"/>
   </div>
 
   <!--
@@ -172,6 +178,8 @@ import InputB from '../components-fw/InputB.vue'
 import InputA from '../components-fw/InputA.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
+import TextZoom from '../components-fw/TextZoom.vue'
+import SelectSvc from '../components-fw/SelectSvc.vue'
 // import ServiceOp from '../components-fw/ServiceOp.vue'
 // import SelectOrg from '../components-fw/SelectOrg.vue'
 // import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
@@ -186,6 +194,9 @@ const ui = stores.ui
 
 const adp = computed(() => ui.adminPage )
 const sites: Ref<Map<string, string>> = ref(new Map())
+const svcLabels : Ref<Object> = ref({})
+const edLabels = ref()
+const edLabelsAv = ref()
 
 const loadSites = async (force?: boolean) => {
   const ls = Array.from(await AOperation.getSites(force))
@@ -193,9 +204,25 @@ const loadSites = async (force?: boolean) => {
   sites.value = ls
 }
 
+const loadLabels = async (force?: boolean) => {
+  svcLabels.value = await AOperation.getServicesLabels()
+  edLabels.value = JSON.stringify(svcLabels.value, null, '\t') 
+  edLabelsAv.value = edLabels.value
+}
+
 onMounted(async () => {
+  await loadLabels()
   await loadSites()
 })
+
+const saveLabels = async (json: string) => {
+  try {
+    const x = JSON.parse(json)
+    await AOperation.setServicesLabels(json)
+  } catch (e) {
+    ui.diagDisplay($t('APjsonerr', [e.message]))
+  }
+}
 
 const status: Ref<ADMIN$Status> = ref(null)
 const siteadmin = ref(false)
@@ -261,6 +288,10 @@ const setSiteSt = async (st: number) => {
   status.value.now = now
   newComment.value = status.value.txt
   setstat.value = false
+}
+
+const selSvc = (svc: string) => {
+  console.log('Selectet svc:', svc)
 }
 
 /*

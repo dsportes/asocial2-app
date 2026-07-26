@@ -7,12 +7,15 @@
   <q-dialog v-model="dialogs.zoomit" persistent>
     <q-card :class="sty('sm')">
       <q-toolbar>
-        <btn-cond icon="close" color="none"  flat @ok="dialogs.zoomit = false"/>
+        <btn-cond icon="close" color="none" flat @ok="dialogs.zoomit = false"/>
+        <btn-cond v-if="rw" class="q-ml-sm" icon="check" color="warning" 
+          :label="checklabel" :disable="text === loc" @ok="done"/>
         <q-toolbar-title class="titre-md full-width text-center q-pr-xs">{{label}}</q-toolbar-title>
         <btn-cond icon="zoom_in" flat @ok="zoom"/>
         <btn-cond class="q-ml-xs" icon="zoom_out" flat @ok="unzoom" :disable="rx < 5"/>
       </q-toolbar>
-      <q-input class="q-pa-xs bord" v-model="loc" type="textarea" readonly :rows="rx"
+      <q-input class="q-pa-xs bord font-mono" v-model="loc" type="textarea" 
+        readonly="!rw" :rows="rx"
         :style="'max-width='+ (mw || 300) + 'px;'"
       />
     </q-card>
@@ -22,9 +25,8 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, reactive, watch } from 'vue'
 
-import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -33,14 +35,22 @@ const props = defineProps({
   label: String,
   text: String,
   rows: Number,
-  mw: Number
+  mw: Number,
+  rw: Boolean,
+  checklabel: String,
 })
+
+const emit = defineEmits(['done'])
 
 watch(() => props.text, (v) => { loc.value = v || ''})
 
 const loc = ref('')
 const rx = ref(5)
 
+const done = () => {
+  dialogs.zoomit = false
+  emit('done', loc.value)
+}
 const dialogs = reactive({
   zoomit: false
 })
