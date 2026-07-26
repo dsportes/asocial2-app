@@ -12,7 +12,7 @@
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
-      <org-svc v-if="sf.step === 0"/>
+      <!-- org-svc v-if="sf.step === 0"/-->
       <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
       <help-button class="" page="DOCpg"/>

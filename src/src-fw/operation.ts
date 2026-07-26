@@ -311,12 +311,43 @@ export const isAdmin = async (site: string) : Promise<boolean> => {
   const op = new AdminOperation('ADMIN$isAdmin', site)
   try {
     const res = await op.post()
-    const b = res['isadmin']
+    const b = res['isAdmin']
     AOperation.adminSites.set(site, b)
     return b
   } catch(e) {
     await op.ko(e)
     return false
+  }
+}
+
+export type ADMIN$Status = {
+  st: number // code 0: inconnu 1: UP 9: DOWN
+  at: number // time de dernière mise à jour
+  txt: string // texte explicatif éventuel de l'administrateur
+}
+export const getSiteStatus = async (site: string) 
+  : Promise<ADMIN$Status> => {
+  const op = new AdminOperation('ADMIN$getStatus', site)
+  try {
+    const res = await op.post()
+    return res['status']
+  } catch(e) {
+    await stores.ui.diagDisplay($t('site_err'))
+    return  { st: 0, at: 0, txt: '' }
+  }
+}
+
+export const setSiteStatus = async (site: string, st: number, txt: string) 
+  : Promise<ADMIN$Status> => {
+  const op = new AdminOperation('ADMIN$setStatus', site)
+  try {
+    op.args.st = st
+    op.args.txt = txt
+    const res = await op.post()
+    return res['status']
+  } catch(e) {
+    await op.ko(e)
+    return  { st: 0, at: 0, txt: '' }
   }
 }
 

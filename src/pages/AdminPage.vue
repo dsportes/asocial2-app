@@ -5,7 +5,8 @@
     <div class="titre-md text-italic text-center">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
     <scroll-area size="sm" class="pwsm">
       <div v-for="([site, url], idx) of sites" :key="site" 
-        :class="'row items-center ' + dkli(idx) + (site === ui.adminPage.site ? ' current': ' nocurrent')">
+        :class="'row items-center cursor-pointer ' + dkli(idx) + (site === ui.adminPage.site ? ' current': ' nocurrent')"
+        @click="setCurSite(site)">
         <div class="col-1">
           <btn-cond v-if="adp.mdAdmin" round color="warning" icon="delete" 
             @ok="delSite(site)"/>
@@ -28,6 +29,32 @@
           :disable="nsite.err !== '' || nurl.err !== ''" @ok="newSite"/>
      </div>
     </q-expansion-item>
+
+    <div v-if="adp.site" class="row justify-between q-mt-md">
+      <btn-cond class="col-auto q-pr-sm" :label="$t('status')" @ok="siteStatus"/>
+      <div v-if="status !== null" class="col">
+        <div>{{$t('svcStatus_now', [dhcool(status.now)])}}</div>
+        <div :class="status.st === 9 ? 'text-warning text-bold' : ''">
+          {{$t('svcStatus_' + status.st, [dhcool(status.at)])}}</div>
+        <div>{{status.txt || $t('nocomment')}}</div>
+
+      <q-expansion-item v-model="setstat" v-if="siteadmin" 
+        class="q-my-sm" dense
+        :label="$t('APsetstsite')" icon="security" header-class="tbs">
+      <div class="column">
+        <input-a prefix="svcStatus" v-model="newComment"/>
+        <div class="row justify-end q-gutter-sm">
+          <btn-cond color="primary" :label="$t('up')" padding="none sm"
+            @ok="setSiteSt(1)"/>
+          <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
+            @ok="setSiteSt(2)"/>
+          <btn-cond color="warning" :label="$t('down')" padding="none sm"
+            @ok="setSiteSt(9)"/>
+        </div>
+      </div>
+      </q-expansion-item>
+      </div>
+    </div>
   </div>
 
   <!--
@@ -93,7 +120,7 @@
   </div>
 -->
 
-  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
+  <!-- dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
     :title="$t('APlistmgr')" vh="75">
     <template #hdr>
       <div class="row justify-between q-pa-xs">
@@ -125,7 +152,7 @@
       <div v-else class="titre-lg text-italic text-center q-my-md">{{$t('APnovallimit')}}</div>
       </div>
     </template>
-  </dialog-std0>
+  </dialog-std0-->
 
 </div>
 </template>
@@ -135,22 +162,27 @@
 // @ts-ignore
 import { ref, Ref, computed, reactive, onMounted } from 'vue'
 import stores from '../stores/all'
-import { ListManagers, UpdateCredential } from '../src-fw/operations'
-import { $Cred } from '../src-fw/documents'
+// import { ListManagers, UpdateCredential } from '../src-fw/operations'
+// import { $Cred } from '../src-fw/documents'
 import { $t, dkli, dhcool, zp } from '../src-fw/util'
 
-import ServiceStatus from '../components-fw/ServiceStatus.vue'
+// import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
+import InputA from '../components-fw/InputA.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
-import ServiceOp from '../components-fw/ServiceOp.vue'
-import SelectOrg from '../components-fw/SelectOrg.vue'
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { AOperation, MDOperation } from 'src/src-fw/operation'
+// import ServiceOp from '../components-fw/ServiceOp.vue'
+// import SelectOrg from '../components-fw/SelectOrg.vue'
+// import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import { AOperation, MDOperation, isAdmin,
+  getSiteStatus, setSiteStatus, ADMIN$Status } from 'src/src-fw/operation'
+import { FW$getStatus, FW$setStatus } from '../src-fw/operations'
+// @ts-ignore
+import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
-const sf = stores.safe
+// const sf = stores.safe
 
 const adp = computed(() => ui.adminPage )
 const sites: Ref<Map<string, string>> = ref(new Map())
@@ -165,23 +197,34 @@ onMounted(async () => {
   await loadSites()
 })
 
+const status: Ref<ADMIN$Status> = ref(null)
+const siteadmin = ref(false)
+const setstat = ref(false)
+
+const setCurSite = async (site: string) => {
+  adp.value.site = site
+  siteadmin.value = false
+  if (site)
+    siteadmin.value = await isAdmin(site)
+  await siteStatus()
+}
 const newsite = ref(false)
 const nsite = reactive({ inp: '', err: ''})
 const nurl = reactive({ inp: '', err: ''})
 
 const delSite = async (site: string) => {
   if (await setSite(site, ''))
-    adp.value.site = ''
+    setCurSite('')
 }
 
 const editSite = async ({site, value}: { site: string, value: string }) => {
   if (await setSite(site, value))
-    adp.value.site = site
+    setCurSite(site)
 }
 
 const newSite = async () => {
   if (await setSite(nsite.inp, nurl.inp)) {
-    adp.value.site = nsite.inp
+    setCurSite(nsite.inp)
     nsite.inp = ''; nsite.err = ''
     nurl.inp = ''; nurl.err = ''
     newsite.value = false
@@ -201,6 +244,26 @@ const setSite = async (site: string, url: string) => {
   }
 }
 
+const siteStatus = async () => {
+  status.value = null
+  if (!adp.value.site) return
+  const now = Date.now()
+  status.value = await getSiteStatus(adp.value.site)
+  newComment.value = status.value.txt
+  status.value.now = now
+}
+
+const newComment = ref('')
+
+const setSiteSt = async (st: number) => {
+  const now = Date.now()
+  status.value = await setSiteStatus(adp.value.site, st, newComment.value || '')
+  status.value.now = now
+  newComment.value = status.value.txt
+  setstat.value = false
+}
+
+/*
 const dialogs = reactive({ 
   confirmrevoke: false,
   edit: false
@@ -209,14 +272,6 @@ const dialogs = reactive({
 const org = ref()
 
 const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
-/* export type $Cred = {
-  credId: string
-  svc: string
-  org: string
-  docCl: string
-  docPk: string
-  props: any
-}*/
 
 const dolist = async () => {
   lstMgr.value = []
@@ -295,6 +350,7 @@ const confirm = async (b) => {
   dialogs.edit = false
   await dolist()
 }
+  */
 
 </script>
 

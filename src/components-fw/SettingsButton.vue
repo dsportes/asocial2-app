@@ -98,7 +98,7 @@
 
   <safe-export v-if="dialogs.SafeExport" v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
 
-  <q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
+  <!-- q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
     full-height persistent>
     <q-card :class="sty('sm')">
       <q-toolbar class="tbs">
@@ -109,7 +109,7 @@
       <service-op class="q-mt-sm q-mb-lg q-px-xs" v-model="svcop"/>
       <service-status v-if="svcop.SVC && svcop.$OP" :svc="svcop.SVC" :op="svcop.$OP"/>
     </q-card>
-  </q-dialog>
+  </q-dialog-->
 
   <!-- Contrôle de l'autorisation des notifications-->
   <q-dialog v-model="session.permDialog" persistent>
@@ -418,7 +418,7 @@ import PermissionBox from '../components-fw/PermissionBox.vue'
 import InputA from '../components-fw/InputA.vue'
 import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
-import ServiceStatus from '../components-fw/ServiceStatus.vue'
+// import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import ServiceOp from '../components-fw/ServiceOp.vue'
 
 import SafeExport from '../dialogs-fw/SafeExport.vue'

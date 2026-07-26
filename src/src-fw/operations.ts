@@ -1,42 +1,9 @@
-import { Operation } from '../src-fw/operation'
+import { Operation, ADMIN$Status } from '../src-fw/operation'
 
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { Subscription } from'../src-fw/subscription'
 import { $Credential, $Cred } from '../src-fw/documents'
-
-/* Operations d'administration *************************************************/
-
-export class  GetStatus$ extends Operation {
-  constructor (SVC: string, $OP: string) { super('GetStatus$', SVC, '', $OP) }
-
-  async run () {
-    try {
-      const res = await this.post(true)
-      return res['status']
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
-  }
-}
-
-export class SetStatus$ extends Operation {
-  constructor (SVC: string, $OP: string) { super('SetStatus$', SVC, '', $OP) }
-
-  async run (st: number, txt: string) {
-    try {
-      this.args.st = st
-      this.args.txt = txt || ''
-      const res = await this.post()
-      return res['status']
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-/* Operations standard *********************************************************/
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -63,62 +30,28 @@ export class ErrorTest extends Operation {
   }
 }
 
-export class  GetStatus extends Operation {
-  constructor (SVC: string, org: string) { super('GetStatus', SVC, org, '') }
-
-  async run () {
-    try {
-      const res = await this.post(true)
-      return res['svcStatus']
-    } catch(e) {
-      await this.ko(e)
-      throw e
-    }
+export const FW$getStatus = async (svc: string, org: string) : Promise<ADMIN$Status> => {
+  const op = new Operation ('FW$getStatus', svc, org)
+  try {
+    const res = await op.post(true)
+    return res['status']
+  } catch(e) {
+    await op.ko(e)
+    return { st: 0, at: 0, txt: '' }
   }
 }
 
-export class SetStatus extends Operation {
-  constructor (SVC: string, org: string) { super('SetStatus', SVC, org, '') }
-
-  async run (st: number, txt: string) {
-    try {
-      this.args.st = st
-      this.args.txt = txt || ''
-      const res = await this.post()
-      return res['svcOpStatus']
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-export class GetOrgConfig extends Operation {
-  constructor (SVC: string, org: string) { super('GetOrgConfig$', SVC, org) }
-
-  async run () {
-    try {
-      this.args.torg = this.args.org
-      const res = await this.post()
-      return res['orgconfig']
-    } catch(e) {
-      await this.ko(e)
-    }
-  }
-}
-
-export class SetOrgConfig extends Operation {
-  constructor (SVC: string, org: string) { super('SetOrgConfig$', SVC, org) }
-
-  async run (db?: string, st?: string ) {
-    try {
-      this.args.torg = this.args.org
-      this.args.db = db || ''
-      this.args.st = st || ''
-      const res = await this.post()
-      return res['orgconfig']
-    } catch(e) {
-      await this.ko(e)
-    }
+export const FW$setStatus = async (svc: string, org: string, st: number, txt: string) 
+  : Promise<ADMIN$Status> => {
+  const op = new Operation ('FW$setStatus', svc, org)
+  try {
+    op.args.st = st
+    op.args.txt = txt || ''
+    const res = await op.post(true)
+    return res['status']
+  } catch(e) {
+    await op.ko(e)
+    return { st: 0, at: 0, txt: '' }
   }
 }
 
