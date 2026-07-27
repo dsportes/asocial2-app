@@ -15,7 +15,7 @@
         <btn-cond class="q-ml-xs" icon="zoom_out" flat @ok="unzoom" :disable="rx < 5"/>
       </q-toolbar>
       <q-input class="q-pa-xs bord font-mono" v-model="loc" type="textarea" 
-        readonly="!rw" :rows="rx"
+        :readonly="!rw" :rows="rx"
         :style="'max-width='+ (mw || 300) + 'px;'"
       />
     </q-card>
@@ -38,11 +38,20 @@ const props = defineProps({
   mw: Number,
   rw: Boolean,
   checklabel: String,
+  zctrl: Number
 })
 
 const emit = defineEmits(['done'])
 
-watch(() => props.text, (v) => { loc.value = v || ''})
+const dozoom = (z: boolean) => {
+  dialogs.zoomit = z
+}
+
+watch(() => props.text, (v) => { 
+  loc.value = v || ''})
+watch(() => props.zctrl, (v) => { 
+  dialogs.zoomit = !dialogs.zoomit
+})
 
 const loc = ref('')
 const rx = ref(5)

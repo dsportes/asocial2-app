@@ -3,7 +3,7 @@
 
   <div v-if="adp.tab === 'sites'" class="pwsm">
     <text-zoom class="q-my-md q-mr-md" :label="$t('APsvclabels')"
-      :text="edLabels" :rows="15" :checklabel="$t('record')"
+      :text="edLabels" :rows="15" :checklabel="$t('record')" :zctrl="zctrl"
       :rw="adp.mdAdmin" @done="saveLabels"/>
 
     <div class="titre-md text-italic q-mb-sm">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
@@ -50,8 +50,8 @@
             <div class="row justify-end q-gutter-sm">
               <btn-cond color="primary" :label="$t('up')" padding="none sm"
                 @ok="setSiteSt(1)"/>
-              <btn-cond color="warning" :label="$t('readonly')" padding="none sm"
-                @ok="setSiteSt(2)"/>
+              <!--btn-cond color="warning" :label="$t('readonly')" padding="none sm"
+                @ok="setSiteSt(2)"/-->
               <btn-cond color="warning" :label="$t('down')" padding="none sm"
                 @ok="setSiteSt(9)"/>
             </div>
@@ -60,8 +60,55 @@
       </div>
     </div>
 
-    <select-svc @change="selSvc"/>
+    <div class="q-my-md tb1">
+      <div class="column full-width tbs">
+        <div class="row items-center q-ma-xs">
+          <img :src="superman" class="q-mr-xs" width="24px"/>
+          <div class="fs-lg text-bold">{{ $t('APdeclorg') }}</div>
+        </div>
+        <div :class="sty() + ' row items-center no-wrap'">
+          <div class="q-mr-md">{{ $t('APchorg') }}</div>
+          <select-org @change="selOrg" :initval="org"/>
+          <btn-cond class="q-ml-sm" icon="close" 
+            round color="warning" @ok="selOrg('')"/>
+        </div>
+      </div>
+
+      <div v-if="org">
+        <div class="q-mb-sm">
+          <div class="row justify-between items-center">
+            <div class="text-italic">
+              {{ $t(orgSvcs && orgSvcs.size ? 'APnewsvcorg' : 'APneworg', [org]) }}
+            </div>
+            <btn-cond class="q-mt-sm q-mb-md self-end q-mr-sm"
+              icon="add" round
+              :disable="!org || !svc || !siteNv" @ok="declare"/>
+          </div>
+          <div class="row items-center justify-around">
+            <select-svc @change="selSvc" noinit/>
+            <select-site @change="selSiteNv" :ctx="{ initial: '' }"/>
+          </div>
+        </div>
+
+        <div v-if="orgSvcs && orgSvcs.size">
+          <div v-for="([svc, site], idx) in orgSvcs" :key="svc">
+            <div :class="sty(idx) + ' row q-my-sm q-mx-xs items-center q-gutter-sm'">
+              <div class="col-5 font-mono">{{ svc }}</div>
+              <select-site class="col-6" @change="updSite"
+                :ctx="{ svc: svc, initial: site }"/>
+              <btn-cond class="col-1" round color="warning" icon="delete"
+                @ok="delSvc(svc)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <choose-it v-model="dialogs.cf"
+    :prefix="'APcfupd' + cascf" :args="argscf" options="pw"
+    @giveup="confirm(0)"
+    @option="confirm"/>
 
   <!--
     <div v-if="sf.auth.admins">
@@ -166,11 +213,11 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { ref, Ref, computed, reactive, onMounted } from 'vue'
+import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'
 import stores from '../stores/all'
 // import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // import { $Cred } from '../src-fw/documents'
-import { $t, dkli, dhcool, zp } from '../src-fw/util'
+import { $t, dkli, dhcool, sty } from '../src-fw/util'
 
 // import ServiceStatus from '../components-fw/ServiceStatus.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -180,8 +227,9 @@ import LineEdit from '../components-fw/LineEdit.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
-// import ServiceOp from '../components-fw/ServiceOp.vue'
-// import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectSite from '../components-fw/SelectSite.vue'
+import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 // import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { AOperation, MDOperation, isAdmin,
   getSiteStatus, setSiteStatus, ADMIN$Status } from 'src/src-fw/operation'
@@ -190,13 +238,17 @@ import { FW$getStatus, FW$setStatus } from '../src-fw/operations'
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
-// const sf = stores.safe
+
+const dialogs = reactive({
+  cf: false
+})
 
 const adp = computed(() => ui.adminPage )
 const sites: Ref<Map<string, string>> = ref(new Map())
-const svcLabels : Ref<Object> = ref({})
+const svcLabels : Ref<Map<string, string>> = ref(new Map())
 const edLabels = ref()
 const edLabelsAv = ref()
+const zctrl = ref(0)
 
 const loadSites = async (force?: boolean) => {
   const ls = Array.from(await AOperation.getSites(force))
@@ -205,8 +257,13 @@ const loadSites = async (force?: boolean) => {
 }
 
 const loadLabels = async (force?: boolean) => {
-  svcLabels.value = await AOperation.getServicesLabels()
-  edLabels.value = JSON.stringify(svcLabels.value, null, '\t') 
+  svcLabels.value = await AOperation.getServicesLabels(force)
+  const x = []
+  for(const [svc, label] of svcLabels.value) x.push([svc, label])
+  x.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
+  const t = []
+  for(const y of x) t.push('  "' + y[0] + '": "' + y[1] + '"')
+  edLabels.value = '{\n' + t.join(',\n') + '\n}'
   edLabelsAv.value = edLabels.value
 }
 
@@ -218,7 +275,9 @@ onMounted(async () => {
 const saveLabels = async (json: string) => {
   try {
     const x = JSON.parse(json)
-    await AOperation.setServicesLabels(json)
+    await AOperation.setServicesLabels(JSON.stringify(x, null, '\t'))
+    await loadLabels(true)
+    zctrl.value = Date.now()
   } catch (e) {
     ui.diagDisplay($t('APjsonerr', [e.message]))
   }
@@ -290,8 +349,69 @@ const setSiteSt = async (st: number) => {
   setstat.value = false
 }
 
-const selSvc = (svc: string) => {
-  console.log('Selectet svc:', svc)
+const orgSvcs: Ref<Map<string, string>> = ref(new Map())
+
+const svc = ref()
+const org = ref()
+const site = ref()
+const siteNv = ref()
+const cascf = ref('')
+const argscf = ref()
+
+const selSvc = (_svc: string) => {
+  svc.value = _svc
+}
+
+const selOrg = async (_org: string) => {
+  if (_org) {
+    org.value = _org
+    svc.value = ''
+    site.value = ''
+    siteNv.value = ''
+    orgSvcs.value = await AOperation.getOrgSvc(_org)
+  } else org.value = ''
+}
+
+const updSite = (ctx) => {
+  site.value = ctx.site
+  svc.value = ctx.svc
+  argscf.value = [org.value, ctx.svc, ctx.initial, ctx.site]
+  cascf.value = 'b'
+  dialogs.cf = true
+}
+
+const delSvc = (_svc: string) => {
+  svc.value = _svc
+  argscf.value = [org.value, svc.value]
+  cascf.value = orgSvcs.value.size > 1 ? 'a' : 'c'
+  dialogs.cf = true
+}
+
+const selSiteNv = ({ site }) => {
+  siteNv.value = site
+}
+
+const declare = async () => {
+  orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, siteNv.value)
+  svc.value = ''
+  site.value = ''
+  siteNv.value = ''
+}
+
+const confirm = async (c) => {
+  dialogs.cf = false
+  if (!c) org.value = ''
+  else {
+    if (cascf.value === 'b') {
+      orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, site.value)
+    } else {
+      orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, '')
+      org.value = ''
+    }
+  }
+  svc.value = ''
+  site.value = ''
+  siteNv.value = ''
 }
 
 /*
@@ -387,5 +507,5 @@ const confirm = async (b) => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-.ellipsis { text-decoration: ellipsis}
+.tb1 { border: 1px solid var(--q-secondary) }
 </style>

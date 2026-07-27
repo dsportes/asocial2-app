@@ -7,6 +7,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
 import { Crypt } from '../src-fw/crypt'
+import { $t } from '../src-fw/util'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
 type StartContext = {
@@ -26,6 +27,7 @@ export const useSessionStore = defineStore('session', () => {
 
   // Gestion des opérations ************************************************
   const opEncours = ref('')
+  const opEncoursName = ref('')
   const opDialog = ref(false)
   const opSpinner = ref(0)
   const opSignal = ref(false)
@@ -42,6 +44,7 @@ export const useSessionStore = defineStore('session', () => {
 
   function opStart (op: any) {
     opEncours.value = op
+    opEncoursName.value = $t('op_' + op.opName)
     opSpinner.value = 0
     opSignal.value = true
     opDialog.value = true

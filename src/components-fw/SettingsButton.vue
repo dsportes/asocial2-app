@@ -150,7 +150,8 @@
           <div class="row items-center justify-between q-pa-sm" style="width:20rem">
             <div class="col column items-center">
               <div class="text-bold titre-md">{{$t('MLAopc')}}</div>
-              <div class="text-bold text-italic">{{$t('op_' + session.opEncours.opName)}}</div>
+              <div class="text-bold text-italic">{{ session.opEncoursName}}</div>
+              <!--div class="text-bold text-italic">{{$t('op_' + session.opEncours.opName)}}</div-->
               <div class="titre-sm">{{$t('MLAint')}}</div>
             </div>
             <div class="col-auto row items-center justify-center q-pa-sm">

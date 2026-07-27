@@ -3,10 +3,15 @@
 
 export default {
   app_label: 'Auteurs et relecteurs',
+
+  service: 'Service',
   service_label: 'Code su service',
   services_AS2: 'Auteurs et relecteurs',
   services_ASSO2: 'Gestion des associations',
   services_SAFE: 'Gestion des Safe Boxes',
+
+  site: 'Site',
+  org: 'Organisation',
 
   lang: 'La langue est le Français',
   darkclear: 'Foncé / clair',
@@ -30,6 +35,7 @@ export default {
   url_set: 'Déclarer l\'URL du service',
   grant: 'Autoriser',
   revoke: 'Révoquer',
+  declare: 'Déclarer',
   app: 'Application:',
   build: 'Build',
   alias: 'Alias',
@@ -40,7 +46,7 @@ export default {
   sites: 'Sites',
   orgs: 'Organisations',
   nosvcorg: 'Ce service ne gère pas cette organisation.',
-  service: 'Service',
+
   servicestatus: 'Status des services',
   svcStatus_label: 'Commentaire ...',
   svcStatus_now: 'Observé à: {0}',
@@ -64,7 +70,6 @@ export default {
   readme: 'LISEZMOI',
   deplier: 'Déplier',
   replier: 'Replier',
-  org: 'Organisation',
   validate: 'Valider',
   confirm: 'Pour confirmer, taper', // BtnConfirm
   containing: 'contenant abc ',
@@ -272,6 +277,8 @@ export default {
   op_$SetSiteUrl: 'Mise à jour d\'une URL d\'un site.',
   op_$GetServicesLabels: 'Récupération de la liste des services.',
   op_$SetServicesLabels: 'Enrregistrement de la liste des services.',
+  op_$SetOrgSvcSite: 'Enregistrement d\'un service pour une organisation.',
+  op_$GetOrgSvc: 'Lecture des services assurés pour une organisation.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -446,7 +453,33 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APsite_label: "Code du site",
   APurl_label: "URL du site",
   APsetstsite: 'Mise à jour du status du site',
-  
+  APdeclorg: 'Déclaration des organisations',
+  APchorg: 'Choisir une organisation:',
+  APnewsvcorg: 'Nouveau service:',
+  APneworg: 'Nouvelle organisation: {0}',
+  APcfupda_tit: 'Suppression d\'un service',
+  APcfupda_txt: `Voulez-vous vraiment supprimer le service [{1}] pour [{0}] ? 
+- Si non, cliquer sur "JE RENONCE"'
+- Si oui, cliquer sur "JE CONFIRME ..."
+`,
+  APcfupda_1: 'Je confirme la suppression',
+  APcfupda_0: 'Je renonce',
+  APcfupdb_tit: 'Mise à jour d\'un service',
+  APcfupdb_txt: `Voulez-vous vraiment changer la prise en charge du service [{1}] pour [{0}], la retirer du site [{2}] pour la confier au site [{3}] ?
+- Si non, cliquer sur "JE RENONCE"'
+- Si oui, cliquer sur "JE CONFIRME ..."
+`,
+  APcfupdb_1: 'Je confirme le changement',
+  APcfupdb_0: 'Je renonce',
+  APcfupdc_tit: 'Suppression d\'un dernier service',
+  APcfupdc_txt: `Voulez-vous vraiment supprimer le dernier service [{1}] supporté pour [{0}] ?
+- Ceci revient à rendre **invalider de facto** l'organisation. 
+- Si non, cliquer sur "JE RENONCE"'
+- Si oui, cliquer sur "JE CONFIRME ..."
+`,
+  APcfupdc_1: 'Je confirme la suppression',
+  APcfupdc_0: 'Je renonce',
+
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',
   APnouser: 'Utilisateur inconnu pour ce pseudo',

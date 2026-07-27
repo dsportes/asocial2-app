@@ -2,6 +2,7 @@
 -->
 <template>
   <q-select v-model="svcloc" dense options-dense filled
+    :label="$t('service')"
     style="width:150px; height:40px"
     transition-show="flip-up" transition-hide="flip-down"
     :options="opts"/>
@@ -18,7 +19,8 @@ import { AOperation } from '../src-fw/operation'
 const session = stores.session
 
 const props = defineProps({
-  restricted: Boolean
+  restricted: Boolean,
+  noinit: Boolean
 })
 
 const emit = defineEmits(['change'])
@@ -36,16 +38,18 @@ const sel = () => {
 
 const init = async () => {
   const ks = config.K.SERVICES
-  const obj = await AOperation.getServicesLabels()
-  for(const svc in obj) {
+  const x = await AOperation.getServicesLabels()
+  for(const [svc, label] of x) {
     if (props.restricted && !ks[svc]) continue
-    const x = { label: obj[svc], svc: svc }
+    const x = { label: label + ' [' + svc + ']', svc: svc }
     opts.value.push(x)
-    if (svc === config.K.DEFAULT_SERVICE) svcloc.value = x
+    opts.value.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
+    if (!props.noinit && svc === config.K.DEFAULT_SERVICE) svcloc.value = x
   }
-  if (!svcloc.value && opts.value.length)
+  if (!props.noinit && !svcloc.value && opts.value.length) {
     svcloc.value = opts.value[0]
-  sel()
+    sel()
+  }
 }
 
 watch(svcloc, (v) => {

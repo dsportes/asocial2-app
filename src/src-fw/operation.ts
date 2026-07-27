@@ -109,7 +109,7 @@ export class CVKeys {
 
 export class AOperation {
   // Chaque propriété est un code service, sa valeur est son label dans la langue de dev
-  static labels : Object | null = null
+  static labels : Map<string, string> = new Map()
 
   // Map de clé site donnant son URL
   static urls : Map<string, string> = new Map()
@@ -135,21 +135,19 @@ export class AOperation {
     return m
   }
 
-  static async getServicesLabels (force?: boolean) : Promise<Object> {
-    if (!AOperation.labels || force) {
+  static async getServicesLabels (force?: boolean) : Promise<Map<string, string>> {
+    if (!AOperation.labels.size || force) {
       const op = new MDOperation('$GetServicesLabels')
       try {
         const res = await op.post()
         const obj = JSON.parse(res.labels)
-        const ls = Array.from(Object.keys(obj))
-        ls.sort((a,b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0))
-        const x = {}
-        for(const svc of ls) x[svc] = obj[svc]
+        const x: Map<string, string> = new Map()
+        for(const svc of Object.keys(obj)) x.set(svc, obj[svc])
         AOperation.labels = x
         return AOperation.labels
       } catch (e) {
         await op.ko(e)
-        return {}
+        return new Map()
       }
     }
     return AOperation.labels
@@ -187,6 +185,17 @@ export class AOperation {
       for (const svc in services) e.set(svc, services[svc])
       Operation.orgs.set(org, e)
     }
+    return e
+  }
+
+  static async setOrgSvc (org: string, svc: string, site: string) {
+    const op = new MDOperation('$SetOrgSvcSite')
+    op.args.params = [org, svc, site]
+    const res = await op.post()
+    const services = res.services || {} // Objet: { svc1: site1, svc2: site2 ...}
+    const e = new Map()
+    for (const svc in services) e.set(svc, services[svc])
+    Operation.orgs.set(org, e)
     return e
   }
 
