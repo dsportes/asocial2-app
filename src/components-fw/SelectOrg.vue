@@ -2,7 +2,7 @@
 -->
 <template>
   <div class="row items-center justify-between w1 cursor-pointer q-pl-xs"
-    style="width:150px; height:40px">
+    style="min-width:150px; height:40px">
     <div v-if="model" class="font-mono">{{ model }}</div>
     <div v-else class="text-italic text-grey-5">{{ $t('org') }}</div>
     <q-icon name="arrow_drop_down" size="24px"/>

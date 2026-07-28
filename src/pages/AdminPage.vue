@@ -67,36 +67,36 @@
           <div class="fs-lg text-bold">{{ $t('APdeclorg') }}</div>
         </div>
         <div :class="sty() + ' row items-center no-wrap'">
-          <div class="q-mr-md">{{ $t('APchorg') }}</div>
-          <select-org @change="selOrg" :initval="org"/>
-          <btn-cond class="q-ml-sm" icon="close" 
+          <div class="q-mr-md col-auto">{{ $t('APchorg') }}</div>
+          <select-org class="col" @change="selOrg" :initval="org"/>
+          <btn-cond class="q-ml-sm col-auto" icon="close" 
             round color="warning" @ok="selOrg('')"/>
         </div>
       </div>
 
       <div v-if="org">
-        <div class="q-mb-sm">
-          <div class="row justify-between items-center">
-            <div class="text-italic">
-              {{ $t(orgSvcs && orgSvcs.size ? 'APnewsvcorg' : 'APneworg', [org]) }}
-            </div>
-            <btn-cond class="q-mt-sm q-mb-md self-end q-mr-sm"
+        <div class="q-mb-lg">
+          <div class="text-italic q-ml-sm">
+            {{ $t(orgSvcs && orgSvcs.size ? 'APnewsvcorg' : 'APneworg', [org]) }}
+          </div>
+          <div class="row items-center full-width">
+            <select-svc class="col q-px-sm" @change="selSvc" noinit
+              :excl="excl"/>
+            <select-site class="col q-px-sm" @change="selSiteNv"
+             :ctx="ctxSite"/>
+            <btn-cond class="col-auto q-mx-sm self-end"
               icon="add" round
               :disable="!org || !svc || !siteNv" @ok="declare"/>
-          </div>
-          <div class="row items-center justify-around">
-            <select-svc @change="selSvc" noinit/>
-            <select-site @change="selSiteNv" :ctx="{ initial: '' }"/>
           </div>
         </div>
 
         <div v-if="orgSvcs && orgSvcs.size">
           <div v-for="([svc, site], idx) in orgSvcs" :key="svc">
-            <div :class="sty(idx) + ' row q-my-sm q-mx-xs items-center q-gutter-sm'">
-              <div class="col-5 font-mono">{{ svc }}</div>
-              <select-site class="col-6" @change="updSite"
+            <div :class="'row q-my-sm q-mx-xs items-center nowrap ' + dkli(idx)">
+              <div class="col font-mono q-mx-sm">{{ svc }}</div>
+              <select-site class="col q-mx-sm" @change="updSite"
                 :ctx="{ svc: svc, initial: site }"/>
-              <btn-cond class="col-1" round color="warning" icon="delete"
+              <btn-cond class="col-auto q-mx-sm" round color="warning" icon="delete"
                 @ok="delSvc(svc)"/>
             </div>
           </div>
@@ -109,6 +109,11 @@
     :prefix="'APcfupd' + cascf" :args="argscf" options="pw"
     @giveup="confirm(0)"
     @option="confirm"/>
+
+  <choose-it v-model="dialogs.ds"
+    prefix="APcfdelsite" options="pw"
+    @giveup="confirmDS(0)"
+    @option="confirmDS"/>
 
   <!--
     <div v-if="sf.auth.admins">
@@ -240,7 +245,8 @@ import superman from '../assets/superman.jpg'
 const ui = stores.ui
 
 const dialogs = reactive({
-  cf: false
+  cf: false,
+  ds: false
 })
 
 const adp = computed(() => ui.adminPage )
@@ -288,18 +294,29 @@ const siteadmin = ref(false)
 const setstat = ref(false)
 
 const setCurSite = async (site: string) => {
-  adp.value.site = site
-  siteadmin.value = false
-  if (site)
-    siteadmin.value = await isAdmin(site)
-  await siteStatus()
+  if (adp.value.site === site) {
+    adp.value.site = ''
+  } else {
+    adp.value.site = site
+    siteadmin.value = false
+    if (site)
+      siteadmin.value = await isAdmin(site)
+    await siteStatus()
+  }
 }
 const newsite = ref(false)
 const nsite = reactive({ inp: '', err: ''})
 const nurl = reactive({ inp: '', err: ''})
+const sitedel = ref()
 
 const delSite = async (site: string) => {
-  if (await setSite(site, ''))
+  sitedel.value = site
+  dialogs.ds = true
+}
+
+const confirmDS = async (c: number) => {
+  if (!c) return
+  if (await setSite(sitedel.value, ''))
     setCurSite('')
 }
 
@@ -357,6 +374,8 @@ const site = ref()
 const siteNv = ref()
 const cascf = ref('')
 const argscf = ref()
+const excl = ref()
+const ctxSite = ref({ initial: '' })
 
 const selSvc = (_svc: string) => {
   svc.value = _svc
@@ -368,7 +387,9 @@ const selOrg = async (_org: string) => {
     svc.value = ''
     site.value = ''
     siteNv.value = ''
+    ctxSite.value = { initial: '' }
     orgSvcs.value = await AOperation.getOrgSvc(_org)
+    excl.value = new Set(Array.from(orgSvcs.value.keys()))
   } else org.value = ''
 }
 
@@ -393,17 +414,20 @@ const selSiteNv = ({ site }) => {
 
 const declare = async () => {
   orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, siteNv.value)
+  excl.value = new Set(Array.from(orgSvcs.value.keys()))
   svc.value = ''
   site.value = ''
   siteNv.value = ''
+  ctxSite.value = { initial: '' }
 }
 
 const confirm = async (c) => {
   dialogs.cf = false
   if (!c) org.value = ''
   else {
-    if (cascf.value === 'b') {
+    if (cascf.value !== 'c') {
       orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, site.value)
+      excl.value = new Set(Array.from(orgSvcs.value.keys()))
     } else {
       orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, '')
       org.value = ''
@@ -412,6 +436,7 @@ const confirm = async (c) => {
   svc.value = ''
   site.value = ''
   siteNv.value = ''
+  ctxSite.value = { initial: '' }
 }
 
 /*

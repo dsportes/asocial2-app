@@ -1,8 +1,8 @@
 <!-- Select d'un service
 -->
 <template>
-  <q-select v-model="siteloc" dense options-dense filled
-    style="width:150px; height:40px" :label="$t('site')"
+  <q-select v-model="siteloc" dense options-dense
+    style="min-width:150px; height:40px" :label="$t('site')"
     transition-show="flip-up" transition-hide="flip-down"
     :options="opts"/>
 </template>
@@ -42,6 +42,8 @@ const init = async () => {
 watch(siteloc, (v) => {
   sel()
 })
+
+watch(() => props.ctx, async () => { await init() })
 
 onMounted(async () => {
  await init()

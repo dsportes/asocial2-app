@@ -177,11 +177,11 @@ export class AOperation {
   static async getOrgSvc (org: string) : Promise<Map<string, string>> {
     let e: Map<string, string> = Operation.orgs.get(org)
     if (!e) {
-      e = new Map()
       const op = new MDOperation('$GetOrgSvc')
       op.args.org = org
       const res = await op.post()
       const services = res.services || {} // Objet: { svc1: site1, svc2: site2 ...}
+      e = new Map()
       for (const svc in services) e.set(svc, services[svc])
       Operation.orgs.set(org, e)
     }

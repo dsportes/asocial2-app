@@ -457,6 +457,14 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APchorg: 'Choisir une organisation:',
   APnewsvcorg: 'Nouveau service:',
   APneworg: 'Nouvelle organisation: {0}',
+  APcfdelsite_tit: 'Suppression d\'un site',
+  APcfdelsite_txt: `Voulez-vous vraiment supprimer ce site ? 
+- Si non, cliquer sur "JE RENONCE"'
+- Si oui, cliquer sur "JE CONFIRME ..."
+`,
+  APcfdelsite_1: 'Je confirme la suppression',
+  APcfdelsite_0: 'Je renonce',
+
   APcfupda_tit: 'Suppression d\'un service',
   APcfupda_txt: `Voulez-vous vraiment supprimer le service [{1}] pour [{0}] ? 
 - Si non, cliquer sur "JE RENONCE"'
