@@ -28,7 +28,7 @@
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
     <q-tab name="sites" icon="cloud" :label="$t('sites')" />
-    <q-tab name="sites" icon="people" :label="$t('orgs')" />
+    <q-tab name="orgs" icon="people" :label="$t('orgs')" />
     <!--q-tab name="managers">
       <img :src="superman" width="24px"/>
       <div>{{ $t('APnewManager_2') }}</div>

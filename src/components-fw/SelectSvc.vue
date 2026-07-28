@@ -20,8 +20,7 @@ const session = stores.session
 
 const props = defineProps({
   restricted: Boolean,
-  noinit: Boolean,
-  excl: Object // set des valeurs exclues
+  ctx: Object // { initial, excl } excl : set des valeurs exclues
 })
 
 const emit = defineEmits(['change'])
@@ -39,25 +38,29 @@ const sel = () => {
 const init = async () => {
   opts.value = []
   const ks = config.K.SERVICES
-  const x = await AOperation.getServicesLabels()
-  for(const [svc, label] of x) {
+  const sl = await AOperation.getServicesLabels()
+  const m = new Map()
+  for(const [svc, label] of sl) {
     if (props.restricted && !ks[svc]) continue
-    if (props.excl && props.excl.has(svc)) continue
+    if (props.ctx && props.ctx.excl && props.ctx.excl.has(svc)) continue
     const x = { label: label + ' [' + svc + ']', svc: svc }
+    m.set(svc, x)
     opts.value.push(x)
     opts.value.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
-    if (!props.noinit && svc === config.K.DEFAULT_SERVICE) svcloc.value = x
   }
-  if (props.noinit) svcloc.value = ''
-  else if (!svcloc.value && opts.value.length) {
-    svcloc.value = opts.value[0]
-    sel()
+  svcloc.value = null
+  if (props.ctx && props.ctx.initial !== undefined) svcloc.value = m.get(props.ctx.initial)
+  else {
+    svcloc.value = m.get(config.K.DEFAULT_SERVICE)
+    if (!svcloc.value && opts.value.length) svcloc.value = opts.value[0]
   }
+  if (svcloc.value) sel()
 }
 
 watch(svcloc, (v) => { sel() })
 
-watch(() => props.excl, async () => { await init() })
+watch(() => props.ctx, async () => { 
+  await init() })
 
 onMounted(async () => { await init() })
 

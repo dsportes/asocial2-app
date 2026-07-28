@@ -444,7 +444,9 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
 
   APsites: 'Liste des sites gérés et leur URL',
   APnosites: 'Aucun site n\'est géré actuellement.',
-
+  APsiteadmin: 'Administrateur du site',
+  APsinfo: 'Site [{0}] - URL: [{1}]',
+  
   APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
   APsvclabels: 'Liste des services',

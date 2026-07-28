@@ -34,31 +34,7 @@
      </div>
     </q-expansion-item>
 
-    <div v-if="adp.site" class="row justify-between q-mt-md">
-      <btn-cond class="col-auto q-pr-sm" :label="$t('status')" @ok="siteStatus"/>
-      <div v-if="status !== null" class="col">
-        <div>{{$t('svcStatus_now', [dhcool(status.now)])}}</div>
-        <div :class="status.st === 9 ? 'text-warning text-bold' : ''">
-          {{$t('svcStatus_' + status.st, [dhcool(status.at)])}}</div>
-        <div>{{status.txt || $t('nocomment')}}</div>
-
-        <q-expansion-item v-model="setstat" v-if="siteadmin" 
-          class="q-my-sm" dense
-          :label="$t('APsetstsite')" icon="security" header-class="tbs">
-          <div class="column">
-            <input-a prefix="svcStatus" v-model="newComment"/>
-            <div class="row justify-end q-gutter-sm">
-              <btn-cond color="primary" :label="$t('up')" padding="none sm"
-                @ok="setSiteSt(1)"/>
-              <!--btn-cond color="warning" :label="$t('readonly')" padding="none sm"
-                @ok="setSiteSt(2)"/-->
-              <btn-cond color="warning" :label="$t('down')" padding="none sm"
-                @ok="setSiteSt(9)"/>
-            </div>
-          </div>
-        </q-expansion-item>
-      </div>
-    </div>
+    <status-site v-if="curSite" v-model="curSite" class="q-mt-md"/>
 
     <div class="q-my-md tb1">
       <div class="column full-width tbs">
@@ -81,9 +57,9 @@
           </div>
           <div class="row items-center full-width">
             <select-svc class="col q-px-sm" @change="selSvc" noinit
-              :excl="excl"/>
+              :ctx="ctxSvc"/>
             <select-site class="col q-px-sm" @change="selSiteNv"
-             :ctx="ctxSite"/>
+              :ctx="ctxSite"/>
             <btn-cond class="col-auto q-mx-sm self-end"
               icon="add" round
               :disable="!org || !svc || !siteNv" @ok="declare"/>
@@ -114,6 +90,29 @@
     prefix="APcfdelsite" options="pw"
     @giveup="confirmDS(0)"
     @option="confirmDS"/>
+
+  <div v-if="adp.tab === 'orgs'" class="pwsm">
+    <div class="row items-center full-width">
+      <select-org class="col" @change="selOrg2" :initval="org2"/>
+      <select-svc class="col q-px-sm" @change="selSvc2" 
+        :ctx="ctxSvc2"/>
+      <btn-cond class="col-auto q-mx-sm self-end"
+        icon="check" round :disable="!org2 || !svc2" @ok="setOS"/>
+      <btn-cond class="col-auto q-mx-sm self-end"
+        icon="close" round color="negative" @ok="clearOS"/>
+    </div>
+
+    <status-site v-if="site2" v-model="site2" class="q-mt-md"/>
+
+    <div v-if="site2" class="q-my-sm titre-md">
+      <div v-if="siteadmin" class="row q-gutter-sm items-center">
+        <img :src="superman" width="24px"/>
+        <div class="titre-md text-bold">{{ $t('APsiteadmin') }}</div>
+      </div>
+      <div class="titre-md">{{ $t('APsinfo', [site2, surl]) }}</div>
+    </div>
+
+  </div>
 
   <!--
     <div v-if="sf.auth.admins">
@@ -224,10 +223,9 @@ import stores from '../stores/all'
 // import { $Cred } from '../src-fw/documents'
 import { $t, dkli, dhcool, sty } from '../src-fw/util'
 
-// import ServiceStatus from '../components-fw/ServiceStatus.vue'
+import StatusSite from '../components-fw/StatusSite.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
-import InputA from '../components-fw/InputA.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
@@ -236,8 +234,7 @@ import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 // import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { AOperation, MDOperation, isAdmin,
-  getSiteStatus, setSiteStatus, ADMIN$Status } from 'src/src-fw/operation'
+import { AOperation, MDOperation, isAdmin, getSite } from 'src/src-fw/operation'
 import { FW$getStatus, FW$setStatus } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -289,25 +286,54 @@ const saveLabels = async (json: string) => {
   }
 }
 
-const status: Ref<ADMIN$Status> = ref(null)
 const siteadmin = ref(false)
-const setstat = ref(false)
+const curSite = ref('')
+const newsite = ref(false)
+const nsite = reactive({ inp: '', err: ''})
+const nurl = reactive({ inp: '', err: ''})
+const sitedel = ref('')
+const orgSvcs: Ref<Map<string, string>> = ref(new Map())
+const svc = ref()
+const org = ref()
+const site = ref()
+const siteNv = ref()
+const cascf = ref('')
+const argscf = ref()
+const excl = ref()
+const ctxSvc = ref()
+const ctxSite = ref()
+
+const init1 = () => {
+  curSite.value = ''
+  adp.value.site = ''
+  siteadmin.value = false
+  newsite.value = false
+  nsite.inp = ''; nsite.err = ''
+  nurl.inp = ''; nurl.err = ''
+  sitedel.value = ''
+  orgSvcs.value = new Map()
+  svc.value = ''
+  site.value = ''
+  siteNv.value = ''
+  cascf.value = ''
+  argscf.value = null
+  excl.value = null
+  ctxSvc.value = newCtx()
+  ctxSite.value = newCtx()
+}
 
 const setCurSite = async (site: string) => {
   if (adp.value.site === site) {
+    curSite.value = ''
     adp.value.site = ''
   } else {
+    curSite.value = site
     adp.value.site = site
     siteadmin.value = false
     if (site)
       siteadmin.value = await isAdmin(site)
-    await siteStatus()
   }
 }
-const newsite = ref(false)
-const nsite = reactive({ inp: '', err: ''})
-const nurl = reactive({ inp: '', err: ''})
-const sitedel = ref()
 
 const delSite = async (site: string) => {
   sitedel.value = site
@@ -347,36 +373,6 @@ const setSite = async (site: string, url: string) => {
   }
 }
 
-const siteStatus = async () => {
-  status.value = null
-  if (!adp.value.site) return
-  const now = Date.now()
-  status.value = await getSiteStatus(adp.value.site)
-  newComment.value = status.value.txt
-  status.value.now = now
-}
-
-const newComment = ref('')
-
-const setSiteSt = async (st: number) => {
-  const now = Date.now()
-  status.value = await setSiteStatus(adp.value.site, st, newComment.value || '')
-  status.value.now = now
-  newComment.value = status.value.txt
-  setstat.value = false
-}
-
-const orgSvcs: Ref<Map<string, string>> = ref(new Map())
-
-const svc = ref()
-const org = ref()
-const site = ref()
-const siteNv = ref()
-const cascf = ref('')
-const argscf = ref()
-const excl = ref()
-const ctxSite = ref({ initial: '' })
-
 const selSvc = (_svc: string) => {
   svc.value = _svc
 }
@@ -387,9 +383,9 @@ const selOrg = async (_org: string) => {
     svc.value = ''
     site.value = ''
     siteNv.value = ''
-    ctxSite.value = { initial: '' }
+    ctxSite.value = newCtx()
     orgSvcs.value = await AOperation.getOrgSvc(_org)
-    excl.value = new Set(Array.from(orgSvcs.value.keys()))
+    ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
   } else org.value = ''
 }
 
@@ -408,17 +404,23 @@ const delSvc = (_svc: string) => {
   dialogs.cf = true
 }
 
+const newCtx = (excl?) => {
+  const c = new Object(); c['initial'] = ''
+  if (excl) c['excl'] = excl
+  return c
+}
+
 const selSiteNv = ({ site }) => {
   siteNv.value = site
 }
 
 const declare = async () => {
   orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, siteNv.value)
-  excl.value = new Set(Array.from(orgSvcs.value.keys()))
   svc.value = ''
   site.value = ''
   siteNv.value = ''
-  ctxSite.value = { initial: '' }
+  ctxSite.value = newCtx()
+  ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
 }
 
 const confirm = async (c) => {
@@ -427,17 +429,58 @@ const confirm = async (c) => {
   else {
     if (cascf.value !== 'c') {
       orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, site.value)
-      excl.value = new Set(Array.from(orgSvcs.value.keys()))
     } else {
       orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, '')
       org.value = ''
     }
+    ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
   }
   svc.value = ''
   site.value = ''
   siteNv.value = ''
-  ctxSite.value = { initial: '' }
+  ctxSite.value = newCtx()
 }
+
+const org2 = ref()
+const svc2 = ref()
+const ctxSite2 = ref()
+const ctxSvc2 = ref()
+const site2 = ref()
+const surl = computed(() => 
+  AOperation.urls.get(site2.value) || '?')
+const selOrg2 = (v) => {
+  org2.value = v
+}
+const selSvc2 = (v) => {
+  svc2.value = v
+}
+
+const clearOS = () => {
+  init2()
+}
+
+const setOS = async () => {
+  site2.value = await getSite(svc2.value, org2.value)
+  siteadmin.value = false
+  if (site2.value)
+    siteadmin.value = await isAdmin(site2.value)
+}
+
+const init2 = () => {
+  org2.value = ''
+  svc2.value = ''
+  site2.value = ''
+  ctxSite2.value = newCtx()
+  ctxSvc2.value = newCtx()
+}
+
+watch(() => adp.tab, (t) => {
+  if (t === 'sites') init1()
+  if (t === 'orgs') init2()
+})
+
+adp.value.tab = 'orgs'
+init2()
 
 /*
 const dialogs = reactive({ 

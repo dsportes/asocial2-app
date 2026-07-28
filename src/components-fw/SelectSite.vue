@@ -43,7 +43,9 @@ watch(siteloc, (v) => {
   sel()
 })
 
-watch(() => props.ctx, async () => { await init() })
+watch(() => props.ctx, async () => { 
+  await init() 
+})
 
 onMounted(async () => {
  await init()
