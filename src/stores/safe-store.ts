@@ -1345,6 +1345,7 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = keyToB64(await Crypt.crypt(pincxcy, keyK.value))
 
+    /*
     let t: Trusting = myTrusting.value
     if (!t) {
       t = new Trusting({
@@ -1362,7 +1363,16 @@ export const useSafeStore = defineStore('safe', () => {
       t.K1 = auth.value.K1
       t.K2 = auth.value.K2
       t.Kp = Kp
-    }
+    }*/
+    const t: Trusting = new Trusting({
+      userId: userId.value,
+      store: mySafeStore.value,
+      pseudo: pseudo,
+      cx: cx,
+      K1: auth.value.K1,
+      K2: auth.value.K2,
+      Kp: Kp
+    })
     await setTrusting(t)
 
     /*

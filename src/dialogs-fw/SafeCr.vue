@@ -173,20 +173,11 @@ watch(expandP, (v) => { resetP() })
 const init = () => {
   if (props.mode === 'a' || props.mode === 'u') {
     aliases.lenth = 0
-    if (sf.auth) {
-      aliases.push({txt: sf.auth.actual.a1K, ac: true, del: false })
-      if (sf.auth.actual.a2K)
-        aliases.push({txt: sf.auth.actual.a2K, ac: true, del: false })
-    }
     resetA()
   }
   if (props.mode === 'p' || props.mode === 'u') {
     listPAC.value.clear()
     phrases.length = 0
-    if (sf.auth) {
-      listPAC.value.add(sf.auth.hshp1)
-      if (sf.auth.hshp2) listPAC.value.add(sf.auth.hshp2)
-    }
     resetP()
   }
   setDiag()

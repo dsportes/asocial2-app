@@ -280,6 +280,7 @@ export default {
   op_$SetServicesLabels: 'Enrregistrement de la liste des services.',
   op_$SetOrgSvcSite: 'Enregistrement d\'un service pour une organisation.',
   op_$GetOrgSvc: 'Lecture des services assurés pour une organisation.',
+  op_$mdAliasFree: 'Vérification de la disponibilité de l\'alias choisi.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1198,22 +1199,22 @@ bla bla
   CATEG_ad: '01Administration générale',
   CATEG_auteurs: '02Auteurs et relecteurs',
 
-  TYPE_membrecodir: '01Nomination au Comité de Direction',
-  TYPE_membrecodir_det: 'Nom / pseudo: {1}',
-  TYPE_membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
+  TYPE_AS2$membrecodir: '01Nomination au Comité de Direction',
+  TYPE_AS2$membrecodir_det: 'Nom / pseudo: {1}',
+  TYPE_AS2$membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
 
-  TYPE_membreredaction: '01Nomination au Comité de Rédaction',
-  TYPE_membreredaction_det: 'Nom / pseudo: {1}',
+  TYPE_AS2$membreredaction: '01Nomination au Comité de Rédaction',
+  TYPE_AS2$membreredaction_det: 'Nom / pseudo: {1}',
 
-  TYPE_auteur: '02Création d\'un nouvel auteur',
-  TYPE_auteur_det: 'Non d\'auteur: {1}',
-  TYPE_auteur_nomAuteur: 'Non d\'auteur:',
-  TYPE_auteur_section: 'Section concernée du Comité de Rédaction:',
-  TYPE_coauteur_nomAuteur: 'Non d\'auteur:',
-  TYPE_coauteur_trigramme: 'Trigramme en tant que "co-auteur":',
+  TYPE_AS2$auteur: '02Création d\'un nouvel auteur',
+  TYPE_AS2$auteur_det: 'Non d\'auteur: {1}',
+  TYPE_AS2$auteur_nomAuteur: 'Non d\'auteur:',
+  TYPE_AS2$auteur_section: 'Section concernée du Comité de Rédaction:',
+  TYPE_AS2$coauteur_nomAuteur: 'Non d\'auteur:',
+  TYPE_AS2$coauteur_trigramme: 'Trigramme en tant que "co-auteur":',
 
-  TYPE_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
-  TYPE_coauteur_det: 'Surnom: {1}',
+  TYPE_AS2$coauteur: '02Nomination en tant que co-auteur d\'un auteur',
+  TYPE_AS2$coauteur_det: 'Surnom: {1}',
 
   FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
   FORMdiag_pseudo: 'Format incorrect du "pseudo": {0}.',
