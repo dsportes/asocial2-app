@@ -231,10 +231,10 @@ export class OperationG extends AOperation {
     const e = await AOperation.getOrgSvc(this.args.org)
     if (!e)
       throw new AppExc(3, 'unknown_org', this.opName, [this.args.org])
-    const url = e.get(this.args.svc)
-    if (!url)
+    this.args.site = e.get(this.args.svc)
+    if (!this.args.site)
       throw new AppExc(3, 'unknown_service_for_org', this.opName, [this.args.org, this.args.svc])
-    return url
+    return await this.getSiteUrl()
   }
 
   async getSiteUrl () : Promise<string> {

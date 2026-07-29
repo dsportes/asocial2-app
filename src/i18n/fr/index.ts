@@ -48,8 +48,9 @@ export default {
   nosvcorg: 'Ce service ne gère pas cette organisation.',
 
   servicestatus: 'Status des services',
+  orgStatus: 'Status de l\'organisation [{0}] pour le service "{2} [{1}]" (site: [{3}]).',
   svcStatus_label: 'Commentaire ...',
-  svcStatus_now: 'Observé à: {0}',
+  svcStatus_now: 'Status observé à: {0}',
   svcStatus_0: '(inconnu)',
   svcStatus_1: 'UP - dernière mise à jour: {0}',
   svcStatus_2: 'LECTURE - dernière mise à jour: {0}',
@@ -454,7 +455,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APnewsite: 'Créer un nouveau site',
   APsite_label: "Code du site",
   APurl_label: "URL du site",
-  APsetstsite: 'Mise à jour du status du site',
+  APsetstsite: 'Changement du status',
   APdeclorg: 'Déclaration des organisations',
   APchorg: 'Choisir une organisation:',
   APnewsvcorg: 'Nouveau service:',
@@ -489,6 +490,8 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
 `,
   APcfupdc_1: 'Je confirme la suppression',
   APcfupdc_0: 'Je renonce',
+  APnoadm: 'Cette fonctionnalité est requiert d\'avoir un pouvoir d\'administration pour cette organisation / service.',
+  APlstmanagers: 'Liste des attributions de pouvoirs de nature "manager".',
 
   APservices: 'Vous êtes "Administrateur Technique" de ... ',
   APnewManager_2: 'Rôles "manager"',

@@ -13,10 +13,7 @@
 import { ref, watch, onMounted } from 'vue'
 
 import stores from '../stores/all'
-// import { $t } from '../src-fw/util'
 import { AOperation } from '../src-fw/operation'
-
-const session = stores.session
 
 const props = defineProps({
   restricted: Boolean,
@@ -27,13 +24,6 @@ const emit = defineEmits(['change'])
 const config = stores.config
 const opts = ref()
 const svcloc = ref()
-
-const model = defineModel()
-
-const sel = () => {
-  model.value = svcloc.value ? svcloc.value.svc : ''
-  emit('change', model.value)
-}
 
 const init = async () => {
   opts.value = []
@@ -54,10 +44,12 @@ const init = async () => {
     svcloc.value = m.get(config.K.DEFAULT_SERVICE)
     if (!svcloc.value && opts.value.length) svcloc.value = opts.value[0]
   }
-  if (svcloc.value) sel()
+  if (svcloc.value) emit('change', svcloc.value.svc || '')
 }
 
-watch(svcloc, (v) => { sel() })
+watch(svcloc, (v) => { 
+  emit('change', svcloc.value.svc || '')
+})
 
 watch(() => props.ctx, async () => { 
   await init() })

@@ -11,28 +11,14 @@
     <div style="color:transparent;width:3px">*<q-tooltip>AdminPage</q-tooltip></div>
   </q-toolbar>
 
-  <!--div :class="sty() + ' q-pb-sm'">
-    <div class="column items-center">
-      <div class="titre-md text-italic text-center">{{ $t('APservices') }}</div>
-      <scroll-area size="xs" class="pwsm">
-        <div v-for="[k,svcOp] of svcOps" :key="k" 
-          :class="'row items-center cursor-pointer ' + (svcOp.svc === ui.adminPage.SVC && svcOp.op === ui.adminPage.$OP ? 'current': 'nocurrent')"
-          @click="setSvcOp(svcOp)">
-          <div class="col-6 text-center">{{ $t('services_' + svcOp.svc) }}</div>
-          <div class="col-6 text-center">{{ svcOp.op }}</div>
-        </div>
-      </scroll-area>
-    </div>
-  </div-->
-
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
     <q-tab name="sites" icon="cloud" :label="$t('sites')" />
     <q-tab name="orgs" icon="people" :label="$t('orgs')" />
-    <!--q-tab name="managers">
+    <q-tab name="managers">
       <img :src="superman" width="24px"/>
       <div>{{ $t('APnewManager_2') }}</div>
-    </q-tab-->
+    </q-tab>
   </q-tabs>
 </div>
 </template>
@@ -48,7 +34,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 // @ts-ignore
-// import superman from '../assets/superman.jpg'
+import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
 

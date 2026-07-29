@@ -93,89 +93,72 @@
 
   <div v-if="adp.tab === 'orgs'" class="pwsm">
     <div class="row items-center full-width">
-      <select-org class="col" @change="selOrg2" :initval="org2"/>
+      <select-org class="col" @change="selOrg2" :initval="so.org"/>
       <select-svc class="col q-px-sm" @change="selSvc2" 
         :ctx="ctxSvc2"/>
       <btn-cond class="col-auto q-mx-sm self-end"
-        icon="check" round :disable="!org2 || !svc2" @ok="setOS"/>
+        icon="check" round :disable="!so.org || !so.svc" @ok="setOS"/>
       <btn-cond class="col-auto q-mx-sm self-end"
         icon="close" round color="negative" @ok="clearOS"/>
     </div>
 
-    <status-site v-if="site2" v-model="site2" class="q-mt-md"/>
+    <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
 
-    <div v-if="site2" class="q-my-sm titre-md">
-      <div v-if="siteadmin" class="row q-gutter-sm items-center">
+    <div v-if="so.site" class="q-my-sm titre-md">
+      <div v-if="so.admin" class="row q-gutter-sm items-center">
         <img :src="superman" width="24px"/>
         <div class="titre-md text-bold">{{ $t('APsiteadmin') }}</div>
       </div>
-      <div class="titre-md">{{ $t('APsinfo', [site2, surl]) }}</div>
+      <div class="titre-md">{{ $t('APsinfo', [so.site, surl]) }}</div>
     </div>
 
-  </div>
-
-  <!--
-    <div v-if="sf.auth.admins">
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
-        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
-      <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
-    </div>
-    <div v-else>
-      <service-op class="q-mb-md" v-model="ui.adminPage"/>
-      <q-separator color="orange" class="q-my-sm"/>
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
-        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
-    </div>
-
-  <div v-if="ui.adminPage.tab === 'svcstatus'" class="pwsm">
-    <div v-if="sf.auth.admins">
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
-        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
-      <div v-else class="titre-md text-italic">{{ $t('svcStatus_no') }}</div>
-    </div>
-    <div v-else>
-      <service-op class="q-mb-md" v-model="ui.adminPage"/>
-      <q-separator color="orange" class="q-my-sm"/>
-      <service-status v-if="ui.adminPage.SVC && ui.adminPage.$OP"
-        :svc="ui.adminPage.SVC" :op="ui.adminPage.$OP"/>
+    <div v-if="so.site && so.org" class="q-my-md">
+      <div class="q-mb-sm titre-md">{{ $t('orgStatus', [so.org, so.svc, lsvc, so.site]) }}</div>
+      <status-org v-model="so"/>
     </div>
   </div>
 
   <div v-if="ui.adminPage.tab === 'managers'" class="pwsm">
-
-    <div v-if="sf.auth.admins">
-      <div v-if="!ui.adminPage.SVC" class="titre-md text-italic">{{ $t('svcStatus_no2') }}</div>
-      <div v-else>
-        <div class="q-my-md full-width row q-gutter-sm items-center">
-          <select-org v-model="org" @change="dolist"/>
-          <btn-cond round icon="refresh" @ok="dolist" size="lg"/>
-        </div>
-
-        <div v-if="org">
-          <scroll-area v-if="lstMgr.length"
-            class="full-width bord1">
-            <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
-              <div class="row">
-                <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
-                <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
-              </div>
-              <div class="row">
-                <div class="col-1"></div>
-                <div class="col-5 row">
-                  <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-                  <div class="col ellipsis">{{m.props.name || '?'}}</div>
-                </div>
-                <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
-              </div>
-            </div>
-          </scroll-area>
-          <div v-else class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
-        </div>
-      </div>
+    <div class="row items-center full-width">
+      <select-org class="col" @change="selOrg2" :initval="so.org"/>
+      <select-svc class="col q-px-sm" @change="selSvc2" 
+        :ctx="ctxSvc2"/>
+      <btn-cond class="col-auto q-mx-sm self-end"
+        icon="check" round :disable="!so.org || !so.svc" @ok="setOS2"/>
+      <btn-cond class="col-auto q-mx-sm self-end"
+        icon="close" round color="negative" @ok="clearOS"/>
     </div>
 
+    <div v-if="so.ready && !so.admin">
+      <div class="msg q-my-sm">{{ $t('APnoadm') }}</div>
+    </div>
+    <div v-if="so.admin">
+      <div class="row nowrap justify-between q-gutter-sm q-my-sm items-center">
+        <div class="titre-md text-italic">{{ $t('APlstmanagers') }}</div>
+        <btn-cond class="col-auto q-mx-sm self-end"
+          icon="refresh" round @ok="setOS2"/>
+      </div>
+
+      <scroll-area v-if="lstMgr.length"
+        class="full-width bord1">
+        <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
+          <div class="row">
+            <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
+            <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
+          </div>
+          <div class="row">
+            <div class="col-1"></div>
+            <div class="col-5 row">
+              <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
+              <div class="col ellipsis">{{m.props.name || '?'}}</div>
+            </div>
+            <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
+          </div>
+        </div>
+      </scroll-area>
+      <div v-else class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
+    </div>
   </div>
--->
 
   <!-- dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
     :title="$t('APlistmgr')" vh="75">
@@ -224,6 +207,7 @@ import stores from '../stores/all'
 import { $t, dkli, dhcool, sty } from '../src-fw/util'
 
 import StatusSite from '../components-fw/StatusSite.vue'
+import StatusOrg from '../components-fw/StatusOrg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
@@ -235,7 +219,6 @@ import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 // import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { AOperation, MDOperation, isAdmin, getSite } from 'src/src-fw/operation'
-import { FW$getStatus, FW$setStatus } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 
@@ -286,8 +269,11 @@ const saveLabels = async (json: string) => {
   }
 }
 
-const siteadmin = ref(false)
-const curSite = ref('')
+const curSite = reactive({
+  org: '',
+  site: '',
+  admin: false
+})
 const newsite = ref(false)
 const nsite = reactive({ inp: '', err: ''})
 const nurl = reactive({ inp: '', err: ''})
@@ -304,9 +290,9 @@ const ctxSvc = ref()
 const ctxSite = ref()
 
 const init1 = () => {
-  curSite.value = ''
+  curSite.site = ''
+  curSite.admin = false
   adp.value.site = ''
-  siteadmin.value = false
   newsite.value = false
   nsite.inp = ''; nsite.err = ''
   nurl.inp = ''; nurl.err = ''
@@ -324,14 +310,13 @@ const init1 = () => {
 
 const setCurSite = async (site: string) => {
   if (adp.value.site === site) {
-    curSite.value = ''
+    curSite.site = ''
     adp.value.site = ''
   } else {
-    curSite.value = site
+    curSite.site = site
     adp.value.site = site
-    siteadmin.value = false
     if (site)
-      siteadmin.value = await isAdmin(site)
+      curSite.admin = await isAdmin(site)
   }
 }
 
@@ -441,37 +426,50 @@ const confirm = async (c) => {
   ctxSite.value = newCtx()
 }
 
-const org2 = ref()
-const svc2 = ref()
-const ctxSite2 = ref()
 const ctxSvc2 = ref()
-const site2 = ref()
-const surl = computed(() => 
-  AOperation.urls.get(site2.value) || '?')
-const selOrg2 = (v) => {
-  org2.value = v
-}
-const selSvc2 = (v) => {
-  svc2.value = v
-}
+const lstMgr = ref([])
 
+const selSvc2 = (v) => {
+  so.svc = v
+}
+const so = reactive({
+  org: '',
+  site: '',
+  svc: '',
+  ready: false,
+  admin: false
+})
+const surl = computed(() => 
+  AOperation.urls.get(so.site) || '?')
+const lsvc = computed(() =>
+  AOperation.labels.get(so.svc) || '?')
+const selOrg2 = (v) => {
+  so.org = v
+}
 const clearOS = () => {
   init2()
 }
 
 const setOS = async () => {
-  site2.value = await getSite(svc2.value, org2.value)
-  siteadmin.value = false
-  if (site2.value)
-    siteadmin.value = await isAdmin(site2.value)
+  so.site = await getSite(so.svc, so.org)
+  so.ready = true
+  if (so.site)
+    so.admin = await isAdmin(so.site)
+}
+
+const setOS2 = async () => {
+  so.site = await getSite(so.svc, so.org)
+  so.ready = true
+  if (so.site)
+    so.admin = await isAdmin(so.site)
+  // TODO
+  lstMgr.value = []
 }
 
 const init2 = () => {
-  org2.value = ''
-  svc2.value = ''
-  site2.value = ''
-  ctxSite2.value = newCtx()
+  so.org = ''; so.site = ''; so.svc = ''; so.ready = false
   ctxSvc2.value = newCtx()
+  lstMgr.value = []
 }
 
 watch(() => adp.tab, (t) => {
