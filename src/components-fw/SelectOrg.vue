@@ -8,7 +8,7 @@
     <q-icon name="arrow_drop_down" size="24px"/>
     <q-menu v-model="menu" anchor="top left" self="top left"
       transition-show="flip-up" transition-hide="flip-down">
-      <input-A size="org" v-model="m" :initval="initval"
+      <input-A size="org" v-model="m" :initval="defOrg"
         :list="lst" prefix="ORG"
         style="width:260px"
         @validate="val"/>
@@ -27,9 +27,21 @@ const lst = computed(() => session.orgs.lst)
 
 const model = defineModel()
 const props = defineProps({
-  initval: String
+  reset: Number,
+  initval: String, // Valeur initiale, si '?' force à ''
+  /* objet permettant à l'appelant de situer l'instance du composant 
+  ayant émis l'événement.
+  */
+  ctx: Object
 })
-const emit = defineEmits(['change'])
+
+const defOrg = computed(() => {
+  if (props.initval) return props.initval === '?' ? '' : props.initval
+  return session.currentOrg || ''
+})
+
+// Emet 2 arguments: org (ou ''), ctx (ou null)
+const emit = defineEmits(['select'])
 
 const menu = ref(false)
 const m = ref()
@@ -38,17 +50,18 @@ const val = () => {
   if (m.value !== model.value) {
     model.value = m.value
     session.addOrg(m.value)
-    emit('change', m.value)
+    emit('select', m.value, props.ctx || null)
   }
   menu.value = false
 }
 
 const init = () => {
-  m.value = props.initval || ''
-  model.value = props.initval || ''
+  m.value = defOrg.value
+  model.value = defOrg.value
 }
 
-watch(() => props.initval, () => init() )
+watch(() => [props.initval, props.ctx, props.reset], () => 
+  init() )
 
 init()
 

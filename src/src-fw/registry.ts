@@ -6,6 +6,8 @@ import { AppExc } from '../src-fw/log'
 export type SOA = {
   svc: string
   org: string
+  svcLabel?: string
+  site?: string
   admin? : boolean
 }
 

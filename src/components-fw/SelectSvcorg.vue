@@ -2,11 +2,12 @@
 event : 'select', svc (org est session.orgs.c)
 -->
 <template>
-  <div class="row q-gutter-xs items-center">
-    <btn-cond icon="backspace" flat color="warning" @ok="ko"/>
-    <select-svc v-model="svc"/>
-    <select-org v-model="org"/>
-    <btn-cond icon="check" round size="lg" color="green-5"
+  <div class="row q-gutter-xs items-center full-width nowrap">
+    <btn-cond class="col-auto" icon="backspace" flat color="warning" @ok="doreset"/>
+    <select-org class="col" v-model="org" :initval="initorg" :reset="reset"/>
+    <select-svc class="col" v-model="svc" :initval="initsvc" :reset="reset"
+      :restricted="restricted" :ctx="ctx || null"/>
+    <btn-cond class="col-auto" icon="check" round size="lg" color="green-5"
       :disable="!svc || !org" @ok="ok"/>
   </div>
   <div v-if="diag" class="msg">{{ $t('nosvcorg') }}</div>
@@ -22,39 +23,50 @@ import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import { SOA } from '../src-fw/registry'
 
-const session = stores.session
-const sf = stores.safe
-const config = stores.config
+const props = defineProps({
+  restricted: Boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
+  initorg: String, // Valeur initiale, si '?' force à ''
+  initsvc: String, // Valeur initiale, si '?' force à ''
+  /* objet permettant à l'appelant de situer l'instance du composant 
+  ayant émis l'événement.
+  si ctx.excl est fourni, liste des services NON sélectionnables.
+  */
+  ctx: Object
+})
 
+const session = stores.session
+
+// Emet 2 arguments: SOA (ou null), ctx (ou null)
 const emit = defineEmits(['select'])
 
-const svc = ref(session.currentSvc)
-const org = ref(session.currentOrg)
+const reset = ref(1)
+const doreset = () => { setTimeout(() => { reset.value++ }, 5) }
+
+const svc = ref()
+const org = ref()
 const diag = ref(false)
 
 const ok = async () => {
   if (session.hasNet) {
-    const site = await getSite(svc.value, org.value)
+    const site = await getSite(svc.value.svc, org.value)
     if (site) {
       const soa : SOA = {
-        svc: svc.value,
+        svc: svc.value.svc,
+        svcLabel: svc.value.label,
         org: org.value,
+        site: site || '',
         admin: await isAdmin(site)
       }
-      emit('select', soa)
+      emit('select', soa, props.ctx || null)
     }
     else diag.value = true
   } else emit('select', {
         svc: svc.value,
         org: org.value,
+        svcLabel: '?',
+        ctx: props.ctx || '',
         admin: false
     })
-}
-
-const ko = () => {
-  svc.value = config.K.DEFAULT_SERVICE
-  org.value = ''
-  emit('select', null)
 }
 
 </script>

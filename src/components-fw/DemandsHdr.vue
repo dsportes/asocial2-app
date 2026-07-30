@@ -41,7 +41,7 @@ import FormZoom from '../components-fw/FormZoom.vue'
 import FormNew from '../components/FormNew.vue'
 import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import { SOA } from '../src-fw/documents'
+import { SOA } from '../src-fw/registry'
 
 const ui = stores.ui
 const fst = stores.form

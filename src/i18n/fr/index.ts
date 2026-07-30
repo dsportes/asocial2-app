@@ -48,7 +48,7 @@ export default {
   nosvcorg: 'Ce service ne gère pas cette organisation.',
 
   servicestatus: 'Status des services',
-  orgStatus: 'Status de l\'organisation [{0}] pour le service "{2} [{1}]" (site: [{3}]).',
+  orgStatus: 'Status de l\'organisation [{0}] pour le service "{1}" (site: [{2}]).',
   svcStatus_label: 'Commentaire ...',
   svcStatus_now: 'Status observé à: {0}',
   svcStatus_0: '(inconnu)',

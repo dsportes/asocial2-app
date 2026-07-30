@@ -255,7 +255,11 @@ export const useUiStore = defineStore('ui', () => {
     return idx
   }
 
+  const _idc = ref(1)
+  const idc = () => _idc.value++
+
   return {
+    idc,
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort,

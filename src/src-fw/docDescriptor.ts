@@ -252,11 +252,11 @@ export class FormType {
     if (!DocDescriptor.services.has(svc))
       throw new AppExc(3, 'EX3_not_configured_service', 'FormType', [svc])
     this.svc = svc
-    this.type = type
+    this.type = svc + '$' + type
     this.categ = categ
     this.key = key
     this.creds = creds
-    FormType.all.set(svc + '$' + type, this)
+    FormType.all.set(this.type, this)
     for(const c of creds) {
       if (c !== 'A') {
         const cl = c.substring(0, c.indexOf('/'))

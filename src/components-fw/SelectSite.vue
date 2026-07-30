@@ -1,7 +1,7 @@
 <!-- Select d'un service
 -->
 <template>
-  <q-select v-model="siteloc" dense options-dense
+  <q-select v-model="model" dense options-dense
     style="min-width:150px; height:40px" :label="$t('site')"
     transition-show="flip-up" transition-hide="flip-down"
     :options="opts"/>
@@ -9,41 +9,41 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 
 import { AOperation } from '../src-fw/operation'
+import stores from '../stores/all'
+const ui = stores.ui
 
-const props = defineProps({
-  ctx: Object
-})
-
-const opts = ref([])
-
-const emit = defineEmits(['change'])
-
-const siteloc = ref()
+const idc = ref(ui.idc())
 
 const model = defineModel()
 
-const sel = () => {
-  model.value = siteloc.value ? siteloc.value : ''
-  props.ctx.site = model.value
-  if (props.ctx.site !== props.ctx.initial)
-    emit('change', props.ctx)
-}
+const props = defineProps({
+  reset: Number,
+  initval: String,
+  ctx: Object
+})
+
+const defSite = computed(() => 
+  props.initval && props.initval === '?' ? '' : props.initval)
+
+const opts = ref([])
+
+const emit = defineEmits(['select'])
 
 const init = async () => {
   const ls = Array.from((await AOperation.getSites()).keys())
   ls.sort((a,b) => a > b ? 1 : (a < b ? -1 : 0))
   opts.value = ls
-  siteloc.value = props.ctx.initial
+  model.value = defSite.value
 }
 
-watch(siteloc, (v) => {
-  sel()
+watch(() => model.value, (v) => {
+  if (model.value !== defSite.value) emit('select', model.value, props.ctx || null)
 })
 
-watch(() => props.ctx, async () => { 
+watch(() => [props.initval, props.ctx, props.reset], async () => { 
   await init() 
 })
 

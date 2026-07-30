@@ -44,9 +44,11 @@
         </div>
         <div :class="sty() + ' row items-center no-wrap'">
           <div class="q-mr-md col-auto">{{ $t('APchorg') }}</div>
-          <select-org class="col" @change="selOrg" :initval="org"/>
-          <btn-cond class="q-ml-sm col-auto" icon="close" 
-            round color="warning" @ok="selOrg('')"/>
+          <select-org class="col" @select="selOrg" initval="?"/>
+          <btn-cond class="q-ml-sm col-auto" icon="refresh" 
+            :disable="!org" round @ok="selOrg(org)"/>
+          <btn-cond class="q-ml-sm col-auto" icon="check" 
+            round @ok="doreset"/>
         </div>
       </div>
 
@@ -56,10 +58,10 @@
             {{ $t(orgSvcs && orgSvcs.size ? 'APnewsvcorg' : 'APneworg', [org]) }}
           </div>
           <div class="row items-center full-width">
-            <select-svc class="col q-px-sm" @change="selSvc" noinit
-              :ctx="ctxSvc"/>
-            <select-site class="col q-px-sm" @change="selSiteNv"
-              :ctx="ctxSite"/>
+            <select-svc class="col q-px-sm" @select="selSvc" initval="?"
+              :ctx="ctxSvc" :reset="reset"/>
+            <select-site class="col q-px-sm" @select="selSiteNv" initval="?"
+              :reset="reset"/>
             <btn-cond class="col-auto q-mx-sm self-end"
               icon="add" round
               :disable="!org || !svc || !siteNv" @ok="declare"/>
@@ -67,11 +69,11 @@
         </div>
 
         <div v-if="orgSvcs && orgSvcs.size">
-          <div v-for="([svc, site], idx) in orgSvcs" :key="svc">
+          <div v-for="([svc, sx], idx) in orgSvcs" :key="svc">
             <div :class="'row q-my-sm q-mx-xs items-center nowrap ' + dkli(idx)">
-              <div class="col font-mono q-mx-sm">{{ svc }}</div>
-              <select-site class="col q-mx-sm" @change="updSite"
-                :ctx="{ svc: svc, initial: site }"/>
+              <div class="col font-mono q-mx-sm">{{ labelSvc(svc) }}</div>
+              <select-site class="col q-mx-sm" @select="updSite" :initval="sx"
+                :ctx="{ svc: svc, sitebf: sx }"/>
               <btn-cond class="col-auto q-mx-sm" round color="warning" icon="delete"
                 @ok="delSvc(svc)"/>
             </div>
@@ -92,15 +94,8 @@
     @option="confirmDS"/>
 
   <div v-if="adp.tab === 'orgs'" class="pwsm">
-    <div class="row items-center full-width">
-      <select-org class="col" @change="selOrg2" :initval="so.org"/>
-      <select-svc class="col q-px-sm" @change="selSvc2" 
-        :ctx="ctxSvc2"/>
-      <btn-cond class="col-auto q-mx-sm self-end"
-        icon="check" round :disable="!so.org || !so.svc" @ok="setOS"/>
-      <btn-cond class="col-auto q-mx-sm self-end"
-        icon="close" round color="negative" @ok="clearOS"/>
-    </div>
+    <select-svcorg class="full-width q-mx-xs"
+      initorg="?" initsvc="?" @select="setOS"/>
 
     <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
 
@@ -113,21 +108,13 @@
     </div>
 
     <div v-if="so.site && so.org" class="q-my-md">
-      <div class="q-mb-sm titre-md">{{ $t('orgStatus', [so.org, so.svc, lsvc, so.site]) }}</div>
+      <div class="q-mb-sm titre-md">{{ $t('orgStatus', [so.org, so.svcLabel, so.site]) }}</div>
       <status-org v-model="so"/>
     </div>
   </div>
 
   <div v-if="ui.adminPage.tab === 'managers'" class="pwsm">
-    <div class="row items-center full-width">
-      <select-org class="col" @change="selOrg2" :initval="so.org"/>
-      <select-svc class="col q-px-sm" @change="selSvc2" 
-        :ctx="ctxSvc2"/>
-      <btn-cond class="col-auto q-mx-sm self-end"
-        icon="check" round :disable="!so.org || !so.svc" @ok="setOS2"/>
-      <btn-cond class="col-auto q-mx-sm self-end"
-        icon="close" round color="negative" @ok="clearOS"/>
-    </div>
+    <select-svcorg initorg="?" initsvc="?" @select="setOS2"/>
 
     <div v-if="so.ready && !so.admin">
       <div class="msg q-my-sm">{{ $t('APnoadm') }}</div>
@@ -206,6 +193,7 @@ import stores from '../stores/all'
 // import { $Cred } from '../src-fw/documents'
 import { $t, dkli, dhcool, sty } from '../src-fw/util'
 
+import { SOA } from '../src-fw/registry'
 import StatusSite from '../components-fw/StatusSite.vue'
 import StatusOrg from '../components-fw/StatusOrg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -215,6 +203,7 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
+import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 // import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
@@ -240,6 +229,11 @@ const loadSites = async (force?: boolean) => {
   const ls = Array.from(await AOperation.getSites(force))
   ls.sort((a,b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0))
   sites.value = ls
+}
+
+const labelSvc = (svc: string) => {
+  const l = svcLabels.value.get(svc) || ''
+  return !l ? svc : (l + ' [' + svc + ']')
 }
 
 const loadLabels = async (force?: boolean) => {
@@ -287,7 +281,9 @@ const cascf = ref('')
 const argscf = ref()
 const excl = ref()
 const ctxSvc = ref()
-const ctxSite = ref()
+
+const reset = ref(1)
+const doreset = () => { setTimeout(() => { reset.value++ }, 5) }
 
 const init1 = () => {
   curSite.site = ''
@@ -305,7 +301,6 @@ const init1 = () => {
   argscf.value = null
   excl.value = null
   ctxSvc.value = newCtx()
-  ctxSite.value = newCtx()
 }
 
 const setCurSite = async (site: string) => {
@@ -358,8 +353,8 @@ const setSite = async (site: string, url: string) => {
   }
 }
 
-const selSvc = (_svc: string) => {
-  svc.value = _svc
+const selSvc = (optSvc: { svc: string, label: string }) => {
+  svc.value = optSvc.svc
 }
 
 const selOrg = async (_org: string) => {
@@ -368,16 +363,15 @@ const selOrg = async (_org: string) => {
     svc.value = ''
     site.value = ''
     siteNv.value = ''
-    ctxSite.value = newCtx()
     orgSvcs.value = await AOperation.getOrgSvc(_org)
-    ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
+    ctxSvc.value = newCtx(true)
   } else org.value = ''
 }
 
-const updSite = (ctx) => {
-  site.value = ctx.site
+const updSite = (_site, ctx) => {
+  site.value = _site
   svc.value = ctx.svc
-  argscf.value = [org.value, ctx.svc, ctx.initial, ctx.site]
+  argscf.value = [org.value, ctx.svc, ctx.sitebf, ctx.site]
   cascf.value = 'b'
   dialogs.cf = true
 }
@@ -389,13 +383,13 @@ const delSvc = (_svc: string) => {
   dialogs.cf = true
 }
 
-const newCtx = (excl?) => {
-  const c = new Object(); c['initial'] = ''
-  if (excl) c['excl'] = excl
+const newCtx = (opt?: boolean) => {
+  const c = new Object()
+  if (opt) c['excl'] = new Set(Array.from(orgSvcs.value.keys()))
   return c
 }
 
-const selSiteNv = ({ site }) => {
+const selSiteNv = (site, ctx) => {
   siteNv.value = site
 }
 
@@ -404,8 +398,8 @@ const declare = async () => {
   svc.value = ''
   site.value = ''
   siteNv.value = ''
-  ctxSite.value = newCtx()
-  ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
+  doreset()
+  ctxSvc.value = newCtx(true)
 }
 
 const confirm = async (c) => {
@@ -418,20 +412,15 @@ const confirm = async (c) => {
       orgSvcs.value = await AOperation.setOrgSvc(org.value, svc.value, '')
       org.value = ''
     }
-    ctxSvc.value = newCtx(new Set(Array.from(orgSvcs.value.keys())))
+    ctxSvc.value = newCtx(true)
   }
   svc.value = ''
   site.value = ''
   siteNv.value = ''
-  ctxSite.value = newCtx()
 }
 
-const ctxSvc2 = ref()
 const lstMgr = ref([])
 
-const selSvc2 = (v) => {
-  so.svc = v
-}
 const so = reactive({
   org: '',
   site: '',
@@ -441,40 +430,31 @@ const so = reactive({
 })
 const surl = computed(() => 
   AOperation.urls.get(so.site) || '?')
-const lsvc = computed(() =>
-  AOperation.labels.get(so.svc) || '?')
-const selOrg2 = (v) => {
-  so.org = v
-}
-const clearOS = () => {
-  init2()
+
+const setOS = async (soa: SOA) => {
+  so.org = soa.org
+  so.svc = soa.svc
+  so.svcLabel = soa.svcLabel
+  so.site = soa.site
+  so.admin = soa.admin
+  so.ready = true
 }
 
-const setOS = async () => {
-  so.site = await getSite(so.svc, so.org)
-  so.ready = true
-  if (so.site)
-    so.admin = await isAdmin(so.site)
-}
-
-const setOS2 = async () => {
-  so.site = await getSite(so.svc, so.org)
-  so.ready = true
-  if (so.site)
-    so.admin = await isAdmin(so.site)
+const setOS2 = async (soa: SOA) => {
+  await setOS(soa)
   // TODO
   lstMgr.value = []
 }
 
 const init2 = () => {
   so.org = ''; so.site = ''; so.svc = ''; so.ready = false
-  ctxSvc2.value = newCtx()
   lstMgr.value = []
 }
 
 watch(() => adp.tab, (t) => {
   if (t === 'sites') init1()
   if (t === 'orgs') init2()
+  if (t === 'managers') init2()
 })
 
 adp.value.tab = 'orgs'
