@@ -1,4 +1,4 @@
-import { schemaExc } from '../as2/schema'
+import { schemaExcAS2 } from '../as2/schema'
 
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
@@ -6,7 +6,7 @@ import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { AS2$Auteur } from './documents'
 
-const ok = !schemaExc()
+const ok = !schemaExcAS2()
 let n = 0
 
 /*
@@ -17,7 +17,12 @@ new FormType(svc, 'auteur', 'k2', ['Redaction/1'])
 new FormType(svc, 'coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
 */
 
-class AS2$Form_membrecomite extends $Form {
+class AS2$Form extends $Form {
+  constructor () { super() }
+}
+if (ok) { n++; Registry.register(AS2$Form) }
+
+class AS2$Form_membrecomite extends AS2$Form {
   docCl: string
 
   constructor (docCl: string) { super(); this.docCl = docCl }
@@ -46,7 +51,6 @@ class AS2$Form_membrecomite extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-if (ok) { n++; Registry.register(AS2$Form_membrecomite) }
 
 class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }

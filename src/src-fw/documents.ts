@@ -151,7 +151,7 @@ export class $MDEvent {
   comment: string // commentaire de l'utilisateur cible crypté par lui.
   lv: number // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
 
-  get typeEd () { return ($t('TYPE_' + this.type)).substring(2)}
+  get typeEd () { return ($t('TYPE_' + this.svc + '_' + this.type)).substring(2)}
 
   get detailEd () {
     return this.detail && this.detail.length > 0 && hasMessage(this.detail[0]) ?
@@ -278,7 +278,7 @@ export class $Form extends $Document {
   _aesU?: Uint8Array | null = null
 
   get typeEd () {
-    return $t('TYPE_' + this.type).substring(2)
+    return $t('TYPE_' + this.svc + '_' + this.type).substring(2)
   }
 
   get soa () : SOA { return { svc: this.svc, org: this.org }}
@@ -334,7 +334,7 @@ export class $Form extends $Document {
     'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
 
   static new (obj) : $Form {
-    const f = Registry.newF(obj.svc, 'Form', obj)
+    const f = Registry.newF(obj.svc, obj.svc + '$' + 'Form', obj)
     for (const p of $Form.lp1) f[p] = obj[p]
     if (!f.opts) f.opts = {}
     if (!f.opts.credTemplates) f.opts.credTemplates = {}

@@ -1,11 +1,11 @@
-import { schemaExc } from '../as2/schema'
+import { schemaExcAS2 } from '../as2/schema'
 
 import { Registry } from '../src-fw/registry'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { $Credential } from '../src-fw/documents'
 
-const ok = !schemaExc()
+const ok = !schemaExcAS2()
 let n = 0
 
 /* Credentials **************************************************************************/

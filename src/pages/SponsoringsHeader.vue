@@ -87,7 +87,7 @@ const dialogs = reactive({
 const formType: Ref<FormType> = ref()
 const ftLabel = computed(() => {
   if (!formType.value) return '?'
-  const y = $t('TYPE_' + formType.value.type)
+  const y = $t('TYPE_' + formType.svc + '_' + formType.value.type)
   return y.substring(2)
 })
 const fctx = ref(null)

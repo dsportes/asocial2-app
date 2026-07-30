@@ -9,14 +9,14 @@
     <div v-if="formType" class="column items-center">
       <div class="row items-center justify-between full-width q-pa-xs">
         <btn-cond icon="close" color="warning" :label="$t('giveup')" @ok="nocreate"/>
-        <div class="titre-md text-bold text-italic">{{ ($t('TYPE_' + formType.type)).substring(2) }}</div>
+        <div class="titre-md text-bold text-italic">{{ $t('TYPE_' + formType.svc + '_' + formType.type).substring(2) }}</div>
       </div>
       <select-svcorg @select="oknew"/>
     </div>
   </div>
 
   <dialog-std0 v-if="dialogs.newdemand" v-model="dialogs.newdemand" width="pwsm" vh="80"
-    :title="$t('FORMnewd', [$t('TYPE_' + formType.type).substring(2)])"
+    :title="$t('FORMnewd', [$t('TYPE_' + formType.svc + '_' +formType.type).substring(2)])"
     hdrclass="tbs" vue="DemandsHdr" @close="close">
     <template #default>
       <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>

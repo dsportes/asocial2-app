@@ -252,7 +252,7 @@ export class FormType {
     if (!DocDescriptor.services.has(svc))
       throw new AppExc(3, 'EX3_not_configured_service', 'FormType', [svc])
     this.svc = svc
-    this.type = svc + '$' + type
+    this.type = type
     this.categ = categ
     this.key = key
     this.creds = creds

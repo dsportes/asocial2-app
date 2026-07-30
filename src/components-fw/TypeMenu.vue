@@ -78,7 +78,7 @@ const getFT = (c: string) : LabVal[] => {
   const x = ftmap.value.get(c)
   for(const [type, ft] of x) 
     if (!props.allow || props.allow.has(type))
-      l.push({ label: $t('TYPE_' + type), value: ft })
+      l.push({ label: $t('TYPE_' + ft.svc + '_' + type), value: ft })
   l.sort((a, b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : 0))
   for(const x of l) x.label = x.label.substring(2)
   return l

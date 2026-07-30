@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ type + '_' + champ) }}</div>
+  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ svc + '_' + type + '_' + champ) }}</div>
 
     <div v-if="fst.visU" class="q-my-sm q-pl-md">
       <div class="text-italic">{{ $t('FORMdem_2_label') }}</div>
@@ -42,6 +42,7 @@ import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 
 const props = defineProps({
   type: String,
+  svc: String,
   champ: String,
   enum: String
 })

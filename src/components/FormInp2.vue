@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ type + '_' + champ) }}</div>
+  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ svc + '_' + type + '_' + champ) }}</div>
 
     <div v-if="fst.visU" class="row q-px-xs items-center">
       <input-b v-if="fst.isDemand && fst.editable"
@@ -40,6 +40,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 
 const props = defineProps({
   type: String,
+  svc: String,
   champ: String,
   size: String,
   valbtn: Boolean

@@ -60,7 +60,7 @@ Contrôlé par ui.leftMenu
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, reactive } from 'vue'
+// import { ref, computed, reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 import { ErrorTest } from '../src-fw/operations'
@@ -82,7 +82,7 @@ const test = async () => {
   await new ErrorTest('AS2', 'doda').run()
 }
 
-const hasManagedOrgs = computed(() => sf.managerCreds().size !== 0)
+// const hasManagedOrgs = computed(() => sf.managerCreds().size !== 0)
 
 const openAdmin = (svc) => {
   ui.closeMenu()

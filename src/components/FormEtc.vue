@@ -10,26 +10,26 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <div v-if="fst.form">
   <!-- membrecodir --------------------------------------------------------------->
   <div v-if="fst.form.type === 'membrecodir'">
-    <form-inp2 v-model="errs.pseudo" type="membrecodir" champ="pseudo" size="pseudo"/>
+    <form-inp2 v-model="errs.pseudo" type="membrecodir" :svc="fst.form.svc" champ="pseudo" size="pseudo"/>
   </div>
 
   <!-- membreredaction --------------------------------------------------------------->
   <div v-if="fst.form.type === 'membreredaction'">
-    <form-inp2 v-model="errs.pseudo" type="membreredaction" champ="pseudo" size="pseudo"/>
+    <form-inp2 v-model="errs.pseudo" type="membreredaction" :svc="fst.form.svc" champ="pseudo" size="pseudo"/>
   </div>
 
   <!-- auteur --------------------------------------------------------------->
   <div v-if="fst.form.type === 'auteur'">
-    <form-inp2 v-model="errs.nomAuteur" type="auteur" champ="nomAuteur" 
+    <form-inp2 v-model="errs.nomAuteur" type="auteur" champ="nomAuteur" :svc="fst.form.svc"
       size="auteur" valbtn />
-    <form-enum2 v-model="errs.section" type="auteur" champ="section" enum="Section"/>
+    <form-enum2 v-model="errs.section" type="auteur" champ="section" enum="Section" :svc="fst.form.svc"/>
   </div>
 
   <!-- coauteur --------------------------------------------------------------->
   <div v-if="fst.form.type === 'coauteur'">
-    <form-inp2 v-model="errs.nomAuteur" type="coauteur" champ="nomAuteur" 
+    <form-inp2 v-model="errs.nomAuteur" type="coauteur" champ="nomAuteur" :svc="fst.form.svc"
       size="auteur" valbtn />
-    <form-inp2 v-model="errs.trigramme" type="coauteur" champ="trigramme" 
+    <form-inp2 v-model="errs.trigramme" type="coauteur" champ="trigramme" :svc="fst.form.svc"
       size="trig" />
   </div>
 

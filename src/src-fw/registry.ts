@@ -32,7 +32,7 @@ export class Registry {
       throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
     let dd = DocDescriptor.get(topcl)
     if (!dd) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [clazz.name])
+      throw new AppExc(103, 'not_configured_doc_class', 'Registry.register', [clazz.name])
     clazz['docDescriptor'] = dd
     if (clazz['manager']) Registry.managers.add(clazz.name)
     this.classes.set(clazz.name, clazz)
@@ -42,7 +42,7 @@ export class Registry {
   static getCl (svc: string, docCl: string) : Function {
     const cl = Registry.classes.get(topCl(svc, docCl))
     if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [topCl(svc, docCl)])
+      throw new AppExc(103, 'not_configured_doc_class', 'Registry.getCl', [topCl(svc, docCl)])
     return cl
   }
 
@@ -58,7 +58,7 @@ export class Registry {
     const cln = topCl(svc, docCl) + (subClassBy ? '_' + data[subClassBy] : '')
     const cl = Registry.classes.get(cln)
     if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', null, [cln])
+      throw new AppExc(103, 'not_configured_doc_class', 'Registry.getClass', [cln])
     return cl
   }
 
