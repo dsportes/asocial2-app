@@ -10,7 +10,8 @@ let n = 0
 
 /* Credentials **************************************************************************/
 class AS2$Credential_CoDir extends $Credential {
-  constructor (obj?: Object) { super(obj) }
+  constructor (obj?: Object) { 
+    super(obj) }
 
   get hasDispProps () { return true }
 
