@@ -61,9 +61,9 @@
           <q-item-section class="fs-lg">{{$t('servicestatus')}}</q-item-section>
         </q-item>
 
-        <q-item clickable dense v-close-popup @click="dialogs.pings = true">
-          <q-item-section avatar><q-avatar size="xl" icon="network_ping"/></q-item-section>
-          <q-item-section class="fs-lg">{{$t('tech')}}</q-item-section>
+        <q-item clickable dense v-close-popup @click="dialogs.crypto = true">
+          <q-item-section avatar><q-avatar size="xl" icon="key"/></q-item-section>
+          <q-item-section class="fs-lg">{{$t('crypto')}}</q-item-section>
         </q-item>
 
         <q-separator/>
@@ -98,18 +98,33 @@
 
   <safe-export v-if="dialogs.SafeExport" v-model="dialogs.SafeExport" tab="restore" @done="coolBye"/>
 
-  <!-- q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
+  <q-dialog v-model="dialogs.ServiceStatus" vue="ServiceStatus"
     full-height persistent>
-    <q-card :class="sty('sm')">
+    <q-card :class="sty('sm') + ' q-pa-sm'">
       <q-toolbar class="tbs">
         <btn-cond flat :label="$t('gotit')" icon="check" color="none"
-          @ok="dialogs.ServiceStatus = false"/>
+          @ok="closeSS"/>
         <q-toolbar-title class="titre-md full-width text-center">{{$t('servicestatus')}}</q-toolbar-title>
       </q-toolbar>
-      <service-op class="q-mt-sm q-mb-lg q-px-xs" v-model="svcop"/>
-      <service-status v-if="svcop.SVC && svcop.$OP" :svc="svcop.SVC" :op="svcop.$OP"/>
+    <select-svcorg class="full-width q-mx-xs"
+      initorg="?" initsvc="?" @select="setOS"/>
+
+    <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
+
+    <div v-if="so.site" class="q-my-sm titre-md">
+      <div v-if="so.admin" class="row q-gutter-sm items-center">
+        <img :src="superman" width="24px"/>
+        <div class="titre-md text-bold">{{ $t('APsiteadmin') }}</div>
+      </div>
+      <div class="titre-md">{{ $t('APsinfo', [so.site, surl]) }}</div>
+    </div>
+
+    <div v-if="so.site && so.org" class="q-my-md">
+      <div class="q-mb-sm titre-md">{{ $t('orgStatus', [so.org, so.svcLabel, so.site]) }}</div>
+      <status-org v-model="so"/>
+    </div>
     </q-card>
-  </q-dialog-->
+  </q-dialog>
 
   <!-- Contrôle de l'autorisation des notifications-->
   <q-dialog v-model="session.permDialog" persistent>
@@ -304,21 +319,10 @@
   </q-dialog>
 
   <!-- Outils techniques -->
-  <dialog-std1 v-model="dialogs.pings" vh="80" vue="SettingsButton"
-    :title="$t('tech')" hdrclass='wmd' help="pings">
-    <template #hdr>
-      <div class="row items-center wmd full-width">
-        <q-tabs dense v-model="tab" class="col bg-primary text-white shadow-2">
-          <q-tab name="crypto" icon="key" :label="$t('crypto')" />
-          <q-tab name="hot">
-            <img :src="superman" width="24px"/>
-            <div>{{ $t('SBhot') }}</div>
-          </q-tab>
-        </q-tabs>
-      </div>
-    </template>
+  <dialog-std1 v-model="dialogs.crypto" vh="80" vue="SettingsButton"
+    :title="$t('crypto')" hdrclass='wmd' help="pings">
     <template #default>
-      <div v-if="tab === 'crypto'" class="q-pa-xs">
+      <div class="q-pa-xs">
         <input-b class="q-mt-md q-mb-sm" v-model="ps" size="p1"
           prefix="SBphrase" @validate="validPs"/>
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sh')}}</div>
@@ -339,31 +343,6 @@
           {{$t('SBgen_' + cr.x)}}</div>
         <q-input class="q-pa-xs bord1" v-model="cr.pems" type="textarea"
          :rows="15"/>
-      </div>
-      <div v-if="tab === 'hot'" class="column q-pa-xs">
-        <div class='titre-lg text-italic text-center self-center q-my-md'>{{$t('SBhot_info')}}</div>
-
-        <div v-if="sf.step === 1" class="msg2 q-my-md self-center">{{$t('SBnotauth')}}</div>
-        <div v-else class="column">
-          <service-op v-model="svcop"/>
-
-          <q-separator color="orange" class="q-my-md"/>
-
-          <input-a class="full-witdh q-mb-md" prefix="url" v-model="svcurl"/>
-          <btn-cond color="warning" :label="$t('url_set')" class="self-end"
-            @ok="setSvcUrl" :disable="!svcop.SVC || !svcop.$OP || !svcurl"/>
-
-          <q-separator color="orange" class="q-my-md"/>
-
-          <div class="q-my-sm titre-md text-italic">{{$t('SBmanorg')}}</div>
-          <input-a class="q-my-xs" prefix="orgcode" size="org" v-model="org"/>
-          <div class="self-end row justify-end q-gutter-sm q-mb-md">
-            <btn-cond color="warning" :label="$t('grant')"
-              @ok="setGrantRevoke(true)" :disable="!svcop.SVC || !svcop.$OP || !org"/>
-            <btn-cond color="warning" :label="$t('revoke')"
-              @ok="setGrantRevoke(false)" :disable="!svcop.SVC || !svcop.$OP || !org"/>
-          </div>
-        </div>
       </div>
     </template>
   </dialog-std1>
@@ -408,20 +387,21 @@ import { useI18n } from 'vue-i18n'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
+import { SOA } from '../src-fw/registry'
 import { LocPref } from '../stores/safe-store'
 import { localeOption } from '../stores/config-store'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { $t, sty, reloadPage, dhcool, coolBye } from '../src-fw/util'
 import { keyToB64 } from '../src-fw/b64'
+import { AOperation } from '../src-fw/operation'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import PermissionBox from '../components-fw/PermissionBox.vue'
-import InputA from '../components-fw/InputA.vue'
 import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
-// import ServiceStatus from '../components-fw/ServiceStatus.vue'
-import ServiceOp from '../components-fw/ServiceOp.vue'
-
+import StatusSite from '../components-fw/StatusSite.vue'
+import StatusOrg from '../components-fw/StatusOrg.vue'
+import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
@@ -441,10 +421,38 @@ const dialogs = reactive({
   ServiceStatus: false,
   theme: false,
   edprf: false,
-  ping: false,
+  crypto: false,
   confirmStopop: false,
   userProfile: false
 })
+
+const so = reactive({
+  org: '',
+  site: '',
+  svc: '',
+  ready: false,
+  admin: false
+})
+const surl = computed(() => 
+  AOperation.urls.get(so.site) || '?')
+const setOS = async (soa: SOA) => {
+  so.org = soa.org
+  so.svc = soa.svc
+  so.svcLabel = soa.svcLabel
+  so.site = soa.site
+  so.admin = soa.admin
+  so.ready = true
+}
+const closeSS = () => {
+  so.org = ''
+  so.svc = ''
+  so.svcLabel = ''
+  so.site = ''
+  so.admin = ''
+  so.ready = false
+  dialogs.ServiceStatus = false
+}
+
 
 const svcop = reactive({
   SVC: '',

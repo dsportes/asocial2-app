@@ -90,7 +90,7 @@ import { saveAs } from 'file-saver'
 import stores from '../stores/all'
 import { Auth, MDuser } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
-import { $t, quarter, readFile, coolBye } from '../src-fw/util'
+import { $t, quarter, readFile } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 
 import BarOpen from '../components-fw/BarOpen.vue'

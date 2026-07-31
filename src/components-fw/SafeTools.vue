@@ -34,6 +34,8 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :disable="!session.hasNet"
         @open="dialogs.SafeCrP = true"/>
 
+      <q-separator color="primary" class="q-my-xs q-mx-lg"/>
+      
       <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
         :title="$t('HPtrust_1')"
         @open="dialogs.DevTrustit = true"/>
@@ -50,11 +52,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         :title="$t('HPtrustings_1')"
         :disable="!session.hasNet || session.incognito"
         @open="dialogs.DevTrustings = true"/>
-
-      <bar-open :bubble="$t('HPadminA_bub')" :disbubble="$t('HPadminA_bub')"
-        :title="$t('HPadminA_label')"
-        :disable="!session.hasNet"
-        @open="dialogs.AdminMgr = true"/>
 
       <bar-open :bubble="$t('HPmanuinfo')"
         :disable="session.incognito || !session.hasNet"
@@ -99,7 +96,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <dev-trustit v-if="dialogs.DevTrustit" v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
   <dev-untrustit v-if="dialogs.DevUntrustit" v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
   <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
-  <admin-mgr v-if="dialogs.AdminMgr" v-model="dialogs.AdminMgr" @close="fnc"/>
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr" @close="fnc"/>
@@ -140,7 +136,6 @@ import UserProfile from '../components-fw/UserProfile.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
-import AdminMgr from '../dialogs-fw/AdminMgr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
@@ -169,8 +164,6 @@ const dialogs = reactive({
   SafeCrP: false,
   SafeTools: false,
   PrefsMgr: false,
-  AdminMgr: false,
-  ContactMgr: false,
   CredsMgr: false,
   ListcredsMgr: false,
   CredsReview: false,

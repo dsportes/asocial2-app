@@ -14,9 +14,9 @@ Model: ui.appDialogs.ConfirmQuit
       </q-toolbar>
       <q-card-actions vertical align="center" class="titre-md q-gutter-sm">
         <btn-cond flat icon="logout" color="warning" size="lg"
-          :label="$t('quitQuit')" @ok="bye"/>
+          :label="$t('quitQuit')" @ok="coolBye"/>
         <btn-cond flat icon="refresh" color="warning" size="lg"
-          :label="$t('quitReload')" @ok="reload"/>
+          :label="$t('quitReload')" @ok="reloadPage"/>
         <btn-cond flat icon="arrow_forward" color="primary" size="lg"
           :label="$t('quitCont')" 
           @ok="ui.appDialogs.ConfirmQuit = false"/>
@@ -34,13 +34,6 @@ import HelpButton from '../components-fw/HelpButton.vue'
 
 const ui = stores.ui
 
-async function bye () {
-  coolBye()
-}
-
-async function reload () {
-  reloadPage()
-}
 </script>
 
 <style lang="scss" scoped>

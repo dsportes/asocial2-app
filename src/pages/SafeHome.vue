@@ -147,7 +147,7 @@ import { decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { TSession, Profile } from '../stores/safe-store'
-import { $t, sty, dkli, dhcool, coolBye } from '../src-fw/util'
+import { $t, sty, dkli, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
