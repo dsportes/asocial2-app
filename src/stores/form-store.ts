@@ -29,6 +29,8 @@ export const useFormStore = defineStore('form', () => {
   const visU = ref()
   const visT = ref()
 
+  const diag = computed(() => diag1.value !== '' || diag2.value !== '')
+
   const onChange1 = () => {
     const f = form.value
     if (f.status > 2) {
@@ -36,7 +38,8 @@ export const useFormStore = defineStore('form', () => {
       diag2.value = ''
       return
     }
-    diag1.value = doCheck()
+    const fn = fnCheck.value[form.value.type]
+    diag1.value = fn ? fn() : ''
   }
 
   const onChange = async () => {
@@ -58,11 +61,6 @@ export const useFormStore = defineStore('form', () => {
 
   const setFnCheck = (_fnCheck) => {
     fnCheck.value = _fnCheck
-  }
-
-  const doCheck = () : string => {
-    const f = fnCheck.value[form.value.type]
-    return f ? f() : ''
   }
 
   const startEdit = (formCtx) => {
@@ -93,7 +91,7 @@ export const useFormStore = defineStore('form', () => {
 
   return {
     setFnCheck, startEdit, reset, onChange, onChange1, undo,
-    form, isDemand, diag1, diag2,
+    form, isDemand, diag1, diag2, diag,
     upd,
     hasChg, editable, creating, visU, visT
   }

@@ -6,7 +6,6 @@ Commentaires dans Input-B.
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
   <q-input class="col" v-model="model" counter dense
     :disable="disable"
-    filled
     input-class="font-mono"
     :type="ui.visibility ? 'text' : 'password'"
     :label="$t(prefix + '_label')"
@@ -16,20 +15,22 @@ Commentaires dans Input-B.
     :hint="hint"
     @keydown.enter.prevent="val">
     <template v-slot:append>
-      <btn-cond round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
+      <btn-cond v-if="!simple"
+        round size="md" :icon="ui.visibility ? 'visibility' : 'visibility_off'"
         @ok="ui.visibility = !ui.visibility" color="none"/>
-      <btn-cond round size="md" icon="close" @ok="model = ''"
+      <btn-cond v-if="!simple"
+        round size="md" icon="close" @ok="model = ''"
         :disable="disable || model.length === 0" color="none"/>
-      <btn-cond v-if="hasInitVal && !disable && chg"
+      <btn-cond v-if="!simple && hasInitVal && !disable && chg"
         size="md" icon="undo" color="none" round 
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK" padding="0 xs"
         :disable="disable || err !== ''"
         @ok="emit('validate', true)" />
-      <btn-cond v-if="mayStar" 
+      <btn-cond v-if="!simple && mayStar" 
         size="md" icon="star" color="warning" round
         @ok="model = fill(model)"/>
-      <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
+      <btn-cond v-if="list && list.length" size="md" icon="arrow_drop_down"
         dense padding="none" color="primary">
         <q-menu auto-close>
           <div class="column q-pa-xs items-start">
@@ -37,7 +38,7 @@ Commentaires dans Input-B.
               @click="model = x; emit('validate', true)"/>
           </div>
         </q-menu>
-      </q-btn>
+      </btn-cond>
     </template>
     <template v-slot:error>{{$t(err)}}</template>
   </q-input>
@@ -59,6 +60,7 @@ const model = defineModel() // Dans le script accessible par model.value
 const emit = defineEmits(['validate', 'change'])
 
 const props = defineProps({
+  simple: Boolean,
   size: String, // obligatoire
   prefix: String, // obligatoire
   initval: String,
@@ -114,6 +116,7 @@ const undo = () => {
   if (props.initval) model.value = props.initval }
 
 const xe = () => {
+  if (!model.value) return 'tooshort'
   if (reg && model.value.length && !reg.test(model.value)) return 'badform'
   if (model.value.length < sz.value[0]) return 'tooshort'
   if (model.value.length > sz.value[1]) return 'toolong'

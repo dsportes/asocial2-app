@@ -134,7 +134,7 @@ import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
 /* Test
 const cl = Registry.getClass('AS2', 'Credential', { docCl: 'Auteur' })
-const cred = Registry.newC('AS2', 'Credential', { docCl: 'Auteur' })
+const cred = Registry.newD('AS2', 'Credential', { docCl: 'Auteur' })
 console.log(cred.descriptor().subClassBy)
 const pk = Registry.getPk('AS2', 'Credential', { docCl: 'Auteur', credId: 'toto'})
 */

@@ -281,6 +281,11 @@ export default {
   op_$SetOrgSvcSite: 'Enregistrement d\'un service pour une organisation.',
   op_$GetOrgSvc: 'Lecture des services assurés pour une organisation.',
   op_$mdAliasFree: 'Vérification de la disponibilité de l\'alias choisi.',
+  op_FormCreateByU: 'Création d\'une demande.',
+  op_FormCreateByT: 'Création d\'une proposition.',
+  op_$mdEventNew: 'Création d\'un événement.',
+  op_$mdEventSync: 'Mise à jour d{un événement.',
+  op_FormCancel: 'Annulation d\'une demande.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -962,6 +967,7 @@ Fermer la fenêtre corespond à un NON sélection.
   SHpe: 'Plein écran',
   SHre: 'Réduire',
 
+  FORMabout: ' A propos ... ',
   FORMstatus_0: 'En création',
   FORMstatus_1: 'Maj par U',
   FORMstatus_2: 'Maj par T',
@@ -1000,8 +1006,9 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMprop_1: 'Propos.',
   FORMdem_2_label: 'Fixé par le "demandeur"',
   FORMprop_2_label: 'Fixé par le "proposant"',
-  FORMmsg_d: 'Message de l\'utilisateur "demandeur"',
-  FORMmsg_p: 'Message de l\'utilisateur "proposant"',
+  FORMmsg: 'Messages du "demandeur" et du "proposant"',
+  FORMmsg_d: 'De l\'utilisateur "demandeur"',
+  FORMmsg_p: 'De l\'utilisateur "proposant"',
   FORMadmin: 'Propositions requérant un privilège "administrateur"',
   FORMnoprops: 'Vous n\'avez aucun pouvoir pour établir une proposition pour cette organisation et ce service.',
   FORMuseralias: 'Un alias de l\'utilisateur destinataire',
@@ -1014,6 +1021,8 @@ bla bla
   FORMok_FormValidateByU: 'Demande enregistrée et VALIDEE avec succès.',
   FORMok_FormValidateByT: 'Proposition enregistrée et VALIDEE avec succès.',
   FORMok_FormCancel: 'Demande annulée avec succès.',
+  FORMprop_OK: 'Proposition correcte',
+  FORMdem_OK: 'Demande correcte',
 
   /*
   Détecté par l'application
@@ -1216,14 +1225,14 @@ bla bla
   TYPE_AS2_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_AS2_coauteur_det: 'Surnom: {1}',
 
-  FORMdiag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
-  FORMdiag_pseudo: 'Format incorrect du "pseudo": {0}.',
-  FORMdiag_nomAuteur: 'Format incorrect du "nom d\'auteur": {0}.',
-  FORMdiag_nomAuteur2: 'Saisie du "nom d\'auteur" non fixée par "OK".',
-  FORMdiag_section: 'Un "nom de section" est requis.',
-  FORMdiag_nomDupl: 'Ce "nom d\'auteur" est déjà celui d\'un auteur existant.',
-  FORMdiag_nomInexistant: 'Aucun auteur ne porte ce nom.',
-  FORMdiag_trigramme: 'Un "trigramme" est requis.',
+  FORM_AS2_diag_lgp: 'Le "pseudo" doit avoir entre 8 et 24 caractères.',
+  FORM_AS2_diag_pseudo: 'Format incorrect du "pseudo": {0}.',
+  FORM_AS2_diag_nomAuteur: 'Format incorrect du "nom d\'auteur": {0}.',
+  FORM_AS2_diag_nomAuteur2: 'Saisie du "nom d\'auteur" non fixée par "OK".',
+  FORM_AS2_diag_section: 'Un "nom de section" est requis.',
+  FORM_AS2_diag_nomDupl: 'Ce "nom d\'auteur" est déjà celui d\'un auteur existant.',
+  FORM_AS2_diag_nomInexistant: 'Aucun auteur ne porte ce nom.',
+  FORM_AS2_diag_trigramme: 'Un "trigramme" est requis.',
 
   STFO_auteur_101: 'Ce "nom d\'auteur" est déjà celui d\'un auteur existant.',
 

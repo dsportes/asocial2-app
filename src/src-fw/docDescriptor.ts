@@ -72,9 +72,13 @@ export class DocDescriptor {
   /* clazz de la forme SVC@docCl_sub : 
   - sub est ignoré si présent
   */
-  static get(clazz: string) { 
+  static get(clazz: string, noex?: boolean) { 
     let i = clazz.indexOf('_')
-    return this.all.get(i === -1 ? clazz : clazz.substring(0, i))
+    const cl = i === -1 ? clazz : clazz.substring(0, i)
+    const dd = this.all.get(cl)
+    if (!dd) 
+      throw new AppExc(103, 'not_configured_doc_class', 'DocDescriptor.get', [cl])
+    return dd
   }
 
   svc: string
@@ -240,7 +244,8 @@ export class FormType {
   static refClasses$ : Set<string> = new Set()
 
   static size () { return DocDescriptor.all.size}
-  static get (svc: string, type: string) { return this.all.get(svc + '$' + type)}
+  static get (svc: string, type: string) { 
+    return this.all.get(svc + '$' + type)}
 
   svc: string
   type: string
@@ -256,7 +261,7 @@ export class FormType {
     this.categ = categ
     this.key = key
     this.creds = creds
-    FormType.all.set(this.type, this)
+    FormType.all.set(svc + '$' + this.type, this)
     for(const c of creds) {
       if (c !== 'A') {
         const cl = c.substring(0, c.indexOf('/'))

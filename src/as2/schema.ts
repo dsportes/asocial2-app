@@ -8,6 +8,8 @@ try {
   const nf = FormType.size()
 
   new DocDescriptor(svc, { name: 'Status', sync: true } )
+  new DocDescriptor(svc, { name: 'CoDir', virtual: true } )
+  new DocDescriptor(svc, { name: 'Redaction', virtual: true } )
   new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
   new DocDescriptor(svc, { name: 'Section', enum: ['roman', 'histoire', 'sf'] })

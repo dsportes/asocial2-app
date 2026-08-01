@@ -1,13 +1,14 @@
 <template>
-<div>
-  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ svc + '_' + type + '_' + champ) }}</div>
-
-    <div v-if="fst.visU" class="row q-px-xs items-center">
+<q-expansion-item :label="$t('TYPE_' + svc + '_' + type + '_' + champ)" 
+  dense switch-toggle-side class="q-ma-sm full-width"
+  header-class="text-bold titre-md text-italic">
+  <div class="q-ml-sm">
+    <div v-if="fst.visU" class="row q-px-xs items-center q-mt-sm">
       <input-b v-if="fst.isDemand && fst.editable"
         class="col font-mono text-bold" :size="size" prefix="FORMdem_2"
         v-model="loc1" :noval="!valbtn" :initval="psU" @validate="valB"/>
       <input-b v-else
-        class="col font-mono text-bold" prefix="FORMdem_2"
+        class="col font-mono text-bold q-mt-sm" prefix="FORMdem_2"
         v-model="loc2" noval :initval="loc2.inp" disable/>
       <btn-cond v-if="fst.isDemand && fst.editable && fst.visT && psT" class="col-auto q-ml-sm"
         flat icon="content_paste" @ok="copyLocU"/>
@@ -17,10 +18,10 @@
 
     <div v-if="fst.visT" class="row q-px-xs items-center">
       <input-b v-if="!fst.isDemand && fst.editable"
-        class="col font-mono text-bold" :size="size" prefix="FORMprop_2"
+        class="col font-mono text-bold q-mt-sm" :size="size" prefix="FORMprop_2"
         v-model="loc1" :noval="!valbtn" :initval="psT" @validate="valB"/>
       <input-b v-else
-        class="col font-mono text-bold" prefix="FORMprop_2"
+        class="col font-mono text-bold q-mt-sm" prefix="FORMprop_2"
         v-model="loc2" noval :initval="loc2.inp" disable/>
       <btn-cond v-if="!fst.isDemand && fst.editable && fst.visU && psU" class="col-auto q-ml-sm"
         flat icon="content_paste" @ok="copyLocT"/>
@@ -28,6 +29,7 @@
         flat icon="star" @ok="initLocT"/>
     </div>
   </div>
+</q-expansion-item>
 </template>
 
 <script setup lang="ts">

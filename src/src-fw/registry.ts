@@ -22,10 +22,8 @@ export class Registry {
   static managers : Set<string> = new Set()
 
   static register (clazz: Function) { 
-    let i = clazz.name.indexOf('_')
-    const topcl = i === -1 ? clazz.name : clazz.name.substring(0, i)
-    // const subCl = i === -1 ? '' : clazz.name.substring(i + 1)
-    i = clazz.name.indexOf('$')
+    const topcl = topCl('', clazz.name)
+    const i = clazz.name.indexOf('$')
     const svc = topcl.substring(0, i)
     const docCl = topcl.substring(i + 1)
     if (!svc || !docCl)
@@ -46,16 +44,11 @@ export class Registry {
     return cl
   }
 
-  // Retourne le DocDescriptor de la classe MAJEURE (sans sous classe)
-  static getDescr (svc: string, docCl: string) : DocDescriptor {
-    const cl = Registry.getCl(svc, docCl)
-    return cl['docDescriptor']
-  }
-
   // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
   static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
-    const subClassBy = Registry.getDescr(svc, docCl).subClassBy
-    const cln = topCl(svc, docCl) + (subClassBy ? '_' + data[subClassBy] : '')
+    const topcl = topCl(svc, docCl)
+    const subClassBy = DocDescriptor.get(topcl).subClassBy
+    const cln = topcl + (subClassBy ? '_' + data[subClassBy] : '')
     const cl = Registry.classes.get(cln)
     if (!cl) 
       throw new AppExc(103, 'not_configured_doc_class', 'Registry.getClass', [cln])
@@ -64,67 +57,45 @@ export class Registry {
 
   // Retourne la pk de la SOUS-CLASSE de docCl selon la valeur de son data
   static getPk (svc: string, docCl: string, data: Object, nohash?: boolean) : string {
-    const cl = Registry.getClass(svc, docCl, data)
-    return cl['docDescriptor'].pkValue(data, nohash)
+    return DocDescriptor.get(topCl(svc, docCl)).pkValue(data, nohash)
   }
 
   // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
-  static newD (svc: string, docCl: string, data: Object ) : $Document {
+  static newD (svc: string, docCl: string, data: Object ) : $ADocument {
     const cl = Registry.getClass(svc, docCl, data)
     // @ts-expect-error
-    const d = new cl() as $Document
-    d._docDescriptor = cl['docDescriptor']
-    return d
-  }
-
-  // Construit un Form
-  static newF (svc: string, docCl: string, data: Object ) {
-    const cl = Registry.getClass(svc, docCl, data)
-    // @ts-expect-error
-    return new cl(data)
-  }
-
-  // Construit un Credential
-  static newC (svc: string, docCl: string, data: Object ) {
-    const cl = Registry.getClass(svc, docCl, data)
-    // @ts-expect-error
-    return new cl(data)
+    return new cl() as $ADocument
   }
 
   static async compile (svc: string, docCl: string, data: Uint8Array) : Promise<$Document | null>{
     const d = data ? decode(data) : {}
-    const doc = Registry.newD(svc, docCl, d)
+    const doc = Registry.newD(svc, docCl, d) as $Document
     if (!doc) return null
-    doc._clazz = docCl
+    doc._clazz = topCl(svc, docCl)
     for(const f in d) doc[f] = d[f]
-    const dd = doc.descriptor()
-    doc._pk = d._pk || doc.descriptor().pkValue(doc)
+    doc._pk = d._pk || doc._docDescriptor.pkValue(doc)
     await doc.compile()
     return doc
   }
 
 }
 
-export class $Document {
+export class $ADocument {
+  constructor () { }
 
-  descriptor() { 
-    return this.constructor['docDescriptor']
-  }
-
-  _clazz: string = ''
-  _docDescriptor: DocDescriptor
-  _pk: string = ''
-  deleted?: boolean = false
-  v: number = 0
-
-  constructor () {
-    // console.log('$Document')
-  }
+  get _docDescriptor () { return DocDescriptor.get(this.constructor.name) }
 
   propertyAsSet (name: string) : Set<string> {
     const v = this[name]
     return !v ? new Set() : new Set(v)
   }
+}
+
+export class $Document extends $ADocument{
+  _clazz: string = ''
+  _pk: string = ''
+  deleted?: boolean = false
+  v: number = 0
 
   async compile() { }
 

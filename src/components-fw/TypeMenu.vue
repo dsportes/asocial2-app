@@ -59,11 +59,11 @@ new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
 */
 
 const init = () => {
-  for(const [type, ft] of FormType.all) {
-    if (!props.allow || props.allow.has(type)) { // TODO
+  for(const [, ft] of FormType.all) {
+    if (!props.allow || props.allow.has(ft.type)) { // TODO
       let e = ftmap.value.get(ft.categ)
       if (!e) { e = new Map<string, FormType>(); ftmap.value.set(ft.categ, e)}
-      e.set(type, ft)
+      e.set(ft.type, ft)
     }
   }
   const l: LabVal[] = []

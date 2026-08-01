@@ -67,6 +67,8 @@ export type $Cred = {
   docCl: string
   docPk: string
   props: any
+  // pubv?: Uint8Array
+  // pubc?: Uint8Array
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
@@ -101,7 +103,8 @@ export class $Credential {
   /* Factory similaire au constructor
   mais créé la sous-classe correspondant à docCl */
   static new (obj): $Credential {
-    const c = Registry.newC(obj.svc, 'Credential', obj) as $Credential
+    // @ts-expect-error
+    const c = Registry.newD(obj.svc, 'Credential', obj) as $Credential
     for (const p of $Credential.lp1) c[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
@@ -288,7 +291,7 @@ export class $Form extends $Document {
       svc: soa.svc, org: soa.org, 
       type, formId: Crypt.rnd(15), userId,
       v: 0, maxLife: 0, status: 0,
-      etcU: null, etcT: null, msgU: null, msgT: null, opts: {}
+      etcU: '', etcT: '', msgU: '', msgT: '', opts: {}
     })
   }
 
@@ -334,7 +337,7 @@ export class $Form extends $Document {
     'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
 
   static new (obj) : $Form {
-    const f = Registry.newF(obj.svc, obj.svc + '$' + 'Form', obj)
+    const f = Registry.newD(obj.svc, 'Form', obj) as $Form
     for (const p of $Form.lp1) f[p] = obj[p]
     if (!f.opts) f.opts = {}
     if (!f.opts.credTemplates) f.opts.credTemplates = {}
@@ -355,7 +358,8 @@ export class $Form extends $Document {
 
   getCh () { return Crypt.rnd(9) }
 
-  get ft () : FormType { return FormType.get(this.svc, this.type) }
+  get ft () : FormType { 
+    return FormType.get(this.svc, this.type) }
 
   async aesU () : Promise<Uint8Array> {
     if (!this._aesU) {
@@ -622,4 +626,3 @@ export class $Form extends $Document {
   }
 
 }
-// Registry.registerD($Form)

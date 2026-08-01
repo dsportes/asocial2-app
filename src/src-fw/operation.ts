@@ -82,21 +82,26 @@ export class CVKeys {
   static async getCKey (site: string, name: string) : Promise<Uint8Array> {
     let k = CVKeys.mc.get(site + '/' + name)
     if (k) return k
-    const op = new AdminOperation('ADMIN$CKey', site)
-    op.args.name = name
-    const res = await op.post(true)
-    const s = res['key']
-    if (!s) return null
-    k = keyFromB64(s)
-    CVKeys.mc.set(site + '/' + name, k)
-    return k
+    const op = new AdminOperation('CONFIG$CKey', site)
+    try {
+      op.args.name = name
+      const res = await op.post(true)
+      const s = res['key']
+      if (!s) return null
+      k = keyFromB64(s)
+      CVKeys.mc.set(site + '/' + name, k)
+      return k
+    } catch (e) {
+      await op.ko(e)
+      return null
+    }
   }
 
   /* Retourne une clé publique de cryptage de configuation */
   static async getVKey (site: string, name: string) : Promise<Uint8Array> {
     let k = CVKeys.mv.get(site + '/' + name)
     if (k) return k
-    const op = new AdminOperation('ADMIN$VKey', site)
+    const op = new AdminOperation('CONFIG$VKey', site)
     op.args.name = name
     const res = await op.post(true)
     const s = res['key']
@@ -140,7 +145,7 @@ export class AOperation {
       const op = new MDOperation('$GetServicesLabels')
       try {
         const res = await op.post()
-        const obj = JSON.parse(res.labels)
+        const obj = res.labels ? JSON.parse(res.labels) : {}
         const x: Map<string, string> = new Map()
         for(const svc of Object.keys(obj)) x.set(svc, obj[svc])
         AOperation.labels = x

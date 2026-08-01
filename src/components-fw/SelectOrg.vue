@@ -1,24 +1,16 @@
 <!-- Saisie du couple Service / Organisation
 -->
 <template>
-  <div class="row items-center justify-between w1 cursor-pointer q-pl-xs"
-    style="min-width:150px; height:40px">
-    <div v-if="model" class="font-mono">{{ model }}</div>
-    <div v-else class="text-italic text-grey-5">{{ $t('org') }}</div>
-    <q-icon name="arrow_drop_down" size="24px"/>
-    <q-menu v-model="menu" anchor="top left" self="top left"
-      transition-show="flip-up" transition-hide="flip-down">
-      <input-A size="org" v-model="m" :initval="defOrg"
-        :list="lst" prefix="ORG"
-        style="width:260px"
-        @validate="val"/>
-    </q-menu>
-  </div>
+  <input-A  simple size="org" v-model="model" :initval="defOrg"
+    :list="lst" prefix="ORG" :label="$t('org')"
+    style="min-width:100px"
+    @validate="val"/>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
+// @ts-ignore
 import stores from '../stores/all'
 import InputA from '../components-fw/InputA.vue'
 
@@ -35,28 +27,19 @@ const props = defineProps({
   ctx: Object
 })
 
-const defOrg = computed(() => {
-  if (props.initval) return props.initval === '?' ? '' : props.initval
-  return session.currentOrg || ''
-})
+const defOrg = ref(props.initval ? (props.initval === '?' ? '' : props.initval) : (session.currentOrg || ''))
 
 // Emet 2 arguments: org (ou ''), ctx (ou null)
 const emit = defineEmits(['select'])
 
-const menu = ref(false)
-const m = ref()
-
 const val = () => {
-  if (m.value !== model.value) {
-    model.value = m.value
-    session.addOrg(m.value)
-    emit('select', m.value, props.ctx || null)
+  if (defOrg.value !== model.value) {
+    session.addOrg(model.value)
+    emit('select', model.value, props.ctx || null)
   }
-  menu.value = false
 }
 
 const init = () => {
-  m.value = defOrg.value
   model.value = defOrg.value
 }
 

@@ -25,7 +25,8 @@ if (ok) { n++; Registry.register(AS2$Form) }
 class AS2$Form_membrecomite extends AS2$Form {
   docCl: string
 
-  constructor (docCl: string) { super(); this.docCl = docCl }
+  constructor (docCl: string) { 
+    super(); this.docCl = docCl }
 
   /* Méthodes surchargées par type *******************************/
   cloneEtc (byU: boolean) : Object {
@@ -39,7 +40,7 @@ class AS2$Form_membrecomite extends AS2$Form {
   }
   async checkEtc (etc: Object) : Promise<string> {
     const p = etc['pseudo'] || ''
-    return p.length < 8 || p.length > 24 ? 'lgp' : ''
+    return p.length < 8 || p.length > 24 ? $t('FORM_AS2_diag_lgp') : ''
   }
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> {
@@ -78,9 +79,9 @@ class AS2$Form_auteur extends $Form {
   }
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
-    if (!na) return $t('FORMdiag_nomAuteur2')
+    if (!na) return $t('FORM_AS2_diag_nomAuteur2')
     const autid = await AS2$Auteur.autidParNom(this.soa, na)
-    if (autid) return $t('FORMdiag_nomDupl')
+    if (autid) return $t('FORM_AS2_diag_nomDupl')
     return ''
   }
 
@@ -116,9 +117,9 @@ class AS2$Form_coauteur extends $Form {
   }
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
-    if (!na) return $t('FORMdiag_nomAuteur2')
+    if (!na) return $t('FORMdiag_AS2_nomAuteur2')
     this.autid = await AS2$Auteur.autidParNom(this.soa, na)
-    if (!this.autid) return $t('FORMdiag_nomInexistant')
+    if (!this.autid) return $t('FORM_AS2_diag_nomInexistant')
     return ''
   }
 

@@ -1,85 +1,91 @@
 <template>
 <div v-if="fctx">
-  <div class="q-ma-sm a-pa-sm bord1 full-width">
-    <div class="font-mono fs-sm">{{ fst.form.formId }}</div>
+  <q-expansion-item :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status)" 
+    dense switch-toggle-side class="q-ma-sm full-width"
+    header-class="text-bold titre-md text-italic">
+    <div>
+      <div class="font-mono fs-sm">{{ fst.form.formId }}</div>
 
-    <div class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ fst.form.org }}</div>
-    </div>
-
-    <div class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMsvc') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + fst.form.svc)}}</div>
-    </div>
-
-    <div v-if="fst.form.v !== 0" class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ dhcool(fst.form.v) }}</div>
-    </div>
-
-    <div v-if="fst.form.v !== 0" class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ dhcool(fst.form.maxLife * 1000) }}</div>
-    </div>
-
-    <div class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
-      <div class="col-7 row items-center">
-        <q-icon :name="stic[fst.form.status]" :color="stclr[fst.form.status]" size="28px"/>
-        <div class="font-mono text-bold" :color="stclr[fst.form.status]">
-          {{ $t('FORMstatus_' + fst.form.status) }}</div>
+      <div class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMorg') }}</div>
+        <div class="col-7 q-pl-sm font-mono">{{ fst.form.org }}</div>
       </div>
-    </div>
 
-    <div v-if="!fst.isDemand" class="row items-center">
-      <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
-      <div class="col-7 q-pl-sm font-mono">
-        <span>{{ fst.form.userId }}</span>
-        <span v-if="fst.form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+      <div class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMsvc') }}</div>
+        <div class="col-7 q-pl-sm font-mono">{{ $t('services_' + fst.form.svc)}}</div>
       </div>
-    </div>
 
-    <div v-if="fst.isDemand" class="row items-start">
-      <div class="col-5 titre-md text-italic items-center">
-        <span>{{ $t('FORMcomment') }}</span>
-        <btn-cond class="q-ml-sm" icon="edit" round
-          @ok="edCom"/>
+      <div v-if="fst.form.v !== 0" class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMversion') }}</div>
+        <div class="col-7 q-pl-sm font-mono">{{ dhcool(fst.form.v) }}</div>
       </div>
-      <div class="col-7 q-pl-sm font-mono">
-        <div v-if="!evcomment && !newcom">{{ $t('FORMnocomment') }}</div>
-        <scroll-md v-else height="50px" class="q-mx-xs bord1 q-pa-xs"
-          :text="newcom || evcomment"/>
-      </div>
-    </div>
 
-  </div>
+      <div v-if="fst.form.v !== 0" class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMlimit') }}</div>
+        <div class="col-7 q-pl-sm font-mono">{{ dhcool(fst.form.maxLife * 1000) }}</div>
+      </div>
+
+      <div class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMstatus') }}</div>
+        <div class="col-7 row items-center">
+          <q-icon :name="stic[fst.form.status]" :color="stclr[fst.form.status]" size="28px"/>
+          <div class="font-mono text-bold" :color="stclr[fst.form.status]">
+            {{ $t('FORMstatus_' + fst.form.status) }}</div>
+        </div>
+      </div>
+
+      <div v-if="!fst.isDemand" class="row items-center">
+        <div class="col-5 titre-md text-italic">{{ $t('FORMuser') }}</div>
+        <div class="col-7 q-pl-sm font-mono">
+          <span>{{ fst.form.userId }}</span>
+          <span v-if="fst.form.userId === sf.userId" class="text-bold q-ml-md">[{{ $t('me') }}]</span>
+        </div>
+      </div>
+
+      <div v-if="fst.isDemand" class="row items-start">
+        <div class="col-5 titre-md text-italic items-center">
+          <span>{{ $t('FORMcomment') }}</span>
+          <btn-cond class="q-ml-sm" icon="edit" round
+            @ok="edCom"/>
+        </div>
+        <div class="col-7 q-pl-sm font-mono">
+          <div v-if="!evcomment && !newcom">{{ $t('FORMnocomment') }}</div>
+          <scroll-md v-else height="50px" class="q-mx-xs bord1 q-pa-xs"
+            :text="newcom || evcomment"/>
+        </div>
+      </div>
+
+    </div>
+  </q-expansion-item>
 
   <div v-if="fst.diag1 !== ''" class="q-my-sm msg byel">
     {{ fst.diag1 }}</div>
   <div v-if="fst.diag1 === '' && fst.diag2 !== ''" class="q-my-sm msg bred">
     {{ fst.diag2 }}</div>
+  <div v-if="!fst.diag" class="q-my-sm text-italic">
+    {{ $t(fst.isDemand ? 'FORMdem_OK' : 'FORMprop_OK') }}</div>
 
-  <div v-if="fst.form.status <= 2" class="q-mb-sm column items-center q-gutter-xs">
+  <div v-if="fst.form.status <= 2" class="q-mb-sm row justify-center q-gutter-sm">
     <btn-cond v-if="fst.creating" icon="check"
       :label="$t('FORMbtnnocr' + (fst.isDemand ? 'd' : 'p'))" @ok="action(8)"/>
     <btn-cond v-if="!fst.creating" icon="undo"
       :disable="!ui.editingInCourse" color="warning"
       :label="$t('FORMbtnundo')" @ok="doUndo"/>
     <btn-cond v-if="fst.isDemand && fst.creating" icon="add"
-      :label="$t('FORMbtnrecd')" :disable="fst.diag1 !== ''"
+      :label="$t('FORMbtnrecd')" :disable="fst.diag"
       @ok="action(6)"/>
     <btn-cond v-if="!fst.isDemand && fst.creating" icon="add"
-      :label="$t('FORMbtnrecp')" :disable="fst.diag1 !== ''"
+      :label="$t('FORMbtnrecp')" :disable="fst.diag"
       @ok="action(7)"/>
     <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" icon="check"
-      :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag1 !== ''"
+      :label="$t('FORMbtnrecd')" :disable="!fst.hasChg || fst.diag"
       @ok="action(2)"/>
     <btn-cond v-if="fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnokp')" :disable="!validU"
       @ok="action(3)"/>
     <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
-      :label="$t('FORMbtnrecp')" :disable="!fst.hasChg || fst.diag1 !== ''"
+      :label="$t('FORMbtnrecp')" :disable="!fst.hasChg || fst.diag"
       @ok="action(4)"/>
     <btn-cond v-if="!fst.isDemand && fst.editable && !fst.creating" icon="check"
       :label="$t('FORMbtnokp')" :disable="!validT"
@@ -90,22 +96,28 @@
   </div>
 
   <!-- Messages --------------------------------------------------------------->
-  <div v-if="fst.visU">
-    <div class="titre-md q-mt-md">{{  $t('FORMmsg_d') }}</div>
-    <md-editor v-if="fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
-      :lgmax="500" :rows="3" :text="fst.form.msgU || ''" modetxt editable/>
-    <md-editor v-else model="fst.form.msgU" :rows="3" disable
-      :text="fst.form.msgU || ''" modetxt/>
-  </div>
+  <q-expansion-item :label="$t('FORMmsg')"
+    dense switch-toggle-side class="q-ma-sm full-width"
+    header-class="text-bold titre-md text-italic">
+    <div class="q-ml-sm">
+      <div v-if="fst.visU">
+        <div class="titre-md q-mt-sm">{{  $t('FORMmsg_d') }}</div>
+        <md-editor v-if="fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
+          :lgmax="500" :rows="3" :text="fst.form.msgU || ''" modetxt editable/>
+        <md-editor v-else model="fst.form.msgU" :rows="3" disable
+          :text="fst.form.msgU || ''" modetxt/>
+      </div>
 
-  <div v-if="fst.visT">
-    <div class="titre-md q-mt-md">{{  $t('FORMmsg_p') }}</div>
-    <!--div>{{ fst.upd.msg }} / {{ fst.form.msgT }}</div-->
-    <md-editor v-if="!fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
-      :lgmax="500" :rows="3" :text="fst.form.msgT || ''" modetxt editable/>
-    <md-editor v-else v-model="fst.form.msgT" :rows="3" disable
-      :text="fst.form.msgT || ''" modetxt/>
-  </div>
+      <div v-if="fst.visT">
+        <div class="titre-md q-mt-sm">{{  $t('FORMmsg_p') }}</div>
+        <!--div>{{ fst.upd.msg }} / {{ fst.form.msgT }}</div-->
+        <md-editor v-if="!fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
+          :lgmax="500" :rows="3" :text="fst.form.msgT || ''" modetxt editable/>
+        <md-editor v-else v-model="fst.form.msgT" :rows="3" disable
+          :text="fst.form.msgT || ''" modetxt/>
+      </div>
+    </div>
+  </q-expansion-item>
 
   <form-etc/>
 
