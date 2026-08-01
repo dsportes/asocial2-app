@@ -135,8 +135,8 @@ const init = () => {
 
 watch(() => ui.currentForm.pft, async () => {
   const u = ui.currentForm
-  forms.value = u.soa && u.soa.svc && u.soa.org ?
-    await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin) : []
+  forms.value = !ui.currentForm.pft || !ui.currentForm.pft.size ? [] :
+    await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
   init()
 })
 

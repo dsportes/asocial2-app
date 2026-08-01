@@ -425,8 +425,10 @@ export class $Form extends $Document {
     const sf = stores.safe
     const site = await getSite(svc, org)
     if (!site) return []
-    if (asAdmin)
-      return await isAdmin(site) ? [] : ['A']
+    if (asAdmin) {
+      const b = await isAdmin(site)
+      return b ? ['A'] : []
+    }
     const fi: Set<string> = new Set()
     for(const [,c] of sf.mySafeCreds) {
       if (c.svc !== svc || c.org !== org) continue
@@ -451,7 +453,7 @@ export class $Form extends $Document {
     for(const [t, e] of FormType.all) {
       for(const c of e.creds) {
         const cl = c.substring(0, c.indexOf('/'))
-        if (docCls.has(cl)) ft.add(t)
+        if (docCls.has(cl)) ft.add(e.type)
       }
     }
     return ft
@@ -467,18 +469,18 @@ export class $Form extends $Document {
     const op = new Operation('FormFilteredList', svc, org)
     for(const cred of creds) await op.sign(cred)
     op.args.filter = filter
-    const res = await op.post()
-    const lst = res.forms as $FormObj[]
-    if (!lst || !lst.length) return []
-    const lf: $Form[] = []
-    for(const obj of lst) {
-      const f = $Form.new(obj)
-      f.svc = svc
-      f.org = org
-      // await f.decryptMsgU()
-      lf.push(f)
+    try {
+      const res = await op.post()
+      const lst = res.forms as $FormObj[]
+      if (!lst || !lst.length) return []
+      const lf: $Form[] = []
+      for(const obj of lst) 
+        lf.push($Form.new(obj))
+      return lf
+    } catch (e) {
+      await op.ko(e)
+      return []
     }
-    return lf
   }
 
   async createByU (upd: Upd) : Promise<boolean> {

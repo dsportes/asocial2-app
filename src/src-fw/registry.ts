@@ -28,10 +28,7 @@ export class Registry {
     const docCl = topcl.substring(i + 1)
     if (!svc || !docCl)
       throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
-    let dd = DocDescriptor.get(topcl)
-    if (!dd) 
-      throw new AppExc(103, 'not_configured_doc_class', 'Registry.register', [clazz.name])
-    clazz['docDescriptor'] = dd
+    DocDescriptor.get(topcl)
     if (clazz['manager']) Registry.managers.add(clazz.name)
     this.classes.set(clazz.name, clazz)
   }

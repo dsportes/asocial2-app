@@ -14,8 +14,10 @@
     <div style="color:transparent;width:3px">*<q-tooltip>SponsoringsPage</q-tooltip></div>
   </q-toolbar>
 
-  <div :class="'column full-width items-center' + (dialogs.newproposal ? ' disabled' : '')">
-    <select-svcorg @select="selsoa"/>
+  <div :class="sty() + ' column full-width items-center' + (dialogs.newproposal ? ' disabled' : '')">
+    <div class="full-width q-mb-lg">
+      <select-svcorg @select="selsoa"/>
+    </div>
     <div v-if="!ui.currentForm.soa || !ui.currentForm.soa.org"
       class="full-width msg">{{ $t('FORMnosoa') }}</div>
 
@@ -55,9 +57,9 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, reactive, computed, watchEffect } from 'vue'
+import { ref, Ref, reactive, computed, watch } from 'vue'
 
-import { $t } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
 import stores from '../stores/all'
 import { FormType } from '../src-fw/docDescriptor'
 
@@ -87,15 +89,15 @@ const dialogs = reactive({
 const formType: Ref<FormType> = ref()
 const ftLabel = computed(() => {
   if (!formType.value) return '?'
-  const y = $t('TYPE_' + formType.svc + '_' + formType.value.type)
+  const y = $t('TYPE_' + formType.value.svc + '_' + formType.value.type)
   return y.substring(2)
 })
 const fctx = ref(null)
 
-watchEffect(async () => {
-  const cf = ui.currentForm
-  cf.pft = !cf.soa || !cf.soa.svc || !cf.soa.org ? new Set() :
-    await $Form.possibleFormTypes(cf.soa.svc, cf.soa.org, cf.asAdmin)
+watch(() => [ui.currentForm.asAdmin, ui.currentForm.soa], async () => {
+  const soa = ui.currentForm.soa
+  const pft = !soa ? new Set() : await $Form.possibleFormTypes(soa.svc, soa.org, ui.currentForm.asAdmin)
+  ui.currentForm.pft = pft
 })
 
 const back = async () => {
@@ -104,7 +106,7 @@ const back = async () => {
     ui.currentForm.zoomed = false
 }
 
-const selsoa = (soa: SOA) => {
+const selsoa = async (soa: SOA) => {
   if (!soa) { reset(); return }
   const cf = ui.currentForm
   cf.soa = soa
