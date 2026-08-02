@@ -64,7 +64,7 @@ if (estComite.value) {
   if (props.isDemand) {
     const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)
     if (cf.asAdmin) form.opts.asAdmin = true
-    form.opts.alias = '?'
+    form.opts.alias = ''
     emit('done', form)
   }
 }

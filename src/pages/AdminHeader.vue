@@ -1,8 +1,7 @@
 <template>
 <div>
   <q-toolbar class="full-width tbp">
-    <btn-cond class="q-mr-xs" color="none" flat icon="menu"
-      @ok="ui.openMenu"/>
+    <btn-menu/>
 
     <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEadmin')}}</q-toolbar-title>
 
@@ -32,6 +31,7 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnMenu from '../components-fw/BtnMenu.vue'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'

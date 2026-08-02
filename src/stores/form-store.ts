@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, Ref, reactive, computed } from 'vue'
+import { ref, Ref, reactive, computed, watch } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import stores from './all'
@@ -31,20 +31,17 @@ export const useFormStore = defineStore('form', () => {
 
   const diag = computed(() => diag1.value !== '' || diag2.value !== '')
 
-  const onChange1 = () => {
+  const onChange = async () => {
+    const ui = stores.ui
     const f = form.value
     if (f.status > 2) {
       diag1.value = ''
       diag2.value = ''
+      ui.resetEditing()
       return
     }
     const fn = fnCheck.value[form.value.type]
     diag1.value = fn ? fn() : ''
-  }
-
-  const onChange = async () => {
-    const f = form.value
-    onChange1()
     diag2.value = diag1.value ? '' : await f.checkEtc(upd.etc)
     if (isDemand.value) {
       upd.etcc = !f.eqEtc(f.etcU, upd.etc)
@@ -53,10 +50,9 @@ export const useFormStore = defineStore('form', () => {
       upd.etcc = !f.eqEtc(f.etcT, upd.etc)
       upd.msgc = upd.msg !== f.msgT
     }
-    if (!creating.value) {
-      const ui = stores.ui
-      if (hasChg.value) ui.setEditing(); else ui.resetEditing()
-    }
+ 
+    if (upd.etcc || upd.msgc) ui.setEditing();
+    else ui.resetEditing()
   }
 
   const setFnCheck = (_fnCheck) => {
@@ -85,15 +81,27 @@ export const useFormStore = defineStore('form', () => {
   }
 
   const undo = async () => {
+    if (form.value.status > 2) return
     reset()
     await onChange()
   }
 
+  const exp = reactive({
+    msg: false
+  })
+  const expOnShow = (id: string) => {
+    for (const x of Object.keys(exp)) if (x !== id) exp[x] = false
+  }
+  const setExp = (id: string) => {
+    exp[id] = false
+  }
+
   return {
-    setFnCheck, startEdit, reset, onChange, onChange1, undo,
+    setFnCheck, startEdit, reset, onChange, undo,
     form, isDemand, diag1, diag2, diag,
     upd,
-    hasChg, editable, creating, visU, visT
+    hasChg, editable, creating, visU, visT,
+    exp, expOnShow, setExp
   }
 
 })

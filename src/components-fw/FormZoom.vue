@@ -96,9 +96,11 @@
   </div>
 
   <!-- Messages --------------------------------------------------------------->
-  <q-expansion-item :label="$t('FORMmsg')"
-    dense switch-toggle-side class="q-ma-sm full-width"
-    header-class="text-bold titre-md text-italic">
+  <!--q-expansion-item v-model="exp['msg']" @before-show="fst.expOnShow('msg')"
+    :label="$t('FORMmsg')" dense switch-toggle-side class="q-ma-sm full-width"
+    header-class="text-bold titre-md text-italic"-->
+  <form-exp name="msg" :label="$t('FORMmsg')">
+    <template #default>
     <div class="q-ml-sm">
       <div v-if="fst.visU">
         <div class="titre-md q-mt-sm">{{  $t('FORMmsg_d') }}</div>
@@ -117,7 +119,8 @@
           :text="fst.form.msgT || ''" modetxt/>
       </div>
     </div>
-  </q-expansion-item>
+    </template>
+  </form-exp>
 
   <form-etc/>
 
@@ -139,6 +142,7 @@ import { ref, computed, watch, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dhcool } from '../src-fw/util'
+import FormExp from '../components-fw/FormExp.vue'
 import ScrollMd from '../components-fw/ScrollMd.vue'
 import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -163,6 +167,7 @@ const dialogs = reactive({
 const sf = stores.safe
 const ui = stores.ui
 const fst = stores.form
+fst.setExp('msg')
 
 const fctx = defineModel<FormCtx>()
 fst.startEdit(fctx.value)

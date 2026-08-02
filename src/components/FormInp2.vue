@@ -1,7 +1,5 @@
 <template>
-<q-expansion-item :label="$t('TYPE_' + svc + '_' + type + '_' + champ)" 
-  dense switch-toggle-side class="q-ma-sm full-width"
-  header-class="text-bold titre-md text-italic">
+<form-exp :name="champ" :label="$t('TYPE_' + svc + '_' + type + '_' + champ)">
   <div class="q-ml-sm">
     <div v-if="fst.visU" class="row q-px-xs items-center q-mt-sm">
       <input-b v-if="fst.isDemand && fst.editable"
@@ -29,7 +27,7 @@
         flat icon="star" @ok="initLocT"/>
     </div>
   </div>
-</q-expansion-item>
+</form-exp>
 </template>
 
 <script setup lang="ts">
@@ -39,6 +37,7 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import FormExp from '../components-fw/FormExp.vue'
 
 const props = defineProps({
   type: String,
@@ -51,6 +50,7 @@ const props = defineProps({
 const err = defineModel()
 
 const fst = stores.form
+fst.setExp(props.champ)
 
 const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
 const psT = computed(() => fst.form.cloneEtc(false)[props.champ])

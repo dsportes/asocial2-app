@@ -7,8 +7,7 @@
     <sponsorings-header v-if="ui.page === 'sponsorings'"/>
 
     <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
-      <btn-cond class="q-mr-xs" color="none" flat icon="menu"
-        @ok="ui.openMenu"/>
+      <btn-menu/>
       <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
@@ -101,7 +100,7 @@ import stores from './stores/all'
 
 import { set$t, sty } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
-
+import BtnMenu from './components-fw/BtnMenu.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 import SafeHome from './pages/SafeHome.vue'
 

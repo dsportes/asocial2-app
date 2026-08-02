@@ -27,6 +27,12 @@ const props = defineProps({
   ctx: Object
 })
 
+const c = localStorage.getItem('org')
+if (c) {
+  session.addOrg(c)
+  if (!session.currentOrg) session.setOrg(c)
+}
+
 const defOrg = ref(props.initval ? (props.initval === '?' ? '' : props.initval) : (session.currentOrg || ''))
 
 // Emet 2 arguments: org (ou ''), ctx (ou null)
@@ -35,6 +41,8 @@ const emit = defineEmits(['select'])
 const val = () => {
   if (defOrg.value !== model.value) {
     session.addOrg(model.value)
+    const c = localStorage.getItem('org')
+    if (c !== model.value) localStorage.setItem('org', model.value)
     emit('select', model.value, props.ctx || null)
   }
 }

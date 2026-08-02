@@ -10,7 +10,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 <div v-if="fst.form">
   <!-- membrecodir --------------------------------------------------------------->
   <div v-if="fst.form.type === 'membrecodir'">
-    <form-inp2 v-model="errs.pseudo"
+    <form-inp2 v-model="errs.pseudo" name="pseudo"
       type="membrecodir" :svc="fst.form.svc" champ="pseudo" size="pseudo"/>
   </div>
 
@@ -52,6 +52,7 @@ import FormEnum2 from '../components/FormEnum2.vue'
 import { $t } from '../src-fw/util'
 
 const fst = stores.form
+
 const errs = reactive({
   pseudo: '',
   nomAuteur: '',

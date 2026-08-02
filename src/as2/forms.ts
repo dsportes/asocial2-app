@@ -25,22 +25,25 @@ if (ok) { n++; Registry.register(AS2$Form) }
 class AS2$Form_membrecomite extends AS2$Form {
   docCl: string
 
+  emptyEtc = { pseudo: '' }
+
   constructor (docCl: string) { 
     super(); this.docCl = docCl }
 
   /* Méthodes surchargées par type *******************************/
   cloneEtc (byU: boolean) : Object {
     if (byU) return { pseudo: this.etcU ? this.etcU['pseudo'] : '' }
-    const alias = this.opts ? this.opts.alias || '?' : '?'
+    const alias = this.opts ? this.opts.alias || '' : ''
     return { pseudo: this.etcT ? this.etcT['pseudo'] : alias }
   }
-  eqEtc (x: Object | null, y: Object | null) : boolean {
-    if (!x || !y) return false
-    return x['pseudo'] === y['pseudo']
+  eqEtc (x: any, y: any) : boolean {
+    const x1 = x || this.emptyEtc
+    const y1 = y || this.emptyEtc
+    return x1.pseudo === y1.pseudo
   }
   async checkEtc (etc: Object) : Promise<string> {
     const p = etc['pseudo'] || ''
-    return p.length < 8 || p.length > 24 ? $t('FORM_AS2_diag_lgp') : ''
+    return p.length < 4 || p.length > 24 ? $t('FORM_AS2_diag_lgp') : ''
   }
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> {
