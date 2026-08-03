@@ -137,7 +137,8 @@ const checkClose = async () => {
   if (b) {
     model.value = false
     emit('close', true)
-  }
+  } else 
+    model.value = true
 }
 
 const selP: Ref<LocPref> = ref(null)

@@ -8,8 +8,8 @@ export const K = {
     SAFE: { api: 1 }
   },
   DEFAULT_SERVICE: 'AS2',
-  MASTERDIR_URL: 'http://localhost:8080/master/',
-  STDSAFE_URL: 'http://localhost:8080/safe/',
+  MASTERDIR_URL: 'http://localhost:8092/master/',
+  STDSAFE_URL: 'http://localhost:8092/safe/',
   FAVORITE_OPERATORS: ['$RED', '$BLUE', '$FRAS'],
 
   DOC_URLS: {

@@ -112,12 +112,6 @@ export class $Credential {
 
   get limit () { return this.props && this.props.limit ? this.props.limit : 0 }
 
-  constructor (obj?: Object) {
-    if (obj)
-      for (const p of $Credential.lp1) this[p] = obj[p] || null
-    if (!this.credId) this.credId = Crypt.rnd(15)
-  }
-
   get serial () : Uint8Array {
     const obj = {}
     for (const p of $Credential.lp1) obj[p] = this[p] || null

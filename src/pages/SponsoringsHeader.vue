@@ -133,7 +133,8 @@ const close = async () => {
     dialogs.newproposal = false
     formType.value = null
     fctx.value = null
-  }
+  } else
+    dialogs.newproposal = true
 }
 
 const onForm = (form) => {

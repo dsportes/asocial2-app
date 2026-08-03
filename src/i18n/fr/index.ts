@@ -113,8 +113,10 @@ export default {
   - Si vous confirmez, elles seront perdues.
   - Si vous renoncez, vous pourrez continuer votre travail normalement.
   `,
-  closeCf_1: 'Je confirme fermer ma session',
-  closeCf_2: 'Je renonce, ma session se poursuit',
+  closeCf_1s: 'Je confirme fermer ma session',
+  closeCf_2s: 'Je renonce, ma session se poursuit',
+  closeCf_1d: 'Je confirme fermer ce dialogue',
+  closeCf_2d: 'Je renonce, le dialogue se poursuit',
   backopen: 'Fin de session ?',
   backopen_label: `### Confirmation de clôture de cette session.
 - en cas de confirmation la session sera fermée et la page de "login" s'affichera.
@@ -284,7 +286,7 @@ export default {
   op_FormCreateByU: 'Création d\'une demande.',
   op_FormCreateByT: 'Création d\'une proposition.',
   op_$mdEventNew: 'Création d\'un événement.',
-  op_$mdEventSync: 'Mise à jour d{un événement.',
+  op_$mdEventSync: 'Mise à jour d\'un événement.',
   op_FormCancel: 'Annulation d\'une demande.',
 
   /* Status de retour d'une opération sur Safe / Master Directory */

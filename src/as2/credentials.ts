@@ -10,8 +10,6 @@ let n = 0
 
 /* Credentials **************************************************************************/
 class AS2$Credential_CoDir extends $Credential {
-  constructor (obj?: Object) { 
-    super(obj) }
 
   get hasDispProps () { return true }
 
@@ -23,7 +21,6 @@ class AS2$Credential_CoDir extends $Credential {
 if (ok) { n++; Registry.register(AS2$Credential_CoDir) }
 
 class AS2$Credential_Redaction extends $Credential {
-  constructor (obj?: Object) { super(obj) }
 
   get hasDispProps () { return true }
 
@@ -35,7 +32,6 @@ class AS2$Credential_Redaction extends $Credential {
 if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
 
 export class AS2$Credential_Auteur extends $Credential {
-  constructor (obj?: Object) { super(obj) }
 
 }
 if (ok) { n++; Registry.register(AS2$Credential_Auteur) }

@@ -11,9 +11,9 @@
       <sd-nb class="q-ma-sm q-my-md" :text="$t('closeCf_label')"/>
       <q-card-actions vertical align="center" class="titre-md q-gutter-sm">
         <btn-cond flat icon="logout" color="warning"
-          :label="$t('closeCf_1')" @ok="ui.resolveEditing(true)"/>
+          :label="$t('closeCf_1d')" @ok="ui.resolveEditing(true)"/>
         <btn-cond flat icon="arrow_forward"
-          :label="$t('closeCf_2')" @ok="ui.resolveEditing(false)"/>
+          :label="$t('closeCf_2d')" @ok="ui.resolveEditing(false)"/>
       </q-card-actions>
     </q-card>
   </q-dialog>

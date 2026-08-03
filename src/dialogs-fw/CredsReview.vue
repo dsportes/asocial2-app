@@ -107,7 +107,8 @@ const checkClose = async () => {
   if (b) {
     model.value = false
     emit('close', true)
-  }
+  } else
+    model.value = true
 }
 
 const todel = ref(new Map<string, $Credential>())

@@ -183,7 +183,8 @@ const checkClose = async () => {
   if (b) {
     model.value = false
     emit('close', true)
-  }
+  } else 
+    model.value = true
 }
 
 const tab = ref('lists') // cred

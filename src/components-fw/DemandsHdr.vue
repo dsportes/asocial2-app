@@ -70,7 +70,8 @@ const close = async () => {
   if (b) {
     dialogs.newdemand = false
     formType.value = ''
-  }
+  } else 
+    dialogs.newdemand = true
 }
 
 const back = async () => {
