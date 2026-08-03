@@ -1,7 +1,7 @@
 <template>
 <div>
   <q-toolbar class="full-width tbp">
-    <btn-menu"/>
+    <btn-menu/>
     <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
       <q-tooltip>{{session.sessionInfo}}</q-tooltip>
     </btn-cond>

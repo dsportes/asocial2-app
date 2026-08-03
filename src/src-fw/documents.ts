@@ -14,6 +14,7 @@ const decoder = new TextDecoder()
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */
 export class $CredTempl {
+  svc: string
   userId: string
   credId: string
   docCl: string
@@ -32,6 +33,7 @@ export class $CredTempl {
     const docPk = Registry.getPk(svc, docCl, src)
     const credId = Crypt.rnd(15)
     const t = new $CredTempl()
+    t.svc = svc
     t.userId = userId
     t.credId = credId
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))

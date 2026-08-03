@@ -67,6 +67,8 @@ class AS2$Form_membreredaction extends AS2$Form_membrecomite {
 if (ok) { n++; Registry.register(AS2$Form_membreredaction) }
 
 class AS2$Form_auteur extends $Form {
+  emptyEtc = { nomAuteur: '', section: '' }
+
   constructor () { super() }
 
   cloneEtc (byU: boolean) : Object | null {
@@ -77,8 +79,9 @@ class AS2$Form_auteur extends $Form {
     }
   }
   eqEtc (x: Object | null, y: Object | null) : boolean {
-    if (!x || !y) return false
-    return (x['nomAuteur'] === y['nomAuteur']) && (x['section'] === y['section'])
+    const x1 = x || this.emptyEtc
+    const y1 = y || this.emptyEtc
+    return (x1['nomAuteur'] === y1['nomAuteur']) && (x1['section'] === y1['section'])
   }
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
@@ -94,7 +97,10 @@ class AS2$Form_auteur extends $Form {
     const autid = Crypt.rnd(15)
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
       { autid: autid }, nomAuteur, { name: nomAuteur })
-    this.opts.auteur = { autid, nomAuteur, section: etc['section'] },
+    this.opts = {
+      auteur: { autid, nomAuteur, section: etc['section'] },
+      credTemplates: {}
+    }
     this.opts.credTemplates[ct.credId] = ct
   }
 

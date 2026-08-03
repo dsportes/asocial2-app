@@ -288,6 +288,8 @@ export default {
   op_$mdEventNew: 'Création d\'un événement.',
   op_$mdEventSync: 'Mise à jour d\'un événement.',
   op_FormCancel: 'Annulation d\'une demande.',
+  op_$mdEventUser: 'Lecture d\'un événement',
+  op_CONFIG$CKey: 'Lecture d\'une clé de configuration',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1216,6 +1218,7 @@ bla bla
 
   TYPE_AS2_membreredaction: '01Nomination au Comité de Rédaction',
   TYPE_AS2_membreredaction_det: 'Nom / pseudo: {1}',
+  TYPE_AS2_membreredaction_pseudo: 'Nom / pseudo connu des autres membres du comité',
 
   TYPE_AS2_auteur: '02Création d\'un nouvel auteur',
   TYPE_AS2_auteur_det: 'Non d\'auteur: {1}',

@@ -24,7 +24,7 @@
 <script setup lang="ts">
 // @ts-ignore
 import { ref, computed, onMounted } from 'vue'
-import { DocEnums } from '../src-fw/operation'
+import { DocEnums, getSite } from '../src-fw/operation'
 import { $t, hasMessage } from '../src-fw/util'
 
 const sizes = { sm: '150px', md: '250px', lg: '350px '}
@@ -50,7 +50,7 @@ const edv = (e) => {
 
 onMounted(async () => { 
   const l = []
-  const lx = await DocEnums.get(props.svc, props.org, props.enum)
+  const lx = await DocEnums.get(props.svc + '$' + props.enum, await getSite(props.svc, props.org))
   for(const e of lx) {
     const t = edv(e)
     l.push([e, t, t.toLowerCase()])

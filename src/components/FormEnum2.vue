@@ -1,12 +1,11 @@
 <template>
-<div>
-  <div class="titre-md q-mt-md">{{  $t('TYPE_'+ svc + '_' + type + '_' + champ) }}</div>
-
+<form-exp :name="champ" :label="$t('TYPE_' + svc + '_' + type + '_' + champ)">
+  <div class="q-ml-sm">
     <div v-if="fst.visU" class="q-my-sm q-pl-md">
       <div class="text-italic">{{ $t('FORMdem_2_label') }}</div>
       <div v-if="fst.isDemand && fst.editable" class="row q-px-xs items-center">
         <select-enum1 class="col"
-          v-model="loc1" :svc="fst.svc" :org="fst.org" :enum="enum"/>
+          v-model="loc1" :svc="fst.form.svc" :org="fst.form.org" :enum="enum"/>
         <btn-cond v-if="fst.visT && psT" class="col-auto q-ml-sm"
           flat icon="content_paste" @ok="copyLocU"/>
         <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
@@ -19,7 +18,7 @@
       <div class="text-italic">{{ $t('FORMprop_2_label') }}</div>
       <div v-if="!fst.isDemand && fst.editable" class="row q-px-xs items-center">
         <select-enum1 class="col"
-          v-model="loc1" :svc="fst.svc" :org="fst.org" :enum="enum"/>
+          v-model="loc1" :svc="fst.form.svc" :org="fst.form.org" :enum="enum"/>
         <btn-cond v-if="fst.visU && psU" class="col-auto q-ml-sm"
           flat icon="content_paste" @ok="copyLocT"/>
         <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
@@ -28,6 +27,7 @@
       <div v-else class="col font-mono text-bold">{{  edv(loc2) }}</div>
     </div>
   </div>
+</form-exp>
 </template>
 
 <script setup lang="ts">
@@ -36,6 +36,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
+import FormExp from '../components-fw/FormExp.vue'
 import { hasMessage } from '../src-fw/util'
 
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
