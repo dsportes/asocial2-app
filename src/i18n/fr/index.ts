@@ -1222,10 +1222,10 @@ bla bla
 
   TYPE_AS2_auteur: '02Création d\'un nouvel auteur',
   TYPE_AS2_auteur_det: 'Non d\'auteur: {1}',
-  TYPE_AS2_auteur_nomAuteur: 'Non d\'auteur:',
-  TYPE_AS2_auteur_section: 'Section concernée du Comité de Rédaction:',
-  TYPE_AS2_coauteur_nomAuteur: 'Non d\'auteur:',
-  TYPE_AS2_coauteur_trigramme: 'Trigramme en tant que "co-auteur":',
+  TYPE_AS2_auteur_nomAuteur: 'Non d\'auteur',
+  TYPE_AS2_auteur_section: 'Section concernée du Comité de Rédaction',
+  TYPE_AS2_coauteur_nomAuteur: 'Non d\'auteur',
+  TYPE_AS2_coauteur_trigramme: 'Trigramme en tant que "co-auteur"',
 
   TYPE_AS2_coauteur: '02Nomination en tant que co-auteur d\'un auteur',
   TYPE_AS2_coauteur_det: 'Surnom: {1}',
