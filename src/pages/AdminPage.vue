@@ -39,7 +39,8 @@
     <div class="q-my-md tb1">
       <div class="column full-width tbs">
         <div class="row items-center q-ma-xs">
-          <img :src="superman" class="q-mr-xs" width="24px"/>
+          <q-icon name="security" color="negative" size="24px" class="q-mr-sm"/>
+          <!--img :src="superman" class="q-mr-xs" width="24px"/-->
           <div class="fs-lg text-bold">{{ $t('APdeclorg') }}</div>
         </div>
         <div :class="sty() + ' row items-center no-wrap'">
@@ -53,7 +54,7 @@
       </div>
 
       <div v-if="org">
-        <div class="q-mb-lg">
+        <div  v-if="adp.mdAdmin" class="q-mb-lg">
           <div class="text-italic q-ml-sm">
             {{ $t(orgSvcs && orgSvcs.size ? 'APnewsvcorg' : 'APneworg', [org]) }}
           </div>
@@ -73,8 +74,8 @@
             <div :class="'row q-my-sm q-mx-xs items-center nowrap ' + dkli(idx)">
               <div class="col font-mono q-mx-sm">{{ labelSvc(svc) }}</div>
               <select-site class="col q-mx-sm" @select="updSite" :initval="sx"
-                :ctx="{ svc: svc, sitebf: sx }"/>
-              <btn-cond class="col-auto q-mx-sm" round color="warning" icon="delete"
+                :ctx="{ svc: svc, sitebf: sx }" :disable="!adp.mdAdmin"/>
+              <btn-cond v-if="adp.mdAdmin" class="col-auto q-mx-sm" round color="warning" icon="delete"
                 @ok="delSvc(svc)"/>
             </div>
           </div>
@@ -452,7 +453,7 @@ watch(() => adp.tab, (t) => {
   if (t === 'managers') init2()
 })
 
-adp.value.tab = 'orgs'
+adp.value.tab = 'sites'
 init2()
 
 const setOS2 = async (soa: SOA) => {

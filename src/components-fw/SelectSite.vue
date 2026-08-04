@@ -1,7 +1,7 @@
 <!-- Select d'un service
 -->
 <template>
-  <q-select v-model="model" dense options-dense
+  <q-select v-model="model" dense options-dense :disable="disable"
     style="min-width:150px; height:40px" :label="$t('site')"
     transition-show="flip-up" transition-hide="flip-down"
     :options="opts"/>
@@ -22,6 +22,7 @@ const model = defineModel()
 const props = defineProps({
   reset: Number,
   initval: String,
+  disable: Boolean,
   ctx: Object
 })
 

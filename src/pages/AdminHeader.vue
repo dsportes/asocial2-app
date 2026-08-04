@@ -2,7 +2,8 @@
 <div>
   <q-toolbar class="full-width tbp">
     <btn-menu/>
-
+    <q-icon v-if="adminPage.mdAdmin" name="security"
+      color="negative" size="28px"/>
     <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEadmin')}}</q-toolbar-title>
 
     <settings-button class="q-ml-sm"/>
@@ -24,13 +25,12 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
 import BtnMenu from '../components-fw/BtnMenu.vue'
 
 // @ts-ignore
@@ -38,7 +38,12 @@ import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
 
-onMounted(async () => { await ui.resetAdminPage() })
+const adminPage = ref({ mdAdmin: false})
+
+onMounted(async () => { 
+  adminPage.value = await ui.resetAdminPage() 
+  // console.log(adminPage.value.mdAdmin)
+})
 
 </script>
 

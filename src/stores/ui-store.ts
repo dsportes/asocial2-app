@@ -223,6 +223,7 @@ export const useUiStore = defineStore('ui', () => {
     adminPage.org = ''
     adminPage.org = ''
     adminPage.mdAdmin = await isMDAdmin()
+    return adminPage
   }
   
   const navBar = reactive({
