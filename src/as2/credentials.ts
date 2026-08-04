@@ -13,9 +13,9 @@ class AS2$Credential_CoDir extends $Credential {
 
   get hasDispProps () { return true }
 
-  async dispAboutme () { 
+  async dispProps () { 
     const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', this.props.name))
+    await ui.diagDisplay($t('TYPE_AS2_membrecodir_det', [this.props.name]))
   }
 }
 if (ok) { n++; Registry.register(AS2$Credential_CoDir) }
@@ -24,15 +24,23 @@ class AS2$Credential_Redaction extends $Credential {
 
   get hasDispProps () { return true }
 
-  async dispAboutme () { 
+  async dispProps () { 
     const ui = stores.ui
-    await ui.diagDisplay($t('CRRaboutme', this.props.name))
+    await ui.diagDisplay($t('TYPE_AS2_membreredaction_det', [this.props.name]))
   }
 }
 if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
 
 export class AS2$Credential_Auteur extends $Credential {
 
+  get hasDispProps () { return true }
+
+  async dispProps () { 
+    const ui = stores.ui
+    let m = $t('TYPE_AS2_auteur_det', [this.props.name])
+    if (this.props.trig) m += ' \n ' + $t('TYPE_AS2_auteur_trigramme_det', [this.props.trig])
+    await ui.diagDisplay(m)
+  }
 }
 if (ok) { n++; Registry.register(AS2$Credential_Auteur) }
 

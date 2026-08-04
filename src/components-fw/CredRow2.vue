@@ -16,18 +16,17 @@
           </div>
           <div class="col-2 text-italic ellipsis">{{cred.docPk || '(na)'}}</div>
           <div class="col-2 justify-end row">
-            <btn-cond v-if="cred.props" class="self-start" icon="star" size="md" round
-              :disable="!cred.hasDispProps" @ok="cred.dispProps"
-              :color="cred.hasDispProps ? 'green-5' : 'grey-5'"/>
-            <btn-cond v-if="cred.props" class="self-start" icon="hourglass" size="md" round 
-              :disable="!cred.limit"  @ok="cred.dispLimit"
-              :color="cred.limit ? 'warning' : 'grey-5'"/>
+            <btn-cond v-if="cred.props && cred.hasDispProps" 
+              class="self-start" icon="star" size="md" round
+              @ok="disp(cred)" color="green-5"/>
+            <btn-cond v-if="cred.props && cred.limit" class="self-start" icon="hourglass" size="md" round 
+              @ok="cred.dispLimit" color="warning"/>
           </div>
         </div>
         <div class="row">
           <div class="col-10 font-mono fs-md mh text-italic">
             {{cred.props && cred.props.name ?  cred.props.name : '?'}}</div>
-          <div class="col-2 ellipsis q-pr-sm">{{cred.credPk}}</div>
+          <div class="col-2 ellipsis q-pr-sm fs-sm font-mono">{{cred.credPk}}</div>
         </div>
         <div v-if="comment && cred.name" class="font-mono text-bold">{{ cred.name }}</div>
       </div>
@@ -37,6 +36,7 @@
 <script setup lang="ts">
 import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import { $Credential } from '../src-fw/documents'
 
 const props = defineProps({
   cred: Object,
@@ -44,6 +44,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['undo', 'select'])
+
+const disp = async (cred: $Credential) => {
+  await cred.dispProps()
+}
+
 
 </script>
 

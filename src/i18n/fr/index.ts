@@ -1213,18 +1213,19 @@ bla bla
   CATEG_AS2_auteurs: '02Auteurs et relecteurs',
 
   TYPE_AS2_membrecodir: '01Nomination au Comité de Direction',
-  TYPE_AS2_membrecodir_det: 'Nom / pseudo: {1}',
+  TYPE_AS2_membrecodir_det: 'Nom / pseudo: {0}',
   TYPE_AS2_membrecodir_pseudo: 'Nom / pseudo connu des autres membres du comité',
 
   TYPE_AS2_membreredaction: '01Nomination au Comité de Rédaction',
-  TYPE_AS2_membreredaction_det: 'Nom / pseudo: {1}',
+  TYPE_AS2_membreredaction_det: 'Nom / pseudo: {0}',
   TYPE_AS2_membreredaction_pseudo: 'Nom / pseudo connu des autres membres du comité',
 
   TYPE_AS2_auteur: '02Création d\'un nouvel auteur',
-  TYPE_AS2_auteur_det: 'Non d\'auteur: {1}',
-  TYPE_AS2_auteur_nomAuteur: 'Non d\'auteur',
+  TYPE_AS2_auteur_det: 'Nom d\'auteur: {0}',
+  TYPE_AS2_auteur_nomAuteur: 'Nom d\'auteur',
+  TYPE_AS2_auteur_trigramme_det: 'Trigramme: {0}',
   TYPE_AS2_auteur_section: 'Section concernée du Comité de Rédaction',
-  TYPE_AS2_coauteur_nomAuteur: 'Non d\'auteur',
+  TYPE_AS2_coauteur_nomAuteur: 'Nom d\'auteur',
   TYPE_AS2_coauteur_trigramme: 'Trigramme en tant que "co-auteur"',
 
   TYPE_AS2_coauteur: '02Nomination en tant que co-auteur d\'un auteur',

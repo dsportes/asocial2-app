@@ -94,8 +94,7 @@
     @option="confirmDS"/>
 
   <div v-if="adp.tab === 'orgs'" class="pwsm">
-    <select-svcorg class="full-width q-mx-xs"
-      initorg="?" initsvc="?" @select="setOS"/>
+    <div class="full-width q-mx-xs"><select-svcorg initorg="?" initsvc="?" @select="setOS"/></div>
 
     <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
 
@@ -128,7 +127,7 @@
 
       <scroll-area v-if="lstMgr.length"
         class="full-width bord1">
-        <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="idx" :class="dkli(idx)">
+        <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="m.credId" :class="dkli(idx)">
           <div class="row">
             <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
             <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
@@ -147,12 +146,12 @@
     </div>
   </div>
 
-  <!-- dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
+  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
     :title="$t('APlistmgr')" vh="75">
     <template #hdr>
       <div class="row justify-between q-pa-xs">
         <btn-cond icon="close" :label="$t('APdelcred')" color="warning" @ok="delcred"/>
-        <btn-cond :label="$t('iconfirm')" confirm @ok="confirm" 
+        <btn-cond :label="$t('iconfirm')" confirm @ok="confirm2" 
           :disable="!changes"/>
       </div>
       <div class="row items-center q-my-xs q-gutter-xs">
@@ -179,7 +178,7 @@
       <div v-else class="titre-lg text-italic text-center q-my-md">{{$t('APnovallimit')}}</div>
       </div>
     </template>
-  </dialog-std0-->
+  </dialog-std0>
 
 </div>
 </template>
@@ -189,10 +188,7 @@
 // @ts-ignore
 import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'
 import stores from '../stores/all'
-// import { ListManagers, UpdateCredential } from '../src-fw/operations'
-// import { $Cred } from '../src-fw/documents'
-import { $t, dkli, dhcool, sty } from '../src-fw/util'
-
+import { $t, dkli, dhcool, sty, zp } from '../src-fw/util'
 import { SOA } from '../src-fw/registry'
 import StatusSite from '../components-fw/StatusSite.vue'
 import StatusOrg from '../components-fw/StatusOrg.vue'
@@ -206,14 +202,19 @@ import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
-// import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { AOperation, MDOperation, isAdmin, getSite } from 'src/src-fw/operation'
+import { $Cred } from '../src-fw/documents'
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import { AOperation, MDOperation, isAdmin } from '../src-fw/operation'
+import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
+const sf = stores.safe
 
 const dialogs = reactive({
+  confirmrevoke: false,
+  edit: false,
   cf: false,
   ds: false
 })
@@ -419,8 +420,6 @@ const confirm = async (c) => {
   siteNv.value = ''
 }
 
-const lstMgr = ref([])
-
 const so = reactive({
   org: '',
   site: '',
@@ -428,8 +427,8 @@ const so = reactive({
   ready: false,
   admin: false
 })
-const surl = computed(() => 
-  AOperation.urls.get(so.site) || '?')
+
+const surl = computed(() => AOperation.urls.get(so.site) || '?')
 
 const setOS = async (soa: SOA) => {
   so.org = soa.org
@@ -440,11 +439,7 @@ const setOS = async (soa: SOA) => {
   so.ready = true
 }
 
-const setOS2 = async (soa: SOA) => {
-  await setOS(soa)
-  // TODO
-  lstMgr.value = []
-}
+const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
 
 const init2 = () => {
   so.org = ''; so.site = ''; so.svc = ''; so.ready = false
@@ -460,20 +455,16 @@ watch(() => adp.tab, (t) => {
 adp.value.tab = 'orgs'
 init2()
 
-/*
-const dialogs = reactive({ 
-  confirmrevoke: false,
-  edit: false
-})
-
-const org = ref()
-
-const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
+const setOS2 = async (soa: SOA) => {
+  await setOS(soa)
+  await dolist()
+}
 
 const dolist = async () => {
   lstMgr.value = []
-  const op = new ListManagers(ui.adminPage.SVC, org.value)
+  const op = new ListManagers(so.svc, so.org)
   lstMgr.value = await op.run()
+  // console.log(lstMgr.value.length)
 }
 
 const timeed = ref('')
@@ -481,6 +472,18 @@ const dateed = ref('')
 const initName = ref('')
 const current = ref({ props: {} })
 const toDel = ref(false)
+
+const targetUser = reactive({ inp: '', err: '' })
+
+const edit = (m) => {
+  current.value = m
+  initName.value = m.props.name || ''
+  targetUser.inp = m.props.name || ''
+  targetUser.err = ''
+  dialogs.edit = true
+  toDel.value = false
+  undolimit()
+}
 
 const setD = (d: Date) => {
   dateed.value = !d ? '' : d.getFullYear() + '/' + zp(d.getMonth() + 1) + '/' + zp(d.getDate())
@@ -494,16 +497,6 @@ const diagD = computed(() =>
 const chgT = computed(() => 
   (current.value.props.limit || 0) * 60000 !== curT.value)
 
-const edit = (m) => {
-  current.value = m
-  initName.value = m.props.name || ''
-  targetUser.inp = m.props.name || ''
-  targetUser.err = ''
-  dialogs.edit = true
-  toDel.value = false
-  undolimit()
-}
-
 const undolimit = () => {
   setD(current.value.props.limit ? new Date(current.value.props.limit * 60000) : null)
 }
@@ -511,7 +504,6 @@ const undolimit = () => {
 const changes = computed(() =>
   toDel.value || chgT.value || targetUser.inp !== (current.value.props.name || '') )
 
-const targetUser = reactive({ inp: '', err: ''})
 
 const delcred = () => {
   toDel.value = true
@@ -531,7 +523,7 @@ const undoAll = () => {
   toDel.value = false
 }
 
-const confirm = async (b) => {
+const confirm2 = async (b) => {
   if (b === false) {
     undoAll()
     return
@@ -540,14 +532,13 @@ const confirm = async (b) => {
   if (toDel.value) c.props.limit = 1
   else c.props.limit = !curT.value ? 0 : Math.floor(curT.value / 60000)
   if (targetUser.inp !== (c.props.name || '')) c.props.name = targetUser.inp
-  const op = new UpdateCredential(c.svc, c.org)
+  const op = new UpdateCredential(so.svc, so.org)
   const status = await op.run(c.credId, c.docCl, c.docPk, c.props)
   if (status) await ui.diagDisplay($t('APupdko'))
   else await ui.diagDisplay($t(toDel.value ? 'APdelok' : 'APupdok'))
   dialogs.edit = false
   await dolist()
 }
-  */
 
 </script>
 

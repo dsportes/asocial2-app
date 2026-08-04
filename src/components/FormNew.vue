@@ -69,7 +69,7 @@ if (estComite.value) {
   }
 }
 
-if (props.formType.type === 'AS2$auteur' || props.formType.type === 'AS2$coauteur') {
+if (props.formType.type === 'auteur' || props.formType.type === 'coauteur') {
   const cf = ui.currentForm
   if (props.isDemand) {
     const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)

@@ -4,10 +4,14 @@ event : 'select', svc (org est session.orgs.c)
 <template>
   <div class="row q-gutter-xs items-center full-width nowrap">
     <btn-cond class="col-auto" icon="backspace" flat color="warning" @ok="doreset"/>
-    <select-org class="col" v-model="org" :initval="initorg" :reset="reset"
-      style="position: relative; top: 10px"/>
-    <select-svc class="col" v-model="svc" :initval="initsvc" :reset="reset"
-      :restricted="restricted" :ctx="ctx || null"/>
+    <div class="col">
+      <select-org v-model="org" :initval="initorg" :reset="reset"
+        style="position: relative; top: 10px"/>
+    </div>
+    <div class="col">
+      <select-svc v-model="svc" :initval="initsvc" :reset="reset"
+        :restricted="restricted" :ctx="ctx || null"/>
+    </div>
     <btn-cond class="col-auto" icon="check" round size="lg" color="green-5"
       :disable="!svc || !org" @ok="ok"/>
   </div>

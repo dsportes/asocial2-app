@@ -107,9 +107,9 @@ class AS2$Form_auteur extends $Form {
 }
 if (ok) { n++; Registry.register(AS2$Form_auteur) }
 
-
 class AS2$Form_coauteur extends $Form {
   autid: string = ''
+  emptyEtc = { nomAuteur: '', trigramme: '' }
 
   constructor () { super() }
 
@@ -121,8 +121,9 @@ class AS2$Form_coauteur extends $Form {
     }
   }
   eqEtc (x: Object | null, y: Object | null) : boolean {
-    if (!x || !y) return false
-    return (x['trigramme'] === y['trigramme']) && (x['nomAuteur'] === y['nomAuteur'])
+    const x1 = x || this.emptyEtc
+    const y1 = y || this.emptyEtc
+    return (x1['trigramme'] === y1['trigramme']) && (x1['nomAuteur'] === y1['nomAuteur'])
   }
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
@@ -133,13 +134,16 @@ class AS2$Form_coauteur extends $Form {
   }
 
   async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
-    const src = { autid: this.autid }
-    this.opts.$1 = Registry.getPk(this.svc, 'Auteur', src)
     if (!byU || !this.autid) return
     const na = etc['nomAuteur']
     const trigramme = etc['trigramme']
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
-      src , na, { name: na, trig: trigramme })
+      { autid: this.autid } , na, { name: na, trig: trigramme })
+    this.opts = {
+      $1: Registry.getPk(this.svc, 'Auteur', { autid: this.autid }),
+      auteur: { autid: this.autid, nomAuteur: na },
+      credTemplates: {}
+    }
     this.opts.credTemplates[ct.credId] = ct
   }
 }
