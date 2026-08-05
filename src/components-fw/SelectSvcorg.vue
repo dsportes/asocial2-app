@@ -2,20 +2,22 @@
 event : 'select', svc (org est session.orgs.c)
 -->
 <template>
+<div>
   <div class="row q-gutter-xs items-center full-width nowrap">
     <btn-cond class="col-auto" icon="backspace" flat color="warning" @ok="doreset"/>
     <div class="col">
-      <select-org v-model="org" :initval="initorg" :reset="reset"
+      <select-org :initval="initorg" :reset="reset" @select="selOrg"
         style="position: relative; top: 10px"/>
     </div>
     <div class="col">
-      <select-svc v-model="svc" :initval="initsvc" :reset="reset"
-        :restricted="restricted" :ctx="ctx || null"/>
+      <select-svc :initval="initsvc" :reset="reset"
+        :restricted="restricted" :ctx="ctx || null" @select="selSvc"/>
     </div>
     <btn-cond class="col-auto" icon="check" round size="lg" color="green-5"
       :disable="!svc || !org" @ok="ok"/>
   </div>
   <div v-if="diag" class="msg">{{ $t('nosvcorg') }}</div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -50,6 +52,13 @@ const doreset = () => { setTimeout(() => { reset.value++ }, 5) }
 const svc = ref()
 const org = ref()
 const diag = ref(false)
+
+const selSvc = (x) => {
+  if (x) svc.value = x
+}
+const selOrg = (x) => {
+  if (x) org.value = x
+}
 
 const ok = async () => {
   if (session.hasNet) {

@@ -41,7 +41,10 @@
       <div v-else class="titre-md text-italic q-my-xs">
         {{ $t('site_ok', [adp.pingop || adp.pingst]) }}
       </div>
-      <status-site v-if="adp.pingop" v-model="curSite" class="q-mt-md"/>
+      <div v-if="adp.pingop">
+        <select-svc :ctx="{ incl: curSite.services }" @select="selSvcx1"/>
+        <status-site v-if="curSite.svc" v-model="curSite" class="q-mt-md"/>
+      </div>
     </div>
 
     <div class="q-my-md tb1">
@@ -102,7 +105,7 @@
     @giveup="confirmDS(0)"
     @option="confirmDS"/>
 
-  <div v-if="adp.tab === 'orgs'" class="pwsm">
+  <div v-if="adp.tab === 'orgs'" class="pwmd">
     <div class="full-width q-mx-xs"><select-svcorg initorg="?" initsvc="?" @select="setOS"/></div>
 
     <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
@@ -213,7 +216,7 @@ import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import { $Cred } from '../src-fw/documents'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { AOperation, MDOperation, isAdmin, configyo, pingStore } from '../src-fw/operation'
+import { AOperation, MDOperation, isAdmin, services, pingStore } from '../src-fw/operation'
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -276,6 +279,8 @@ const saveLabels = async (json: string) => {
 const curSite = reactive({
   org: '',
   site: '',
+  services: new Set(),
+  svc: '',
   admin: false
 })
 const newsite = ref(false)
@@ -297,7 +302,10 @@ const doreset = () => { setTimeout(() => { reset.value++ }, 5) }
 
 const init1 = () => {
   curSite.site = ''
+  curSite.svc = ''
+  curSite.svcLabel = ''
   curSite.admin = false
+  curSite.services = new Set(),
   adp.value.site = ''
   newsite.value = false
   nsite.inp = ''; nsite.err = ''
@@ -319,27 +327,36 @@ const setCurSite = async (site: string) => {
     adp.value.site = ''
   } else {
     curSite.site = site
+    curSite.admin = false
+    curSite.svc = ''
+    curSite.services = new Set()
+    curSite.svcLabel = ''
     adp.value.site = site
     if (site) {
       adp.value.pingop = ''
       adp.value.pingst = ''
-      curSite.admin = false
       if (site.endsWith('st')) {
         const r = await pingStore(site)
         if (r) {
-          console.log('PINGSTORE: ' + r)
+          // console.log('PINGSTORE: ' + r)
           adp.value.pingst = r
         }
       } else {
-        const r = await configyo(site)
+        const r = await services(site)
         if (r) {
-          console.log('YO: ' + r)
-          adp.value.pingop = r
+          adp.value.pingop = new Date(r.at).toISOString()
+          curSite.services = new Set(r.services)
+          // console.log(new Date().toISOString(), 'Services: ' + r.services.join(' / '))
           curSite.admin = await isAdmin(site)
         }
       }
     }
   }
+}
+
+const selSvcx1 = (x) => {
+  curSite.svc = x.svc
+  curSite.svcLabel = x.label
 }
 
 const delSite = async (site: string) => {

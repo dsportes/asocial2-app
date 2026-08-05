@@ -291,6 +291,7 @@ export default {
   op_FormCancel: 'Annulation d\'une demande.',
   op_$mdEventUser: 'Lecture d\'un événement',
   op_CONFIG$CKey: 'Lecture d\'une clé de configuration',
+  op_CONFIG$Services: 'Lecture des services assurés par le site',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',

@@ -43,9 +43,9 @@ const newComment = ref()
 
 const setStatus = async () => {
   status.value = null
-  if (!so.value || !so.value.site) return
+  if (!so.value || !so.value.site || !so.value.svc) return
   const now = Date.now()
-  status.value = await getSiteStatus(so.value.site)
+  status.value = await getSiteStatus(so.value.site, so.value.svc)
   // console.log(site.value, JSON.stringify(status.value))
   newComment.value = status.value.txt
   if (so.admin) setstat.value = true
@@ -54,7 +54,7 @@ const setStatus = async () => {
 
 const updStatus = async (st: number) => {
   const now = Date.now()
-  status.value = await setSiteStatus(so.value.site, st, newComment.value || '')
+  status.value = await setSiteStatus(so.value.site, so.value.svc, st, newComment.value || '')
   status.value.now = now
   newComment.value = status.value.txt
   setstat.value = false

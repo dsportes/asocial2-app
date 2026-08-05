@@ -7,7 +7,7 @@ try {
   const nd = DocDescriptor.size()
   const nf = FormType.size()
   
-  new DocDescriptor(svc, { name: 'Status', sync: false } )
+  new DocDescriptor(svc, { name: 'Status', sync: false, pk:['svc'], nohash: true } )
 
   console.log('FW document descriptors:' + (DocDescriptor.size() - nd) 
     + ' forms descriptors:' + (FormType.size() - nf))

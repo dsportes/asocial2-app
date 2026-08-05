@@ -1,9 +1,9 @@
 <!-- Saisie du couple Service / Organisation
 -->
 <template>
-  <input-A  simple size="org" v-model="model" :initval="defOrg"
+  <input-A  simple size="org" v-model="local" :initval="defOrg"
     :list="lst" prefix="ORG" :label="$t('org')"
-    style="min-width:100px"
+    style="min-width:105px;overflow:hidden"
     @validate="val"/>
 </template>
 
@@ -17,7 +17,7 @@ import InputA from '../components-fw/InputA.vue'
 const session = stores.session
 const lst = computed(() => session.orgs.lst)
 
-const model = defineModel()
+const local = defineModel()
 const props = defineProps({
   reset: Number,
   initval: String, // Valeur initiale, si '?' force à ''
@@ -39,16 +39,18 @@ const defOrg = ref(props.initval ? (props.initval === '?' ? '' : props.initval) 
 const emit = defineEmits(['select'])
 
 const val = () => {
-  if (defOrg.value !== model.value) {
-    session.addOrg(model.value)
+  if (defOrg.value !== local.value) {
+    session.addOrg(local.value)
     const c = localStorage.getItem('org')
-    if (c !== model.value) localStorage.setItem('org', model.value)
-    emit('select', model.value, props.ctx || null)
+    if (c !== local.value) localStorage.setItem('org', local.value)
+    emit('select', local.value, props.ctx || null)
   }
 }
 
 const init = () => {
-  model.value = defOrg.value
+  local.value = defOrg.value
+  if (local.value)
+    emit('select', local.value, props.ctx || null)
 }
 
 watch(() => [props.initval, props.ctx, props.reset], () => 

@@ -6,6 +6,7 @@ const ok = !schemaExcFW()
 
 export class ADMIN$Status extends $Document {
   static release = 0
+  svc: string
   st: number // code 0: inconnu 1: UP 2: READ-ONLY 9: DOWN
   at: number // time de dernière mise à jour
   txt: string // texte explicatif éventuel de l'administrateur

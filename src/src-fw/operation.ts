@@ -353,13 +353,13 @@ export class AdminOperation extends OperationG {
   }
 }
 
-export const configyo = async (site: string) : Promise<boolean> => {
-  const op = new AdminOperation('CONFIG$yo', site)
+export const services = async (site: string) : Promise<{at: number, services: string[]}> => {
+  const op = new AdminOperation('CONFIG$Services', site)
   try {
     const res = await op.post()
-    return res['yo']
+    return res
   } catch(e) {
-    return false
+    return null
   }
 }
 
@@ -382,10 +382,11 @@ export type ADMIN$Status = {
   at: number // time de dernière mise à jour
   txt: string // texte explicatif éventuel de l'administrateur
 }
-export const getSiteStatus = async (site: string) 
+export const getSiteStatus = async (site: string, svc: string) 
   : Promise<ADMIN$Status> => {
   const op = new AdminOperation('ADMIN$getStatus', site)
   try {
+    op.args.svc = svc
     const res = await op.post()
     return res['status']
   } catch(e) {
@@ -394,10 +395,11 @@ export const getSiteStatus = async (site: string)
   }
 }
 
-export const setSiteStatus = async (site: string, st: number, txt: string) 
+export const setSiteStatus = async (site: string, svc: string, st: number, txt: string) 
   : Promise<ADMIN$Status> => {
   const op = new AdminOperation('ADMIN$setStatus', site)
   try {
+    op.args.svc = svc
     op.args.st = st
     op.args.txt = txt
     const res = await op.post()

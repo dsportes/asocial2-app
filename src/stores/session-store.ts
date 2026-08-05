@@ -225,7 +225,7 @@ export const useSessionStore = defineStore('session', () => {
   const setOrg = (org: string) => { orgs.c = org }
 
   const _currentSvc = ref()
-  const currentSvc = computed(() => _currentSvc.value || stores.config.K.DEFAULT_SERVICE)
+  const currentSvc = computed(() => _currentSvc.value)
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
