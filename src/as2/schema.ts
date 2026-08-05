@@ -7,7 +7,7 @@ try {
   const nd = DocDescriptor.size()
   const nf = FormType.size()
 
-  new DocDescriptor(svc, { name: 'Status', sync: true } )
+  new DocDescriptor(svc, { name: 'Status', sync: true, pk: ['svc'], nohash: true } )
   new DocDescriptor(svc, { name: 'CoDir', virtual: true } )
   new DocDescriptor(svc, { name: 'Redaction', virtual: true } )
   new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
