@@ -273,11 +273,11 @@ export class OperationG extends AOperation {
     const config = stores.config
     const session = stores.session
     try {
-
       let u = this.args.site ? await this.getSiteUrl() : await this.getSvcOrgUrl()
       if (!u.endsWith('/')) u += '/'
       // this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
       this.url = u + 'op/'
+
       if (this.args.svc)
         this.args.APIVERSION = config.K.SERVICES[this.args.svc].api
 
@@ -315,7 +315,7 @@ export class OperationG extends AOperation {
         throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (u || '?'), txt])
+      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (this.url || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
@@ -350,6 +350,16 @@ export class AdminOperation extends OperationG {
   constructor (opName: string, site: string, background?: boolean) {
     super(opName, background)
     this.args.site = site
+  }
+}
+
+export const configyo = async (site: string) : Promise<boolean> => {
+  const op = new AdminOperation('CONFIG$yo', site)
+  try {
+    const res = await op.post()
+    return res['yo']
+  } catch(e) {
+    return false
   }
 }
 
@@ -464,8 +474,18 @@ comme hp0, hr0, etc.
 export class SafeOperation extends A2Operation {
   constructor (opName: string, safeStore?: string) {
     super(opName)
-    if (!safeStore) this.url = stores.config.K.STDSAFE_URL
-    else this.safeStore = safeStore
+    if (safeStore) this.safeStore = safeStore
+    else this.url = stores.config.K.STDSAFE_URL
+  }
+}
+
+export const pingStore = async (store: string) : Promise<boolean> => {
+  const op = new SafeOperation('$PingStore', store)
+  try {
+    const ret = await op.post()
+    return ret['pingstore'] || false
+  } catch(e) {
+    return false
   }
 }
 

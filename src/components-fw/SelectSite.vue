@@ -13,6 +13,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 
 import { AOperation } from '../src-fw/operation'
 import stores from '../stores/all'
+import { $t } from '../src-fw/util'
 const ui = stores.ui
 
 const idc = ref(ui.idc())
@@ -20,6 +21,7 @@ const idc = ref(ui.idc())
 const model = defineModel()
 
 const props = defineProps({
+  forstore: Boolean,
   reset: Number,
   initval: String,
   disable: Boolean,
@@ -34,8 +36,12 @@ const opts = ref([])
 const emit = defineEmits(['select'])
 
 const init = async () => {
-  const ls = Array.from((await AOperation.getSites()).keys())
+  const ls = []
+  const b = props.forstore
+  for(const u of (await AOperation.getSites()).keys())
+    if (!b || u.endsWith('st')) ls.push(u)
   ls.sort((a,b) => a > b ? 1 : (a < b ? -1 : 0))
+  if (b) ls.unshift($t('SECsite_std'))
   opts.value = ls
   model.value = defSite.value
 }

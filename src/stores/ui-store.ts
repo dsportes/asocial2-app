@@ -215,6 +215,8 @@ export const useUiStore = defineStore('ui', () => {
     site: '',
     org: '',
     svc: '',
+    pingop: '',
+    pingst: '',
     mdAdmin: false
   })
 
@@ -222,6 +224,8 @@ export const useUiStore = defineStore('ui', () => {
     adminPage.site = ''
     adminPage.org = ''
     adminPage.org = ''
+    adminPage.pingop = ''
+    adminPage.pingst = ''
     adminPage.mdAdmin = await isMDAdmin()
     return adminPage
   }

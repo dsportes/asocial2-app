@@ -56,6 +56,7 @@ export default {
   svcStatus_2: 'LECTURE - dernière mise à jour: {0}',
   svcStatus_9: 'DOWN - dernière mise à jour: {0}',
   site_err: 'Ce site ne peut pas être atteint: c\'est soit un incident technique passager, soit une erreur de configuration.',
+  site_ok: 'Site accessible: {0}',
   svcStatus_maj: 'Mise à jour du status',
 
   svcStatus_no: 'Service / opérateur non sélectionné',
@@ -833,7 +834,7 @@ La session a accès en lecture aux documents et certains fichiers, dans l'état 
 Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centrales, NI d'une mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 
 `,
-  SEStit: 'Données de sécurité sur site',
+  SEStit: 'Votre "Safe Box" sera hébergée sur le site',
   SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
   SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   SESmodes: `## Modes NORMAL et INCOGNITO

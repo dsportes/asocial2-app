@@ -34,7 +34,15 @@
      </div>
     </q-expansion-item>
 
-    <status-site v-if="curSite" v-model="curSite" class="q-mt-md"/>
+    <div v-if="curSite.site">
+      <div v-if="!adp.pingop && !adp.pingst" class="msg q-my-xs">
+        {{ $t('site_err') }}
+      </div>
+      <div v-else class="titre-md text-italic q-my-xs">
+        {{ $t('site_ok', [adp.pingop || adp.pingst]) }}
+      </div>
+      <status-site v-if="adp.pingop" v-model="curSite" class="q-mt-md"/>
+    </div>
 
     <div class="q-my-md tb1">
       <div class="column full-width tbs">
@@ -205,7 +213,7 @@ import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import { $Cred } from '../src-fw/documents'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { AOperation, MDOperation, isAdmin } from '../src-fw/operation'
+import { AOperation, MDOperation, isAdmin, configyo, pingStore } from '../src-fw/operation'
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -312,8 +320,25 @@ const setCurSite = async (site: string) => {
   } else {
     curSite.site = site
     adp.value.site = site
-    if (site)
-      curSite.admin = await isAdmin(site)
+    if (site) {
+      adp.value.pingop = ''
+      adp.value.pingst = ''
+      curSite.admin = false
+      if (site.endsWith('st')) {
+        const r = await pingStore(site)
+        if (r) {
+          console.log('PINGSTORE: ' + r)
+          adp.value.pingst = r
+        }
+      } else {
+        const r = await configyo(site)
+        if (r) {
+          console.log('YO: ' + r)
+          adp.value.pingop = r
+          curSite.admin = await isAdmin(site)
+        }
+      }
+    }
   }
 }
 

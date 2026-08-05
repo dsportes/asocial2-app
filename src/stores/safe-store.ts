@@ -1692,16 +1692,6 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const pingStore = async (store: string) : Promise<boolean> => {
-    const op = new SafeOperation('$Ping', store)
-    try {
-      const ret = await op.post()
-      return ret['ping'] || false
-    } catch(e) {
-      return false
-    }
-  }
-
   return {
     hasIDBS, devId, devName,
     trustings, myTrusting, delTrusting,
@@ -1727,8 +1717,7 @@ export const useSafeStore = defineStore('safe', () => {
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,
-    getSafe, delSafe, restoreSafe, reloadSafe,
-    pingStore
+    getSafe, delSafe, restoreSafe, reloadSafe
   }
 })
 

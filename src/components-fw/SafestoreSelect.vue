@@ -16,9 +16,10 @@ Résultat en v-model.
     </div>
   </template>
   <div class="q-ml-md q-mr-xs q-my-sm bordl bordb">
-    <input-a prefix="SECsitech"
+    <select-site v-model="store" :initval="def" @select="check" forstore/>
+    <!--input-a prefix="SECsitech"
       @validate="check" :initval="def" :list="vals"
-      v-model="store"/>
+      v-model="store"/-->
   </div>
 </q-expansion-item>
 </template>
@@ -27,8 +28,10 @@ Résultat en v-model.
 // @ts-ignore
 import { ref, watch } from 'vue'
 import stores from '../stores/all'
-import InputA from '../components-fw/InputA.vue'
+// import InputA from '../components-fw/InputA.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import SelectSite from '../components-fw/SelectSite.vue'
+import { pingStore } from '../src-fw/operation'
 import { $t } from '../src-fw/util'
 
 const sf = stores.safe
@@ -36,8 +39,8 @@ const config = stores.config
 
 const exp = ref(false)
 const def = $t('SECsite_std')
-const sites = config.K.FAVORITE_OPERATORS.sort()
-const vals = ref([def, ...sites])
+// const sites = config.K.FAVORITE_SITES.sort()
+// const vals = ref([def, ...sites])
 
 const model = defineModel() // Dans le script accessible par model.value
 
@@ -51,7 +54,7 @@ const err = ref(0)
 
 model.value = ''
 
-const check = () => {
+const check = async () => {
   const s = store.value
   if (s === def) {
     err.value = 0
@@ -59,7 +62,7 @@ const check = () => {
     exp.value = false
   } else {
     err.value = 2
-    checkStore()
+    await checkStore()
   }
 }
 
@@ -69,7 +72,7 @@ watch(store, (v) => {
 
 const checkStore = async () => {
   const s = store.value
-  const ok = await sf.pingStore(s)
+  const ok = await pingStore(s)
   if (ok) {
     model.value = s
     err.value = 0
