@@ -2,7 +2,7 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
-import { Subscription } from'../src-fw/subscription'
+import { $Subs } from'../src-fw/subscription'
 import { $Credential, $Cred } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -59,10 +59,10 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
 - Supprime la précédente s'il y en avait une
 - Créé une nouvelle si l'argument subscription n'est pas null
 */
-export class SetSubscription extends Operation {
-  constructor (SVC: string, org: string) { super('SetSubscription', SVC, org) }
+export class FW$SetSubscription extends Operation {
+  constructor (svc: string, org: string) { super('FW$SetSubscription', svc, org) }
 
-  async run (subscription: Subscription, longLife: boolean ) {
+  async run (subscription: $Subs, longLife: boolean ) {
     try {
       // const subJSON = stores.session.subJSON
       this.args.subscription = subscription
@@ -76,8 +76,8 @@ export class SetSubscription extends Operation {
 
 /* UpdateSubscription enregistre la mise à jour d'une souscription d'une session
 */
-export class UpdateSubscription extends Operation {
-  constructor (SVC: string, org: string) { super('UpdateSubscription', SVC, org) }
+export class FW$UpdateSubscription extends Operation {
+  constructor (svc: string, org: string) { super('$FW$UpdateSubscription', svc, org) }
 
   async run (title: string, url: string, defs: Object ) {
     try {

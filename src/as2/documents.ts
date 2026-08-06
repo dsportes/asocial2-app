@@ -2,6 +2,7 @@ import { schemaExcAS2 } from '../as2/schema'
 import { schemaExcFW } from '../src-fw/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
 import { ADMIN$Status } from '../src-fw/fwdocuments'
+import { $Subs, $SubsItem } from '../src-fw/subscription'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
 
@@ -12,6 +13,14 @@ let n = 0
 class AS2$Status extends ADMIN$Status {
 }
 if (ok) { n++; Registry.register(AS2$Status) }
+
+class AS2$Subs extends $Subs {
+}
+n++; Registry.register(AS2$Subs)
+
+class AS2$SubsItem extends $SubsItem {
+}
+n++; Registry.register(AS2$SubsItem)
 
 export class AS2$Auteur extends $Document {
   // Donne le autid de svc/org/nom

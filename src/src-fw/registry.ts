@@ -89,6 +89,7 @@ export class $ADocument {
 }
 
 export class $Document extends $ADocument{
+  _svc: string = ''
   _clazz: string = ''
   _pk: string = ''
   deleted?: boolean = false

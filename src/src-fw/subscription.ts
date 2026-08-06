@@ -3,7 +3,8 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { IDB } from './idb'
 import stores from '../stores/all'
-import { UpdateSubscription, SetSubscription } from '../src-fw/operations'
+import { $Document } from '../src-fw/registry'
+import { FW$UpdateSubscription, FW$SetSubscription } from '../src-fw/operations'
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
@@ -11,7 +12,7 @@ si versions[0] === versions[1] la souscription est à jour en session
 export type versions = [number, number]
 
 // Souscription d'une organisation
-export class Subscription {
+export class $Subs extends $Document {
   title: string // titre des notifications web-push
   defs: Object // liste des définitions
   // { def: msg ... } - def: sa définition. msg: est un message ou ''
@@ -27,15 +28,16 @@ export class Subscription {
   _newDefs: Set<string> = new Set()
   _delDefs: Set<string> = new Set()
 
-  static fromSerial (bin: Uint8Array) : Subscription {
+  static fromSerial (bin: Uint8Array) : $Subs {
     const obj = decode(bin)
-    const s = new Subscription()
+    const s = new $Subs()
     s.title = obj.title || ''
     s.defs = obj.defs
     return s
   }
 
   constructor () {
+    super()
     this.title = ''
     this.defs = {}
   }
@@ -67,7 +69,7 @@ export class Subscription {
 
     // Recherche des Subs à mettre à jour en store et enregistrer en IDB
     if (session.hasIDB && (this.title !== null || this._defs.size)) {
-      const msubs: Map<string, Subs> = new Map<string, Subs>()
+      const msubs: Map<string, $Subs> = new Map<string, $Subs>()
       for(const def of this._newDefs) {
         const [clazz, subs] = dataSt.setDefLoc(org, def, 0)
         msubs.set(clazz, subs)
@@ -87,18 +89,18 @@ export class Subscription {
         delta[def] = msg
         if (msg === false) delete this.defs[def]; else this.defs[def] = msg
       }
-      await new UpdateSubscription('', org).run(this._title, this._url, delta)
+      await new FW$UpdateSubscription(this._svc, org).run(this._title, this._url, delta)
     }
   }
 
   /* Enregistrement de la souscription au serveur
   Pas invoquée en mode PLANE
   */
-  async subscribe (org: string, longLife: boolean, title?: string, url?: string) {
+  async subscribe (svc: string, org: string, longLife: boolean, title?: string, url?: string) {
     const config = stores.config
     this.url = url || config.location
     this.title = title || (config.K.APPNAME + ' - ' + org)
-    await new SetSubscription('', org).run(this, longLife)
+    await new FW$SetSubscription(svc, org).run(this, longLife)
   }
 
   serial () : Uint8Array { return encode({title: this.title, defs: this.defs}) }
@@ -108,7 +110,7 @@ export class Subscription {
 /********************************************************************
 Souscription élementaire d'une classe de documents pour une organisation
 ********************************************************************/
-export class Subs {
+export class $SubsItem {
   vdef0 : versions | null // versions de la collection de tous les documents de la classe
   vdef1 : Map<string, versions> // versions pour chaque pk
   vdef2 : Map<string, versions> // pour chaque collection colName/colValue
@@ -119,9 +121,9 @@ export class Subs {
     this.vdef2 = new Map<string, versions>()
   }
 
-  static deserial (bin: Uint8Array) : Subs {
+  static deserial (bin: Uint8Array) : $SubsItem {
     const { vdef0, vdef1, vdef2 } = decode(bin)
-    const subs = new Subs()
+    const subs = new $SubsItem()
     if (vdef0) subs.vdef0 = vdef0
     for (const x in vdef1) subs.vdef1.set(x, vdef1[x])
     for (const x in vdef2) subs.vdef2.set(x, vdef1[x])
