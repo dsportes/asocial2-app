@@ -2,6 +2,7 @@ import { schemaExcAS2 } from '../as2/schema'
 
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
+import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { AS2$Auteur } from './documents'
@@ -140,7 +141,7 @@ class AS2$Form_coauteur extends $Form {
     const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
-      $1: Registry.getPk(this.svc, 'Auteur', { autid: this.autid }),
+      $1: DocDescriptor.get(this.svc + '$Auteur').pkValue({ autid: this.autid }),
       auteur: { autid: this.autid, nomAuteur: na },
       credTemplates: {}
     }

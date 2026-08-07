@@ -11,7 +11,7 @@ export type SOA = {
   admin? : boolean
 }
 
-const topCl = (svc: string, docCl: string) : string => {
+export const topCl = (svc: string, docCl: string) : string => {
   const i = docCl.indexOf('_')
   const d = i === -1 ? docCl : docCl.substring(0, i)
   return d.indexOf('$') === -1 ? svc + '$' + d : d
@@ -33,14 +33,6 @@ export class Registry {
     this.classes.set(clazz.name, clazz)
   }
 
-  // Retourne le constructor de la classe MAJEURE (sans sous classe)
-  static getCl (svc: string, docCl: string) : Function {
-    const cl = Registry.classes.get(topCl(svc, docCl))
-    if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', 'Registry.getCl', [topCl(svc, docCl)])
-    return cl
-  }
-
   // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
   static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
     const topcl = topCl(svc, docCl)
@@ -50,11 +42,6 @@ export class Registry {
     if (!cl) 
       throw new AppExc(103, 'not_configured_doc_class', 'Registry.getClass', [cln])
     return cl
-  }
-
-  // Retourne la pk de la SOUS-CLASSE de docCl selon la valeur de son data
-  static getPk (svc: string, docCl: string, data: Object, nohash?: boolean) : string {
-    return DocDescriptor.get(topCl(svc, docCl)).pkValue(data, nohash)
   }
 
   // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data

@@ -1,12 +1,12 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document, SOA } from './registry'
+import { Registry, $Document, SOA, topCl } from '../src-fw//registry'
+import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
-import { FormType } from '../src-fw/docDescriptor'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -30,7 +30,7 @@ export class $CredTempl {
   static async new (userId: string, svc: string, org: string, 
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const sf = stores.safe
-    const docPk = Registry.getPk(svc, docCl, src)
+    const docPk = DocDescriptor.get(topCl(svc, docCl)).pkValue(src)
     const credId = Crypt.rnd(15)
     const t = new $CredTempl()
     t.svc = svc

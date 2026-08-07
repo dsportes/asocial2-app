@@ -15,10 +15,15 @@ import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 
 // @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
-import { fromByteArray, toByteArray } from '../src/src-fw/base64'
-import { keyFromB64, keyToB64 } from '../src/src-fw/b64'
+import { decode } from '@msgpack/msgpack'
+
+function keyFromB64 (key: string) : Uint8Array {
+  if (!key) new Uint8Array([])
+  const s = self.atob(key)
+  const u8 = new Uint8Array(s.length)
+  for (let i = 0, strLen = key.length; i < strLen; i++) u8[i] = s.charCodeAt(i)
+  return u8
+}
 
 function b64ToObj (b64: string) : any {
   const bin = keyFromB64(b64)

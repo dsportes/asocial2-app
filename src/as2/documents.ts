@@ -3,6 +3,7 @@ import { schemaExcFW } from '../src-fw/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
 import { ADMIN$Status } from '../src-fw/fwdocuments'
 import { $Subs, $SubsItem } from '../src-fw/subscription'
+import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
 
@@ -53,7 +54,7 @@ export class AS2$Auteur extends $Document {
   static async get (autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
     const soa = stores.session.currentOrgSvc
     const op = new Operation('AuteurDeId', soa.svc, soa.org)
-    const pk = autPk || Registry.getPk(soa.svc, 'Auteur', { autid: autid })
+    const pk = autPk || DocDescriptor.get(soa.svc + '$Auteur').pkValue({ autid: autid })
     op.sign(stores.safe.myCredOfDoc('Auteur', pk))
     op.args.autPk = pk
     try {

@@ -7,7 +7,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
 import { Crypt } from '../src-fw/crypt'
-import { $t } from '../src-fw/util'
+import { $t, sleep } from '../src-fw/util'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
 type StartContext = {
@@ -70,6 +70,10 @@ export const useSessionStore = defineStore('session', () => {
   const sessionInfo = computed(() => subJSON.value.startsWith('???') ? subJSON.value : sessionId.value)
 
   async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
+    while (!myRegistration) {
+      console.log('Waiting registration ...')
+      await sleep(100)
+    }
     registration.value = myRegistration
     // @ts-ignore
     const pm = registration.value.pushManager
@@ -181,11 +185,6 @@ export const useSessionStore = defineStore('session', () => {
     _creds.value = creds
     const svcOrgs = new Set<string>()
     for(const [,c] of _creds.value) svcOrgs.add(c.org + '/' + c.svc)
-    /* Pour test
-    svcOrgs.add('doda/ASSO2')
-    svcOrgs.add('demo/AS2')
-    svcOrgs.add('demo/ASSO2')
-    */
     const lst: string[] = Array.from(svcOrgs).sort((a,b) => a < b ? 1 :(a > b ? -1 : 0))
     const lst2 = []; lst.forEach(t => { 
       const x = t.split('/')

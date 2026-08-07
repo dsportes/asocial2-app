@@ -292,6 +292,9 @@ export default {
   op_$mdEventUser: 'Lecture d\'un événement',
   op_CONFIG$CKey: 'Lecture d\'une clé de configuration',
   op_CONFIG$Services: 'Lecture des services assurés par le site',
+  op_FW$setSubscription: 'Souscription aux notifications',
+  op_MajAuteur: 'Mise à jour d\'un nom d\'auteur',
+  op_$UpdateCredName: 'Mise à jour d\'un nom de crdential',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1264,6 +1267,7 @@ bla bla
   AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',
   AUTko_1: 'Auteur non trouvé (disparu ?, BUG ?)',
   AUTnotrig: '(pas de trigramme)',
+  AUTko: 'Auteur inconnu',
 
   ENUM_Section_roman: 'Roman',
   ENUM_Section_histoire: 'Histoire',

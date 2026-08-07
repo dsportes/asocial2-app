@@ -2,7 +2,7 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
-import { $Subs } from'../src-fw/subscription'
+import { $subscription } from'../src-fw/subscription'
 import { $Credential, $Cred } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -59,17 +59,27 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
 - Supprime la précédente s'il y en avait une
 - Créé une nouvelle si l'argument subscription n'est pas null
 */
-export class FW$SetSubscription extends Operation {
-  constructor (svc: string, org: string) { super('FW$SetSubscription', svc, org) }
+export class FW$setSubscription extends Operation {
+  constructor (svc: string, org: string) { super('FW$setSubscription', svc, org) }
 
-  async run (subscription: $Subs, longLife: boolean ) {
+  async run (defs: Object | null, longLife: boolean, url?: string, title?: string ) 
+  : Promise<boolean> {
     try {
-      // const subJSON = stores.session.subJSON
-      this.args.subscription = subscription
+      const session = stores.session
+      const config = stores.config
+      this.args.subscription = {
+        sessionId: session.sessionId,
+        subJSON: session.subJSON,
+        url: url || config.location,
+        title: title || (config.K.APPNAME + ' - ' + this.args.org),
+        defs
+      }
       this.args.longLife = longLife
       const res = await this.post()
+      return true
     } catch(e) {
       await this.ko(e)
+      return false
     }
   }
 }

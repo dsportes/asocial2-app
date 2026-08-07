@@ -4,12 +4,20 @@ import { encode, decode } from '@msgpack/msgpack'
 import { IDB } from './idb'
 import stores from '../stores/all'
 import { $Document } from '../src-fw/registry'
-import { FW$UpdateSubscription, FW$SetSubscription } from '../src-fw/operations'
+import { FW$UpdateSubscription, FW$setSubscription } from '../src-fw/operations'
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
 */
 export type versions = [number, number]
+
+export type $subscription = {
+  sessionId: string
+  subJSON: string
+  url: string
+  title: string
+  defs: Object
+}
 
 // Souscription d'une organisation
 export class $Subs extends $Document {
@@ -97,10 +105,7 @@ export class $Subs extends $Document {
   Pas invoquée en mode PLANE
   */
   async subscribe (svc: string, org: string, longLife: boolean, title?: string, url?: string) {
-    const config = stores.config
-    this.url = url || config.location
-    this.title = title || (config.K.APPNAME + ' - ' + org)
-    await new FW$SetSubscription(svc, org).run(this, longLife)
+    await new FW$setSubscription(svc, org).run(this.defs, longLife, url, title)
   }
 
   serial () : Uint8Array { return encode({title: this.title, defs: this.defs}) }

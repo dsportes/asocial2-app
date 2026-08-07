@@ -41,17 +41,19 @@ function b64ToObj (b64: string) : any {
 export async function onPushMsg (payload: string) {
   if (payload) {
     const messageNotif = b64ToObj(payload)
+    /*
     if (messageNotif.defs && messageNotif.defs.length)
       await stores.data.onNotif(messageNotif.now, messageNotif.org, messageNotif.defs)
+    */
     if (messageNotif.body) {
       const config = stores.config
       if (config.mondebug) console.log('Show notif EXPLICITE from app')
-      const options = { body: messageNotif }
+      const options = { body: messageNotif.body }
       // @ts-ignore
-      if (messageNotif.url) options.data = { url: payload.data.url || config.location }
+      if (messageNotif.url) options.data = { url: messageNotif.url || config.location }
       const t = messageNotif.title || (config.K.APPNAME + ' - ' + messageNotif.org)
       // @ts-ignore
-      await session.registration.showNotification(t, options)
+      await stores.session.registration.showNotification(t, options)
     }
   }
 }
@@ -82,11 +84,14 @@ register('./firebase-messaging-sw.js', {
 
   registered (registration) { 
     myRegistration = registration
-    console.log('Service worker is registered')
+    const ok = myRegistration ? 'ok' : 'KO'
+    console.log('Service worker is registered', ok)
   },
 
   ready (registration) { 
-    console.log('Service worker is active')
+    myRegistration = registration
+    const ok = myRegistration ? 'ok' : 'KO'
+    console.log('Service worker is active', ok)
     registration.active.postMessage({ type: 'STARTING' })
   },
 

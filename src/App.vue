@@ -97,8 +97,9 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
+import { myRegistration } from '../src-pwa/register-service-worker'
 
-import { set$t, sty } from './src-fw/util'
+import { set$t, sty, sleep } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
 import BtnMenu from './components-fw/BtnMenu.vue'
 import SafeHeader from './pages/SafeHeader.vue'
@@ -120,7 +121,6 @@ import SettingsButton from './components-fw/SettingsButton.vue'
 import HelpButton from './components-fw/HelpButton.vue'
 import LeftMenu from './components-fw/LeftMenu.vue'
 import BtnCond from './components-fw/BtnCond.vue'
-import OrgSvc from './components-fw/OrgSvc.vue'
 
 import GotIt from './dialogs-fw/GotIt.vue'
 import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
@@ -128,15 +128,6 @@ import ConfirmClose from './dialogs-fw/ConfirmClose.vue'
 import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
-
-// import { Registry } from '../src-fw/registry' // pour test
-
-/* Test
-const cl = Registry.getClass('AS2', 'Credential', { docCl: 'Auteur' })
-const cred = Registry.newD('AS2', 'Credential', { docCl: 'Auteur' })
-console.log(cred.descriptor().subClassBy)
-const pk = Registry.getPk('AS2', 'Credential', { docCl: 'Auteur', credId: 'toto'})
-*/
 
 // const decoder = new TextDecoder()
 // const encoder = new TextEncoder()

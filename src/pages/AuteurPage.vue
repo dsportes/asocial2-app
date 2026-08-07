@@ -65,7 +65,8 @@ import BarTitle from '../components-fw/BarTitle.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
-import { Operation } from 'src/src-fw/operation'
+import { Operation } from '../src-fw/operation'
+import { FW$setSubscription } from 'src/src-fw/operations'
 
 const ui = stores.ui
 const session = stores.session
@@ -77,7 +78,8 @@ const cred = ref(null)
 const aut = ref(null)
 const coauts: Ref<$Cred[]> = ref([])
 
-const init = async () => { creds.value = await sf.myFullCreds('Auteur') }
+const init = async () => { 
+  creds.value = await sf.myFullCreds('Auteur') }
 onMounted(async () => { await init()})
 
 const select = async (c: $Credential) => {
@@ -86,6 +88,10 @@ const select = async (c: $Credential) => {
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {
+    const defs = {}; defs['Auteur/' + c.docPk] = 'Hello victor'
+    const op = new FW$setSubscription(soa.value.svc, soa.value.org)
+    if (await op.run(defs, false, '', 'Test auteur'))
+      console.log('subs done')
     const co = []
     for(const cr in aut.value.embedCreds)
       if (cr !== c.credId) co.push(aut.value.embedCreds[cr])

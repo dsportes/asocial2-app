@@ -812,10 +812,10 @@ export const useSafeStore = defineStore('safe', () => {
   const myFullCreds = async (docCl?: string) : Promise<Map<string, $Credential>> => {
     const soa = stores.session.currentOrgSvc
     const m : Map<string, $Credential> = mySimpleCreds(docCl)
-    let op
+    const op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
     try {
-      op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
-      for(const [,cred] of m) await op.sign(cred)
+      for(const [,cred] of m) 
+        await op.sign(cred)
       const res = await op.post()
       const props: Object = res.props
       for(const credId of Object.keys(props)) {
@@ -823,7 +823,10 @@ export const useSafeStore = defineStore('safe', () => {
         if (e) e.props = props[credId]
       }
       return m
-    } catch (e) { op.ko(e); return m }
+    } catch (e) { 
+      await op.ko(e)
+      return m 
+    }
   }
 
   type SetNameCred = {

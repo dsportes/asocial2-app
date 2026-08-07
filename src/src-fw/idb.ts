@@ -9,7 +9,7 @@ import { AppExc } from '../src-fw/log'
 import { sleep } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
-import { Subscription, Subs } from '../src-fw/subscription'
+import { $Subs } from '../src-fw/subscription'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
@@ -124,12 +124,12 @@ export class IDB {
   }
 
   /* Retourne une map de toutes les Subscriptions */
-  async getSubscriptions () : Promise<Map<string, Subscription>> {
+  async getSubscriptions () : Promise<Map<string, $Subs>> {
     try {
-      const m: Map<string, Subscription> = new Map<string, Subscription>()
+      const m: Map<string, $Subs> = new Map<string, $Subs>()
       this.db.subsriptions.each(async (r) => {
         const bin = await this.decryptRecord(r.bin, true) as Uint8Array
-        m.set(r.org, Subscription.fromSerial(bin))
+        m.set(r.org, $Subs.fromSerial(bin))
       })
       return m
     } catch (e) {
@@ -139,14 +139,14 @@ export class IDB {
 
   /* Récupère les objets Subs de toutes les org/clazz
   Map par org / map par classe */
-  async getSubs () : Promise<Map<string, Map<string, Subs>>> {
-    const m: Map<string, Map<string, Subs>> = new Map<string, Map<string, Subs>>()
+  async getSubs () : Promise<Map<string, Map<string, $Subs>>> {
+    const m: Map<string, Map<string, $Subs>> = new Map<string, Map<string, $Subs>>()
     try {
       await this.db.subs.each(async (rec) => {
         const s = await this.decryptRecord(rec.bin) as Uint8Array
-        const subs = Subs.deserial(s)
+        const subs = $Subs.fromSerial(s)
         let eorg = m.get(rec.org)
-        if (!eorg) { eorg = new Map<string, Subs>(); m.set(rec.org, eorg)}
+        if (!eorg) { eorg = new Map<string, $Subs>(); m.set(rec.org, eorg)}
         eorg.set(rec.clazz, subs)
       })
       return m
@@ -165,7 +165,7 @@ export class IDB {
   async loadAllDocs (cb: Function) : Promise<void> {
     await this.db.documents.each(async ({org, id, bin }) => {
       const rec = await this.decryptRecord(bin) as docRecord
-      const doc = await Registry.compile(rec.clazz, rec.data)
+      const doc = await Registry.compile('', rec.clazz, rec.data)
       cb(org, doc)
     })
   }
@@ -178,7 +178,7 @@ export class IDB {
   async retSync (
       org: string, 
       clazz: string, 
-      subs: Subs, 
+      subs: $Subs, 
       binDocs: Map<string, Uint8Array>, 
       delPks: string[]) : Promise<void> {
     try {
@@ -210,8 +210,8 @@ export class IDB {
   */
   async updateSubscription (
       org: string, 
-      subscription: Subscription, 
-      msubs: Map<string, Subs>) {
+      subscription: $Subs, 
+      msubs: Map<string, $Subs>) {
     try {
       const bin = await this.cryptRecord(subscription.serial())
       const binSubs = new Map<string, Uint8Array>()
@@ -239,9 +239,9 @@ export class IDB {
   subs peut être devenu "inutile" si toutes ses defs ont été supprimées
   et dans ce cas est supprimé de la base.
   */
-  async updSubs (org: string, clazz: string, subs: Subs) : Promise<void> {
+  async updSubs (org: string, clazz: string, subs: $Subs) : Promise<void> {
     try {
-      if (subs.hasRefs()) {
+      if (subs.defs) {
         const binSubs = await this.cryptRecord(subs.serial())
         await this.db.subs.put({ org, clazz, binSubs })
       } else 

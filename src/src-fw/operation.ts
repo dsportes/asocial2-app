@@ -275,7 +275,6 @@ export class OperationG extends AOperation {
     try {
       let u = this.args.site ? await this.getSiteUrl() : await this.getSvcOrgUrl()
       if (!u.endsWith('/')) u += '/'
-      // this.url = u + 'op/' + (this.args.$OP || this.args.org) + '/' + this.opName
       this.url = u + 'op/'
 
       if (this.args.svc)
