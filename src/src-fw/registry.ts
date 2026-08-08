@@ -11,10 +11,27 @@ export type SOA = {
   admin? : boolean
 }
 
+export const subCl = (clazz: string) => {
+  const i = clazz.indexOf('_')
+  return i === -1 ? '' : clazz.substring(i + 1)
+}
+
+export const medCl = (clazz: string) => {
+  let i = clazz.indexOf('_')
+  const d = i === -1 ? clazz : clazz.substring(0, i)
+  i = d.indexOf('$')
+  return i === -1 ? d : d.substring(i + 1)
+}
+
 export const topCl = (svc: string, docCl: string) : string => {
   const i = docCl.indexOf('_')
   const d = i === -1 ? docCl : docCl.substring(0, i)
   return d.indexOf('$') === -1 ? svc + '$' + d : d
+}
+
+export const svcCl = (clazz: string) => {
+  const i = clazz.indexOf('$')
+  return i === -1 ? '' : clazz.substring(0, i)
 }
 
 export class Registry {
@@ -51,11 +68,11 @@ export class Registry {
     return new cl() as $ADocument
   }
 
-  static async compile (svc: string, docCl: string, data: Uint8Array) : Promise<$Document | null>{
+  static async compile (svc: string, docCl: string, org: string, data: Uint8Array) : Promise<$Document | null>{
     const d = data ? decode(data) : {}
     const doc = Registry.newD(svc, docCl, d) as $Document
     if (!doc) return null
-    doc._clazz = topCl(svc, docCl)
+    doc._org = org
     for(const f in d) doc[f] = d[f]
     doc._pk = d._pk || doc._docDescriptor.pkValue(doc)
     await doc.compile()
@@ -76,8 +93,10 @@ export class $ADocument {
 }
 
 export class $Document extends $ADocument{
-  _svc: string = ''
-  _clazz: string = ''
+  get _svc () { return svcCl(this.constructor.name) }
+  get _clazz () { return medCl(this.constructor.name) }
+
+  _org: string
   _pk: string = ''
   deleted?: boolean = false
   v: number = 0

@@ -2,7 +2,7 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
-import { $subscription } from'../src-fw/subscription'
+import { $Subs } from'../src-fw/subscription'
 import { $Credential, $Cred } from '../src-fw/documents'
 
 export class Bug extends Operation {
@@ -52,53 +52,6 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
   } catch(e) {
     await op.ko(e)
     return { st: 0, at: 0, txt: '' }
-  }
-}
-
-/* SetSubscription enregistre la souscription d'une session *************************
-- Supprime la précédente s'il y en avait une
-- Créé une nouvelle si l'argument subscription n'est pas null
-*/
-export class FW$setSubscription extends Operation {
-  constructor (svc: string, org: string) { super('FW$setSubscription', svc, org) }
-
-  async run (defs: Object | null, longLife: boolean, url?: string, title?: string ) 
-  : Promise<boolean> {
-    try {
-      const session = stores.session
-      const config = stores.config
-      this.args.subscription = {
-        sessionId: session.sessionId,
-        subJSON: session.subJSON,
-        url: url || config.location,
-        title: title || (config.K.APPNAME + ' - ' + this.args.org),
-        defs
-      }
-      this.args.longLife = longLife
-      const res = await this.post()
-      return true
-    } catch(e) {
-      await this.ko(e)
-      return false
-    }
-  }
-}
-
-/* UpdateSubscription enregistre la mise à jour d'une souscription d'une session
-*/
-export class FW$UpdateSubscription extends Operation {
-  constructor (svc: string, org: string) { super('$FW$UpdateSubscription', svc, org) }
-
-  async run (title: string, url: string, defs: Object ) {
-    try {
-      // const subJSON = stores.session.subJSON
-      this.args.title = title
-      this.args.url = url
-      this.args.defs = defs
-      const res = await this.post()
-    } catch(e) {
-      await this.ko(e)
-    }
   }
 }
 

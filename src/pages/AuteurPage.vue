@@ -66,7 +66,7 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
-import { FW$setSubscription } from 'src/src-fw/operations'
+import { $Subs } from '../src-fw/subscription'
 
 const ui = stores.ui
 const session = stores.session
@@ -88,10 +88,12 @@ const select = async (c: $Credential) => {
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {
-    const defs = {}; defs['Auteur/' + c.docPk] = 'Hello victor'
-    const op = new FW$setSubscription(soa.value.svc, soa.value.org)
-    if (await op.run(defs, false, '', 'Test auteur'))
+    const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
+    subs.setTitle('Test auteur')
+    subs.setDef('Auteur/' + c.docPk, 'Hello victor')
+    if (await subs.subscribe(false))
       console.log('subs done')
+
     const co = []
     for(const cr in aut.value.embedCreds)
       if (cr !== c.credId) co.push(aut.value.embedCreds[cr])
