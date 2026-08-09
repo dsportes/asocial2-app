@@ -1,7 +1,8 @@
 import { schemaExcAS2 } from '../as2/schema'
 import { schemaExcFW } from '../src-fw/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
-import { ADMIN$Status } from '../src-fw/fwdocuments'
+import { ADMIN$Status} from '../src-fw/fwdocuments'
+import { $DefSigner } from '../src-fw/documents'
 import { $Subs } from '../src-fw/subscription'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
@@ -19,6 +20,11 @@ class AS2$Subs extends $Subs {
 }
 n++; Registry.register(AS2$Subs)
 
+class AS2$DefSigner extends $DefSigner {
+  static _unregistered = true
+}
+n++; Registry.register(AS2$DefSigner)
+ 
 export class AS2$Auteur extends $Document {
   // Donne le autid de svc/org/nom
   static autids: Map<string, string> = new Map()

@@ -1,15 +1,58 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document, SOA, topCl } from '../src-fw//registry'
+import { Registry, $Document, $ADocument, SOA, topCl } from '../src-fw//registry'
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
-import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
+import { MDOperation, Operation, CVKeys, getSite, isAdmin, SubsToSync } from '../src-fw/operation'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
+
+export class $DefSigner extends $ADocument {
+  op: Operation
+  dd: DocDescriptor
+  creds: Map<string, $Credential> 
+
+  async sign (toSync: SubsToSync[]) {
+    if (!this.creds) {
+      this.creds = new Map()
+      const sc = stores.safe.mySimpleCreds('', this.op.soa)
+      for(const [ ,c] of sc)
+        this.creds.set(c.docCl + '/' + c.docPk, c)
+    }
+    for (const { def, } of toSync) {
+      const item = def.split('/')
+      // 0: classe, 1: document, 2: coll
+      const type = item.length - 1
+      this.dd = DocDescriptor.get(this.op.args.svc + '$' + item[0])
+      switch (type) {
+        case 0 : { await this.sign0(item[0]); break }
+        case 1 : { await this.sign1(item[0], item[1]); break }
+        case 2 : { await this.sign2(item[0], item[1], item[2]); break }
+      }
+    }
+  }
+
+  async sign0 (docCl: string) {
+    const cred = this.creds.get(docCl + '/1')
+    if (cred) await this.op.sign(cred)
+  }
+  async sign1 (docCl: string, docPk: string) {
+    const cred = this.creds.get(docCl + '/' + docPk)
+    if (cred) await this.op.sign(cred)
+  }
+  async sign2 (docCl: string, colName: string, val: string) {
+    const x = this.dd.colls.get(colName)
+    if (x && x.class) {
+      const cred = this.creds.get(x.class + '/' + val)
+      if (cred) await this.op.sign(cred)
+    }
+  }
+
+}
 
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */

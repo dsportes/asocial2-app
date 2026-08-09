@@ -3,7 +3,8 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 import stores from '../stores/all'
 import { subsToSync } from '../stores/data-store'
 import { $Subs } from'../src-fw/subscription'
-import { $Credential, $Cred } from '../src-fw/documents'
+import { $Credential, $Cred, $DefSigner } from '../src-fw/documents'
+import { $Document, Registry, SOA } from '../src-fw/registry'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -70,21 +71,43 @@ Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des docum
   - v: version du document si n'est PLUS dans la collection
   - data: data du document s'il est dans la collection
 */
-export class Sync extends Operation {
-  constructor (SVC: string, org: string) { super('Sync', SVC, org) }
+export class FW$Sync {
+  op: Operation
 
-  async run (subsToSync: subsToSync) {
+  constructor (soa: SOA) {
+    this.op = new Operation('FW$Sync', soa.svc, soa.org)
+    this.op.args.toSync = []
+  }
+
+  add (v: number, docCl:string, docPk?: string, colName?: string) {
+    if (!docPk) this.op.args.toSync.push({ def: docCl + '/1', v: v || 0})
+    else if (!colName) this.op.args.toSync.push({ def: docCl + '/' + docPk, v: v || 0})
+    else this.op.args.toSync.push({ def: docCl + '/' + colName + '/' +  docPk, v: v || 0})
+    return this
+  }
+
+  async post (noex?: boolean) : Promise<Map<string, $Document>> {
+    const signer = Registry.newD(this.op.args.svc, 'DefSigner') as $DefSigner
+    signer.op = this.op
+    await signer.sign(this.op.args.toSync)
+    const docs: Map<string, $Document> = new Map()
     try {
-      // const org = subsToSync.org
-      // const type = subsToSync.def.split('/').length - 1
-      const dataSt = stores.data
-      this.args.toSync = [subsToSync]
-      const res = await this.post()
-      const x = res[subsToSync.def] // data[] / data / data[]
-      const opTime = res['now']
-      await dataSt.retSync(opTime, this.args.org, subsToSync.def, x)
-    } catch(e) {
-      await this.ko(e)
+      const res = await this.op.post()
+      if (res.syncs) {
+        for(const x in res.syncs) {
+          const datas = res.syncs[x]
+          for (const data of datas) {
+            const cl = x.substring(0, x.indexOf('/'))
+            const doc = await Registry.compile(this.op.args.svc, cl, this.op.args.org, data)
+            docs.set(cl + '/' + doc._pk, doc)
+          }
+        }
+      }
+      return docs
+    } catch (e) {
+      await this.op.ko(e)
+      if (!noex) throw e
+      return docs
     }
   }
 }

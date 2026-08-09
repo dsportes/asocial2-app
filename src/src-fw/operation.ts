@@ -17,6 +17,11 @@ export async function getSite (svc: string, org: string) : Promise<string> {
   return e ? e.get(svc) : undefined
 }
 
+export type SubsToSync = {
+  def: string, 
+  v: number
+}
+
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
@@ -333,6 +338,8 @@ export class Operation extends OperationG {
   - soit explicitement comme argument,
   - sinon comme préfixe 'svc$op' du nom de l'opération.
   */
+
+  get soa () { return { svc: this.args.svc, org: this.args.org } }
 
   constructor (opName: string, svc: string, org: string, background?: boolean) {
     super(opName, background)

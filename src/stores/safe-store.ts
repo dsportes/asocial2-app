@@ -794,10 +794,10 @@ export const useSafeStore = defineStore('safe', () => {
     return m
   }
 
-  const myCredOfDoc = (docCl: string, docPk: string) : $Credential | null => {
-    const soa = stores.session.currentOrgSvc
+  const myCredOfDoc = (docCl: string, docPk: string, soa?: any) : $Credential | null => {
+    const s = soa || stores.session.currentOrgSvc
     for(const [, cred] of mySafeCreds.value)
-      if (cred.svc === soa.svc && cred.org === soa.org 
+      if (cred.svc === s.svc && cred.org === s.org 
         && cred.docCl === docCl && cred.docPk === docPk) 
         return cred
     return null

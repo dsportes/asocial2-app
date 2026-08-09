@@ -40,20 +40,22 @@ export class $Subs extends $Document {
   - addDef / delDef
   puis in fine commit()
   */
-  setTitle (title: string) { this.title = title }
+  setTitle (title: string) { this.title = title; return this }
 
-  setUrl (url: string) { this.url = url }
+  setUrl (url: string) { this.url = url; return this}
 
   setDef (def: string, msg: string) {
     const i = this.defs.indexOf(def)
     if (i === -1) this.defs.push(def)
     if (msg) this.msgs[def] = msg
+    return this
   }
 
   delDef (def: string) {
     const i = this.defs.indexOf(def)
     if (i !== -1) this.defs.splice(i, 1)
     delete this.msgs[def]
+    return this
   }
 
   serial () : Uint8Array {

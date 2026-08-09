@@ -295,7 +295,8 @@ export default {
   op_FW$setSubscription: 'Souscription aux notifications',
   op_MajAuteur: 'Mise à jour d\'un nom d\'auteur',
   op_$UpdateCredName: 'Mise à jour d\'un nom de crdential',
-
+  op_FW$Sync: 'Synchonisation des données',
+  
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété de la Safe Box non reconnue (phrase ou autre).',
@@ -1192,6 +1193,7 @@ bla bla
   EX105_safe_arguments_notdecodable: 'Opération Safe Box en échec inattendu. impossible de décoder les arguments.',
   EX105_masterdir_case_chk: 'Accès au masterdir "case" avec une clé d\'authentification "chk" non valide.',
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
+  EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application (BUG probable): [service: {0}, classe:{1}, id:{2}]',
 
   EX108_SQLite_connexion_failed: 'Détail: [{0}]',
   EX108_masterdir_db_error_mdSetValue: 'Détail: [{0}]',

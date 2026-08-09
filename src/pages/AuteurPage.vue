@@ -55,17 +55,19 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, reactive, watch } from 'vue'
+import { ref, Ref, computed, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
-import { AS2$Auteur } from '../as2/documents'
+import { DocDescriptor } from '../src-fw/docDescriptor'
+// import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
 import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
+import {FW$Sync } from '../src-fw/operations'
 import { $Subs } from '../src-fw/subscription'
 
 const ui = stores.ui
@@ -84,16 +86,16 @@ onMounted(async () => { await init()})
 
 const select = async (c: $Credential) => {
   cred.value = c
-  aut.value = await AS2$Auteur.get(null, c.docPk)
+  const sync = new FW$Sync(soa.value).add(0, 'Auteur', c.docPk)
+  const docs = await sync.post(true)
+  aut.value = docs.get('Auteur/' + c.docPk)
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {
     const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
-    subs.setTitle('Test auteur')
-    subs.setDef('Auteur/' + c.docPk, 'Hello victor')
+    subs.setTitle('Test auteur').setDef('Auteur/' + c.docPk, 'Hello victor')
     if (await subs.subscribe(false))
       console.log('subs done')
-
     const co = []
     for(const cr in aut.value.embedCreds)
       if (cr !== c.credId) co.push(aut.value.embedCreds[cr])
@@ -127,9 +129,9 @@ const majSection = async (section: string) => {
 
 const majAut = async (nomAuteur: string, section: string) => {
   const soa = session.currentOrgSvc
+  const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
   const op = new Operation('MajAuteur', soa.svc, soa.org)
-  const a = aut.value
-  op.args.autid = a.autid
+  op.args.autid = aut.value.autid
   if (nomAuteur) op.args.nomAuteur = nomAuteur
   if (section) op.args.section = section
   await op.sign(cred.value)
@@ -139,9 +141,10 @@ const majAut = async (nomAuteur: string, section: string) => {
       await ui.diagDisplay($t('AUTko_' + res.status))
       return false
     } else { 
-      a.nomAuteur = res.maj.nomAuteur
-      a.section = res.maj.section
-      return true
+      const sync = new FW$Sync(soa).add(0, 'Auteur', pk)
+      const docs = await sync.post(true)
+      aut.value = docs.get('Auteur/' + pk)
+      return aut.value || false
     }
   } catch (e) { op.ko(e); return false }
 }

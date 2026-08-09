@@ -45,16 +45,20 @@ export class Registry {
     const docCl = topcl.substring(i + 1)
     if (!svc || !docCl)
       throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
-    DocDescriptor.get(topcl)
+    if (!clazz['_unregistered'])
+      DocDescriptor.get(topcl)
     if (clazz['manager']) Registry.managers.add(clazz.name)
     this.classes.set(clazz.name, clazz)
   }
 
   // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
-  static getClass (svc: string, docCl: string, data: Object, nohash?: boolean ) : Function {
+  static getClass (svc: string, docCl: string, data?: Object, nohash?: boolean ) : Function {
     const topcl = topCl(svc, docCl)
-    const subClassBy = DocDescriptor.get(topcl).subClassBy
-    const cln = topcl + (subClassBy ? '_' + data[subClassBy] : '')
+    let cln = topcl
+    if (data) {
+      const subClassBy = DocDescriptor.get(topcl).subClassBy
+      cln += (subClassBy ? '_' + data[subClassBy] : '')
+    }
     const cl = Registry.classes.get(cln)
     if (!cl) 
       throw new AppExc(103, 'not_configured_doc_class', 'Registry.getClass', [cln])
@@ -62,7 +66,7 @@ export class Registry {
   }
 
   // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
-  static newD (svc: string, docCl: string, data: Object ) : $ADocument {
+  static newD (svc: string, docCl: string, data?: Object ) : $ADocument {
     const cl = Registry.getClass(svc, docCl, data)
     // @ts-expect-error
     return new cl() as $ADocument
