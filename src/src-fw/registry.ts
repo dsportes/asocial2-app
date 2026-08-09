@@ -3,6 +3,11 @@ import { decode } from '@msgpack/msgpack'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AppExc } from '../src-fw/log'
 
+export type CollData = {
+  v: number,
+  datas
+}
+
 export type SOA = {
   svc: string
   org: string
@@ -72,17 +77,18 @@ export class Registry {
     return new cl() as $ADocument
   }
 
-  static async compile (svc: string, docCl: string, org: string, data: Uint8Array) : Promise<$Document | null>{
-    const d = data ? decode(data) : {}
-    const doc = Registry.newD(svc, docCl, d) as $Document
-    if (!doc) return null
+  static async compile (svc: string, docCl: string, org: string, obj: Object) : Promise<$Document | null>{
+    const doc = Registry.newD(svc, docCl, obj) as $Document
     doc._org = org
-    for(const f in d) doc[f] = d[f]
-    doc._pk = d._pk || doc._docDescriptor.pkValue(doc)
-    await doc.compile()
+    doc._pk = obj['_pk']
+    doc.v = obj['v']
+    if (obj['deleted']) doc.deleted = true
+    else {
+      for(const f in obj) doc[f] = obj[f]
+      await doc.compile()
+    }
     return doc
   }
-
 }
 
 export class $ADocument {

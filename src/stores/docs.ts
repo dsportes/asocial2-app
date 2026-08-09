@@ -22,7 +22,7 @@ export type IDocStore = {
   hasDocs(clazz: string): boolean
 
   // Stocke un document selon sa classe et sa pk
-  set(clazz: string, pk: string, doc: $Document) : void
+  set(doc: $Document) : boolean
 
   // Retourne le document stocké ayant cette classe et cette pk ou undefined
   get(clazz: string, pk: string) : $Document
@@ -48,10 +48,66 @@ export const getStore = (svc: string, org: string, noforce?: boolean)
   return st
 }
 
+export type CollItem = {
+  def: string
+  vloc: number // version de la collection détenue en store
+  vidb: number // version détenue en IDB
+  pks: Set<string> // Set des pk des documents de la collection
+}
+
 const useStore = (id: string) =>
   defineStore(`store-${id}`, () => {
     const docs = reactive({
     })
+
+    /* Deux formes de collections selon leur def:
+      0: Auteur : tous les auteurs
+      2: Article/auteur/pkauteur : les messages dont l'auteur est pkauteur
+      value: CollItem
+    */
+    const colls = reactive({
+    })
+
+    const collections: string[] = computed(() => Object.keys(colls))
+
+    const getColl = (def: string) => {
+      const e = colls[def]
+      return e || undefined
+    }
+
+    const setColl = (def: string, v: number, pksp: Set<string>, pksm?: Set<string>) 
+      : CollItem => {
+      let item: CollItem = colls[def]
+      if (item) {
+        if (item.vloc >= v) return item
+        item.vloc = v
+        for(const pk of pksp) item.pks.add(pk)
+        if (pksm) for(const pk of pksm) item.pks.delete(pk)
+        return item
+      } else {
+        item = { def: def, vidb: 0, vloc: v, pks: pksp }
+        colls[def] = item
+        return item
+      }
+    }
+
+    const setCollIDB = (def: string, v: number, pksp: Set<string>) 
+      : CollItem => {
+      let item: CollItem = colls[def]
+      if (item) {
+        /* La version IDB ne peut plus être chargée quand la collection
+        a été chargée depuis le service */
+        if (item.vloc) {
+          if (item.vidb < v) item.vidb = v
+          return item
+        }
+        if (item.vidb >= v) return item
+      } else item = { def: def, vloc: 0, vidb: 0, pks: null }
+      item.vidb = v
+      item.pks = pksp
+      return item
+    }
+
 
     const classes: string[] = computed(() => Object.keys(docs))
 
@@ -62,10 +118,21 @@ const useStore = (id: string) =>
 
     const hasDocs = (clazz: string): boolean => docs[clazz] ? true : false
 
-    const set = (clazz: string, pk: string, doc: $Document) : void => {
+    const set = (doc: $Document) : boolean => {
+      if (!doc) return false
+      const clazz = doc._clazz
+      const pk = doc._pk
       let e = docs[clazz]
-      if (!e) { e = {} ; docs[clazz] = e }
-      e[pk] = doc
+      if (!e) { 
+        e = {}
+        e[pk] = doc
+        docs[clazz] = e 
+        return true
+      } else {
+        const d = e[pk]
+        if (!d || d.V < doc.v) { e[pk] = doc; return true }
+        return false
+      }
     }
 
     const get = (clazz: string, pk: string) : $Document => {

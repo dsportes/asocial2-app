@@ -1,10 +1,13 @@
+// @ts-ignore
+import { decode } from '@msgpack/msgpack'
+
 import { Operation, ADMIN$Status } from '../src-fw/operation'
 
-import stores from '../stores/all'
-import { subsToSync } from '../stores/data-store'
-import { $Subs } from'../src-fw/subscription'
+// import stores from '../stores/all'
+// import { subsToSync } from '../stores/data-store'
+import { getStore } from'../stores/docs'
 import { $Credential, $Cred, $DefSigner } from '../src-fw/documents'
-import { $Document, Registry, SOA } from '../src-fw/registry'
+import { $Document, Registry, SOA, CollData } from '../src-fw/registry'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -94,11 +97,18 @@ export class FW$Sync {
     try {
       const res = await this.op.post()
       if (res.syncs) {
-        for(const x in res.syncs) {
-          const datas = res.syncs[x]
-          for (const data of datas) {
-            const cl = x.substring(0, x.indexOf('/'))
-            const doc = await Registry.compile(this.op.args.svc, cl, this.op.args.org, data)
+        const std = getStore(this.op.args.svc, this.op.args.org)
+        for(const def in res.syncs) {
+          const vdatas = res.syncs[def] as CollData
+          for (const data of vdatas.datas) {
+            const d = decode(data)
+            const cl = d._clazz
+            const pk = d._pk
+            let doc = std.get(cl, pk)            
+            if (!doc || d.v > doc.v) {
+              doc = await Registry.compile(this.op.args.svc, cl, this.op.args.org, d)
+              std.set(doc)
+            }
             docs.set(cl + '/' + doc._pk, doc)
           }
         }
