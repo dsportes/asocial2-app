@@ -1136,6 +1136,8 @@ bla bla
   EX3_svcopurl_not_found: 'svcopurl_not_found. Service: [{0}] - StatusText: [{1}]',
   EX3_svcorgurl_not_found: 'svcorgurl_not_found. Organisation: [{0}] - Service: [{1}]',
   EX3_safeStore_url_not_found: 'safeStore_url_not_found. Safestore: [{0}]',
+  EX3_not_compilable_document: 'Document reçu illisible (Bug probable): ' +
+    'Organisation: [{0}] - Service: [{1}] - Classe: [{3}] - PK: [{4}] - Détail: [{5}]',
 
   EX8_IDB_error: 'IDB_error. Détail: [{0}]',
   EX8_IDB_SAFE_error: 'IDB_error. Détail: [{0}]',

@@ -3,9 +3,10 @@ import { encode, decode } from '@msgpack/msgpack'
 
 // import { IDB } from './idb'
 import stores from '../stores/all'
-import { $Document } from '../src-fw/registry'
-import { Registry } from '../src-fw/registry'
 import { Operation } from '../src-fw/operation'
+import { $DefSigner } from '../src-fw/documents'
+import { getStore, $DocItem, $DCItem } from'../stores/docs'
+import { $Document, Registry, SOA, CollData } from '../src-fw/registry'
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
@@ -92,3 +93,97 @@ export class $Subs extends $Document {
   
 }
 
+/* FW$Sync : synchronise les defs des souscriptions citées *************************
+- toSync = SubsToSync[]
+subsToSync = {
+  def: string, 
+  v: number - version 'vs' la plus récente détenue en session
+}
+Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' 
+des documents par exemple: 
+  - type 0: Auteur : collection de 0-N éléments.
+  - type 1: Auteur/sh(Zola) : 0-1 élément.
+  - type 2: Article/auteurs/sh(Zola) : collection de 0-N éléments.
+- pour chaque def d'entrée, un élément syncs[def] est retourné
+  - type 0 et 2: { v, datas: Uint8Array[] } 
+  - type 1: { v, datas: Uint8Array[] } datas 0 ou 1 élément
+
+- vs est 0: tous les éléments connus actuellement.
+- vs != 0: INCREMENTAL , liste des changements depuis vs:
+  - ceux ajoutés avec leur data complète: { v _pk _clazz ...}
+  - ceux supprimés avec une data: { deleted:true, v _pk, _clazz }
+    - v: version de suppression (dh de l'opération de suppression)
+
+- Type 2 INCREMENTAL : Article/auteurs/sh(Zola)
+  retourne une collection d'"Article" (dont l'un des Auteurs est Zola), PAS d'"Auteur"
+  a) ajoutés à la sous-collection ou toujours présents mais modifiés, 
+  b) partis de la sous-collection, 
+  b) zombifiés
+  - pour savoir si un article a1 est dans le cas a) ou b)
+    - la session recherche si Zola est ou non dans la liste d'auteurs,
+      - oui c'est un a), ajouté à la collection ou mis à jour
+      - non c'est un b), supprimé de la collection
+    - cas c): deleted est à true (Article supprimé)
+Retour:
+- syncs[def]: { v, datas: Uint8Array[] }
+- now : date-heure de l'opération IMPORTANTE. C'est la dh d'ASSERTION,
+  à cette date-heure l'image de la collection est celle-ci.
+  - si l'élément est { v: 0, datas: [] } IL N'Y A PAS eu de changements
+    depuis la dh vs fournie par la session. la version v de la collection est INCONNUE.
+  - si l'élément est { v: 12345, datas: [d1, ...] }.
+    - le ou les changements a) b) c) sont dans datas
+    - la version v de la collection est CONNUE (sa dh de dernier changement): 
+      - INCREMENTALE : c'est la plus haute de celles contenues dans les datas.
+      - INTEGRALE: v la plus haute des documents lus, y compris ceux
+        supprimés qui ne sont PAS dans datas.
+*/
+export class FW$Sync {
+  op: Operation
+
+  constructor (soa: SOA) {
+    this.op = new Operation('FW$Sync', soa.svc, soa.org)
+    this.op.args.toSync = []
+  }
+
+  add (v: number, docCl:string, docPk?: string, colName?: string) {
+    if (!docPk) this.op.args.toSync.push({ def: docCl + '/1', v: v || 0})
+    else if (!colName) this.op.args.toSync.push({ def: docCl + '/' + docPk, v: v || 0})
+    else this.op.args.toSync.push({ def: docCl + '/' + colName + '/' +  docPk, v: v || 0})
+    return this
+  }
+
+  async post (noex?: boolean) : Promise<Map<string, $DCItem>> {
+    const signer = Registry.newD(this.op.args.svc, 'DefSigner') as $DefSigner
+    signer.op = this.op
+    await signer.sign(this.op.args.toSync)
+    const dcitems: Map<string, $DCItem> = new Map()
+    try {
+      const res = await this.op.post()
+      const sat = res['now'] // service assertion time
+      if (res.syncs) {
+        const std = getStore(this.op.args.svc, this.op.args.org)
+        for(const def in res.syncs) {
+          const type = def.split('/').length - 1
+          const cd = res.syncs[def] as CollData
+          await std.storeCollData(def, cd.incr, sat, cd.v, cd.datas)
+          for (const data of vdatas.datas) {
+            const d = decode(data)
+            const cl = d._clazz
+            const pk = d._pk
+            let item: $DocItem = std.getDoc(cl, pk)            
+            if (!item || d.v > item.sv) {
+              const doc = await Registry.compile(this.op.args.svc, cl, this.op.args.org, d)
+              item = await std.setDoc(def, sat, d.v, data, doc)
+            }
+            dcitems.set(def, item)
+          }
+        }
+      }
+      return dcitems
+    } catch (e) {
+      await this.op.ko(e)
+      if (!noex) throw e
+      return dcitems
+    }
+  }
+}

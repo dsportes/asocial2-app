@@ -5,8 +5,9 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 
 // import stores from '../stores/all'
 // import { subsToSync } from '../stores/data-store'
-import { getStore } from'../stores/docs'
+
 import { $Credential, $Cred, $DefSigner } from '../src-fw/documents'
+import { getStore } from'../stores/docs'
 import { $Document, Registry, SOA, CollData } from '../src-fw/registry'
 
 export class Bug extends Operation {
@@ -56,69 +57,6 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
   } catch(e) {
     await op.ko(e)
     return { st: 0, at: 0, txt: '' }
-  }
-}
-
-/* Sync : synchronise les souscriptions citées *************************
-- toSync = subsToSync[]
-subsToSync = {
-  def: string,
-  v: number - version 'vs' la plus récente détenue en session
-}
-Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' des documents (par exemple: Article/auteurs/Zola)
-- si vs est absent: connue actuellement (à now)
-- changements (documents ajoutés ou partis de la sous-collection ou zombifiés) depuis la version vs
-    de la sous-collection connue en session.
-- { def0: [Uint8Array], def1: Uint8array, def2: { pk: data | v ... }}
-  Pour les 'def2', un objet { pk: data | v ... }
-  - v: version du document si n'est PLUS dans la collection
-  - data: data du document s'il est dans la collection
-*/
-export class FW$Sync {
-  op: Operation
-
-  constructor (soa: SOA) {
-    this.op = new Operation('FW$Sync', soa.svc, soa.org)
-    this.op.args.toSync = []
-  }
-
-  add (v: number, docCl:string, docPk?: string, colName?: string) {
-    if (!docPk) this.op.args.toSync.push({ def: docCl + '/1', v: v || 0})
-    else if (!colName) this.op.args.toSync.push({ def: docCl + '/' + docPk, v: v || 0})
-    else this.op.args.toSync.push({ def: docCl + '/' + colName + '/' +  docPk, v: v || 0})
-    return this
-  }
-
-  async post (noex?: boolean) : Promise<Map<string, $Document>> {
-    const signer = Registry.newD(this.op.args.svc, 'DefSigner') as $DefSigner
-    signer.op = this.op
-    await signer.sign(this.op.args.toSync)
-    const docs: Map<string, $Document> = new Map()
-    try {
-      const res = await this.op.post()
-      if (res.syncs) {
-        const std = getStore(this.op.args.svc, this.op.args.org)
-        for(const def in res.syncs) {
-          const vdatas = res.syncs[def] as CollData
-          for (const data of vdatas.datas) {
-            const d = decode(data)
-            const cl = d._clazz
-            const pk = d._pk
-            let doc = std.get(cl, pk)            
-            if (!doc || d.v > doc.v) {
-              doc = await Registry.compile(this.op.args.svc, cl, this.op.args.org, d)
-              std.set(doc)
-            }
-            docs.set(cl + '/' + doc._pk, doc)
-          }
-        }
-      }
-      return docs
-    } catch (e) {
-      await this.op.ko(e)
-      if (!noex) throw e
-      return docs
-    }
   }
 }
 

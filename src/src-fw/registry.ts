@@ -4,6 +4,7 @@ import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AppExc } from '../src-fw/log'
 
 export type CollData = {
+  incr: boolean,
   v: number,
   datas
 }
@@ -87,6 +88,15 @@ export class Registry {
       for(const f in obj) doc[f] = obj[f]
       await doc.compile()
     }
+    return doc
+  }
+
+  static buildZombi (svc: string, docCl: string, org: string, v: number, pk: string) : $Document {
+    const doc = Registry.newD(svc, docCl) as $Document
+    doc._org = org
+    doc._pk = pk
+    doc.v = v
+    doc.deleted = true
     return doc
   }
 }

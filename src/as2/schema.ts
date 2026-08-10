@@ -1,4 +1,4 @@
-import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
+import { DocDescriptor, FormType, collection } from '../src-fw/docDescriptor'
 
 let exc: Error | null = null
 
@@ -15,7 +15,11 @@ try {
   new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
   new DocDescriptor(svc, { name: 'Section', virtual: true, enum: ['roman', 'histoire', 'sf'] })
-  new DocDescriptor(svc, { name: 'Auteur', pk: ['autId'] })
+  new DocDescriptor(svc, { name: 'Auteur', pk: ['autId'] },
+    new Map<string, collection>([
+      ['section',  { key: ['section'], mutable: true, class: 'Section' }]
+    ])
+  )
 
   new FormType(svc, 'membrecodir', 'AS2_ad', 'k1', ['A'])
   new FormType(svc, 'membreredaction', 'AS2_ad', 'k1', ['A'])

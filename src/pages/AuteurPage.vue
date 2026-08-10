@@ -67,8 +67,7 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
-import {FW$Sync } from '../src-fw/operations'
-import { $Subs } from '../src-fw/subscription'
+import { $Subs, FW$Sync } from '../src-fw/subscription'
 
 const ui = stores.ui
 const session = stores.session
