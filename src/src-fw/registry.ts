@@ -3,12 +3,6 @@ import { decode } from '@msgpack/msgpack'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AppExc } from '../src-fw/log'
 
-export type CollData = {
-  incr: boolean,
-  v: number,
-  datas
-}
-
 export type SOA = {
   svc: string
   org: string

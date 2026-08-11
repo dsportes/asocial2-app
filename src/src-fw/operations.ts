@@ -6,9 +6,7 @@ import { Operation, ADMIN$Status } from '../src-fw/operation'
 // import stores from '../stores/all'
 // import { subsToSync } from '../stores/data-store'
 
-import { $Credential, $Cred, $DefSigner } from '../src-fw/documents'
-import { getStore } from'../stores/docs'
-import { $Document, Registry, SOA, CollData } from '../src-fw/registry'
+import { $Credential, $Cred } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }

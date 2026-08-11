@@ -59,6 +59,7 @@ import { ref, Ref, computed, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
+import { IDocStore } from '../stores/docs'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -83,11 +84,28 @@ const init = async () => {
   creds.value = await sf.myFullCreds('Auteur') }
 onMounted(async () => { await init()})
 
+const subsAuteur = async (pk: string) => {
+  const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
+  subs.setTitle('Test auteur').setDef('Auteur/' + pk, 'Hello victor')
+  if (await subs.subscribe(false))
+    console.log('subs done')
+}
+
+const syncAuteur = async (pk: string) : Promise<IDocStore> => {
+  const sync = new FW$Sync(soa.value)
+  const toSync = await sync.setDefs(['Auteur', pk])
+  await sync.post(true)
+  return sync.getStd()
+}
+
 const select = async (c: $Credential) => {
   cred.value = c
-  const sync = new FW$Sync(soa.value).add(0, 'Auteur', c.docPk)
-  const docs = await sync.post(true)
-  aut.value = docs.get('Auteur/' + c.docPk)
+  await subsAuteur(c.docPk)
+
+  const std = await syncAuteur(c.docPk)
+
+  aut.value = std.getDoc('Auteur', c.docPk)
+
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {
@@ -140,9 +158,8 @@ const majAut = async (nomAuteur: string, section: string) => {
       await ui.diagDisplay($t('AUTko_' + res.status))
       return false
     } else { 
-      const sync = new FW$Sync(soa).add(0, 'Auteur', pk)
-      const docs = await sync.post(true)
-      aut.value = docs.get('Auteur/' + pk)
+      const std = await syncAuteur(pk)
+      aut.value = std.getDoc('Auteur',pk)
       return aut.value || false
     }
   } catch (e) { op.ko(e); return false }
