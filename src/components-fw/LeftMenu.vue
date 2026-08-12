@@ -32,7 +32,6 @@ Contrôlé par ui.leftMenu
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEsponsorings') }}</div>
       </btn-cond>
-      <!-- btn-cond v-if="sf.userId && (sf.auth.admins || hasManagedOrgs)" -->
       <btn-cond v-if="sf.userId"
         class="q-mb-sm" flat color="warning"
         @ok="openAdmin" :disable="ui.page === 'admin'">
@@ -40,10 +39,10 @@ Contrôlé par ui.leftMenu
         <div>{{ $t('PAGEadmin') }}</div>
       </btn-cond>
 
-      <btn-cond :disable="ui.page === 'app'" class="q-mb-sm"
+      <btn-cond class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
-      <btn-cond :disable="ui.page === 'auteur'" class="q-mb-sm"
+      <btn-cond class="q-mb-sm"
         flat :label="$t('PAGEauteur')"
         @ok="ui.closeMenu(); ui.setPage('auteur')"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"

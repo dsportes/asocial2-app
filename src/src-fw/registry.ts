@@ -75,7 +75,7 @@ export class Registry {
   static async compile (svc: string, docCl: string, org: string, obj: Object) : Promise<$Document | null>{
     const doc = Registry.newD(svc, docCl, obj) as $Document
     doc._org = org
-    doc._pk = obj['_pk']
+    doc._pk = doc._docDescriptor.pkValue(obj)
     doc.v = obj['v']
     if (obj['deleted']) doc.deleted = true
     else {

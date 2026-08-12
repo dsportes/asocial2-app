@@ -1,7 +1,7 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-// import { IDB } from './idb'
+// import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
 import { $DefSigner } from '../src-fw/documents'
@@ -171,14 +171,14 @@ export class FW$Sync {
   signer: $DefSigner
   defs: string[]
   std: IDocStore
-  idb: boolean
+  hasIDB: boolean
 
   constructor (soa: SOA) {
     this.op = new Operation('FW$Sync', soa.svc, soa.org)
-    this.signer = Registry.newD(soa.svc, 'DefSigner') as $DefSigner
+    this.signer = (Registry.newD(soa.svc, 'DefSigner') as $DefSigner).init(soa.svc, soa.org)
     this.std = getStore(soa.svc, soa.org)
     this.op.args.toSync = []
-    this.idb = stores.session.hasIDB
+    this.hasIDB = stores.session.hasIDB
   }
 
   getStd () : IDocStore { return this.std }
@@ -189,11 +189,11 @@ export class FW$Sync {
       const idf = this.std.idef(def)
       let item : $DCItem
       if (idf.type === 1) {
-        item = this.std.classes[def]
-        if (!item && this.idb) item = await this.std.initDocFromIDB(def)
+        item = this.std.getDCItem(def)
+        if (!item && this.hasIDB) item = await this.std.initDocFromIDB(def)
       } else {
         item = this.std.collections[def]
-        if (!item && this.idb) item = await this.std.initCollFromIDB(def)
+        if (!item && this.hasIDB) item = await this.std.initCollFromIDB(def)
       }
       this.op.args.toSync.push({ def, v: item ? item.sv : 0})
     }

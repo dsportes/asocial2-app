@@ -5,7 +5,7 @@ import { Registry, $Document, $ADocument, SOA, topCl } from '../src-fw//registry
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
-import { getStore, IDocStore } from '../stores/docs'
+import { getStore, IDocStore, Idef } from '../stores/docs'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, getSite, isAdmin, SubsToSync } from '../src-fw/operation'
 
@@ -18,30 +18,42 @@ export class $DefSigner extends $ADocument {
   dd: DocDescriptor
   creds: Map<string, $Credential> 
 
-  constructor (svc: string, org: string) {
-    super()
+  init (svc: string, org: string) {
     this.std = getStore(svc, org)
     this.creds = new Map()
     const sc = stores.safe.mySimpleCreds()
     for(const [ ,c] of sc)
       this.creds.set(c.docCl + '/' + c.docPk, c)
+    return this
   }
 
   // Surchargeable par application
   getCred (def: string): $Credential {
     const idf = this.std.idef(def)
     switch (idf.type) {
-      case 0 : return this.creds.get(idf.cl + '/1')
-      case 1 : return this.creds.get(idf.cl + '/' + idf.pk)
-      case 2 : return this.creds.get(idf.anxCl + '/' + idf.pk)
+      case 0 : return this.getCred0(idf)
+      case 1 : return this.getCred1(idf)
+      case 2 : return this.getCred2(idf)
     }
+  }
+
+  getCred0 (idf: Idef) : $Credential {
+    return this.creds.get(idf.cl + '/1')
+  }
+
+  getCred1 (idf: Idef) : $Credential {
+    return this.creds.get(idf.cl + '/' + idf.pk)
+  }
+
+  getCred2 (idf: Idef) : $Credential {
+    return this.creds.get(idf.anxCl + '/' + idf.pk)
   }
 
   // Retourne la liste des defs d'entrée ayant un credential (signable)
   validDefs (defs: string[]) : string[] {
     const ok = []
     for(const def of defs)
-      if (this.getCred((def))) ok.push(def)
+      if (this.getCred(def)) ok.push(def)
     return ok
   }
 
@@ -49,7 +61,7 @@ export class $DefSigner extends $ADocument {
   async sign (op: Operation, defs: string[]) : Promise<string[]> {
     const ok = []
     for(const def of defs) {
-      const cred = this.getCred((def))
+      const cred = this.getCred(def)
       if (cred) {
         ok.push(def)
         await op.sign(cred)

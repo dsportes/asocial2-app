@@ -29,6 +29,9 @@ export type IDocStore = {
   collections() : string[]
 
   idef (def) : Idef
+
+  getDCItem (def) : $DCItem
+  getCollItem (def) : $CollItem
   storeDocColl (def: string, sat: number, cd: $DCData) : Promise<void>
 
   // Retourne true si la classe a des documents stockés
@@ -105,9 +108,13 @@ const useStore = (id: string) =>
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
     const session = useSessionStore()
+    const hasIDB = session.hasIDB
+    const hasNet = session.hasNet
     const sf = useSafeStore()
 
     const docs = reactive({  })
+
+    const getDCItem = (def: string) : $DCItem => docs[def]
 
     const getDoc = (cl: string, pk: string) : $Document => {
       const item = docs[cl + '/' + pk]
@@ -121,26 +128,7 @@ const useStore = (id: string) =>
     */
     const colls = reactive({  })
 
-    const hasIDB = () : boolean => { 
-      return session.hasIDB }
-
-    const creds: Map<string, Credential> = new Map()
-
-    const getCred = (def: string): any => {
-      const idf = idef(def)
-      switch (idf.type) {
-        case 0 : return creds.get(idf.cl + '/1')
-        case 1 : return creds.get(idf.cl + '/' + idf.pk)
-        case 2 : return creds.get(idf.anxCl + '/' + idf.pk)
-      }
-    }
-
-    const loadCreds = () => {
-      creds.clear()
-      const sc = sf.mySimpleCreds()
-      for(const [ ,c] of sc)
-        creds.set(c.docCl + '/' + c.docPk, c)
-    }
+    const getCollItem = (def: string) : $CollItem => colls[def]
     
     const idef = (def: string) : Idef => {
       const defx = def.split('/')
@@ -210,18 +198,19 @@ const useStore = (id: string) =>
       async function manageData (data: Uint8Array) {
         const row = buildRow(idf, data) as row
         const doc = await compile(idf.cl, row)
-        const defd = idf.cl + '/' + row._pk
+        const defd = doc._clazz + '/' + doc._pk
         let itemd = docs[defd] as $DocItem
         // Si itemd n'existait pas on EN CREE UN
         if (!itemd) {
-          itemd = { def: defd, sat, lat: sat, sv: row.v, lv: row.v, doc }
+          itemd = { def: defd, sat, lat: 0, sv: row.v, lv: 0, doc }
+          docs[def] = itemd
         } else {
           itemd.sat = sat
           itemd.sv = row.v
           itemd.doc = doc
         }
-        if (idb) await setIDB(itemd, data)
-        return row._pk
+        if (hasIDB) await setIDB(itemd, data)
+        return doc._pk
       }
 
       async function movedDatas (pks: Set<string>) {
@@ -236,7 +225,7 @@ const useStore = (id: string) =>
             itemd.sv = row.v
             itemd.doc = await compile(idf.cl, row)
           }
-          if (idb) await setIDB(itemd, data)
+          if (hasIDB) await setIDB(itemd, data)
         }
       }
 
@@ -249,10 +238,9 @@ const useStore = (id: string) =>
             itemd.sv = v
             itemd.doc = Registry.buildZombi(svc, idf.cl, org, v, pk)
           }
-          if (idb) await setIDB(itemd, null)
+          if (hasIDB) await setIDB(itemd, null)
       }
 
-      const idb = hasIDB()
       const idf = idef(def)
 
       if (idf.type === 1) { // Documents
@@ -264,7 +252,7 @@ const useStore = (id: string) =>
           - le document existe : v: sa version data: son contenu
           */
           if (cd.v === 0) {
-            if (!item) return // n'existait pas, n'existe toujors pas
+            if (!item) return // n'existait pas, n'existe toujours pas
             // Existait: enregistré comme vide
             await deleteDoc(item.doc._pk, cd.v)
           } else { // Le document existe
@@ -279,7 +267,7 @@ const useStore = (id: string) =>
          // Par principe de sérialisation item existe toujours
           if (cd.v === 0) { // document inchangé
             item.sat = sat
-            if (idb) await setLatIDB(item)
+            if (hasIDB) await setLatIDB(item)
           } else {
             const data = cd['data']
             if (!data) { // Existait, n'existe plus: enregistré comme vide
@@ -292,7 +280,7 @@ const useStore = (id: string) =>
 
       } else { // Colections
 
-        let item = docs[def] as $CollItem
+        let item = colls[def] as $CollItem
         if (!cd.incr) {
           /* INTEGRAL
           - la collection est vide : v == 0 (datas moved deleted sont absents)
@@ -306,19 +294,20 @@ const useStore = (id: string) =>
             item.sat = sat
             item.sv = cd.v
             item.pks = new Set()
-            if (idb) await setIDB(item, null)
+            if (hasIDB) await setIDB(item, null)
           } else { // La collection n'est pas vide
             const pks: Set<string> = new Set()
             await manageDatas(pks)
             if (!item) { // N'existait pas, on en créé un
               // Création de l'item pour la collection
               item = { def, sat, lat: sat, sv: cd.v, lv: cd.v, pks }
+              colls[item] = item
             } else { // la collection avait un item
               item.sat = sat
               item.sv = cd.v
               item.pks = pks
             }
-            if (idb) await setIDB(item, encode(Array.from(item.pks)))
+            if (hasIDB) await setIDB(item, encode(Array.from(item.pks)))
           }
         } else { 
           /*
@@ -339,7 +328,7 @@ const useStore = (id: string) =>
           if (cd.v === 0) {
             // la collection est inchangée - item EXISTE - rafraichissement de sat
             item.sat = sat
-            if (idb) await setLatIDB(item)
+            if (hasIDB) await setLatIDB(item)
           } else { 
             /* La collection a changé
             cd.v : est sa version
@@ -408,7 +397,7 @@ const useStore = (id: string) =>
     }
 
     return { 
-      svc, org, idef,
+      svc, org, idef, getDCItem, getCollItem,
       classes, collections, hasDocs, getDoc,
       storeDocColl,
       initCollFromIDB, initDocFromIDB,

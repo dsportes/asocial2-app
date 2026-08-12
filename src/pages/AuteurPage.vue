@@ -93,7 +93,7 @@ const subsAuteur = async (pk: string) => {
 
 const syncAuteur = async (pk: string) : Promise<IDocStore> => {
   const sync = new FW$Sync(soa.value)
-  const toSync = await sync.setDefs(['Auteur', pk])
+  const toSync = await sync.setDefs(['Auteur/' + pk])
   await sync.post(true)
   return sync.getStd()
 }
@@ -109,10 +109,6 @@ const select = async (c: $Credential) => {
   if (!aut.value) {
     await ui.diagDisplay($t('AUTko'))
   } else {
-    const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
-    subs.setTitle('Test auteur').setDef('Auteur/' + c.docPk, 'Hello victor')
-    if (await subs.subscribe(false))
-      console.log('subs done')
     const co = []
     for(const cr in aut.value.embedCreds)
       if (cr !== c.credId) co.push(aut.value.embedCreds[cr])
