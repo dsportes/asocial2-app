@@ -10,7 +10,7 @@ import Dexie from 'dexie'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
-import { $t, sleep, quarter } from '../src-fw/util'
+import { $t, sleep, quarter, equ8 } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
 import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
@@ -1255,6 +1255,28 @@ export const useSafeStore = defineStore('safe', () => {
     return 0
   }
 
+  const openSafeByPlane = async (shp: Uint8Array,  t: Trusting) : Promise<number> => {
+    AOperation.reset()
+    keyK.value = null
+    if (t.K1) {
+      try {
+        const k = await Crypt.decrypt(shp, keyFromB64(t.K1))
+        userId.value = t.userId
+        keyK.value = k
+        return 0
+      } catch (e) {  }
+    }
+    if (t.K2) {
+      try {
+        const k = await Crypt.decrypt(shp, keyFromB64(t.K2))
+        userId.value = t.userId
+        keyK.value = k
+        return 0
+      } catch (e) {  }
+    }
+    return 1
+  }
+
   /* Set d'un ou de deux alias de l'utilisateur.
   - 1) écrit les alias en future dans safe
   - 2) enregistre futur dans le Master Directory
@@ -1432,35 +1454,6 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       op.args['untrustDev'] = untrustDev
-      ret = await op.post()
-    } catch(e) {
-      op.ko(e)
-      return -1
-    }
-    if (!ret.status)
-      await compileSafe(ret.safe)
-    return ret.status
-  }
-
-  type SetAdmins = {
-    userId: string
-    shK: string
-    admins: string
-  }
-
-  const setAdmins = async (lst: string[]) => {
-    const admins = lst.length ?
-      keyToB64(await Crypt.crypt(keyK.value, encoder.encode(lst.join('/'))))
-      : ''
-    const setadmins: SetAdmins = {
-      userId: userId.value,
-      admins,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string
-    }
-    const op = new SafeOperation('$SetAdmins', mySafeStore.value)
-    let ret
-    try {
-      op.args['setadmins'] = setadmins
       ret = await op.post()
     } catch(e) {
       op.ko(e)
@@ -1715,8 +1708,8 @@ export const useSafeStore = defineStore('safe', () => {
     mySimpleCreds, myFullCreds, myCredOfDoc,
     sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
-    openSafeByAP, openSafeByPin,
-    setAlias, setTrust,setUntrust,setAdmins, setUntrustAll,
+    openSafeByAP, openSafeByPin, openSafeByPlane,
+    setAlias, setTrust,setUntrust, setUntrustAll,
     getAllSessions, synthUsers,
     resetAllLocal,
     SetOpUrl, GRSvcOpOrg,

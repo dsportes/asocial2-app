@@ -7,7 +7,7 @@
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>
-      <login-block @logged="sf.setStep(2)"/>
+      <login-block @logged="session.noNet ? opPlane() : sf.setStep(2)"/>
     </div>
 
     <div v-if="sf.step === 2" class="column items-center">
@@ -350,6 +350,12 @@ const opGuest = () => {
 }
 
 const opCalc = () => {
+  session.noNet = true
+  sf.setStep(0)
+  session.setStartContext('', new Map())
+}
+
+const opPlane = () => {
   session.noNet = true
   sf.setStep(0)
   session.setStartContext('', new Map())

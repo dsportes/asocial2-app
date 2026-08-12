@@ -4,6 +4,7 @@ import { ref, computed, reactive, Ref } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
+import { resetAll } from '../stores/docs'
 
 import stores from './all'
 import { Crypt } from '../src-fw/crypt'
@@ -68,7 +69,7 @@ export const useSessionStore = defineStore('session', () => {
   const sessionId = ref('')
   const wpReady = computed(() => permState.value === 'granted' && registration.value && sessionId.value)
   const sessionInfo = computed(() => subJSON.value.startsWith('???') ? subJSON.value : sessionId.value)
-
+  
   async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
     while (!myRegistration) {
       console.log('Waiting registration ...')
@@ -180,6 +181,7 @@ export const useSessionStore = defineStore('session', () => {
   const currentOrgSvc = ref({ svc: '', org: '' })
 
   const setStartContext = (aboutProfile: string, creds: Map<string, any>) => { 
+    resetAll()
     setPhase(0)
     _aboutProfile.value = aboutProfile
     _creds.value = creds
@@ -196,6 +198,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const endSession = () => {
+    resetAll()
     _aboutProfile.value = ''
     _creds.value = null
     lstOrgSvc.value = []

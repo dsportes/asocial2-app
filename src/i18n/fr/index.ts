@@ -17,6 +17,9 @@ export default {
   darkclear: 'Foncé / clair',
   ok: 'OK',
   me: 'moi',
+  planemode: 'Mode Avion',
+  pseudolocal: 'Pseudo sur ce poste:',
+  userid: 'ID utilisateur:',
   guest: 'Invité',
   login: 'Login',
   later: 'Plus tard',
@@ -794,6 +797,10 @@ Pour désigner un site non répertorié, l'utilisateur est convié à donner son
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
+`,
+LOGauthplane_label: 'Login en mode "Avion" possible pour:',
+LOGauthplane_bub: `# Authentification en mode "Avion"
+Si vous avez **certifié** ce terminal, vous vous authentifier par une de vos phrases secrètes.
 `,
 LOGauthbypin_label: 'Login par code PIN possible pour:',
 LOGauthbypin_bub: `# Authentification par code PIN

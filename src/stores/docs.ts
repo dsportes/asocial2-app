@@ -64,6 +64,13 @@ export const getStore = (svc: string, org: string, noforce?: boolean)
   return st
 }
 
+export const resetAll = () => {
+  for(const k in dsStores)
+    dsStores[k].$reset()
+  for(const k in dsStores)
+    delete dsStores[k]
+}
+
 export type IDBrow = {
   lat: number
   v: number

@@ -5,21 +5,25 @@ Event émis: logged
 <div class="q-ma-xs q-pa-xs">
   <div v-if="sf.users.length">
     <div class="row full-width items-center q-my-sm">
-      <btn-bubble :text="$t('LOGauthbypin_bub')"/>
-      <div class="text-italic titre-md q-ml-sm">{{$t('LOGauthbypin_label')}}</div>
+      <btn-bubble :text="$t(session.noNet ? 'LOGauthplane_bub' : 'LOGauthbypin_bub')"/>
+      <div class="text-italic titre-md q-ml-sm">
+        {{$t(session.noNet ? 'LOGauthplane_label' : 'LOGauthbypin_label')}}</div>
       <div v-for="u in sf.users" :key="u.userId"
         :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
         @click="selectUser(u)">{{u.pseudo}}</div>
     </div>
     <div v-if="selectedUser" class="wsm">
-      <div class="q-pa-sm">
+      <div v-if="!session.noNet" class="q-pa-sm">
         <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
+      <input-b v-else class="q-pa-sm"
+        v-model="entryPP" size="p1" prefix="Phrase"
+        @validate="authPlane"/>
     </div>
   </div>
 
   <!-- Authentification "forte" -->
-  <div class="full-width column">
+  <div v-if="!session.noNet" class="full-width column">
     <bar-title prefix="LOGap" class="q-mt-sm q-mb-xs text-italic"/>
     <div v-if="diagAP" class="q-my-xs msg self-end"
       style="margin-left:55px">
@@ -49,10 +53,12 @@ import BtnCond from '../components-fw/BtnCond.vue'
 
 const sf = stores.safe
 const ui = stores.ui
+const session = stores.session
 
 const emit = defineEmits(['logged'])
 
 const pin = reactive({ inp: '', err: '' })
+const entryPP = reactive({inp:'', err:''})
 const users = ref(sf.users)
 const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
 
@@ -62,7 +68,8 @@ watch(() => sf.users, () => {
 })
 
 const selectUser = (u) => {
-  pin.value = { inp: '', err: '' }
+  pin.inp = ''; pin.err = '' 
+  entryPP.inp = ''; entryPP.err = '' 
   selectedUser.value = selectedUser.value === u ? null : u
 }
 
@@ -70,6 +77,13 @@ const authPIN = async () => {
   const status = await sf.openSafeByPin(pin.inp, selectedUser.value)
   if (status === 0) emit('logged', null)
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status), true)
+}
+
+const authPlane = async () => {
+  const shp = await Crypt.strongHash(entryPP.inp, true, true)
+  const status = await sf.openSafeByPlane(shp, selectedUser.value)
+  if (status === 0) emit('logged', null)
+  else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
 
 const entryA = reactive({inp:'', err:''})
@@ -100,7 +114,7 @@ const valA = async () => {
 
 const valP = async () => {
   const shp = await Crypt.strongHash(entryP.inp, true, false)
-  const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
+  const status = await sf.openSafeByPlane(safeIS.value.i, safeIS.value.s, shp)
   if (status === 0) emit('logged', null)
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
