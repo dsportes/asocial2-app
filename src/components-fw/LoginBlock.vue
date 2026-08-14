@@ -114,7 +114,7 @@ const valA = async () => {
 
 const valP = async () => {
   const shp = await Crypt.strongHash(entryP.inp, true, false)
-  const status = await sf.openSafeByPlane(safeIS.value.i, safeIS.value.s, shp)
+  const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
   if (status === 0) emit('logged', null)
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }

@@ -11,15 +11,66 @@ import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+
 import { useSessionStore } from '../stores/session-store'
 import { useSafeStore } from '../stores/safe-store'
+import { useConfigStore } from '../stores/config-store'
+
+import { keyFromB64 } from '../src-fw/b64'
 import { $Document, Registry } from '../src-fw/registry'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $DCData } from 'src/src-fw/subscription'
 import { AppExc } from '../src-fw/log'
 
+
+/* POUR TEST */
+let callBack : Function
+export const setCallBack = (fn: Function) => {
+  callBack = fn
+}
+
 // Si IDB a une lat plus ancienne il faut rafraîchir sa lat
 const MAXLATDELAY = 3 * 3600 * 1000
+
+type MsgNotif = {
+  svc: string
+  org: string // 'demo'
+  now: number // dh de l'opération ayant publié le message
+  title: string // 'myApp - demo', 
+  body: string // 'Chat reçu',
+  url: string // 'http...'
+  defs: string // liste de def séparés par un espace
+}
+
+let config = null
+let session = null
+
+const init = () => {
+  if (!config) {
+    config = useConfigStore()
+    session = useSessionStore()
+  }
+}
+
+/* Traitement des notifications reçues:
+- sur retour d'opération,
+- sur web-push,
+*/
+export async function onPushMsg (payload: string) {
+  init()
+  const messageNotif =  decode(keyFromB64(payload)) as MsgNotif
+  if (messageNotif.defs && messageNotif.defs.length)
+    await processNotif(messageNotif)
+  if (messageNotif.body) {
+    if (config.mondebug) console.log('Show notif EXPLICITE from app')
+    const options = { body: messageNotif.body }
+    // @ts-ignore
+    if (messageNotif.url) options.data = { url: messageNotif.url || config.location }
+    const t = messageNotif.title || (config.K.APPNAME + ' - ' + messageNotif.org)
+    // @ts-ignore
+    await session.registration.showNotification(t, options)
+  }
+}
 
 export type IDocStore = {
   readonly svc
@@ -38,6 +89,8 @@ export type IDocStore = {
   hasDocs (clazz: string): boolean
 
   getDoc (cl: string, pk: string) : $Document
+
+  onNotif (defs: string[], dh: number) : Promise<void>
 
   initDocFromIDB (def: string) : Promise<$DocItem>
   initCollFromIDB (def: string) : Promise<$CollItem>
@@ -62,6 +115,14 @@ export const getStore = (svc: string, org: string, noforce?: boolean)
     dsStores[k] = st
   }
   return st
+}
+
+export const processNotif = async (m: MsgNotif) => {
+  const st = getStore(m.svc, m.org)
+  if (m.defs) {
+    const l = m.defs.split(' ')
+    await st.onNotif(l, m.now)
+  }
 }
 
 export const resetAll = () => {
@@ -114,7 +175,7 @@ const useStore = (id: string) =>
   defineStore(`store-${id}`, () => {
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
-    const session = useSessionStore()
+    init()
     const hasIDB = session.hasIDB
     const hasNet = session.hasNet
     const sf = useSafeStore()
@@ -155,6 +216,10 @@ const useStore = (id: string) =>
     const classes = () : string[] => { return Object.keys(docs) }
     const hasDocs = (clazz: string): boolean => docs[clazz] ? true : false
     const collections = () : string[] => { return  Object.keys(colls) }
+
+    const onNotif = async (defs: string[], dh: number) => {
+      await callBack(defs)
+    }
 
     const storeDocColl = async (def: string, sat: number, cd: $DCData) : Promise<void> => {
 
@@ -405,6 +470,7 @@ const useStore = (id: string) =>
 
     return { 
       svc, org, idef, getDCItem, getCollItem,
+      onNotif,
       classes, collections, hasDocs, getDoc,
       storeDocColl,
       initCollFromIDB, initDocFromIDB,

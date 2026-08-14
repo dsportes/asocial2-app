@@ -5,10 +5,10 @@ import { $t } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
+import { onPushMsg } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Credential } from '../src-fw/documents'
-import { onPushMsg } from '../../src-pwa/register-service-worker'
 
 const encoder = new TextEncoder()
 

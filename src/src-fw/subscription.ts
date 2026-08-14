@@ -53,10 +53,7 @@ export class $Subs extends $Document {
   }
 
   /* Mise à jour d'une souscription enregistrée: possibilités ...
-  - setTile
-  - addDef / delDef
-  puis in fine commit()
-  */
+  - setTitle, setUrl, setDef  */
   setTitle (title: string) { this.title = title; return this }
 
   setUrl (url: string) { this.url = url; return this}

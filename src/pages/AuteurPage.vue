@@ -55,12 +55,12 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted } from 'vue'
+import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
-import { IDocStore } from '../stores/docs'
-import { DocDescriptor } from '../src-fw/docDescriptor'
+import { getStore, IDocStore, setCallBack } from '../stores/docs'
+// import { DocDescriptor } from '../src-fw/docDescriptor'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -76,44 +76,59 @@ const sf = stores.safe
 
 const creds: Ref<Map<string, $Credential>> = ref()
 const soa = computed(() => session.currentOrgSvc )
+const std = computed(() => getStore(soa.value.svc, soa.value.org))
+
 const cred = ref(null)
-const aut = ref(null)
-const coauts: Ref<$Cred[]> = ref([])
+
+const aut = computed(() => 
+  cred.value ? std.value.getDoc('Auteur', cred.value.docPk) : null)
+
+const coauts: Ref<$Cred[]> = computed(() => {
+  const co = []
+  if (aut.value && aut.value.embedCreds) for(const cr in aut.value.embedCreds)
+      if (cr !== cred.value.credId) co.push(aut.value.embedCreds[cr])
+  return co
+})
+
+// watch(aut, (v) => { console.log(v.nomAuteur) })
 
 const init = async () => { 
   creds.value = await sf.myFullCreds('Auteur') }
+
 onMounted(async () => { await init()})
 
 const subsAuteur = async (pk: string) => {
   const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
   subs.setTitle('Test auteur').setDef('Auteur/' + pk, 'Hello victor')
-  if (await subs.subscribe(false))
-    console.log('subs done')
+  await subs.subscribe(false)
 }
 
-const syncAuteur = async (pk: string) : Promise<IDocStore> => {
+const syncAuteur = async (pk: string) : Promise<void> => {
   const sync = new FW$Sync(soa.value)
-  const toSync = await sync.setDefs(['Auteur/' + pk])
+  await sync.setDefs(['Auteur/' + pk])
   await sync.post(true)
-  return sync.getStd()
 }
+
+// Test de retour de notif
+setCallBack(async (defs: string[]) => {
+  for(const def of defs) {
+    const idf = std.value.idef(def)
+    await syncAuteur(idf.pk)
+  }
+})
 
 const select = async (c: $Credential) => {
   cred.value = c
   await subsAuteur(c.docPk)
-
-  const std = await syncAuteur(c.docPk)
-
-  aut.value = std.getDoc('Auteur', c.docPk)
-
+  await syncAuteur(c.docPk)
+  /*
   if (!aut.value) {
-    await ui.diagDisplay($t('AUTko'))
-  } else {
     const co = []
     for(const cr in aut.value.embedCreds)
       if (cr !== c.credId) co.push(aut.value.embedCreds[cr])
     coauts.value = co
   }
+  */
 }
 
 const editTrig = async (trig: string) => {
@@ -130,10 +145,9 @@ const editTrig = async (trig: string) => {
 }
 
 const majNA = async (nomAuteur: string) => {
-  if (await majAut(nomAuteur, null)) {
-    if (await sf.updateCredName(cred.value.credId, nomAuteur))
-      cred.value.name = nomAuteur
-  }
+  await majAut(nomAuteur, null)
+  if (await sf.updateCredName(cred.value.credId, nomAuteur))
+    cred.value.name = nomAuteur
 }
 
 const majSection = async (section: string) => {
@@ -142,7 +156,7 @@ const majSection = async (section: string) => {
 
 const majAut = async (nomAuteur: string, section: string) => {
   const soa = session.currentOrgSvc
-  const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
+  // const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
   const op = new Operation('MajAuteur', soa.svc, soa.org)
   op.args.autid = aut.value.autid
   if (nomAuteur) op.args.nomAuteur = nomAuteur
@@ -150,15 +164,11 @@ const majAut = async (nomAuteur: string, section: string) => {
   await op.sign(cred.value)
   try {
     const res = await op.post()
-    if (res.status) {
+    if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
-      return false
-    } else { 
-      const std = await syncAuteur(pk)
-      aut.value = std.getDoc('Auteur',pk)
-      return aut.value || false
-    }
-  } catch (e) { op.ko(e); return false }
+  } catch (e) { 
+    await op.ko(e)
+  }
 }
 
 const selCo = (cx: $Cred) => {

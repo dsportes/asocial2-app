@@ -1,10 +1,8 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
 import { urlFromText } from '../src/src-fw/util'
-import { keyFromB64 } from '../src/src-fw/b64'
 import stores from '../src/stores/all'
-// @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { onPushMsg } from '../src/stores/docs'
 
 // Ecoute les changements de permissions et les route vers config
 navigator.permissions.query({ name: 'notifications' })
@@ -21,54 +19,21 @@ navigator.permissions.query({ name: 'notifications' })
   console.log('Permissions cannot be asked')
 })
 
-type messageNotif = {
-  org: string // 'demo'
-  title: string // 'myApp - demo', 
-  body: string // 'Chat reçu',
-  url: string // 'http...'
-  defs: string[] // [a/v/c c/d/e ...]
-}
-
-function b64ToObj (b64: string) : any {
-  const bin = keyFromB64(b64)
-  return decode(bin)
-}
-
-/* Traitement des notifications:
-- sur retour d'opération
-- sur web-push
-*/
-export async function onPushMsg (payload: string) {
-  if (payload) {
-    const messageNotif = b64ToObj(payload)
-    /*
-    if (messageNotif.defs && messageNotif.defs.length)
-      await stores.data.onNotif(messageNotif.now, messageNotif.org, messageNotif.defs)
-    */
-    if (messageNotif.body) {
-      const config = stores.config
-      if (config.mondebug) console.log('Show notif EXPLICITE from app')
-      const options = { body: messageNotif.body }
-      // @ts-ignore
-      if (messageNotif.url) options.data = { url: messageNotif.url || config.location }
-      const t = messageNotif.title || (config.K.APPNAME + ' - ' + messageNotif.org)
-      // @ts-ignore
-      await stores.session.registration.showNotification(t, options)
-    }
-  }
-}
-
 // Traite les messages émis par le SW 
 navigator.serviceWorker.onmessage = async (message) => {
-  if (message.data) {
-    if (message.data.type === 'STOP') {
-      window.location.href = urlFromText(stores.config.K.byeHtml)
-    } else if (message.data.type === 'PUSH') {
-      console.log('Notification received by web-push')
-      await onPushMsg(message.data.payload)
-    } else {
-      stores.session.onSwMessage(message.data)
+  try {
+    if (message.data) {
+      if (message.data.type === 'STOP') {
+        window.location.href = urlFromText(stores.config.K.byeHtml)
+      } else if (message.data.type === 'PUSH') {
+        console.log('Notification received by web-push')
+        await onPushMsg(message.data.payload)
+      } else {
+        stores.session.onSwMessage(message.data)
+      }
     }
+  } catch (e) { 
+    console.log(e)
   }
 }
 
