@@ -189,7 +189,7 @@ export type Safe = {
   auth: Auth
   devices: Object | null
   creds: Object | null
-  profiles: Object | null
+  options: Object | null
   prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
 }
 
@@ -228,6 +228,7 @@ class Trusting {
   K1: string = ''
   K2: string = ''
   Kp: string = ''
+  appsDb: string[] = []
 
   constructor (obj: Object) {
     for(const f of Object.keys(obj)) this[f] = obj[f]
@@ -238,40 +239,25 @@ class Trusting {
     for(const f of Object.keys(this)) obj[f] = this[f]
     return obj
   }
-}
 
-export class TSession {
-  app: string = '' // code de l'application
-  userId: string = '' // id de l'utilisateur
-  profId: string = '' // id du profil - si '*' "tous les droits"
-  about: string = '' // copie de about du profil (utile en mode Avion)
-  size: number[] = []// tailles des données / fichiers stockés en local dans IDB
-  time: number = 0 // date-heure de dernière ouverture sur ce terminal
-  prefCode: string = '' // code de la "préférence" utilisée la dernière fois
-  prefTime: number = 0 // date-heure de dernière mise à jour
-  prefObj: Uint8Array | null = null // objet de "préférence" utilisé la dernière fois (utile en mode Avion)
-
-  constructor (obj: Object) {
-    for(const f of Object.keys(obj)) this[f] = obj[f]
+  hasAppDb () {
+    const app = stores.config.appname
+    if (!this.appsDb || this.appsDb.length)
+      return this.appsDb.indexOf(app) !== -1
   }
 
-  static initSize () {
-    return new Array(coeffs.length).fill(0)
+  addAppsDb () {
+    const app = stores.config.appname
+    if (!this.appsDb) this.appsDb = []
+    const i = this.appsDb.indexOf(app)
+    if (i === -1) this.appsDb.push(app)
   }
 
-  get toObj () : Object {
-    const obj = {}
-    for(const f of Object.keys(this)) obj[f] = this[f]
-    return obj
-  }
-
-  get dbName () : string { return this.app + '_' + Crypt.shaS(this.userId + '/' + this.profId)}
-  get idOf () : string {
-    return TSession.id(this.app, this.userId, this.profId)
-  }
-
-  static id (app, userId, profId) : string {
-    return Crypt.shaS(app + '/' + userId + '/' + profId)
+  delAppsDb () {
+    const app = stores.config.appname
+    if (!this.appsDb) this.appsDb = []
+    const i = this.appsDb.indexOf(app)
+    if (i !== -1) this.appsDb.splice(i, 1)
   }
 }
 
@@ -281,6 +267,12 @@ type Device = {
   cy: string
   sign: string
   nbe: number
+}
+
+type Options = {
+  orgs: string[]
+  roles: string[]
+  ref: string
 }
 
 function EX (e: any, op: string) {
@@ -302,9 +294,6 @@ export const useSafeStore = defineStore('safe', () => {
   const devId = ref('') // Depuis IDB Header
   const devName = ref('') // Depuis IDB Header
   const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
-  const mySessions : Ref<Map<string, TSession>> = ref()
-
-  const newTSession = (obj) => new TSession(obj)
 
   watch(() => stores.session.incognito, async (v) => {
     await loadTrustings()
@@ -387,113 +376,6 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
-  const getMySessions = async () => {
-    const app = stores.config.appname
-    mySessions.value = new Map<string, TSession>()
-    const mpf: Map<string, Profile> = mySafeProfiles.value
-    const toSave: Map<string, TSession> = new Map()
-
-    await db.value.tsessions.each(async (r) => {
-      try {
-        const obj = decode(r.bin)
-        const s : TSession = new TSession(obj)
-        if (s.userId === userId.value && s.app ===  app) {
-          s.about = await dcX(keyFromB64(s.about))
-          const profile: Profile | undefined = mpf.get(s.profId)
-          if (profile && s.about !== profile.about) {
-            s.about = profile.about
-            toSave.set(s.idOf, s)
-          }
-        }
-        mySessions.value.set(s.idOf, s)
-      } catch (e) {
-        console.log(e)
-      }
-    })
-
-    for(const [,s] of mySessions.value) {
-      if (s.prefCode) {
-        const p = mySafePrefs.value.get(s.prefCode)
-        if (p && (s.prefTime !== p.time)) {
-          s.prefTime = p.time
-          s.prefObj = p.obj
-          toSave.set(s.idOf, s)
-        }
-      }
-    }
-    if (toSave.size)
-      for(const [,s] of toSave) await saveTSession(s)
-  }
-
-  const saveTSession = async (s: TSession) => {
-    try {
-      const id = s.idOf
-      const ab = s.about
-      s.about = keyToB64(await ecX(s.about))
-      const bin = encode(s.toObj)
-      await db.value.tsessions.put({ id, bin })
-      s.about = ab
-      mySessions.value.set(id, s)
-    } catch (e) {
-      throw EX(e, 'saveTSession')
-    }
-  }
-
-  const delTSession = async (l: TSession[]) => {
-    for (const s of l) {
-      try {
-        const id = s.idOf
-        await db.value.tsessions.where({ id }).delete()
-        mySessions.value.delete(id)
-        if (!stores.session.incognito) {
-          const x = localStorage.getItem('$DBLIST') || ''
-          const dbl = x.split(' ')
-          const n = dbl.indexOf(s.dbName)
-          if (n === -1) dbl.splice(n, 1)
-          localStorage.setItem('$DBLIST', dbl.join(' '))
-        }
-        try {
-          await Dexie.delete(s.dbName)
-          await sleep(300)
-          console.log(s.dbName + ' deleted')
-        } catch (e: any) {
-          console.log(s.dbName + ' deletion FAILED: ', e.message())
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    }
-  }
-
-  const setTSession = async (s: TSession, razdb?: boolean) => {
-    try {
-      s.time = Date.now()
-      if (razdb) s.size = TSession.initSize()
-      if (!stores.session.incognito)
-        await saveTSession(s)
-
-      recordIDB(s.dbName)
-      if (razdb) try {
-          await Dexie.delete(s.dbName)
-          await sleep(300)
-          console.log(s.dbName + ' deleted')
-        } catch (e: any) {
-          console.log(s.dbName + ' deletion FAILED: ', e.message())
-        }
-    } catch (e) {
-      throw EX(e, 'setTSession')
-    }
-  }
-
-  const recordIDB = (dbName: string) => {
-    if (stores.session.incognito) return
-    const x = localStorage.getItem('$DBLIST') || ''
-    const dbl = x.split(' ')
-    const n = dbl.indexOf(dbName)
-    if (n === -1) dbl.push(dbName)
-    localStorage.setItem('$DBLIST', dbl.join(' '))
-  }
-
   /**********************************************************************
   Safe central : copie locale du safe de l'utilisateur courant
   - permet un affichage complet, y compris pour les données relatives
@@ -506,9 +388,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   const setStep = async (s) => {
     if (s === 2) {
-      await getMySessions()
-      selectedSession.value = null
-      selectedProfile.value = null
+ 
     }
     if (s === 1) {
       auth.value = null
@@ -528,9 +408,6 @@ export const useSafeStore = defineStore('safe', () => {
     return t ? t.pseudo : ''
   })
 
-  const selectedSession: Ref<TSession> = ref(null)
-  const selectedProfile: Ref<Profile> = ref(null)
-
   const users = computed(() =>
     trustings.value ? Array.from(trustings.value.values()) : [])
 
@@ -540,11 +417,10 @@ export const useSafeStore = defineStore('safe', () => {
   /* Section "devices de confiance" une entrée par device identifiée par `devid`*/
   const devices: Ref<Map<string, Device>> = ref() // cle devid
 
+  const options: Ref<Object> = ref()
+
   /* Section "préférences" organisée avec une **sous-section par application** */
   const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
-
-  /* Section "profiles" organisée avec une **sous-section par application**   */
-  const mySafeProfiles: Ref<Map<string, Profile>> = ref() // ceux de l'app courante
 
   /* Section "creds": organisée avec une **sous-section par application** */
   const mySafeCreds: Ref<Map<string, $Credential>> = ref()
@@ -616,7 +492,7 @@ export const useSafeStore = defineStore('safe', () => {
     await loadDevices(safe) // devices
     await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
-    await loadProfiles(safe) // profiles
+    await loadOptions(safe) // option
     if (safe.auth.future !== null)
       await resetAliases(safe)
   }
@@ -704,7 +580,6 @@ export const useSafeStore = defineStore('safe', () => {
   **************************************************************************************/
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.appname
-    const ls: TSession[] = []
     const p = new Map<string, [number, Uint8Array]>() // clé: app
     if (safe.prefs) {
       const x = safe.prefs[app]
@@ -714,7 +589,21 @@ export const useSafeStore = defineStore('safe', () => {
         p.set(code, [time, obj])
       }
     }
-    if (ls.length) for (const s of ls) await setTSession(s, false)
+    mySafePrefs.value = p
+  }
+
+  /* Options *************************************************************
+  Un "objet" par application contenant ses options
+  */
+  const loadOptions = async (safe: Safe) : Promise<void> => {
+    const app = stores.config.appname
+    const p = new Map<string, Object>() // clé: app
+    if (safe.options) {
+      const x = safe.options[app]
+      const b = keyFromB64(x)
+      const y = await Crypt.decrypt(keyK.value, b)
+      p.set(app, decode(y))
+    }
     mySafePrefs.value = p
   }
 
@@ -874,90 +763,6 @@ export const useSafeStore = defineStore('safe', () => {
     return await doOpSafe(op)
   }
 
-  /* Profiles ****************************************************************
-  Section organisée avec une **sous-section par application** regroupant une liste d'items
-  ayant un identifiant généré aléatoirement à sa création.
-  Chaque item est sérialisé en base64 et a les propriétés suivantes:
-  - `about`: texte significatif pour l'utilisateur **crypté par la clé K**
-    décrivant le _profil_ d'une session (par exemple `Revue des notes d'Alice et Jules`).
-  - `creds`: liste des id des _credentials_ qui sont attachés à une session
-    de ce profil lors de son ouverture.
-  ****************************************************************************/
-  const loadProfiles = async (safe: Safe) : Promise<void> => {
-    const app = stores.config.appname
-    const m = new Map<string, Profile>()
-    m.set('*', { profId: '*', about: '', crIds: [] })
-    if (safe.profiles) {
-      const mpf = safe.profiles[app]
-      if (mpf) {
-        for (const profId in mpf) {
-          const x = decode(keyFromB64(mpf[profId]))
-          const about = await dcX(keyFromB64(x.about))
-          const s = sessionOfProfId(profId)
-          if (s)
-            s.about = about
-          const p: Profile = { profId, about, crIds: x.crIds }
-          m.set(profId, p)
-        }
-      }
-    }
-    mySafeProfiles.value = m
-  }
-
-  type SetProfiles = {
-    app: string
-    userId: string
-    shK: string
-    profiles: Object | null // clé: profId, valeur: Objet Profile sérialisé crypté
-    delprofs: string[] // liste des profIds à supprimer
-  }
-
-  /* Création, mise jour et suppression de plusieurs profiles */
-  const updateProfiles = async (
-    mprofiles: Map<string, Profile> | null,
-    delprofs: string[] | null,
-    ) => {
-
-    let profiles : Object | null = {}
-    if (mprofiles && mprofiles.size) for(const [profId, p] of mprofiles) {
-      p.about = keyToB64(await ecX(p.about))
-      profiles[profId] = keyToB64(encode(p))
-    }
-    if (Object.keys(profiles).length === 0) profiles = null
-    const setProfiles : SetProfiles = {
-      app: stores.config.appname,
-      userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      profiles,
-      delprofs: delprofs || []
-    }
-    const op = new SafeOperation('$UpdateProfiles', mySafeStore.value)
-    op.args.setProfiles = setProfiles
-    return await doOpSafe(op)
-  }
-
-  type SetAboutProfile = {
-    app: string,
-    userId: string
-    shK: string
-    profId: string
-    about: string
-  }
-  /* Maj de l'about d'un profile */
-  const setAboutProfile = async (profId: string, about: string) => {
-    const aboutProfile: SetAboutProfile = {
-      app: stores.config.appname,
-      userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      profId,
-      about: keyToB64(await ecX(about))
-    }
-    const op = new SafeOperation('$SetAboutProfile', mySafeStore.value)
-    op.args.aboutProfile = aboutProfile
-    return await doOpSafe(op)
-  }
-  /****************************************************************************/
-
   /* Credential de type "manager" *****************************************/
   const managerCreds = () : Map<string, $Credential> => {
     const m = new Map()
@@ -988,15 +793,6 @@ export const useSafeStore = defineStore('safe', () => {
       }
     else for (const [credId, c] of mySafeCreds.value) x.set(credId, c)
     return x
-  }
-
-  const sessionOfProfId = (profId: string) => {
-    const id = TSession.id(stores.config.appname, userId.value, profId)
-    return mySessions.value ? mySessions.value.get(id) || null : null
-  }
-
-  const profileOfProfId = (profId: string) => {
-    return mySafeProfiles.value.get(profId)
   }
 
   const createSafe = async (
