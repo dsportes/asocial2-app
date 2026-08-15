@@ -7,10 +7,18 @@
   <div :class="sty('md')">
     <div v-if="sf.tab === 'login' && sf.step === 1">
       <mode-net/>
-      <login-block @logged="session.noNet ? opPlane() : sf.setStep(2)"/>
+      <mode-local/>
+      <login-block @logged="sf.setStep(2)"/>
     </div>
 
     <div v-if="sf.step === 2" class="column items-center">
+      <div v-if="session.modeSync" class="q-my-sm row justify-between items-center">
+        <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
+        <btn-bubble class="col-auto self-start"
+          :text="$t('HPresetdb_1')"/>
+      </div>
+
+
       <div :class="dkli(idx) + ' full-width'" v-for="([profId, p], idx) of locSafeProfiles" :key="profId">
         <div v-if="sOfP(profId)">
           <div :class="clSel(sOfP(profId)) + 'row q-my-sm q-py-xs'">
@@ -109,11 +117,7 @@
             <btn-bubble class="col-auto self-start"
               :text="$t('HPunpin_1')"/>
           </div>
-          <div v-if="!unpinme" class="q-my-sm row justify-between items-center">
-            <q-toggle class="col q-pr-md" v-model="resetdb" dense :label="$t('HPresetdb_0')"/>
-            <btn-bubble class="col-auto self-start"
-              :text="$t('HPresetdb_1')"/>
-          </div>
+
         </div>
         <div v-else>
           <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
@@ -146,13 +150,14 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { TSession, Profile } from '../stores/safe-store'
+// import { TSession, Profile } from '../stores/safe-store'
 import { $t, sty, dkli, dhcool } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputA from '../components-fw/InputA.vue'
 import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
+import ModeLocal from '../components-fw/ModeLocal.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import BarOpen from '../components-fw/BarOpen.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -182,7 +187,7 @@ onMounted(async () => {
   await sf.init0()
 })
 
-const sOfP = (profId: string) => sf.sessionOfProfId(profId)
+// const sOfP = (profId: string) => sf.sessionOfProfId(profId)
 
 const resetdb = ref(false)
 const unpinme = ref(false)

@@ -10,6 +10,8 @@ let n = 0
 
 /* Credentials **************************************************************************/
 class AS2$Credential_CoDir extends $Credential {
+  static _manager = true
+  static _role = 'ad'
 
   get hasDispProps () { return true }
 
@@ -21,6 +23,8 @@ class AS2$Credential_CoDir extends $Credential {
 if (ok) { n++; Registry.register(AS2$Credential_CoDir) }
 
 class AS2$Credential_Redaction extends $Credential {
+  static _manager = true
+  static _role = 'ad'
 
   get hasDispProps () { return true }
 
@@ -32,6 +36,7 @@ class AS2$Credential_Redaction extends $Credential {
 if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
 
 export class AS2$Credential_Auteur extends $Credential {
+  static _role = 'auteurs'
 
   get hasDispProps () { return true }
 

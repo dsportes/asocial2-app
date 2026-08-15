@@ -1,5 +1,5 @@
 // @ts-ignore
-import { decode } from '@msgpack/msgpack'
+import { encode } from '@msgpack/msgpack'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AppExc } from '../src-fw/log'
 
@@ -36,7 +36,18 @@ export const svcCl = (clazz: string) => {
 
 export class Registry {
   static classes : Map<string, Function> = new Map()
+
+  /* Set des noms des classes des credential
+  assignés par role (CATEG dans I18n) */
   static managers : Set<string> = new Set()
+
+  /* Set des classes de leur svc$docCl des credential (depuis leur sous-classe) 
+  assignés par svc$role (CATEG dans I18n) */
+  static roles : Map<string, Set<string>> = new Map()
+  static roleOfCred : Map<string, string> = new Map()
+
+  static getCredsOfRole(role: string) { return this.roles.get(role) }
+  static getRoleOfCred(cred: string) { return this.roleOfCred.get(cred) }
 
   static register (clazz: Function) { 
     const topcl = topCl('', clazz.name)
@@ -47,7 +58,17 @@ export class Registry {
       throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
     if (!clazz['_unregistered'])
       DocDescriptor.get(topcl)
-    if (clazz['manager']) Registry.managers.add(clazz.name)
+    if (clazz['_manager']) Registry.managers.add(clazz.name)
+    const role = clazz['_role']
+    if (role) {
+      const cl = svc + '$' + subCl(clazz.name)
+      const r = svc + '$' + role
+      let e = Registry.roles.get(r)
+      if (!e) { e = new Set(); Registry.roles.set(r, e)}
+      e.add(cl)
+      Registry.roleOfCred.set(cl, r)
+    }
+
     this.classes.set(clazz.name, clazz)
   }
 
@@ -116,5 +137,16 @@ export class $Document extends $ADocument{
   v: number = 0
 
   async compile() { }
+
+  serial () : Uint8Array {
+    const obj: any = {}
+    if (!this.deleted) for(const p of Object.keys(this))
+      if (!p.startsWith('_')) obj[p] = this[p]
+    else this.deleted = true
+    obj._clazz = topCl('', this.constructor.name)
+    obj._org = this._org
+    obj._pk = this._pk
+    return encode(obj)
+  }
 
 }

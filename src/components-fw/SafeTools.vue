@@ -26,12 +26,12 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('SFTalias_bub')" :disbubble="$t('SFTalias_bub')"
         :title="$t('SFTalias_label')"
-        :disable="!session.hasNet"
+        :disable="session.noNet"
         @open="dialogs.SafeCrA = true"/>
 
       <bar-open :bubble="$t('SFTphrase_bub')" :disbubble="$t('SFTphrase_bub')"
         :title="$t('SFTphrase_label')"
-        :disable="!session.hasNet"
+        :disable="session.noNet"
         @open="dialogs.SafeCrP = true"/>
 
       <q-separator color="primary" class="q-my-xs q-mx-lg"/>
@@ -50,11 +50,11 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
         :title="$t('HPtrustings_1')"
-        :disable="!session.hasNet || session.incognito"
+        :disable="session.noNet || session.noLocal"
         @open="dialogs.DevTrustings = true"/>
 
       <bar-open :bubble="$t('HPmanuinfo')"
-        :disable="session.incognito || !session.hasNet"
+        :disable="session.noNet"
         :title="$t('HPmanusers')"
         @open="dialogs.ManageUsers = true"/>
 
@@ -62,29 +62,24 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('CRRtit_bub')" :disbubble="$t('CRRtit_bub')"
         :title="$t('CRRtit_label')"
-        :disable="!session.hasNet"
+        :disable="session.noNet"
         @open="dialogs.CredsReview = true"/>
-
-      <bar-open :bubble="$t('LCRtit_bub')" :disbubble="$t('LCRtit_bub')"
-        :title="$t('LCRtit_label')"
-        :disable="!session.hasNet"
-        @open="dialogs.ListcredsMgr = true"/>
 
       <bar-open :bubble="$t('HPprefs_2')" :disbubble="$t('HPprefs_2')"
         :title="$t('HPprefs_1')"
-        :disable="!session.hasNet || session.incognito"
+        :disable="session.noNet"
         @open="dialogs.PrefsMgr = true"/>
 
       <q-separator color="orange" class="q-my-xs"/>
       <div class="titre-md text-italic text-bold text-warning text-center">{{ $t('SFTopal') }}</div>
 
       <bar-open :bubble="$t('HPexpsafe_2')"
-        :disable="session.incognito || !session.hasNet"
+        :disable="session.noNet"
         :title="$t('HPexpsafe_1')"
         @open="dialogs.SafeExport = true"/>
 
       <bar-open :bubble="$t('HPdelsafe_2')" :disbubble="$t('HPdelsafe_3')"
-        :disable="session.incognito || !session.hasNet"
+        :disable="session.noNet"
         :title="$t('HPdelsafe_1')"
         @open="dialogs.delSafe = true"/>
 
@@ -98,7 +93,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
-  <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr" @close="fnc"/>
   <prefs-mgr v-if="dialogs.PrefsMgr" v-model="dialogs.PrefsMgr" @close="fnc"/>
 
   <safe-export v-if="dialogs.SafeExport" v-model="dialogs.SafeExport" @close="fnc" @done="fnc"/>
@@ -136,7 +130,6 @@ import UserProfile from '../components-fw/UserProfile.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
-import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'

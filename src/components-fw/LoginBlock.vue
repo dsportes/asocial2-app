@@ -3,7 +3,12 @@ Event émis: logged
 -->
 <template>
 <div class="q-ma-xs q-pa-xs">
-  <div v-if="sf.users.length">
+
+  <div v-if="sf.hasIDBS && session.noNet" class="titre-md msg2 text-center q-ma-sm">
+    {{ $t('LOGplaneimp') }}
+  </div>
+
+  <div v-if="sf.hasIDBS && sf.users.length">
     <div class="row full-width items-center q-my-sm">
       <btn-bubble :text="$t(session.noNet ? 'LOGauthplane_bub' : 'LOGauthbypin_bub')"/>
       <div class="text-italic titre-md q-ml-sm">
@@ -13,17 +18,22 @@ Event émis: logged
         @click="selectUser(u)">{{u.pseudo}}</div>
     </div>
     <div v-if="selectedUser" class="wsm">
-      <div v-if="!session.noNet" class="q-pa-sm">
+      <div v-if="session.hasNet" class="q-pa-sm">
         <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
       </div>
-      <input-b v-else class="q-pa-sm"
-        v-model="entryPP" size="p1" prefix="Phrase"
-        @validate="authPlane"/>
+      <div v-else>
+        <div v-if="!selectedUser.hasAppDb()" class="titre-md msg2 text-center q-ma-sm">
+          {{ $t('LOGplaneimp') }}
+        </div>
+        <input-b v-else class="q-pa-sm"
+          v-model="entryPP" size="p1" prefix="Phrase"
+          @validate="authPlane"/>
+      </div>
     </div>
   </div>
 
   <!-- Authentification "forte" -->
-  <div v-if="!session.noNet" class="full-width column">
+  <div v-if="session.hasNet" class="full-width column">
     <bar-title prefix="LOGap" class="q-mt-sm q-mb-xs text-italic"/>
     <div v-if="diagAP" class="q-my-xs msg self-end"
       style="margin-left:55px">
@@ -42,7 +52,7 @@ Event émis: logged
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -59,18 +69,20 @@ const emit = defineEmits(['logged'])
 
 const pin = reactive({ inp: '', err: '' })
 const entryPP = reactive({inp:'', err:''})
-const users = ref(sf.users)
+const users = computed(() => session.noLocal ? [] : sf.users)
 const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
 
+/*
 watch(() => sf.users, () => {
   users.value = sf.users
   selectedUser.value = users.value.length === 1 ? users.value[0] : null
 })
+*/
 
-const selectUser = (u) => {
+const selectUser = (u) => { // u est un Trusting
   pin.inp = ''; pin.err = '' 
   entryPP.inp = ''; entryPP.err = '' 
-  selectedUser.value = selectedUser.value === u ? null : u
+  selectedUser.value = u
 }
 
 const authPIN = async () => {
@@ -113,6 +125,7 @@ const valA = async () => {
 }
 
 const valP = async () => {
+  await sf.init1()
   const shp = await Crypt.strongHash(entryP.inp, true, false)
   const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
   if (status === 0) emit('logged', null)

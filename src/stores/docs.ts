@@ -21,6 +21,7 @@ import { $Document, Registry } from '../src-fw/registry'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $DCData } from 'src/src-fw/subscription'
 import { AppExc } from '../src-fw/log'
+import { idb } from '../src-fw/idb'
 
 
 /* POUR TEST */
@@ -94,10 +95,6 @@ export type IDocStore = {
 
   initDocFromIDB (def: string) : Promise<$DocItem>
   initCollFromIDB (def: string) : Promise<$CollItem>
-
-  getRowIDB (def: string) : Promise<IDBrow>
-  setDataIDB (def: string, idbrow: IDBrow) : Promise<void>
-  updLatIDB (def: string, idbrow: IDBrow) : Promise<void>
 }
 
 const dsStores = {}
@@ -240,14 +237,14 @@ const useStore = (id: string) =>
         if (item.lv !== cd.v) {
           item.lv = cd.v
           item.lat = sat
-          await setDataIDB(def, { lat: sat, v: cd.v, data })
+          await idb.setDC(def, sat, cd.v, data)
         } else await setLatIDB(item)
       }
 
       async function setLatIDB (item: $DCItem) {
         if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
           item.lat = sat
-          await updLatIDB(def, { lat: sat, v: cd.v })
+          await idb.updLV(def, sat, cd.v)
         }
       }
 
@@ -421,13 +418,13 @@ const useStore = (id: string) =>
     }
 
     const initDocFromIDB = async (def: string) : Promise<$DocItem> => {
-      const idf = idef(def)
-      const r: IDBrow = await getRowIDB(def)
-      if (!r) return null
-      let item: $DocItem = colls[def]
+      let item: $DocItem = docs[def]
       if (item) return item
+      const r: IDBrow = await idb.getDC(def)
+      if (!r) return null
       item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, doc: null}
       try {
+        const idf = idef(def)
         const obj = decode(r.data)
         const doc = await Registry.compile(svc, idf.cl, org, obj)
         return item
@@ -438,13 +435,13 @@ const useStore = (id: string) =>
     }
 
     const initCollFromIDB = async (def: string) : Promise<$CollItem> => {
-      const idf = idef(def)
-      const r: IDBrow = await getRowIDB(def)
-      if (!r) return null
       let item: $CollItem = colls[def]
       if (item) return item
+      const r: IDBrow = await idb.getDC(def)
+      if (!r) return null
       item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, pks: null}
       try {
+        const idf = idef(def)
         const x = decode(r.data)
         item.pks = new Set(x)
         const cl = idf.type === 2 ? idf.anxCl : idf.cl
@@ -457,23 +454,11 @@ const useStore = (id: string) =>
       }
     }
 
-    const getRowIDB = async (def: string) : Promise<IDBrow> => {
-      // TODO
-      return null
-    }
-    const setDataIDB = async (def: string, idbrow: IDBrow) : Promise<void> => {
-      // TODO
-    }
-    const updLatIDB = async (def: string, idbrow: IDBrow) : Promise<void> => {
-      // TODO idbrow. data est absent et ignoré
-    }
-
     return { 
       svc, org, idef, getDCItem, getCollItem,
       onNotif,
       classes, collections, hasDocs, getDoc,
       storeDocColl,
-      initCollFromIDB, initDocFromIDB,
-      getRowIDB, setDataIDB, updLatIDB
+      initCollFromIDB, initDocFromIDB
     } as IDocStore
   })()

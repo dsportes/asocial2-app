@@ -30,10 +30,12 @@
       @ok="sf.setStep(1)"/>
     <safe-tools/>
   </div>
+  <!-- TODO
   <div v-if="sf.step === 2" :class="sty() + ' q-pa-xs'">
-    <mode-incognito/>
+    <mode-local/>
     <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
   </div>
+  -->
 
   <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
 
@@ -69,7 +71,7 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import DemandsHdr from '../components-fw/DemandsHdr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
-import ModeIncognito from '../components-fw/ModeIncognito.vue'
+import ModeLocal from '../components-fw/ModeLocal.vue'
 
 import SafeTools from '../components-fw/SafeTools.vue'
 // @ts-ignore

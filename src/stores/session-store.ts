@@ -16,7 +16,6 @@ type StartContext = {
   pseudo: string
   profId: string
   profAboutStr: string
-  incognito: boolean
   prefs: Uint8Array,
   creds: Map<string, Object>
 }
@@ -147,9 +146,14 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const incognito = ref(false)
+  const noLocal = ref(false)
+  const hasLocal = computed(() => !noLocal.value)  
   const noNet = ref(false)
   const hasNet = computed(() => !noNet.value)
+  const planeMode = computed(() => noNet.value && !noLocal.value )
+  const syncMode = computed(() => !noNet.value && !noLocal.value )
+  const incMode = computed(() => !noNet.value && noLocal.value )
+
   const dbName = ref('')
   const setDbName = (name: string) => { dbName.value = name }
   const hasIDB = computed(() => dbName.value !== '')
@@ -236,7 +240,7 @@ export const useSessionStore = defineStore('session', () => {
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
     dbName, setDbName, phase, setPhase,
-    hasIDB, hasNet, noNet, incognito,
+    hasIDB, hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode,
     pref, edPref, setEdPref, updatePref,
     aboutProfile, creds, setStartContext, endSession,
     lstOrgSvc, currentOrgSvc, currentSvc, setSvc, 

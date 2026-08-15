@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 // @ts-ignore
 import type { Ref } from 'vue'
 // @ts-ignore
@@ -269,12 +269,6 @@ type Device = {
   nbe: number
 }
 
-type Options = {
-  orgs: string[]
-  roles: string[]
-  ref: string
-}
-
 function EX (e: any, op: string) {
   const ex = new AppExc(8, 'IDB_SAFE_error', op, [e.message])
   if (e && e.stack) ex.stack = e.stack
@@ -295,19 +289,24 @@ export const useSafeStore = defineStore('safe', () => {
   const devName = ref('') // Depuis IDB Header
   const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
 
-  watch(() => stores.session.incognito, async (v) => {
+  watch(() => stores.session.noLocal, async (v) => {
     await loadTrustings()
   })
 
   const init0 = async () : Promise<void> => {
+    if (await Dexie.exists('safe'))
+      await init1()
+  }
+
+  const init1 = async () : Promise<void> => {
+    if (db.value) return
+    trustings.value = new Map<string, Trusting>()
+    devId.value = ''
+    devName.value = ''
     try {
-      trustings.value = new Map<string, Trusting>()
-      devId.value = ''
-      devName.value = ''
       db.value = new Dexie('safe')
       db.value.version(1).stores(STORES)
       await loadTrustings()
-      console.log('Init0 IDBS OK - devId:[' + devId.value + '] devName:[' + devName.value + ']')
     } catch (e: any) {
       if (db.value) {
         await db.value.close()
@@ -318,7 +317,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setHeader = async () => {
-    if (stores.session.incognito) return
     try {
       await db.value.header.put({
         id: '1',
@@ -332,7 +330,6 @@ export const useSafeStore = defineStore('safe', () => {
 
   const loadTrustings = async () => {
     trustings.value.clear()
-    if (stores.session.incognito)  return
     const r = await db.value.header.get('1')
     devId.value = r && r.devId ? r.devId : ''
     devName.value = r && r.devName ? r.devName : ''
@@ -356,7 +353,6 @@ export const useSafeStore = defineStore('safe', () => {
   })
 
   const setTrusting = async (t: Trusting) => {
-    if (stores.session.incognito) return
     try {
       const obj = t.toObj
       await db.value.trustings.put({ id: t.userId, bin: encode(obj)})
@@ -367,7 +363,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delTrusting = async (id: string) => {
-    if (stores.session.incognito) return
     try {
       await db.value.trustings.where({id}).delete()
       trustings.value.delete(id)
@@ -387,14 +382,13 @@ export const useSafeStore = defineStore('safe', () => {
   const step = computed(() => locstep.value)
 
   const setStep = async (s) => {
-    if (s === 2) {
- 
-    }
     if (s === 1) {
       auth.value = null
       userId.value = null
       keyK.value = null
-      await loadTrustings()
+    }
+    if (s === 2) {
+      await prepCtx()
     }
     locstep.value = s
   }
@@ -411,19 +405,33 @@ export const useSafeStore = defineStore('safe', () => {
   const users = computed(() =>
     trustings.value ? Array.from(trustings.value.values()) : [])
 
+  const initCtx = reactive({
+    creds: {},
+    prefs: {},
+    optsC: {},
+    optsS: {}
+  })
+  const prepCtx = async () => {
+
+  }
+
   /* Section "auth" */
   const auth: Ref<Auth> = ref(null)
 
   /* Section "devices de confiance" une entrée par device identifiée par `devid`*/
   const devices: Ref<Map<string, Device>> = ref() // cle devid
 
-  const options: Ref<Object> = ref()
+  /* Section "préférences" organisée avec une **sous-section par application**
+  Seulement les préférences de app */
+  const mySafePrefs: Ref<Map<string, Uint8Array>> = ref()
 
-  /* Section "préférences" organisée avec une **sous-section par application** */
-  const mySafePrefs: Ref<Map<string, Uint8Array>> = ref() // clé app
-
-  /* Section "creds": organisée avec une **sous-section par application** */
+  /* Section "creds": organisée avec une **sous-section par application**
+  Seulement les credentials de app */
   const mySafeCreds: Ref<Map<string, $Credential>> = ref()
+
+  /* Section "options": organisée avec un **objet par application**
+  Seulement l'objet options de app */
+  const mySafeOptions: Ref<Object> = ref()
 
   const credsToCheck: Ref<string[]> = ref()
 
@@ -583,26 +591,11 @@ export const useSafeStore = defineStore('safe', () => {
     const p = new Map<string, [number, Uint8Array]>() // clé: app
     if (safe.prefs) {
       const x = safe.prefs[app]
-      for (const code in x) {
+      if (x) for (const code in x) {
         const z = keyFromB64(x[code]) // encode de [time, obj]
         const [time, obj] = decode(z)
         p.set(code, [time, obj])
       }
-    }
-    mySafePrefs.value = p
-  }
-
-  /* Options *************************************************************
-  Un "objet" par application contenant ses options
-  */
-  const loadOptions = async (safe: Safe) : Promise<void> => {
-    const app = stores.config.appname
-    const p = new Map<string, Object>() // clé: app
-    if (safe.options) {
-      const x = safe.options[app]
-      const b = keyFromB64(x)
-      const y = await Crypt.decrypt(keyK.value, b)
-      p.set(app, decode(y))
     }
     mySafePrefs.value = p
   }
@@ -635,7 +628,40 @@ export const useSafeStore = defineStore('safe', () => {
     op.args.updatePrefs = updatePrefs
     return await doOpSafe(op)
   }
-  /***************************************************************************/
+
+  /* Options *************************************************************
+  Un "objet" par application contenant ses options
+  */
+  const loadOptions = async (safe: Safe) : Promise<void> => {
+    mySafeOptions.value = {}
+    const app = stores.config.appname
+    if (safe.options) {
+      const x = safe.options[app]
+      if (x)
+        mySafeOptions.value = await Crypt.decrypt(keyK.value, keyFromB64(x))
+    }
+  }
+
+  type SetOptions = {
+    app: string
+    userId: string
+    shK: string
+    options: string // options cryptées par K
+  }
+
+  /* Mise à jour des options */
+  const setOptions = async (options: Object) => {
+
+    const so: SetOptions = {
+      app: stores.config.appname,
+      userId: userId.value,
+      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      options: keyToB64(await Crypt.crypt(keyK.value, encode(options || {})))
+    }
+    const op = new SafeOperation('$SetOptions', mySafeStore.value)
+    op.args.setOptions = so
+    return await doOpSafe(op)
+  }
 
   /* Creds ************************************************************************
   "creds" : Credentials. Une entrée par "credId" : [nameK, credK, toCheck]
@@ -836,7 +862,7 @@ export const useSafeStore = defineStore('safe', () => {
       auth: auth,
       devices: null,
       creds: null,
-      profiles: null,
+      options: null,
       prefs: null
     }
 
@@ -1166,25 +1192,6 @@ export const useSafeStore = defineStore('safe', () => {
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
     const Kp = keyToB64(await Crypt.crypt(pincxcy, keyK.value))
 
-    /*
-    let t: Trusting = myTrusting.value
-    if (!t) {
-      t = new Trusting({
-        userId: userId.value,
-        store: mySafeStore.value,
-        pseudo: pseudo,
-        cx: cx,
-        K1: auth.value.K1,
-        K2: auth.value.K2,
-        Kp: Kp
-      })
-    } else {
-      t.pseudo = pseudo
-      t.cx = cx
-      t.K1 = auth.value.K1
-      t.K2 = auth.value.K2
-      t.Kp = Kp
-    }*/
     const t: Trusting = new Trusting({
       userId: userId.value,
       store: mySafeStore.value,
@@ -1312,6 +1319,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
   }
 
+  /*
   type Suas = {
     n: number
     ck: boolean
@@ -1443,72 +1451,25 @@ export const useSafeStore = defineStore('safe', () => {
       if (dbName) await Dexie.delete(dbName)
     localStorage.removeItem('$DBLIST')
   }
-
-  const SetOpUrl = async (SVC: string, $OP: string, url: string )
-  : Promise<boolean> => {
-    const params = [SVC, $OP, url]
-    const time = Date.now()
-    const ch = encode([time, params])
-    const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
-    const op = new MDOperation('$SetOpUrl')
-    try {
-      op.args.userId = userId.value
-      op.args.time = time
-      op.args.params = params
-      op.args.sign = sign
-      const ret = await op.post()
-      return true
-    } catch(e) {
-      op.ko(e)
-      return false
-    }
-  }
-
-  const GRSvcOpOrg = async (SVC: string, $OP: string | null, org: string )
-  : Promise<boolean> => {
-    const params = [SVC, $OP, org]
-    const time = Date.now()
-    const ch = encode([time, params])
-    const sign = await Crypt.sign(keyFromB64(auth.value.S), ch)
-    const op = new MDOperation('$GrantSvcOpOrg')
-    try {
-      op.args.userId = userId.value
-      op.args.time = time
-      op.args.params = params
-      op.args.sign = sign
-      await op.post()
-      return true
-    } catch(e) {
-      op.ko(e)
-      return false
-    }
-  }
+  */
 
   return {
     hasIDBS, devId, devName,
+    init0, init1, initCtx, prepCtx,
     trustings, myTrusting, delTrusting,
-    init0,
-
-    mySessions, getMySessions, setTSession,
-    delTSession, newTSession,
+    
     tab, tab3, step, setStep,
     mySafeStore, userId, userName, keyK,
-    selectedProfile, selectedSession, users,
+    users,
 
-    auth, devices, mySafePrefs, mySafeProfiles,
+    auth, devices, mySafePrefs,
     mySafeCreds,
-    updatePrefs,
-    updateCredName, fixCreds,
-    setAboutProfile, updateProfiles /* ??? */,
+    updatePrefs, setOptions, updateCredName, fixCreds,
     managerCreds, isManager, getCreds,
     mySimpleCreds, myFullCreds, myCredOfDoc,
-    sessionOfProfId, profileOfProfId,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin, openSafeByPlane,
     setAlias, setTrust,setUntrust, setUntrustAll,
-    getAllSessions, synthUsers,
-    resetAllLocal,
-    SetOpUrl, GRSvcOpOrg,
     getSafe, delSafe, restoreSafe, reloadSafe
   }
 })

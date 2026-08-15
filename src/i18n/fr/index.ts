@@ -651,27 +651,16 @@ bla bla
     'seront désépinglées et non accessibles en mode AVION. Ce terminal ne sera plus "de confiance" pour les utilisateurs supprimés.',
   HPclicksession: 'Choisir la session ou profil à ouvrir / rouvrir.',
 
-  HPresetdb_0: 'Effacer le cache local des documents et fichiers de l\'exécution précédente',
+  HPresetdb_0: 'Ré-initialiser la base locale "Cache"',
   HPresetdb_1: `### Attention !
-La base locale sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
+La base locale Cache sera effacée ce qui provoquera le rechargement _intégral_ de ses données.
 
 - Ceci peut alonger **significativement** la durée d'initialisation de la session.
 - Les fichiers attachés aux documents conservés sur ce terminal ne seront plus accessibles en mode avion.
 `,
-  HPunpin_0: 'DÉSÉPINGLER cette session: supprime son cache local de documents et fichiers',
-  HPunpin_1: `# Désépingler une session
-- économise de la place sur le terminal en supprimant ses données stockées localement.
-- ralentit sa réouverture ultérieure sur ce terminal.
-- interdt son ouverture en mode AVION sur ce terminal.
-`,
-  HPpin_0: 'ÉPINGLER cette session: active son cache local de documents et fichiers',
-  HPpin_1: `# Épingler une session
-- occupe de la place sur le terminal en stockant certaines de ses données localement.
-- accélère sa réouverture ultérieure sur ce terminal.
-- autorise son ouverture en mode AVION sur ce terminal.
-`,
+
   HPpref_1: 'par défaut',
-  HPnotpinned: '(non épinglée)',
+
   HPexpsafe_1: 'Sauvegarde / Restauration de ma Safe Box',
   HPexpsafe_2: `# Faire un backup de ma Safe Box
 bla bla
@@ -798,6 +787,7 @@ Pour désigner un site non répertorié, l'utilisateur est convié à donner son
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
 `,
+LOGplaneimp: 'Login en mode "Avion" impossible, base locale Cache non trouvée',
 LOGauthplane_label: 'Login en mode "Avion" possible pour:',
 LOGauthplane_bub: `# Authentification en mode "Avion"
 Si vous avez **certifié** ce terminal, vous vous authentifier par une de vos phrases secrètes.
@@ -846,7 +836,7 @@ La session a accès en lecture aux documents et certains fichiers, dans l'état 
 Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centrales, NI d'une mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 
 `,
-  SEStit: 'Votre "Safe Box" sera hébergée sur le site',
+  SEStit: 'Votre "Safe Box" sera hébergée sur le site TODO',
   SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
   SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
   SESmodes: `## Modes NORMAL et INCOGNITO

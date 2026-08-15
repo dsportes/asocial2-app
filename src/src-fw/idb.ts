@@ -9,64 +9,36 @@ import { AppExc } from '../src-fw/log'
 import { sleep } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry } from '../src-fw/registry'
-import { $Subs } from '../src-fw/subscription'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
-  auths: 'id',
-  subsriptions: '[org]', // { org, bin } - souscriptions pour cette organisation
-  subs: '[org+clazz]', // { org, clazz, bin } bin:serial crypté de l'objet Subs (état des souscriptions de la classe)
-  documents: '[org+id]' // { org, id, bin } : bin: serial crypté d'un docRecord { clazz, data }
+  docs: 'def, lat',
+  colls: 'def, lat'
 }
 
-const encoder = new TextEncoder()
+type IDBrow = {
+  lat: number
+  v: number
+  data?: Uint8Array
+}
 
-type docRecord = {
-  clazz: string // classe du document
-  data: Uint8Array // document "sérialisé" tel que reçu du serveur (à compiler)
+export let idb : IDB = null // IDB courante
+
+export async function deleteIDB (appName?: string, userId?: string) {
+  const config = stores.config
+  const mondebug = config.mondebug
+  const name = (appName || config.appName) + '_' + (userId || stores.safe.userId)
+  try {
+    await Dexie.delete(name)
+    await sleep(100)
+    if (mondebug) console.log('IDB reset [' + name + '] OK')
+  } catch (e: any) {
+    if (mondebug) console.log('IDB reset [' + name + '] failed: ' + e.toString())
+  }
+  idb = null
 }
 
 export class IDB {
-  static idb: IDB | null
-
-  db : any
-  keyK: Uint8Array
-  mondebug: boolean
-
-  constructor (name: string) {
-    const config = stores.config
-    this.mondebug = config.mondebug
-    this.keyK = keyFromB64(config['keyK'])
-    if (!this.keyK)
-      throw new AppExc(3, 'IDB_keyK_not_declared')
-    if (this.mondebug) console.log('Open IDB: [' + name + ']')
-    this.db = new Dexie(name, { autoOpen: true })
-    this.db.version(1).stores(STORES)
-    IDB.idb = this
-  }
-
-  static async open () {
-    const session = stores.session
-    try {
-      const idb = new IDB(session.dbName)
-      await idb.db.open()
-      return idb
-    } catch (e) {
-      throw IDB.EX(e, 'open')
-    }
-  }
-
-  static async delete (name: string) {
-    const mondebug = stores.config.mondebug
-    try {
-      await Dexie.delete(name)
-      await sleep(100)
-      if (mondebug) console.log('RAZ db')
-    } catch (e: any) {
-      if (mondebug) console.log(e.toString())
-    }
-    IDB.idb = null
-  }
 
   static EX (e: any, opName: string) { 
     const ex = new AppExc(8, 'IDB_error', opName, [e.message])
@@ -74,180 +46,103 @@ export class IDB {
     return ex
   }
 
-  async cryptId (id: string) : Promise<string> {
-    const x = await Crypt.crypt(encoder.encode(id), this.keyK)
-    return keyToB64(x)
+  db : any
+  keyK: Uint8Array
+  mondebug: boolean
+  appName: string
+  userId: string
+  SYNCINCRNBD: number
+
+  get dbName() { return this.appName + '_' + this.userId }
+
+  constructor () {
+    const config = stores.config
+    this.appName = config.appName
+    this.mondebug = config.mondebug
+    this.SYNCINCRNBD = config.SYNCINCRNBD
+    this.keyK = stores.safe.keyK
+    this.db = new Dexie(this.dbName, { autoOpen: true })
+    this.db.version(1).stores(STORES)
+    idb = this
   }
 
-  async cryptRecord (bin: Uint8Array | Object): Promise<Uint8Array | null> {
-    return await Crypt.crypt(typeof bin !== 'object' ? bin : encode(bin), this.keyK)
+  async open (clean?: boolean) {
+    try {
+      const max = Date.now() + (this.SYNCINCRNBD * 86400000)
+      await this.db.open()
+      if (this.mondebug) console.log('IDB open [' + this.dbName + ']')
+      if (clean) {
+        this.db.docs.where('lat').below(max).delete()
+        this.db.colls.where('lat').below(max).delete()
+      }
+    } catch (e) {
+      throw IDB.EX(e, 'open')
+    }
   }
 
-  async decryptRecord (bin: any, raw?: boolean): Promise<Object | Uint8Array | null> {
-    const x = await Crypt.decrypt(bin, this.keyK)
-    return raw ? x : decode(x)
+  async cryptData (data: Uint8Array): Promise<Uint8Array | null> {
+    return !data ? null : await Crypt.crypt(this.keyK, data)
   }
 
-  /* Retourne le contenu d'un "state" (singleton nommé)
+  async decryptData (bin: Uint8Array): Promise<Uint8Array | null> {
+    return !bin ? null : await Crypt.decrypt(this.keyK, bin)
+  }
+
+  async setDC (def: string, lat: number, v: number, d: Uint8Array) {
+    try {
+      const data = await this.cryptData(d)
+      const r = { def, lat, v, data }
+      const n = def.split('/')
+      if (n.length === 1) await this.db.docs.put(r)
+      else await this.db.colls.put(r)
+    } catch (e) {
+      throw IDB.EX(e, 'setDC')
+    }
+  }
+
+  async getDC (def: string) : Promise<IDBrow | null> {
+    try {
+      const n = def.split('/')
+      let r
+      if (n.length === 1) r = await this.db.docs.get(def)
+      else r = await this.db.colls.get(r)
+    if (r)
+      r.data = await this. decryptData(r.data)
+    return r
+    } catch (e) {
+      throw IDB.EX(e, 'getDC')
+    }
+  }
+
+  async updLV (def: string, lat: number, v: number) {
+    try {
+      const r = { def, lat, v }
+      const n = def.split('/')
+      if (n.length === 1) await this.db.docs.upsert(r)
+      else await this.db.colls.upsert(r)
+    } catch (e) {
+      throw IDB.EX(e, 'setDC')
+    }
+  }
+
+  /* Retourne le contenu d'un singleton nommé
   ou un objet vide s'il n'existait pas */
-  async getState (name: string) : Promise<Object> {
+  async getSingleton (name: string) : Promise<Object> {
     try {
       const r = await this.db.singletons.get(name)
-      return r ? (await this.decryptRecord(r.bin) as Object) : { }
+      return r ? decode(await this.decryptData(r.bin) as Object) : { }
     } catch (e) {
-      throw IDB.EX(e, 'getState')
+      throw IDB.EX(e, 'getSingleton')
     }
   }
 
-  /* Enregistre le contenu d'un "state" nommé */
-  async putState (name: string, rec: any) {
+  /* Enregistre le contenu d'un singleton nommé */
+  async putSingleton (name: string, val: Object) {
     try {
-      const bin = await this.cryptRecord(rec)
+      const bin = await this.cryptData(encode(val))
       await this.db.singletons.put({ name, bin })
     } catch (e) {
-      throw IDB.EX(e, 'putState')
-    }
-  }
-
-  /* Supprime la subscription d'une organisation
-  et tous ses subs de classe
-  */
-  async delSubscription (org: string) {
-    try {
-      await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
-        await this.db.subs.where({ org }).delete()
-        await this.db.subsriptions.where({ org }).delete()
-      })
-    } catch (e) {
-      throw IDB.EX(e, 'delSubscription')
-    }
-  }
-
-  /* Retourne une map de toutes les Subscriptions */
-  async getSubscriptions () : Promise<Map<string, $Subs>> {
-    try {
-      const m: Map<string, $Subs> = new Map<string, $Subs>()
-      this.db.subsriptions.each(async (r) => {
-        const bin = await this.decryptRecord(r.bin, true) as Uint8Array
-        m.set(r.org, $Subs.fromSerial(bin))
-      })
-      return m
-    } catch (e) {
-      throw IDB.EX(e, 'getSubscriptions')
-    }
-  }
-
-  /* Récupère les objets Subs de toutes les org/clazz
-  Map par org / map par classe */
-  async getSubs () : Promise<Map<string, Map<string, $Subs>>> {
-    const m: Map<string, Map<string, $Subs>> = new Map<string, Map<string, $Subs>>()
-    try {
-      await this.db.subs.each(async (rec) => {
-        const s = await this.decryptRecord(rec.bin) as Uint8Array
-        const subs = $Subs.fromSerial(s)
-        let eorg = m.get(rec.org)
-        if (!eorg) { eorg = new Map<string, $Subs>(); m.set(rec.org, eorg)}
-        eorg.set(rec.clazz, subs)
-      })
-      return m
-    } catch (e) {
-      throw IDB.EX(e, 'getSubs')
-    }
-  }
-
-  /* Supprime tous les documents (d'une organisation ou de toutes) */
-  async deleteAllDocs (org?: string) {
-    if (org) await this.db.documents.where({ org }).delete()
-    else await this.db.documents.delete()
-  }
-
-  /* Retourne sur la fonction cb(org, doc) tous les documents (compilés) de la base */
-  async loadAllDocs (cb: Function) : Promise<void> {
-    await this.db.documents.each(async ({org, id, bin }) => {
-      const rec = await this.decryptRecord(bin) as docRecord
-      const doc = await Registry.compile('', rec.clazz, rec.data)
-      cb(org, doc)
-    })
-  }
-
-  /* Retour de sync: sauvegarde transactionnelle en IDB du nouvel état résultant:
-  - subs: état (versions) des souscriptions de la classe mis à jour
-  - binDocs: map (par pk) des documents (en binaire issu du serveur) créés / modifiés
-  - delPks: liste des pk des documents supprimés
-  */
-  async retSync (
-      org: string, 
-      clazz: string, 
-      subs: $Subs, 
-      binDocs: Map<string, Uint8Array>, 
-      delPks: string[]) : Promise<void> {
-    try {
-      const binSubs = subs ? await this.cryptRecord(subs.serial()) : null
-      const cbinDocs = new Map<string, Uint8Array>()
-      const binPks = new Map<string, string>()
-      for(const [pk, binDoc] of binDocs) {
-        cbinDocs.set(pk, await this.cryptRecord(binDoc))
-        binPks.set(pk, await this.cryptId(pk))
-      }
-      for(const pk of delPks)
-        binPks.set(pk, await this.cryptId(pk))
-
-      await this.db.transaction('rw', ['documents', 'subs'], async () => {
-        if (binSubs)
-          await this.db.subs.put({ org, clazz, binSubs })
-        for(const [pk, bin] of cbinDocs)
-          await this.db.documents.put({ org, id: binPks.get(pk), bin })
-        for(const pk of delPks)
-          await this.db.documents.where({ org, id: binPks.get(pk) }).delete()
-      })
-    } catch (e) {
-      throw IDB.EX(e, 'retSync')
-    }
-  }
-
-  /* Met à jour (en une seule transaction) une souscription et les subs élémentaires modifiés 
-  suite à son édition locale
-  */
-  async updateSubscription (
-      org: string, 
-      subscription: $Subs, 
-      msubs: Map<string, $Subs>) {
-    try {
-      const bin = await this.cryptRecord(subscription.serial())
-      const binSubs = new Map<string, Uint8Array>()
-      for(const [clazz, subs] of msubs)
-        if (subs) binSubs.set(clazz, await this.cryptRecord(subs.serial()))
-      await this.db.transaction('rw', ['subscriptions', 'subs'], async () => {
-        await this.db.subscriptions.put({ org, bin })
-        for(const [clazz, subs] of msubs) {
-          if (subs) {
-            const bin = binSubs.get(clazz)
-            await this.db.subs.put({ org, clazz, bin })
-          } else {
-            await this.db.subs.where({ org, clazz }).delete()
-          }
-        }
-      })
-    } catch (e) {
-      throw IDB.EX(e, 'updateSubscription')
-    }
-  }
-
-  /* Sur retour de notification d'une souscription, mise à jour de l'état des sousciptions
-  de la classe.
-  - subs: nouvel état des souscriptions de la classe (du fait des versions remontées du serveur).
-  subs peut être devenu "inutile" si toutes ses defs ont été supprimées
-  et dans ce cas est supprimé de la base.
-  */
-  async updSubs (org: string, clazz: string, subs: $Subs) : Promise<void> {
-    try {
-      if (subs.defs) {
-        const binSubs = await this.cryptRecord(subs.serial())
-        await this.db.subs.put({ org, clazz, binSubs })
-      } else 
-        await this.db.subs.where({ org, clazz }).delete()
-    } catch (e) {
-      throw IDB.EX(e, 'updSubs')
+      throw IDB.EX(e, 'putSingleton')
     }
   }
 }
