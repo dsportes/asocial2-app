@@ -40,15 +40,15 @@
           <q-item-section class="fs-lg">{{$t('theme')}}</q-item-section>
         </q-item>
 
-        <q-separator v-if="stores.safe.step === 0"/>
+        <q-separator v-if="session.step === 3"/>
 
-        <q-item v-if="sf.step !== 1" @click="dialogs.userProfile = true"
+        <q-item v-if="session.step > 0" @click="dialogs.userProfile = true"
           clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="person"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('SButtitle')}}</q-item-section>
         </q-item>
 
-        <q-item v-if="sf.step === 0" @click="dialogs.edprf = true"
+        <q-item v-if="session.step > 0" @click="dialogs.edprf = true"
           clickable dense v-close-popup>
           <q-item-section avatar><q-avatar size="xl" icon="settings"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('settings')}}</q-item-section>
@@ -68,7 +68,7 @@
 
         <q-separator/>
 
-        <q-item v-if="sf.step === 0" clickable dense v-close-popup @click="ui.sessionClose">
+        <q-item v-if="session.step === 3" clickable dense v-close-popup @click="ui.sessionClose">
           <q-item-section avatar><q-avatar size="xl" icon="exit_to_app"/></q-item-section>
           <q-item-section class="fs-lg">{{$t('endsession')}}</q-item-section>
         </q-item>

@@ -14,14 +14,14 @@ Contrôlé par ui.leftMenu
   </q-header>
   <q-page-container>
     <!--div><btn-cond label="Test Erreur" @ok="test"/></div-->
-    <div v-if="sf.step === 0" class="q-mt-sm q-mb-lg q-px-sm">
+    <div v-if="session.step === 2" class="q-mt-sm q-mb-lg q-px-sm">
       <btn-cond flat icon="exit_to_app" color="warning" :label="$t('endsession')"
         @ok="ui.closeMenu(); ui.sessionClose()"/>
     </div>
 
-    <safe-tools v-if="sf.userId && sf.step !== 1" short class="q-mb-sm q-px-sm"
+    <safe-tools v-if="sf.userId && session.step > 0" short class="q-mb-sm q-px-sm"
       @close="ui.closeMenu()"/>
-    <div v-if="sf.step === 0" class="column q-px-sm">
+    <div v-if="session.step === 2" class="column q-px-sm">
       <btn-cond class="q-mb-sm" flat color="primary"
         @ok="openDemands" :disable="ui.page === 'demands'">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
@@ -75,7 +75,7 @@ import invitation from '../assets/invitation.png'
 
 const sf = stores.safe
 const ui = stores.ui
-// const session = stores.session
+const session = stores.session
 
 const test = async () => {
   await new ErrorTest('AS2', 'doda').run()

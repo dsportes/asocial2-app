@@ -142,6 +142,13 @@ export class $Credential {
   }
 
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk', 'privs', 'privd', 'name', 'toCheck' ]
+  static lp2 = [ 'credId', 'svc', 'org', 'docCl', 'docPk' ]
+
+  toCred() : $Cred {
+    const x = {}
+    for(const p in $Credential.lp2) x[p] = this[p]
+    return x as $Cred
+  }
 
   credId: string = '' // ID du credential.
   svc: string = '' // code du service
@@ -192,6 +199,8 @@ export class $Credential {
     if (this.limit)
       await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 60000)]))
   }
+
+  to
 
 }
 

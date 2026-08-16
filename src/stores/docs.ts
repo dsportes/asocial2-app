@@ -10,6 +10,8 @@ import { reactive } from 'vue'
 // @ts-ignore
 import { defineStore } from 'pinia'
 // @ts-ignore
+import cloneDeep from 'lodash.clonedeep'
+// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import { useSessionStore } from '../stores/session-store'
@@ -22,7 +24,6 @@ import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $DCData } from 'src/src-fw/subscription'
 import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
-
 
 /* POUR TEST */
 let callBack : Function
@@ -43,22 +44,13 @@ type MsgNotif = {
   defs: string // liste de def séparés par un espace
 }
 
-let config = null
-let session = null
-
-const init = () => {
-  if (!config) {
-    config = useConfigStore()
-    session = useSessionStore()
-  }
-}
-
 /* Traitement des notifications reçues:
 - sur retour d'opération,
 - sur web-push,
 */
 export async function onPushMsg (payload: string) {
-  init()
+  const config = useConfigStore()
+  const session = useSessionStore()
   const messageNotif =  decode(keyFromB64(payload)) as MsgNotif
   if (messageNotif.defs && messageNotif.defs.length)
     await processNotif(messageNotif)
@@ -122,11 +114,13 @@ export const processNotif = async (m: MsgNotif) => {
   }
 }
 
-export const resetAll = () => {
+export const resetDocStores = () => {
   for(const k in dsStores)
-    dsStores[k].$reset()
-  for(const k in dsStores)
-    delete dsStores[k]
+    dsStores[k].$patch({
+      docs: {},
+      colls: {}
+    })
+  for(const k in dsStores) delete dsStores[k] // ?
 }
 
 export type IDBrow = {
@@ -168,16 +162,27 @@ type row = {
   v: number
 }
 
+/* Les DocStore sont créés en début de session pour héberger les documents
+et collections de la session pour chauqe couple svc / org.
+Ils sont détruits en fin de session.
+*/ 
 const useStore = (id: string) =>
   defineStore(`store-${id}`, () => {
+    const session = useSessionStore()
+
+    /* State *********************************************/
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
-    init()
-    const hasIDB = session.hasIDB
-    const hasNet = session.hasNet
-    const sf = useSafeStore()
-
+    let hasIDB = session.hasIDB
+    let hasNet = session.hasNet
     const docs = reactive({  })
+    /* Deux formes de collections selon leur def:
+      0: Auteur : tous les auteurs
+      2: Article/auteur/pkauteur : les messages dont l'auteur est pkauteur
+      value: CollItem
+    */
+    const colls = reactive({  })
+    /************************************************/
 
     const getDCItem = (def: string) : $DCItem => docs[def]
 
@@ -185,13 +190,6 @@ const useStore = (id: string) =>
       const item = docs[cl + '/' + pk]
       return item ? item.doc : null
     }
-
-    /* Deux formes de collections selon leur def:
-      0: Auteur : tous les auteurs
-      2: Article/auteur/pkauteur : les messages dont l'auteur est pkauteur
-      value: CollItem
-    */
-    const colls = reactive({  })
 
     const getCollItem = (def: string) : $CollItem => colls[def]
     
@@ -455,7 +453,8 @@ const useStore = (id: string) =>
     }
 
     return { 
-      svc, org, idef, getDCItem, getCollItem,
+      svc, org,
+      idef, getDCItem, getCollItem,
       onNotif,
       classes, collections, hasDocs, getDoc,
       storeDocColl,

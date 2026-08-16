@@ -7,8 +7,6 @@ import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { AppExc } from '../src-fw/log'
 import { sleep } from '../src-fw/util'
-import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { Registry } from '../src-fw/registry'
 
 const STORES = {
   singletons: 'name', // singletons { name, bin }
@@ -27,7 +25,7 @@ export let idb : IDB = null // IDB courante
 export async function deleteIDB (appName?: string, userId?: string) {
   const config = stores.config
   const mondebug = config.mondebug
-  const name = (appName || config.appName) + '_' + (userId || stores.safe.userId)
+  const name = appName || (config.K.APPNAME + '_' + (userId || stores.safe.userId))
   try {
     await Dexie.delete(name)
     await sleep(100)
@@ -38,6 +36,9 @@ export async function deleteIDB (appName?: string, userId?: string) {
   idb = null
 }
 
+/* Ne peut être construit et ouvert qu'après authentification
+session.step >= 1
+*/
 export class IDB {
 
   static EX (e: any, opName: string) { 
@@ -57,10 +58,12 @@ export class IDB {
 
   constructor () {
     const config = stores.config
-    this.appName = config.appName
+    const sf = stores.safe
+    this.appName = config.K.APPNAME
     this.mondebug = config.mondebug
-    this.SYNCINCRNBD = config.SYNCINCRNBD
-    this.keyK = stores.safe.keyK
+    this.SYNCINCRNBD = config.K.SYNCINCRNBD
+    this.keyK = sf.keyK
+    this.userId = sf.userId
     this.db = new Dexie(this.dbName, { autoOpen: true })
     this.db.version(1).stores(STORES)
     idb = this
@@ -78,6 +81,13 @@ export class IDB {
     } catch (e) {
       throw IDB.EX(e, 'open')
     }
+  }
+
+  close () {
+    if (this.db) 
+      try { this.db.close() } catch(e) {}
+    this.db = null
+    idb = null
   }
 
   async cryptData (data: Uint8Array): Promise<Uint8Array | null> {

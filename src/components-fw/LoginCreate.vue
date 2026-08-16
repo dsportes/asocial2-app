@@ -25,11 +25,11 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 
 import SafeCr from '../dialogs-fw/SafeCr.vue'
 
-const sf = stores.safe
+// const sf = stores.safe
 
 const emit = defineEmits(['done'])
 
-const model = defineModel()
+// const model = defineModel()
 
 const props = defineProps({
   hasaccount: Boolean
@@ -44,10 +44,12 @@ const flag = reactive({
   f2: props.hasaccount ? true : false
 })
 
+/*
 watch(model, () => {
   flag.f1 = false
   flag.f2 = props.hasaccount ? true : false
 })
+*/
 
 watch(() => flag.f1, (v) => {
   if (v) { flag.f2 = false; dialogs.create = true }

@@ -787,7 +787,7 @@ Pour désigner un site non répertorié, l'utilisateur est convié à donner son
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
 `,
-LOGplaneimp: 'Login en mode "Avion" impossible, base locale Cache non trouvée',
+LOGplaneimp2: 'Login en mode "Avion" impossible, aucun utilisateur enregistré sur ce terminal n\'a de base locale Cache.',
 LOGauthplane_label: 'Login en mode "Avion" possible pour:',
 LOGauthplane_bub: `# Authentification en mode "Avion"
 Si vous avez **certifié** ce terminal, vous vous authentifier par une de vos phrases secrètes.

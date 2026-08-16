@@ -54,7 +54,7 @@ export class AS2$Auteur extends $Document {
   }
 
   static async get (autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
-    const soa = stores.session.currentOrgSvc
+    const soa = stores.session.currentSOA
     const op = new Operation('AuteurDeId', soa.svc, soa.org)
     const pk = autPk || DocDescriptor.get(soa.svc + '$Auteur').pkValue({ autid: autid })
     op.sign(stores.safe.myCredOfDoc('Auteur', pk))

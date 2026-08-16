@@ -1,42 +1,49 @@
-<!-- Panel d'authentification par ailias / phrase ou code PIN
+<!-- Panel d'authentification par alias / phrase ou code PIN
 Event émis: logged
 -->
 <template>
 <div class="q-ma-xs q-pa-xs">
 
-  <div v-if="sf.hasIDBS && session.noNet" class="titre-md msg2 text-center q-ma-sm">
-    {{ $t('LOGplaneimp') }}
+  <div v-if="session.noNet && sf.users.length && !myUsers.length" 
+    class="titre-md msg2 text-center q-ma-sm">{{ $t('LOGplaneimp2') }}</div>
+
+  <div v-if="session.noNet && myUsers.length"
+    class="row full-width items-center q-my-sm q-gutter-sm">
+    <btn-bubble :text="$t('LOGauthplane_bub')"/>
+    <div class="text-italic titre-md q-ml-sm"> {{$t('LOGauthplane_label')}}</div>
+    <div v-for="u in myUsers" :key="u.userId"
+      :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
+      @click="selectUser(u)">{{u.pseudo}}
+    </div>
   </div>
 
-  <div v-if="sf.hasIDBS && sf.users.length">
-    <div class="row full-width items-center q-my-sm">
-      <btn-bubble :text="$t(session.noNet ? 'LOGauthplane_bub' : 'LOGauthbypin_bub')"/>
-      <div class="text-italic titre-md q-ml-sm">
-        {{$t(session.noNet ? 'LOGauthplane_label' : 'LOGauthbypin_label')}}</div>
-      <div v-for="u in sf.users" :key="u.userId"
-        :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
-        @click="selectUser(u)">{{u.pseudo}}</div>
+  <div v-if="session.hasNet && sf.users.length" 
+    class="row full-width items-center q-my-sm q-gutter-sm">
+    <btn-bubble :text="$t('LOGauthbypin_bub')"/>
+    <div class="text-italic titre-md q-ml-sm">{{$t('LOGauthbypin_label')}}</div>
+    <div v-for="u in sf.users" :key="u.userId"
+      :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
+      @click="selectUser(u)">{{u.pseudo}}</div>
+  </div>
+
+  <div v-if="selectedUser" class="wsm">
+    <div v-if="session.hasNet" class="q-pa-sm">
+      <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
     </div>
-    <div v-if="selectedUser" class="wsm">
-      <div v-if="session.hasNet" class="q-pa-sm">
-        <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
-      </div>
-      <div v-else>
-        <div v-if="!selectedUser.hasAppDb()" class="titre-md msg2 text-center q-ma-sm">
-          {{ $t('LOGplaneimp') }}
-        </div>
-        <input-b v-else class="q-pa-sm"
-          v-model="entryPP" size="p1" prefix="Phrase"
-          @validate="authPlane"/>
-      </div>
+    <div v-else class="q-pa-sm">
+      <input-b class="q-pa-sm"
+        v-model="entryPP" size="p1" prefix="Phrase"
+        @validate="authPlane"/>
     </div>
   </div>
+
+  <q-separator v-if="(session.hasNet && sf.users.length) || (session.noNet && myUsers.length)" 
+    class="q-my-md q-mx-md" color="orange"/>
 
   <!-- Authentification "forte" -->
   <div v-if="session.hasNet" class="full-width column">
     <bar-title prefix="LOGap" class="q-mt-sm q-mb-xs text-italic"/>
-    <div v-if="diagAP" class="q-my-xs msg self-end"
-      style="margin-left:55px">
+    <div v-if="diagAP" class="q-my-xs msg q-ml-lg">
       {{ $t('LOGapdiag_' + diagAP)}}</div>
     <input-b v-if="stepAP===0" class="q-ml-lg"
       v-model="entryA" size="alias" prefix="Alias"
@@ -47,6 +54,7 @@ Event émis: logged
     <btn-cond v-if="stepAP===1" class="q-ml-lg self-end"
       flat color="warning" :label="$t('UAPt_p')" @ok="resetAP"/>
   </div>
+
 </div>
 </template>
 
@@ -72,6 +80,12 @@ const entryPP = reactive({inp:'', err:''})
 const users = computed(() => session.noLocal ? [] : sf.users)
 const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
 
+const myUsers = computed(() => {
+  const l = []
+  for(const u of sf.users) 
+    if (u.hasAppDb()) l.push(u)
+  return l
+})
 /*
 watch(() => sf.users, () => {
   users.value = sf.users

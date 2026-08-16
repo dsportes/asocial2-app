@@ -4,26 +4,165 @@ import { ref, computed, reactive, Ref } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-import { resetAll } from '../stores/docs'
 
 import stores from './all'
+import { SOA } from '../src-fw/registry'
+import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
+import { idb, IDB } from '../src-fw/idb'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
-type StartContext = {
-  userId: string
-  pseudo: string
-  profId: string
-  profAboutStr: string
-  prefs: Uint8Array,
-  creds: Map<string, Object>
+// const encoder = new TextEncoder()
+// const decoder = new TextDecoder()
+
+export class SCcontext { // Contexte Safe / Cache
+  creds: Object = {}
+  prefs: Object = {}
+  options = {
+    orgs: [],
+    roles: [],
+    pref: ''
+  }
+  optionsB: any = { }
+
+  get isOrgsEd () { return (this.srt(this.options.orgs).join('/') !== this.optionsB.orgs.join('/'))}
+  get isRolesEd () { return (this.srt(this.options.roles).join('/') !== this.optionsB.roles.join('/'))}
+  get isPrefEd () { return this.options.pref !== this.optionsB.pref}
+  get isEd () { return this.isPrefEd || this.isOrgsEd || this.isRolesEd }
+  
+  soas: Map<string, SOA> = new Map()
+  orgs: Set<string> = new Set()
+
+  srt(x) { return x.sort((a, b) => a < b ? 1 : (a > b ? -1 : 0)) }
+
+  // Chargement initial depuis Safe et / ou Cache et fusion des options
+  async init () : Promise<SCcontext> {
+    const session = stores.session
+    const sf = stores.safe
+    let optsC: any
+    let optsS: any
+    if (session.hasNet) {
+      for(const [credId, c] of sf.mySafeCreds) 
+        this.creds[credId] = c.toCred()
+      for(const [id, x] of sf.mySafePrefs)
+        this.prefs[id] = x // x: [time, obj]
+      optsS = sf.mySafeOptions || {}
+    }
+    if (idb) {
+      if (session.planeMode) 
+        this.creds = await idb.getSingleton('creds')
+      if (session.planeMode)
+        this.prefs = await idb.getSingleton('prefs')
+      optsC = await idb.getSingleton('options')
+    }
+    for(const credId in this.creds) {
+      const c = this.creds[credId]
+      const k = c.svc + '/' + c.org
+      this.soas.set(k, { svc: c.svc, org: c.org })
+      this.orgs.add(c.org)
+    }
+
+    const orgs = optsC && optsC.orgs ? optsC.orgs : (optsS && optsS.orgs || [])
+    { const x1 = []; for(const o of orgs) x1.push(o); this.options.orgs = this.srt(x1) }
+
+    this.options.roles = this.srt(optsC && optsC.roles ? optsC.roles : (optsS && optsS.roles || []))
+
+    this.options.pref = optsC && optsC.pref ? optsC.pref : (optsS && optsS.pref || '')
+    if (this.options.pref && !this.prefs[this.options.pref]) this.options.pref = ''
+    this.optionsB.orgs = [ ...this.options.orgs]
+    this.optionsB.roles = [ ...this.options.roles]
+    this.optionsB.pref = this.options.pref
+
+    return this
+  }
 }
 
-const encoder = new TextEncoder()
-const decoder = new TextDecoder()
-
 export const useSessionStore = defineStore('session', () => {
+
+  /*
+  0 : avant login
+  1 : authentification faite
+  2 : session en choix d'ouverture
+  3 : session ouverte
+  */
+  const step: Ref<number> = ref(0)
+  const noLocal = ref(false)
+  const noNet = ref(false)
+
+  const hasLocal = computed(() => !noLocal.value)
+  const hasNet = computed(() => !noNet.value)
+  const planeMode = computed(() => noNet.value && !noLocal.value )
+  const syncMode = computed(() => !noNet.value && !noLocal.value )
+  const incMode = computed(() => !noNet.value && noLocal.value )
+
+  const scContext: Ref<SCcontext> = ref()
+  const lstSOA: Ref<SOA[]> = ref()
+  const currentSOA: Ref<SOA> = ref()
+
+  const setStep = async (s: number) => { 
+    const ui = stores.ui
+    const sf = stores.safe
+    const b = step.value
+    switch (s) {
+      case 0 : {
+        ui.resetLoginPage()
+        sf.resetSafe()
+        if (b > 1) resetDocStores()
+        if (b === 0) await sf.init0()
+        else await sf.loadTrustings()
+        step.value = s
+        return
+      }
+
+      case 1 : { // authentification faite
+        resetDocStores()
+        if (hasLocal.value) {
+          new IDB()
+          await idb.open()
+          const mt = sf.myTrusting
+          if (mt) mt.addAppsDb()
+        }
+        const sc = new SCcontext()
+        await sc.init()
+        lstSOA.value = []
+        for(const [,soa] of sc.soas) lstSOA.value.push(soa)
+        currentSOA.value = lstSOA.value.length == 1 ? lstSOA.value[0] : { svc: '', org: '' }
+        scContext.value = sc
+        ui.loginPage.resetdb = false
+        step.value = s
+        return
+      }
+
+      case 2 : { // session ouverte
+        ui.setPage('app')
+        step.value = s
+        return
+      }
+    }
+  }
+
+  /*
+  const init0 = () => {
+    step.value = 0
+    noLocal.value = false
+    noNet.value = false
+  }
+  */
+
+  const pref = reactive({ code: '', time: 0, obj: null })
+  const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
+  const setEdPref = (code: string, time: number, obj: Object) => {
+    edPref.code = code
+    edPref.time = time
+    edPref.obj = obj
+    edPref.orig = decode(encode(obj))
+    edPref.chg = false
+    edPref.diag = ''
+  }
+  const updatePref = (code: string, time: number, obj: Object) => {
+    pref.code = code; pref.time = time; pref.obj = obj
+  }
 
   // Gestion des opérations ************************************************
   const opEncours = ref('')
@@ -146,72 +285,8 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const noLocal = ref(false)
-  const hasLocal = computed(() => !noLocal.value)  
-  const noNet = ref(false)
-  const hasNet = computed(() => !noNet.value)
-  const planeMode = computed(() => noNet.value && !noLocal.value )
-  const syncMode = computed(() => !noNet.value && !noLocal.value )
-  const incMode = computed(() => !noNet.value && noLocal.value )
+  const orgs = reactive({ c: '', lst: [] })
 
-  const dbName = ref('')
-  const setDbName = (name: string) => { dbName.value = name }
-  const hasIDB = computed(() => dbName.value !== '')
-
-  const phase: Ref<number> = ref(0)
-  // 0 : session en phase d'initialisation
-  // 1 : session running (initialisée)
-  const setPhase = (p: number) => { phase.value = p}
-
-  const pref = reactive({code:'', time: 0, obj: {}})
-  const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
-  const setEdPref = (code: string, time: number, obj: Object) => {
-    edPref.code = code
-    edPref.time = time
-    edPref.obj = obj
-    edPref.orig = decode(encode(obj))
-    edPref.chg = false
-    edPref.diag = ''
-  }
-  const updatePref = (code: string, time: number, obj: Object) => {
-    pref.code = code; pref.time = time; pref.obj = obj
-  }
-
-  const _aboutProfile: Ref<string> = ref('')
-  const aboutProfile = computed(() => _aboutProfile.value)
-  const _creds: Ref<Map<string, any>> = ref(null) // $Credential
-  const creds = computed(() => _creds.value)
-  const lstOrgSvc: Ref<[string, string, string][]> = ref([])
-  const currentOrgSvc = ref({ svc: '', org: '' })
-
-  const setStartContext = (aboutProfile: string, creds: Map<string, any>) => { 
-    resetAll()
-    setPhase(0)
-    _aboutProfile.value = aboutProfile
-    _creds.value = creds
-    const svcOrgs = new Set<string>()
-    for(const [,c] of _creds.value) svcOrgs.add(c.org + '/' + c.svc)
-    const lst: string[] = Array.from(svcOrgs).sort((a,b) => a < b ? 1 :(a > b ? -1 : 0))
-    const lst2 = []; lst.forEach(t => { 
-      const x = t.split('/')
-      lst2.push([x[0], x[1], x[1]]) })
-    lstOrgSvc.value = lst2
-    currentOrgSvc.value = lst2.length ? 
-      { svc: lst2[0][1], org: lst2[0][0]} : { svc: '', org: '' }
-    stores.ui.setPage('app')
-  }
-
-  const endSession = () => {
-    resetAll()
-    _aboutProfile.value = ''
-    _creds.value = null
-    lstOrgSvc.value = []
-  }
-
-  const orgs = reactive({
-    c: '',
-    lst: [] 
-  })
   const setOrgs = (s: Set<string>) => {
     const s1 = new Set(orgs.lst)
     for(const o of s) s1.add(o)
@@ -235,16 +310,18 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
+    step, setStep,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
-    dbName, setDbName, phase, setPhase,
-    hasIDB, hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode,
-    pref, edPref, setEdPref, updatePref,
-    aboutProfile, creds, setStartContext, endSession,
-    lstOrgSvc, currentOrgSvc, currentSvc, setSvc, 
-    orgs, addOrg, setOrg, setOrgs, currentOrg
+
+    hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode,
+    lstSOA, currentSOA, scContext,
+
+    orgs, setOrgs, setOrg, addOrg, currentOrg,
+    currentSvc, setSvc,
+    edPref, setEdPref, updatePref,
     // focus, getFocus, lostFocus, closingApp
   }
 })

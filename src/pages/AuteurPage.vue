@@ -75,7 +75,7 @@ const session = stores.session
 const sf = stores.safe
 
 const creds: Ref<Map<string, $Credential>> = ref()
-const soa = computed(() => session.currentOrgSvc )
+const soa = computed(() => session.currentSOA )
 const std = computed(() => getStore(soa.value.svc, soa.value.org))
 
 const cred = ref(null)
@@ -132,7 +132,7 @@ const select = async (c: $Credential) => {
 }
 
 const editTrig = async (trig: string) => {
-  const soa = session.currentOrgSvc
+  const soa = session.currentSOA
   const op = new Operation('UpdPropsCred', soa.svc, soa.org)
   const c = cred.value
   op.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk, props: { trig: trig } })
@@ -155,7 +155,7 @@ const majSection = async (section: string) => {
 }
 
 const majAut = async (nomAuteur: string, section: string) => {
-  const soa = session.currentOrgSvc
+  const soa = session.currentSOA
   // const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
   const op = new Operation('MajAuteur', soa.svc, soa.org)
   op.args.autid = aut.value.autid

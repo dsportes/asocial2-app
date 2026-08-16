@@ -12,7 +12,7 @@
     <div style="color:transparent;width:3px">*<q-tooltip>SafePage</q-tooltip></div>
   </q-toolbar>
 
-  <q-tabs v-if="sf.step === 1" dense v-model="sf.tab" breakpoint="2000px"
+  <q-tabs v-if="session.step === 0" dense v-model="ui.loginPage.tab" breakpoint="2000px"
     class="full-width bg-primary text-white shadow-2">
     <q-tab name="login">
       <img :src="anonymous" width="32px"/>
@@ -24,29 +24,25 @@
     </q-tab>
   </q-tabs>
 
-  <div v-if="sf.step === 2"
+  <div v-if="session.step === 1"
     class="row justify-between q-ma-sm items-center">
     <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
-      @ok="sf.setStep(1)"/>
+      @ok="step(0)"/>
     <safe-tools/>
   </div>
-  <!-- TODO
-  <div v-if="sf.step === 2" :class="sty() + ' q-pa-xs'">
-    <mode-local/>
-    <div class="titre-md text-italic q-my-sm">{{$t('HPclicksession')}}</div>
+
+  <div v-if="session.step === 3"> <!-- TODO -->
+    <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
   </div>
-  -->
 
-  <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
-
-  <div v-if="sf.step === 3">
+  <div v-if="session.step === 3"> <!-- TODO -->
     <div :class="sty() + ' row justify-between q-pa-xs items-center'">
       <btn-cond icon="chevron_left" :label="$t('LOGback')"
-        @ok="sf.setStep(1)"/>
+        @ok="step(0)"/>
       <btn-cond icon="chevron_right" :label="$t('LOGsession')"
-        @ok="sf.setStep(2)"/>
+        @ok="session.setStep(3)"/>
     </div>
-    <!--q-tabs dense v-model="sf.tab3"
+    <!--q-tabs dense v-model="ui.loginPage.tab3"
       class="full-width bg-primary text-white shadow-2">
       <btn-cond icon="add_box" color="none" :label="$t('SFHnewr')"
         @ok="dialogs.NewReq = true"/>
@@ -71,7 +67,6 @@ import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import DemandsHdr from '../components-fw/DemandsHdr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
-import ModeLocal from '../components-fw/ModeLocal.vue'
 
 import SafeTools from '../components-fw/SafeTools.vue'
 // @ts-ignore
@@ -83,6 +78,8 @@ const $t = useI18n().t
 const sf = stores.safe
 const session = stores.session
 const ui = stores.ui
+
+const step = async (s: number) => { await session.setStep(s) }
 
 const dialogs = reactive({
   ListcredsMgr: false,

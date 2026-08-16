@@ -60,7 +60,7 @@ export const useUiStore = defineStore('ui', () => {
     // console.log(screenWidth.value, screenHeight.value)
   }
 
-  // Sasie en mode password ou text
+  // Saisie en mode password ou text
   const visibility = ref(true)
 
   // ********************************************
@@ -220,13 +220,13 @@ export const useUiStore = defineStore('ui', () => {
     mdAdmin: false
   })
 
-  const resetAdminPage = async () => {
+  const resetAdminPage = async (reset?: boolean) => {
     adminPage.site = ''
     adminPage.org = ''
     adminPage.org = ''
     adminPage.pingop = ''
     adminPage.pingst = ''
-    adminPage.mdAdmin = await isMDAdmin()
+    adminPage.mdAdmin = reset ? false : await isMDAdmin()
     return adminPage
   }
   
@@ -236,6 +236,15 @@ export const useUiStore = defineStore('ui', () => {
     nb: 0,
     fnnav: null
   })
+
+  const loginPage = reactive({
+    tab: 'login', // guest
+    resetdb: false
+  })
+  const resetLoginPage = () => {
+    loginPage.tab = 'login'
+    loginPage.resetdb = false
+  }
 
   const currentForm = reactive({
     soa: { svc: '', org: '', admin: false },
@@ -275,6 +284,7 @@ export const useUiStore = defineStore('ui', () => {
     page, setPage, backToOpenSession,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
+    loginPage, resetLoginPage,
     emojiIndex, setEmoji,
     sessionClose, cfSessionClose
   }

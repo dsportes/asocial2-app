@@ -12,7 +12,7 @@
       <btn-cond v-else label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
-      <!-- org-svc v-if="sf.step === 0"/-->
+      
       <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
       <help-button class="" page="DOCpg"/>
@@ -20,7 +20,7 @@
     </q-toolbar>
   </q-header>
 
-  <q-drawer v-if="sf.step === 0" v-model="ui.leftMenu" :class="sty()"
+  <q-drawer v-if="session.step === 2" v-model="ui.leftMenu" :class="sty()"
     show-if-above overlay :width="350" :breakpoint="700" elevated >
     <left-menu/>
   </q-drawer>
@@ -137,7 +137,6 @@ const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
 const config = stores.config
 const session = stores.session
 const ui = stores.ui
-const sf = stores.safe
 
 const i18n = useI18n()
 const $t = i18n.t // Pour rendre accessible $t dans le code
@@ -147,6 +146,7 @@ ui.set$t$q($t, $q)
 
 onMounted(async () => { // Sur onMounted parce que async
   await session.setRegistration(keyFromB64(fromUrl(config.K.vapidPublicKey)), config.location, config.K.APPNAME)
+  await session.setStep(0)
 })
 
 ui.setScreenWH($q.screen.width, $q.screen.height)
