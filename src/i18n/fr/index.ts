@@ -990,6 +990,13 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMstatus_3: 'Validé',
   FORMstatus_4: 'Annulé',
 
+  FORMnewex: 'Proposition à un utilisateur enregistré',
+  FORMnewinv: 'Proposition à une personne N\'AYANT PAS ENCORE de compte',
+  FORMpfxinv_label: 'Préfixe du code d\'invitation',
+  FORMinvcode: 'Code confidentiel à communiquer au destinataire de l\'invitation:', 
+  FORMcopythat: 'J\'ai bien noté',
+  FORMinvko: 'Incident technique, l\'invitation N\'A PAS été enregistrée.',
+  FORMisinvit: 'invitation',
   FORMnosoa: 'Choisir une organisation',
   FORMnewd: 'Nouvelle demande: {0}',
   FORMnewp: 'Nouvelle proposition: {0}',

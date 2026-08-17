@@ -17,6 +17,10 @@ export function gzipT (data: Uint8Array) : Uint8Array | undefined { return gzip(
 
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
 
+export function isClear (a: Uint8Array) : boolean {
+ return a && a.length > 3 && a[0] === 36 && a[1] === 33 && a[2] === 36 && a[3] === 33
+}
+
 export function hasMessage (code: string) : string {
   const k = stores.config.K
   for (const opt of k.localeOptions) {

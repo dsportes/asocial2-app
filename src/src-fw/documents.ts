@@ -6,7 +6,7 @@ import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { getStore, IDocStore, Idef } from '../stores/docs'
-import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
+import { $t, dhcool, equ8, hasMessage, isClear } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, getSite, isAdmin, SubsToSync } from '../src-fw/operation'
 
 const encoder = new TextEncoder()
@@ -339,6 +339,7 @@ export class $Form extends $Document {
   etcT: Object | null = null // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null = null // message écrit par U.
   msgT: Uint8Array | null = null // message écrit par le tiers.
+  isInvit?:boolean
   opts?: any = null // options éventuelles de validation (calculées par compileEtc)
 
   comment?: string = '' // commentaire écrit et crypté par U.
@@ -396,11 +397,11 @@ export class $Form extends $Document {
   /* Pour création de l'instance à réception par le service
   OU pour création explicite par UI */
   static lp1 = ['svc', 'org', 'formId', 'type', 'userId', 'v', 'maxLife',
-    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
+    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'isInvit', 'opts' ]
 
   /* Pour transmission au service à la création par $FormObj */
   static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife',
-    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'opts' ]
+    'status', 'etcU', 'etcT', 'msgU', 'msgT', 'isInvit', 'opts' ]
 
   static new (obj) : $Form {
     const f = Registry.newD(obj.svc, 'Form', obj) as $Form

@@ -1,6 +1,7 @@
 <template>
 <div v-if="fctx">
-  <q-expansion-item :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status)" 
+  <q-expansion-item 
+    :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status) + (fst.form.isInvit ? ' [' + $t('FORMisinvit') + ']' : '')" 
     dense switch-toggle-side class="q-ma-sm full-width"
     header-class="text-bold titre-md text-italic">
     <div>

@@ -841,6 +841,30 @@ export const useSafeStore = defineStore('safe', () => {
     return status
   }
 
+  const createInvit = async (userId: string, invitCode: string) : Promise<number> => {
+    const hsha1 = Crypt.shaS(await Crypt.strongHash(invitCode, false, true))
+    const d = new Date()
+    const llq = quarter(d)
+
+    const mdUser: MDuser = {
+      userId: userId,
+      hshK: '', 
+      hsha1, hsha2: '', C: '', V: '', 
+      llq,
+      store: ''
+    }
+    const op = new MDOperation('$mdUserNew')
+    try {
+      op.args.mdUser = mdUser
+      const res = await op.post()
+      return res.status
+    } catch (e) {
+      op.ko(e)
+      return -1
+    }
+
+  }
+
   const restoreSafe = async (store: string, safe: Safe, mdUser: MDuser)
     : Promise<number> => {
     AOperation.reset()
@@ -1299,7 +1323,7 @@ export const useSafeStore = defineStore('safe', () => {
     openSafeByAP, openSafeByPin, openSafeByPlane,
     setAlias, setTrust,setUntrust, setUntrustAll,
 
-    getSafe, delSafe, restoreSafe, reloadSafe
+    getSafe, delSafe, restoreSafe, reloadSafe, createInvit
   }
 })
 
