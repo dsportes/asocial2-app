@@ -95,6 +95,9 @@ export const useSessionStore = defineStore('session', () => {
   const planeMode = computed(() => noNet.value && !noLocal.value )
   const syncMode = computed(() => !noNet.value && !noLocal.value )
   const incMode = computed(() => !noNet.value && noLocal.value )
+  const loginMode = computed(() =>
+    noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
+  )
 
   const scContext: Ref<SCcontext> = ref()
   const lstSOA: Ref<SOA[]> = ref()
@@ -316,7 +319,7 @@ export const useSessionStore = defineStore('session', () => {
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
 
-    hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode,
+    hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
     lstSOA, currentSOA, scContext,
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,

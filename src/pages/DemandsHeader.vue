@@ -2,6 +2,7 @@
 <div>
   <q-toolbar class="full-width tbp">
     <btn-menu/>
+    <btn-mode/>
     <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
       <q-tooltip>{{session.sessionInfo}}</q-tooltip>
     </btn-cond>
@@ -29,6 +30,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import DemandsHdr from '../components-fw/DemandsHdr.vue'
 import BtnMenu from '../components-fw/BtnMenu.vue'
+import BtnMode from '../components-fw/BtnMode.vue'
 
 const ui = stores.ui
 const session = stores.session

@@ -2,6 +2,7 @@
 <div>
   <q-toolbar class="full-width tbp">
     <btn-menu/>
+    <btn-mode/>
     <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
       <q-tooltip>{{session.sessionInfo}}</q-tooltip>
     </btn-cond>
@@ -64,6 +65,7 @@ import { FormType } from '../src-fw/docDescriptor'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import BtnMenu from '../components-fw/BtnMenu.vue'
+import BtnMode from '../components-fw/BtnMode.vue'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'

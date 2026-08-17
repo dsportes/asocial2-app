@@ -293,10 +293,6 @@ export const useSafeStore = defineStore('safe', () => {
     trustings.value = new Map<string, Trusting>()
     devId.value = ''
     devName.value = ''
-    icvs.value = new Map()
-    auth.value = null
-    userId.value = null
-    keyK.value = null
     if (!IDBsafe.value && await Dexie.exists('safe')) 
       await init1()
   }
@@ -316,6 +312,10 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const resetSafe = () => {
+    icvs.value = new Map()
+    auth.value = null
+    userId.value = null
+    keyK.value = null
     auth.value = null
     devices.value = null
     mySafePrefs.value = null
@@ -701,6 +701,7 @@ export const useSafeStore = defineStore('safe', () => {
   */
   const myFullCreds = async (soa: SOA, docCl?: string) : Promise<Map<string, $Credential>> => {
     const m : Map<string, $Credential> = mySimpleCreds(soa, docCl)
+    if (!m.size) return m
     const op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
     try {
       for(const [,cred] of m) 

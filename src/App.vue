@@ -8,8 +8,8 @@
 
     <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
       <btn-menu/>
-      <btn-plane v-if="session.noNet"/>
-      <btn-cond v-else label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
+      <btn-mode/>
+      <btn-cond v-if="session.hasNet" label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
         <q-tooltip>{{session.sessionInfo}}</q-tooltip>
       </btn-cond>
       
@@ -102,7 +102,7 @@ import stores from './stores/all'
 import { set$t, sty, sleep } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
 import BtnMenu from './components-fw/BtnMenu.vue'
-import BtnPlane from './components-fw/BtnPlane.vue'
+import BtnMode from './components-fw/BtnMode.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 import SafeHome from './pages/SafeHome.vue'
 

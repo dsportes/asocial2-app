@@ -2,6 +2,7 @@
 <div>
   <q-toolbar class="full-width tbp">
     <btn-menu/>
+    <btn-mode/>
     <q-icon v-if="adminPage.mdAdmin" name="security"
       color="negative" size="28px"/>
     <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEadmin')}}</q-toolbar-title>
@@ -32,6 +33,7 @@ import stores from '../stores/all'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnMenu from '../components-fw/BtnMenu.vue'
+import BtnMode from '../components-fw/BtnMode.vue'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'

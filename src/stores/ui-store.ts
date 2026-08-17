@@ -197,16 +197,14 @@ export const useUiStore = defineStore('ui', () => {
   const cfSessionClose = () => {
     appDialogs.ConfirmCloseSession = false
     resetEditing()
-    backToOpenSession()
+    backToLogin()
   }
 
-  const backToOpenSession = () => {
-    stores.session.endSession()
+  const backToLogin = () => {
     page.value = ''
     setTimeout(() => {
       page.value = HOME
-      stores.safe.setStep(1)
-      // setTimeout( () => { reopenSession.value++ }, 100)
+      stores.session.setStep(0)
     }, 50)
   }
 
@@ -281,7 +279,7 @@ export const useUiStore = defineStore('ui', () => {
     exc, displayExc, hideExc,
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
-    page, setPage, backToOpenSession,
+    page, setPage, backToLogin,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     loginPage, resetLoginPage,

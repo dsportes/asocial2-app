@@ -21,7 +21,7 @@ export class $DefSigner extends $ADocument {
   init (svc: string, org: string) {
     this.std = getStore(svc, org)
     this.creds = new Map()
-    const sc = stores.safe.mySimpleCreds()
+    const sc = stores.safe.mySimpleCreds({svc, org})
     for(const [ ,c] of sc)
       this.creds.set(c.docCl + '/' + c.docPk, c)
     return this
@@ -146,7 +146,7 @@ export class $Credential {
 
   toCred() : $Cred {
     const x = {}
-    for(const p in $Credential.lp2) x[p] = this[p]
+    for(const p of $Credential.lp2) x[p] = this[p]
     return x as $Cred
   }
 

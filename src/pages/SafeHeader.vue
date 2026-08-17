@@ -1,6 +1,7 @@
 <template>
 <div class="column full-width">
   <q-toolbar class="full-width tbp">
+    <btn-mode/>
     <btn-cond label="WP" disable :color="session.wpReady ? 'green' : 'red'">
       <q-tooltip>{{session.sessionInfo}}</q-tooltip>
     </btn-cond>
@@ -65,6 +66,7 @@ import { sty } from '../src-fw/util'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnMode from '../components-fw/BtnMode.vue'
 import DemandsHdr from '../components-fw/DemandsHdr.vue'
 import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
 

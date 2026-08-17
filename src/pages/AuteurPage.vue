@@ -93,7 +93,7 @@ const coauts: Ref<$Cred[]> = computed(() => {
 // watch(aut, (v) => { console.log(v.nomAuteur) })
 
 const init = async () => { 
-  creds.value = await sf.myFullCreds('Auteur') }
+  creds.value = await sf.myFullCreds(soa.value, 'Auteur') }
 
 onMounted(async () => { await init()})
 

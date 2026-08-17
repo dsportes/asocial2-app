@@ -2,9 +2,9 @@
 <template>
 <div class="row self-start full-width justify-between items-center q-my-sm">
   <q-toggle class="col q-pr-md" v-model="session.noLocal" dense color="negative"
-    :label="$t('SESincognito_' + (session.noLocal ? '2' : '1'))"/>
+    :label="$t('LOGloc_' + (session.noLocal ? '2' : '1'))"/>
   <btn-bubble class="col-auto self-start"
-    :text="$t('SESmodes')"/>
+    :text="$t('LOGloc_3')"/>
 </div>
 </template>
 

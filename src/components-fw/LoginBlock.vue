@@ -4,10 +4,17 @@ Event émis: logged
 <template>
 <div class="q-ma-xs q-pa-xs">
 
-  <div v-if="session.noNet && sf.users.length && !myUsers.length" 
+  <div v-if="session.noNet && session.noLocal"
+    class="row full-width items-center q-my-sm q-gutter-sm">
+    <btn-bubble :text="$t('LOGcalc_bub')"/>
+    <btn-cond :label="$t('LOGcalc_label')" no-caps icon="calculate"
+      @ok="authCalc"/>
+  </div>
+
+  <div v-if="session.noNet && session.hasLocal && sf.users.length && !myUsers.length" 
     class="titre-md msg2 text-center q-ma-sm">{{ $t('LOGplaneimp2') }}</div>
 
-  <div v-if="session.noNet && myUsers.length"
+  <div v-if="mayPlane"
     class="row full-width items-center q-my-sm q-gutter-sm">
     <btn-bubble :text="$t('LOGauthplane_bub')"/>
     <div class="text-italic titre-md q-ml-sm"> {{$t('LOGauthplane_label')}}</div>
@@ -17,7 +24,7 @@ Event émis: logged
     </div>
   </div>
 
-  <div v-if="session.hasNet && sf.users.length" 
+  <div v-if="mayPin" 
     class="row full-width items-center q-my-sm q-gutter-sm">
     <btn-bubble :text="$t('LOGauthbypin_bub')"/>
     <div class="text-italic titre-md q-ml-sm">{{$t('LOGauthbypin_label')}}</div>
@@ -37,10 +44,10 @@ Event émis: logged
     </div>
   </div>
 
-  <q-separator v-if="(session.hasNet && sf.users.length) || (session.noNet && myUsers.length)" 
+  <q-separator v-if="mayPlane || mayPin" 
     class="q-my-md q-mx-md" color="orange"/>
 
-  <!-- Authentification "forte" -->
+  <!-- Authentification par alias / phrase -->
   <div v-if="session.hasNet" class="full-width column">
     <bar-title prefix="LOGap" class="q-mt-sm q-mb-xs text-italic"/>
     <div v-if="diagAP" class="q-my-xs msg q-ml-lg">
@@ -60,7 +67,7 @@ Event émis: logged
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -77,21 +84,33 @@ const emit = defineEmits(['logged'])
 
 const pin = reactive({ inp: '', err: '' })
 const entryPP = reactive({inp:'', err:''})
-const users = computed(() => session.noLocal ? [] : sf.users)
-const selectedUser = ref(users.value.length === 1 ? users.value[0] : null)
+const selectedUser = ref(null)
 
 const myUsers = computed(() => {
   const l = []
-  for(const u of sf.users) 
+  if (sf.users) for(const u of sf.users) 
     if (u.hasAppDb()) l.push(u)
   return l
 })
-/*
-watch(() => sf.users, () => {
-  users.value = sf.users
-  selectedUser.value = users.value.length === 1 ? users.value[0] : null
+
+const mayPlane = computed(() => 
+  session.hasLocal && myUsers.value.length)
+const mayPin = computed(() => 
+  session.hasNet && session.hasLocal && sf.users && sf.users.length)
+
+const preselect = () => {
+  if (mayPlane.value && myUsers.value.length === 1)
+    selectedUser.value = myUsers.value[0]
+  else if (mayPin.value && sf.users.length === 1)
+    selectedUser.value = sf.users[0]
+  else selectedUser.value = null
+}
+
+preselect()
+
+watch(() => session.hasNet, () => {
+  preselect()
 })
-*/
 
 const selectUser = (u) => { // u est un Trusting
   pin.inp = ''; pin.err = '' 
@@ -99,16 +118,20 @@ const selectUser = (u) => { // u est un Trusting
   selectedUser.value = u
 }
 
+const authCalc = async () => {
+  emit('logged', 'calc')
+}
+
 const authPIN = async () => {
   const status = await sf.openSafeByPin(pin.inp, selectedUser.value)
-  if (status === 0) emit('logged', null)
+  if (status === 0) emit('logged', 'pin')
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status), true)
 }
 
 const authPlane = async () => {
   const shp = await Crypt.strongHash(entryPP.inp, true, true)
   const status = await sf.openSafeByPlane(shp, selectedUser.value)
-  if (status === 0) emit('logged', null)
+  if (status === 0) emit('logged', 'plane')
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
 
@@ -142,7 +165,7 @@ const valP = async () => {
   await sf.init1()
   const shp = await Crypt.strongHash(entryP.inp, true, false)
   const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
-  if (status === 0) emit('logged', null)
+  if (status === 0) emit('logged', 'alias')
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
 

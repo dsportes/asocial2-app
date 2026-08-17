@@ -307,7 +307,7 @@ const importCf = async (n) => {
   else {
     await ui.diagDisplay($t('SFXimpok'))
     model.value = false
-    ui.backToOpenSession()
+    ui.backToLogin()
   }
 
 }

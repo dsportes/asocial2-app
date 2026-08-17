@@ -5,7 +5,7 @@
     <div v-if="ui.loginPage.tab === 'login' && session.step === 0">
       <mode-net/>
       <mode-local/>
-      <login-block @logged="step(1)"/>
+      <login-block @logged="logok"/>
     </div>
 
     <div v-if="session.step === 1" class="column items-center">
@@ -109,6 +109,11 @@ import LoginCreate from '../components-fw/LoginCreate.vue'
 
 const ui = stores.ui
 const session = stores.session
+
+const logok = async (x) => {
+  if (x === 'calc') await step(2)
+  else await step(1)
+}
 
 const step = async (s: number) => { await session.setStep(s) }
 

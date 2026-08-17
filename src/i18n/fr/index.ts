@@ -815,46 +815,55 @@ bla bla
 `,
   LOGback: 'Retour au Login',
   LOGsession: 'Ouvrir une session',
-  LOGnet_1: 'Accès à Internet',
-  LOGnet_2: 'Mode AVION: pas d\'accès à Internet',
-  LOGnet_3: `## Ouverture de session AVEC ou SANS Internet
-#### CERTIFICATION d'un terminal par un utilisateur
-Les utilisateurs peuvent **certifier** des terminaux:
-- ils _pourront_ s'y authentifier ensuite avec un simple code PIN,
-- ils _pourront_ y **ÉPINGLER** leurs sessions (et leur donner un nom).
-
-> Une session _épinglée_ bénéficie d'un **cache** local crypté de documents et de fichiers qui accélère son démarrage et réduit le trafic sur le réseau et les coûts de calcul.
-
-## Ouvrir une session AVEC Internet
-C'est le mode _normal_: les documents et fichiers de la base centrale sont accédés en respectant les _pouvoirs_ de la session ouverte.
-Quand la session est _épinglée_ la mémoire locale _cache_ des documents est chargée.
-
-## Rouvrir SANS Internet une session qui a été _ÉPINGLÉE_: mode **AVION**
-La session a accès en lecture aux documents et certains fichiers, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
-
-### Rouvrir SANS Internet une session qui n'a pas été _ÉPINGLÉE_: mode **CALCULETTE**
-Sans accès Internet, ni accès à aucun document ni fichier (NI des bases centrales, NI d'une mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
+  LOGcalc_label: 'Ouvrir une session en mode "Calculette"',
+  LOGcalc_bub: `### Ouvrir une session SANS Internet et SANS accès à la mémoire _Cache_: mode **CALCULETTE**
+Sans accès Internet, ni accès à aucun document ni fichier (NI des services _cloud_, NI de la mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 
 `,
-  SEStit: 'Votre "Safe Box" sera hébergée sur le site TODO',
-  SESincognito_1: 'Mode NORMAL: bénéfice des données stockées en "cache" sur ce terminal',
-  SESincognito_2: 'Mode INCOGNITO: AUCUN accès aux données stockées sur ce terminal',
-  SESmodes: `## Modes NORMAL et INCOGNITO
-#### En mode NORMAL,
-une session bénéficie du stockage en mémoire _cache_ (cryptée) des documents:
-- ouverture plus rapide et plus économe du réseau et du temps de calcul.
-- ouverture en **MODE AVION** possible en l'absence d'accès à Internet.
+  LOGmode_1: 'Mode synchronisé',
+  LOGmode_2: 'Mode incognito',
+  LOGmode_3: 'Mode avion',
+  LOGmode_4: 'Mode calculette',
+  LOGnet_1: 'Accès à Internet',
+  LOGnet_2: 'AUCUN accès à Internet',
+  LOGloc_1: 'Accès aux données cryptées de l\'application en "Cache" sur ce terminal',
+  LOGloc_2: 'AUCUN accès aux données stockées sur ce terminal',
+  LOGloc_3: `### Accès aux données en _Cache_ sur ce terminal
+La session bénéficie de copies locales cryptées de documents :
+- ouverture plus rapide et plus économe du réseau et en temps de calcul.
+- ouverture en *mode **AVION** possible en l'absence d'accès à Internet.
 
-#### En mode INCOGNITO,
+#### ### Accès aux données en _Cache_
 <img src="images/flowers.png" style="background-color:white">
-une session ignore complètement l'existence d'une mémoire _cache_ locale de documents.
-- son chargement est plus long et plus coûteux.
-- le mode AVION en l'absence d'accès à Internet n'est pas disponible.
-- en contrepartie, la session n'a laissé aucune trace de son exécution sur le terminal.
+Une session ignore complètement l'existence d'une mémoire _cache_ locale de documents.
+- le chargement des documents est plus long et plus coûteux.
+- le mode **AVION** en l'absence d'accès à Internet n'est PAS disponible.
+- en contrepartie, la session ne laisse AUCUNE TRACE de son exécution sur le terminal.
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 `,
 
+  LOGnet_3: `## Ouverture de session AVEC ou SANS Internet
+#### CERTIFICATION d'un terminal par un utilisateur
+Un utilisateur peut **certifier** un terminal en lesquel il a _confiance_ :
+- en ayant accès à Internet, il pourra s'y authentifier ensuite avec un simple code PIN,
+- il y disposera d'une mémoire _Cache_ locale cryptée: sans accès à Internet il pouura y ouvrir des sessions en mode AVION.
+
+### Ouvrir une session AVEC Internet
+C'est le mode _normal_ SYNCHRONISE: les documents et fichiers de la base centrale sont accédés en respectant les _pouvoirs_ de la session ouverte.
+Quand la session a accès à la mémoire locale _cache_ des documents, 
+- les documents lus depuis Internet sont stockés localement en _Cache_ cryptée pour l'utilisateur,
+- en cours de session, leurs mise à jour éventuelles sont notifiées à la session qui recharge ceux ayant changé,
+- beaucoup de documents sont accessibles sans utiliser Internet.
+
+## Rouvrir SANS Internet une session qui a été antérieurement ouverte en mode synchronisé: mode **AVION**
+La session a accès en lecture aux documents et certains fichiers, dans l'état où ils étaient à la fin de la dernière session ouverte avec Internet accessible.
+
+### Ouvrir une session SANS Internet et SANS accès à la mémoire _Cache_: mode **CALCULETTE**
+Sans accès Internet, ni accès à aucun document ni fichier (NI des services _cloud_, NI de la mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
+
+`,
+  SEStit: 'Votre "Safe Box" sera hébergée sur le site TODO',
   CRRnocred: 'Aucun pouvoir n\'est enregistré.',
   CRRtit_label: 'Revue de mes pouvoirs',
   CRRtit_bub: `### Revue de mes pouvoirs
