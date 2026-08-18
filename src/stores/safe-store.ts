@@ -954,7 +954,7 @@ export const useSafeStore = defineStore('safe', () => {
       const r = ret['icvs'] as ICVS
       if (!r) return null
       if (x) x.s = r.s // rafraichit le store (non constant)
-      else icvs.value.set(r.i, r)
+      else if (r.c) icvs.value.set(r.i, r) // on ne stocke pas les invitations en cours
       return r
     } catch(e) {
       op.ko(e)

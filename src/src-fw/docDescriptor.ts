@@ -15,6 +15,7 @@ export type Descriptor = {
   sync?: boolean
   embedCreds?: boolean // les credentials sont embarqués dans la propriété creds
   virtual?: boolean
+  role?: string
 }
 
 /* Type d'index :
@@ -89,6 +90,7 @@ export class DocDescriptor {
   enum?: string[]
   extenum?: string = ''
   subClassBy?: string = ''
+  role?: string = ''
 
   // Pour les services seulement
   sync?: boolean
@@ -213,6 +215,7 @@ export class DocDescriptor {
     this.sync = arg.sync || false
     this.embedCreds = arg.embedCreds || false
     this.virtual = arg.virtual || false
+    this.role = arg.role || ''
 
     if (colls && colls.size) {
       for(const [nc, coll] of colls) {
