@@ -110,7 +110,7 @@ export class DocDescriptor {
     let p = src['pk']
     if (p) return p
     const x = []
-    if (src) this.pk.forEach(p => { x.push(src[p] || '') })
+    if (src) this.pk.forEach(pr => { x.push(src[pr] || '') })
     p = x.join('/')
     return nohash || this.nohash ? p : Crypt.shaS(p)
   }

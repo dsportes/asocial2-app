@@ -32,7 +32,6 @@ export const K = {
     tr: [3, 8],
     dev: [6, 16],
     pin: [8, 16],
-    sn: [3, 40], // Nom des sessions
     about: [4, 64],
     url: [4, 80],
     comment: [4, 80],

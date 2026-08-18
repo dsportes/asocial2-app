@@ -1,63 +1,118 @@
 <template>
 <div>
-  <div v-if="!hasaccount" class="row full-width items-center">
-    <btn-bubble :text="$t('HPinvnc_bub')"/>
-    <q-radio v-model="flag.f1" :val="true" :label="$t('HPinvco_1')" />
-    <q-radio v-model="flag.f2" :val="true" :label="$t('HPinvco_2')" />
-  </div>
-  <div v-else class="titre-md text-italic">{{$t('HPinvco_3')}}</div>
+  <q-toolbar>
+    <btn-bubble :text="$t('LOGcreate_bub')"/>
+    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('LOGcreate_tit')}}</q-toolbar-title>
+    <q-checkbox v-model="adm" color="negative" size="16px"
+      checked-icon="star" unchecked-icon="star_border"/>
+  </q-toolbar>
 
-  <login-block v-if="flag.f2" class="full-width q-pl-sm"
-    @logged="emit('done', true)"/>
+  <div class="column items-center">
+    <select-site class="pwxxs q-my-md" v-if="adm" v-model="site"/>
+    <input-a v-if="!adm || site" class="pwsm q-my-md"
+      :prefix="adm ? 'LOGcreate_pwd' : 'LOGcreate_inv'" 
+      size="ps" v-model="invitCode" @validate="onCode"/>
+    <div class="pwxs font-mono q-my-sm">{{ userId }}</div>
+  </div>
 
   <safe-cr v-if="dialogs.create" v-model="dialogs.create"
-    mode="u" @done="emit('done', true)"/>
+    mode="u" @creation="onCreation"/>
+
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { reactive, watch } from 'vue'
+import { reactive, ref } from 'vue'
 import stores from '../stores/all'
 
-import LoginBlock from '../components-fw/LoginBlock.vue'
+import { Crypt } from '../src-fw/crypt'
+import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import InputA from '../components-fw/InputA.vue'
+import SelectSite from '../components-fw/SelectSite.vue'
+import { AdminOperation } from '../src-fw/operation'
+import { $t } from '../src-fw/util'
 
 import SafeCr from '../dialogs-fw/SafeCr.vue'
 
-// const sf = stores.safe
+const sf = stores.safe
+const ui = stores.ui
+const session = stores.session
 
 const emit = defineEmits(['done'])
-
-// const model = defineModel()
-
-const props = defineProps({
-  hasaccount: Boolean
-})
 
 const dialogs = reactive({
   create: false
 })
+const adm = ref(false)
+const site = ref('')
+const userId = ref()
+const shi = ref()
 
-const flag = reactive({
-  f1: false,
-  f2: props.hasaccount ? true : false
-})
+const invitCode = ref('')
 
-/*
-watch(model, () => {
-  flag.f1 = false
-  flag.f2 = props.hasaccount ? true : false
-})
-*/
+const adminId = async () => {
+  const op = new AdminOperation('CONFIG$AdminID', site.value)
+  op.args.pwd = await Crypt.strongHash(invitCode.value, false, false)
+  try {
+    const res = await op.post()
+    if (!res.id) {
+      await ui.diagDisplay($t('LOGcreate_noid'))
+    } else {
+      userId.value = res.id
+      await checkUID()
+    }
 
-watch(() => flag.f1, (v) => {
-  if (v) { flag.f2 = false; dialogs.create = true }
-})
+  } catch (e) {
+    await op.ko(e)
+    userId.value = ''
+  }
+}
 
-watch(() => flag.f2, (v) => {
-  if (v) flag.f1 = false
-})
+const getInvit = async () => {
+  shi.value = await Crypt.strongHash(invitCode.value, false, true)
+  const hsha1 = Crypt.shaS(shi.value)
+  // const invit = keyToB64(shi.value)
+  // const x = Crypt.shaS(keyFromB64(invit))
+  const icvs = await sf.mdUserGetICVS(hsha1)
+  if (!icvs) await ui.diagDisplay($t('LOGcreate_noinv'))
+  else {
+    if (icvs.c) {
+      await ui.diagDisplay($t('LOGcreate_cr'))
+      ui.loginPage.tab = 'login'
+    } else {
+      userId.value = icvs.i
+      // await ui.diagDisplay(userId.value)
+      dialogs.create = true
+    }
+  }
+}
+
+const checkUID = async () => {
+  const icvs = await sf.mdUserGetICVS(userId.value)
+  if (icvs) {
+    await ui.diagDisplay($t('LOGcreate_cr'))
+    ui.loginPage.tab = 'login'
+  }
+  else dialogs.create = true
+}
+
+const onCode = async () => {
+  if (adm.value) await adminId()
+  else await getInvit()
+}
+
+const onCreation = async ({ st, a1, a2, shp1, shp2 }) => {
+  const invit = adm.value ? '' : keyToB64(shi.value)
+  const status = await sf.createSafe(st, a1, a2, shp1, shp2, userId.value, invit)
+  if (!status) {
+    await ui.diagDisplay($t('LOGcreate_ok'))
+    await session.setStep(1, !adm.value ? 'demands' : 'app')
+  } else {
+    await ui.diagDisplay($t('STSF_' + status))
+  }
+}
 
 </script>
 

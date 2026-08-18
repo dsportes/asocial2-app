@@ -108,7 +108,7 @@ const sf = stores.safe
 const ui = stores.ui
 
 const model = defineModel()
-const emit = defineEmits(['close', 'done'])
+const emit = defineEmits(['close', 'done', 'creation'])
 const props = defineProps ({
   mode: String // u: nouvel user, a: chagt alias, p: chgt phrase
 })
@@ -388,14 +388,10 @@ const validateU = async () => {
     else if (!shp2) shp2 = al.sh
     else break
   }
-  let status = await sf.createSafe(store.value, a1, a2, shp1, shp2)
-  if (status > 0) await ui.diagDisplay($t('STSF_' + status))
-  else if (status === 0) {
-    await ui.diagDisplay($t('UAPok_u'))
-    emit('done', true)
-    model.value = false
-    emit('close', true)
-  }
+  const obj = { st: store.value, a1, a2, shp1, shp2 }
+  emit('creation', obj)
+  model.value = false
+  emit('close', true)
 }
 init()
 </script>

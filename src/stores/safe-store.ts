@@ -154,6 +154,7 @@ export type MDuser = {
   V: string // clé publique de vérification de U. En base 64.
   llq: number // _last quarter login_. Numéro du trimestre de dernier login, 0 étant le premier de l'an 2000.
   store: string // code du store où est stocké à l'instant actuel le _safe_ de U.
+  invit?: string
 }
 
 export type Alias = {
@@ -785,9 +786,9 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const createSafe = async (
-    store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array) => {
+    store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array,
+    userId: string, invitCode: string) => {
     AOperation.reset()
-    userId.value = Crypt.rnd(15)
     keyK.value = Crypt.random(32)
     const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
     const K1 = keyToB64(await Crypt.crypt(shp1, keyK.value))
@@ -821,7 +822,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     const safe: Safe = {
-      userId: userId.value,
+      userId,
       auth: auth,
       devices: null,
       creds: null,
@@ -830,10 +831,11 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     const mdUser: MDuser = {
-      userId: userId.value,
+      userId,
       hshK, hsha1, hsha2, C, V, llq,
       store: store
     }
+    if (invitCode) mdUser.invit = invitCode
 
     const status = await restoreSafe(store, safe, mdUser)
     if (!status)
@@ -1309,7 +1311,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    init0, resetSafe, IDBsafe, loadTrustings,
+    init0, init1, resetSafe, IDBsafe, loadTrustings,
     devId, devName,
     trustings, myTrusting, delTrusting, users,
 

@@ -6,8 +6,8 @@ import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 import { getStore, IDocStore, Idef } from '../stores/docs'
-import { $t, dhcool, equ8, hasMessage, isClear } from '../src-fw/util'
-import { MDOperation, Operation, CVKeys, getSite, isAdmin, SubsToSync } from '../src-fw/operation'
+import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
+import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()

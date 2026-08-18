@@ -13,28 +13,14 @@
         <q-toggle class="col q-pr-md" v-model="ui.loginPage.resetdb" dense :label="$t('HPresetdb_0')"/>
       </div>
       <btn-cond label="Ouvrir la session" icon="check" @ok="step(2)"/>
-
+      <!-- TODO -->
     </div>
 
     <div v-if="ui.loginPage.tab === 'guest' && session.step === 0" class="q-pa-xs">
-      <!--v-model="g1m"-->
       <login-create class="full-width"
         @done="ui.loginPage.tab3 = 'newr'; step(3)"/>
-
-      <bar-open class="q-mt-md q-mb-xs full-width" :bubbleleft="$t('SFHvisit_bub')"
-        :title="$t('SFHvisit_label')"/>
-
-      <bar-open class="q-my-xs full-width" :bubbleleft="$t('SFHcalc_bub')"
-        :title="$t('SFHcalc_label')"/>
-
     </div>
   </div>
-
-  <!--
-  <div v-if="session.step === 3" class="q-pa-xs">
-    <demands-scan/>
-  </div>
-  -->
 
   <!-- Dialogue d'options de lancement 
   <q-dialog v-model="dialogs.optstart" persistent>
@@ -44,35 +30,6 @@
         <q-toolbar-title class="titre-lg text-right q-mx-xs">{{$t('HPoptstart')}}</q-toolbar-title>
       </q-toolbar>
       <div class="full-width q-pa-sm">
-        <input-a v-if="session.hasNet && !selStar" class="q-my-sm"
-          size="about" prefix="HPpsab" :initval="selSessionAbBefore"
-          v-model="selSessionAb" @validate="valAbPs"/>
-        <div v-else class="q-my-sm font-mono text-bold">{{selSessionAb}}</div>
-
-        <div v-if="sf.selectedSession">
-          <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
-            <q-toggle class="col q-pr-md" v-model="unpinme" dense :label="$t('HPunpin_0')"/>
-            <btn-bubble class="col-auto self-start"
-              :text="$t('HPunpin_1')"/>
-          </div>
-
-        </div>
-        <div v-else>
-          <div v-if="session.hasNet" class="q-my-sm row justify-between items-center">
-            <q-toggle class="col q-pr-md" v-model="pinme" dense :label="$t('HPpin_0')"/>
-            <btn-bubble class="col-auto self-start"
-              :text="$t('HPpin_1')"/>
-          </div>
-        </div>
-
-        <div class="row q-my-md q-gutter-sm">
-          <div class="text-italic text-bold">{{$t('HPstartpref')}}</div>
-          <btn-cond no-caps :label="$t('HPpref_1')"
-            @ok="dialogs.optstart = false; validateSession('', 0, null)"/>
-          <btn-cond no-caps v-for="[code, [time, obj]] in sf.mySafePrefs" :key="code"
-            :label="code" padding="none xs"
-            @ok="dialogs.optstart = false; validateSession(code, time, obj)"/>
-        </div>
 
       </div>
     </q-card>
@@ -115,7 +72,8 @@ const logok = async (x) => {
   else await step(1)
 }
 
-const step = async (s: number) => { await session.setStep(s) }
+const step = async (s: number) => { 
+  await session.setStep(s) }
 
 watch(() => ui.loginPage.resetdb, async (v) => {
   if (v) await ui.diagDisplay($t('HPresetdb_1'))

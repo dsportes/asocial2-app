@@ -323,7 +323,7 @@
     :title="$t('crypto')" hdrclass='wmd' help="pings">
     <template #default>
       <div class="q-pa-xs">
-        <input-b class="q-mt-md q-mb-sm" v-model="ps" size="p1"
+        <input-b class="q-mt-md q-mb-sm" v-model="ps" size="ps"
           prefix="SBphrase" @validate="validPs"/>
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_sh')}}</div>
         <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.b64" />
@@ -331,6 +331,13 @@
         <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.shaps" />
         <div class="q-mt-md titre-md text-italic">{{$t('SBphrase_shaS')}}</div>
         <q-input dense class="q-mb-md font-mono text-bold" filled v-model="cr.shaSps" />
+
+        <q-separator class="q-my-md" color="orange" />
+
+        <div class="row item-center q-gutter-md">
+          <btn-cond class="q-mb-md" no-caps :label="$t('SBgenuserid')" @ok="genId"/>
+          <div class="font-mono fs-lg">{{ usid }}</div>
+        </div>
 
         <q-separator class="q-my-md" color="orange" />
 
@@ -435,6 +442,10 @@ const so = reactive({
 })
 const surl = computed(() => 
   AOperation.urls.get(so.site) || '?')
+const usid = ref('')
+const genId = () => {
+  usid.value = Crypt.rnd(15)
+}
 const setOS = async (soa: SOA) => {
   so.org = soa.org
   so.svc = soa.svc

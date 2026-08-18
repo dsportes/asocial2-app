@@ -32,26 +32,6 @@
     <safe-tools/>
   </div>
 
-  <div v-if="session.step === 3"> <!-- TODO -->
-    <listcreds-mgr v-if="dialogs.ListcredsMgr" v-model="dialogs.ListcredsMgr"/>
-  </div>
-
-  <div v-if="session.step === 3"> <!-- TODO -->
-    <div :class="sty() + ' row justify-between q-pa-xs items-center'">
-      <btn-cond icon="chevron_left" :label="$t('LOGback')"
-        @ok="step(0)"/>
-      <btn-cond icon="chevron_right" :label="$t('LOGsession')"
-        @ok="session.setStep(3)"/>
-    </div>
-    <!--q-tabs dense v-model="ui.loginPage.tab3"
-      class="full-width bg-primary text-white shadow-2">
-      <btn-cond icon="add_box" color="none" :label="$t('SFHnewr')"
-        @ok="dialogs.NewReq = true"/>
-      <q-tab name="scan" icon="search" :label="$t('SFHscan')" />
-    </q-tabs-->
-    <demands-hdr/>
-  </div>
-
 </div>
 </template>
 

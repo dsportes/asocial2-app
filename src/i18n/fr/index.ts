@@ -570,6 +570,7 @@ bla bla
   SBphrase_sh: 'SH en base64:',
   SBphrase_sha: 'SHA du SH:',
   SBphrase_shaS: 'SHA "court" du SH:',
+  SBgenuserid: 'Générer un identiant d\'utilisateur',
   SBgencc: 'Générer un couple de clés de ...',
   SBgensv: 'Signature / Vérification',
   SBgendc: 'Décryptage / Cryptage',
@@ -787,13 +788,23 @@ Pour désigner un site non répertorié, l'utilisateur est convié à donner son
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
 
 `,
-LOGplaneimp2: 'Login en mode "Avion" impossible, aucun utilisateur enregistré sur ce terminal n\'a de base locale Cache.',
-LOGauthplane_label: 'Login en mode "Avion" possible pour:',
-LOGauthplane_bub: `# Authentification en mode "Avion"
+  LOGcreate_tit: 'Déclaration d\'un compte sur invitation',
+  LOGcreate_pwd_label: 'Mot de passe de l\'administrateur à créér',
+  LOGcreate_inv_label: 'Code d\'invitation',
+  LOGcreate_noid: 'Mot de passe non reconnu.',
+  LOGcreate_noinv: 'Aucune proposition n\'a été trouvée pour ce code d\'invitation',
+  LOGcreate_cr: 'Enregistrement du compte déjà effectuée, utiliser la procédure normale de "login".',
+  LOGcreate_ok: 'Vous êtes enregistré, votre "Safe Box" a été crrée',
+  LOGcreate_bub: `## Déclaration d'un compte sur invitation
+bla bla
+`,
+  LOGplaneimp2: 'Login en mode "Avion" impossible, aucun utilisateur enregistré sur ce terminal n\'a de base locale Cache.',
+  LOGauthplane_label: 'Login en mode "Avion" possible pour:',
+  LOGauthplane_bub: `# Authentification en mode "Avion"
 Si vous avez **certifié** ce terminal, vous vous authentifier par une de vos phrases secrètes.
 `,
-LOGauthbypin_label: 'Login par code PIN possible pour:',
-LOGauthbypin_bub: `# Authentification par code PIN
+  LOGauthbypin_label: 'Login par code PIN possible pour:',
+  LOGauthbypin_bub: `# Authentification par code PIN
 Si vous avez **certifié** ce terminal, votre code PIN suffit à vous authentifier.
 
 Cliquer dans la liste sur vos initiales données lors de la certification.
@@ -863,7 +874,7 @@ La session a accès en lecture aux documents et certains fichiers, dans l'état 
 Sans accès Internet, ni accès à aucun document ni fichier (NI des services _cloud_, NI de la mémoire _cache_ locale) l'application travaille en mode _calculette_: les fonctionnalités proposées sont en conséquence en général très restreintes (mais celà dépend de l'application).
 
 `,
-  SEStit: 'Votre "Safe Box" sera hébergée sur le site TODO',
+  SEStit: 'Votre "Safe Box" sera hébergée sur le site',
   CRRnocred: 'Aucun pouvoir n\'est enregistré.',
   CRRtit_label: 'Revue de mes pouvoirs',
   CRRtit_bub: `### Revue de mes pouvoirs

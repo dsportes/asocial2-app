@@ -103,7 +103,7 @@ export const useSessionStore = defineStore('session', () => {
   const lstSOA: Ref<SOA[]> = ref()
   const currentSOA: Ref<SOA> = ref()
 
-  const setStep = async (s: number) => { 
+  const setStep = async (s: number, toPage?: string) => { 
     const ui = stores.ui
     const sf = stores.safe
     const b = step.value
@@ -114,7 +114,7 @@ export const useSessionStore = defineStore('session', () => {
         if (b > 1) resetDocStores()
         if (b === 0) await sf.init0()
         else await sf.loadTrustings()
-        step.value = s
+        step.value = 0
         return
       }
 
@@ -133,13 +133,17 @@ export const useSessionStore = defineStore('session', () => {
         currentSOA.value = lstSOA.value.length == 1 ? lstSOA.value[0] : { svc: '', org: '' }
         scContext.value = sc
         ui.loginPage.resetdb = false
-        step.value = s
-        return
+        if (!toPage) {
+          step.value = 1
+          return
+        }
+        // sinon enchaîne sur ouverture page
+        step.value = 2
       }
 
       case 2 : { // session ouverte
-        ui.setPage('app')
-        step.value = s
+        ui.setPage(toPage || 'app')
+        step.value = 2
         return
       }
     }
