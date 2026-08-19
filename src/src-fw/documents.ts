@@ -12,6 +12,60 @@ import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/oper
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
+/*
+
+*/
+export type OrgRole = [string, string]
+
+export class $Options { 
+  orgsRoles: OrgRole[]
+  orgsRolesP: OrgRole[] // listes des couples "potentiels" (pouvant figurer dans orgsRoles)
+  pref: string
+
+  srt(x) { return x.sort((a, b) => a < b ? 1 : (a > b ? -1 : 0)) }
+
+  // Chargement initial depuis Safe et / ou Cache et fusion des options
+  async init () : Promise<SCcontext> {
+    const session = stores.session
+    const sf = stores.safe
+    let optsC: any
+    let optsS: any
+    if (session.hasNet) {
+      for(const [credId, c] of sf.mySafeCreds) 
+        this.creds[credId] = c.toCred()
+      for(const [id, x] of sf.mySafePrefs)
+        this.prefs[id] = x // x: [time, obj]
+      optsS = sf.mySafeOptions || {}
+    }
+    if (idb) {
+      if (session.planeMode) 
+        this.creds = await idb.getSingleton('creds')
+      if (session.planeMode)
+        this.prefs = await idb.getSingleton('prefs')
+      optsC = await idb.getSingleton('options')
+    }
+    for(const credId in this.creds) {
+      const c = this.creds[credId]
+      const k = c.svc + '/' + c.org
+      this.soas.set(k, { svc: c.svc, org: c.org })
+      this.orgs.add(c.org)
+    }
+
+    const orgs = optsC && optsC.orgs ? optsC.orgs : (optsS && optsS.orgs || [])
+    { const x1 = []; for(const o of orgs) x1.push(o); this.options.orgs = this.srt(x1) }
+
+    this.options.roles = this.srt(optsC && optsC.roles ? optsC.roles : (optsS && optsS.roles || []))
+
+    this.options.pref = optsC && optsC.pref ? optsC.pref : (optsS && optsS.pref || '')
+    if (this.options.pref && !this.prefs[this.options.pref]) this.options.pref = ''
+    this.optionsB.orgs = [ ...this.options.orgs]
+    this.optionsB.roles = [ ...this.options.roles]
+    this.optionsB.pref = this.options.pref
+
+    return this
+  }
+}
+
 export class $DefSigner extends $ADocument {
   std: IDocStore
   op: Operation
