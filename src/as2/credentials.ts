@@ -3,7 +3,7 @@ import { schemaExcAS2 } from '../as2/schema'
 import { Registry } from '../src-fw/registry'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { $Credential } from '../src-fw/documents'
+import { $Credential, $Perimeter } from '../src-fw/documents'
 
 const ok = !schemaExcAS2()
 let n = 0
@@ -36,8 +36,16 @@ class AS2$Credential_Redaction extends $Credential {
 if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
 
 export class AS2$Credential_Auteur extends $Credential {
-  static _role = 'auteurs'
 
+  getPerimeters () : $Perimeter[] {
+    const p = {
+      id: 'Auteur/' + this.docPk,
+      role: 'AS2_auteurs',
+      plane: true,
+      defs: ['Auteur/' + this.docPk]
+    }
+    return [p]
+  }
   get hasDispProps () { return true }
 
   async dispProps () { 

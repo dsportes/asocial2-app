@@ -14,7 +14,7 @@ const decoder = new TextDecoder()
 
 /*
 
-*/
+
 export type OrgRole = [string, string]
 
 export class $Options { 
@@ -65,6 +65,7 @@ export class $Options {
     return this
   }
 }
+  */
 
 export class $DefSigner extends $ADocument {
   std: IDocStore
@@ -188,11 +189,23 @@ export type $Cred = {
   // pubc?: Uint8Array
 }
 
+export type $Perimeter = {
+  id: string
+  role: string
+  plane: boolean
+  defs: string[]
+}
+
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
 export class $Credential {
   descriptor() { 
     return this.constructor['docDescriptor']
+  }
+
+  // Surchargé par sous-classe
+  getPerimeters () : $Perimeter[] {
+    return []
   }
 
   static lp1 = [ 'credId', 'svc', 'org', 'docCl', 'docPk', 'privs', 'privd', 'name', 'toCheck' ]

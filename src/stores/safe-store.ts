@@ -17,7 +17,7 @@ import { Crypt } from '../src-fw/crypt'
 import { idb } from '../src-fw/idb'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry, SOA } from '../src-fw/registry'
-import { $Credential } from '../src-fw/documents'
+import { $Credential, $Perimeter } from '../src-fw/documents'
 
 /*
 ### Safes stockés dans un directory
@@ -694,6 +694,21 @@ export const useSafeStore = defineStore('safe', () => {
     return null
   }
 
+  const getPerimeters = () : Map<string, Map<string, $Perimeter>> => {
+    const m: Map<string, Map<string, $Perimeter>> = new Map()
+    for(const [, cred] of mySafeCreds.value) {
+      const lp = cred.getPerimeters()
+      if (lp.length) {
+        const so = cred.svc + '/' + cred.org
+        let m2 = m.get(so)
+        if (!m2) { m2 = new Map(); m.set(so, m2) }
+        for (const p of lp)
+          m2.set(p.id, p)
+      }
+    }
+    return m
+  }
+
   /* Retourne une map des credentials de l'utilisateur
   AVEC les props des credentials obtenus du service
   pour le svc / org courant de la session:
@@ -1320,7 +1335,7 @@ export const useSafeStore = defineStore('safe', () => {
     auth, devices, mySafePrefs, mySafeCreds, mySafeOptions,
     updatePrefs, setOptions, updateCredName, fixCreds,
     managerCreds, isManager,
-    mySimpleCreds, myFullCreds, myCredOfDoc,
+    mySimpleCreds, myFullCreds, myCredOfDoc, getPerimeters,
     createSafe, setPhraseSafe, mdAliasFree, mdUserGetICVS,
     openSafeByAP, openSafeByPin, openSafeByPlane,
     setAlias, setTrust,setUntrust, setUntrustAll,

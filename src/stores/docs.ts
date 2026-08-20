@@ -235,14 +235,14 @@ const useStore = (id: string) =>
         if (item.lv !== cd.v) {
           item.lv = cd.v
           item.lat = sat
-          await idb.setDC(def, sat, cd.v, data)
+          await idb.setDC(svc, org, def, sat, cd.v, data)
         } else await setLatIDB(item)
       }
 
       async function setLatIDB (item: $DCItem) {
         if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
           item.lat = sat
-          await idb.updLV(def, sat, cd.v)
+          await idb.updLV(svc, org, def, sat, cd.v)
         }
       }
 
@@ -418,7 +418,7 @@ const useStore = (id: string) =>
     const initDocFromIDB = async (def: string) : Promise<$DocItem> => {
       let item: $DocItem = docs[def]
       if (item) return item
-      const r: IDBrow = await idb.getDC(def)
+      const r: IDBrow = await idb.getDC(svc, org, def)
       if (!r) return null
       item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, doc: null}
       try {
@@ -435,7 +435,7 @@ const useStore = (id: string) =>
     const initCollFromIDB = async (def: string) : Promise<$CollItem> => {
       let item: $CollItem = colls[def]
       if (item) return item
-      const r: IDBrow = await idb.getDC(def)
+      const r: IDBrow = await idb.getDC(svc, org, def)
       if (!r) return null
       item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, pks: null}
       try {
