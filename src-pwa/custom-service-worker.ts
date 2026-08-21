@@ -33,12 +33,15 @@ function b64ToObj (b64: string) : any {
 self.skipWaiting()
 clientsClaim()
 const mf = self.__WB_MANIFEST
-console.log('SW: WB_MANIFEST >>>>>>>')
-mf.forEach(x => {
-  // @ts-ignore
-  console.log('WB_MANIFEST: ' + x.url)
-})
-console.log('SW: WB_MANIFEST <<<<<<<')
+{
+  let n = 0
+  console.log('SW: WB_MANIFEST >>>>>>>') 
+  mf.forEach(x => { 
+    n++
+    // console.log('WB_MANIFEST: ' + x.url) 
+  })
+  console.log('SW: WB_MANIFEST <<<<<<< ' + n)
+}
 
 // Use with precache injection
 // @ts-ignore

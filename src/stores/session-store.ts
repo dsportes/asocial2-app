@@ -10,6 +10,7 @@ import { SOA } from '../src-fw/registry'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
+import { IDBsafe } from '../src-fw/idbsafe'
 import { idb, IDB, Perims, Prefs, Options, StartPlane  } from '../src-fw/idb'
 import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
@@ -42,17 +43,18 @@ export const useSessionStore = defineStore('session', () => {
   const prefs: Ref<Prefs> = ref()
 
   const pref: Ref<string> = ref()
-  const prefC: Ref<string> = ref()
-  const prefS: Ref<string> = ref()
 
   const orgRoles : Ref<Set<string>> = ref() // couples org/role
   const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
-  const orgRolesC : Ref<Set<string>> = ref() // couples org/role de Cache
-  const orgRolesS : Ref<Set<string>> = ref() // couples org/role de SafeBox
 
-  // const scContext: Ref<SCcontext> = ref()
-  const lstSOA: Ref<SOA[]> = ref()
-  const currentSOA: Ref<SOA> = ref()
+  const setOrgRolesP = (perims: Perims) => {
+    const s: Set<string> = new Set()
+    for(const [so, m] of perims) {
+      const org = so.substring(so.indexOf('/') + 1)
+      for(const [,p] of m) s.add(org + '/' + p.role)
+    }
+    orgRolesP.value = s
+  }
 
   const setStep = async (s: number, toPage?: string) => { 
     const ui = stores.ui
@@ -61,42 +63,46 @@ export const useSessionStore = defineStore('session', () => {
     switch (s) {
       case 0 : {
         ui.resetLoginPage()
-        sf.resetSafe()
+        sf.resetSafeBox()
         if (b > 1) resetDocStores()
-        if (b === 0) await sf.init0()
-        else await sf.loadTrustings()
         step.value = 0
         return
       }
 
       case 1 : { // authentification faite
+        // préparation pour permettre le choix des options
         resetDocStores()
         if (hasLocal.value) {
+          // Création si nécessaire de Cache
           new IDB()
           const mt = sf.myTrusting
-          if (mt) mt.addAppsDb()
+          if (mt) await mt.addAppsDb()
         }
         if (sessionId.planeMode) {
           const sp: StartPlane = await idb.openPlane()
           prefs.value = sp.prefs
           perims.value = sp.perims
-          orgRoles.value = new Set(sp.options.orgRoles)
-          pref.value = sp.options.pref
+          setOrgRolesP(perims.value)
+          orgRoles.value = new Set(sp.options.orgRoles || [])
+          pref.value = sp.options.pref || ''
         } else {
-          // TODO : calculer orgRolesS depuis perims
           perims.value = sf.getPerimeters()
+          setOrgRolesP(perims.value)
           prefs.value = sf.mySafePrefs
           const x = sf.mySafeOptions
-          prefS.value = x.pref
-          orgRolesS.value = x.orgRoles
+          pref.value = x.pref || ''
+          orgRoles.value = x.orgRoles || []
           if (sessionId.syncMode) {
             const opts = await idb.openSync()
-            prefC.value = opts ? opts.pref || '' : ''
-            orgRolesC.value = new Set(opts ? opts.orgRoles || [] : [])
+            if (opts && opts.pref) pref.value = opts.pref
+            if (opts && opts.orgRoles && opts.orgRoles.length)
+              orgRoles.value = new Set(opts.orgRoles)
           }
         }
         ui.loginPage.resetdb = false
-        step.value = 1
+        if (!toPage) { step.value = 1; return }
+        /* Sinon les options sont celles par défaut (sans choix)
+        et on lance la session immédiatement sur la page souhaitée */
       }
 
       case 2 : { // start session: choix des options fait
@@ -274,7 +280,6 @@ export const useSessionStore = defineStore('session', () => {
     permState, permDialog, changePerm, askForPerm, permChange,
 
     hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
-    lstSOA, currentSOA,
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,

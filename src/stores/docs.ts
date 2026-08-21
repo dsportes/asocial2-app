@@ -55,7 +55,7 @@ export async function onPushMsg (payload: string) {
   if (messageNotif.defs && messageNotif.defs.length)
     await processNotif(messageNotif)
   if (messageNotif.body) {
-    if (config.mondebug) console.log('Show notif EXPLICITE from app')
+    if (config.K.myDebug) console.log('Show notif EXPLICITE from app')
     const options = { body: messageNotif.body }
     // @ts-ignore
     if (messageNotif.url) options.data = { url: messageNotif.url || config.location }

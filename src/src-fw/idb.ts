@@ -89,7 +89,9 @@ type IDBrow = {
   data?: Uint8Array
 }
 
+// Map par svc/org des périmètres identifiés par leur id
 export type Perims = Map<string, Map<string, $Perimeter>>
+// Map des préférences identifiées par leur code
 export type Prefs = Map<string, Object>
 export type Options = {
   orgRoles: string[] // liste des couples org/role sélectionnés par l'utilisateur
@@ -106,14 +108,14 @@ export let idb : IDB = null // IDB courante
 
 export async function deleteIDB (appName?: string, userId?: string) {
   const config = stores.config
-  const mondebug = config.mondebug
+  const myDebug = config.K.myDebug
   const name = appName || (config.K.APPNAME + '_' + (userId || stores.safe.userId))
   try {
     await Dexie.delete(name)
     await sleep(100)
-    if (mondebug) console.log('IDB reset [' + name + '] OK')
+    if (myDebug) console.log('IDB reset [' + name + '] OK')
   } catch (e: any) {
-    if (mondebug) console.log('IDB reset [' + name + '] failed: ' + e.toString())
+    if (myDebug) console.log('IDB reset [' + name + '] failed: ' + e.toString())
   }
   idb = null
 }
@@ -131,7 +133,7 @@ export class IDB {
 
   db : any
   keyK: Uint8Array
-  mondebug: boolean
+  myDebug: boolean
   appName: string
   userId: string
   SYNCINCRNBD: number
@@ -142,7 +144,7 @@ export class IDB {
     const config = stores.config
     const sf = stores.safe
     this.appName = config.K.APPNAME
-    this.mondebug = config.mondebug
+    this.myDebug = config.myDebug
     this.SYNCINCRNBD = config.K.SYNCINCRNBD
     this.keyK = sf.keyK
     this.userId = sf.userId
@@ -150,17 +152,6 @@ export class IDB {
     this.db.version(1).stores(STORES)
     idb = this
   }
-
-  /*
-  async open () {
-    try {
-      await this.db.open()
-      if (this.mondebug) console.log('IDB open [' + this.dbName + ']')
-    } catch (e) {
-      throw IDB.EX(e, 'open')
-    }
-  }
-  */
 
   close () {
     if (this.db) 
@@ -277,7 +268,7 @@ export class IDB {
   */
   async openPlane () : Promise<StartPlane | null> {
     try {
-      await this.db.open()
+      await this.db.open() // Pas utile du fait auto-open ?
       const options = await this.getOptions()
       if (!options) return null
       return {
@@ -292,7 +283,7 @@ export class IDB {
 
   async openSync () : Promise<Options | null> {
     try {
-      await this.db.open()
+      await this.db.open() // Pas utile du fait auto-open ?
       return await this.getOptions()
     } catch (e) {
       throw IDB.EX(e, 'openPlane')
@@ -311,7 +302,6 @@ export class IDB {
   async startSyncReset (options: Object, prefs: Prefs, perims: Perims) 
   : Promise<void> {
     try {
-      await this.db.open()
       await this.setOptions(options)
       await this.storePrefs(prefs)
       await this.storePerims(perims)

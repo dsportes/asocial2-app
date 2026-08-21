@@ -299,6 +299,7 @@ export default {
   op_MajAuteur: 'Mise à jour d\'un nom d\'auteur',
   op_$UpdateCredName: 'Mise à jour d\'un nom de crdential',
   op_FW$Sync: 'Synchonisation des données',
+  op_$PingStore: 'Test d\'accès à un store de Safe Box',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -587,10 +588,7 @@ bla bla
   HPtrust_2: `### Certifier ce terminal
 bla bla
 `,
-  HPtrust_2d: `### Accorder / retirer sa certification à un terminal, changer son code PIN
-Pour ces opérations, par sécurité il faut s'être authentifié par sa phrase secrète (pas son code PIN).
-`,
-  HPuntrust_1: 'Retirer la certification de ce terminal',
+  HPuntrust_1: 'Retirer la certification de ce terminal [{0}]',
   HPuntrust_2: `### Retirer sa confiance au terminal
 bla bla
 `,
@@ -636,9 +634,11 @@ bla bla
   HPsttrust_0: 'Terminal déclaré de confiance.',
   HPsttrust_1: 'Echec de la déclaration de confiance: utilisateur non enregistré.',
   HPsttrust_2: 'Echec de la déclaration de confiance: codes de l\'utilisateur incorrects.',
-  HPstuntrust_0: 'Confiance retiré au terminal.',
+
+  HPstuntrust_0: 'Ce terminal n\'a plus ma confiance.',
   HPstuntrust_1: 'Echec du retrait de confiance: utilisateur non enregistré.',
   HPstuntrust_2: 'Echec du retrait de confiance: codes de l\'utilisateur incorrects.',
+
   HPutd_1: 'Pour information: quand ce terminal n\'est pas déclaré "de confiance", la ou les sessions qui y avaient été "épinglées" ne le sont plus (elles n\'ont plus de données sauvegardées localement):',
   HPutd_2: '- leurs réouverture sont PLUS LONGUES,',
   HPutd_3: '- elles NE SONT PLUS ACCESSIBLES EN MODE AVION.',

@@ -67,12 +67,13 @@ const delTrustIt = (id) => {
 }
 
 const delTrustings = async () => {
-  console.log('delTrust')
   const st = await sf.setUntrustAll(delTrustSet.value)
   if (st === 0) {
-    delTrustSet.value = null
+    delTrustSet.value = new Set()
     model.value = true
     emit('done', true)
+    emit('close', true)
+    model.value = false
   } else await ui.diagDisplay($t('HPopnotpin_' + st))
 }
 </script>

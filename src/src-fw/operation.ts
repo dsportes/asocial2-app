@@ -310,7 +310,7 @@ export class OperationG extends AOperation {
         session.opEnd()
         const ntf = obj['notification']
         if (ntf) {
-          if (config.mondebug) console.log('Notification received on operation return')
+          if (config.K.mydebug) console.log('Notification received on operation return')
           await onPushMsg(ntf) // traitement des notifications sur retour d'opération
         }
         return obj

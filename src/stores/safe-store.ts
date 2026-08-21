@@ -11,10 +11,10 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { $t, sleep, quarter, equ8 } from '../src-fw/util'
-import { AppExc } from '../src-fw/log'
+
 import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
-import { idb } from '../src-fw/idb'
+import { IDBsafe, Trusting } from '../src-fw/idbsafe'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry, SOA } from '../src-fw/registry'
 import { $Credential, $Perimeter } from '../src-fw/documents'
@@ -210,109 +210,27 @@ type Device = {
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-const STORES = {
-  header: 'id', // singleton: id = '1'
-  trustings: 'id'
-}
-
-class Trusting {
-  userId: string = ''
-  store: string = '' // safe store du user
-  pseudo: string = ''
-  cx: string = ''
-  K1: string = ''
-  K2: string = ''
-  Kp: string = ''
-  appsDb: string[] = []
-
-  constructor (obj: Object) {
-    for(const f of Object.keys(obj)) this[f] = obj[f]
-  }
-
-  get toObj () : Object {
-    const obj = {}
-    for(const f of Object.keys(this)) obj[f] = this[f]
-    return obj
-  }
-
-  hasAppDb () {
-    const app = stores.config.K.APPNAME
-    if (!this.appsDb || this.appsDb.length)
-      return this.appsDb.indexOf(app) !== -1
-  }
-
-  addAppsDb () {
-    const app = stores.config.K.APPNAME
-    if (!this.appsDb) this.appsDb = []
-    const i = this.appsDb.indexOf(app)
-    if (i === -1) this.appsDb.push(app)
-  }
-
-  delAppsDb () {
-    const app = stores.config.K.APPNAME
-    if (!this.appsDb) this.appsDb = []
-    const i = this.appsDb.indexOf(app)
-    if (i !== -1) this.appsDb.splice(i, 1)
-  }
-}
-
-function EX (e: any, op: string) {
-  const ex = new AppExc(8, 'IDB_SAFE_error', op, [e.message])
-  if (e && e.stack) ex.stack = e.stack
-  return ex
-}
-
 export const useSafeStore = defineStore('safe', () => {
 
-  const IDBsafe = ref(null) // IDB safe locale
-  
-  /* Map des "presque" constantes par user.
-  L'opérateur gérant le safe peut changer en cours de session.
-  */
-  const icvs : Ref<Map<string, ICVS>> = ref(new Map())
+  /* Contenu en Safe Box de la base locale IDB ***********************************************/
+  const devId = ref('') 
+  const devName = ref('')
+  // Map par userId de leur trusting
+  const trustings : Ref<Map<string, Trusting>> = ref(new Map())
 
-  /* Base locale IDB : image en mémoire ***********************************************/
-  const devId = ref('') // Depuis IDB Header
-  const devName = ref('') // Depuis IDB Header
-  const trustings : Ref<Map<string, Trusting>> = ref() // Depuis IDB trustings
   const myTrusting: Ref<Trusting> = computed(() => {
     if (!userId.value) return null
     for(const [,item] of trustings.value)
       if (item.userId === userId.value) return item
     return null
   })
-  const users = computed(() =>
-    trustings.value ? Array.from(trustings.value.values()) : [])
 
-  /*
-  watch(() => stores.session.noLocal, async (v) => {
-    await loadTrustings()
-  })
+  /* Map des "presque" constantes par user.
+  L'opérateur gérant le safe peut changer en cours de session.
   */
+  const icvs : Ref<Map<string, ICVS>> = ref(new Map())
 
-  const init0 = async () : Promise<void> => {
-    trustings.value = new Map<string, Trusting>()
-    devId.value = ''
-    devName.value = ''
-    if (!IDBsafe.value && await Dexie.exists('safe')) 
-      await init1()
-  }
-
-  const init1 = async () : Promise<void> => {
-    try {
-      IDBsafe.value = new Dexie('safe')
-      IDBsafe.value.version(1).stores(STORES)
-      await loadTrustings()
-    } catch (e: any) {
-      if (IDBsafe.value) {
-        await IDBsafe.value.close()
-        IDBsafe.value = null
-      }
-      console.log('Init0 IDBS failed: ' + e.message)
-    }
-  }
-
-  const resetSafe = () => {
+  const resetSafeBox = () => {
     icvs.value = new Map()
     auth.value = null
     userId.value = null
@@ -325,64 +243,8 @@ export const useSafeStore = defineStore('safe', () => {
     credsToCheck.value = null
   }
 
-  const setHeader = async () => {
-    try {
-      await IDBsafe.value.header.put({
-        id: '1',
-        devId: devId.value || '',
-        devName: devName.value || ''
-      })
-    } catch (e) {
-      throw EX(e, 'setHeader')
-    }
-  }
-
-  const loadTrustings = async () => {
-    const m: Map<string, Trusting> = new Map()
-    if (!IDBsafe.value) {
-      trustings.value = m
-      return
-    }
-    const r = await IDBsafe.value.header.get('1')
-    devId.value = r && r.devId ? r.devId : ''
-    devName.value = r && r.devName ? r.devName : ''
-    if (devId.value) {
-      await IDBsafe.value.trustings.each(async (r) => {
-        try {
-          const obj = decode(r.bin)
-          const t : Trusting = new Trusting(obj)
-          m.set(t.userId, t)
-        } catch (e) {
-          console.log(e)
-        }
-      })
-      trustings.value = m
-    }
-  }
-
-  const setTrusting = async (t: Trusting) => {
-    if (IDBsafe.value) try {
-      const obj = t.toObj
-      await IDBsafe.value.trustings.put({ id: t.userId, bin: encode(obj)})
-      trustings.value.set(t.userId, t)
-    } catch (e) {
-      throw EX(e, 'setTrusting')
-    }
-  }
-
-  const delTrusting = async (id: string) => {
-    if (IDBsafe.value) try {
-      await IDBsafe.value.trustings.where({id}).delete()
-      trustings.value.delete(id)
-    } catch (e) {
-      throw EX(e, 'delTrusting')
-    }
-  }
-
   /**********************************************************************
-  Safe central : copie locale du safe de l'utilisateur courant
-  - permet un affichage complet, y compris pour les données relatives
-    aux autres applications que celle qui s'exécute.
+  Safe Box : copie locale de la Safe Box de l'utilisateur courant
   **********************************************************************/
 
   const mySafeStore = ref('')
@@ -543,13 +405,13 @@ export const useSafeStore = defineStore('safe', () => {
         d.devName = await dcX(keyFromB64(d.devName))
         m.set(id, d)
       }
-      if (!found) // le device doit être retiré de la liste des trustings
-        await delTrusting(devId.value)
+      if (!found) // le userId doit être retiré de la liste des trustings
+        await IDBsafe.delTrusting(userId.value)
       const tr = myTrusting.value as Trusting
       if (tr && ((tr.K1 !== auth.value.K1) || (tr.K2 !== auth.value.K2))) {
         tr.K1 = auth.value.K1
         tr.K2 = auth.value.K2
-        setTrusting(tr)
+        await IDBsafe.saveTrusting(tr)
       }
     }
     devices.value = m
@@ -672,22 +534,49 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Retourne une map des credentials de l'utilisateur
-  SANS les props des credentials
-  - soit tous,
-  - soit ceux du type spécifié.
+  SANS les props des credentials pour un service donné, filtré éventuellement
+  - par org,
+  - par docCl.
   */
-  const mySimpleCreds = (soa: SOA, docCl?: string) : Map<string, $Credential> => {
+  const mySimpleCreds = (svc: string, org: string, docCl?: string) : Map<string, $Credential> => {
     const m : Map<string, $Credential> = new Map()
     for(const [credId, cred] of mySafeCreds.value)
-      if (cred.svc === soa.svc && cred.org === soa.org 
-        && (!docCl || docCl === cred.docCl)) m.set(credId, cred)
+      if (cred.svc === svc && (!org || cred.org === org) && (!docCl || docCl === cred.docCl)) 
+        m.set(credId, cred)
     return m
   }
 
-  const myCredOfDoc = (docCl: string, docPk: string, soa?: any) : $Credential | null => {
-    const s = soa || stores.session.currentOrgSvc
+  /* Retourne une map des credentials de l'utilisateur
+  AVEC les props des credentials obtenus du service pour un svc / org fixé:
+  - soit tous,
+  - soit ceux de docCl spécifié.
+  */
+  const myFullCreds = async (svc: string, org: string, docCl?: string) : Promise<Map<string, $Credential>> => {
+    const m : Map<string, $Credential> = mySimpleCreds(svc, org, docCl)
+    if (!m.size) return m
+    let op: Operation
+    try {
+      for(const [ ,cred] of m) {
+        op = new Operation('PropsOfMyCreds', svc, cred.org)
+        await op.sign(cred)
+        const res = await op.post()
+        const props: Object = res.props
+        for(const credId of Object.keys(props)) {
+          const e = m.get(credId)
+          if (e) e.props = props[credId]
+        }
+      }
+      return m
+    } catch (e) { 
+      await op.ko(e)
+      return m 
+    }
+  }
+
+  const myCredOfDoc = (svc: string, org: string, docCl: string, docPk: string) 
+  : $Credential | null => {
     for(const [, cred] of mySafeCreds.value)
-      if (cred.svc === s.svc && cred.org === s.org 
+      if (cred.svc === svc && cred.org === org 
         && cred.docCl === docCl && cred.docPk === docPk) 
         return cred
     return null
@@ -706,32 +595,6 @@ export const useSafeStore = defineStore('safe', () => {
       }
     }
     return m
-  }
-
-  /* Retourne une map des credentials de l'utilisateur
-  AVEC les props des credentials obtenus du service
-  pour le svc / org courant de la session:
-  - soit tous,
-  - soit ceux du type spécifié.
-  */
-  const myFullCreds = async (soa: SOA, docCl?: string) : Promise<Map<string, $Credential>> => {
-    const m : Map<string, $Credential> = mySimpleCreds(soa, docCl)
-    if (!m.size) return m
-    const op = new Operation('PropsOfMyCreds', soa.svc, soa.org)
-    try {
-      for(const [,cred] of m) 
-        await op.sign(cred)
-      const res = await op.post()
-      const props: Object = res.props
-      for(const credId of Object.keys(props)) {
-        const e = m.get(credId)
-        if (e) e.props = props[credId]
-      }
-      return m
-    } catch (e) { 
-      await op.ko(e)
-      return m 
-    }
   }
 
   type SetNameCred = {
@@ -1182,11 +1045,11 @@ export const useSafeStore = defineStore('safe', () => {
   /* Certifie le device courant, le nomme name et attribue le pseudo de l'utilisateur.
   */
   const setTrust = async (name: string, pin: string, pseudo: string) => {
-    if (!IDBsafe) await init1()
-    if (!devId.value || name !== devName.value) { // put Header
+    await IDBsafe.openInAnyCase()
+    if (!devId.value || name !== devName.value) { // save Header
       if (!devId.value) devId.value = Crypt.rnd(12)
       devName.value = name
-      await setHeader()
+      await IDBsafe.saveHeader(devId.value, devName.value)
     }
 
     const cx = Crypt.rnd(24)
@@ -1205,7 +1068,7 @@ export const useSafeStore = defineStore('safe', () => {
       K2: auth.value.K2,
       Kp: Kp
     })
-    await setTrusting(t)
+    await IDBsafe.saveTrusting(t)
 
     /*
     - génère un couple `Sa Va` de clés asymétriques signature / vérification.
@@ -1220,6 +1083,7 @@ export const useSafeStore = defineStore('safe', () => {
     const asn1 = Crypt.signToAsn1(signEC)
     const sign = keyToB64(asn1)
     const Va = keyToB64(kpsv.pub)
+  
     const shK = await Crypt.strongHash(keyK.value, false, false) as string
     const trustDev: TrustDev = {
       userId: userId.value,
@@ -1229,6 +1093,22 @@ export const useSafeStore = defineStore('safe', () => {
       devName: keyToB64(await Crypt.crypt(keyK.value, encoder.encode(devName.value))),
       Va, cy, sign
     }
+
+    let oksign = false
+    {
+      const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
+      console.log('PINCX !!!!!!!!!!!!!!!!!!!!!!!!!! ', pincx)
+      // vérifie par `Va` que `sign` est bien la signature de pincx 
+      const V = keyFromB64(trustDev.Va)
+      // Rétablit la signature en EC - ce que ne fait pas la version PHP
+      const s1 = keyFromB64(trustDev.sign)
+      const sign = Crypt.signFromAsn1(s1)
+      const pcb = keyFromB64(pincx)
+      oksign = await Crypt.verify(V, sign, pcb)
+      if (!oksign)
+        console.log('BUG signature PIN !!!!!!!!!!!!!!!!!!!!!!!!!!')
+    }
+
     const op = new SafeOperation('$TrustDevice', mySafeStore.value)
     let ret
     try {
@@ -1249,10 +1129,10 @@ export const useSafeStore = defineStore('safe', () => {
     devIds: string[]
   }
   const setUntrust = async () => {
-    if (!IDBsafe) await init1()
+    await IDBsafe.openInAnyCase()
     const t: Trusting = myTrusting.value
     if (!t) return 0 // était déjà untrusted
-    await delTrusting(t.userId)
+    await IDBsafe.delTrusting(t.userId)
     const untrustDev: UntrustDev = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
@@ -1273,8 +1153,9 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const setUntrustAll = async (sId: Set<string>) => {
+    await IDBsafe.openInAnyCase()
     if (sId.has(devId.value))
-      await delTrusting(userId.value)
+      await IDBsafe.delTrusting(userId.value)
     const untrustDev: UntrustDev = {
       userId: userId.value,
       devIds: Array.from(sId),
@@ -1325,13 +1206,12 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   return {
-    init0, init1, resetSafe, IDBsafe, loadTrustings,
-    devId, devName,
-    trustings, myTrusting, delTrusting, users,
+    devId, devName, trustings, myTrusting,
 
+    resetSafeBox,
     mySafeStore, userId, userName, keyK,
-
     auth, devices, mySafePrefs, mySafeCreds, mySafeOptions,
+
     updatePrefs, setOptions, updateCredName, fixCreds,
     managerCreds, isManager,
     mySimpleCreds, myFullCreds, myCredOfDoc, getPerimeters,

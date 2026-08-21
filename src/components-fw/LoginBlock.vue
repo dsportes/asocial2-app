@@ -11,14 +11,14 @@ Event émis: logged
       @ok="authCalc"/>
   </div>
 
-  <div v-if="session.noNet && session.hasLocal && sf.users.length && !myUsers.length" 
+  <div v-if="session.noNet && session.hasLocal && sf.trustings.size && trustingsCached().length" 
     class="titre-md msg2 text-center q-ma-sm">{{ $t('LOGplaneimp2') }}</div>
 
   <div v-if="mayPlane"
     class="row full-width items-center q-my-sm q-gutter-sm">
     <btn-bubble :text="$t('LOGauthplane_bub')"/>
     <div class="text-italic titre-md q-ml-sm"> {{$t('LOGauthplane_label')}}</div>
-    <div v-for="u in myUsers" :key="u.userId"
+    <div v-for="u in trustingsCached()" :key="u.userId"
       :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
       @click="selectUser(u)">{{u.pseudo}}
     </div>
@@ -28,7 +28,7 @@ Event émis: logged
     class="row full-width items-center q-my-sm q-gutter-sm">
     <btn-bubble :text="$t('LOGauthbypin_bub')"/>
     <div class="text-italic titre-md q-ml-sm">{{$t('LOGauthbypin_label')}}</div>
-    <div v-for="u in sf.users" :key="u.userId"
+    <div v-for="[,u] in sf.trustings" :key="u.userId"
       :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
       @click="selectUser(u)">{{u.pseudo}}</div>
   </div>
@@ -67,8 +67,9 @@ Event émis: logged
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
+import { IDBsafe } from '../src-fw/idbsafe'
 import { $t } from '../src-fw/util'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import InputB from '../components-fw/InputB.vue'
@@ -80,29 +81,39 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
+/* Si IDB safe existe, on peut a minima la lire pour lister
+les users qui y ont un trusting et leur proposer
+un login par PIN ou AVION.
+Si IDB safe n'existe pas, sf.trustings / sf.trustingHavingCache sont vides
+*/
+onMounted(async () => {
+  await IDBsafe.openOnlyIfExists()
+})
+
 const emit = defineEmits(['logged'])
 
 const pin = reactive({ inp: '', err: '' })
 const entryPP = reactive({inp:'', err:''})
 const selectedUser = ref(null)
 
-const myUsers = computed(() => {
+const trustingsCached = () => {
   const l = []
-  if (sf.users) for(const u of sf.users) 
+  for(const [,u] of sf.trustings) 
     if (u.hasAppDb()) l.push(u)
   return l
-})
+}
 
 const mayPlane = computed(() => 
-  session.hasLocal && myUsers.value.length)
+  session.hasLocal && trustingsCached().length)
 const mayPin = computed(() => 
-  session.hasNet && session.hasLocal && sf.users && sf.users.length)
+  session.hasNet && session.hasLocal && sf.trustings.size)
 
 const preselect = () => {
-  if (mayPlane.value && myUsers.value.length === 1)
-    selectedUser.value = myUsers.value[0]
-  else if (mayPin.value && sf.users.length === 1)
-    selectedUser.value = sf.users[0]
+  const x = trustingsCached()
+  if (mayPlane.value && x.length === 1)
+    selectedUser.value = x[0]
+  else if (mayPin.value && sf.trustings.size === 1)
+    selectedUser.value = sf.trustings.size[0]
   else selectedUser.value = null
 }
 
@@ -162,7 +173,8 @@ const valA = async () => {
 }
 
 const valP = async () => {
-  await sf.init1()
+  // Si IDBsafe n'était pas ouvert (voire n'existait pas), ouverture et initialisation
+  await IDBsafe.openInAnyCase()
   const shp = await Crypt.strongHash(entryP.inp, true, false)
   const status = await sf.openSafeByAP(safeIS.value.i, safeIS.value.s, shp)
   if (status === 0) emit('logged', 'alias')

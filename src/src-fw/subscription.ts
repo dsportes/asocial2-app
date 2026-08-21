@@ -170,10 +170,10 @@ export class FW$Sync {
   std: IDocStore
   hasIDB: boolean
 
-  constructor (soa: SOA) {
-    this.op = new Operation('FW$Sync', soa.svc, soa.org)
-    this.signer = (Registry.newD(soa.svc, 'DefSigner') as $DefSigner).init(soa.svc, soa.org)
-    this.std = getStore(soa.svc, soa.org)
+  constructor (svc: string, org: string) {
+    this.op = new Operation('FW$Sync', svc, org)
+    this.signer = (Registry.newD(svc, 'DefSigner') as $DefSigner).init(svc, org)
+    this.std = getStore(svc, org)
     this.op.args.toSync = []
     this.hasIDB = stores.session.hasIDB
   }

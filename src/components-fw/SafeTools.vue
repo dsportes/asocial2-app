@@ -36,17 +36,17 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <q-separator color="primary" class="q-my-xs q-mx-lg"/>
       
-      <bar-open v-if="trustingMe === null" :bubble="$t('HPtrust_2')" :disbubble="$t('HPtrust_2d')"
+      <bar-open v-if="sf.myTrusting === null" :bubble="$t('HPtrust_2')"
         :title="$t('HPtrust_1')"
         @open="dialogs.DevTrustit = true"/>
 
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPchgpin_2')" :disbubble="$t('HPtrust_2d')"
+      <bar-open v-if="sf.myTrusting !== null" :bubble="$t('HPchgpin_2')"
         :title="$t('HPchgpin_1')"
         @open="dialogs.DevTrustit = true"/>
 
-      <bar-open v-if="trustingMe !== null" :bubble="$t('HPuntrust_2')" :disbubble="$t('HPtrust_2d')"
-        :title="$t('HPuntrust_1')"
-        @open="openUntrust"/>
+      <bar-open v-if="sf.myTrusting !== null" :bubble="$t('HPuntrust_2')"
+        :title="$t('HPuntrust_1', [sf.devName])"
+        @open="dialogs.DevUntrustit = true"/>
 
       <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
         :title="$t('HPtrustings_1')"
@@ -89,7 +89,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
   <safe-cr v-if="dialogs.SafeCrA" v-model="dialogs.SafeCrA" mode="a" @close="fnc"/>
   <safe-cr v-if="dialogs.SafeCrP" v-model="dialogs.SafeCrP" mode="p" @close="fnc"/>
   <dev-trustit v-if="dialogs.DevTrustit" v-model="dialogs.DevTrustit" @close="fnc" @done="fnc"/>
-  <dev-untrustit v-if="dialogs.DevUntrustit" v-model="dialogs.DevUntrustit" @close="fnc" @done="fnc"/>
   <dev-trustings v-if="dialogs.DevTrustings" v-model="dialogs.DevTrustings" @close="fnc"/>
   <manage-users v-if="dialogs.ManageUsers" v-model="dialogs.ManageUsers" @close="fnc" />
   <creds-review v-if="dialogs.CredsReview" v-model="dialogs.CredsReview" @close="fnc"/>
@@ -110,6 +109,19 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       <div class="row full-width justify-between items-center">
         <btn-cond :label="$t('giveup')" @ok="dialogs.delSafe = false"/>
         <btn-cond :label="$t('iconfirm')" confirm @ok="delSafe"/>
+      </div>
+    </q-card>
+  </q-dialog>
+
+  <!-- Confirmation de perte de confiance du terminal -->
+  <q-dialog v-if="dialogs.DevUntrustit" v-model="dialogs.DevUntrustit" persistent>
+    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
+      <div class="q-my-sm titre-lg text-bold text-center">
+        {{$t('HPuntrust_1', [sf.devName])}}
+      </div>
+      <div class="row full-width justify-between items-center">
+        <btn-cond :label="$t('giveup')" @ok="dialogs.DevUntrustit = false"/>
+        <btn-cond :label="$t('iconfirm')" confirm @ok="untrustit"/>
       </div>
     </q-card>
   </q-dialog>
@@ -135,7 +147,6 @@ import ManageUsers from '../dialogs-fw/ManageUsers.vue'
 import SafeCr from '../dialogs-fw/SafeCr.vue'
 import DevTrustings from '../dialogs-fw/DevTrustings.vue'
 import DevTrustit from '../dialogs-fw/DevTrustit.vue'
-import DevUntrustit from '../dialogs-fw/DevUntrustit.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 
 // @ts-ignore
@@ -168,11 +179,18 @@ const dialogs = reactive({
   delSafe: false
 })
 
-const trustingMe = computed(() => sf.myTrusting )
-
-const openUntrust = async () => {
-  await sf.getMySessions()
-  dialogs.DevUntrustit = true
+const untrustit = async () => {
+  try {
+    const status = await sf.setUntrust()
+    if (status)
+      await ui.diagDisplay($t('HPstuntrust_' + status))
+    dialogs.DevUntrustit = false
+    fnc()
+  } catch (e: any) {
+    await ui.diagDisplay($t('exui', [e.label, e.message]))
+    dialogs.DevUntrustit = false
+  }
+  
 }
 
 const fnc = () => {

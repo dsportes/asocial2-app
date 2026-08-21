@@ -35,7 +35,7 @@
     <div class="row">
       <div class="col-5">{{ $t('AUTcol_sec') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <select-enum1 :svc="soa.svc" :org="soa.org"
+        <select-enum1 svc="AS2" :org="org"
           v-model="aut.section" enum="Section" size="md"
           @select="majSection"/>
       </div>
@@ -60,7 +60,6 @@ import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
 import { getStore, IDocStore, setCallBack } from '../stores/docs'
-// import { DocDescriptor } from '../src-fw/docDescriptor'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -75,8 +74,8 @@ const session = stores.session
 const sf = stores.safe
 
 const creds: Ref<Map<string, $Credential>> = ref()
-const soa = computed(() => session.currentSOA )
-const std = computed(() => getStore(soa.value.svc, soa.value.org))
+const org = ref()
+const std = computed(() => getStore('AS2', org.value))
 
 const cred = ref(null)
 
@@ -93,18 +92,19 @@ const coauts: Ref<$Cred[]> = computed(() => {
 // watch(aut, (v) => { console.log(v.nomAuteur) })
 
 const init = async () => { 
-  creds.value = await sf.myFullCreds(soa.value, 'Auteur') }
+  creds.value = await sf.myFullCreds('AS2', '', 'Auteur') }
 
-onMounted(async () => { await init()})
+onMounted(async () => { 
+  await init()})
 
 const subsAuteur = async (pk: string) => {
-  const subs = $Subs.new(soa.value.svc, soa.value.org) as $Subs
+  const subs = $Subs.new('AS2', org.value) as $Subs
   subs.setTitle('Test auteur').setDef('Auteur/' + pk, 'Hello victor')
   await subs.subscribe(false)
 }
 
 const syncAuteur = async (pk: string) : Promise<void> => {
-  const sync = new FW$Sync(soa.value)
+  const sync = new FW$Sync('AS2', org.value)
   await sync.setDefs(['Auteur/' + pk])
   await sync.post(true)
 }
@@ -119,21 +119,13 @@ setCallBack(async (defs: string[]) => {
 
 const select = async (c: $Credential) => {
   cred.value = c
+  org.value = c.org
   await subsAuteur(c.docPk)
   await syncAuteur(c.docPk)
-  /*
-  if (!aut.value) {
-    const co = []
-    for(const cr in aut.value.embedCreds)
-      if (cr !== c.credId) co.push(aut.value.embedCreds[cr])
-    coauts.value = co
-  }
-  */
 }
 
 const editTrig = async (trig: string) => {
-  const soa = session.currentSOA
-  const op = new Operation('UpdPropsCred', soa.svc, soa.org)
+  const op = new Operation('UpdPropsCred', 'AS2', org.value)
   const c = cred.value
   op.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk, props: { trig: trig } })
   await op.sign(c)
@@ -155,10 +147,9 @@ const majSection = async (section: string) => {
 }
 
 const majAut = async (nomAuteur: string, section: string) => {
-  const soa = session.currentSOA
   // const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
-  const op = new Operation('MajAuteur', soa.svc, soa.org)
-  op.args.autid = aut.value.autid
+  const op = new Operation('MajAuteur', 'AS2', org.value)
+  op.args.autpk = cred.value.docPk
   if (nomAuteur) op.args.nomAuteur = nomAuteur
   if (section) op.args.section = section
   await op.sign(cred.value)

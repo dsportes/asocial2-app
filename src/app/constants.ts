@@ -15,6 +15,8 @@ export const K = {
     en: "https://asocialapps.github.io/frdocs/",
   },
 
+  myDebug: true,
+  
   // 'https://europe-west1-asocial2.cloudfunctions.net/asocialgcf/'
   vapidPublicKey: 'BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew',
 

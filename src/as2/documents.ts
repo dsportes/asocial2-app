@@ -53,11 +53,10 @@ export class AS2$Auteur extends $Document {
     }
   }
 
-  static async get (autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
-    const soa = stores.session.currentSOA
-    const op = new Operation('AuteurDeId', soa.svc, soa.org)
-    const pk = autPk || DocDescriptor.get(soa.svc + '$Auteur').pkValue({ autid: autid })
-    op.sign(stores.safe.myCredOfDoc('Auteur', pk))
+  static async get (org: string, autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
+    const op = new Operation('AuteurDeId', 'AS2', org)
+    const pk = autPk || DocDescriptor.get('AS2$Auteur').pkValue({ autid: autid })
+    op.sign(stores.safe.myCredOfDoc('AS2', org, 'Auteur', pk))
     op.args.autPk = pk
     try {
       const res = await op.post()

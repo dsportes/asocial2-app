@@ -76,7 +76,7 @@ export class $DefSigner extends $ADocument {
   init (svc: string, org: string) {
     this.std = getStore(svc, org)
     this.creds = new Map()
-    const sc = stores.safe.mySimpleCreds({svc, org})
+    const sc = stores.safe.mySimpleCreds(svc, org)
     for(const [ ,c] of sc)
       this.creds.set(c.docCl + '/' + c.docPk, c)
     return this
