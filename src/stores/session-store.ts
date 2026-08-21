@@ -10,73 +10,12 @@ import { SOA } from '../src-fw/registry'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
-import { idb, IDB } from '../src-fw/idb'
+import { idb, IDB, Perims, Prefs, Options, StartPlane  } from '../src-fw/idb'
+import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
-
-export class SCcontext { // Contexte Safe / Cache
-  creds: Object = {}
-  prefs: Object = {}
-  options = {
-    orgs: [],
-    roles: [],
-    pref: ''
-  }
-  optionsB: any = { }
-
-  get isOrgsEd () { return (this.srt(this.options.orgs).join('/') !== this.optionsB.orgs.join('/'))}
-  get isRolesEd () { return (this.srt(this.options.roles).join('/') !== this.optionsB.roles.join('/'))}
-  get isPrefEd () { return this.options.pref !== this.optionsB.pref}
-  get isEd () { return this.isPrefEd || this.isOrgsEd || this.isRolesEd }
-  
-  soas: Map<string, SOA> = new Map()
-  orgs: Set<string> = new Set()
-
-  srt(x) { return x.sort((a, b) => a < b ? 1 : (a > b ? -1 : 0)) }
-
-  // Chargement initial depuis Safe et / ou Cache et fusion des options
-  async init () : Promise<SCcontext> {
-    const session = stores.session
-    const sf = stores.safe
-    let optsC: any
-    let optsS: any
-    if (session.hasNet) {
-      for(const [credId, c] of sf.mySafeCreds) 
-        this.creds[credId] = c.toCred()
-      for(const [id, x] of sf.mySafePrefs)
-        this.prefs[id] = x // x: [time, obj]
-      optsS = sf.mySafeOptions || {}
-    }
-    if (idb) {
-      if (session.planeMode) 
-        this.creds = await idb.getSingleton('creds')
-      if (session.planeMode)
-        this.prefs = await idb.getSingleton('prefs')
-      optsC = await idb.getSingleton('options')
-    }
-    for(const credId in this.creds) {
-      const c = this.creds[credId]
-      const k = c.svc + '/' + c.org
-      this.soas.set(k, { svc: c.svc, org: c.org })
-      this.orgs.add(c.org)
-    }
-
-    const orgs = optsC && optsC.orgs ? optsC.orgs : (optsS && optsS.orgs || [])
-    { const x1 = []; for(const o of orgs) x1.push(o); this.options.orgs = this.srt(x1) }
-
-    this.options.roles = this.srt(optsC && optsC.roles ? optsC.roles : (optsS && optsS.roles || []))
-
-    this.options.pref = optsC && optsC.pref ? optsC.pref : (optsS && optsS.pref || '')
-    if (this.options.pref && !this.prefs[this.options.pref]) this.options.pref = ''
-    this.optionsB.orgs = [ ...this.options.orgs]
-    this.optionsB.roles = [ ...this.options.roles]
-    this.optionsB.pref = this.options.pref
-
-    return this
-  }
-}
 
 export const useSessionStore = defineStore('session', () => {
 
@@ -99,7 +38,19 @@ export const useSessionStore = defineStore('session', () => {
     noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
   )
 
-  const scContext: Ref<SCcontext> = ref()
+  const perims: Ref<Perims> = ref()
+  const prefs: Ref<Prefs> = ref()
+
+  const pref: Ref<string> = ref()
+  const prefC: Ref<string> = ref()
+  const prefS: Ref<string> = ref()
+
+  const orgRoles : Ref<Set<string>> = ref() // couples org/role
+  const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
+  const orgRolesC : Ref<Set<string>> = ref() // couples org/role de Cache
+  const orgRolesS : Ref<Set<string>> = ref() // couples org/role de SafeBox
+
+  // const scContext: Ref<SCcontext> = ref()
   const lstSOA: Ref<SOA[]> = ref()
   const currentSOA: Ref<SOA> = ref()
 
@@ -122,26 +73,33 @@ export const useSessionStore = defineStore('session', () => {
         resetDocStores()
         if (hasLocal.value) {
           new IDB()
-          await idb.open()
           const mt = sf.myTrusting
           if (mt) mt.addAppsDb()
         }
-        const sc = new SCcontext()
-        await sc.init()
-        lstSOA.value = []
-        for(const [,soa] of sc.soas) lstSOA.value.push(soa)
-        currentSOA.value = lstSOA.value.length == 1 ? lstSOA.value[0] : { svc: '', org: '' }
-        scContext.value = sc
-        ui.loginPage.resetdb = false
-        if (!toPage) {
-          step.value = 1
-          return
+        if (sessionId.planeMode) {
+          const sp: StartPlane = await idb.openPlane()
+          prefs.value = sp.prefs
+          perims.value = sp.perims
+          orgRoles.value = new Set(sp.options.orgRoles)
+          pref.value = sp.options.pref
+        } else {
+          // TODO : calculer orgRolesS depuis perims
+          perims.value = sf.getPerimeters()
+          prefs.value = sf.mySafePrefs
+          const x = sf.mySafeOptions
+          prefS.value = x.pref
+          orgRolesS.value = x.orgRoles
+          if (sessionId.syncMode) {
+            const opts = await idb.openSync()
+            prefC.value = opts ? opts.pref || '' : ''
+            orgRolesC.value = new Set(opts ? opts.orgRoles || [] : [])
+          }
         }
-        // sinon enchaîne sur ouverture page
-        step.value = 2
+        ui.loginPage.resetdb = false
+        step.value = 1
       }
 
-      case 2 : { // session ouverte
+      case 2 : { // start session: choix des options fait
         ui.setPage(toPage || 'app')
         step.value = 2
         return
@@ -149,15 +107,7 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  /*
-  const init0 = () => {
-    step.value = 0
-    noLocal.value = false
-    noNet.value = false
-  }
-  */
-
-  const pref = reactive({ code: '', time: 0, obj: null })
+  const prefx = reactive({ code: '', time: 0, obj: null })
   const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
   const setEdPref = (code: string, time: number, obj: Object) => {
     edPref.code = code
@@ -168,7 +118,7 @@ export const useSessionStore = defineStore('session', () => {
     edPref.diag = ''
   }
   const updatePref = (code: string, time: number, obj: Object) => {
-    pref.code = code; pref.time = time; pref.obj = obj
+    prefx.code = code; prefx.time = time; prefx.obj = obj
   }
 
   // Gestion des opérations ************************************************
@@ -324,7 +274,7 @@ export const useSessionStore = defineStore('session', () => {
     permState, permDialog, changePerm, askForPerm, permChange,
 
     hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
-    lstSOA, currentSOA, scContext,
+    lstSOA, currentSOA,
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,

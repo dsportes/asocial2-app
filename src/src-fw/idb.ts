@@ -91,11 +91,15 @@ type IDBrow = {
 
 export type Perims = Map<string, Map<string, $Perimeter>>
 export type Prefs = Map<string, Object>
+export type Options = {
+  orgRoles: string[] // liste des couples org/role sélectionnés par l'utilisateur
+  pref: string
+}
 
 export type StartPlane = { 
   perims: Perims,
   prefs: Prefs, 
-  options: Object
+  options: Options
 }
 
 export let idb : IDB = null // IDB courante
@@ -147,6 +151,7 @@ export class IDB {
     idb = this
   }
 
+  /*
   async open () {
     try {
       await this.db.open()
@@ -155,14 +160,6 @@ export class IDB {
       throw IDB.EX(e, 'open')
     }
   }
-
-  /*
-    const max = Date.now() + (this.SYNCINCRNBD * 86400000)
-    if (clean) {
-      this.db.docs.where('lat').below(max).delete()
-      this.db.colls.where('lat').below(max).delete()
-    }
-
   */
 
   close () {
@@ -180,9 +177,10 @@ export class IDB {
     return !bin ? null : await Crypt.decrypt(this.keyK, bin)
   }
 
-  async getOptions () : Promise<Object>{
+  async getOptions () : Promise<Options>{
     const x = await this.db.singletons.get('$OPTIONS$')
-    const obj = x ? decode(await this.decryptData(x.data)) : {}
+    if (!x) return null
+    const obj = decode(await this.decryptData(x.data))
     return obj
   }
 
@@ -277,14 +275,25 @@ export class IDB {
     - retourne une Map des préférences
     - retourne l'objet options.
   */
-  async openPlane () : Promise<StartPlane> {
+  async openPlane () : Promise<StartPlane | null> {
     try {
       await this.db.open()
+      const options = await this.getOptions()
+      if (!options) return null
       return {
-        options: await this.getOptions(),
+        options,
         prefs: await this.getPrefs(),
         perims: await this.getPerims()
       }
+    } catch (e) {
+      throw IDB.EX(e, 'openPlane')
+    }
+  }
+
+  async openSync () : Promise<Options | null> {
+    try {
+      await this.db.open()
+      return await this.getOptions()
     } catch (e) {
       throw IDB.EX(e, 'openPlane')
     }
@@ -299,7 +308,7 @@ export class IDB {
   - reçoit un objet options et le stocke.
   - reçoit une Map des préférences et la stocke
   */
-  async openSyncReset (options: Object, prefs: Prefs, perims: Perims) 
+  async startSyncReset (options: Object, prefs: Prefs, perims: Perims) 
   : Promise<void> {
     try {
       await this.db.open()
@@ -323,7 +332,7 @@ export class IDB {
       dont la lat est obsolète.
     - lit l'objet options et le retourne.
   */
-  async openSync (options: Object, prefs: Prefs, perims: Perims) 
+  async startSync (options: Object, prefs: Prefs, perims: Perims) 
   : Promise<Object> {
     try {
       const max = Date.now() - (this.SYNCINCRNBD * 86400000)

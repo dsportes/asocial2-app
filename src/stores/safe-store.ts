@@ -402,7 +402,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Section "préférences" organisée avec une **sous-section par application**
   Seulement les préférences de app */
-  const mySafePrefs: Ref<Map<string, Uint8Array>> = ref()
+  const mySafePrefs: Ref<Map<string, Object>> = ref()
 
   /* Section "creds": organisée avec une **sous-section par application**
   Seulement les credentials de app */
@@ -557,7 +557,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Prefs *****************************************************************************
   Cette section est organisée avec une **sous-section par application** donnant une
-  map (**cryptée par la clé K**) de clé `code` et de valeur `[time, obj]`:
+  map de clé `code` et de valeur `encode([time, obj])`:
   - `code` : texte court parlant pour l'utilisateur correspondant
     à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
   - `time`: date-heure de dernière mise à jour
@@ -566,13 +566,12 @@ export const useSafeStore = defineStore('safe', () => {
   **************************************************************************************/
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.K.APPNAME
-    const p = new Map<string, [number, Uint8Array]>() // clé: app
+    const p = new Map<string, [number, Object]>() // clé: app
     if (safe.prefs) {
-      const x = safe.prefs[app]
-      if (x) for (const code in x) {
-        const z = keyFromB64(x[code]) // encode de [time, obj]
-        const [time, obj] = decode(z)
-        p.set(code, [time, obj])
+      const pr = safe.prefs[app]
+      if (pr) for (const code in pr) {
+        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(pr[code])))
+        p.set(code, obj)
       }
     }
     mySafePrefs.value = p
@@ -582,16 +581,16 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shK: string
-    prefs: Object | null // clé: prefId, valeur: Objet Prefs sérialisé crypté
+    prefs: Object | null // clé: code, valeur: Objet Prefs sérialisé crypté
     delprefs: string[] // liste des crIds à supprimer
   }
 
   /* Mise à jour des préférences */
-  const updatePrefs = async ( mprefs: Map<string, LocPref>, delprefs: string[] ) => {
+  const updatePrefs = async ( mprefs: Map<string, Object>, delprefs: string[] ) => {
     let prefs : Object | null = {}
 
-    if (mprefs && mprefs.size) for(const [,p] of mprefs) {
-      prefs[p.code] = keyToB64(encode([p.time, p.obj]))
+    if (mprefs && mprefs.size) for(const [code, obj] of mprefs) {
+      prefs[code] = keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
     }
     if (Object.keys(prefs).length === 0) prefs = null
 
