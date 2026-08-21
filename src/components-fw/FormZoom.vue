@@ -1,5 +1,5 @@
 <template>
-<div v-if="fctx">
+<div v-if="fctx && fst.form">
   <q-expansion-item 
     :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status) + (fst.form.isInvit ? ' [' + $t('FORMisinvit') + ']' : '')" 
     dense switch-toggle-side class="q-ma-sm full-width"
@@ -106,18 +106,17 @@
       <div v-if="fst.visU">
         <div class="titre-md q-mt-sm">{{  $t('FORMmsg_d') }}</div>
         <md-editor v-if="fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
-          :lgmax="500" :rows="3" :text="fst.form.msgU || ''" modetxt editable/>
-        <md-editor v-else model="fst.form.msgU" :rows="3" disable
-          :text="fst.form.msgU || ''" modetxt/>
+          :lgmax="500" :rows="3" :text="fst.form.msgUS" modetxt editable/>
+        <md-editor v-else model="fst.form.msgUS" :rows="3" disable
+          :text="fst.form.msgUS" modetxt/>
       </div>
 
       <div v-if="fst.visT">
         <div class="titre-md q-mt-sm">{{  $t('FORMmsg_p') }}</div>
-        <!--div>{{ fst.upd.msg }} / {{ fst.form.msgT }}</div-->
         <md-editor v-if="!fst.isDemand && fst.form.status <= 2" v-model="fst.upd.msg"
-          :lgmax="500" :rows="3" :text="fst.form.msgT || ''" modetxt editable/>
-        <md-editor v-else v-model="fst.form.msgT" :rows="3" disable
-          :text="fst.form.msgT || ''" modetxt/>
+          :lgmax="500" :rows="3" :text="fst.form.msgTS" modetxt editable/>
+        <md-editor v-else v-model="fst.form.msgTS" :rows="3" disable
+          :text="fst.form.msgTS" modetxt/>
       </div>
     </div>
     </template>

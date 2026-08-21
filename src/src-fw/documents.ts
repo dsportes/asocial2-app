@@ -414,6 +414,9 @@ export class $Form extends $Document {
   // lv?: number = 0 // lastView par U
   _aesU?: Uint8Array | null = null
 
+  msgUS?: string
+  msgTS?: string
+
   get typeEd () {
     return $t('TYPE_' + this.svc + '_' + this.type).substring(2)
   }
@@ -425,7 +428,7 @@ export class $Form extends $Document {
       svc: soa.svc, org: soa.org, 
       type, formId: Crypt.rnd(15), userId,
       v: 0, maxLife: 0, status: 0,
-      etcU: '', etcT: '', msgU: '', msgT: '', opts: {}
+      etcU: null, etcT: null, msgU: null, msgT: null, opts: {}
     })
   }
 
@@ -544,6 +547,7 @@ export class $Form extends $Document {
     const f = $Form.new(obj)
     f.svc = svc
     f.org = org
+    await f.decryptMsgU()
     return f
   }
 

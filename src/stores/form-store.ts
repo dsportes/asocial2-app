@@ -45,10 +45,10 @@ export const useFormStore = defineStore('form', () => {
     diag2.value = diag1.value ? '' : await f.checkEtc(upd.etc)
     if (isDemand.value) {
       upd.etcc = !f.eqEtc(f.etcU, upd.etc)
-      upd.msgc = upd.msg !== f.msgU
+      upd.msgc = upd.msg !== f.msgUS
     } else {
       upd.etcc = !f.eqEtc(f.etcT, upd.etc)
-      upd.msgc = upd.msg !== f.msgT
+      upd.msgc = upd.msg !== f.msgTS
     }
  
     if (upd.etcc || upd.msgc) ui.setEditing();
@@ -63,8 +63,9 @@ export const useFormStore = defineStore('form', () => {
     form.value = formCtx.form
     isDemand.value = formCtx.isDemand
     const f = form.value
-    if (typeof f.msgU !== 'string') f.msgU = f.msgU ? decoder.decode(f.msgU) : ''
-    if (typeof f.msgT !== 'string') f.msgT = f.msgT ? decoder.decode(f.msgT) : ''
+    f.msgUS = f.msgU ? decoder.decode(f.msgU) : ''
+    const isS = typeof f.msgT === 'string'
+    f.msgTS = isS ? f.msgT : decoder.decode(f.msgT)
     reset()
     setTimeout(async () => {
       await onChange()}, 1)
@@ -74,7 +75,7 @@ export const useFormStore = defineStore('form', () => {
     const f = form.value
     const ui = stores.ui
     if (f.status !== 0) ui.resetEditing()
-    upd.msg = isDemand.value ? f.msgU || '' : f.msgT || ''
+    upd.msg = isDemand.value ? f.msgUS || '' : f.msgTS || ''
     upd.etc = isDemand.value ? f.cloneEtc(true) : f.cloneEtc(false)
     visU.value = (f.status === 0 && isDemand.value) || (f.status > 0)
     visT.value = (f.status === 0 && !isDemand.value) || (f.status > 0)
