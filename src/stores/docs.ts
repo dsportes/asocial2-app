@@ -19,6 +19,7 @@ import { useSafeStore } from '../stores/safe-store'
 import { useConfigStore } from '../stores/config-store'
 
 import { keyFromB64 } from '../src-fw/b64'
+import { $Perimeter } from '../src-fw/documents'
 import { $Document, Registry } from '../src-fw/registry'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $DCData } from 'src/src-fw/subscription'
@@ -139,22 +140,54 @@ export type Idef = {
   anxCl: string
 }
 
-export interface $DCItem {
+export class $DCItem {
+  // 0: jamais demandé, 1: premier sync en cours, 2: un sync s'est terminé
+  state: number = 0
+  get isStandBy () { return this.state === 0 }
+  get isLoading () { return this.state === 1 }
+  get isReady () { return this.state === 2 }
+
+  // set des prérimètres référençant ce def
+  perims: Set<string> = new Set()
+
   def: string
   /* sat : service assert time. Le service affirme la collection 
   avait bien cette valeur à la date-heure sat */
-  sat: number 
-  sv: number // version de la collection détenue en store (et en service)
-  lat: number // En IDB, la valeur est assertée à lat
-  lv: number // version locale détenue en IDB
+  sat: number // service assertion time
+  sv: number // version du document / collection en service
+  lat: number // local assertion time - (détenue en IDB)
+  lv: number // version locale (détenue en IDB)
+
+  constructor (def: string, sat?: number, lat?: number, sv?: number, lv?: number) {
+    this.def = def
+    this.sat = sat || 0
+    this.lat = lat || 0
+    this.sv = sv || 0
+    this.lv = lv || 0
+  }
+
+  addPerimeter (p: string) {
+    this.perims.add(p)
+  }
+
 }
 
-export interface $CollItem extends $DCItem {
+export class $CollItem extends $DCItem {
   pks: Set<string> // Set des pk des documents de la collection
+  constructor (def: string, sat?: number, lat?: number, sv?: number, lv?: number, pks?: Set<string>) {
+    super(def, sat, lat, sv, lv)
+    this.pks = pks || null
+  }
+  get isEmpty() { return this.pks === null }
 }
 
-export interface $DocItem extends $DCItem {
+export class $DocItem extends $DCItem {
   doc: $Document // Document compilé
+  constructor (def: string, sat?: number, lat?: number, sv?: number, lv?: number, doc?: $Document) {
+    super(def, sat, lat, sv, lv)
+    this.doc = doc || null
+  }
+  get isEmpty() { return this.doc === null }
 }
 
 type row = {
@@ -175,13 +208,22 @@ const useStore = (id: string) =>
     const org = id.substring(id.indexOf('/') + 1)
     let hasIDB = session.hasIDB
     let hasNet = session.hasNet
+
     const docs = reactive({  })
+
     /* Deux formes de collections selon leur def:
       0: Auteur : tous les auteurs
       2: Article/auteur/pkauteur : les messages dont l'auteur est pkauteur
       value: CollItem
     */
     const colls = reactive({  })
+
+    /* Chaque propriété correspondant à un périmètre: sa valeur donne son état.
+    - 0: stand-by - n'a pas l'objet d'un fetch
+    - 1: loading - a fait l'objet d'un fetch, toutes defs abonnés et sync demandés
+    - 2: ready - toutes defs ont eu au moins un sync.
+    */
+    const pstates = reactive({  })
     /************************************************/
 
     const getDCItem = (def: string) : $DCItem => docs[def]
@@ -265,18 +307,18 @@ const useStore = (id: string) =>
       async function manageData (data: Uint8Array) {
         const row = buildRow(idf, data) as row
         const doc = await compile(idf.cl, row)
-        const defd = doc._clazz + '/' + doc._pk
-        let itemd = docs[defd] as $DocItem
+        const def = doc._clazz + '/' + doc._pk
+        let item = docs[def] as $DocItem
         // Si itemd n'existait pas on EN CREE UN
-        if (!itemd) {
-          itemd = { def: defd, sat, lat: 0, sv: row.v, lv: 0, doc }
-          docs[def] = itemd
+        if (!item) {
+          item = new $DocItem(def, sat, 0, row.v, 0, doc)
+          docs[def] = item
         } else {
-          itemd.sat = sat
-          itemd.sv = row.v
-          itemd.doc = doc
+          item.sat = sat
+          item.sv = row.v
+          item.doc = doc
         }
-        if (hasIDB) await setIDB(itemd, data)
+        if (hasIDB) await setIDB(item, data)
         return doc._pk
       }
 
@@ -345,7 +387,7 @@ const useStore = (id: string) =>
           }
         }
 
-      } else { // Colections
+      } else { // Collections
 
         let item = colls[def] as $CollItem
         if (!cd.incr) {
@@ -367,7 +409,7 @@ const useStore = (id: string) =>
             await manageDatas(pks)
             if (!item) { // N'existait pas, on en créé un
               // Création de l'item pour la collection
-              item = { def, sat, lat: sat, sv: cd.v, lv: cd.v, pks }
+              item = new $CollItem(def, sat, sat, cd.v, cd.v, pks)
               colls[item] = item
             } else { // la collection avait un item
               item.sat = sat
@@ -420,11 +462,11 @@ const useStore = (id: string) =>
       if (item) return item
       const r: IDBrow = await idb.getDC(svc, org, def)
       if (!r) return null
-      item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, doc: null}
+      item = new $DocItem(def, r.lat, r.v, r.lat, r.v, null)
       try {
         const idf = idef(def)
         const obj = decode(r.data)
-        const doc = await Registry.compile(svc, idf.cl, org, obj)
+        item.doc = await Registry.compile(svc, idf.cl, org, obj)
         return item
       } catch (e) {
         console.error(e.toString)
@@ -437,7 +479,7 @@ const useStore = (id: string) =>
       if (item) return item
       const r: IDBrow = await idb.getDC(svc, org, def)
       if (!r) return null
-      item = { def, sat: r.lat, sv: r.v, lat: r.lat, lv: r.v, pks: null}
+      item = new $CollItem(def, r.lat, r.v, r.lat, r.v, null)
       try {
         const idf = idef(def)
         const x = decode(r.data)
@@ -450,6 +492,27 @@ const useStore = (id: string) =>
         console.error(e.toString)
         return null
       }
+    }
+
+    const getItem = (def: string, create?: boolean) => {
+      const idf = idef(def)
+      const dc = idf.type === 1 ? docs : colls
+      let item = dc[def]
+      if (!item && create) {
+        item = idf.type === 1 ? new $DCItem(def) : new $CollItem(def)
+        dc[def] = item
+      }
+      return item
+    }
+
+    const addPerimeter = (p: $Perimeter) => {
+      let state = 0
+      for(const def of p.defs) {
+        const item = getItem(def, true)
+        item.addPerimeter(p.id)
+        if (item.state < state) state = item.state
+      }
+      pstates[p.id] = state
     }
 
     return { 

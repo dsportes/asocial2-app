@@ -6,7 +6,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
-import { SOA } from '../src-fw/registry'
+import { getStore } from '../stores/docs'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
@@ -57,6 +57,52 @@ export const useSessionStore = defineStore('session', () => {
     orgRolesP.value = s
   }
 
+  const doStep1 = async (sf, ui) => {
+    AOperation.reset()
+    resetDocStores()
+    if (hasLocal.value) {
+      // Création si nécessaire de Cache
+      new IDB()
+      const mt = sf.myTrusting
+      if (mt) await mt.addAppsDb()
+    }
+    if (sessionId.planeMode) {
+      const sp: StartPlane = await idb.openPlane()
+      prefs.value = sp.prefs
+      perims.value = sp.perims
+      setOrgRolesP(perims.value)
+      orgRoles.value = new Set(sp.options.orgRoles || [])
+      pref.value = sp.options.pref || ''
+    } else {
+      perims.value = sf.getPerimeters()
+      setOrgRolesP(perims.value)
+      prefs.value = sf.mySafePrefs
+      const x = sf.mySafeOptions
+      pref.value = x.pref || ''
+      orgRoles.value = x.orgRoles || []
+      if (sessionId.syncMode) {
+        const opts = await idb.openSync()
+        if (opts && opts.pref) pref.value = opts.pref
+        if (opts && opts.orgRoles && opts.orgRoles.length)
+          orgRoles.value = new Set(opts.orgRoles)
+      }
+    }
+    ui.loginPage.resetdb = false
+  }
+
+  const doStep2 = async (sf, ui) => {
+    const svcOrgs: Set<string> = new Set(perims.value.keys())
+    for(const svcOrg of svcOrgs) {
+      const i = svcOrg.indexOf('/')
+      const svc = svcOrg.substring(0, i)
+      const org = svcOrg.substring(i + 1 )
+      const mperins = perims.value.get(svcOrg)
+      const st = getStore(svc, org)
+      
+    }
+
+  }
+
   const setStep = async (s: number, toPage?: string) => { 
     const ui = stores.ui
     const sf = stores.safe
@@ -71,48 +117,16 @@ export const useSessionStore = defineStore('session', () => {
         return
       }
 
-      case 1 : { // authentification faite
-        // préparation pour permettre le choix des options
-        AOperation.reset()
-        resetDocStores()
-        if (hasLocal.value) {
-          // Création si nécessaire de Cache
-          new IDB()
-          const mt = sf.myTrusting
-          if (mt) await mt.addAppsDb()
-        }
-        if (sessionId.planeMode) {
-          const sp: StartPlane = await idb.openPlane()
-          prefs.value = sp.prefs
-          perims.value = sp.perims
-          setOrgRolesP(perims.value)
-          orgRoles.value = new Set(sp.options.orgRoles || [])
-          pref.value = sp.options.pref || ''
-        } else {
-          perims.value = sf.getPerimeters()
-          setOrgRolesP(perims.value)
-          prefs.value = sf.mySafePrefs
-          const x = sf.mySafeOptions
-          pref.value = x.pref || ''
-          orgRoles.value = x.orgRoles || []
-          if (sessionId.syncMode) {
-            const opts = await idb.openSync()
-            if (opts && opts.pref) pref.value = opts.pref
-            if (opts && opts.orgRoles && opts.orgRoles.length)
-              orgRoles.value = new Set(opts.orgRoles)
-          }
-        }
-        ui.loginPage.resetdb = false
+      case 1 : // authentification faite
+        await doStep1(sf, ui) // préparation pour permettre le choix des options
         if (!toPage) { step.value = 1; return }
         /* Sinon les options sont celles par défaut (sans choix)
         et on lance la session immédiatement sur la page souhaitée */
-      }
 
-      case 2 : { // start session: choix des options fait
+      case 2 : // ouverture effective de la session après les choix faits
+        await doStep2(sf, ui) // initialisation des DocStore
         ui.setPage(toPage || 'app')
         step.value = 2
-        return
-      }
     }
   }
 
