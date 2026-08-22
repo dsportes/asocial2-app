@@ -14,6 +14,7 @@ import { IDBsafe } from '../src-fw/idbsafe'
 import { idb, IDB, Perims, Prefs, Options, StartPlane  } from '../src-fw/idb'
 import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
+import { AOperation } from 'src/src-fw/operation'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
@@ -62,6 +63,7 @@ export const useSessionStore = defineStore('session', () => {
     const b = step.value
     switch (s) {
       case 0 : {
+        AOperation.reset()
         ui.resetLoginPage()
         sf.resetSafeBox()
         if (b > 1) resetDocStores()
@@ -71,6 +73,7 @@ export const useSessionStore = defineStore('session', () => {
 
       case 1 : { // authentification faite
         // préparation pour permettre le choix des options
+        AOperation.reset()
         resetDocStores()
         if (hasLocal.value) {
           // Création si nécessaire de Cache

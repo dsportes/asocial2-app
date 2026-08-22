@@ -664,9 +664,10 @@ export const useSafeStore = defineStore('safe', () => {
 
   const createSafe = async (
     store: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array,
-    userId: string, invitCode: string) => {
+    _userId: string, invitCode: string) => {
     AOperation.reset()
     keyK.value = Crypt.random(32)
+    userId.value = _userId
     const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
     const K1 = keyToB64(await Crypt.crypt(shp1, keyK.value))
     const K2 = !shp2 ? '' : keyToB64(await Crypt.crypt(shp2, keyK.value))
@@ -699,7 +700,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     const safe: Safe = {
-      userId,
+      userId: _userId,
       auth: auth,
       devices: null,
       creds: null,
@@ -708,7 +709,7 @@ export const useSafeStore = defineStore('safe', () => {
     }
 
     const mdUser: MDuser = {
-      userId,
+      userId: _userId,
       hshK, hsha1, hsha2, C, V, llq,
       store: store
     }

@@ -41,10 +41,10 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, onMounted, watch } from 'vue'
+import { watch } from 'vue'
 
 import stores from '../stores/all'
-import { $t, sty, dkli, dhcool } from '../src-fw/util'
+import { $t, sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 // import InputA from '../components-fw/InputA.vue'

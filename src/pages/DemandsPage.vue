@@ -1,12 +1,172 @@
 <template>
-  <demands-scan/>
+<div class="column items-center">
+<div class="pwmd">
+  <div v-if="!ui.currentEvent.zoomed && !ui.currentForm.increation" class="full-width">
+
+    <div v-if="!events.length" class="titre-md text-italic q-pa-md">{{ $t('FORMnoevents') }}</div>
+    <div v-else v-for="(event, idx) of events" :key="event.eventId"
+      :class="clcase(event, idx) + ' q-my-sm full-width cursor-pointer select'"
+      @click="selEvent(event, idx)">
+      <div class="row items-center full-width">
+        <div class="col-4 text-italic ellipsis">{{$t('services_' + event.svc)}}</div>
+        <div class="col-5 ellipsis text-right text-bold">{{ event.typeEd }}</div>
+        <div class="col-3 row items-center">
+          <q-icon :name="stic[event.status]" :color="stclr[event.status]" size="md"/>
+          <div class="font-mono text-bold" :color="stclr[event.status]">
+            {{ $t('FORMstatus_' + event.status) }}</div>
+        </div>
+      </div>
+
+      <div class="row items-center full-width">
+        <div class="col-4 text-italic ellipsis">{{event.org}}</div>
+        <div class="col-8 row justify-end">
+          <q-icon v-if="event.lv < event.v" class="col-auto q-mr-sm"
+            name="fiber_new" size="36px" color="warning"/>
+          <div class="col font-mono ellipsis">{{dhcool(event.v)}}</div>
+        </div>
+      </div>
+
+      <div v-if="event.detailEd" class="full-width ellipsis">{{event.detailEd}}</div>
+
+      <scroll-md v-if="event.comment" class="full-width" height="30px" :text="event.comment"/>
+    </div>
+  </div>
+
+  <div v-if="ui.currentEvent.zoomed" class="pwmd q-pt-sm">
+    <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
+  </div>
+</div>
+</div>
 </template>
 
 <script setup lang="ts">
-import DemandsScan from '../components-fw/DemandsScan.vue'
+// @ts-ignore
+import { Ref, ref, onMounted, watch } from 'vue'
+
+import stores from '../stores/all'
+import { $t, dkli, dhcool } from '../src-fw/util'
+
+import { $Form, $MDEvent } from '../src-fw/documents'
+import ScrollMd from '../components-fw/ScrollMd.vue'
+import FormZoom from '../components-fw/FormZoom.vue'
+
+const stic = ['add', 'person', 'local_police', 'check', 'close']
+const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
+
+const ui = stores.ui
+
+watch(() => ui.demandsPageInit, async () => { await init() })
+
+const fctx = ref(null)
+
+const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+  const b = await ui.mayClose()
+  if (!b) return
+  const u = ui.navBar
+  switch (n) {
+    case 1 : { if (u.idx < events.value.length - 1) u.idx++; break }
+    case 2 : { if (u.idx > 0) u.idx--; break }
+    case 3 : { if (u.idx !== 0) u.idx = 0; break }
+    case 4 : { if (u.idx < events.value.length - 1) u.idx = events.value.length - 1; break }
+  }
+  const event = events.value[u.idx]
+  await selEvent(event, u.idx)
+}
+
+const events: Ref<$MDEvent[]> = ref([])
+
+const isCurrent = (event: $MDEvent) =>
+  ui.currentEvent.event && (ui.currentEvent.event.eventId === event.eventId)
+const clcase = (event: $MDEvent, idx: number) => dkli(idx) + (isCurrent(event) ? ' current ' : ' nocurrent ')
+
+const onDone = (ok: boolean) => {
+  if (ok) onUpdate() // ok: true - Maj effectuée.
+}
+
+/* Form mise à jour :
+- récupère l'ID de l'event courant - old
+- recharge la liste
+- recherche dans la liste rafraichie l'indice de l'event d'ID acId
+- resélectionne cet event à son nouvel indice et rezoom
+- si l'event a disparu (rarissime mais possible), rezoom sur le premier de la liste
+  ou pas rezoom du tout si la liste rafraichie est vide.
+*/
+const onUpdate = (newId?: string) => {
+  const u = ui.currentEvent
+  const old = newId || u.event.eventId
+  u.zoomed = false
+  setTimeout(async () => {
+    events.value = await $MDEvent.listEvents()
+    let idx = -1
+    let event = null
+    for(let i = 0; i < events.value.length; i++) {
+      event = events.value[i]
+      if (event.eventId === old) { idx = i; break}
+    }
+    if (idx !== -1) await selEvent(event, idx)
+    else {
+      if (events.value.length)
+        await selEvent(events.value[0], 0)
+      else selEvent0()
+    }
+  }, 100)
+}
+
+const selEvent0 = () => {
+  const u = ui.currentEvent
+  u.event = null
+  u.form = null
+  fctx.value = null
+  u.zoomed = false
+  const nb = ui.navBar
+  nb.idx = -1
+  nb.nb = events.value.length
+  nb.hasBack = false
+}
+
+const selEvent = async (event: $MDEvent, idx: number) => {
+  // Get du Form associé document
+  const u = ui.currentEvent
+  u.event = event
+  if (event.lv < event.v) {
+    await event.mdEventUser(true)
+    event.lv = event.v
+    // await sleep(3000)
+  }
+  const f = await $Form.get(event.svc, event.org, event.eventId, event.type, event.userId)
+  u.form = f || null
+  if (f) {
+    fctx.value = { form: f, isDemand: true }
+    u.zoomed = true
+  } else {
+    fctx.value = null
+    u.zoomed = false
+  }
+  if (fctx.value === null)
+    console.log('fuck')
+  const nb = ui.navBar
+  nb.idx = idx
+  nb.nb = events.value.length
+  nb.hasBack = u.zoomed
+}
+
+const init = async () => {
+  events.value = await $MDEvent.listEvents()
+  selEvent0()
+  ui.currentEvent.fnOnUpdate = onUpdate
+  ui.navBar.fnnav = nav
+  ui.navBar.hasBack = false
+}
+
+onMounted(async () => { 
+  await init() })
 
 </script>
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.select:hover { background-color: $yellow-2; color: black; }
+.current { border: 1px solid $warning }
+.nocurrent { border: 1px solid transparent }
 </style>
+

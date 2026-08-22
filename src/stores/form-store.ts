@@ -63,9 +63,9 @@ export const useFormStore = defineStore('form', () => {
     form.value = formCtx.form
     isDemand.value = formCtx.isDemand
     const f = form.value
-    f.msgUS = f.msgU ? decoder.decode(f.msgU) : ''
-    const isS = typeof f.msgT === 'string'
-    f.msgTS = isS ? f.msgT : decoder.decode(f.msgT)
+    f.msgUS = !f.msgU ? '' : decoder.decode(f.msgU)
+    // il y a eu un bug avec un msgT en string (normalement corrigé)
+    f.msgTS = !f.msgT ? '' : (typeof f.msgT === 'string' ? f.msgT : decoder.decode(f.msgT))
     reset()
     setTimeout(async () => {
       await onChange()}, 1)

@@ -270,6 +270,8 @@ export const useUiStore = defineStore('ui', () => {
   const _idc = ref(1)
   const idc = () => _idc.value++
 
+  const demandsPageInit = ref(0)
+
   return {
     idc,
     set$t$q, setDark, isDark, $q, visibility,
@@ -284,7 +286,8 @@ export const useUiStore = defineStore('ui', () => {
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     loginPage, resetLoginPage,
     emojiIndex, setEmoji,
-    sessionClose, cfSessionClose
+    sessionClose, cfSessionClose,
+    demandsPageInit
   }
 })
 

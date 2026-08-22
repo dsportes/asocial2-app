@@ -27,7 +27,7 @@ import { reactive, ref } from 'vue'
 import stores from '../stores/all'
 
 import { Crypt } from '../src-fw/crypt'
-import { keyToB64, keyFromB64 } from '../src-fw/b64'
+import { keyToB64 } from '../src-fw/b64'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import InputA from '../components-fw/InputA.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
