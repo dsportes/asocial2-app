@@ -93,14 +93,9 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const subsGen = (svc: string, org: string, p2sync: $Perimeter[]) : $Subs => {
-    const subs = new $Subs()
     const pgen = Registry.newD(svc, '$SubsGenerator') as $SubsGenerator
-    pgen.org = org
-    pgen.subs = subs
-    pgen.start()
-    for(const p of p2sync) pgen.processPerimeter(p)
-    pgen.end()
-    return subs
+    pgen.init(org).processPerimeters(p2sync)
+    return pgen.subs
   }
 
   const doStep2 = async (sf, ui) => {
@@ -120,12 +115,11 @@ export const useSessionStore = defineStore('session', () => {
             p2sync.push(p)
             st.addPerimeter(p)
             for(const def of p.defs)
-              defItem.set(def, st.getDCItem(def))
+              defItem.set(def.definition, st.getDCItem(def))
           }
         // Chargement depuis IDB
-        for(const [def, item] of defItem) {
-          const n = def.split('/').length
-          if (n === 1) await st.initDocFromIDB(item as $DocItem)
+        for(const [, item] of defItem) {
+          if (!item.def.isColl) await st.initDocFromIDB(item as $DocItem)
           else await st.initCollFromIDB(item as $CollItem)
         }
         // Génère la subscription et l'enregistre dans le service
@@ -133,17 +127,17 @@ export const useSessionStore = defineStore('session', () => {
         if (syncMode) {
           const subs = subsGen(svc, org, p2sync)
           st.subsOK = await subs.subscribe(false)
-          // Synchronise les defs par périmètre
+
+          // Synchronise les defs par périmètre TODO !!!!!!!!!!
           for(const p of p2sync) {
             const sync = new FW$Sync(svc, org, st)
             for(const def of p.defs)
               sync.addDef(def, defItem.get(def).lv)
             await sync.post()
           }
-
         }
+      }
     }
-
   }
 
   const setStep = async (s: number, toPage?: string) => { 
@@ -309,7 +303,8 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const orgs = reactive({ c: '', lst: [] })
-
+  const currentOrg = computed(() => orgs.c || '')
+  const setOrg = (org: string) => { orgs.c = org }
   const setOrgs = (s: Set<string>) => {
     const s1 = new Set(orgs.lst)
     for(const o of s) s1.add(o)
@@ -325,8 +320,6 @@ export const useSessionStore = defineStore('session', () => {
     orgs.c = org
     setOrgs(new Set([org]))
   }
-  const currentOrg = computed(() => orgs.c || '')
-  const setOrg = (org: string) => { orgs.c = org }
 
   const _currentSvc = ref()
   const currentSvc = computed(() => _currentSvc.value)

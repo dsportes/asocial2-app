@@ -18,7 +18,7 @@ Table singletons:
   - stocke l'objet options sous le name $options$.
 
 Table perims:
-- clé primaire pk: svc/org/ID où ID est l'identifiant du périmètre docCl_code/docPk
+- clé primaire pk: svc/org/ID où ID est l'identifiant du périmètre docCl@code/docPk
 - data: l'objet sérialisé et crypté par la clé K de l'utilisateur du périmètre.
 
 Table docs: { sodef, def, so, lat, v, data } so: svc/org
@@ -189,14 +189,15 @@ export class IDB {
     const m: Perims = new Map()
     const lp = await this.db.perims.toArray()
     for(const px of lp) {
-      const obj = decode(await this.decryptData(px.data)) as $Perimeter
+      const obj = decode(await this.decryptData(px.data))
+      const p = new $Perimeter(obj.svc, obj.id, obj.role, obj.plane, obj.defs)
       const soid = px.id
       let i = soid.indexOf('/')
       i = soid.indexOf('/', i + 1)
       const so = soid.substring(0, i)
-      let m2 = m.get(so)
+      let m2: Map<string, $Perimeter> = m.get(so)
       if (!m2) { m2 = new Map(); m.set(so, m2) }
-      m2.set(obj.id, obj)
+      m2.set(p.id, p)
     }
     return m
   }
@@ -206,9 +207,9 @@ export class IDB {
     for(const [so, m] of perims) {
       for (const [,p] of m) {
         todo.push({
-          pk: so + '/' + p.id,
           so,
-          data: await this.cryptData(encode(p))
+          pk: so + '/' + p.id,
+          data: await this.cryptData(encode(p.toObj()))
         })
       }
     }

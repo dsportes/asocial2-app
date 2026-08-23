@@ -64,24 +64,17 @@ export class AS2$Auteur extends $Document {
 if (ok) { n++; Registry.register(AS2$Auteur)}
 
 export class AS2$SubsGenerator extends $SubsGenerator {
-  creds: Map<string, $Credential>
-  start () {
+
+  processPerimeters (lp: $Perimeter[]) {
     this.subs.setTitle('Test auteur')
-    this.creds = stores.safe.mySimpleCreds('AS2', this.org)
-  }
-
-  processPerimeter (p: $Perimeter) {
-    if (p.id.startsWith('Auteur')) {
-      const def = p.defs[0]
-      const pk = def.split('/')[1]
-      let nom = ''
-      for(const [,c] of this.creds)
-        if (c.docCl === 'Auteur' && c.docPk === pk) nom = c.name || ''
-      this.subs.setDef(def, nom ? 'Salut ' + nom : '')
-    }
-  }
-
-  end () {
+    for(const p of lp)
+      if (p.credCl === 'Auteur') {
+        const def = p.defs[0]
+        let nom = ''
+        for(const [,c] of this.creds)
+          if (c.docCl === 'Auteur' && c.docPk === def.pk) nom = c.name || ''
+        this.subs.setDef(def, nom ? 'Salut ' + nom : '')
+      }
   }
 }
 if (ok) { n++; Registry.register(AS2$SubsGenerator)}

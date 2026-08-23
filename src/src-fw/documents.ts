@@ -5,127 +5,30 @@ import { Registry, $Document, $ADocument, SOA, topCl } from '../src-fw//registry
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
-import { getStore, IDocStore, Idef } from '../stores/docs'
+import { getStore, IDocStore } from '../stores/docs'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-/*
-
-
-export type OrgRole = [string, string]
-
-export class $Options { 
-  orgsRoles: OrgRole[]
-  orgsRolesP: OrgRole[] // listes des couples "potentiels" (pouvant figurer dans orgsRoles)
-  pref: string
-
-  srt(x) { return x.sort((a, b) => a < b ? 1 : (a > b ? -1 : 0)) }
-
-  // Chargement initial depuis Safe et / ou Cache et fusion des options
-  async init () : Promise<SCcontext> {
-    const session = stores.session
-    const sf = stores.safe
-    let optsC: any
-    let optsS: any
-    if (session.hasNet) {
-      for(const [credId, c] of sf.mySafeCreds) 
-        this.creds[credId] = c.toCred()
-      for(const [id, x] of sf.mySafePrefs)
-        this.prefs[id] = x // x: [time, obj]
-      optsS = sf.mySafeOptions || {}
-    }
-    if (idb) {
-      if (session.planeMode) 
-        this.creds = await idb.getSingleton('creds')
-      if (session.planeMode)
-        this.prefs = await idb.getSingleton('prefs')
-      optsC = await idb.getSingleton('options')
-    }
-    for(const credId in this.creds) {
-      const c = this.creds[credId]
-      const k = c.svc + '/' + c.org
-      this.soas.set(k, { svc: c.svc, org: c.org })
-      this.orgs.add(c.org)
-    }
-
-    const orgs = optsC && optsC.orgs ? optsC.orgs : (optsS && optsS.orgs || [])
-    { const x1 = []; for(const o of orgs) x1.push(o); this.options.orgs = this.srt(x1) }
-
-    this.options.roles = this.srt(optsC && optsC.roles ? optsC.roles : (optsS && optsS.roles || []))
-
-    this.options.pref = optsC && optsC.pref ? optsC.pref : (optsS && optsS.pref || '')
-    if (this.options.pref && !this.prefs[this.options.pref]) this.options.pref = ''
-    this.optionsB.orgs = [ ...this.options.orgs]
-    this.optionsB.roles = [ ...this.options.roles]
-    this.optionsB.pref = this.options.pref
-
-    return this
-  }
-}
-  */
-
-export class $DefSigner extends $ADocument {
-  std: IDocStore
-  op: Operation
-  dd: DocDescriptor
+export class $DefSigner {
   creds: Map<string, $Credential> 
 
-  init (svc: string, org: string) {
-    this.std = getStore(svc, org)
+  constructor (svc: string, org: string) {
     this.creds = new Map()
     const sc = stores.safe.mySimpleCreds(svc, org)
     for(const [ ,c] of sc)
       this.creds.set(c.docCl + '/' + c.docPk, c)
-    return this
   }
 
-  // Surchargeable par application
-  getCred (def: string): $Credential {
-    const idf = this.std.idef(def)
-    switch (idf.type) {
-      case 0 : return this.getCred0(idf)
-      case 1 : return this.getCred1(idf)
-      case 2 : return this.getCred2(idf)
+  getCred (def: $Def): $Credential {
+    switch (def.type) {
+      case 1 : return this.creds.get(def.definition)
+      case 2 : return this.creds.get(def.docCl + '/1')
+      case 3 : return this.creds.get(def.colClass + '/' + def.pk)
     }
   }
-
-  getCred0 (idf: Idef) : $Credential {
-    return this.creds.get(idf.cl + '/1')
-  }
-
-  getCred1 (idf: Idef) : $Credential {
-    return this.creds.get(idf.cl + '/' + idf.pk)
-  }
-
-  getCred2 (idf: Idef) : $Credential {
-    return this.creds.get(idf.anxCl + '/' + idf.pk)
-  }
-
-  /*
-  // Retourne la liste des defs d'entrée ayant un credential (signable)
-  validDefs (defs: string[]) : string[] {
-    const ok = []
-    for(const def of defs)
-      if (this.getCred(def)) ok.push(def)
-    return ok
-  }
-
-  // Signe et retourne la liste des def dont la signature a pu être faite
-  async sign (op: Operation, defs: string[]) : Promise<string[]> {
-    const ok = []
-    for(const def of defs) {
-      const cred = this.getCred(def)
-      if (cred) {
-        ok.push(def)
-        await op.sign(cred)
-      }
-    }
-    return ok
-  }
-  */
 
 }
 
@@ -191,11 +94,60 @@ export type $Cred = {
   // pubc?: Uint8Array
 }
 
-export type $Perimeter = {
-  id: string
-  role: string
-  plane: boolean
-  defs: string[]
+/* Classe immutable de définition d'un document ou d'une collection */
+export class $Def {
+  /* 1: docCl/pk : le document de classe docCl de clé pk
+    2: docCl : la collection des documents de classe docCl
+    3: docCl/colName/pk : la collection des documents de classe docCl 
+    dont la propriété colName vaut pk
+  */
+  readonly type: number
+  readonly svc: string
+  readonly docCl: string
+  readonly pk?: string
+  readonly colName?: string
+  readonly definition: string
+
+  get isColl () { return this.type !== 1 }
+  get docDescriptor () { return DocDescriptor.get(this.svc + '$' + this.docCl) || null }
+  get colClass () { return this.docDescriptor ? this.docDescriptor.colls.get(this.colName) : '' }
+  
+  constructor (svc: string, definition: string) {
+      this.svc = svc
+      this.definition = definition
+      const defx = definition.split('/')
+      this.type = defx.length === 0 ? 2 : (defx.length === 1 ? 1 : 2)
+      this.docCl = defx[0]
+      if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
+      if (this.type === 3) this.colName = defx[1]
+  }
+}
+
+/* Classe immutable de définition d'un périmètre*/
+export class $Perimeter {
+  readonly svc: string
+  readonly id: string
+  readonly role: string
+  readonly plane: boolean
+  readonly defs: $Def[]
+  readonly credCl: string
+  readonly credPk: string 
+
+  constructor (svc: string, id: string, role: string, plane: boolean, definitions: string[]) {
+    this.svc = svc; this.role = role; this.plane = plane || false; this.defs = []
+    for(const d of definitions) this.defs.push(new $Def(svc, d))
+    const i = id.indexOf('@')
+    const j = id.indexOf('/')
+    this.credCl = id.substring(0, (i === -1 ? j : i))
+    this.credPk = id.substring(j + 1)
+  }
+
+  toObj () {
+    const obj = { svc: this.svc, id: this.id, role: this.role, plane: this.plane, defs: [] }
+    for(const def of this.defs) obj.defs.push(def.definition)
+    return obj
+  }
+
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).

@@ -38,13 +38,7 @@ if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
 export class AS2$Credential_Auteur extends $Credential {
 
   getPerimeters () : $Perimeter[] {
-    const p = {
-      id: 'Auteur/' + this.docPk,
-      role: 'AS2_auteurs',
-      plane: true,
-      defs: ['Auteur/' + this.docPk]
-    }
-    return [p]
+    return [ new $Perimeter('AS2', 'Auteur/' + this.docPk, 'AS2_auteurs', true, ['Auteur/' + this.docPk] )]
   }
   get hasDispProps () { return true }
 

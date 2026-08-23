@@ -4,7 +4,7 @@ import { encode, decode } from '@msgpack/msgpack'
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
-import { $DefSigner, $Perimeter } from '../src-fw/documents'
+import { $DefSigner, $Perimeter, $Def, $Credential } from '../src-fw/documents'
 import { getStore, IDocStore } from'../stores/docs'
 import { $ADocument, $Document, Registry } from '../src-fw/registry'
 import { $DCItem } from '../stores/docs'
@@ -38,13 +38,13 @@ export type $SubsObj = {
   msgs: Object
 }
 
-// Souscription d'une organisation
+/* Classe immuable après construction / setDef - Souscription d'une organisation */
 export class $Subs extends $Document {
   title: string = '' // titre des notifications web-push
   msgs: Object = {} // messages des définitions
   // { def: msg ... } - def: sa définition. msg: est un message ou ''
   url: string = '' // url de l'application à ouvrir par le terminal sur web-push
-  defs: string[] = []// définitions de la souscription
+  defs: string[] = [] // définitions de la souscription
 
   /* Mise à jour d'une souscription enregistrée: possibilités ...
   - setTitle, setUrl, setDef  */
@@ -52,20 +52,14 @@ export class $Subs extends $Document {
 
   setUrl (url: string) { this.url = url; return this}
 
-  setDef (def: string, msg?: string) {
-    const i = this.defs.indexOf(def)
-    if (i === -1) this.defs.push(def)
-    if (msg) this.msgs[def] = msg
+  setDef (def: $Def, msg?: string) {
+    const i = this.defs.indexOf(def.definition)
+    if (i === -1) this.defs.push(def.definition)
+    if (msg) this.msgs[def.definition] = msg
     return this
   }
 
-  delDef (def: string) {
-    const i = this.defs.indexOf(def)
-    if (i !== -1) this.defs.splice(i, 1)
-    delete this.msgs[def]
-    return this
-  }
-
+  /*
   serial () : Uint8Array {
     return encode({
       title: this.title,
@@ -74,6 +68,7 @@ export class $Subs extends $Document {
       msgs: this.msgs
     })
   }
+  */
 
   /* Enregistrement de la souscription au serveur */
   async subscribe (longLife: boolean) : Promise<boolean> {
@@ -103,18 +98,18 @@ export class $Subs extends $Document {
 export class $SubsGenerator extends $ADocument {
   subs: $Subs
   org: string
+  creds: Map<string, $Credential>
 
-  start () {
-    // subs.setTitle()
+  init (org: string) {
+    this.org = org
+    this.creds = stores.safe.mySimpleCreds('AS2', org)
+    this.subs = new $Subs()
+    return this
   }
 
-  processPerimeter (p: $Perimeter) {
-    for(const def of p.defs) {
-      this.subs.setDef(def)
-    }
-  }
-
-  end () {
+  processPerimeters (lp: $Perimeter[]) {
+    for(const p of lp)
+      for(const def of p.defs) this.subs.setDef(def)
   }
 }
 
@@ -178,25 +173,18 @@ Retour:
 export class FW$Sync {
   op: Operation
   signer: $DefSigner
-  defs: string[]
-  std: IDocStore
-  hasIDB: boolean
 
   constructor (svc: string, org: string, std: IDocStore) {
-    this.std = std
     this.op = new Operation('FW$Sync', svc, org)
-    this.signer = (Registry.newD(svc, 'DefSigner') as $DefSigner).init(svc, org)
+    this.signer = new $DefSigner(svc, org)
     this.op.args.toSync = []
-    this.hasIDB = stores.session.hasIDB
   }
 
-  getStd () : IDocStore { return this.std }
-
-  async addDef (def:string, v: number) {
+  async addDef (def: $Def, v: number) {
     const cred = this.signer.getCred(def)
     if (cred) {
       await this.op.sign(cred)
-      this.op.args.toSync.push({ def, v })
+      this.op.args.toSync.push({ def: def.definition, v })
     }
   }
 
@@ -227,7 +215,7 @@ export class FW$Sync {
         for(const def in res.syncs) {
           const cd = res.syncs[def] as $DCData
           if (cd.v === -1) continue // Pas de credential accepté
-          await this.std.storeDocColl(def, sat, cd)
+          // await this.std.storeDocColl(def, sat, cd)
         }
       }
       return true
