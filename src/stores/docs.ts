@@ -6,7 +6,7 @@ Voir: https://alexop.dev/tils/dynamic-pinia-dsStores/
 */
 
 // @ts-ignore
-import { reactive } from 'vue'
+import { ref, reactive } from 'vue'
 // @ts-ignore
 import { defineStore } from 'pinia'
 // @ts-ignore
@@ -69,6 +69,8 @@ export async function onPushMsg (payload: string) {
 export type IDocStore = {
   readonly svc
   readonly org
+  subsOK
+
   // Retourne la liste des classes ayant au moins un document ou []
   classes() : string[]
   collections() : string[]
@@ -86,8 +88,10 @@ export type IDocStore = {
 
   onNotif (defs: string[], dh: number) : Promise<void>
 
-  initDocFromIDB (def: string) : Promise<$DocItem>
-  initCollFromIDB (def: string) : Promise<$CollItem>
+  initDocFromIDB (item: $DocItem) : Promise<void>
+  initCollFromIDB (item: $CollItem) : Promise<void>
+
+  addPerimeter (p: $Perimeter)
 }
 
 const dsStores = {}
@@ -208,6 +212,8 @@ const useStore = (id: string) =>
     const org = id.substring(id.indexOf('/') + 1)
     let hasIDB = session.hasIDB
     let hasNet = session.hasNet
+
+    const subsOK = ref(false)
 
     const docs = reactive({  })
 
@@ -457,40 +463,34 @@ const useStore = (id: string) =>
 
     }
 
-    const initDocFromIDB = async (def: string) : Promise<$DocItem> => {
-      let item: $DocItem = docs[def]
-      if (item) return item
-      const r: IDBrow = await idb.getDC(svc, org, def)
-      if (!r) return null
-      item = new $DocItem(def, r.lat, r.v, r.lat, r.v, null)
-      try {
-        const idf = idef(def)
+    const initDocFromIDB = async (item: $DocItem) => {
+      const idf = idef(item.def)
+      const r: IDBrow = await idb.getDC(svc, org, item.def)
+      if (r) try {
         const obj = decode(r.data)
         item.doc = await Registry.compile(svc, idf.cl, org, obj)
-        return item
+        item.lat = r.lat
+        item.lv = r.v
       } catch (e) {
         console.error(e.toString)
-        return null
       }
     }
 
-    const initCollFromIDB = async (def: string) : Promise<$CollItem> => {
-      let item: $CollItem = colls[def]
-      if (item) return item
-      const r: IDBrow = await idb.getDC(svc, org, def)
-      if (!r) return null
-      item = new $CollItem(def, r.lat, r.v, r.lat, r.v, null)
-      try {
-        const idf = idef(def)
+    const initCollFromIDB = async (item: $CollItem) => {
+      const idf = idef(item.def)
+      const r: IDBrow = await idb.getDC(svc, org, item.def)
+      if (r) try {
         const x = decode(r.data)
         item.pks = new Set(x)
+        item.lat = r.lat
+        item.lv = r.v
         const cl = idf.type === 2 ? idf.anxCl : idf.cl
-        for(const pk of x)
-          await initDocFromIDB(cl + '/' + pk)
-        return item
+        for(const pk of x) {
+          const itemd = getItem(cl + '/' + pk, true)
+          await initDocFromIDB(itemd)
+        }
       } catch (e) {
         console.error(e.toString)
-        return null
       }
     }
 
@@ -516,11 +516,12 @@ const useStore = (id: string) =>
     }
 
     return { 
-      svc, org,
+      svc, org, subsOK,
       idef, getDCItem, getCollItem,
       onNotif,
       classes, collections, hasDocs, getDoc,
       storeDocColl,
-      initCollFromIDB, initDocFromIDB
+      initCollFromIDB, initDocFromIDB,
+      addPerimeter
     } as IDocStore
   })()

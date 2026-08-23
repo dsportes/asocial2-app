@@ -97,11 +97,13 @@ const init = async () => {
 onMounted(async () => { 
   await init()})
 
+/*
 const subsAuteur = async (pk: string) => {
   const subs = $Subs.new('AS2', org.value) as $Subs
   subs.setTitle('Test auteur').setDef('Auteur/' + pk, 'Hello victor')
   await subs.subscribe(false)
 }
+*/
 
 const syncAuteur = async (pk: string) : Promise<void> => {
   const sync = new FW$Sync('AS2', org.value)

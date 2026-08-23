@@ -104,6 +104,7 @@ export class $DefSigner extends $ADocument {
     return this.creds.get(idf.anxCl + '/' + idf.pk)
   }
 
+  /*
   // Retourne la liste des defs d'entrée ayant un credential (signable)
   validDefs (defs: string[]) : string[] {
     const ok = []
@@ -124,6 +125,7 @@ export class $DefSigner extends $ADocument {
     }
     return ok
   }
+  */
 
 }
 

@@ -2,8 +2,8 @@ import { schemaExcAS2 } from '../as2/schema'
 import { schemaExcFW } from '../src-fw/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
 import { ADMIN$Status} from '../src-fw/fwdocuments'
-import { $DefSigner } from '../src-fw/documents'
-import { $Subs } from '../src-fw/subscription'
+import { $DefSigner, $Perimeter, $Credential } from '../src-fw/documents'
+import { $SubsGenerator } from '../src-fw/subscription'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
@@ -15,10 +15,6 @@ let n = 0
 class AS2$Status extends ADMIN$Status {
 }
 if (ok) { n++; Registry.register(AS2$Status) }
-
-class AS2$Subs extends $Subs {
-}
-n++; Registry.register(AS2$Subs)
 
 class AS2$DefSigner extends $DefSigner {
   static _unregistered = true
@@ -66,5 +62,28 @@ export class AS2$Auteur extends $Document {
 
 }
 if (ok) { n++; Registry.register(AS2$Auteur)}
+
+export class AS2$SubsGenerator extends $SubsGenerator {
+  creds: Map<string, $Credential>
+  start () {
+    this.subs.setTitle('Test auteur')
+    this.creds = stores.safe.mySimpleCreds('AS2', this.org)
+  }
+
+  processPerimeter (p: $Perimeter) {
+    if (p.id.startsWith('Auteur')) {
+      const def = p.defs[0]
+      const pk = def.split('/')[1]
+      let nom = ''
+      for(const [,c] of this.creds)
+        if (c.docCl === 'Auteur' && c.docPk === pk) nom = c.name || ''
+      this.subs.setDef(def, nom ? 'Salut ' + nom : '')
+    }
+  }
+
+  end () {
+  }
+}
+if (ok) { n++; Registry.register(AS2$SubsGenerator)}
 
 export const AS2nbDocs = () : number => n

@@ -6,15 +6,17 @@ import { encode, decode } from '@msgpack/msgpack'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
-import { getStore } from '../stores/docs'
+import { getStore, $DCItem, $DocItem, $CollItem } from '../stores/docs'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
+import { Registry } from '../src-fw/registry'
 import { IDBsafe } from '../src-fw/idbsafe'
 import { idb, IDB, Perims, Prefs, Options, StartPlane  } from '../src-fw/idb'
 import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 import { AOperation } from 'src/src-fw/operation'
+import { $Subs, $SubsGenerator, FW$Sync } from 'src/src-fw/subscription'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
@@ -66,7 +68,7 @@ export const useSessionStore = defineStore('session', () => {
       const mt = sf.myTrusting
       if (mt) await mt.addAppsDb()
     }
-    if (sessionId.planeMode) {
+    if (planeMode) {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
       perims.value = sp.perims
@@ -80,7 +82,7 @@ export const useSessionStore = defineStore('session', () => {
       const x = sf.mySafeOptions
       pref.value = x.pref || ''
       orgRoles.value = x.orgRoles || []
-      if (sessionId.syncMode) {
+      if (syncMode) {
         const opts = await idb.openSync()
         if (opts && opts.pref) pref.value = opts.pref
         if (opts && opts.orgRoles && opts.orgRoles.length)
@@ -90,15 +92,56 @@ export const useSessionStore = defineStore('session', () => {
     ui.loginPage.resetdb = false
   }
 
+  const subsGen = (svc: string, org: string, p2sync: $Perimeter[]) : $Subs => {
+    const subs = new $Subs()
+    const pgen = Registry.newD(svc, '$SubsGenerator') as $SubsGenerator
+    pgen.org = org
+    pgen.subs = subs
+    pgen.start()
+    for(const p of p2sync) pgen.processPerimeter(p)
+    pgen.end()
+    return subs
+  }
+
   const doStep2 = async (sf, ui) => {
     const svcOrgs: Set<string> = new Set(perims.value.keys())
     for(const svcOrg of svcOrgs) {
       const i = svcOrg.indexOf('/')
       const svc = svcOrg.substring(0, i)
-      const org = svcOrg.substring(i + 1 )
-      const mperins = perims.value.get(svcOrg)
+      const org = svcOrg.substring(i + 1)
       const st = getStore(svc, org)
-      
+
+      // Preset les documents / collections des périmètres
+      if (syncMode || planeMode) {
+        const p2sync = [] // périmètres à synchroniser / charger de IDB
+        const defItem = new Map<string, $DCItem>() // item de DocStore par def
+        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
+        for(const [,p] of px) if (p.plane) { // p : périmètre à synch / charger
+            p2sync.push(p)
+            st.addPerimeter(p)
+            for(const def of p.defs)
+              defItem.set(def, st.getDCItem(def))
+          }
+        // Chargement depuis IDB
+        for(const [def, item] of defItem) {
+          const n = def.split('/').length
+          if (n === 1) await st.initDocFromIDB(item as $DocItem)
+          else await st.initCollFromIDB(item as $CollItem)
+        }
+        // Génère la subscription et l'enregistre dans le service
+        // Synchronise les defs
+        if (syncMode) {
+          const subs = subsGen(svc, org, p2sync)
+          st.subsOK = await subs.subscribe(false)
+          // Synchronise les defs par périmètre
+          for(const p of p2sync) {
+            const sync = new FW$Sync(svc, org, st)
+            for(const def of p.defs)
+              sync.addDef(def, defItem.get(def).lv)
+            await sync.post()
+          }
+
+        }
     }
 
   }

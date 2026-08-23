@@ -4,9 +4,9 @@ import { encode, decode } from '@msgpack/msgpack'
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
-import { $DefSigner } from '../src-fw/documents'
+import { $DefSigner, $Perimeter } from '../src-fw/documents'
 import { getStore, IDocStore } from'../stores/docs'
-import { $Document, Registry, SOA } from '../src-fw/registry'
+import { $ADocument, $Document, Registry } from '../src-fw/registry'
 import { $DCItem } from '../stores/docs'
 
 export interface $DCData {
@@ -46,19 +46,13 @@ export class $Subs extends $Document {
   url: string = '' // url de l'application à ouvrir par le terminal sur web-push
   defs: string[] = []// définitions de la souscription
 
-  static new (svc: string, org: string) {
-    const subs = Registry.newD(svc, 'Subs', { }) as $Subs
-    subs._org = org
-    return subs
-  }
-
   /* Mise à jour d'une souscription enregistrée: possibilités ...
   - setTitle, setUrl, setDef  */
   setTitle (title: string) { this.title = title; return this }
 
   setUrl (url: string) { this.url = url; return this}
 
-  setDef (def: string, msg: string) {
+  setDef (def: string, msg?: string) {
     const i = this.defs.indexOf(def)
     if (i === -1) this.defs.push(def)
     if (msg) this.msgs[def] = msg
@@ -104,6 +98,24 @@ export class $Subs extends $Document {
     }
   }
   
+}
+
+export class $SubsGenerator extends $ADocument {
+  subs: $Subs
+  org: string
+
+  start () {
+    // subs.setTitle()
+  }
+
+  processPerimeter (p: $Perimeter) {
+    for(const def of p.defs) {
+      this.subs.setDef(def)
+    }
+  }
+
+  end () {
+  }
 }
 
 /* Les appels à FW$Sync se font à deux occasions:
@@ -170,16 +182,25 @@ export class FW$Sync {
   std: IDocStore
   hasIDB: boolean
 
-  constructor (svc: string, org: string) {
+  constructor (svc: string, org: string, std: IDocStore) {
+    this.std = std
     this.op = new Operation('FW$Sync', svc, org)
     this.signer = (Registry.newD(svc, 'DefSigner') as $DefSigner).init(svc, org)
-    this.std = getStore(svc, org)
     this.op.args.toSync = []
     this.hasIDB = stores.session.hasIDB
   }
 
   getStd () : IDocStore { return this.std }
 
+  async addDef (def:string, v: number) {
+    const cred = this.signer.getCred(def)
+    if (cred) {
+      await this.op.sign(cred)
+      this.op.args.toSync.push({ def, v })
+    }
+  }
+
+  /*
   async setDefs (defs: string[]) : Promise<[{ def: string, v: number }]> {
     this.defs = this.signer.validDefs(defs)
     for(const def of this.defs) {
@@ -196,9 +217,9 @@ export class FW$Sync {
     }
     return this.op.args.toSync
   }
+  */
 
   async post (noex?: boolean) : Promise<boolean> {
-    await this.signer.sign(this.op, this.defs)
     try {
       const res = await this.op.post()
       const sat = res['now'] // service assertion time

@@ -121,10 +121,10 @@ export class $ADocument {
 
   get _docDescriptor () { return DocDescriptor.get(this.constructor.name) }
 
-  propertyAsSet (name: string) : Set<string> {
+  /* propertyAsSet (name: string) : Set<string> {
     const v = this[name]
     return !v ? new Set() : new Set(v)
-  }
+  } */
 }
 
 export class $Document extends $ADocument{
