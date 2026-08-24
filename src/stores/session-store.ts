@@ -43,6 +43,13 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   const perims: Ref<Perims> = ref()
+  const getPrimeter = 
+    (svc: string, org: string, code: string, docCl: string, pk: string ) => {
+    const m = perims.value.get(svc + '/' + org)
+    if (!m) return null
+    const id = (code || '') + '/' + docCl + '/' + pk
+    return m.get(id)
+  }
   const prefs: Ref<Prefs> = ref()
 
   const pref: Ref<string> = ref()
@@ -107,34 +114,32 @@ export const useSessionStore = defineStore('session', () => {
       const st = getStore(svc, org)
 
       // Preset les documents / collections des périmètres
-      if (syncMode || planeMode) {
+      if (syncMode) {
         const p2sync = [] // périmètres à synchroniser / charger de IDB
-        const defItem = new Map<string, $DCItem>() // item de DocStore par def
-        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [,p] of px) if (p.plane) { // p : périmètre à synch / charger
-            p2sync.push(p)
-            st.addPerimeter(p)
-            for(const def of p.defs)
-              defItem.set(def.definition, st.getDCItem(def))
-          }
-        // Chargement depuis IDB
-        for(const [, item] of defItem) {
-          if (!item.def.isColl) await st.initDocFromIDB(item as $DocItem)
-          else await st.initCollFromIDB(item as $CollItem)
-        }
-        // Génère la subscription et l'enregistre dans le service
-        // Synchronise les defs
-        if (syncMode) {
-          const subs = subsGen(svc, org, p2sync)
-          st.subsOK = await subs.subscribe(false)
 
-          // Synchronise les defs par périmètre TODO !!!!!!!!!!
-          for(const p of p2sync) {
-            const sync = new FW$Sync(svc, org, st)
-            for(const def of p.defs)
-              sync.addDef(def, defItem.get(def).lv)
-            await sync.post()
+        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
+        for(const [,p] of px) {
+          if (p.plane) { // p : périmètre à synchroniser / charger depuis IDB
+            p2sync.push(p)
+            st.getAPState(p, true)
+            for(const def of p.defs) {
+              const item = st.getItem(def, true)
+              // Chargement depuis IDB
+              if (!item.def.isColl) await st.initDocFromIDB(item as $DocItem)
+              else await st.initCollFromIDB(item as $CollItem)
+            }
           }
+        }
+        
+        // Génère la subscription et l'enregistre dans le service
+        const subs = subsGen(svc, org, p2sync)
+        st.subsOK = await subs.subscribe(false)
+
+        // Demande la synchronisation des defs des périmètres
+        for(const p of p2sync) {
+          st.getAPState(p) // simulation d'un fetch initial
+          for(const def of p.defs)
+            st.syncQueue.push(st.getItem(def))
         }
       }
     }
@@ -161,7 +166,7 @@ export const useSessionStore = defineStore('session', () => {
         et on lance la session immédiatement sur la page souhaitée */
 
       case 2 : // ouverture effective de la session après les choix faits
-        await doStep2(sf, ui) // initialisation des DocStore
+        await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
         ui.setPage(toPage || 'app')
         step.value = 2
     }
@@ -337,6 +342,7 @@ export const useSessionStore = defineStore('session', () => {
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
     edPref, setEdPref, updatePref,
+    getPrimeter
     // focus, getFocus, lostFocus, closingApp
   }
 })

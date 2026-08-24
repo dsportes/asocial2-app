@@ -115,6 +115,11 @@ export class DocDescriptor {
     return nohash || this.nohash ? p : Crypt.shaS(p)
   }
 
+  colClass (name: string) {
+    const c = this.colls.get(name)
+    return c ? c.class : ''
+  }
+
   isTestable (idxName: string) : boolean {
     const idx = this.indexes.get(idxName)
     return idx && idx.testable

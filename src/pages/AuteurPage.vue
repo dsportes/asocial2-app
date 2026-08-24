@@ -59,7 +59,7 @@ import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
-import { getStore, IDocStore, setCallBack } from '../stores/docs'
+import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BarTitle from '../components-fw/BarTitle.vue'
@@ -67,7 +67,6 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
-import { $Subs, FW$Sync } from '../src-fw/subscription'
 
 const ui = stores.ui
 const session = stores.session
@@ -76,11 +75,25 @@ const sf = stores.safe
 const creds: Ref<Map<string, $Credential>> = ref()
 const org = ref()
 const std = computed(() => getStore('AS2', org.value))
+const perimetre = ref()
 
 const cred = ref(null)
 
 const aut = computed(() => 
   cred.value ? std.value.getDoc('Auteur', cred.value.docPk) : null)
+
+watch(aut, (v) => { 
+  console.log(v.nomAuteur) })
+
+watch(() => std.value.docs['Auteur/' + cred.value.docPk], (v) => {
+  console.log(v.doc.nomAuteur)
+})
+
+watch(cred, (c) => {
+  watch(() => std.value.docs['Auteur/' + c.docPk], (v) => {
+    console.log(v.doc.nomAuteur)
+  })
+})
 
 const coauts: Ref<$Cred[]> = computed(() => {
   const co = []
@@ -89,41 +102,20 @@ const coauts: Ref<$Cred[]> = computed(() => {
   return co
 })
 
-// watch(aut, (v) => { console.log(v.nomAuteur) })
-
 const init = async () => { 
   creds.value = await sf.myFullCreds('AS2', '', 'Auteur') }
 
 onMounted(async () => { 
   await init()})
 
-/*
-const subsAuteur = async (pk: string) => {
-  const subs = $Subs.new('AS2', org.value) as $Subs
-  subs.setTitle('Test auteur').setDef('Auteur/' + pk, 'Hello victor')
-  await subs.subscribe(false)
-}
-*/
-
-const syncAuteur = async (pk: string) : Promise<void> => {
-  const sync = new FW$Sync('AS2', org.value)
-  await sync.setDefs(['Auteur/' + pk])
-  await sync.post(true)
-}
-
-// Test de retour de notif
-setCallBack(async (defs: string[]) => {
-  for(const def of defs) {
-    const idf = std.value.idef(def)
-    await syncAuteur(idf.pk)
-  }
-})
-
 const select = async (c: $Credential) => {
   cred.value = c
   org.value = c.org
-  await subsAuteur(c.docPk)
-  await syncAuteur(c.docPk)
+  perimetre.value = session.getPrimeter('AS2', c.org, '', 'Auteur', c.docPk) 
+  let t1 = 0, t2 = 0
+  t1 = std.fetch(perimetre.value)
+  if (t1 === 0) t2 = await std.listen(perimetre.value)
+  console.log(t1, t2)
 }
 
 const editTrig = async (trig: string) => {

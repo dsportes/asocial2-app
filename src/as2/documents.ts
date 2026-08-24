@@ -2,7 +2,7 @@ import { schemaExcAS2 } from '../as2/schema'
 import { schemaExcFW } from '../src-fw/schema'
 import { Registry, $Document, SOA } from '../src-fw/registry'
 import { ADMIN$Status} from '../src-fw/fwdocuments'
-import { $DefSigner, $Perimeter, $Credential } from '../src-fw/documents'
+import { $Perimeter } from '../src-fw/documents'
 import { $SubsGenerator } from '../src-fw/subscription'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
@@ -16,10 +16,6 @@ class AS2$Status extends ADMIN$Status {
 }
 if (ok) { n++; Registry.register(AS2$Status) }
 
-class AS2$DefSigner extends $DefSigner {
-  static _unregistered = true
-}
-n++; Registry.register(AS2$DefSigner)
  
 export class AS2$Auteur extends $Document {
   // Donne le autid de svc/org/nom
@@ -68,7 +64,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
   processPerimeters (lp: $Perimeter[]) {
     this.subs.setTitle('Test auteur')
     for(const p of lp)
-      if (p.credCl === 'Auteur') {
+      if (p.docCl === 'Auteur') {
         const def = p.defs[0]
         let nom = ''
         for(const [,c] of this.creds)

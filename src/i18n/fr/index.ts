@@ -1082,7 +1082,7 @@ bla bla
   110: FW : Exception technique DB / réseau : configuration suspectée
   111: APP : Exception technique DB / réseau : configuration suspectée
   */
-
+  EX_sync: 'Incident technique ayant bloqué la synchronisation des données avec le service cloud [{0}]. Essayer de continuer.',
   EX_isApp: 'Erreur détectée par l\'application s\'exécutant sur ce terminal.',
   EX_isSvc: 'Erreur détectée par un service "cloud" et remontée à l\'application s\'exécutant sur ce terminal.',
   EX_toAdmin: 'L\'erreur a été transmise à l\'administrateur technique.',

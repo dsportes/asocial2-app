@@ -20,16 +20,9 @@ import { useConfigStore } from '../stores/config-store'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/documents'
 import { $Document, Registry } from '../src-fw/registry'
-import { DocDescriptor } from '../src-fw/docDescriptor'
-import { $DCData } from 'src/src-fw/subscription'
-import { AppExc } from '../src-fw/log'
+import { FW$Sync } from 'src/src-fw/subscription'
+// import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
-
-/* POUR TEST */
-let callBack : Function
-export const setCallBack = (fn: Function) => {
-  callBack = fn
-}
 
 // Si IDB a une lat plus ancienne il faut rafraîchir sa lat
 const MAXLATDELAY = 3 * 3600 * 1000
@@ -52,8 +45,13 @@ export async function onPushMsg (payload: string) {
   const config = useConfigStore()
   const session = useSessionStore()
   const messageNotif =  decode(keyFromB64(payload)) as MsgNotif
-  if (messageNotif.defs && messageNotif.defs.length)
-    await processNotif(messageNotif)
+  const st = getStore(messageNotif.svc, messageNotif.org, true)
+  if (st && messageNotif.defs && messageNotif.defs.length) {
+    const l: string[] = messageNotif.defs.split(' ')
+    const defs: $Def[] = []
+    for(const x of l) defs.push(new $Def(x))
+    await st.onNotif(defs, messageNotif.now)
+  }
   if (messageNotif.body) {
     if (config.K.myDebug) console.log('Show notif EXPLICITE from app')
     const options = { body: messageNotif.body }
@@ -69,26 +67,28 @@ export type IDocStore = {
   readonly svc: string
   readonly org: string
   subsOK: boolean
+  syncQueue: SyncQueue
 
-  // Retourne la liste des classes ayant au moins un document ou []
-  classes() : string[]
-  collections() : string[]
+  getItem (def: $Def, create?: boolean) : $DCItem
+  getAPState (p: $Perimeter, recalc?: boolean) : APState
+  setAPState (p: $Perimeter) : APState
 
-  getDCItem (def: $Def) : $DCItem
-
-  storeDocColl (def: $Def, sat: number, cd: $DCData) : Promise<void>
+  storeDoc (item: $DocItem, sat: number, cd: $DocData) : Promise<void>
+  storeColl (item: $CollItem, sat: number, cd: $CollData) : Promise<void>
 
   // Retourne true si la classe a des documents stockés
   hasDocs (clazz: string): boolean
 
   getDoc (cl: string, pk: string) : $Document
 
-  onNotif (defs: string[], dh: number) : Promise<void>
+  onNotif (defs: $Def[], dh: number) : Promise<void>
 
   initDocFromIDB (item: $DocItem) : Promise<void>
   initCollFromIDB (item: $CollItem) : Promise<void>
 
-  addPerimeter (p: $Perimeter)
+  fetch (p: $Perimeter) : number
+  listen (p: $Perimeter, lastTime?: number) : Promise<number>
+  checkResolves () : void
 }
 
 const dsStores = {}
@@ -108,14 +108,6 @@ export const getStore = (svc: string, org: string, noforce?: boolean)
   return st
 }
 
-export const processNotif = async (m: MsgNotif) => {
-  const st = getStore(m.svc, m.org)
-  if (m.defs) {
-    const l: string[] = m.defs.split(' ')
-    await st.onNotif(l, m.now)
-  }
-}
-
 export const resetDocStores = () => {
   for(const k in dsStores)
     dsStores[k].$patch({
@@ -132,7 +124,17 @@ export type IDBrow = {
 }
 
 export class $DCItem {
-  // 0: jamais demandé, 1: premier sync en cours, 2: un sync s'est terminé
+  lastSync: number = 0 // dh op dernière sync
+
+  /*
+   0: sync ni en queue, ni posté
+   1: sync en queue, 
+   2: sync posté pas revenu,
+   3: sync posté et revenu
+  */
+  syncSt: number = 0 
+
+  // 0: jamais demandé, 1: premier sync en cours, 2: un premier sync s'est terminé
   state: number = 0
   get isStandBy () { return this.state === 0 }
   get isLoading () { return this.state === 1 }
@@ -160,17 +162,6 @@ export class $DCItem {
   addPerimeter (p: string) {
     this.perims.add(p)
   }
-
-  /*
-  toObj () {
-    return {
-      def: this.def.definition, 
-      sat: this.sat || 0, lat: this.lat || 0,
-      sv: this.sv || 0, lv: this.lv || 0
-    }
-  }
-  */
-
 }
 
 export class $CollItem extends $DCItem {
@@ -191,9 +182,87 @@ export class $DocItem extends $DCItem {
   get isEmpty() { return this.doc === null }
 }
 
-type row = {
+// Decode d'un Document sérialisé
+type Row = {
   _pk: string
   v: number
+  // etc.
+}
+
+type APState = {
+  lastSync: number
+  perimeter: $Perimeter
+  resolves: Function[]
+}
+
+interface $DCData {
+  v: number
+  incr?: boolean
+}
+
+interface $DocData extends $DCData{
+  data?: Uint8Array
+}
+
+interface $CollData extends $DCData{
+  datas?: Uint8Array[]
+  moved?: Uint8Array[]
+  deleted?: [string, number][]
+}
+
+export class SyncQueue {
+  std: IDocStore
+  svc: string
+  org: string
+  items: $DCItem[] = [] // items en queue ou en sync
+  syncRunning: boolean = false
+
+  constructor (svc: string, org: string) {
+    this.svc = svc
+    this.org = org
+    this.std = getStore(svc, org, true)
+  }
+
+  push (item: $DCItem) {
+    if (item.syncSt === 0) this.items.push(item)
+    if (this.syncRunning) return
+    /* Préparation d'une synchro
+    - on prend au plus 10 items à la fois (pour économiser le réseau)
+    - mais au plus une collection INTEGRALE (pour éviter des volumes délirants)
+    */
+    const runningItems: Map<string, $DCItem> = new Map()
+    const sync = new FW$Sync(this.svc, this.org)
+    let n = 10
+    for(const item of this.items) {
+      if (n === 0) break
+      runningItems.set(item.def.definition, item)
+      item.syncSt = 1
+      sync.addDef(item.def, item.lv)
+      if (!item.def.isColl) n--
+      else { if (item.lv) n--; else n = 0  }
+    }
+    this.syncRunning = true
+    setTimeout(async () => {
+      // post désynchronisé pour que push ne soit pas bloqué en await
+      for(const [,item] of runningItems) item.syncSt = 2
+      const [now, syncs] = await sync.post()
+      if (now === 0) { // échec, sera retenté
+        for(const [,item] of runningItems) item.syncSt = 0
+      } else {
+        for(const definition in syncs) {
+          const dcdata = syncs[definition] as $DCData
+          const item = runningItems.get(definition)
+          item.syncSt = 3
+          item.lastSync = now
+          if (item.def.type === 1) await this.std.storeDoc(item as $DocItem, now, dcdata as $DocData)
+          else await this.std.storeColl(item as $CollItem, now, dcdata as $CollData)
+        }
+        this.std.checkResolves()
+      }
+
+    }, 1)
+  }
+
 }
 
 /* Les DocStore sont créés en début de session pour héberger les documents
@@ -208,7 +277,8 @@ const useStore = (id: string) =>
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
     let hasIDB = session.hasIDB
-    let hasNet = session.hasNet
+
+    const syncQueue = new SyncQueue(svc, org)
 
     const subsOK = ref(false)
 
@@ -221,16 +291,8 @@ const useStore = (id: string) =>
     */
     const colls = reactive({  })
 
-    /* Chaque propriété correspondant à un périmètre: sa valeur donne son état.
-    - 0: stand-by - n'a pas l'objet d'un fetch
-    - 1: loading - a fait l'objet d'un fetch, toutes defs abonnés et sync demandés
-    - 2: ready - toutes defs ont eu au moins un sync.
-    */
-    const pstates = reactive({  })
+    const activePerims = reactive({  })
     /************************************************/
-
-    const getDCItem = (def: $Def) : $DCItem => 
-      def.type === 1 ? docs[def.definition] : colls[def.definition]
 
     const getDoc = (cl: string, pk: string) : $Document => {
       const item = docs[cl + '/' + pk]
@@ -241,133 +303,155 @@ const useStore = (id: string) =>
     const hasDocs = (clazz: string): boolean => docs[clazz] ? true : false
     const collections = () : string[] => { return  Object.keys(colls) }
 
-    const onNotif = async (defs: string[], dh: number) => {
-      await callBack(defs)
+    // Avis de mises à jour de documents / collections - A RESYNCHRONISER
+    const onNotif = async (defs: $Def[], dh: number) => {
+      for(const def of defs) {
+        const item = getItem(def)
+        if (item) syncQueue.push(item)
+      }
     }
 
-    const storeDocColl = async (def: $Def, sat: number, cd: $DCData) : Promise<void> => {
+    async function setIDB (item: $DCItem, sat: number, v: number, data: Uint8Array) {
+      /* Store en IDB:
+      a) si version plus récente
+      b) ou si identique et que lat est "bien inférieure à" sat */
+      if (item.lv !== v) {
+        item.lv = v
+        item.lat = sat
+        await idb.setDC(svc, org, item.def.definition, sat, v, data)
+      } else await setLatIDB(item, sat, v)
+    }
 
-      async function compile (clazz: string, row: row) : Promise<$Document> {
-        try {
-          return await Registry.compile(svc, clazz, org, row)
-        } catch (e) {
-          throw new AppExc(3, 'not_compilable_document', 'storeCollData',
-            [org, svc, clazz, row._pk, e.message]
-          )
+    async function setLatIDB (item: $DCItem, sat: number, v: number) {
+      if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
+        item.lat = sat
+        await idb.updLV(svc, org, item.def.definition, sat, v)
+      }
+    }
+
+    /* Ces documents sont modifiés mais SURTOUT NE SONT PLUS dans la collection
+    Les documents de la collection ont une classe différente pour un type 2 ou 3
+    */
+    async function movedDatas (item, sat, pks: Set<string>, datas: Uint8Array[]) {
+      const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
+      if (!docCl) return
+      for(const data of datas) {
+        const doc = await getDocument(docCl, data)
+        pks.delete(doc._pk)
+        const def = new $Def(docCl + '/' + doc._pk)
+        let itemd = getItem(def) as $DocItem
+        // Si itemd n'existait pas on N'EN CREE PAS
+        if (itemd && hasIDB) 
+          await setIDB(itemd, sat, doc.v, data)
+      }
+    }
+
+    /* Ces documents sont ajoutés ou modifiés mais SONT dans la collection
+    Les documents de la collection ont une classe différente pour un type 2 ou 3
+    */
+    async function manageDatas (item: $CollItem, sat: number, pks: Set<string>, datas: Uint8Array[]) {
+      const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
+      if (!docCl) return
+      for(const data of datas) {
+        const doc = await getDocument(docCl, data)
+        pks.add(doc._pk)
+        const def = new $Def(docCl + '/' + doc._pk)
+        let itemd = getItem(def) as $DocItem
+        if (!itemd) {
+          itemd = new $DocItem(def, sat, 0, doc.v, 0, doc)
+          docs[def.definition] = itemd
+        } else {
+          itemd.sat = sat
+          itemd.sv = doc.v
         }
+        if (hasIDB) await setIDB(itemd, sat, doc.v, data)
       }
+    }
 
-      async function setIDB (item: $DCItem, data: Uint8Array) {
-        /* Store en IDB:
-        a) si version plus récente
-        b) ou si identique et que lat est "bien inférieure à" sat */
-        if (item.lv !== cd.v) {
-          item.lv = cd.v
-          item.lat = sat
-          await idb.setDC(svc, org, def.definition, sat, cd.v, data)
-        } else await setLatIDB(item)
+    async function  getDocument(docCl: string, data: Uint8Array) : Promise<$Document> {
+      try {
+        const row = decode(data) as Row
+        return await Registry.compile(svc, docCl, org, row)
+      } catch (e) {
+        console.log(e)
+        return null
+        // TODO
       }
+    }
 
-      async function setLatIDB (item: $DCItem) {
-        if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
-          item.lat = sat
-          await idb.updLV(svc, org, def.definition, sat, cd.v)
+    async function manageData (item: $DocItem, sat: number, data: Uint8Array) {
+      item.doc = await getDocument(item.def.docCl, data)
+      if (hasIDB) await setIDB(item, sat, item.doc.v, data)
+      else {
+        item.lv = docs.v
+        item.lat = sat
+      }
+    }
+
+    async function deleteDoc (def: $Def, sat: number, pk: string, v: number) {
+        const defd = new $Def(def.docCl + '/' + pk)
+        let itemd = getItem(def) as $DocItem
+        // Si itemd n'existait pas on N'EN CREE PAS
+        if (itemd) // créé un Zombi
+          itemd.doc = Registry.buildZombi(svc, def.docCl, org, v, pk)
+        if (hasIDB) await setIDB(itemd, sat, v, null)
+        else {
+          itemd.sat = sat
+          itemd.sv = v
         }
+    }
+
+    const storeDoc = async (item: $DocItem, sat: number, cd: $DocData) : Promise<void> => {
+      if (cd.v === -1) { // credential NON accepté
+        // TODO
+        return
       }
-
-      function buildRow (def: $Def, enc: Uint8Array) : row {
-        try {
-          return decode(enc) as row
-        } catch (e) {
-          throw new AppExc(3, 'not_compilable_document', 'storeCollData',
-            [org, svc, def.docCl, def.pk, e.message])
-        }
-      }
-
-      async function manageDatas (pks: Set<string>) {
-        for(const data of cd['datas']) {
-          const pk = await manageData(data)
-          pks.add(pk)
-        }
-      }
-
-      async function manageData (data: Uint8Array) {
-        const row = buildRow(def, data) as row
-        const doc = await compile(def.docCl, row)
-        const item = getItem(def, true) as $DocItem
-        item.sat = sat
-        item.sv = row.v
-        item.doc = doc
-        if (hasIDB) await setIDB(item, data)
-        return doc._pk
-      }
-
-      async function movedDatas (pks: Set<string>) {
-        for(const data of cd['datas']) {
-          const row = buildRow(def, data) as row
-          const defd = new $Def(svc, def.docCl + '/' + row._pk)
-          pks.delete(row._pk)
-          let itemd = getItem(defd) as $DocItem
-          // Si itemd n'existait pas on N'EN CREE PAS
-          if (itemd) {
-            itemd.sat = sat
-            itemd.sv = row.v
-            itemd.doc = await compile(def.docCl, row)
-          }
-          if (hasIDB) await setIDB(itemd, data)
-        }
-      }
-
-      async function deleteDoc (pk: string, v: number) {
-          const defd = new $Def(svc, def.docCl + '/' + pk)
-          let itemd = docs[defd] as $DocItem
-          // Si itemd n'existait pas on N'EN CREE PAS
-          if (itemd) { // créé un Zombi
-            itemd.sat = sat
-            itemd.sv = v
-            itemd.doc = Registry.buildZombi(svc, def.docCl, org, v, pk)
-          }
-          if (hasIDB) await setIDB(itemd, null)
-      }
-
-      if (!def.isColl) { // Documents
-
-        let item = getItem(def) as $DocItem
-        if (!cd.incr) {
-          /* INTEGRAL
-          - le document n'existe PAS : v == 0, data: absent
-          - le document existe : v: sa version data: son contenu
-          */
-          if (cd.v === 0) {
-            if (!item) return // n'existait pas, n'existe toujours pas
-            // Existait: enregistré comme vide
-            await deleteDoc(item.doc._pk, cd.v)
-          } else { // Le document existe
-            await manageData(cd['data'])
-          }
-        } else { 
-          /* INCREMENTAL
-          - document ayant disparu DEPUIS vs: v version de disparition, data: null
-          - document ayant changé (pas disparu): v est sa version, data: son contenu
-          - document inchangé: v: 0
-          */
-         // Par principe de sérialisation item existe toujours
-          if (cd.v === 0) { // document inchangé
+      if (!cd.incr) {
+        /* INTEGRAL
+        - le document n'existe PAS : v == 0, data: absent
+        - le document existe : v: sa version data: son contenu
+        */
+        if (cd.v === 0) { // Existait, n'existe plus - enregistré comme deleted
+          if (item.sv === 0) return // n'existait pas, n'existe toujours pas
+          item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
+          if (hasIDB) await setIDB(item, sat, cd.v, null)
+          else {
             item.sat = sat
-            if (hasIDB) await setLatIDB(item)
-          } else {
-            const data = cd['data']
-            if (!data) { // Existait, n'existe plus: enregistré comme vide
-              await deleteDoc(item.doc._pk, cd.v)
-            } else { // Existe toujours mais a changé
-              await manageData(data)
+            item.sv = 0
+          }
+        } else { // Le document existe
+          await manageData(item, sat, cd['data'])
+        }
+      } else { 
+        /* INCREMENTAL
+        - document ayant disparu DEPUIS vs: v version de disparition, data: null
+        - document ayant changé (pas disparu): v est sa version, data: son contenu
+        - document inchangé: v: 0
+        */
+        if (cd.v === 0) { // document inchangé
+          item.sat = sat
+          if (hasIDB) await setLatIDB(item, sat, cd.v)
+        } else {
+          const data = cd['data']
+          if (!data) { // Existait, n'existe plus: enregistré comme deleted
+            item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
+            if (hasIDB) await setIDB(item, sat, cd.v, null)
+            else {
+              item.sat = sat
+              item.sv = cd.v
             }
+          } else { // Existe toujours mais a changé
+            await manageData(item, sat, data)
           }
         }
+      }
+    }
 
-      } else { // Collections
-
-        let item = getItem(def) as $CollItem
+    const storeColl = async (item: $CollItem, sat: number, cd: $CollData) : Promise<void> => {
+        if (cd.v === -1) { // credential NON accepté
+          // TODO
+          return
+        }
         if (!cd.incr) {
           /* INTEGRAL
           - la collection est vide : v == 0 (datas moved deleted sont absents)
@@ -375,64 +459,64 @@ const useStore = (id: string) =>
             - datas : liste des contenus des documents
             - v : version du document le plus récent de datas
           */
-          if (cd.v === 0) {
-            if (!item) return // n'existait pas, n'existe toujors pas
-            // Existait: enregistré comme vide
-            item.sat = sat
-            item.sv = cd.v
+          if (cd.v === 0 && item.sv === 0) return // n'existait pas, n'existe toujors pas
+          if (cd.v === 0) { // collection vide
             item.pks = new Set()
-            if (hasIDB) await setIDB(item, null)
-          } else { // La collection n'est pas vide
-            const pks: Set<string> = new Set()
-            await manageDatas(pks)
-            if (!item) { // N'existait pas, on en créé un
-              // Création de l'item pour la collection
-              item = new $CollItem(def, sat, sat, cd.v, cd.v, pks)
-              colls[def.definition] = item
-            } else { // la collection avait un item
+            if (hasIDB) await setIDB(item, sat, cd.v, null)
+            else {
               item.sat = sat
               item.sv = cd.v
-              item.pks = pks
             }
-            if (hasIDB) await setIDB(item, encode(Array.from(item.pks)))
+          } else { // La collection n'est pas vide
+            const pks: Set<string> = new Set()
+            await manageDatas(item, sat, pks, cd.datas) // ajoute à pks
+            item.pks = pks
+            if (hasIDB) await setIDB(item, sat, cd.v, encode(Array.from(pks)))
+            else {
+              item.sat = sat
+              item.sv = cd.v
+            }
           }
+      } else { 
+        /*
+        INCREMENTAL, liste des changements depuis vs:
+        - pour les types 0 et 2, 
+          - collection inchangée: v: 0 (datas dels sont absents)
+          - collection changée: v et 1 à 3 listes
+            - v : version du changement le plus récent
+            - datas : [Uint8Array]
+              - ceux ajoutés à la collection depuis vs avec leur data complète
+              - ceux qui sont dans la collection et ont changé depuis vs avec data complète
+            - moved : [Uint8Array] type 2 seulement
+              - ceux ayant quitté la collection depuis vs avec leur data complète
+            - deleted : couples des [pk, v] des documents supprimés 
+              où v est leur dh de supression
+        */
+        if (cd.v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
+          item.sat = sat
+          if (hasIDB) await setLatIDB(item, sat, cd.v)
         } else { 
-          /*
-          INCREMENTAL, liste des changements depuis vs:
-          - pour les types 0 et 2, 
-            - collection inchangée: v: 0 (datas dels sont absents)
-            - collection changée: v et 1 à 3 listes
-              - v : version du changement le plus récent
-              - datas : [Uint8Array]
-                - ceux ajoutés à la collection depuis vs avec leur data complète
-                - ceux qui sont dans la collection et ont changé depuis vs avec data complète
-              - moved : [Uint8Array] type 2 seulement
-                - ceux ayant quitté la collection depuis vs avec leur data complète
-              - deleted : couples des [pk, v] des documents supprimés 
-                où v est leur dh de supression
-          */
-          // Par principe même de sérialisation maj des stores item EXISTE
-          if (cd.v === 0) {
-            // la collection est inchangée - item EXISTE - rafraichissement de sat
-            item.sat = sat
-            if (hasIDB) await setLatIDB(item)
-          } else { 
-            /* La collection a changé
-            cd.v : est sa version
-            datas et deleted : toujours à traiter
-            moved : seulement pour type 2 */
-            const pks: Set<string> = item.pks || new Set()
-            await manageDatas(pks)
-            for(const [pk, v] of cd['deleted']) {
+          /* La collection a changé
+          cd.v : est sa version
+          datas et deleted : A AJOUTER (s'il n'y était pas) / CHANGES (s'il y était) pour type 2 et 3
+          moved : seulement pour type 3 */
+          const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
+          const pks: Set<string> = item.pks || new Set()
+          if (cd.datas)
+            await manageDatas(item, sat, pks, cd.datas)
+          if (cd.deleted)
+            for(const [pk, v] of cd.deleted) {
               pks.delete(pk)
-              await deleteDoc(pk, v)
+              const defd = new $Def(docCl + '/' + pk)
+              await deleteDoc(defd, sat, pk, v)
             }
-            await movedDatas(pks)
-          }
+          if (cd.moved)
+            await movedDatas(item, sat, pks, cd.moved)
+          item.pks = pks
+          item.sat = sat
+          item.sv = cd.v
         }
-
       }
-
     }
 
     const initDocFromIDB = async (item: $DocItem) => {
@@ -454,9 +538,9 @@ const useStore = (id: string) =>
         item.pks = new Set(x)
         item.lat = r.lat
         item.lv = r.v
-        const cl = item.def.type === 3 ? item.def.colClass : item.def.docCl
+        const cl = item.def.type === 3 ? item.def.colClass(svc) : item.def.docCl
         for(const pk of x) {
-          const itemd = getItem(new $Def(svc, cl + '/' + pk), true)
+          const itemd = getItem(new $Def(cl + '/' + pk), true)
           await initDocFromIDB(itemd)
         }
       } catch (e) {
@@ -474,23 +558,81 @@ const useStore = (id: string) =>
       return item
     }
 
-    const addPerimeter = (p: $Perimeter) => {
-      let state = 0
-      for(const def of p.defs) {
-        const item = getItem(def, true)
-        item.addPerimeter(p.id)
-        if (item.state < state) state = item.state
+    const getAPState = (p: $Perimeter) : APState => {
+      let x: APState = activePerims[p.id]
+      if (!x) {
+        x = { lastSync: 0, resolves: [], perimeter: p }
+        activePerims[p.id] = x
       }
-      pstates[p.id] = state
+      return x
+    }
+
+    /* fetch force la synchronisation du périmètre qui devient actif:
+    - s'il l'était déjà synchronisé, retourne lastSync
+    - sinon retourne 0: 
+      - il faudra faire "await listen(p)" pour attendre sa première synchro complète
+    */
+    const fetch = (p: $Perimeter) : number => {
+      const apstate = getAPState(p)
+      if (apstate.lastSync === 0) // on poste le sync de tous ses items
+        for(const def of p.defs)
+          syncQueue.push(getItem(def))
+      return lastSync (apstate)
+    } 
+
+    /* listen sur un périmètre depuis un lastTime (par défaut 0)
+    attend que le périmètre ait une lastSync postérieure à lastTime.
+    Une manière d'écouter quand le périmètre change.
+    */
+    const listen = async (p: $Perimeter, lastTime?: number) : Promise<any> => {
+      const apstate = getAPState(p)
+      const ls = lastSync (apstate)
+      if (ls > lastTime || 0) return ls
+      const pr = new Promise((resolve, reject) => {
+        apstate.resolves.push(resolve)
+      })
+      return pr
+    } 
+
+    const lastSync = (apstate: APState) : number => {
+      let lastSync = 0
+      for(const def of apstate.perimeter.defs) {
+        const item = getItem(def)
+        if (!item.lastSync) return 0
+        if (item.lastSync > lastSync) lastSync = item.lastSync
+      }
+      apstate.lastSync = lastSync
+      return lastSync
+    }
+
+    /* Retour de synchronisation
+    on ne checke que les périmètres ayant fait l'objet d'un fetch WAIT
+    */
+    const checkResolves = () => {
+      for(const idp in activePerims) {
+        const apstate = activePerims[idp]
+        if (apstate.resolves.length) {
+          /* Si un périmètre a un item qui n'a jamais été synchronisé 
+          il ne sera pas résolu */
+          const ls = lastSync (apstate)
+          if (ls) {
+            // Le périmètre peut être résolu
+            for(const resolve of apstate.resolves)
+              resolve(lastSync)
+            apstate.resolves = []
+          }
+        }
+      }
     }
 
     return { 
-      svc, org, subsOK,
-      getDCItem,
+      svc, org, subsOK, syncQueue,
+      getItem,
+      getAPState,
       onNotif,
-      classes, collections, hasDocs, getDoc,
-      storeDocColl,
+      getDoc,
+      storeDoc, storeColl,
       initCollFromIDB, initDocFromIDB,
-      addPerimeter
+      fetch, listen, checkResolves
     } as IDocStore
   })()

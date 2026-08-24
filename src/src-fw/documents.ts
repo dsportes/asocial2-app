@@ -12,26 +12,6 @@ import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/oper
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
-export class $DefSigner {
-  creds: Map<string, $Credential> 
-
-  constructor (svc: string, org: string) {
-    this.creds = new Map()
-    const sc = stores.safe.mySimpleCreds(svc, org)
-    for(const [ ,c] of sc)
-      this.creds.set(c.docCl + '/' + c.docPk, c)
-  }
-
-  getCred (def: $Def): $Credential {
-    switch (def.type) {
-      case 1 : return this.creds.get(def.definition)
-      case 2 : return this.creds.get(def.docCl + '/1')
-      case 3 : return this.creds.get(def.colClass + '/' + def.pk)
-    }
-  }
-
-}
-
 /* Génératiuon d'un "template" comportant toutes les données (sauf userId)
 pour créer un Credential dans une opération */
 export class $CredTempl {
@@ -102,19 +82,22 @@ export class $Def {
     dont la propriété colName vaut pk
   */
   readonly type: number
-  readonly svc: string
   readonly docCl: string
   readonly pk?: string
   readonly colName?: string
-  readonly definition: string
+
+  get definition () : string {
+    return this.type === 2 ? this.docCl : 
+      (this.type === 1 ? this.docCl + '/' + this.pk : this.docCl + '/' + this.colName + '/' + this.pk)
+  }
 
   get isColl () { return this.type !== 1 }
-  get docDescriptor () { return DocDescriptor.get(this.svc + '$' + this.docCl) || null }
-  get colClass () { return this.docDescriptor ? this.docDescriptor.colls.get(this.colName) : '' }
+  colClass (svc: string) : string{ 
+    const dd = DocDescriptor.get(svc + '$' + this.docCl)
+    return dd ? dd.colClass(this.colName) : '' 
+  }
   
-  constructor (svc: string, definition: string) {
-      this.svc = svc
-      this.definition = definition
+  constructor (definition: string) {
       const defx = definition.split('/')
       this.type = defx.length === 0 ? 2 : (defx.length === 1 ? 1 : 2)
       this.docCl = defx[0]
@@ -123,27 +106,29 @@ export class $Def {
   }
 }
 
-/* Classe immutable de définition d'un périmètre*/
+/* Classe immutable de définition d'un périmètre
+id est de la forme: docCl@code/docPk OU de la forme docCl/docPk
+*/
 export class $Perimeter {
-  readonly svc: string
-  readonly id: string
+  readonly docCl: string
+  readonly code: string
+  readonly docPk: string 
+
   readonly role: string
   readonly plane: boolean
   readonly defs: $Def[]
-  readonly credCl: string
-  readonly credPk: string 
 
-  constructor (svc: string, id: string, role: string, plane: boolean, definitions: string[]) {
-    this.svc = svc; this.role = role; this.plane = plane || false; this.defs = []
-    for(const d of definitions) this.defs.push(new $Def(svc, d))
-    const i = id.indexOf('@')
-    const j = id.indexOf('/')
-    this.credCl = id.substring(0, (i === -1 ? j : i))
-    this.credPk = id.substring(j + 1)
+  get id () { return this.code + '/' + this.docCl + '/' + this.docPk }
+
+  constructor (code: string, docCl: string, docPk: string, role: string, plane: boolean, definitions: string[]) {
+    this.docCl = docCl; this.code = code; this.docPk = docPk
+    this.role = role; this.plane = plane || false; this.defs = []
+    for(const d of definitions) this.defs.push(new $Def(d))
   }
 
   toObj () {
-    const obj = { svc: this.svc, id: this.id, role: this.role, plane: this.plane, defs: [] }
+    const obj = { docCl: this.docCl, code: this.code, docPk: this.docPk,
+      role: this.role, plane: this.plane, defs: [] }
     for(const def of this.defs) obj.defs.push(def.definition)
     return obj
   }

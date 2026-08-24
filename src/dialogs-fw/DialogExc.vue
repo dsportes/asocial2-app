@@ -7,12 +7,13 @@
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX' + major + '_label')}}</q-toolbar-title>
       </q-toolbar>
       <q-card-section v-if="!abort">
-        <div class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
+        <div v-if="exc.background">{{  $t('EX_sync', [exc.svc]) }}</div>
+        <div v-else class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
         <div class="q-mb-xs titre-md" v-html="html"/>
         <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
       </q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
-        <btn-cond v-if="!exc.background" color="primary" icon="arrow_forward"
+        <btn-cond color="primary" icon="arrow_forward"
           :label="$t('EX_continue')" @ok="cont"/>
         <btn-cond color="warning" icon="logout" 
           :label="$t('EX_quit')" @ok="bye"/>
@@ -43,6 +44,7 @@ public opName: string
 public org: string
 public stack: string
 public args: string[]
+public svc: string
 
 public message: string
 

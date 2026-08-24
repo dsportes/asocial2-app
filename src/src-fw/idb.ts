@@ -190,7 +190,7 @@ export class IDB {
     const lp = await this.db.perims.toArray()
     for(const px of lp) {
       const obj = decode(await this.decryptData(px.data))
-      const p = new $Perimeter(obj.svc, obj.id, obj.role, obj.plane, obj.defs)
+      const p = new $Perimeter(obj.code, obj.docCl, obj.docPk, obj.role, obj.plane, obj.defs)
       const soid = px.id
       let i = soid.indexOf('/')
       i = soid.indexOf('/', i + 1)

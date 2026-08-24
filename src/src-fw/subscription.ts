@@ -4,25 +4,11 @@ import { encode, decode } from '@msgpack/msgpack'
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
-import { $DefSigner, $Perimeter, $Def, $Credential } from '../src-fw/documents'
-import { getStore, IDocStore } from'../stores/docs'
-import { $ADocument, $Document, Registry } from '../src-fw/registry'
-import { $DCItem } from '../stores/docs'
+import { $Perimeter, $Def, $Credential } from '../src-fw/documents'
+import { IDocStore } from'../stores/docs'
+import { $ADocument, $Document } from '../src-fw/registry'
 
-export interface $DCData {
-  v: number
-  incr?: boolean
-}
 
-export interface $DocData extends $DCData{
-  data?: Uint8Array
-}
-
-export interface $CollData extends $DCData{
-  datas?: Uint8Array[]
-  moved?: Uint8Array[]
-  deleted?: [string, number][]
-}
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
@@ -113,6 +99,28 @@ export class $SubsGenerator extends $ADocument {
   }
 }
 
+class $DefSigner {
+  svc: string
+  creds: Map<string, $Credential> 
+
+  constructor (svc: string, org: string) {
+    this.svc = svc
+    this.creds = new Map()
+    const sc = stores.safe.mySimpleCreds(svc, org)
+    for(const [ ,c] of sc)
+      this.creds.set(c.docCl + '/' + c.docPk, c)
+  }
+
+  getCred (def: $Def): $Credential {
+    switch (def.type) {
+      case 1 : return this.creds.get(def.definition)
+      case 2 : return this.creds.get(def.docCl + '/1')
+      case 3 : return this.creds.get(def.colClass(this.svc) + '/' + def.pk)
+    }
+  }
+
+}
+
 /* Les appels à FW$Sync se font à deux occasions:
 - pour charger des documents / collections A LA PREMIERE demande 
   au cours de la session, APRES avoir déclaré les souscriptions
@@ -171,58 +179,38 @@ Retour:
   à cette date-heure l'image de la collection est celle-ci.
 */
 export class FW$Sync {
+  svc: string
   op: Operation
   signer: $DefSigner
+  creds: $Credential[] = []
 
-  constructor (svc: string, org: string, std: IDocStore) {
+  constructor (svc: string, org: string) {
+    this.svc = svc
     this.op = new Operation('FW$Sync', svc, org)
     this.signer = new $DefSigner(svc, org)
     this.op.args.toSync = []
   }
 
-  async addDef (def: $Def, v: number) {
+  // Retourne true si un credential existe
+  addDef (def: $Def, v: number) : boolean {
     const cred = this.signer.getCred(def)
     if (cred) {
-      await this.op.sign(cred)
+      this.creds.push(cred)
       this.op.args.toSync.push({ def: def.definition, v })
-    }
-  }
-
-  /*
-  async setDefs (defs: string[]) : Promise<[{ def: string, v: number }]> {
-    this.defs = this.signer.validDefs(defs)
-    for(const def of this.defs) {
-      const idf = this.std.idef(def)
-      let item : $DCItem
-      if (idf.type === 1) {
-        item = this.std.getDCItem(def)
-        if (!item && this.hasIDB) item = await this.std.initDocFromIDB(def)
-      } else {
-        item = this.std.collections[def]
-        if (!item && this.hasIDB) item = await this.std.initCollFromIDB(def)
-      }
-      this.op.args.toSync.push({ def, v: item ? item.sv : 0})
-    }
-    return this.op.args.toSync
-  }
-  */
-
-  async post (noex?: boolean) : Promise<boolean> {
-    try {
-      const res = await this.op.post()
-      const sat = res['now'] // service assertion time
-      if (res.syncs) {
-        for(const def in res.syncs) {
-          const cd = res.syncs[def] as $DCData
-          if (cd.v === -1) continue // Pas de credential accepté
-          // await this.std.storeDocColl(def, sat, cd)
-        }
-      }
       return true
+    } else return false
+  }
+
+
+  async post () : Promise<[number, Object]> {
+    try {
+      for(const cred of this.creds)
+        await this.op.sign(cred)
+      const res = await this.op.post(true)
+      return [res.now, res.syncs]
     } catch (e) {
-      await this.op.ko(e)
-      if (!noex) throw e
-      return false
+      await this.op.ko(e, this.svc)
+      return [0, null]
     }
   }
 }
