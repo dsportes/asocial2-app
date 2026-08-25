@@ -99,7 +99,7 @@ export class $Def {
   
   constructor (definition: string) {
       const defx = definition.split('/')
-      this.type = defx.length === 0 ? 2 : (defx.length === 1 ? 1 : 2)
+      this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
       this.docCl = defx[0]
       if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
       if (this.type === 3) this.colName = defx[1]

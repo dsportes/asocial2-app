@@ -43,7 +43,7 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   const perims: Ref<Perims> = ref()
-  const getPrimeter = 
+  const getPerimeter = 
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
     const m = perims.value.get(svc + '/' + org)
     if (!m) return null
@@ -75,7 +75,7 @@ export const useSessionStore = defineStore('session', () => {
       const mt = sf.myTrusting
       if (mt) await mt.addAppsDb()
     }
-    if (planeMode) {
+    if (planeMode.value) {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
       perims.value = sp.perims
@@ -89,7 +89,7 @@ export const useSessionStore = defineStore('session', () => {
       const x = sf.mySafeOptions
       pref.value = x.pref || ''
       orgRoles.value = x.orgRoles || []
-      if (syncMode) {
+      if (syncMode.value) {
         const opts = await idb.openSync()
         if (opts && opts.pref) pref.value = opts.pref
         if (opts && opts.orgRoles && opts.orgRoles.length)
@@ -100,7 +100,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const subsGen = (svc: string, org: string, p2sync: $Perimeter[]) : $Subs => {
-    const pgen = Registry.newD(svc, '$SubsGenerator') as $SubsGenerator
+    const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
     pgen.init(org).processPerimeters(p2sync)
     return pgen.subs
   }
@@ -114,14 +114,14 @@ export const useSessionStore = defineStore('session', () => {
       const st = getStore(svc, org)
 
       // Preset les documents / collections des périmètres
-      if (syncMode) {
+      if (syncMode.value) {
         const p2sync = [] // périmètres à synchroniser / charger de IDB
 
         const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
         for(const [,p] of px) {
           if (p.plane) { // p : périmètre à synchroniser / charger depuis IDB
             p2sync.push(p)
-            st.getAPState(p, true)
+            st.getAPState(p)
             for(const def of p.defs) {
               const item = st.getItem(def, true)
               // Chargement depuis IDB
@@ -133,7 +133,7 @@ export const useSessionStore = defineStore('session', () => {
         
         // Génère la subscription et l'enregistre dans le service
         const subs = subsGen(svc, org, p2sync)
-        st.subsOK = await subs.subscribe(false)
+        st.subsOK = await subs.subscribe(svc, org, false)
 
         // Demande la synchronisation des defs des périmètres
         for(const p of p2sync) {
@@ -342,7 +342,7 @@ export const useSessionStore = defineStore('session', () => {
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
     edPref, setEdPref, updatePref,
-    getPrimeter
+    getPerimeter
     // focus, getFocus, lostFocus, closingApp
   }
 })

@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { onMounted, ref } from 'vue'
+import { Ref, onMounted, ref } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
@@ -34,17 +34,19 @@ import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnMenu from '../components-fw/BtnMenu.vue'
 import BtnMode from '../components-fw/BtnMode.vue'
+import { isMDAdmin } from 'src/src-fw/operation'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
 
+const isAdmin: Ref<boolean> = ref(false)
 const adminPage = ref({ mdAdmin: false})
 
 onMounted(async () => { 
-  adminPage.value = await ui.resetAdminPage() 
-  // console.log(adminPage.value.mdAdmin)
+  isAdmin.value = await isMDAdmin()
+  adminPage.value = ui.resetAdminPage(isAdmin.value) 
 })
 
 </script>

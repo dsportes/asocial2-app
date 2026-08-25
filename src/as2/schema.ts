@@ -7,6 +7,8 @@ try {
   const nd = DocDescriptor.size()
   const nf = FormType.size()
 
+  new DocDescriptor(svc, { name: 'SubsGenerator', virtual: true })
+
   new DocDescriptor(svc, { name: 'Status', sync: true, pk: ['svc'], nohash: true } )
   new DocDescriptor(svc, { name: 'Subs', pk: ['sessionId'] })
 

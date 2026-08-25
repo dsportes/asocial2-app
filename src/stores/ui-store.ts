@@ -4,9 +4,10 @@ import { ref, computed, reactive } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { setCssVar } from 'quasar'
-import stores from './all'
-import { Help } from '../src-fw/help'
-import { isMDAdmin } from 'src/src-fw/operation'
+
+import { hasPage } from '../src-fw/help'
+import { useConfigStore } from '../stores/config-store'
+import { useSessionStore } from '../stores/session-store'
 
 const large = 900
 const HOME = 'safeHome'
@@ -31,7 +32,7 @@ export const useUiStore = defineStore('ui', () => {
     const d = isDark.value
     if ((d && dark) || (!d && !dark)) return
     $q.value.dark.set(dark)
-    const t = stores.config.K.theme
+    const t = useConfigStore().K.theme
     for(const c in t) setCssVar(c, t[c][dark ? 0 : 1])
   }
 
@@ -104,17 +105,15 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   const openHelp = (page: string) => {
-    if (!Help.hasPage(page)) {
+    if (hasPage(page)) {
       $q.value.dialog({
         // title: 'Alert',
         message: $t.value('HLPaidebd', [page]),
         ok: { label: $t.value('gotit'), flat:true, color: "primary" }
       }).onOk(() => { }).onCancel(() => { }).onDismiss(() => { })
-    }
-    else {
+    } else {
       pushhelp(page)
-      console.log('Ouverture page aide ', page)
-      return
+      // console.log('Ouverture page aide ', page)
     }
   }
 
@@ -204,7 +203,7 @@ export const useUiStore = defineStore('ui', () => {
     page.value = ''
     setTimeout(() => {
       page.value = HOME
-      stores.session.setStep(0)
+      useSessionStore().setStep(0)
     }, 50)
   }
 
@@ -218,13 +217,13 @@ export const useUiStore = defineStore('ui', () => {
     mdAdmin: false
   })
 
-  const resetAdminPage = async (reset?: boolean) => {
+  const resetAdminPage = (isAdmin: boolean) => {
     adminPage.site = ''
     adminPage.org = ''
     adminPage.org = ''
     adminPage.pingop = ''
     adminPage.pingst = ''
-    adminPage.mdAdmin = reset ? false : await isMDAdmin()
+    adminPage.mdAdmin = isAdmin
     return adminPage
   }
   

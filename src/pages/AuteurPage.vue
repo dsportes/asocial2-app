@@ -57,7 +57,7 @@
 // @ts-ignore
 import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
-import { $Credential, $Cred } from '../src-fw/documents'
+import { $Credential, $Cred, $Def } from '../src-fw/documents'
 import { $t, sty } from '../src-fw/util'
 import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
@@ -83,17 +83,7 @@ const aut = computed(() =>
   cred.value ? std.value.getDoc('Auteur', cred.value.docPk) : null)
 
 watch(aut, (v) => { 
-  console.log(v.nomAuteur) })
-
-watch(() => std.value.docs['Auteur/' + cred.value.docPk], (v) => {
-  console.log(v.doc.nomAuteur)
-})
-
-watch(cred, (c) => {
-  watch(() => std.value.docs['Auteur/' + c.docPk], (v) => {
-    console.log(v.doc.nomAuteur)
-  })
-})
+  console.log(v ? v.nomAuteur : 'personne') })
 
 const coauts: Ref<$Cred[]> = computed(() => {
   const co = []
@@ -111,11 +101,10 @@ onMounted(async () => {
 const select = async (c: $Credential) => {
   cred.value = c
   org.value = c.org
-  perimetre.value = session.getPrimeter('AS2', c.org, '', 'Auteur', c.docPk) 
-  let t1 = 0, t2 = 0
-  t1 = std.fetch(perimetre.value)
-  if (t1 === 0) t2 = await std.listen(perimetre.value)
-  console.log(t1, t2)
+  perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk) 
+  watchUpdAut()
+  tx.value = std.value.fetch(perimetre.value)
+  if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
 }
 
 const editTrig = async (trig: string) => {
@@ -140,15 +129,26 @@ const majSection = async (section: string) => {
   await majAut(null, section)
 }
 
+const tx = ref(0)
+const watchUpdAut = () => {
+  std.value.listen(perimetre.value, tx.value)
+  .then(v => {
+    tx.value = v
+    console.log('auteur a changé: ' + v) // Do something here
+    watchUpdAut()
+  })
+}
+
 const majAut = async (nomAuteur: string, section: string) => {
-  // const pk = DocDescriptor.get('AS2$Auteur').pkValue(aut.value)
   const op = new Operation('MajAuteur', 'AS2', org.value)
   op.args.autpk = cred.value.docPk
   if (nomAuteur) op.args.nomAuteur = nomAuteur
   if (section) op.args.section = section
   await op.sign(cred.value)
   try {
+    console.log('majaut1 ' + tx.value)
     const res = await op.post()
+    console.log('majaut2 ' + tx.value)
     if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
   } catch (e) { 

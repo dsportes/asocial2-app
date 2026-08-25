@@ -57,10 +57,10 @@ export class $Subs extends $Document {
   */
 
   /* Enregistrement de la souscription au serveur */
-  async subscribe (longLife: boolean) : Promise<boolean> {
+  async subscribe (svc: string, org: string, longLife: boolean) : Promise<boolean> {
     const session = stores.session
     const config = stores.config
-    const op = new Operation('FW$setSubscription', this._svc, this._org)
+    const op = new Operation('FW$setSubscription', svc, org)
     try {
       op.args.subscription = {
         sessionId: session.sessionId,
@@ -206,7 +206,7 @@ export class FW$Sync {
     try {
       for(const cred of this.creds)
         await this.op.sign(cred)
-      const res = await this.op.post(true)
+      const res = await this.op.post()
       return [res.now, res.syncs]
     } catch (e) {
       await this.op.ko(e, this.svc)

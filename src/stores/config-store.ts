@@ -3,6 +3,8 @@ import { ref, Ref, computed } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
+import { useI18n } from 'vue-i18n'
+// @ts-ignore
 import customR from '../assets/custom.json?raw'
 import { K as AppK } from '../app/constants'
 
@@ -39,6 +41,7 @@ export const useConfigStore = defineStore('config', () => {
     for(const f in custom) K.value[f] = custom[f]
     K.value.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = K.value.localeOptions[0].value
+    useI18n().locale.value = locale.value
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
   }

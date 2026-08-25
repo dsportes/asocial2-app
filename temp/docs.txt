@@ -6,7 +6,7 @@ Voir: https://alexop.dev/tils/dynamic-pinia-dsStores/
 */
 
 // @ts-ignore
-import { Ref, ref, reactive, watch } from 'vue'
+import { ref, reactive } from 'vue'
 // @ts-ignore
 import { defineStore } from 'pinia'
 // @ts-ignore
@@ -68,7 +68,7 @@ export type IDocStore = {
   readonly org: string
   subsOK: boolean
   syncQueue: SyncQueue
-
+  docs: Object
   getItem (def: $Def, create?: boolean) : $DCItem
   getAPState (p: $Perimeter) : APState
 
@@ -284,16 +284,6 @@ const useStore = (id: string) =>
     */
     const colls = reactive({  })
 
-    const upd = (item: $DCItem) => {
-      if (item.def.type === 1) {
-        delete docs[item.def.definition]
-        docs[item.def.definition] = item
-      } else {
-        delete colls[item.def.definition]
-        colls[item.def.definition] = item
-      }
-    }
-
     const activePerims = reactive({  })
     /************************************************/
 
@@ -325,13 +315,11 @@ const useStore = (id: string) =>
         item.lat = sat
         await idb.setDC(svc, org, item.def.definition, sat, v, data)
       } else await setLatIDB(item, sat, v)
-      upd(item)
     }
 
     async function setLatIDB (item: $DCItem, sat: number, v: number) {
       if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
         item.lat = sat
-        upd(item)
         await idb.updLV(svc, org, item.def.definition, sat, v)
       }
     }
@@ -366,12 +354,10 @@ const useStore = (id: string) =>
         let itemd = getItem(def) as $DocItem
         if (!itemd) {
           itemd = new $DocItem(def, sat, 0, doc.v, 0, doc)
-          // docs[def.definition] = itemd
           docs[def.definition] = itemd
         } else {
           itemd.sat = sat
           itemd.sv = doc.v
-          upd(itemd)
         }
         if (hasLocal) await setIDB(itemd, sat, doc.v, data)
       }
@@ -392,12 +378,9 @@ const useStore = (id: string) =>
       item.doc = await getDocument(item.def.docCl, data)
       if (hasLocal) await setIDB(item, sat, item.doc.v, data)
       else {
-        item.lv = item.doc.v
+        item.lv = docs.v
         item.lat = sat
-        upd(item)
       }
-      delete docs[item.def.definition]
-      docs[item.def.definition] = item
     }
 
     async function deleteDoc (def: $Def, sat: number, pk: string, v: number) {
@@ -410,7 +393,6 @@ const useStore = (id: string) =>
         else {
           itemd.sat = sat
           itemd.sv = v
-          upd(itemd)
         }
     }
 
@@ -431,7 +413,6 @@ const useStore = (id: string) =>
           else {
             item.sat = sat
             item.sv = 0
-            upd(item)
           }
         } else { // Le document existe
           await manageData(item, sat, cd['data'])
@@ -445,7 +426,6 @@ const useStore = (id: string) =>
         if (cd.v === 0) { // document inchangé
           item.sat = sat
           if (hasLocal) await setLatIDB(item, sat, cd.v)
-          else upd(item)
         } else {
           const data = cd['data']
           if (!data) { // Existait, n'existe plus: enregistré comme deleted
@@ -454,7 +434,6 @@ const useStore = (id: string) =>
             else {
               item.sat = sat
               item.sv = cd.v
-              upd(item)
             }
           } else { // Existe toujours mais a changé
             await manageData(item, sat, data)
@@ -482,7 +461,6 @@ const useStore = (id: string) =>
             else {
               item.sat = sat
               item.sv = cd.v
-              upd(item)
             }
           } else { // La collection n'est pas vide
             const pks: Set<string> = new Set()
@@ -492,7 +470,6 @@ const useStore = (id: string) =>
             else {
               item.sat = sat
               item.sv = cd.v
-              upd(item)
             }
           }
       } else { 
@@ -513,7 +490,6 @@ const useStore = (id: string) =>
         if (cd.v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
           item.sat = sat
           if (hasLocal) await setLatIDB(item, sat, cd.v)
-          else upd(item)
         } else { 
           /* La collection a changé
           cd.v : est sa version
@@ -534,7 +510,6 @@ const useStore = (id: string) =>
           item.pks = pks
           item.sat = sat
           item.sv = cd.v
-          upd(item)
         }
       }
     }
@@ -546,7 +521,6 @@ const useStore = (id: string) =>
         item.doc = await Registry.compile(svc, item.def.docCl, org, obj)
         item.lat = r.lat
         item.lv = r.v
-        upd(item)
       } catch (e) {
         console.error(e.toString)
       }
@@ -559,7 +533,6 @@ const useStore = (id: string) =>
         item.pks = new Set(x)
         item.lat = r.lat
         item.lv = r.v
-        upd(item)
         const cl = item.def.type === 3 ? item.def.colClass(svc) : item.def.docCl
         for(const pk of x) {
           const itemd = getItem(new $Def(cl + '/' + pk), true)
@@ -571,17 +544,17 @@ const useStore = (id: string) =>
     }
 
     const getItem = (def: $Def, create?: boolean) => {
-      let item = def.isColl ? colls[def.definition] : docs[def.definition]
+      const dc = def.isColl ? colls : docs
+      let item = dc[def.definition]
       if (!item && create) {
         item = def.isColl ? new $CollItem(def) : new $DCItem(def)
-        if (def.isColl) colls[def.definition] = item
-        else docs[def.definition] = item
+        dc[def.definition] = item
       }
       return item
     }
 
     const getAPState = (p: $Perimeter) : APState => {
-      let x = activePerims[p.id]
+      let x: APState = activePerims[p.id]
       if (!x) {
         x = { lastSync: 0, resolves: [], perimeter: p }
         activePerims[p.id] = x
@@ -599,7 +572,7 @@ const useStore = (id: string) =>
       if (apstate.lastSync === 0) // on poste le sync de tous ses items
         for(const def of p.defs)
           syncQueue.push(getItem(def))
-      return getLastSync(apstate)
+      return lastSync (apstate)
     } 
 
     /* listen sur un périmètre depuis un lastTime (par défaut 0)
@@ -608,7 +581,7 @@ const useStore = (id: string) =>
     */
     const listen = async (p: $Perimeter, lastTime?: number) : Promise<any> => {
       const apstate = getAPState(p)
-      const ls = getLastSync(apstate)
+      const ls = lastSync (apstate)
       if (ls > lastTime || 0) return ls
       const pr = new Promise((resolve, reject) => {
         apstate.resolves.push(resolve)
@@ -616,7 +589,7 @@ const useStore = (id: string) =>
       return pr
     } 
 
-    const getLastSync = (apstate: APState) : number => {
+    const lastSync = (apstate: APState) : number => {
       let lastSync = 0
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
@@ -636,11 +609,11 @@ const useStore = (id: string) =>
         if (apstate.resolves.length) {
           /* Si un périmètre a un item qui n'a jamais été synchronisé 
           il ne sera pas résolu */
-          const ls = getLastSync(apstate)
+          const ls = lastSync (apstate)
           if (ls) {
             // Le périmètre peut être résolu
             for(const resolve of apstate.resolves)
-              resolve(ls)
+              resolve(lastSync)
             apstate.resolves = []
           }
         }
@@ -648,7 +621,7 @@ const useStore = (id: string) =>
     }
 
     return { 
-      svc, org, subsOK, syncQueue,
+      svc, org, subsOK, syncQueue, docs,
       getItem,
       getAPState,
       onNotif,

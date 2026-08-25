@@ -95,7 +95,7 @@
     <q-card :class="sty('md') + 'q-pa-sm'">
       <q-card-section>
         <div class="titre-md">{{$t('HLPrm1')}}</div>
-        <sd-nb :text="Help.readme" class="q-my-sm rd"/>
+        <sd-nb :text="readme" class="q-my-sm rd"/>
       </q-card-section>
       <q-card-actions align="center" class="q-my-sm">
         <btn-cond flat :label="$t('gotit')" size="lg" @ok="dialogs.Readme = false"/>
@@ -110,13 +110,17 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 
+import { setPlan, nodes, pages } from '../src-fw/help'
+import { readme, sources, labels } from '../app/apphelp'
+
 import stores from '../stores/all'
 import { sty, $t } from '../src-fw/util'
-import { Help } from '../src-fw/help'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import ShowHtml from '../components-fw/ShowHtml.vue'
 import SdNb from '../components-fw/SdNb.vue'
+
+setPlan()
 
 const ui = stores.ui
 
@@ -125,10 +129,6 @@ const dialogs = reactive({ Readme: false })
 const config = stores.config
 const docsurl = config.K.docsurls[config.locale] || 'http://localhost:8080/fr'
 const urld = '<a href="' + docsurl + '/'
-const nodes = Help.tree()
-const sources = Help.sources
-const pages = Help.pages() // Key: nom page, value: nom de sa page mère (null si racine)
-const labels = Help.labels
 
 function label (p) {
   let l = labels[config.locale][p]
@@ -166,7 +166,7 @@ function parents (n) { // nom d'une page ou section
 
 const tree = ref(null)
 const expandAll = ref(false)
-const splitterModel = ref(50)
+// const splitterModel = ref(50)
 const selected = ref(ui.helpstack[0])
 const expanded = ref(parents(ui.helpstack[0]))
 const intro = ref()

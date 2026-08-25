@@ -349,7 +349,7 @@ export class IDB {
       const sodef = so + '/' + def
       const r = { sodef, def, so, lat, v, data }
       const n = def.split('/')
-      if (n.length === 1) await this.db.docs.put(r)
+      if (n.length === 2) await this.db.docs.put(r)
       else await this.db.colls.put(r)
     } catch (e) {
       throw IDB.EX(e, 'setDC')
