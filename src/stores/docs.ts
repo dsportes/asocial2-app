@@ -414,16 +414,21 @@ const useStore = (id: string) =>
         }
     }
 
+    /* 
+    INTEGRAL
+    - le document n'existe PAS : v == 0, data: absent
+    - le document existe : v: sa version data: son contenu
+    INCREMENTAL
+    - document ayant disparu DEPUIS vs: v version de disparition, data: ZOMBI
+    - document ayant changé (pas disparu): v est sa version, data: son contenu
+    - document inchangé: v: 0    
+    */
     const storeDoc = async (item: $DocItem, sat: number, cd: $DocData) : Promise<void> => {
       if (cd.v === -1) { // credential NON accepté
         // TODO
         return
       }
-      if (!cd.incr) {
-        /* INTEGRAL
-        - le document n'existe PAS : v == 0, data: absent
-        - le document existe : v: sa version data: son contenu
-        */
+      if (!cd.incr) { // INREGRAL
         if (cd.v === 0) { // Existait, n'existe plus - enregistré comme deleted
           if (item.sv === 0) return // n'existait pas, n'existe toujours pas
           item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
@@ -436,12 +441,7 @@ const useStore = (id: string) =>
         } else { // Le document existe
           await manageData(item, sat, cd['data'])
         }
-      } else { 
-        /* INCREMENTAL
-        - document ayant disparu DEPUIS vs: v version de disparition, data: null
-        - document ayant changé (pas disparu): v est sa version, data: son contenu
-        - document inchangé: v: 0
-        */
+      } else { // INCREMENTAL
         if (cd.v === 0) { // document inchangé
           item.sat = sat
           if (hasLocal) await setLatIDB(item, sat, cd.v)
@@ -463,18 +463,31 @@ const useStore = (id: string) =>
       }
     }
 
+    /* 
+    INTEGRAL
+    - la collection est vide : v == 0 (datas moved deleted sont absents)
+    - la collection n'est PAS vide:
+      - datas : liste des contenus des documents
+      - v : version du document le plus récent de datas
+    INCREMENTAL, liste des changements depuis vs:
+    - collection inchangée: v == 0
+    - collection changée: v != 0 et 1 à 3 listes datas, moved, deleted
+      - v : version du changement le plus récent
+      - datas : [Uint8Array]
+        - documents AJOUTES à la collection depuis vs avec leur data complète
+        - documents qui étaient et sont toujours dans la collection 
+          et ONT CHANGE depuis vs avec data complète
+      - moved : [Uint8Array] type 3 seulement
+        - ceux AYANT QUIITE la collection depuis vs avec leur data complète
+      - deleted : couples des [pk, v] des documents qui étaient dans la collection
+        et ONT ETE SUPPRIME: document ZOMBI où v est leur dh de supression
+    */
     const storeColl = async (item: $CollItem, sat: number, cd: $CollData) : Promise<void> => {
         if (cd.v === -1) { // credential NON accepté
           // TODO
           return
         }
-        if (!cd.incr) {
-          /* INTEGRAL
-          - la collection est vide : v == 0 (datas moved deleted sont absents)
-          - la collection n'est PAS vide:
-            - datas : liste des contenus des documents
-            - v : version du document le plus récent de datas
-          */
+        if (!cd.incr) { // INTEGRAL
           if (cd.v === 0 && item.sv === 0) return // n'existait pas, n'existe toujors pas
           if (cd.v === 0) { // collection vide
             item.pks = new Set()
@@ -496,20 +509,6 @@ const useStore = (id: string) =>
             }
           }
       } else { 
-        /*
-        INCREMENTAL, liste des changements depuis vs:
-        - pour les types 0 et 2, 
-          - collection inchangée: v: 0 (datas dels sont absents)
-          - collection changée: v et 1 à 3 listes
-            - v : version du changement le plus récent
-            - datas : [Uint8Array]
-              - ceux ajoutés à la collection depuis vs avec leur data complète
-              - ceux qui sont dans la collection et ont changé depuis vs avec data complète
-            - moved : [Uint8Array] type 2 seulement
-              - ceux ayant quitté la collection depuis vs avec leur data complète
-            - deleted : couples des [pk, v] des documents supprimés 
-              où v est leur dh de supression
-        */
         if (cd.v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
           item.sat = sat
           if (hasLocal) await setLatIDB(item, sat, cd.v)

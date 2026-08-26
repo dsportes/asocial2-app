@@ -57,8 +57,8 @@
 // @ts-ignore
 import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
-import { $Credential, $Cred, $Def } from '../src-fw/documents'
-import { $t, sty } from '../src-fw/util'
+import { $Credential, $Cred, $Def, $Perimeter } from '../src-fw/documents'
+import { $t, sty, dhcool } from '../src-fw/util'
 import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -76,6 +76,7 @@ const creds: Ref<Map<string, $Credential>> = ref()
 const org = ref()
 const std = computed(() => getStore('AS2', org.value))
 const perimetre = ref()
+const tx = ref(0)
 
 const cred = ref(null)
 
@@ -102,7 +103,9 @@ const select = async (c: $Credential) => {
   cred.value = c
   org.value = c.org
   perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk) 
-  watchUpdAut()
+  watchUpdAut(perimetre.value, tx.value, (t) => {
+    console.log(`Le périmètre Auteur ${c.docPk} a changé à ${dhcool(t)}`)
+  })
   tx.value = std.value.fetch(perimetre.value)
   if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
 }
@@ -129,14 +132,8 @@ const majSection = async (section: string) => {
   await majAut(null, section)
 }
 
-const tx = ref(0)
-const watchUpdAut = () => {
-  std.value.listen(perimetre.value, tx.value)
-  .then(v => {
-    tx.value = v
-    console.log('auteur a changé: ' + v) // Do something here
-    watchUpdAut()
-  })
+const watchUpdAut = (p: $Perimeter, tx: number, onchg: Function) => {
+  std.value.listen(p, tx).then(v => { tx = v; onchg(v); watchUpdAut(p, tx, onchg) })
 }
 
 const majAut = async (nomAuteur: string, section: string) => {
