@@ -99,12 +99,6 @@ export const useSessionStore = defineStore('session', () => {
     ui.loginPage.resetdb = false
   }
 
-  const subsGen = (svc: string, org: string, p2sync: $Perimeter[]) : $Subs => {
-    const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
-    pgen.init(org).processPerimeters(p2sync)
-    return pgen.subs
-  }
-
   const doStep2 = async (sf, ui) => {
     const svcOrgs: Set<string> = new Set(perims.value.keys())
     for(const svcOrg of svcOrgs) {
@@ -113,34 +107,13 @@ export const useSessionStore = defineStore('session', () => {
       const org = svcOrg.substring(i + 1)
       const st = getStore(svc, org)
 
-      // Preset les documents / collections des périmètres
-      if (syncMode.value) {
-        const p2sync = [] // périmètres à synchroniser / charger de IDB
-
+      // Sauf en incognito, fetch les documents / collections des périmètres "avion"
+      if (hasLocal.value) {
+        const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
         const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [,p] of px) {
-          if (p.plane) { // p : périmètre à synchroniser / charger depuis IDB
-            p2sync.push(p)
-            st.getAPState(p)
-            for(const def of p.defs) {
-              const item = st.getItem(def, true)
-              // Chargement depuis IDB
-              if (!item.def.isColl) await st.initDocFromIDB(item as $DocItem)
-              else await st.initCollFromIDB(item as $CollItem)
-            }
-          }
-        }
-        
-        // Génère la subscription et l'enregistre dans le service
-        const subs = subsGen(svc, org, p2sync)
-        st.subsOK = await subs.subscribe(svc, org, false)
-
-        // Demande la synchronisation des defs des périmètres
-        for(const p of p2sync) {
-          st.getAPState(p) // simulation d'un fetch initial
-          for(const def of p.defs)
-            st.syncQueue.push(st.getItem(def))
-        }
+        for(const [,p] of px) 
+          if (p.plane) p2sync.push(p)
+        await st.fetch(p2sync)
       }
     }
   }

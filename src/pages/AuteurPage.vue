@@ -106,7 +106,7 @@ const select = async (c: $Credential) => {
   watchUpdAut(perimetre.value, tx.value, (t) => {
     console.log(`Le périmètre Auteur ${c.docPk} a changé à ${dhcool(t)}`)
   })
-  tx.value = std.value.fetch(perimetre.value)
+  tx.value = await std.value.fetch([perimetre.value])
   if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
 }
 

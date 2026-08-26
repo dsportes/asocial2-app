@@ -20,7 +20,8 @@ import { useConfigStore } from '../stores/config-store'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/documents'
 import { $Document, Registry } from '../src-fw/registry'
-import { FW$Sync } from 'src/src-fw/subscription'
+import { FW$Sync, $SubsGenerator } from 'src/src-fw/subscription'
+import { sleep } from '../src-fw/util'
 // import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
 
@@ -66,27 +67,21 @@ export async function onPushMsg (payload: string) {
 export type IDocStore = {
   readonly svc: string
   readonly org: string
-  subsOK: boolean
+
+  fetch (lp: $Perimeter[]) : Promise<void>
+  listen (p: $Perimeter, lastTime?: number) : Promise<number>
+  forcedResync (p?: $Perimeter) : void
+  getDoc (cl: string, pk: string) : $Document
+  getColl (cl: string, pk: string) : Set<string>
+
+  subsOK: Ref<boolean>
   syncQueue: SyncQueue
 
   getItem (def: $Def, create?: boolean) : $DCItem
   getAPState (p: $Perimeter) : APState
 
-  storeDoc (item: $DocItem, sat: number, cd: $DocData) : Promise<void>
-  storeColl (item: $CollItem, sat: number, cd: $CollData) : Promise<void>
-
-  // Retourne true si la classe a des documents stockés
-  hasDocs (clazz: string): boolean
-
-  getDoc (cl: string, pk: string) : $Document
-
   onNotif (defs: $Def[], dh: number) : Promise<void>
-
-  initDocFromIDB (item: $DocItem) : Promise<void>
-  initCollFromIDB (item: $CollItem) : Promise<void>
-
-  fetch (p: $Perimeter) : number
-  listen (p: $Perimeter, lastTime?: number) : Promise<number>
+  storeDC (item: $DCItem, now: number, dcdata: $DCData) : Promise<void>
   checkResolves () : void
 }
 
@@ -123,13 +118,12 @@ export type IDBrow = {
 }
 
 export class $DCItem {
-  lastSync: number = 0 // dh op dernière sync
+  lastSync: number = 0 // dh op dernière sync en succès
 
   /*
    0: sync ni en queue, ni posté
    1: sync en queue, 
    2: sync posté pas revenu,
-   3: sync posté et revenu
   */
   syncSt: number = 0 
 
@@ -141,7 +135,7 @@ export class $DCItem {
 
   def: $Def
   /* sat : service assert time. Le service affirme la collection 
-  avait bien cette valeur à la date-heure sat */
+  avait bien cette valeur à la date-heure de l'opération sync*/
   sat: number // service assertion time
   sv: number // version du document / collection en service
   lat: number // local assertion time - (détenue en IDB)
@@ -208,6 +202,8 @@ export class SyncQueue {
   org: string
   items: $DCItem[] = [] // items en queue ou en sync
   syncRunning: boolean = false
+  runningItems: Map<string, $DCItem> = new Map()
+  sync: FW$Sync
 
   constructor (svc: string, org: string) {
     this.svc = svc
@@ -215,45 +211,54 @@ export class SyncQueue {
     this.std = getStore(svc, org)
   }
 
-  push (item: $DCItem) {
-    if (item.syncSt === 0) this.items.push(item)
-    if (this.syncRunning) return
-    /* Préparation d'une synchro
-    - on prend au plus 10 items à la fois (pour économiser le réseau)
-    - mais au plus une collection INTEGRALE (pour éviter des volumes délirants)
-    */
-    const runningItems: Map<string, $DCItem> = new Map()
-    const sync = new FW$Sync(this.svc, this.org)
-    let n = 10
-    for(const item of this.items) {
-      if (n === 0) break
-      runningItems.set(item.def.definition, item)
-      item.syncSt = 1
-      sync.addDef(item.def, item.lv)
-      if (!item.def.isColl) n--
-      else { if (item.lv) n--; else n = 0  }
-    }
+  push (items: $DCItem[]) {
+    for(const item of items) // N'inscrit pas ceux en cours de sync
+      if (item.syncSt === 0) this.items.push(item)
+    if (this.syncRunning || !this.items.length) return
+    this.peakItemsToRun()
     this.syncRunning = true
     const self = this
     setTimeout(async () => {
-      // post désynchronisé pour que push ne soit pas bloqué en await
-      for(const [,item] of runningItems) item.syncSt = 2
-      const [now, syncs] = await sync.post()
-      if (now === 0) { // échec, sera retenté
-        for(const [,item] of runningItems) item.syncSt = 0
-      } else {
+      await self.syncList()
+    }, 1)
+  }
+
+  peakItemsToRun () {
+    this.runningItems.clear()
+    if (this.items.length === 0) return
+    this.sync = new FW$Sync(this.svc, this.org)
+    let n = 10
+    while (this.items.length) {
+      const item = this.items.shift()
+      this.runningItems.set(item.def.definition, item)
+      item.syncSt = 1
+      this.sync.addDef(item.def, item.lv)
+      if (!item.def.isColl) n--
+      else { if (item.lv) n--; else break }
+      if (n === 0) break
+    }
+  }
+
+  async syncList () {
+    while (this.runningItems.size !== 0) {
+      for(const [,item] of this.runningItems) item.syncSt = 2
+      const [sat, syncs] = await this.sync.post()
+      if (sat !== 0) { 
         for(const definition in syncs) {
           const dcdata = syncs[definition] as $DCData
-          const item = runningItems.get(definition)
-          item.syncSt = 3
-          item.lastSync = now
-          if (item.def.type === 1) await self.std.storeDoc(item as $DocItem, now, dcdata as $DocData)
-          else await self.std.storeColl(item as $CollItem, now, dcdata as $CollData)
+          const item = this.runningItems.get(definition)
+          item.syncSt = 0
+          await this.std.storeDC(item, sat, dcdata)
         }
-        self.std.checkResolves()
+        this.std.checkResolves()
+        this.runningItems.clear()
+      } else { // échec: nouvelle tentative (quand l'utilisateur aura validé l'erreur)
+        await sleep(3000)
       }
-      self.syncRunning = false
-    }, 1)
+      if (this.runningItems.size === 0)
+        this.peakItemsToRun()
+    }
+    this.syncRunning = false
   }
 
 }
@@ -270,12 +275,13 @@ const useStore = (id: string) =>
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
     let hasLocal = session.hasLocal
+    let hasNet = session.hasNet
 
     const syncQueue = new SyncQueue(svc, org)
 
-    const subsOK = ref(false)
+    const subsOK: Ref<boolean>= ref(false)
 
-    const docs = reactive({  })
+    const docs: Ref<reactive> = reactive({  })
 
     /* Deux formes de collections selon leur def:
       0: Auteur : tous les auteurs
@@ -302,18 +308,19 @@ const useStore = (id: string) =>
       return item ? item.doc : null
     }
 
-    /*
-    const classes = () : string[] => { return Object.keys(docs) }
-    const hasDocs = (clazz: string): boolean => docs[clazz] ? true : false
-    const collections = () : string[] => { return  Object.keys(colls) }
-    */
+    const getColl = (cl: string, pk: string) : Set<string> => {
+      const item = colls[cl + '/' + pk]
+      return item ? item.pks : new Set()
+    }
 
     // Avis de mises à jour de documents / collections - A RESYNCHRONISER
     const onNotif = async (defs: $Def[], dh: number) => {
+      const items: $DCItem[] = []
       for(const def of defs) {
-        const item = getItem(def)
-        if (item) syncQueue.push(item)
-      }
+          const item = getItem(def)
+          if (item) items.push(item)
+        }
+      if (items.length) syncQueue.push(items)
     }
 
     async function setIDB (item: $DCItem, sat: number, v: number, data: Uint8Array) {
@@ -412,6 +419,11 @@ const useStore = (id: string) =>
           itemd.sv = v
           upd(itemd)
         }
+    }
+
+    const storeDC = async (item: $DCItem, now: number, dcdata: $DCData) => {
+      if (item.def.type === 1) await storeDoc(item as $DocItem, now, dcdata as $DocData)
+      else await storeColl(item as $CollItem, now, dcdata as $CollData)
     }
 
     /* 
@@ -569,6 +581,15 @@ const useStore = (id: string) =>
       }
     }
 
+    const loadFromIDB = async (p: $Perimeter) => {
+      for(const def of p.defs) {
+        const item = getItem(def, true)
+        // Chargement depuis IDB
+        if (!item.def.isColl) await initDocFromIDB(item as $DocItem)
+        else await initCollFromIDB(item as $CollItem)
+      }
+    }
+
     const getItem = (def: $Def, create?: boolean) => {
       let item = def.isColl ? colls[def.definition] : docs[def.definition]
       if (!item && create) {
@@ -588,46 +609,101 @@ const useStore = (id: string) =>
       return x
     }
 
-    /* fetch force la synchronisation du périmètre qui devient actif:
-    - s'il l'était déjà synchronisé, retourne lastSync
-    - sinon retourne 0: 
-      - il faudra faire "await listen(p)" pour attendre sa première synchro complète
+    /* fetch : pour chaque périmètre de la liste:
+    - le périmètre devient actif
+    - sauf avion, abonne les périmètres (et réabonne ceux déjà actifs)
+    - sauf incognito, recharge les documents / collections depuis le Cache IDB
+    - sauf avion demande la synchronisation des defs du périmètre 
+    - faire "await listen(p)" pour "attendre" (ou non) sa première synchro complète
     */
-    const fetch = (p: $Perimeter) : number => {
-      const apstate = getAPState(p)
-      if (apstate.lastSync === 0) // on poste le sync de tous ses items
-        for(const def of p.defs)
-          syncQueue.push(getItem(def))
-      return getLastSync(apstate)
-    } 
+    const fetch = async (lp: $Perimeter[]) : Promise<void> => {
+      const lp1: $Perimeter[] = [] // périmètres à souscrire
+      const pid: Set<string> = new Set() // périmétres déjà actifs
+      for(const x in activePerims) {
+        pid.add(x)
+        lp1.push(activePerims[x])
+      }
+      const lp2: $Perimeter[] = [] // périmètres à synchroniser
+      for(const p of lp) {
+        if (!pid.has(p.id)) {
+          activePerims[p.id] = { lastSync: 0, resolves: [], perimeter: p }
+          lp2.push(p)
+          lp1.push(p)
+        }
+      }
+      if (!lp2.length) return // tous déjà chargés
+      if (hasLocal) // pré chargement depuis Cache IDB
+        for(const p of lp2) await loadFromIDB(p)
+      if (hasNet) { // souscription + sync
+        subsOK.value = false
+        const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
+        pgen.init(org).processPerimeters(lp2)
+        subsOK.value = await pgen.subs.subscribe(svc, org, false)
+        if (subsOK.value) {
+          const items = []
+          for(const p of lp2)
+            for(const def of p.defs) items.push(getItem(def))
+          if (items.length) syncQueue.push(items)
+        } else {
+          // TODO
+          console.log('subscription failed !')
+        }
+      }
+    }
 
-    /* listen sur un périmètre depuis un lastTime (par défaut 0)
-    attend que le périmètre ait une lastSync postérieure à lastTime.
-    Une manière d'écouter quand le périmètre change.
+    /* Resynchronise un périmètre cité, ou sinon tous ceux actifs
+    NORMALEMENT les notifications déclenchent les synchronisations nécessaires.
+    Cependant si par superstition, ou problèmes réseau cahotiques,
+    l'utilisateur veut resynchroniser des périmètres
+    par crainte d'avoir perdu des "notifications",
+    il peut les forcer. 
+    */
+    const forcedResync = (p?: $Perimeter) : void => {
+      const lp1: $Perimeter[] = [] // périmètres à souscrire
+      if (p && activePerims[p.id]) lp1.push(p)
+      if (!p) for(const x in activePerims) lp1.push(activePerims[x])
+      if (lp1.length === 0) return
+      const items = []
+      for(const p of lp1)
+        for(const def of p.defs) items.push(getItem(def))
+      if (items.length) syncQueue.push(items)
+    }
+
+    /* listen sur un périmètre:
+    - "attend" que le périmètre ait une lastSync postérieure à lastTime.
+    - si c'est déjà le cas, revient de suite.
+    - retourne la lastSync du périmètre
     */
     const listen = async (p: $Perimeter, lastTime?: number) : Promise<any> => {
-      const apstate = getAPState(p)
+      let apstate = activePerims[p.id]
+      if (!apstate) return -1 // le périmètre n'a pas eu de fetch
       const ls = getLastSync(apstate)
-      if (ls > lastTime || 0) return ls
+      // le périmètre a-t-il déjà été rafraîchi après lastTime ?
+      if (ls > (lastTime || 0)) return ls 
+      // NON retourne une promesse qui sera satisfaite ... un jour (ou non)
       const pr = new Promise((resolve, reject) => {
         apstate.resolves.push(resolve)
       })
       return pr
     } 
 
+    /* Retourne le time de la dernière synchronisation COMPLETE
+    pour le périmètre, c'est à dire le sat (service assert time)
+    le plus faible de tous ses defs.
+    */
     const getLastSync = (apstate: APState) : number => {
       let lastSync = 0
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
         if (!item.lastSync) return 0
-        if (item.lastSync > lastSync) lastSync = item.lastSync
+        if (item.lastSync < lastSync) lastSync = item.lastSync
       }
       apstate.lastSync = lastSync
       return lastSync
     }
 
-    /* Retour de synchronisation
-    on ne checke que les périmètres ayant fait l'objet d'un fetch WAIT
+    /* Retour de synchronisation:
+    - ne checke QUE les périmètres actifs (ayant fait l'objet d'un fetch)
     */
     const checkResolves = () => {
       for(const idp in activePerims) {
@@ -650,10 +726,8 @@ const useStore = (id: string) =>
       svc, org, subsOK, syncQueue,
       getItem,
       getAPState,
-      onNotif,
-      getDoc,
-      storeDoc, storeColl,
-      initCollFromIDB, initDocFromIDB,
-      fetch, listen, checkResolves
+      onNotif, storeDC, checkResolves,
+      getDoc, getColl,
+      fetch, listen, forcedResync
     } as IDocStore
   })()
