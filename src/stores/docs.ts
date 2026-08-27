@@ -117,55 +117,41 @@ export type IDBrow = {
   data?: Uint8Array
 }
 
-export class $DCItem {
-  lastSync: number = 0 // dh op dernière sync en succès
-
+export abstract class $DCItem {
   /*
    0: sync ni en queue, ni posté
    1: sync en queue, 
    2: sync posté pas revenu,
   */
-  syncSt: number = 0 
-
-  // 0: jamais demandé, 1: premier sync en cours, 2: un premier sync s'est terminé
-  state: number = 0
-  get isStandBy () { return this.state === 0 }
-  get isLoading () { return this.state === 1 }
-  get isReady () { return this.state === 2 }
+  syncSt: number = 0
 
   def: $Def
-  /* sat : service assert time. Le service affirme la collection 
-  avait bien cette valeur à la date-heure de l'opération sync*/
-  sat: number // service assertion time
-  sv: number // version du document / collection en service
-  lat: number // local assertion time - (détenue en IDB)
-  lv: number // version locale (détenue en IDB)
 
-  constructor (def: $Def, sat?: number, lat?: number, sv?: number, lv?: number) {
-    this.def = def
-    this.sat = sat || 0
-    this.lat = lat || 0
-    this.sv = sv || 0
-    this.lv = lv || 0
-  }
+  /* sat : service assert time. Le service affirme que le document / collection 
+  avait bien cette valeur à la date-heure de l'opération sync */
+  sat: number = 0 // service assertion time
+  sv: number = 0 // version du document / collection en service
+  lat: number = 0 // local assertion time - (détenue en IDB)
+  lv: number = 0 // version locale (détenue en IDB)
+
+  constructor (def: $Def) { this.def = def }
 }
 
 export class $CollItem extends $DCItem {
-  pks: Set<string> // Set des pk des documents de la collection
-  constructor (def: $Def, sat?: number, lat?: number, sv?: number, lv?: number, pks?: Set<string>) {
-    super(def, sat, lat, sv, lv)
-    this.pks = pks || null
-  }
-  get isEmpty() { return this.pks === null }
+  pks: Set<string> = new Set() // Set des pk des documents de la collection
+
+  constructor (def: $Def) { super(def) }
+
 }
 
 export class $DocItem extends $DCItem {
-  doc: $Document // Document compilé
-  constructor (def: $Def, sat?: number, lat?: number, sv?: number, lv?: number, doc?: $Document) {
-    super(def, sat, lat, sv, lv)
+  doc: $Document = null // Document compilé
+  constructor (def: $Def, lat?: number, lv?: number, doc?: $Document) {
+    super(def)
+    if (lat) this.lat = lat
+    if (lv) this.lv = lv
     this.doc = doc || null
   }
-  get isEmpty() { return this.doc === null }
 }
 
 // Decode d'un Document sérialisé
@@ -372,15 +358,20 @@ const useStore = (id: string) =>
         const def = new $Def(docCl + '/' + doc._pk)
         let itemd = getItem(def) as $DocItem
         if (!itemd) {
-          itemd = new $DocItem(def, sat, 0, doc.v, 0, doc)
-          // docs[def.definition] = itemd
+          itemd = new $DocItem(def)
+          itemd.sat = sat
+          itemd.sv = doc.v
+          if (hasLocal) { itemd.lv = itemd.sv; itemd.lat = itemd.sat }
+          itemd.doc = doc
           docs[def.definition] = itemd
         } else {
           itemd.sat = sat
           itemd.sv = doc.v
+          if (hasLocal) { itemd.lv = itemd.sv; itemd.lat = itemd.sat }
           upd(itemd)
         }
-        if (hasLocal) await setIDB(itemd, sat, doc.v, data)
+        if (hasLocal) 
+          await idb.setDC(svc, org, def.definition, itemd.sat, itemd.sv, data)
       }
     }
 
@@ -551,6 +542,7 @@ const useStore = (id: string) =>
     }
 
     const initDocFromIDB = async (item: $DocItem) => {
+      // Item est vierge
       const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
       if (r) try {
         const obj = decode(r.data)
@@ -564,6 +556,7 @@ const useStore = (id: string) =>
     }
 
     const initCollFromIDB = async (item: $CollItem) => {
+      // Item est vierge
       const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
       if (r) try {
         const x = decode(r.data)
@@ -592,10 +585,12 @@ const useStore = (id: string) =>
 
     const getItem = (def: $Def, create?: boolean) => {
       let item = def.isColl ? colls[def.definition] : docs[def.definition]
-      if (!item && create) {
-        item = def.isColl ? new $CollItem(def) : new $DCItem(def)
-        if (def.isColl) colls[def.definition] = item
-        else docs[def.definition] = item
+      if (!item) {
+        item = def.isColl ? new $CollItem(def) : new $DocItem(def)
+        docs[def.definition] = item
+      } else {
+        item.sat = 0; item.lat = 0; item.sv = 0; item.lv = 0
+        upd(item)
       }
       return item
     }
@@ -695,8 +690,7 @@ const useStore = (id: string) =>
       let lastSync = 0
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
-        if (!item.lastSync) return 0
-        if (item.lastSync < lastSync) lastSync = item.lastSync
+        if (item.sat < lastSync) lastSync = item.sat
       }
       apstate.lastSync = lastSync
       return lastSync
