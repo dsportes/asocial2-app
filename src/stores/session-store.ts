@@ -51,19 +51,21 @@ export const useSessionStore = defineStore('session', () => {
     return m.get(id)
   }
   const prefs: Ref<Prefs> = ref()
+  const selOptions = ref(false)
 
   const pref: Ref<string> = ref()
+  const currentPref = computed(() => !pref.value ? null : prefs.value[pref.value])
 
   const orgRoles : Ref<Set<string>> = ref() // couples org/role
   const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
 
-  const setOrgRolesP = (perims: Perims) => {
+  const getOrgRolesP = (perims: Perims) => {
     const s: Set<string> = new Set()
     for(const [so, m] of perims) {
       const org = so.substring(so.indexOf('/') + 1)
       for(const [,p] of m) s.add(org + '/' + p.role)
     }
-    orgRolesP.value = s
+    return s
   }
 
   const doStep1 = async (sf, ui) => {
@@ -79,16 +81,16 @@ export const useSessionStore = defineStore('session', () => {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
       perims.value = sp.perims
-      setOrgRolesP(perims.value)
+      orgRolesP.value = getOrgRolesP(perims.value)
       orgRoles.value = new Set(sp.options.orgRoles || [])
       pref.value = sp.options.pref || ''
     } else {
       perims.value = sf.getPerimeters()
-      setOrgRolesP(perims.value)
+      orgRolesP.value = getOrgRolesP(perims.value)
       prefs.value = sf.mySafePrefs
       const x = sf.mySafeOptions
-      pref.value = x.pref || ''
-      orgRoles.value = x.orgRoles || []
+      pref.value = x ? x.pref || '' : ''
+      orgRoles.value = x ? x.orgRoles || [] : []
       if (syncMode.value) {
         const opts = await idb.openSync()
         if (opts && opts.pref) pref.value = opts.pref
@@ -97,6 +99,7 @@ export const useSessionStore = defineStore('session', () => {
       }
     }
     ui.loginPage.resetdb = false
+    selOptions.value = true
   }
 
   const doStep2 = async (sf, ui) => {
@@ -111,9 +114,56 @@ export const useSessionStore = defineStore('session', () => {
       if (hasLocal.value) {
         const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
         const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [,p] of px) 
-          if (p.plane) p2sync.push(p)
+        for(const [,p] of px) if (p.plane) p2sync.push(p)
         await st.fetch(p2sync)
+      }
+    }
+  }
+
+  const onCredsOptionsChange = async () => {
+    const sf = stores.safe
+    const svcOrgsBefore: Set<string> = new Set(perims.value.keys())
+    perims.value = sf.getPerimeters()
+    orgRolesP.value = getOrgRolesP(perims.value)
+    const svcOrgs: Set<string> = new Set(perims.keys())
+
+    for(const svcOrg of svcOrgsBefore) {
+      if (!svcOrgs.has(svcOrg)) {
+        /* Suite à des suppressions de credentials
+        des svc / org POURRAIENT ne plus être "potentiellement" actifs */
+        const i = svcOrg.indexOf('/')
+        const svc = svcOrg.substring(0, i)
+        const org = svcOrg.substring(i + 1)
+        /* Supprimer la souscription
+        N'étant plus sollicitées, les sync s'arrêteront d'elles-mêmes */
+        if (hasNet) {
+          const subs = new $Subs()
+          await subs.subscribe(svc, org, false)
+        }
+      }
+    }
+
+    for(const svcOrg of svcOrgs) {
+      const i = svcOrg.indexOf('/')
+      const svc = svcOrg.substring(0, i)
+      const org = svcOrg.substring(i + 1)
+      const st = getStore(svc, org)
+
+      if (!planeMode) {
+        const lpBeforeIds = st.activePerimsIds()
+        const lpAfterIds: Set<string> = new Set()
+        const p2sync: $Perimeter[] = []
+
+        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
+        for(const [x,p] of px) {
+          const c1 = syncMode.value && (p.plane || (!p.plane && lpBeforeIds.has(p.id))) // 
+          const c2 = incMode.value && lpBeforeIds.has(p.id)
+          if (c1 || c2  )
+            for(const [x,p] of px) { p2sync.push(p); lpAfterIds.add(x) }
+        }
+        const lpobs = new Set<string>()
+        for(const x of lpBeforeIds) if (!lpAfterIds.has(x)) lpobs.add(x)
+        await st.fetch(p2sync, lpobs)
       }
     }
   }
@@ -142,6 +192,36 @@ export const useSessionStore = defineStore('session', () => {
         await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
         ui.setPage(toPage || 'app')
         step.value = 2
+    }
+  }
+
+  const chgOptions = async (_pref: string | null, 
+    _orgRoles: string[] | null, toSaveBox: boolean, toSaveLoc: boolean) => {
+    
+    if (_pref !== null) pref.value = _pref
+    if (_orgRoles !== null) orgRoles.value = _orgRoles
+    if ((_pref !== null || _orgRoles !== null) && toSaveLoc && hasLocal.value) {
+      const opts = await idb.getOptions() || { pref: '', orgRoles: []}
+      const options = {
+        pref: _pref !== null ? _pref : opts.pref,
+        orgRoles: _orgRoles !== null ? _orgRoles : opts.orgRoles
+      }
+      await idb.setOptions(options)
+    }
+    if ((_pref !== null || _orgRoles !== null) && toSaveBox && hasNet.value) {
+      const sf = stores.safeStore
+      const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
+      const options = {
+        pref: _pref !== null ? _pref : opts.pref,
+        orgRoles: _orgRoles !== null ? _orgRoles : opts.orgRoles
+      }
+      await sf.setOptions(options)
+    }
+
+    if (step.value === 1) { 
+      await setStep(2)
+    } else {
+      setTimeout(async () => { await onCredsOptionsChange() }, 1)
     }
   }
 
@@ -304,7 +384,7 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, setStep,
+    step, setStep, prefs, pref, orgRoles, orgRolesP, selOptions,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
@@ -314,8 +394,8 @@ export const useSessionStore = defineStore('session', () => {
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
-    edPref, setEdPref, updatePref,
-    getPerimeter
+    edPref, setEdPref, updatePref, currentPref,
+    getPerimeter, chgOptions
     // focus, getFocus, lostFocus, closingApp
   }
 })

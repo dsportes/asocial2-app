@@ -363,9 +363,9 @@ export class IDB {
       let r
       if (n.length === 1) r = await this.db.docs.get(sodef)
       else r = await this.db.colls.get(sodef)
-    if (r)
-      r.data = await this. decryptData(r.data)
-    return r
+      if (r)
+        r.data = await this. decryptData(r.data)
+      return r
     } catch (e) {
       throw IDB.EX(e, 'getDC')
     }

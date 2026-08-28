@@ -68,17 +68,19 @@ export type IDocStore = {
   readonly svc: string
   readonly org: string
 
-  fetch (lp: $Perimeter[]) : Promise<void>
+  fetch (lp: $Perimeter[], lpobs?: Set<string>) : Promise<void>
   listen (p: $Perimeter, lastTime?: number) : Promise<number>
   forcedResync (p?: $Perimeter) : void
   getDoc (cl: string, pk: string) : $Document
   getColl (cl: string, pk: string) : Set<string>
+  activePerimsIds () : Set<string>
 
   subsOK: Ref<boolean>
   syncQueue: SyncQueue
 
   getItem (def: $Def, create?: boolean) : $DCItem
   getAPState (p: $Perimeter) : APState
+  resetDefp () : void
 
   onNotif (defs: $Def[], dh: number) : Promise<void>
   storeDC (item: $DCItem, now: number, dcdata: $DCData) : Promise<void>
@@ -124,6 +126,8 @@ export abstract class $DCItem {
    2: sync posté pas revenu,
   */
   syncSt: number = 0
+
+  defp: boolean = false // true si référencé par au moins un périmètre
 
   def: $Def
 
@@ -198,8 +202,9 @@ export class SyncQueue {
   }
 
   push (items: $DCItem[]) {
-    for(const item of items) // N'inscrit pas ceux en cours de sync
-      if (item.syncSt === 0) this.items.push(item)
+    // N'inscrit ni ceux en cours de sync, ni ceux n'étant plus référencés par un périmètre
+    for(const item of items)
+      if (item.syncSt === 0 && item.defp) this.items.push(item)
     if (this.syncRunning || !this.items.length) return
     this.peakItemsToRun()
     this.syncRunning = true
@@ -266,6 +271,8 @@ const useStore = (id: string) =>
     const syncQueue = new SyncQueue(svc, org)
 
     const subsOK: Ref<boolean>= ref(false)
+    // abonnement actuel
+    const actualSubs: Ref<Object> = ref(null)
 
     const docs: Ref<reactive> = reactive({  })
 
@@ -287,6 +294,11 @@ const useStore = (id: string) =>
     }
 
     const activePerims = reactive({  })
+    const activePerimsIds = () : Set<string> => {
+      const s = new Set<string>()
+      for(const x in activePerims) s.add(x)
+      return s
+    }
     /************************************************/
 
     const getDoc = (cl: string, pk: string) : $Document => {
@@ -313,7 +325,8 @@ const useStore = (id: string) =>
       /* Store en IDB:
       a) si version plus récente
       b) ou si identique et que lat est "bien inférieure à" sat */
-      if (item.lv !== v) {
+      item.sat = sat
+      if (item.lv < v) {
         item.lv = v
         item.lat = sat
         await idb.setDC(svc, org, item.def.definition, sat, v, data)
@@ -546,10 +559,13 @@ const useStore = (id: string) =>
       const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
       if (r) try {
         const obj = decode(r.data)
-        item.doc = await Registry.compile(svc, item.def.docCl, org, obj)
-        item.lat = r.lat
-        item.lv = r.v
-        upd(item)
+        const doc = await Registry.compile(svc, item.def.docCl, org, obj)
+        if (item.sv < doc.v) { // sinon l'item retour de sync est plus récent
+          item.doc = doc
+          item.lat = r.lat
+          item.lv = r.v
+          upd(item)
+        }
       } catch (e) {
         console.error(e.toString)
       }
@@ -558,7 +574,7 @@ const useStore = (id: string) =>
     const initCollFromIDB = async (item: $CollItem) => {
       // Item est vierge
       const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
-      if (r) try {
+      if (r.v > item.sv) try { // sinon celui de retour de sync est plus récent
         const x = decode(r.data)
         item.pks = new Set(x)
         item.lat = r.lat
@@ -577,9 +593,11 @@ const useStore = (id: string) =>
     const loadFromIDB = async (p: $Perimeter) => {
       for(const def of p.defs) {
         const item = getItem(def, true)
-        // Chargement depuis IDB
-        if (!item.def.isColl) await initDocFromIDB(item as $DocItem)
-        else await initCollFromIDB(item as $CollItem)
+        if (!item.sat) {
+          // Chargement depuis IDB, s'il n'a jamais été ni chargé, ni synchronisé
+          if (!item.def.isColl) await initDocFromIDB(item as $DocItem)
+          else await initCollFromIDB(item as $CollItem)
+        }
       }
     }
 
@@ -611,38 +629,51 @@ const useStore = (id: string) =>
     - sauf avion demande la synchronisation des defs du périmètre 
     - faire "await listen(p)" pour "attendre" (ou non) sa première synchro complète
     */
-    const fetch = async (lp: $Perimeter[]) : Promise<void> => {
+    const fetch = async (lp: $Perimeter[], lpobs?: Set<string>) : Promise<void> => {
       const lp1: $Perimeter[] = [] // périmètres à souscrire
-      const pid: Set<string> = new Set() // périmétres déjà actifs
+      const lp2: $Perimeter[] = [] // nouveaux (ou pas) périmètres à synchroniser
+
+      if (lpobs && lpobs.size) for(const pid of lpobs) delete activePerims[id]
+
+      const pid: Set<string> = new Set() // périmétres (restés) actifs
       for(const x in activePerims) {
         pid.add(x)
         lp1.push(activePerims[x])
       }
-      const lp2: $Perimeter[] = [] // périmètres à synchroniser
-      for(const p of lp) {
+      for(const p of lp) { // par principe pas obsolètes
         if (!pid.has(p.id)) {
           activePerims[p.id] = { lastSync: 0, resolves: [], perimeter: p }
-          lp2.push(p)
           lp1.push(p)
         }
+        lp2.push(p)
       }
-      if (!lp2.length) return // tous déjà chargés
-      if (hasLocal) // pré chargement depuis Cache IDB
-        for(const p of lp2) await loadFromIDB(p)
-      if (hasNet) { // souscription + sync
+
+      if (hasNet) { // Faut-il refaire les souscriptions ?
+        resetDefp() // recalcul si les documents / collections sont référencés ou non
         subsOK.value = false
         const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
         pgen.init(org).processPerimeters(lp2)
-        subsOK.value = await pgen.subs.subscribe(svc, org, false)
-        if (subsOK.value) {
-          const items = []
-          for(const p of lp2)
-            for(const def of p.defs) items.push(getItem(def))
-          if (items.length) syncQueue.push(items)
-        } else {
-          // TODO
-          console.log('subscription failed !')
-        }
+        if (!actualSubs.value || !pgen.subs.equalTo(actualSubs.value)) {
+          actualSubs.value = pgen.subs
+          subsOK.value = await pgen.subs.subscribe(svc, org, false)
+        } else subsOK.value = true
+      }
+
+      if (!subsOK.value) {
+        // TODO
+        console.log('subscription failed !')
+      }
+
+      if (!lp2.length) return // tous déjà chargés
+
+      if (hasLocal) // pré chargement depuis Cache IDB
+        for(const p of lp2) await loadFromIDB(p)
+
+      if (hasNet && subsOK.value) { // synchroniser les nouveaux
+        const items = []
+        for(const p of lp2)
+          for(const def of p.defs) items.push(getItem(def))
+        if (items.length) syncQueue.push(items)
       }
     }
 
@@ -716,12 +747,30 @@ const useStore = (id: string) =>
       }
     }
 
+    /* Positionne pour chaque document / collection le flag _defp_ 
+    qui indique qu'un périmètre actif au moins le référence:
+    - quand ce n'est pas le cas, sa synchronisation peut être suspendue.
+    */
+    const resetDefp = () => {
+      for(const x in docs) docs[x].defp = false
+      for(const x in colls) colls[x].defp = false
+      for(const idp in activePerims) 
+        setDefp(activePerims[idp].perimeter)
+    }
+
+    const setDefp = (p: $Perimeter) => {
+      for(const def of p.defs) {
+        const item = getItem(def)
+        if (item) item.defp = true
+      }
+    }
+
     return { 
       svc, org, subsOK, syncQueue,
       getItem,
       getAPState,
       onNotif, storeDC, checkResolves,
-      getDoc, getColl,
-      fetch, listen, forcedResync
+      getDoc, getColl, activePerimsIds,
+      fetch, listen, forcedResync, resetDefp
     } as IDocStore
   })()

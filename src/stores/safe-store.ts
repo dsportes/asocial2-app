@@ -472,7 +472,7 @@ export const useSafeStore = defineStore('safe', () => {
   Un "objet" par application contenant ses options
   */
   const loadOptions = async (safe: Safe) : Promise<void> => {
-    mySafeOptions.value = {}
+    mySafeOptions.value = null
     const app = stores.config.K.APPNAME
     if (safe.options) {
       const x = safe.options[app]

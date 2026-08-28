@@ -45,6 +45,15 @@ export class $Subs extends $Document {
     return this
   }
 
+  equalTo (s: $Subs) : boolean {
+    if (s.title !== this.title || s.url !== this.url) return false
+    const x1: string[] = [], x2: string[] = []
+    for(const m in this.msgs) x1.push(m + '#' + this.msgs[m]) ; x1.sort()
+    for(const m in s.msgs) x2.push(m + '#' + s.msgs[m]) ; x2.sort()
+    if (x1.join('&') !== x2.join('&')) return false
+    if (this.defs.sort().join('&') !== s.defs.sort().join('&')) return false
+    return true
+  }
   /*
   serial () : Uint8Array {
     return encode({
@@ -85,8 +94,16 @@ export class $SubsGenerator extends $ADocument {
   subs: $Subs
   org: string
   creds: Map<string, $Credential>
+  pref: Object
+  roles: Set<string> = new Set()
 
   init (org: string) {
+    const session = stores.session
+    for(const x of session.orgRoles) {
+      const i = x.indexOf('/')
+      if (x.substring(0, i) === org) this.roles.add(x.substring(i + 1))
+    }
+    this.pref = session.currentPref || {}
     this.org = org
     this.creds = stores.safe.mySimpleCreds('AS2', org)
     this.subs = new $Subs()

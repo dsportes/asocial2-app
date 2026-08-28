@@ -980,6 +980,28 @@ Fermer la fenêtre corespond à un NON sélection.
 `,
   SLCsel: 'Quelques caractères dans le code recherché',
 
+  OPTStitle_1: 'Options de la session',
+  OPTStitle_2: 'Changer les options de la session',
+  OPTSok_1: 'Ouvrir la session',
+  OPTSok_2: 'Valider',
+  OPTSdef: '(préférences par défaut)',
+  OPTSquit_tit: 'Confirmer l\'abandon des saisies',
+  OPTSquit_txt: 'Des saisies ont été effectuées. Voulez-vous fermer quand-même et les perdre ou reprendre la procédure ?',
+  OPTSquit_1: 'Fermer ce dialogue',
+  OPTSquit_0: 'Poursuivre la procédure',
+
+  OPTStitle_bub: `### Options de la session
+  bla bla
+`,
+  OPTSpref: 'Préférences d\'affichage / comportement de la session',
+  OPTSroles: 'Pour chaque fonctionnalité, organisations ciblées:',
+  OPTSresetdb: `### ATTENTION : effacer la base locale Cache n'est pas anodin
+- bla bla 1
+- bla bla 2
+`,
+  OPTStosaveb: 'Sauvegarder ces options dans ma "Safe Box"',
+  OPTStosavel: 'Sauvegarder ces options pour ce terminal',
+
   // DialogueHelp.vue
   HLPaidebd: 'Page "{0}" bientôt disponible',
   HLPfermer: 'Fermer l\'aide',
