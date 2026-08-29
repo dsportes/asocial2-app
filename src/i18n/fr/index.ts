@@ -604,6 +604,7 @@ bla bla
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
 `,
+  HPprefs_new: '[nouvelle]',
   HPprefs_1: 'Afficher / gérer mes préférences',
   HPprefs_2: `# Afficher / gérer mes préférences
   bla bla
@@ -999,8 +1000,8 @@ Fermer la fenêtre corespond à un NON sélection.
 - bla bla 1
 - bla bla 2
 `,
-  OPTStosaveb: 'Sauvegarder ces options dans ma "Safe Box"',
-  OPTStosavel: 'Sauvegarder ces options pour ce terminal',
+
+  OPTStosave: 'Sauvegarder ces options pour les retrouver dans des sessions futures',
 
   // DialogueHelp.vue
   HLPaidebd: 'Page "{0}" bientôt disponible',

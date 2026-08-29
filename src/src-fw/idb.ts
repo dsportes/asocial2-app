@@ -78,6 +78,7 @@ Les autres méthodes sont:
 
 const STORES = {
   singletons: 'name', // singletons { name, data }
+  prefs: 'code',
   perims: 'pk, so',
   docs: 'sodef, [so+lat]',
   colls: 'sodef, [so+lat]'
@@ -87,6 +88,12 @@ type IDBrow = {
   lat: number
   v: number
   data?: Uint8Array
+}
+
+type ValidP = {
+  pk: string,
+  so: string,
+  data: Uint8Array
 }
 
 // Map par svc/org des périmètres identifiés par leur id
@@ -160,6 +167,15 @@ export class IDB {
     idb = null
   }
 
+  async open () : Promise<void> {
+    try {
+      await this.db.open() // Pas utile du fait auto-open ?
+    } catch (e) {
+      throw IDB.EX(e, 'openPlane')
+    }
+  }
+
+
   async cryptData (data: Uint8Array): Promise<Uint8Array | null> {
     return !data ? null : await Crypt.crypt(this.keyK, data)
   }
@@ -177,10 +193,10 @@ export class IDB {
 
   async getPrefs () : Promise<Prefs>{
     const m: Prefs = new Map()
-    const ls = await this.db.singletons.toArray()
-    for(const s of ls) {
-      const obj = decode(await this.decryptData(s.data))
-      if (s.name !== '$OPTIONS$') m.set(obj.code, obj)
+    const lp = await this.db.prefs.toArray()
+    for(const pref of lp) {
+      const obj = decode(await this.decryptData(pref.data))
+      m.set(pref.code, obj)
     }
     return m
   }
@@ -222,17 +238,20 @@ export class IDB {
   }
 
   async storePrefs (prefs: Prefs) : Promise<void> {
-    const todo = []
+    const todo = new Map<string, any>()
     for(const [code, obj] of prefs) {
-      todo.push({
-        code,
-        data: await this.cryptData(encode(obj))
-      })
+      todo.set(code, { code, data: await this.cryptData(encode(obj)) })
     }
-    await this.db.transaction('rw', this.db.singletons, async () => {
+    await this.db.transaction('rw', this.db.prefs, async () => {
+      this.db.prefs
       const lp = []
-      for(const x of todo)
-        lp.push(this.db.singletons.add({code: x.code, data: x.data}))
+      for(const x of this.db.prefs.toArray()) {
+        const pr = todo.get(x.code)
+        if (pr)
+          lp.push(this.db.prefs.add({code: x.code, data: pr.data}))
+        else
+          lp.push(x.delete())
+      }
       await Promise.all(lp)
     })
   }
@@ -243,17 +262,17 @@ export class IDB {
       await this.db.transaction('rw', 
         this.db.perims, this.db.docs, this.db.colls, async () => {
         await Promise.all([
-        this.db.docs.where('so').equals(so).and(x => x.lat < limit).delete(),
-        this.db.colls.where('so').equals(so).and(x => x.lat < limit).delete()
+          this.db.docs.where('so').equals(so).and(x => x.lat < limit).delete(),
+          this.db.colls.where('so').equals(so).and(x => x.lat < limit).delete()
         ])
       }) 
     } else {
       await this.db.transaction('rw', 
         this.db.perims, this.db.docs, this.db.colls, async () => {
         await Promise.all([
-        this.db.perims.where('so').equals(so).delete(),
-        this.db.docs.where('so').equals(so).delete(),
-        this.db.colls.where('so').equals(so).delete()
+          this.db.perims.where('so').equals(so).delete(),
+          this.db.docs.where('so').equals(so).delete(),
+          this.db.colls.where('so').equals(so).delete()
         ])
       })
     }
@@ -291,43 +310,29 @@ export class IDB {
     }
   }
 
-  /* openSyncReset
-  La BASE A ETE SUPPRIMEE AVANT l'APPEL et le constructor invoqué
-  Ouverture en mode _sync_ AVEC reset:
-  - ouverture en autoopen (vide)
-  - reçoit une Map des périmètres groupés par svc/org
-    - stocke les périmètres un row par périmètre.
+  /* openSync
+  La BASE A ETE (EVENTUELLEMENT) SUPPRIMEE AVANT l'APPEL 
+  et le constructor invoqué
   - reçoit un objet options et le stocke.
   - reçoit une Map des préférences et la stocke
-  */
-  async startSyncReset (options: Object, prefs: Prefs, perims: Perims) 
-  : Promise<void> {
-    try {
-      await this.setOptions(options)
-      await this.storePrefs(prefs)
-      await this.storePerims(perims)
-    } catch (e) {
-      throw IDB.EX(e, 'openSyncReset')
-    }
-  }
-
-  /* Ouverture en mode _sync_ SANS reset:
-  - ouverture en autoopen
+  MAJ et interprétation des périmètres
   - lit les périmètres existants pour en tirer la liste "avant" des couples svc/org
     que la base héberge.
-  - reçoit une Map des périmètres groupés par svc/org. Donne une liste "après".
+  - reçoit la Map des périmètres "potentiels" groupés par svc/org. 
+    Donne une liste "après".
     - supprime de la base tous les perims / docs / colls dont le svc/org
       était dans la liste "avant" et ne sont plus dans la liste "après"
     - stocke les périmètres reçus un row par périmètre.
     - pour chaque svc/org de la liste "après" supprime tous les docs / colls
       dont la lat est obsolète.
-    - lit l'objet options et le retourne.
   */
-  async startSync (options: Object, prefs: Prefs, perims: Perims) 
-  : Promise<Object> {
+  async setupSession (options: Object, prefs: Prefs, perims: Perims) 
+  : Promise<void> {
     try {
+      await this.setOptions(options)
+      await this.storePrefs(prefs)
+      
       const max = Date.now() - (this.SYNCINCRNBD * 86400000)
-      await this.db.open()
       const locPerims = await this.getPerims()
       const soBefore = new Set(locPerims.keys())
       const soAfter = new Set(perims.keys())
@@ -335,8 +340,9 @@ export class IDB {
         await this.purge(so, 0)
       for(const so of soAfter)
         await this.purge(so, max)
-      await this.storePrefs(prefs)
-      return await this.getOptions()
+
+      await this.updPerims(perims)
+
     } catch (e) {
       throw IDB.EX(e, 'openSyncReset')
     }
@@ -383,34 +389,48 @@ export class IDB {
     }
   }
 
+
   /* updPerims - maj des périmètres, ajout de nouveaux, suppression d'anciens
   - un périmètre dont defs a une longueur nulle (ou est null) est à supprimer
-  - si un périmètre était le dernier existant pour un svc/org
+  - s'il n'y a plus de périmètre pour un svc/org
     les docs / colls de ce svc/org sont supprimés.
   */
   async updPerims (perims: Perims): Promise<void> {
     try {
-      const soDels: Set<string> = new Set()
-      const todo = []
+      const soLivingP: Set<string> = new Set()
+      const soHavingDel: Set<string> = new Set()
+
+      const livingP: Map<string, ValidP> = new Map()
+      const toDelP = new Set<string>()
+
       for(const [so, m] of perims) {
         for (const [,p] of m) {
-          if (!p.defs || !p.defs.length) soDels.add(so)
-          todo.push({
-            pk: so + '/' + p.id,
-            so,
-            data: p.defs && p.defs.length ? await this.cryptData(encode(p)) : null
-          })
+          const pk = so + '/' + p.id
+          if (p.defs && p.defs.length) {
+            soLivingP.add(so)
+            const vp = { pk, so, data: await this.cryptData(encode(p)) }
+            livingP.set(pk, vp)
+          }
         }
       }
+
+      this.db.perims.forEach((p) => {
+        if (!livingP.has(p.pk)) {
+          toDelP.add(p.pk)
+          if (!soLivingP.has(p.so)) soHavingDel.add(p.so)
+        }
+      })
+
       await this.db.transaction('rw', this.db.perims, async () => {
         const lp = []
-        for(const x of todo) {
-          if (x.data) lp.push(this.db.perims.set({pk: x.pk, so: x.so, data: x.data}))
-          else lp.push(this.db.perims.get(x.pk).delete())
-        }
+        for(const [, x] of livingP)
+          lp.push(this.db.perims.set(x))
+        for(const pk of toDelP)
+          lp.push(this.db.perims.get(pk).delete())
         await Promise.all(lp)
       })
-      for(const so of soDels) {
+
+      for(const so of soHavingDel) {
         const n = await this.db.perims.where('so').equals(so).count()
         if (n === 0)
           await this.purge(so, 0)

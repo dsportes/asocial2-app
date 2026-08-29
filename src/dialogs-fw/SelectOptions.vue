@@ -10,12 +10,11 @@
   </template>
   <template #default>
     <div v-if="s1 === 1 && session.syncMode" class="q-my-sm q- ml-xs row justify-between items-center">
-      <q-toggle class="col q-pr-md" v-model="ui.loginPage.resetdb" dense :label="$t('HPresetdb_0')"/>
+      <q-toggle class="col q-pr-md" v-model="session.resetdb" dense :label="$t('HPresetdb_0')"/>
     </div>
 
     <div class="q-my-md">
-      <q-checkbox dense v-if="session.hasLocal" v-model="toSaveLoc" :label="$t('OPTStosavel')" />
-      <q-checkbox dense v-if="session.hasNet" v-model="toSaveBox" :label="$t('OPTStosaveb')" />
+      <q-checkbox dense v-model="toSave" :label="$t('OPTStosave')" />
     </div>
 
     <div class="q-mt-md titre-md text-italic">{{ $t('OPTSpref') }}</div>
@@ -74,12 +73,11 @@ const dialogs = reactive({
   close: false
 })
 
-watch(() => ui.loginPage.resetdb, async (v) => {
+watch(() => session.resetdb, async (v) => {
   if (v) await ui.diagDisplay($t('OPTSresetdb'))
 })
 
-const toSaveBox = ref(true)
-const toSaveLoc = ref(true)
+const toSave = ref(true)
 const prCodes = ref()
 const defp = ref()
 const selPref = ref()
@@ -145,7 +143,7 @@ const ok = async () => {
 
   const _pref = selPref.value === defp.value ? '' : selPref.value
 
-  await session.chgOptions(_pref, _orgRoles, toSaveBox.value, toSaveLoc.value)
+  await session.chgOptions(_pref, _orgRoles, toSave.value)
 }
 
 const onClose = async () => {

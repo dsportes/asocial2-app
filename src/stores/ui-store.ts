@@ -235,12 +235,10 @@ export const useUiStore = defineStore('ui', () => {
   })
 
   const loginPage = reactive({
-    tab: 'login', // guest
-    resetdb: false
+    tab: 'login' // guest
   })
   const resetLoginPage = () => {
     loginPage.tab = 'login'
-    loginPage.resetdb = false
   }
 
   const currentForm = reactive({

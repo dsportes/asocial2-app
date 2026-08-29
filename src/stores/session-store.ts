@@ -12,7 +12,7 @@ import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
 import { Registry } from '../src-fw/registry'
 import { IDBsafe } from '../src-fw/idbsafe'
-import { idb, IDB, Perims, Prefs, Options, StartPlane  } from '../src-fw/idb'
+import { idb, IDB, Perims, Prefs, deleteIDB, Options, StartPlane  } from '../src-fw/idb'
 import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 import { AOperation } from 'src/src-fw/operation'
@@ -32,6 +32,7 @@ export const useSessionStore = defineStore('session', () => {
   const step: Ref<number> = ref(0)
   const noLocal = ref(false)
   const noNet = ref(false)
+  const resetdb = ref(false)
 
   const hasLocal = computed(() => !noLocal.value)
   const hasNet = computed(() => !noNet.value)
@@ -53,6 +54,7 @@ export const useSessionStore = defineStore('session', () => {
   }
   const prefs: Ref<Prefs> = ref()
   const selOptions = ref(false)
+  const newOptions = ref(null)
 
   const pref: Ref<string> = ref()
   const currentPref = computed(() => !pref.value ? null : prefs.value[pref.value])
@@ -72,6 +74,7 @@ export const useSessionStore = defineStore('session', () => {
   const doStep1 = async (sf, ui) => {
     AOperation.reset()
     resetDocStores()
+    newOptions.value = null
     if (hasLocal.value) {
       // Création si nécessaire de Cache
       new IDB()
@@ -100,7 +103,7 @@ export const useSessionStore = defineStore('session', () => {
           orgRoles.value = new Set(opts.orgRoles)
       }
     }
-    ui.loginPage.resetdb = false
+    resetdb.value = false
     selOptions.value = true
   }
 
@@ -196,20 +199,29 @@ export const useSessionStore = defineStore('session', () => {
         et on lance la session immédiatement sur la page souhaitée */
 
       case 2 : // ouverture effective de la session après les choix faits
+        if (syncMode.value) {
+          if (resetdb.value) {
+            idb.close()
+            await deleteIDB()
+            await idb.open()
+          }
+          const options = { pref: pref.value, orgRoles: orgRoles.value }
+          await idb.setupSession(options, prefs.value, perims.value)
+        }
         await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
         ui.setPage(toPage || 'app')
         step.value = 2
     }
   }
 
-  const chgOptions = async (_pref: string , _orgRoles: string[], toSaveBox: boolean, toSaveLoc: boolean) => {
+  const chgOptions = async (_pref: string , _orgRoles: string[], toSave: boolean) => {
     pref.value = _pref
     orgRoles.value = _orgRoles
+    optionsTime.value = Date.now()
 
-    if (toSaveBox || toSaveLoc) {
+    if (toSave) {
       const _slor = _orgRoles.sort().join(' ')
-
-      if (toSaveBox && hasNet.value) {
+      if (hasNet.value) {
         const sf = stores.safeStore
         const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
         const slor = opts.orgRoles.sort().join(' ')
@@ -217,9 +229,7 @@ export const useSessionStore = defineStore('session', () => {
           const options = { pref: _pref, orgRoles: _orgRoles }
           await sf.setOptions(options)
         }
-      }
-
-      if (toSaveLoc && hasLocal.value) {
+      } else if (planeMode.value) {
         const opts = await idb.getOptions() || { pref: '', orgRoles: []}
         const slor = opts.orgRoles.sort().join(' ')
         if (slor !== _slor || opts.pref !== _pref) {
@@ -229,7 +239,6 @@ export const useSessionStore = defineStore('session', () => {
       }
     }
 
-    optionsTime.value = Date.now()
     if (step.value === 1) { 
       await setStep(2)
     } else {
@@ -237,18 +246,20 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  const prefx = reactive({ code: '', time: 0, obj: null })
-  const edPref = reactive({code:'', time: 0, obj: {}, orig: {}, diag: '', chg: false})
-  const setEdPref = (code: string, time: number, obj: Object) => {
+  const edPref = reactive({code:'', obj: {}, orig: {}, diag: '', chg: false})
+  const setEdPref = (code: string, obj: Object, orig: Object) => {
     edPref.code = code
-    edPref.time = time
     edPref.obj = obj
-    edPref.orig = decode(encode(obj))
+    edPref.orig = orig
     edPref.chg = false
     edPref.diag = ''
   }
-  const updatePref = (code: string, time: number, obj: Object) => {
-    prefx.code = code; prefx.time = time; prefx.obj = obj
+  const resetEdPref = () => {
+    edPref.code = ''
+    edPref.obj = null
+    edPref.orig = null
+    edPref.chg = false
+    edPref.diag = ''
   }
 
   // Gestion des opérations ************************************************
@@ -396,17 +407,18 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, setStep, prefs, pref, orgRoles, orgRolesP, selOptions, optionsTime,
+    step, setStep, prefs, pref, newOptions,
+    orgRoles, orgRolesP, selOptions, optionsTime,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
 
-    hasNet, noNet, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
+    hasNet, noNet, resetdb, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
-    edPref, setEdPref, updatePref, currentPref,
+    edPref, setEdPref, resetEdPref, currentPref,
     getPerimeter, chgOptions
     // focus, getFocus, lostFocus, closingApp
   }
