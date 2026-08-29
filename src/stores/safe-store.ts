@@ -298,7 +298,8 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       ret = await op.post()
     } catch(e) {
-      op.ko(e)
+      op.
+      ko(e)
       return -1
     }
     if (ret.status === 0)
@@ -477,7 +478,7 @@ export const useSafeStore = defineStore('safe', () => {
     if (safe.options) {
       const x = safe.options[app]
       if (x)
-        mySafeOptions.value = await Crypt.decrypt(keyK.value, keyFromB64(x))
+        mySafeOptions.value = decode(await Crypt.decrypt(keyK.value, keyFromB64(x)))
     }
   }
 

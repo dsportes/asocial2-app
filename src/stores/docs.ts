@@ -68,19 +68,19 @@ export type IDocStore = {
   readonly svc: string
   readonly org: string
 
-  fetch (lp: $Perimeter[], lpobs?: Set<string>) : Promise<void>
+  fetch (lp: $Perimeter[]) : Promise<void>
   listen (p: $Perimeter, lastTime?: number) : Promise<number>
   forcedResync (p?: $Perimeter) : void
   getDoc (cl: string, pk: string) : $Document
   getColl (cl: string, pk: string) : Set<string>
   activePerimsIds () : Set<string>
+  removeActiveP (id: string) : void
 
   subsOK: Ref<boolean>
   syncQueue: SyncQueue
 
   getItem (def: $Def, create?: boolean) : $DCItem
   getAPState (p: $Perimeter) : APState
-  resetDefp () : void
 
   onNotif (defs: $Def[], dh: number) : Promise<void>
   storeDC (item: $DCItem, now: number, dcdata: $DCData) : Promise<void>
@@ -271,8 +271,7 @@ const useStore = (id: string) =>
     const syncQueue = new SyncQueue(svc, org)
 
     const subsOK: Ref<boolean>= ref(false)
-    // abonnement actuel
-    const actualSubs: Ref<Object> = ref(null)
+    const optionsTime = ref(0)
 
     const docs: Ref<reactive> = reactive({  })
 
@@ -307,6 +306,9 @@ const useStore = (id: string) =>
       const s = new Set<string>()
       for(const x in activePerims) s.add(x)
       return s
+    }
+    const removeActiveP = (id: string) : void => {
+      delete activePerims[id]
     }
     /************************************************/
 
@@ -347,7 +349,7 @@ const useStore = (id: string) =>
         // Si itemd n'existait pas on N'EN CREE PAS
         if (itemd && itemd.sat < sat) {
           itemd.doc = doc
-          await manageData1(itemd, sat, v, data)
+          await manageData(itemd, sat, v, data)
         }
       }
     }
@@ -369,7 +371,7 @@ const useStore = (id: string) =>
         itemd = new $DocItem(def)
         if (itemd.sat < sat) {
           itemd.doc = doc
-          await manageData1(itemd, sat, v, data)
+          await manageData(itemd, sat, v, data)
         }
       }
       return pks
@@ -386,7 +388,7 @@ const useStore = (id: string) =>
       }
     }
 
-    async function manageData1 (item: $DCItem, sat: number, v: number, data: Uint8Array) {
+    async function manageData (item: $DCItem, sat: number, v: number, data: Uint8Array) {
       item.sat = sat
       item.sv = v
       upd(item)
@@ -405,21 +407,13 @@ const useStore = (id: string) =>
       }
     }
 
-    async function manageData (item: $DocItem, sat: number, v: number, data: Uint8Array) {
-      const doc = await getDocument(item.def.docCl, data)
-      if (item.sat < sat) {
-        item.doc = doc
-        await manageData1(item, sat, v, data)
-      }
-    }
-
     async function deleteDoc (def: $Def, sat: number, pk: string, v: number) {
       const defd = new $Def(def.docCl + '/' + pk)
       const item = getItem(defd) as $DocItem
       // Si item n'existait pas on N'EN CREE PAS
       if (item && item.sat < sat) { // créé un Zombi
         item.doc = Registry.buildZombi(svc, def.docCl, org, v, pk)
-        await manageData1(item, sat, v, null)
+        await manageData(item, sat, v, null)
       }
     }
 
@@ -449,10 +443,14 @@ const useStore = (id: string) =>
           if (item.sv === 0) return // n'existait pas, n'existe toujours pas
           if (item.sat < sat) {
             item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
-            await manageData1(item, sat, v, null)
+            await manageData(item, sat, v, null)
           }
         } else { // Le document existe
-          await manageData(item, sat, v, data)
+          const doc = await getDocument(item.def.docCl, data)
+          if (item.sat < sat) {
+            item.doc = doc
+            await manageData(item, sat, v, data)
+          }
         }
       } else { // INCREMENTAL
         if (v === 0) { // document inchangé
@@ -468,10 +466,14 @@ const useStore = (id: string) =>
           if (!data) { // Existait, n'existe plus: enregistré comme deleted
             if (item.sat < sat) {
               item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
-              await manageData1(item, sat, v, null)
+              await manageData(item, sat, v, null)
             }
           } else { // Existe toujours mais a changé
-            await manageData(item, sat, v, data)
+            const doc = await getDocument(item.def.docCl, data)
+            if (item.sat < sat) {
+              item.doc = doc
+              await manageData(item, sat, v, data)
+            }
           }
         }
       }
@@ -507,14 +509,14 @@ const useStore = (id: string) =>
         if (v === 0) { // collection vide
           if (item.sat < sat) {
             item.pks = new Set()
-            await manageData1(item, sat, v, null)
+            await manageData(item, sat, v, null)
           }
         } else { // La collection n'est pas vide
           const pks: Set<string> = await manageDatas(item, sat, cd.datas)
           if (item.sat < sat) {
             item.pks = pks
             const data = encode(Array.from(pks))
-            await manageData1(item, sat, v, data)
+            await manageData(item, sat, v, data)
           }
         }
       } else { 
@@ -555,7 +557,7 @@ const useStore = (id: string) =>
           if (item.sat < sat) {
             item.pks = pks
             const data = encode(Array.from(pks))
-            await manageData1(item, sat, v, data)            
+            await manageData(item, sat, v, data)            
           }
         }
       }
@@ -617,46 +619,43 @@ const useStore = (id: string) =>
       return x
     }
 
-    /* fetch : pour chaque périmètre de la liste:
-    - le périmètre devient actif
-    - sauf avion, abonne les périmètres (et réabonne ceux déjà actifs)
-    - sauf incognito, recharge les documents / collections depuis le Cache IDB
-    - sauf avion demande la synchronisation des defs du périmètre 
-    - faire "await listen(p)" pour "attendre" (ou non) sa première synchro complète
+    /* fetch : pour chaque périmètre de la liste lp: le périmètre DEVIENT actif
+      - sauf avion, abonne les périmètres (et réabonne ceux déjà actifs)
+      - sauf incognito, recharge les documents / collections depuis le Cache IDB
+      - sauf avion demande la synchronisation des defs du périmètre 
+    Faire "await listen(p)" pour "attendre" (ou non) sa première synchro complète
     */
-    const fetch = async (lp: $Perimeter[], lpobs?: Set<string>) : Promise<void> => {
-      const lp1: $Perimeter[] = [] // périmètres à souscrire
-      const lp2: $Perimeter[] = [] // nouveaux (ou pas) périmètres à synchroniser
+    const fetch = async (lp: $Perimeter[]) : Promise<void> => {
+      const toSub = hasNet && session.optionsTime !== optionsTime.value
 
-      if (lpobs && lpobs.size) for(const pid of lpobs) delete activePerims[id]
+      const lp1: $Perimeter[] = [] // TOUS les périmètres abonnés (ou à abonner)
+      const lp2: $Perimeter[] = [] // nouveaux périmètres à synchroniser
 
-      const pid: Set<string> = new Set() // périmétres (restés) actifs
-      for(const x in activePerims) {
-        pid.add(x)
-        lp1.push(activePerims[x])
-      }
-      for(const p of lp) { // par principe pas obsolètes
-        if (!pid.has(p.id)) {
-          activePerims[p.id] = { lastSync: 0, resolves: [], perimeter: p }
-          lp1.push(p)
+      if (toSub) for(const x in activePerims) lp1.push(activePerims[x])
+
+      for(const p of lp) {
+        let ap = activePerims[p.id]
+        if (!ap) {
+          ap = { lastSync: 0, resolves: [], perimeter: p }
+          activePerims[p.id] = ap
+          for(const def of ap.perimeter.defs)
+            getItem(def, true).defp = true
+          if (toSub) lp1.push(p)
         }
-        lp2.push(p)
+        if (!ap.lastSync) lp2.push(p)
       }
 
-      if (hasNet) { // Faut-il refaire les souscriptions ?
+      if (toSub) { // (Re)faire les souscriptions
         resetDefp() // recalcul si les documents / collections sont référencés ou non
         subsOK.value = false
         const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
-        pgen.init(org).processPerimeters(lp2)
-        if (!actualSubs.value || !pgen.subs.equalTo(actualSubs.value)) {
-          actualSubs.value = pgen.subs
-          subsOK.value = await pgen.subs.subscribe(svc, org, false)
-        } else subsOK.value = true
-      }
-
-      if (!subsOK.value) {
-        // TODO
-        console.log('subscription failed !')
+        pgen.init(svc, org).processPerimeters(lp1)
+        subsOK.value = await pgen.subs.subscribe(svc, org, false)
+        optionsTime.value = session.optionsTime
+        if (!subsOK.value) {
+          // TODO
+          console.log('subscription failed !')
+        }
       }
 
       if (!lp2.length) return // tous déjà chargés
@@ -714,30 +713,33 @@ const useStore = (id: string) =>
     */
     const getLastSync = (apstate: APState) : number => {
       let lastSync = 0
+      let noSync = false
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
-        if (item.sat < lastSync) lastSync = item.sat
+        if (item.sat === 0) { 
+          noSync = true
+          break
+        }
+        if (lastSync === 0) lastSync = item.sat
+        else if (item.sat < lastSync) lastSync = item.sat
       }
-      apstate.lastSync = lastSync
-      return lastSync
+      apstate.lastSync = noSync ? 0 : lastSync
+      return apstate.lastSync
     }
 
     /* Retour de synchronisation:
     - ne checke QUE les périmètres actifs (ayant fait l'objet d'un fetch)
+    - vérifie leur état de synchronisation
     */
     const checkResolves = () => {
       for(const idp in activePerims) {
         const apstate = activePerims[idp]
-        if (apstate.resolves.length) {
-          /* Si un périmètre a un item qui n'a jamais été synchronisé 
-          il ne sera pas résolu */
-          const ls = getLastSync(apstate)
-          if (ls) {
-            // Le périmètre peut être résolu
-            for(const resolve of apstate.resolves)
-              resolve(ls)
-            apstate.resolves = []
-          }
+        let ls = getLastSync(apstate)
+        if (ls && apstate.resolves.length) {
+          // Si un périmètre a un item qui n'a jamais été synchronisé il ne peut pas résolu 
+          for(const resolve of apstate.resolves)
+            resolve(ls)
+          apstate.resolves = []
         }
       }
     }
@@ -749,14 +751,12 @@ const useStore = (id: string) =>
     const resetDefp = () => {
       for(const x in docs) docs[x].defp = false
       for(const x in colls) colls[x].defp = false
-      for(const idp in activePerims) 
-        setDefp(activePerims[idp].perimeter)
-    }
-
-    const setDefp = (p: $Perimeter) => {
-      for(const def of p.defs) {
-        const item = getItem(def)
-        if (item) item.defp = true
+      for(const idp in activePerims) {
+        const ap = activePerims[idp]
+        for(const def of ap.perimeter.defs) {
+          const item = getItem(def)
+          if (item) item.defp = true
+        }
       }
     }
 
@@ -765,7 +765,7 @@ const useStore = (id: string) =>
       getItem,
       getAPState,
       onNotif, storeDC, checkResolves,
-      getDoc, getColl, activePerimsIds,
-      fetch, listen, forcedResync, resetDefp
+      getDoc, getColl, activePerimsIds, removeActiveP,
+      fetch, listen, forcedResync
     } as IDocStore
   })()

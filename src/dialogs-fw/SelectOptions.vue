@@ -138,14 +138,14 @@ const undo = () => {
 }
 
 const ok = async () => {
-  const l = orChg.value ? [] : null
-  if (orChg.value) for(const r of orgRoles.value)
-    for(const ox of r.orgs) if (ox.sel) l.push(ox.org + '/' + r.role)
-  // console.log('Options: ', selPref.value, l.join('   '))
-  let p = selPref.value !== selPrefi.value ? session.pref : null
-  if (p === defp.value) p = ''
-  session.selOptions = false
-  await session.chgOptions(p, l, toSaveBox.value, toSaveLoc.value)
+  const _orgRoles: string[] = []
+  for(const r of orgRoles.value)
+    for(const ox of r.orgs) if (ox.sel) _orgRoles.push(ox.org + '/' + r.role)
+  console.log('orgRoles: ' + _orgRoles.join('  '))
+
+  const _pref = selPref.value === defp.value ? '' : selPref.value
+
+  await session.chgOptions(_pref, _orgRoles, toSaveBox.value, toSaveLoc.value)
 }
 
 const onClose = async () => {

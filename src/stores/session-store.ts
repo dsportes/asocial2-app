@@ -42,6 +42,7 @@ export const useSessionStore = defineStore('session', () => {
     noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
   )
 
+  const optionsTime = ref(0)
   const perims: Ref<Perims> = ref()
   const getPerimeter = 
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
@@ -77,6 +78,7 @@ export const useSessionStore = defineStore('session', () => {
       const mt = sf.myTrusting
       if (mt) await mt.addAppsDb()
     }
+    optionsTime.value = Date.now()
     if (planeMode.value) {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
@@ -150,20 +152,25 @@ export const useSessionStore = defineStore('session', () => {
       const st = getStore(svc, org)
 
       if (!planeMode) {
-        const lpBeforeIds = st.activePerimsIds()
-        const lpAfterIds: Set<string> = new Set()
-        const p2sync: $Perimeter[] = []
+        // Périmètres "potentiels" recalculés
+        const perimsP: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
 
-        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [x,p] of px) {
-          const c1 = syncMode.value && (p.plane || (!p.plane && lpBeforeIds.has(p.id))) // 
-          const c2 = incMode.value && lpBeforeIds.has(p.id)
-          if (c1 || c2  )
-            for(const [x,p] of px) { p2sync.push(p); lpAfterIds.add(x) }
+        const lpBeforeIds = st.activePerimsIds() // actifs avant
+        const lpAfterIds: Set<string> = new Set() // actifs après
+        const p2sync: $Perimeter[] = [] // ajouter à synchroniser
+
+        for(const [x,p] of perimsP) {
+          // Maintenir ou ajouter "actif" ?
+          if ((syncMode.value && p.plane) || lpBeforeIds.has(p.id))
+            lpAfterIds.add(x)
+          // A synchroniser parce que nouvellement actif ?
+          if (lpAfterIds.has(x) && !lpBeforeIds.has(x))
+            p2sync.push(p)
+          // A supprimer de la synchronisation ?
+          if (lpBeforeIds.has(x) && !lpAfterIds.has(x))
+            st.removeActiveP(x)
         }
-        const lpobs = new Set<string>()
-        for(const x of lpBeforeIds) if (!lpAfterIds.has(x)) lpobs.add(x)
-        await st.fetch(p2sync, lpobs)
+        await st.fetch(p2sync)
       }
     }
   }
@@ -195,29 +202,34 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  const chgOptions = async (_pref: string | null, 
-    _orgRoles: string[] | null, toSaveBox: boolean, toSaveLoc: boolean) => {
-    
-    if (_pref !== null) pref.value = _pref
-    if (_orgRoles !== null) orgRoles.value = _orgRoles
-    if ((_pref !== null || _orgRoles !== null) && toSaveLoc && hasLocal.value) {
-      const opts = await idb.getOptions() || { pref: '', orgRoles: []}
-      const options = {
-        pref: _pref !== null ? _pref : opts.pref,
-        orgRoles: _orgRoles !== null ? _orgRoles : opts.orgRoles
+  const chgOptions = async (_pref: string , _orgRoles: string[], toSaveBox: boolean, toSaveLoc: boolean) => {
+    pref.value = _pref
+    orgRoles.value = _orgRoles
+
+    if (toSaveBox || toSaveLoc) {
+      const _slor = _orgRoles.sort().join(' ')
+
+      if (toSaveBox && hasNet.value) {
+        const sf = stores.safeStore
+        const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
+        const slor = opts.orgRoles.sort().join(' ')
+        if (slor !== _slor || opts.pref !== _pref) {
+          const options = { pref: _pref, orgRoles: _orgRoles }
+          await sf.setOptions(options)
+        }
       }
-      await idb.setOptions(options)
-    }
-    if ((_pref !== null || _orgRoles !== null) && toSaveBox && hasNet.value) {
-      const sf = stores.safeStore
-      const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
-      const options = {
-        pref: _pref !== null ? _pref : opts.pref,
-        orgRoles: _orgRoles !== null ? _orgRoles : opts.orgRoles
+
+      if (toSaveLoc && hasLocal.value) {
+        const opts = await idb.getOptions() || { pref: '', orgRoles: []}
+        const slor = opts.orgRoles.sort().join(' ')
+        if (slor !== _slor || opts.pref !== _pref) {
+          const options = { pref: _pref, orgRoles: _orgRoles }
+          await idb.setOptions(options)
+        }
       }
-      await sf.setOptions(options)
     }
 
+    optionsTime.value = Date.now()
     if (step.value === 1) { 
       await setStep(2)
     } else {
@@ -384,7 +396,7 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, setStep, prefs, pref, orgRoles, orgRolesP, selOptions,
+    step, setStep, prefs, pref, orgRoles, orgRolesP, selOptions, optionsTime,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
