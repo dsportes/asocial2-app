@@ -293,6 +293,15 @@ const useStore = (id: string) =>
       }
     }
 
+    const getItem = (def: $Def, create?: boolean) => {
+      let item = def.isColl ? colls[def.definition] : docs[def.definition]
+      if (!item && create) {
+        item = def.isColl ? new $CollItem(def) : new $DocItem(def)
+        docs[def.definition] = item
+      }
+      return item
+    }
+
     const activePerims = reactive({  })
     const activePerimsIds = () : Set<string> => {
       const s = new Set<string>()
@@ -321,71 +330,49 @@ const useStore = (id: string) =>
       if (items.length) syncQueue.push(items)
     }
 
-    async function setIDB (item: $DCItem, sat: number, v: number, data: Uint8Array) {
-      /* Store en IDB:
-      a) si version plus récente
-      b) ou si identique et que lat est "bien inférieure à" sat */
-      item.sat = sat
-      if (item.lv < v) {
-        item.lv = v
-        item.lat = sat
-        await idb.setDC(svc, org, item.def.definition, sat, v, data)
-      } else await setLatIDB(item, sat, v)
-      upd(item)
-    }
-
-    async function setLatIDB (item: $DCItem, sat: number, v: number) {
-      if (sat - item.lat > MAXLATDELAY) { // MAJ IDB si lat trop ancienne
-        item.lat = sat
-        upd(item)
-        await idb.updLV(svc, org, item.def.definition, sat, v)
-      }
-    }
-
     /* Ces documents sont modifiés mais SURTOUT NE SONT PLUS dans la collection
     Les documents de la collection ont une classe différente pour un type 2 ou 3
     */
-    async function movedDatas (item, sat, pks: Set<string>, datas: Uint8Array[]) {
+    async function movedDatas (item: $DCItem, sat: number, datas: Uint8Array[]) 
+    : Promise<Set<string>> {
+      const pks = new Set<string>()
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
-      if (!docCl) return
+      if (!docCl) return pks
       for(const data of datas) {
         const doc = await getDocument(docCl, data)
-        pks.delete(doc._pk)
+        const v = doc.v
+        pks.add(doc._pk)
         const def = new $Def(docCl + '/' + doc._pk)
         let itemd = getItem(def) as $DocItem
         // Si itemd n'existait pas on N'EN CREE PAS
-        if (itemd && hasLocal) 
-          await setIDB(itemd, sat, doc.v, data)
+        if (itemd && itemd.sat < sat) {
+          itemd.doc = doc
+          await manageData1(itemd, sat, v, data)
+        }
       }
     }
 
     /* Ces documents sont ajoutés ou modifiés mais SONT dans la collection
     Les documents de la collection ont une classe différente pour un type 2 ou 3
     */
-    async function manageDatas (item: $CollItem, sat: number, pks: Set<string>, datas: Uint8Array[]) {
+    async function manageDatas (item: $CollItem, sat: number, datas: Uint8Array[]) 
+      : Promise<Set<string>> {
+      const pks = new Set<string>()
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
-      if (!docCl) return
+      if (!docCl) return pks
       for(const data of datas) {
         const doc = await getDocument(docCl, data)
+        const v = doc.v
         pks.add(doc._pk)
         const def = new $Def(docCl + '/' + doc._pk)
-        let itemd = getItem(def) as $DocItem
-        if (!itemd) {
-          itemd = new $DocItem(def)
-          itemd.sat = sat
-          itemd.sv = doc.v
-          if (hasLocal) { itemd.lv = itemd.sv; itemd.lat = itemd.sat }
+        let itemd = getItem(def, true) as $DocItem
+        itemd = new $DocItem(def)
+        if (itemd.sat < sat) {
           itemd.doc = doc
-          docs[def.definition] = itemd
-        } else {
-          itemd.sat = sat
-          itemd.sv = doc.v
-          if (hasLocal) { itemd.lv = itemd.sv; itemd.lat = itemd.sat }
-          upd(itemd)
+          await manageData1(itemd, sat, v, data)
         }
-        if (hasLocal) 
-          await idb.setDC(svc, org, def.definition, itemd.sat, itemd.sv, data)
       }
+      return pks
     }
 
     async function  getDocument(docCl: string, data: Uint8Array) : Promise<$Document> {
@@ -399,30 +386,41 @@ const useStore = (id: string) =>
       }
     }
 
-    async function manageData (item: $DocItem, sat: number, data: Uint8Array) {
-      item.doc = await getDocument(item.def.docCl, data)
-      if (hasLocal) await setIDB(item, sat, item.doc.v, data)
-      else {
-        item.lv = item.doc.v
-        item.lat = sat
-        upd(item)
+    async function manageData1 (item: $DCItem, sat: number, v: number, data: Uint8Array) {
+      item.sat = sat
+      item.sv = v
+      upd(item)
+      if (hasLocal && item.lv <= v) {
+        if (item.lv < v) {
+          item.lat = sat
+          item.lv = v
+          upd(item)
+          await idb.setDC(svc, org, item.def.definition, sat, v, data)
+        }
+        if ((item.lv === v) && (sat - item.lat > MAXLATDELAY)) {
+          item.lat = sat
+          upd(item)
+          await idb.updLV(svc, org, item.def.definition, sat, v)
+        }
       }
-      delete docs[item.def.definition]
-      docs[item.def.definition] = item
+    }
+
+    async function manageData (item: $DocItem, sat: number, v: number, data: Uint8Array) {
+      const doc = await getDocument(item.def.docCl, data)
+      if (item.sat < sat) {
+        item.doc = doc
+        await manageData1(item, sat, v, data)
+      }
     }
 
     async function deleteDoc (def: $Def, sat: number, pk: string, v: number) {
-        const defd = new $Def(def.docCl + '/' + pk)
-        let itemd = getItem(defd) as $DocItem
-        // Si itemd n'existait pas on N'EN CREE PAS
-        if (itemd) // créé un Zombi
-          itemd.doc = Registry.buildZombi(svc, def.docCl, org, v, pk)
-        if (hasLocal) await setIDB(itemd, sat, v, null)
-        else {
-          itemd.sat = sat
-          itemd.sv = v
-          upd(itemd)
-        }
+      const defd = new $Def(def.docCl + '/' + pk)
+      const item = getItem(defd) as $DocItem
+      // Si item n'existait pas on N'EN CREE PAS
+      if (item && item.sat < sat) { // créé un Zombi
+        item.doc = Registry.buildZombi(svc, def.docCl, org, v, pk)
+        await manageData1(item, sat, v, null)
+      }
     }
 
     const storeDC = async (item: $DCItem, now: number, dcdata: $DCData) => {
@@ -440,40 +438,40 @@ const useStore = (id: string) =>
     - document inchangé: v: 0    
     */
     const storeDoc = async (item: $DocItem, sat: number, cd: $DocData) : Promise<void> => {
+      const v  = cd.v
+      const data = cd['data']
       if (cd.v === -1) { // credential NON accepté
         // TODO
         return
       }
       if (!cd.incr) { // INREGRAL
-        if (cd.v === 0) { // Existait, n'existe plus - enregistré comme deleted
+        if (v === 0) { // n'existe pas / plus - enregistré comme deleted
           if (item.sv === 0) return // n'existait pas, n'existe toujours pas
-          item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
-          if (hasLocal) await setIDB(item, sat, cd.v, null)
-          else {
-            item.sat = sat
-            item.sv = 0
-            upd(item)
+          if (item.sat < sat) {
+            item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
+            await manageData1(item, sat, v, null)
           }
         } else { // Le document existe
-          await manageData(item, sat, cd['data'])
+          await manageData(item, sat, v, data)
         }
       } else { // INCREMENTAL
-        if (cd.v === 0) { // document inchangé
+        if (v === 0) { // document inchangé
           item.sat = sat
-          if (hasLocal) await setLatIDB(item, sat, cd.v)
-          else upd(item)
+          upd(item)
+          if (hasLocal && (sat - item.lat > MAXLATDELAY)) {
+            item.lat = sat
+            item.lv = v
+            upd(item)
+            await idb.updLV(svc, org, item.def.definition, sat, v)
+          }
         } else {
-          const data = cd['data']
           if (!data) { // Existait, n'existe plus: enregistré comme deleted
-            item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
-            if (hasLocal) await setIDB(item, sat, cd.v, null)
-            else {
-              item.sat = sat
-              item.sv = cd.v
-              upd(item)
+            if (item.sat < sat) {
+              item.doc = Registry.buildZombi(svc, item.def.docCl, org, item.sv, item.def.pk)
+              await manageData1(item, sat, v, null)
             }
           } else { // Existe toujours mais a changé
-            await manageData(item, sat, data)
+            await manageData(item, sat, v, data)
           }
         }
       }
@@ -499,57 +497,66 @@ const useStore = (id: string) =>
         et ONT ETE SUPPRIME: document ZOMBI où v est leur dh de supression
     */
     const storeColl = async (item: $CollItem, sat: number, cd: $CollData) : Promise<void> => {
-        if (cd.v === -1) { // credential NON accepté
-          // TODO
-          return
-        }
-        if (!cd.incr) { // INTEGRAL
-          if (cd.v === 0 && item.sv === 0) return // n'existait pas, n'existe toujors pas
-          if (cd.v === 0) { // collection vide
+      const v = cd.v
+      if (v === -1) { // credential NON accepté
+        // TODO
+        return
+      }
+      if (!cd.incr) { // INTEGRAL
+        if (v === 0 && item.sv === 0) return // n'existait pas, n'existe toujors pas
+        if (v === 0) { // collection vide
+          if (item.sat < sat) {
             item.pks = new Set()
-            if (hasLocal) await setIDB(item, sat, cd.v, null)
-            else {
-              item.sat = sat
-              item.sv = cd.v
-              upd(item)
-            }
-          } else { // La collection n'est pas vide
-            const pks: Set<string> = new Set()
-            await manageDatas(item, sat, pks, cd.datas) // ajoute à pks
-            item.pks = pks
-            if (hasLocal) await setIDB(item, sat, cd.v, encode(Array.from(pks)))
-            else {
-              item.sat = sat
-              item.sv = cd.v
-              upd(item)
-            }
+            await manageData1(item, sat, v, null)
           }
+        } else { // La collection n'est pas vide
+          const pks: Set<string> = await manageDatas(item, sat, cd.datas)
+          if (item.sat < sat) {
+            item.pks = pks
+            const data = encode(Array.from(pks))
+            await manageData1(item, sat, v, data)
+          }
+        }
       } else { 
-        if (cd.v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
+        if (v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
           item.sat = sat
-          if (hasLocal) await setLatIDB(item, sat, cd.v)
-          else upd(item)
+          upd(item)
+          if (hasLocal && (sat - item.lat > MAXLATDELAY)) {
+            item.lat = sat
+            upd(item)
+            await idb.updLV(svc, org, item.def.definition, sat, v)
+          }
         } else { 
           /* La collection a changé
           cd.v : est sa version
           datas et deleted : A AJOUTER (s'il n'y était pas) / CHANGES (s'il y était) pour type 2 et 3
           moved : seulement pour type 3 */
           const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
-          const pks: Set<string> = item.pks || new Set()
-          if (cd.datas)
-            await manageDatas(item, sat, pks, cd.datas)
-          if (cd.deleted)
+          const pks = new Set(item.pks)
+          let pks1: Set<string>
+          let pks2: Set<string> = new Set()
+          let pks3: Set<string>
+          if (cd.datas) {
+            pks1 = await manageDatas(item, sat, cd.datas)
+          }
+          if (cd.deleted) {
             for(const [pk, v] of cd.deleted) {
-              pks.delete(pk)
+              pks2.add(pk)
               const defd = new $Def(docCl + '/' + pk)
               await deleteDoc(defd, sat, pk, v)
             }
-          if (cd.moved)
-            await movedDatas(item, sat, pks, cd.moved)
-          item.pks = pks
-          item.sat = sat
-          item.sv = cd.v
-          upd(item)
+          }
+          if (cd.moved) {
+            pks3 = await movedDatas(item, sat, cd.moved)
+          }
+          for(const pk of pks1) pks.add(pk)
+          for(const pk of pks2) pks.delete(pk)
+          for(const pk of pks3) pks.add(pk)
+          if (item.sat < sat) {
+            item.pks = pks
+            const data = encode(Array.from(pks))
+            await manageData1(item, sat, v, data)            
+          }
         }
       }
     }
@@ -599,18 +606,6 @@ const useStore = (id: string) =>
           else await initCollFromIDB(item as $CollItem)
         }
       }
-    }
-
-    const getItem = (def: $Def, create?: boolean) => {
-      let item = def.isColl ? colls[def.definition] : docs[def.definition]
-      if (!item) {
-        item = def.isColl ? new $CollItem(def) : new $DocItem(def)
-        docs[def.definition] = item
-      } else {
-        item.sat = 0; item.lat = 0; item.sv = 0; item.lv = 0
-        upd(item)
-      }
-      return item
     }
 
     const getAPState = (p: $Perimeter) : APState => {
