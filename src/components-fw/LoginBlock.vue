@@ -11,16 +11,21 @@ Event émis: logged
       @ok="authCalc"/>
   </div>
 
-  <div v-if="session.noNet && session.hasLocal && sf.trustings.size && trustingsCached().length" 
+  <div v-if="session.noNet && session.hasLocal && sf.trustings.size && !trustingsCached.length" 
     class="titre-md msg2 text-center q-ma-sm">{{ $t('LOGplaneimp2') }}</div>
 
   <div v-if="mayPlane"
     class="row full-width items-center q-my-sm q-gutter-sm">
     <btn-bubble :text="$t('LOGauthplane_bub')"/>
     <div class="text-italic titre-md q-ml-sm"> {{$t('LOGauthplane_label')}}</div>
-    <div v-for="u in trustingsCached()" :key="u.userId"
-      :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
-      @click="selectUser(u)">{{u.pseudo}}
+    <div v-for="u in trustingsCached" :key="u.userId"
+      :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUserpl ? 'bg-warning' : 'bg-primary')"
+      @click="selectUserpl(u)">{{u.pseudo}}
+    </div>
+
+    <div v-if="selectedUserpl" class="q-pa-sm full-width q-mr-lg">
+      <input-b v-model="entryPP" size="p1" prefix="Phrase"
+        @validate="authPlane"/>
     </div>
   </div>
 
@@ -31,16 +36,8 @@ Event émis: logged
     <div v-for="[,u] in sf.trustings" :key="u.userId"
       :class="'q-ml-sm cursor-pointer select font-mono q-px-xs text-white fs-md ' + (u === selectedUser ? 'bg-warning' : 'bg-primary')"
       @click="selectUser(u)">{{u.pseudo}}</div>
-  </div>
-
-  <div v-if="selectedUser" class="wsm">
-    <div v-if="session.hasNet" class="q-pa-sm">
+    <div v-if="selectedUser" class="q-pa-sm full-width q-mr-lg">
       <input-b v-model="pin" prefix="PSpin" size="pin" @validate="authPIN"/>
-    </div>
-    <div v-else class="q-pa-sm">
-      <input-b class="q-pa-sm"
-        v-model="entryPP" size="p1" prefix="Phrase"
-        @validate="authPlane"/>
     </div>
   </div>
 
@@ -59,7 +56,7 @@ Event émis: logged
       v-model="entryP" size="p1" prefix="Phrase"
       @validate="valP"/>
     <btn-cond v-if="stepAP===1" class="q-ml-lg self-end"
-      flat color="warning" :label="$t('UAPt_p')" @ok="resetAP"/>
+      flat color="warning" :label="$t('UAPt_q')" @ok="resetAP"/>
   </div>
 
 </div>
@@ -81,6 +78,15 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
+const trustingsCached = ref([])
+
+watch(() => sf.trustings, (t) => {
+  const l = []
+  for(const [,u] of t) if (u.hasAppDb()) l.push(u)
+  trustingsCached.value = l
+  console.log('trustings', t.size, l.length)
+})
+
 /* Si IDB safe existe, on peut a minima la lire pour lister
 les users qui y ont un trusting et leur proposer
 un login par PIN ou AVION.
@@ -95,26 +101,23 @@ const emit = defineEmits(['logged'])
 const pin = reactive({ inp: '', err: '' })
 const entryPP = reactive({inp:'', err:''})
 const selectedUser = ref(null)
-
-const trustingsCached = () => {
-  const l = []
-  for(const [,u] of sf.trustings) 
-    if (u.hasAppDb()) l.push(u)
-  return l
-}
+const selectedUserpl = ref(null)
 
 const mayPlane = computed(() => 
-  session.hasLocal && trustingsCached().length)
+  session.noNet && session.hasLocal && trustingsCached.value.length)
 const mayPin = computed(() => 
   session.hasNet && session.hasLocal && sf.trustings.size)
 
 const preselect = () => {
-  const x = trustingsCached()
+  const x = trustingsCached.value
   if (mayPlane.value && x.length === 1)
-    selectedUser.value = x[0]
+    selectedUserpl.value = x[0]
   else if (mayPin.value && sf.trustings.size === 1)
     selectedUser.value = sf.trustings.size[0]
-  else selectedUser.value = null
+  else {
+    selectedUser.value = null
+    selectedUserpl.value = null
+  }
 }
 
 preselect()
@@ -125,8 +128,12 @@ watch(() => session.hasNet, () => {
 
 const selectUser = (u) => { // u est un Trusting
   pin.inp = ''; pin.err = '' 
-  entryPP.inp = ''; entryPP.err = '' 
   selectedUser.value = u
+}
+
+const selectUserpl = (u) => { // u est un Trusting
+  entryPP.inp = ''; entryPP.err = '' 
+  selectedUserpl.value = u
 }
 
 const authCalc = async () => {
@@ -141,7 +148,7 @@ const authPIN = async () => {
 
 const authPlane = async () => {
   const shp = await Crypt.strongHash(entryPP.inp, true, true)
-  const status = await sf.openSafeByPlane(shp, selectedUser.value)
+  const status = await sf.openSafeByPlane(shp, selectedUserpl.value)
   if (status === 0) emit('logged', 'plane')
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }

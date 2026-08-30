@@ -40,6 +40,9 @@ Contrôlé par ui.leftMenu
       </btn-cond>
 
       <btn-cond class="q-mb-sm"
+        flat :label="$t('OPTStitle_2')"
+        @ok="ui.closeMenu();dialogs.options = true"/>
+      <btn-cond class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
       <btn-cond class="q-mb-sm"
@@ -54,12 +57,14 @@ Contrôlé par ui.leftMenu
     </div>
   </q-page-container>
 
+  <select-optionsdial v-if="dialogs.options" v-model="dialogs.options"/>
+
 </q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-// import { ref, computed, reactive } from 'vue'
+import { reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 import { ErrorTest } from '../src-fw/operations'
@@ -67,6 +72,7 @@ import { ErrorTest } from '../src-fw/operations'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
+import SelectOptionsdial from '../dialogs-fw/SelectOptionsdial.vue'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -81,7 +87,9 @@ const test = async () => {
   await new ErrorTest('AS2', 'doda').run()
 }
 
-// const hasManagedOrgs = computed(() => sf.managerCreds().size !== 0)
+const dialogs = reactive({
+  options: false
+})
 
 const openAdmin = (svc) => {
   ui.closeMenu()

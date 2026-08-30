@@ -106,20 +106,6 @@ Chaque row est associé à UN _utilisateur_ ayant déclaré le _device_ de confi
 - `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN + cx, cy)` en base 64 où,
   - `PIN` est le code PIN fixé par l'utilisateur à la déclaration de confiance,
   - `cx cy` sont des _challenges_ générés aléatoirement à ce moment (des random de 24 bytes en base 64).
-
-#### `tsessions`
-Chaque row décrit une _session épinglée_:
-- `app`: code l'application correspondante.
-- `userId`: identifiant de l'utilisateur.
-- `profId`: id du profil de la session ou * pour le profil par défaut contenant tous les droits.
-- `about`: texte significatif pour l'utilisateur **crypté par la clé de l'utilisateur** et encodé en base 64 décrivant l'usage de sa session (par exemple `Revue des notes d'Alice et Jules`).
-- `size`: `[s1, s2 ...]` volumes _utile_ des données de la base IDB lors de la dernière session ouverte sur ce _device_.
-- `time`: dernière date-heure d'ouverture de cette session sur ce terminal.
-- `prefCode`: code de la "préférence" utilisée la dernière fois.
-- `prefTime`: _epoch_ date-heure de la dernière mise à jour de cette préférence.
-- `prefObj`:  sérialisation (en binaire) de cet objet de "préférence" utilisé la dernière fois.
-
-Il existe une base de données IDB de nom `app_x` où `x` est le hash court de `userId + '/' + profId`: elle contient les **documents en cache** de cette session.
 */
 
 export type Managements = { 
@@ -128,16 +114,6 @@ export type Managements = {
   org: string,
   docCls: Set<string> // Set des classes de document "manager"
 }
-
-/*
-export type SvcOrg = {
-  k: string // svc / org
-  label: string // label de svc
-  svc: string
-  org: string
-  creds: $Credential[]
-}
-*/
 
 export type LocPref = {
   code: string
@@ -420,21 +396,20 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Prefs *****************************************************************************
   Cette section est organisée avec une **sous-section par application** donnant une
-  map de clé `code` et de valeur `encode([time, obj])`:
+  map de clé `code` et de valeur l'objet prefs.
   - `code` : texte court parlant pour l'utilisateur correspondant
     à un de ses usages habituels de l'application comme `mobile, large, simple, expert ...`.
-  - `time`: date-heure de dernière mise à jour
-  - `obj`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
+  - `prefs`: un objet sérialisé donnant les valeurs des _préférences_ à utiliser
     à l'ouverture d'une session.
   **************************************************************************************/
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.K.APPNAME
-    const p = new Map<string, [number, Object]>() // clé: app
+    const p = new Map<string, Object>() // clé: app
     if (safe.prefs) {
       const pr = safe.prefs[app]
-      if (pr) for (const code in pr) {
-        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(pr[code])))
-        p.set(code, obj)
+      if (pr) {
+        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(pr)))
+        for(const code in obj) p.set(code, obj[code])
       }
     }
     mySafePrefs.value = p
@@ -444,25 +419,21 @@ export const useSafeStore = defineStore('safe', () => {
     app: string
     userId: string
     shK: string
-    prefs: Object | null // clé: code, valeur: Objet Prefs sérialisé crypté
-    delprefs: string[] // liste des crIds à supprimer
+    prefs: string // Objet Prefs sérialisé crypté
   }
 
   /* Mise à jour des préférences */
-  const updatePrefs = async ( mprefs: Map<string, Object>, delprefs: string[] ) => {
+  const updatePrefs = async ( mprefs: Map<string, Object>) => {
     let prefs : Object | null = {}
 
-    if (mprefs && mprefs.size) for(const [code, obj] of mprefs) {
-      prefs[code] = keyToB64(await Crypt.crypt(keyK.value, encode(obj)))
-    }
-    if (Object.keys(prefs).length === 0) prefs = null
-
+    if (mprefs && mprefs.size) 
+      for(const [code, obj] of mprefs) prefs[code] = obj
+    
     const updatePrefs: UpdatePrefs = {
       app: stores.config.K.APPNAME,
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,
-      prefs,
-      delprefs : delprefs || []
+      prefs: keyToB64(await Crypt.crypt(keyK.value, encode(prefs)))
     }
     const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
     op.args.updatePrefs = updatePrefs

@@ -24,20 +24,16 @@
 import { watch, reactive } from 'vue'
 
 import stores from '../stores/all'
-import { $t, sty } from '../src-fw/util'
+import { sty } from '../src-fw/util'
 
 import LoginBlock from '../components-fw/LoginBlock.vue'
 import ModeNet from '../components-fw/ModeNet.vue'
 import ModeLocal from '../components-fw/ModeLocal.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
-import SelectOptions from '../dialogs-fw/SelectOptions.vue'
+import SelectOptions from '../components-fw/SelectOptions.vue'
 
 const ui = stores.ui
 const session = stores.session
-
-const dialogs = reactive({
-  seloptions: false
-})
 
 const logok = async (x) => {
   if (x === 'calc') await step(2)

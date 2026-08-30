@@ -1,42 +1,32 @@
 <template>
 <div>
-<dialog-std0 v-model="session.selOptions" vh="75"
-  @close="onClose" 
-  :title="$t('OPTStitle_' + s1)"
-  :help="$t('OPTStitle_bub')">
-  <template #btn>
-    <btn-cond :label="$t('OPTSok_' + s1)" padding="none xs" @ok="ok"
-      :disable="s1 === 2 && !chg"/>
-  </template>
-  <template #default>
-    <div v-if="s1 === 1 && session.syncMode" class="q-my-sm q- ml-xs row justify-between items-center">
-      <q-toggle class="col q-pr-md" v-model="session.resetdb" dense :label="$t('HPresetdb_0')"/>
-    </div>
+  <div v-if="s1 === 1 && session.syncMode" class="q-my-sm q- ml-xs row justify-between items-center">
+    <q-toggle class="col q-pr-md" v-model="session.resetdb" dense :label="$t('HPresetdb_0')"/>
+  </div>
 
-    <div class="q-my-md">
-      <q-checkbox dense v-model="toSave" :label="$t('OPTStosave')" />
-    </div>
+  <div class="q-my-md">
+    <q-checkbox dense v-model="toSave" :label="$t('OPTStosave')" />
+  </div>
 
-    <div class="q-mt-md titre-md text-italic">{{ $t('OPTSpref') }}</div>
-    <div class="row q-gutter-sm">
-      <q-radio v-for="code in prCodes" dense v-model="selPref" 
-        :val="code" :label="code" />
-    </div>
+  <div class="q-mt-md titre-md text-italic">{{ $t('OPTSpref') }}</div>
+  <div class="row q-gutter-sm">
+    <q-radio v-for="code in prCodes" dense v-model="selPref" 
+      :val="code" :label="code" />
+  </div>
 
-    <div class="row items-center q-mt-md titre-md text-italic">
-      <div class="titre-md text-italic">{{ $t('OPTSroles') }}</div>
-      <btn-cond v-if="orChg" round class="q-ml-md" icon="undo" @ok="undo"/>
+  <div class="row items-center q-mt-md titre-md text-italic">
+    <div class="titre-md text-italic">{{ $t('OPTSroles') }}</div>
+    <btn-cond v-if="orChg" round class="q-ml-md" icon="undo" @ok="undo"/>
+  </div>
+  <div v-for="(r, idx) in orgRoles" :key="r.role" 
+    :class="dkli(idx) + ' q-my-sm q-pl-lg'">
+    <div class="titre-md">{{ r.label }}</div>
+    <div class="row q-gutter-md">
+      <q-checkbox dense v-for="org in r.orgs" :key="org.code" v-model="org.sel" 
+        :label="org.org"/>
     </div>
-    <div v-for="(r, idx) in orgRoles" :key="r.role" 
-      :class="dkli(idx) + ' q-my-sm q-pl-lg'">
-      <div class="titre-md">{{ r.label }}</div>
-      <div class="row q-gutter-md">
-        <q-checkbox dense v-for="org in r.orgs" :key="org.code" v-model="org.sel" 
-          :label="org.org"/>
-      </div>
-    </div>
-  </template>
-</dialog-std0>
+  </div>
+
 <choose-it v-model="dialogs.close"
   prefix="OPTSquit" options="pw"
   @giveup="closeIt"
@@ -68,6 +58,10 @@ type OrgRole = {
 const ui = stores.ui
 const session = stores.session
 const s1 = computed(() => session.step === 1 ? 1 : 2)
+const okn = ref(session.okOptions)
+session.haschgOptions = false
+
+watch(() => session.okOptions, async (v) => { if (v > okn.value) await ok() })
 
 const dialogs = reactive({
   close: false
@@ -84,14 +78,13 @@ const selPref = ref()
 const selPrefi = ref()
 const orgRoles: Ref<OrgRole[]> = ref()
 
-const test = ['doda/AS2_auteurs', 'doda/AS2_ad', 'demo/AS2_auteurs' ]
+// const test = ['doda/AS2_auteurs', 'doda/AS2_ad', 'demo/AS2_auteurs' ]
 
 const init = () => {
   defp.value = $t('OPTSdef')
   prCodes.value = Array.from(session.prefs.keys()).sort()
   prCodes.value.unshift(defp.value)
-  selPref.value = session.pref && prCodes.value.indexOf(session.pref || defp.value) ? 
-    selPref.value || defp.value : defp.value
+  selPref.value = session.pref && prCodes.value.indexOf(session.pref) !== -1 ? session.pref : defp.value
   selPrefi.value = selPref.value
   const x = []
   for(const y of session.orgRolesP) {
@@ -124,12 +117,15 @@ const init = () => {
 }
 
 const orChg = computed(() => {
-  for(const r of orgRoles.value)
+  if (orgRoles.value) for(const r of orgRoles.value)
     for(const ox of r.orgs) if (ox.sel !== ox.seli) return true
   return false
 })
 
 const chg = computed(() => selPrefi.value !== selPref.value || orChg.value)
+watch(chg, (v) => {
+  session.haschgOptions = v
+})
 
 const undo = () => {
   for(const r of orgRoles.value) for(const ox of r.orgs) ox.sel = ox.seli
@@ -146,15 +142,8 @@ const ok = async () => {
   await session.chgOptions(_pref, _orgRoles, toSave.value)
 }
 
-const onClose = async () => {
-  if (chg.value) 
-    dialogs.close = true
-  else await closeIt()
-}
-
 const closeIt = async () => {
   if (session.step === 1) {
-    session.selOptions = false
     await session.setStep(2)
   }
 }

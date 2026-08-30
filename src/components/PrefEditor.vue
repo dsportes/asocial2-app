@@ -30,10 +30,10 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
-import { $t /*, dkli, dhcool */ } from '../src-fw/util'
+import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 

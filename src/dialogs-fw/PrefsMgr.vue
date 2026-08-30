@@ -8,8 +8,14 @@ Events: close done
   <template #btn>
     <btn-cond icon="check" :label="$t('validate')" @ok="validate"
       :disable="!ui.editingInCourse">
-      <q-badge color="red" floating>{{ deletedCodes.size + updatedPrefs.size }}</q-badge>
+      <q-badge color="red" floating>{{ nbc }}</q-badge>
     </btn-cond>
+  </template>
+
+  <template #hdr>
+    <div class="q-pa-xs">
+      <q-checkbox dense v-model="toSave" :label="$t('HPprefssave')" />
+    </div>
   </template>
 
 <template #default>
@@ -17,34 +23,34 @@ Events: close done
     <div class="pwsm q-pa-xs">
     <div class="q-my-md text-center titre-md">{{$t('HPprefslist')}}</div>
     <scroll-area class='pwsm'><template #default>
-      <div :class="dkli(idx)" v-for="([code, obj], idx) of myPrefs" :key="code">
+      <div :class="dkli(idx)" v-for="(code, idx) of st" :key="code">
         <div :class="pSel(code) + 'row q-my-xs cursor-pointer select'"
-          @click="selPref(code, obj)">
+          @click="selPref(code)">
           <div class="col-6 font-mono q-pr-sm">{{code}}</div>
-          <div class="col-6">{{dhcool(obj.time)}}</div>
+          <div class="col-6">{{coolTime(code)}}</div>
         </div>
       </div>
     </template></scroll-area>
 
     <div v-if="selP === null" class="row justify-between items-center q-gutter-sm">
       <div class="q-my-md text-warning text-italic text-bold titre-md">{{$t('HPprefsnosel')}}</div>
-      <btn-cond icon="add" :label="$t('create')" @ok="newPref"/>
+      <btn-cond icon="add" :label="$t('HPprefscr')" @ok="newPref"/>
     </div>
     <div v-else>
       <div class="q-my-md text-bold titre-md">
-        {{$t('HPprefssel', [selP.code, dhcool(selP.time), $t('st_' + [st])])}}</div>
+        {{$t('HPprefssel', [selP, coolTime(selP), $t('HPprefsst_' + stc)])}}</div>
       <text-zoom :label="$t('HPprefraw')" :text="rawText"/>
       <div class="row q-gutter-sm">
-        <btn-cond v-if="st !== 3" icon="delete" :label="$t('delete')" @ok="delPref"/>
-        <btn-cond v-if="st > 1" icon="undo" :label="$t('undo')" @ok="undoPref"/>
-        <btn-cond v-if="st !== 3" icon="edit" :label="$t('edit')" @ok="editPref"/>
-        <btn-cond v-if="st !== 3" icon="content_copy" :label="$t('duplicate')" @ok="dupPref"/>
+        <btn-cond v-if="stc !== 3" icon="delete" :label="$t('delete')" @ok="delPref"/>
+        <btn-cond v-if="stc > 1" icon="undo" :label="$t('undo')" @ok="undoPref"/>
+        <btn-cond v-if="stc !== 3" icon="edit" :label="$t('edit')" @ok="editPref"/>
+        <btn-cond v-if="stc !== 3" icon="content_copy" :label="$t('duplicate')" @ok="dupPref"/>
         <btn-cond icon="add" :label="$t('create')" @ok="newPref"/>
       </div>
     </div>
 
-    <input-a v-if="edName !== 0" class="q-my-md full-width"
-      size="pref" prefix="HPprefcode" :initval="selP ? selP.code : ''"
+    <input-a v-if="edName" class="q-my-md full-width"
+      size="pref" prefix="HPprefcode" :initval="selP || ''"
       v-model="namep" @validate="valNamep"/>
 
   </div>
@@ -111,12 +117,19 @@ watch(model, (v) => {
 })
 
 const diag = computed(() => session.edPref ? session.edPref.diag : '' )
+const toSave = ref(true)
 
 const myPrefs: Ref<Map<string, Object>> = ref(new Map())
 const myPrefsOrig: Ref<Map<string, Object>> = ref(sf.mySafePrefs)
-const updatedPrefs = ref(new Set<string>())
-const deletedPrefs = ref(new Set<string>())
-const createdPrefs = ref(new Set<string>())
+const st = reactive({}) // 0: inchangé 1: ajouté 2: modifié 3: supprimé
+const nbc = computed(() => {
+  let n = 0
+  for(const c in st) if (st[c] !== 0) n++
+  return n
+})
+const coolTime = (code: string) : string => {
+  return st[code] === 1 ? $t('HPprefs_new') : dhcool(myPrefs.value.get(code).time)
+}
 
 watch(() => sf.mySafePrefs, () => { 
   init()
@@ -125,16 +138,14 @@ watch(() => sf.mySafePrefs, () => {
 const init = () => {
   for(const [code, obj] of session.prefs) {
     const clone = decode(encode(obj))
-    myPrefs.set(code, clone)
+    myPrefs.value.set(code, clone)
+    st[code] = 0
   }
-  deletedPrefs.value.clear()
-  updatedPrefs.value.clear()
-  createdPrefs.value.clear()
 }
 
-watch(() => [createdPrefs.value.size, deletedPrefs.value.size, updatedPrefs.value.size], () => {
-  if (createdPrefs.value.size + deletedPrefs.value.size + updatedPrefs.value.size) ui.setEditing()
-  else ui.resetEditing()
+watch(st, (v) => { 
+  for(const code in v) if (v[code]) { ui.setEditing(); return }
+  ui.resetEditing()
 })
 
 const checkClose = async () => {
@@ -147,14 +158,11 @@ const checkClose = async () => {
 }
 
 const selP = ref(null)
+const stc = computed(() => selP.value ? st[selP.value] : 0)
 
-const pSel = (code: string) => {
-  const x = !code ? '' : (selP.value === code ? 'bord2w ' : 'bord2c ')
-  const y = deletedPrefs.value.has(code) ? 'text-strike ' : ''
-  const z = updatedPrefs.value.has(code) ? 'text-warning text-bold ' : ''
-  const t = createdPrefs.value.has(code) ? 'text-italic text-warning text-bold ' : ''
-  return x + y + z + t
-}
+const styl = ['', 'text-italic text-warning text-bold', 'text-warning text-bold', 'text-strike']
+const pSel = (code: string) => 
+  (selP.value === code ? 'bord2w ' : 'bord2c ') + styl[st[code]] + ' '
 
 const selPref = (code: string) => {
   if (selP.value === code) selP.value = null
@@ -162,44 +170,24 @@ const selPref = (code: string) => {
 }
 const rawText = computed(() => !selP.value ? '???' : JSON.stringify(myPrefs.value.get(selP.value), null, '\t'))
 
-const st = computed(() => { // 0: inchangé 1: ajouté 2: modifié 3: supprimé
-  const code = selP.value
-  if (createdPrefs.value.has(code)) return 1
-  if (deletedPrefs.value.has(code)) return 3
-  if (updatedPrefs.value.has(code)) return 2
-  return 0
-})
-
-const delPref = () => {
-  if (st.value === 1) createdPrefs.value.delete(selP.value)
-  else if (st.value === 2) deletedPrefs.value.add(selP.value)
-  else if (st.value === 0) deletedPrefs.value.add(selP.value)
+const delPref = () => { // 0: inchangé 1: ajouté 2: modifié 3: supprimé
+  if (selP.value !== null) {
+    if (stc.value === 1) delete st[selP.value]
+    else st[selP.value] = 3
+  }
   selP.value = null
 }
 
 const undoPref = () => {
   const code = selP.value
-  switch (st.value) {
+  switch (st[selP.value]) {
     case 0: return // inchangé
-    case 1: { createdPrefs.value.delete(code); break }
-    case 2: { // updated
-      const x = myPrefsOrig.value.get(code)
-      updatedPrefs.value.delete(code)
-      if (x) {
-        const clone = decode(encode(x))
-        myPrefs.value.set(code, clone)
-      } else myPrefs.value.delete(code)
-      break
-    }
-    case 3: { // supprimé
-      const x = myPrefsOrig.value.get(code)
-      deletedPrefs.value.delete(code)
-      if (x) {
-        const clone = decode(encode(x))
-        myPrefs.value.set(code, clone)
-      } else myPrefs.value.delete(code)
-      break
-    }
+    case 1: delete st[selP.value]; return // ajouté
+    case 2: // modifié
+    case 3: // supprimé
+      const clone = decode(encode(myPrefsOrig.value.get(code)))
+      myPrefs.value.set(code, clone)
+      st[selP.value] = 0
   }
 }
 
@@ -207,53 +195,57 @@ const namep = ref('')
 const origName = ref()
 
 const editPref = () => {
-  const obj = myPrefs.value.get(selP.value) || { time: 0 }
-  const orig = myPrefsOrig.value.get(selP.value) || { time: 0 }
+  const obj = myPrefs.value.get(selP.value)
+  const orig = myPrefsOrig.value.get(selP.value) || null
   session.setEdPref(selP.value, obj, orig)
   dialogs.edprf = true
 }
 
+const edName = ref(false)
+
 const dupPref = () => {
+  edName.value = true
   origName.value = selP.value
   namep.value = selP.value
 }
 
 const newPref = () => {
+  edName.value = true
   origName.value = null
   namep.value = ''
 }
 
 const valNamep = async () => { // nouveau, soit vide, soit par duplication
   const n = namep.value
-  if (createdPrefs.value.has(n) || updatedPrefs.value.has(n) || deletedPrefs.value.has(n)) {
+  if (st[n] !== undefined) {
     await ui.diagDisplay($t('HPprefdup'))
     return
   }
-  const objx = myPrefs.value.get(origName.value)
-  const obj = origName.value && objx ? decode(encode(objx)) : { time: 0 }
-  const objy = myPrefsOrig.value.get(origName.value)
-  const orig = origName.value && objy ? objy : { time: 0 }
+  edName.value = false
+  const obj = origName.value ? decode(encode(myPrefs.value.get(origName.value))) : { time: 0 }
+  const orig = origName.value ? myPrefsOrig.value.get(origName.value) : { time: 0 }
   myPrefs.value.set(n, obj)
-  createdPrefs.value.add(n)
+  st[n] = 1
   session.setEdPref(n, obj, orig)
   dialogs.edprf = true
 }
 
-const edValid = () => {
+const edValid = () => { // était 0, 1 ou 2
   const edP = session.edPref
   if (edP.diag) return
-  if (edP.chg && !createdPrefs.has(edP.code))
-    updatedPrefs.value.add(edP.code)
+  if (edP.chg && st[edP.code] === 0) st[edP.code] = 1
   selP.value = edP.code
-  session.resetPref()
+  session.resetEdPref()
   dialogs.edprf = false
 }
 
 const validate = async () => {
   const m = new Map<string, Object>()
-  for(const code of updatedPrefs.value)
-    m.set(code, myPrefs.value.get(code))
-  await sf.updatePrefs(m, Array.from(deletedPrefs.value))
+  for(const code in st) {
+    const s = st[code]
+    if (s !== 3) m.set(code, myPrefs.value.get(code))
+  }
+  await session.updatePrefs(m, toSave.value)
   emit('done', true)
 }
 

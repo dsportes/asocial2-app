@@ -695,6 +695,7 @@ const useStore = (id: string) =>
     - retourne la lastSync du périmètre
     */
     const listen = async (p: $Perimeter, lastTime?: number) : Promise<any> => {
+      if (!hasNet) return 0
       let apstate = activePerims[p.id]
       if (!apstate) return -1 // le périmètre n'a pas eu de fetch
       const ls = getLastSync(apstate)

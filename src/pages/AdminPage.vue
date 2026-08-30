@@ -158,7 +158,7 @@
     </div>
   </div>
 
-  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @onClose="dialogs.edit = false"
+  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @close="dialogs.edit = false"
     :title="$t('APlistmgr')" vh="75">
     <template #hdr>
       <div class="row justify-between q-pa-xs">

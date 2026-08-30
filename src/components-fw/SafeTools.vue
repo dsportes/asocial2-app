@@ -3,14 +3,13 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 -->
 <template>
 <div>
-  <btn-cond v-if="short" class="q-mb-sm" flat color="primary"
+  <btn-cond v-if="short" class="q-mb-sm" flat
     @ok="dialogs.SafeTools = true">
     <img :src="safebox" class="q-mr-xs" width="24px"/>
     <div>{{ $t('SFTtit') }}</div>
   </btn-cond>
-  <btn-cond v-else color="primary"
-    @ok="dialogs.SafeTools = true" size="lg" padding="xs sm">
-    <img :src="safebox" class="q-mx-sm" width="36px"/>
+  <btn-cond v-else color="none" @ok="dialogs.SafeTools = true" flat >
+    <img :src="safebox" class="q-mx-sm" width="24px"/>
     <div>{{ $t('SFTtit') }}</div>
   </btn-cond>
 
@@ -125,13 +124,16 @@ tous les dialogues de gestion des "dsonnées de sécurité".
       </div>
     </q-card>
   </q-dialog>
+
+  <select-optionsdial v-if="dialogs.options" v-model="dialogs.options"/>
+
 </div>
 </template>
 
 <script setup lang="ts">
 
 // @ts-ignore
-import { reactive, computed } from 'vue'
+import { reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
@@ -141,6 +143,7 @@ import BarOpen from '../components-fw/BarOpen.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
+import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
@@ -148,6 +151,7 @@ import SafeCr from '../dialogs-fw/SafeCr.vue'
 import DevTrustings from '../dialogs-fw/DevTrustings.vue'
 import DevTrustit from '../dialogs-fw/DevTrustit.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
+import SelectOptionsdial from '../dialogs-fw/SelectOptionsdial.vue'
 
 // @ts-ignore
 import skull from '../assets/skull.png'
@@ -176,7 +180,8 @@ const dialogs = reactive({
   DevTrustit: false,
   DevUntrustit: false,
   SafeExport: false,
-  delSafe: false
+  delSafe: false,
+  options: false
 })
 
 const untrustit = async () => {
@@ -190,7 +195,6 @@ const untrustit = async () => {
     await ui.diagDisplay($t('exui', [e.label, e.message]))
     dialogs.DevUntrustit = false
   }
-  
 }
 
 const fnc = () => {

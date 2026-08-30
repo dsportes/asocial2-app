@@ -5,17 +5,22 @@
     <btn-cond class="col-auto" icon="sync" round @ok="init"/>
   </div>
   <scroll-area class="pwsm" size="sm">
-    <div v-for="([credId, c], idx) in creds" :key="c.credId"
+    <div v-if="session.hasNet" v-for="([credId, c], idx) in creds" :key="c.credId"
       :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
       @click="select(c)">
       <div class="col">{{ c.name }}</div>
       <div class="col-2">{{ c.props.trig || '' }}</div>
       <div class="col-auto font-mono">{{ credId.substring(0,5) }}</div>
     </div>
+    <div v-else v-for="(p, idx) in myPerims" :key="p.id" @click="selectp(p)"
+      :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)">
+      <div>{{ p.id }}</div>
+      <div>{{ p.docPk }}</div>
+    </div>
   </scroll-area>
 
   <div v-if="aut" class="pwsm q-my-md">
-    <div class="row q-mb-sm">
+    <div v-if="session.hasNet" class="row q-mb-sm">
       <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
       <div class="col-7 q-pl-sm ">
         <line-edit :text="cred.props.trig || $t('AUTnotrig')" @change="editTrig"/>
@@ -29,7 +34,8 @@
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <line-edit :text="aut.nomAuteur" @change="majNA"/>
+        <line-edit :text="aut.nomAuteur" @change="majNA"
+          :disable="session.planeMode"/>
       </div>
     </div>
     <div class="row">
@@ -37,10 +43,11 @@
       <div class="col-7 q-pl-sm font-mono">
         <select-enum1 svc="AS2" :org="org"
           v-model="aut.section" enum="Section" size="md"
-          @select="majSection"/>
+          @select="majSection"
+          :disable="session.planeMode"/>
       </div>
     </div>
-    <div class="row">
+    <div v-if="session.hasNet" class="row">
       <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
       <div class="col-7 row q-gutter-md q-pl-sm">
         <div v-for="cx in coauts" :key="cx.credId" @click="selCo(cx)"
@@ -78,6 +85,21 @@ const std = computed(() => getStore('AS2', org.value))
 const perimetre = ref()
 const tx = ref(0)
 
+const myPerims = computed(() => {
+  const l = []
+  for (const [so, m2] of session.perims) {
+    if (so.startsWith('AS2')) { 
+      const i = so.indexOf('/')
+      const org = so.substring(i + 1)
+      for(const [pid, p] of m2) {
+      if(p.docCl === 'Auteur') 
+        l.push({ p, org, id: p.id, docPk: p.docPk })
+      }
+    }
+  }
+  return l
+})
+
 const cred = ref(null)
 
 const aut = computed(() => 
@@ -97,7 +119,17 @@ const init = async () => {
   creds.value = await sf.myFullCreds('AS2', '', 'Auteur') }
 
 onMounted(async () => { 
-  await init()})
+  if (session.hasNet) await init()})
+
+const selectp = async (p) => {
+  org.value = p.org
+  perimetre.value = p.p 
+  watchUpdAut(perimetre.value, tx.value, (t) => {
+    console.log(`Le périmètre Auteur ${perimetre.value.docPk} a changé à ${dhcool(t)}`)
+  })
+  tx.value = await std.value.fetch([perimetre.value])
+  if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
+}
 
 const select = async (c: $Credential) => {
   cred.value = c

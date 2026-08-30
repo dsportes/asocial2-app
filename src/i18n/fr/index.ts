@@ -393,6 +393,7 @@ export default {
   UAPc_a: 'Je corrige ma saisie initiale',
   UAPt_a: 'Je renonce à ajouter un alias',
   UAPt_p: 'Je renonce à ajouter une phrase secrète',
+  UAPt_q: 'Je redonne un alias',
   UAPdup_a: 'Cet alias est déjà dans votre liste',
   UAPdup_p: 'Cet phrase est déjà dans votre liste',
   UAPdup_p1: 'Cette phrase était une des vôtres',
@@ -604,11 +605,17 @@ bla bla
   HPchgpin_2: `### Changer son code PIN / modifier mon pseudo
 bla bla
 `,
+  HPprefscr: 'Ajouter',
   HPprefs_new: '[nouvelle]',
   HPprefs_1: 'Afficher / gérer mes préférences',
   HPprefs_2: `# Afficher / gérer mes préférences
   bla bla
 `,
+  HPprefsst_0: 'inchangée',
+  HPprefsst_1: 'ajoutée',
+  HPprefsst_2: 'modifiée',
+  HPprefsst_3: 'supprimée',
+  HPprefssave: 'Sauvegarder les préférences pour les retrouver lors d\'une prochaine session',
   HPprefs_ed: 'Edition des options de préférence',
   HPprefsnosel: 'Aucune "préférence" sélectionnée.',
   HPprefssel: 'Préférence [{0}] : dernière édition {1} ({2}).',

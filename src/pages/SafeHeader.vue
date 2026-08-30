@@ -27,8 +27,12 @@
 
   <div v-if="session.step === 1"
     class="row justify-between q-ma-sm items-center">
-    <btn-cond icon="chevron_left" color="none" :label="$t('LOGback')"
+    <btn-cond icon="chevron_left" color="none" :label="$t('login')"
       @ok="step(0)"/>
+    <btn-cond :label="$t('OPTSok_1')" size="lg" padding="none xs" 
+      @ok="session.okOptions = session.okOptions + 1">
+      <q-badge v-if="session.haschgOptions" floating color="red" rounded />
+    </btn-cond>
     <safe-tools/>
   </div>
 
@@ -37,18 +41,16 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { useI18n } from 'vue-i18n'
+// import { useI18n } from 'vue-i18n'
 // @ts-ignore
-import { reactive } from 'vue'
+// import { reactive } from 'vue'
 
 import stores from '../stores/all'
-import { sty } from '../src-fw/util'
 import SettingsButton from '../components-fw/SettingsButton.vue'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnMode from '../components-fw/BtnMode.vue'
-import DemandsHdr from '../components-fw/DemandsHdr.vue'
-import ListcredsMgr from '../dialogs-fw/ListcredsMgr.vue'
+import { $t } from '../src-fw/util'
 
 import SafeTools from '../components-fw/SafeTools.vue'
 // @ts-ignore
@@ -56,17 +58,11 @@ import anonymous from '../assets/anonymous-w.svg'
 // @ts-ignore
 import flowers from '../assets/flowers.png'
 
-const $t = useI18n().t
 const sf = stores.safe
 const session = stores.session
 const ui = stores.ui
 
 const step = async (s: number) => { await session.setStep(s) }
-
-const dialogs = reactive({
-  ListcredsMgr: false,
-  NewReq: false
-})
 
 </script>
 

@@ -1,22 +1,20 @@
 // @ts-ignore
 import { ref, computed, reactive, Ref } from 'vue'
 // @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
+// import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
-import { getStore, $DCItem, $DocItem, $CollItem } from '../stores/docs'
+import { getStore } from '../stores/docs'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
-import { Registry } from '../src-fw/registry'
-import { IDBsafe } from '../src-fw/idbsafe'
-import { idb, IDB, Perims, Prefs, deleteIDB, Options, StartPlane  } from '../src-fw/idb'
+import { idb, IDB, Perims, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
 import { $Perimeter } from '../src-fw/documents'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 import { AOperation } from 'src/src-fw/operation'
-import { $Subs, $SubsGenerator, FW$Sync } from 'src/src-fw/subscription'
+import { $Subs } from 'src/src-fw/subscription'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
@@ -33,6 +31,8 @@ export const useSessionStore = defineStore('session', () => {
   const noLocal = ref(false)
   const noNet = ref(false)
   const resetdb = ref(false)
+  const okOptions = ref(1)
+  const haschgOptions = ref(false)
 
   const hasLocal = computed(() => !noLocal.value)
   const hasNet = computed(() => !noNet.value)
@@ -53,8 +53,6 @@ export const useSessionStore = defineStore('session', () => {
     return m.get(id)
   }
   const prefs: Ref<Prefs> = ref()
-  const selOptions = ref(false)
-  const newOptions = ref(null)
 
   const pref: Ref<string> = ref()
   const currentPref = computed(() => !pref.value ? null : prefs.value[pref.value])
@@ -74,7 +72,6 @@ export const useSessionStore = defineStore('session', () => {
   const doStep1 = async (sf, ui) => {
     AOperation.reset()
     resetDocStores()
-    newOptions.value = null
     if (hasLocal.value) {
       // Création si nécessaire de Cache
       new IDB()
@@ -104,7 +101,6 @@ export const useSessionStore = defineStore('session', () => {
       }
     }
     resetdb.value = false
-    selOptions.value = true
   }
 
   const doStep2 = async (sf, ui) => {
@@ -203,11 +199,15 @@ export const useSessionStore = defineStore('session', () => {
           if (resetdb.value) {
             idb.close()
             await deleteIDB()
+            new IDB()
             await idb.open()
           }
           const options = { pref: pref.value, orgRoles: orgRoles.value }
-          await idb.setupSession(options, prefs.value, perims.value)
+          await idb.storeOptions(options)
+          await idb.storePrefs(prefs.value)
+          await idb.storePerims(perims.value)
         }
+
         await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
         ui.setPage(toPage || 'app')
         step.value = 2
@@ -234,7 +234,7 @@ export const useSessionStore = defineStore('session', () => {
         const slor = opts.orgRoles.sort().join(' ')
         if (slor !== _slor || opts.pref !== _pref) {
           const options = { pref: _pref, orgRoles: _orgRoles }
-          await idb.setOptions(options)
+          await idb.storeOptions(options)
         }
       }
     }
@@ -260,6 +260,13 @@ export const useSessionStore = defineStore('session', () => {
     edPref.orig = null
     edPref.chg = false
     edPref.diag = ''
+  }
+  const updatePrefs = async (_prefs: Prefs, toSave: boolean) => {
+    prefs.value = _prefs
+    if (toSave) {
+      if (planeMode.value) await idb.storePrefs(_prefs)
+      else stores.safe.updatePrefs(_prefs)
+    }
   }
 
   // Gestion des opérations ************************************************
@@ -407,8 +414,8 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, setStep, prefs, pref, newOptions,
-    orgRoles, orgRolesP, selOptions, optionsTime,
+    step, setStep, prefs, pref, okOptions, haschgOptions, perims,
+    orgRoles, orgRolesP, optionsTime,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
@@ -418,7 +425,7 @@ export const useSessionStore = defineStore('session', () => {
 
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
-    edPref, setEdPref, resetEdPref, currentPref,
+    edPref, setEdPref, resetEdPref, updatePrefs, currentPref,
     getPerimeter, chgOptions
     // focus, getFocus, lostFocus, closingApp
   }
