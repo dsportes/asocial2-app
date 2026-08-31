@@ -32,7 +32,8 @@ export class IDBsafe {
   static async openOnlyIfExists () {
     if (!safeBox) safeBox = useSafeStore()
     if (!config) config = useConfigStore()
-    if (!IDBsafe.db && await Dexie.exists('safe')) 
+    if (IDBsafe.db) await IDBsafe.load() // reload sur fin de session
+    else if (await Dexie.exists('safe')) 
       await IDBsafe.openInAnyCase()
   }
 

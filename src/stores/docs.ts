@@ -18,7 +18,7 @@ import { useSessionStore } from '../stores/session-store'
 import { useConfigStore } from '../stores/config-store'
 
 import { keyFromB64 } from '../src-fw/b64'
-import { $Perimeter, $Def } from '../src-fw/documents'
+import { $Perimeter, $Def } from '../src-fw/subscription'
 import { $Document, Registry } from '../src-fw/registry'
 import { FW$Sync, $SubsGenerator } from 'src/src-fw/subscription'
 import { sleep } from '../src-fw/util'
@@ -54,7 +54,7 @@ export async function onPushMsg (payload: string) {
     await st.onNotif(defs, messageNotif.now)
   }
   if (messageNotif.body) {
-    if (config.K.myDebug) console.log('Show notif EXPLICITE from app')
+    // if (config.K.myDebug) console.log('Show notif EXPLICITE from app')
     const options = { body: messageNotif.body }
     // @ts-ignore
     if (messageNotif.url) options.data = { url: messageNotif.url || config.location }
@@ -67,20 +67,19 @@ export async function onPushMsg (payload: string) {
 export type IDocStore = {
   readonly svc: string
   readonly org: string
-
-  fetch (lp: $Perimeter[]) : Promise<void>
-  listen (p: $Perimeter, lastTime?: number) : Promise<number>
+  getXref (def: $Def) : Set<string> 
+  
+  fetch (lp: $Perimeter[], waiting?: boolean, force?: number) : Promise<void>
+  waitNextSync (p: $Perimeter) : Promise<void>
   forcedResync (p?: $Perimeter) : void
+  getLastSyncTime (p: $Perimeter) : number
+  getApstate (pid: string) : APState
+  removeActiveP (id: string) : void
+
+  getItem (def: $Def, create?: boolean) : $DCItem
   getDoc (cl: string, pk: string) : $Document
   getColl (cl: string, pk: string) : Set<string>
   activePerimsIds () : Set<string>
-  removeActiveP (id: string) : void
-
-  subsOK: Ref<boolean>
-  syncQueue: SyncQueue
-
-  getItem (def: $Def, create?: boolean) : $DCItem
-  getAPState (p: $Perimeter) : APState
 
   onNotif (defs: $Def[], dh: number) : Promise<void>
   storeDC (item: $DCItem, now: number, dcdata: $DCData) : Promise<void>
@@ -124,13 +123,11 @@ export abstract class $DCItem {
    0: sync ni en queue, ni posté
    1: sync en queue, 
    2: sync posté pas revenu,
+   3: posté, revenu
+   4: changement notifié, à resync
   */
   syncSt: number = 0
-
-  defp: boolean = false // true si référencé par au moins un périmètre
-
   def: $Def
-
   /* sat : service assert time. Le service affirme que le document / collection 
   avait bien cette valeur à la date-heure de l'opération sync */
   sat: number = 0 // service assertion time
@@ -143,19 +140,12 @@ export abstract class $DCItem {
 
 export class $CollItem extends $DCItem {
   pks: Set<string> = new Set() // Set des pk des documents de la collection
-
-  constructor (def: $Def) { super(def) }
-
+  constructor (def: $Def) { super(def)}
 }
 
 export class $DocItem extends $DCItem {
   doc: $Document = null // Document compilé
-  constructor (def: $Def, lat?: number, lv?: number, doc?: $Document) {
-    super(def)
-    if (lat) this.lat = lat
-    if (lv) this.lv = lv
-    this.doc = doc || null
-  }
+  constructor (def: $Def) { super(def) }
 }
 
 // Decode d'un Document sérialisé
@@ -166,7 +156,14 @@ type Row = {
 }
 
 type APState = {
-  lastSync: number
+  /* 
+    1: inscrit, pas encore abonné
+    2: actif, abonné
+    3: synchro demandée au moins une fois
+    (l'état de synchronisation effective est donné par lastSync)
+  */
+  status: number
+  lastSync: number // si non 0, dh de dernière synchro complète
   perimeter: $Perimeter
   resolves: Function[]
 }
@@ -201,16 +198,38 @@ export class SyncQueue {
     this.std = getStore(svc, org)
   }
 
-  push (items: $DCItem[]) {
-    // N'inscrit ni ceux en cours de sync, ni ceux n'étant plus référencés par un périmètre
-    for(const item of items)
-      if (item.syncSt === 0 && item.defp) this.items.push(item)
+  /* Pousse en queue de synchronisation les items de la liste, SAUF,
+    - ceux n'étant plus / pas référencés par un périmètre ACTIF (2)
+    - ceux déjà en cours de sync.
+    FORCE: resync même s'il a été posté, est revenu et qu'aucune notification
+      ne l'a concerné (cad théoriquement à jour)
+    Leur statut devient 1
+      0: sync ni en queue, ni posté
+      1: sync en queue, 
+      2: sync posté pas revenu,
+      3: posté, revenu
+      4: changement notifié, à resync
+  */
+  push (items: $DCItem[], force?: boolean) {
+    for(const item of items) {
+      if (item.syncSt === 1 || item.syncSt === 2) continue // en cours
+      if (force || item.syncSt === 0 || item.syncSt === 4) {
+        for(const pid of this.std.getXref(item.def)) {
+          const apstate = this.std.getApstate(pid)
+          if (apstate && apstate.status >= 2) {
+            this.items.push(item)
+            item.syncSt = 1 // pushed en queue, pas posté (prévient mise en q multiple)
+            break
+          }
+        }
+      }
+    }
     if (this.syncRunning || !this.items.length) return
-    this.peakItemsToRun()
     this.syncRunning = true
+    this.peakItemsToRun()
     const self = this
     setTimeout(async () => {
-      await self.syncList()
+      await self.doSyncs()
     }, 1)
   }
 
@@ -222,7 +241,6 @@ export class SyncQueue {
     while (this.items.length) {
       const item = this.items.shift()
       this.runningItems.set(item.def.definition, item)
-      item.syncSt = 1
       this.sync.addDef(item.def, item.lv)
       if (!item.def.isColl) n--
       else { if (item.lv) n--; else break }
@@ -230,7 +248,7 @@ export class SyncQueue {
     }
   }
 
-  async syncList () {
+  async doSyncs () {
     while (this.runningItems.size !== 0) {
       for(const [,item] of this.runningItems) item.syncSt = 2
       const [sat, syncs] = await this.sync.post()
@@ -238,7 +256,7 @@ export class SyncQueue {
         for(const definition in syncs) {
           const dcdata = syncs[definition] as $DCData
           const item = this.runningItems.get(definition)
-          item.syncSt = 0
+          item.syncSt = 3
           await this.std.storeDC(item, sat, dcdata)
         }
         this.std.checkResolves()
@@ -251,7 +269,6 @@ export class SyncQueue {
     }
     this.syncRunning = false
   }
-
 }
 
 /* Les DocStore sont créés en début de session pour héberger les documents
@@ -271,7 +288,6 @@ const useStore = (id: string) =>
     const syncQueue = new SyncQueue(svc, org)
 
     const subsOK: Ref<boolean>= ref(false)
-    const optionsTime = ref(0)
 
     const docs: Ref<reactive> = reactive({  })
 
@@ -282,6 +298,10 @@ const useStore = (id: string) =>
     */
     const colls = reactive({  })
 
+    const getXref = (def: $Def) : Set<string> => {
+      return session.getXref(svc, org, def)
+    }
+    
     const upd = (item: $DCItem) => {
       if (item.def.type === 1) {
         delete docs[item.def.definition]
@@ -310,6 +330,9 @@ const useStore = (id: string) =>
     const removeActiveP = (id: string) : void => {
       delete activePerims[id]
     }
+    const getApstate = (pid: string) : APState => {
+      return activePerims[pid]
+    }
     /************************************************/
 
     const getDoc = (cl: string, pk: string) : $Document => {
@@ -327,7 +350,10 @@ const useStore = (id: string) =>
       const items: $DCItem[] = []
       for(const def of defs) {
           const item = getItem(def)
-          if (item) items.push(item)
+          if (item) {
+            item.syncSt = 4
+            items.push(item)
+          }
         }
       if (items.length) syncQueue.push(items)
     }
@@ -402,7 +428,7 @@ const useStore = (id: string) =>
         if ((item.lv === v) && (sat - item.lat > MAXLATDELAY)) {
           item.lat = sat
           upd(item)
-          await idb.updLV(svc, org, item.def.definition, sat, v)
+          await idb.updLV(svc, org, item.def, sat, v)
         }
       }
     }
@@ -460,7 +486,7 @@ const useStore = (id: string) =>
             item.lat = sat
             item.lv = v
             upd(item)
-            await idb.updLV(svc, org, item.def.definition, sat, v)
+            await idb.updLV(svc, org, item.def, sat, v)
           }
         } else {
           if (!data) { // Existait, n'existe plus: enregistré comme deleted
@@ -526,7 +552,7 @@ const useStore = (id: string) =>
           if (hasLocal && (sat - item.lat > MAXLATDELAY)) {
             item.lat = sat
             upd(item)
-            await idb.updLV(svc, org, item.def.definition, sat, v)
+            await idb.updLV(svc, org, item.def, sat, v)
           }
         } else { 
           /* La collection a changé
@@ -610,64 +636,91 @@ const useStore = (id: string) =>
       }
     }
 
-    const getAPState = (p: $Perimeter) : APState => {
-      let x = activePerims[p.id]
-      if (!x) {
-        x = { lastSync: 0, resolves: [], perimeter: p }
-        activePerims[p.id] = x
+    const doSubs = async () => {
+      const lp1: $Perimeter[] = [] // périmètres à abonner
+      for(const x in activePerims) lp1.push(activePerims[x].perimeter)
+      subsOK.value = false
+      const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
+      pgen.init(svc, org).processPerimeters(lp1)
+      subsOK.value = await pgen.subs.subscribe(svc, org, false)
+      if (subsOK.value) for(const p of lp1) {
+        const aps = activePerims[p.id]
+        if (aps.status < 2) aps.status = 2
+      } else {
+        // TODO
+        console.log('subscription failed !')
       }
-      return x
     }
 
-    /* fetch : pour chaque périmètre de la liste lp: le périmètre DEVIENT actif
-      - sauf avion, abonne les périmètres (et réabonne ceux déjà actifs)
-      - sauf incognito, recharge les documents / collections depuis le Cache IDB
-      - sauf avion demande la synchronisation des defs du périmètre 
-    Faire "await listen(p)" pour "attendre" (ou non) sa première synchro complète
+    const areSubsTodo = () : boolean => {
+      for(const x in activePerims)
+        if (activePerims[x] < 2) return true
+      return false
+    }
+
+    /* fetch rend ACTIF les périmètres de la liste lp qui ne l'étaient pas ...
+    FORCE 2: a) chargement initial en syncMode, b) reprise après PAUSE de synchro
+      - rend ACTIF les périmètres de la liste lp qui ne l'étaient pas
+      - refait les souscriptions
+      - demande une (re)synchrosition des périmètres de lp (MEME S'ILS L'ETAIENT DEJA)
+    FORCE 1: a) changement des périmètres en cours de session (édition de options)
+      - rend ACTIF les périmètres de la liste lp qui ne l'étaient pas
+      - refait les souscriptions, si certaines manquaient
+      - demande une synchronisation des périmètres de lp QUI NE L'ETAIENT PAS
+    FORCE 0: demandes au fil de l'eau de l'application
+      - rend ACTIF les périmètres de la liste lp qui ne l'étaient pas
+      - refait les souscriptions, si certaines manquaient
+      - demande une synchronisation des périmètres de lp QUI NE L'ETAIENT PAS
+    SI WAITING :
+      - ne retourne que quand tous les périmètres de la liste lp
+      auront eu au moins une synchronisation complète.
+      - si tous ont déjà eu une synchro complète, retourne maintenant.
     */
-    const fetch = async (lp: $Perimeter[]) : Promise<void> => {
-      const toSub = hasNet && session.optionsTime !== optionsTime.value
+    const fetch = async (lp: $Perimeter[], waiting?: boolean, _force?: number) : Promise<void> => {
+      const force = _force || 0
+      for(const p of lp)
+        if (!activePerims[p.id]) 
+          activePerims[p.id] = { status: 0, lastSync: 0, resolves: [], perimeter: p }
 
-      const lp1: $Perimeter[] = [] // TOUS les périmètres abonnés (ou à abonner)
-      const lp2: $Perimeter[] = [] // nouveaux périmètres à synchroniser
+      if (session.planeMode) {
+        for(const p of lp) await loadFromIDB(p)
+        return
+      }
 
-      if (toSub) for(const x in activePerims) lp1.push(activePerims[x])
-
+      const lp2: $Perimeter[] = [] // périmètres à synchroniser
+      if (force  === 2 || areSubsTodo()) await doSubs()
       for(const p of lp) {
-        let ap = activePerims[p.id]
-        if (!ap) {
-          ap = { lastSync: 0, resolves: [], perimeter: p }
-          activePerims[p.id] = ap
-          for(const def of ap.perimeter.defs)
-            getItem(def, true).defp = true
-          if (toSub) lp1.push(p)
-        }
-        if (!ap.lastSync) lp2.push(p)
+        const ap = activePerims[p.id]
+        if (force === 2 || (ap.status < 3)) lp2.push(p)
       }
 
-      if (toSub) { // (Re)faire les souscriptions
-        resetDefp() // recalcul si les documents / collections sont référencés ou non
-        subsOK.value = false
-        const pgen = Registry.newD(svc, 'SubsGenerator') as $SubsGenerator
-        pgen.init(svc, org).processPerimeters(lp1)
-        subsOK.value = await pgen.subs.subscribe(svc, org, false)
-        optionsTime.value = session.optionsTime
-        if (!subsOK.value) {
-          // TODO
-          console.log('subscription failed !')
-        }
-      }
+      if (!lp2.length) return // rien à synchroniser
 
-      if (!lp2.length) return // tous déjà chargés
-
-      if (hasLocal) // pré chargement depuis Cache IDB
+      if (hasLocal) // pré chargement depuis Cache IDB (des defs jamais chargées)
         for(const p of lp2) await loadFromIDB(p)
 
-      if (hasNet && subsOK.value) { // synchroniser les nouveaux
+      if (hasNet && subsOK.value) { // synchronisation demandée
         const items = []
-        for(const p of lp2)
+        for(const p of lp2) {
+          activePerims[p.id].status = 3
           for(const def of p.defs) items.push(getItem(def))
+        }
         if (items.length) syncQueue.push(items)
+      }
+
+      if (waiting) {
+        const promises = []
+        for(const p of lp2) {
+          const apstate = activePerims[p.id]
+          if (apstate.lastSync === 0)
+            promises.push(new Promise((resolve) => { 
+              apstate.resolves.push(resolve) 
+            }))
+        }
+        if (promises.length) {
+          console.log('waiting ' + promises.length + ' promises')
+          await Promise.all(promises)
+        }
       }
     }
 
@@ -689,25 +742,6 @@ const useStore = (id: string) =>
       if (items.length) syncQueue.push(items)
     }
 
-    /* listen sur un périmètre:
-    - "attend" que le périmètre ait une lastSync postérieure à lastTime.
-    - si c'est déjà le cas, revient de suite.
-    - retourne la lastSync du périmètre
-    */
-    const listen = async (p: $Perimeter, lastTime?: number) : Promise<any> => {
-      if (!hasNet) return 0
-      let apstate = activePerims[p.id]
-      if (!apstate) return -1 // le périmètre n'a pas eu de fetch
-      const ls = getLastSync(apstate)
-      // le périmètre a-t-il déjà été rafraîchi après lastTime ?
-      if (ls > (lastTime || 0)) return ls 
-      // NON retourne une promesse qui sera satisfaite ... un jour (ou non)
-      const pr = new Promise((resolve, reject) => {
-        apstate.resolves.push(resolve)
-      })
-      return pr
-    } 
-
     /* Retourne le time de la dernière synchronisation COMPLETE
     pour le périmètre, c'est à dire le sat (service assert time)
     le plus faible de tous ses defs.
@@ -724,49 +758,58 @@ const useStore = (id: string) =>
         if (lastSync === 0) lastSync = item.sat
         else if (item.sat < lastSync) lastSync = item.sat
       }
-      apstate.lastSync = noSync ? 0 : lastSync
-      return apstate.lastSync
+      return lastSync
     }
 
     /* Retour de synchronisation:
-    - ne checke QUE les périmètres actifs (ayant fait l'objet d'un fetch)
-    - vérifie leur état de synchronisation
+    - check les périmètres actifs ayant fait l'objet 
+      d'au moins une demande de synchro
+    - resolve tous les promises en attente sur le périmètre
+      1: inscrit, pas encore abonné
+      2: actif, abonné
+      3: synchro demandée au moins une fois
+      (l'état de synchronisation effective est donné par lastSync)
     */
     const checkResolves = () => {
       for(const idp in activePerims) {
         const apstate = activePerims[idp]
-        let ls = getLastSync(apstate)
-        if (ls && apstate.resolves.length) {
-          // Si un périmètre a un item qui n'a jamais été synchronisé il ne peut pas résolu 
-          for(const resolve of apstate.resolves)
-            resolve(ls)
-          apstate.resolves = []
+        if (apstate.status === 3) {
+          const ls = getLastSync(apstate)
+          if (ls && ls > apstate.lastSync) {
+            apstate.lastSync = ls
+            if (apstate.resolves.length) {
+              for(const resolve of apstate.resolves) resolve(ls)
+              apstate.resolves = []
+            }
+          }
         }
       }
     }
 
-    /* Positionne pour chaque document / collection le flag _defp_ 
-    qui indique qu'un périmètre actif au moins le référence:
-    - quand ce n'est pas le cas, sa synchronisation peut être suspendue.
-    */
-    const resetDefp = () => {
-      for(const x in docs) docs[x].defp = false
-      for(const x in colls) colls[x].defp = false
-      for(const idp in activePerims) {
-        const ap = activePerims[idp]
-        for(const def of ap.perimeter.defs) {
-          const item = getItem(def)
-          if (item) item.defp = true
-        }
-      }
+    const getLastSyncTime = (p: $Perimeter) : number => {
+      const apstate = activePerims[p.id]
+      return apstate ? apstate.lastSync : 0
     }
+
+    /* Attente sur un périmètre:
+    - reviendra la prochaine fois qu'un périmètre aura été synchronisé
+      (en totalité)
+    - retourne la lastSync du périmètre
+    */
+    const waitNextSync = async (p: $Perimeter) : Promise<void> => {
+      if (!hasNet) return
+      let apstate = activePerims[p.id]
+      if (!apstate && apstate.status < 2) return
+      return new Promise((resolve) => { 
+        apstate.resolves.push(resolve) 
+      })
+    } 
 
     return { 
-      svc, org, subsOK, syncQueue,
+      svc, org, getXref, getApstate, subsOK,
       getItem,
-      getAPState,
       onNotif, storeDC, checkResolves,
       getDoc, getColl, activePerimsIds, removeActiveP,
-      fetch, listen, forcedResync
+      fetch, waitNextSync, forcedResync, getLastSyncTime
     } as IDocStore
   })()

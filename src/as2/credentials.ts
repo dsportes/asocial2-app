@@ -3,7 +3,8 @@ import { schemaExcAS2 } from '../as2/schema'
 import { Registry } from '../src-fw/registry'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { $Credential, $Perimeter } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
+import { $Perimeter } from '../src-fw/subscription'
 
 const ok = !schemaExcAS2()
 let n = 0

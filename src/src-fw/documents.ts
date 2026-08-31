@@ -4,8 +4,8 @@ import { Crypt } from '../src-fw/crypt'
 import { Registry, $Document, $ADocument, SOA, topCl } from '../src-fw//registry'
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
+import { $Perimeter } from '../src-fw/subscription'
 import stores from '../stores/all'
-import { getStore, IDocStore } from '../stores/docs'
 import { $t, dhcool, equ8, hasMessage } from '../src-fw/util'
 import { MDOperation, Operation, CVKeys, getSite, isAdmin } from '../src-fw/operation'
 
@@ -72,67 +72,6 @@ export type $Cred = {
   props: any
   // pubv?: Uint8Array
   // pubc?: Uint8Array
-}
-
-/* Classe immutable de définition d'un document ou d'une collection */
-export class $Def {
-  /* 1: docCl/pk : le document de classe docCl de clé pk
-    2: docCl : la collection des documents de classe docCl
-    3: docCl/colName/pk : la collection des documents de classe docCl 
-    dont la propriété colName vaut pk
-  */
-  readonly type: number
-  readonly docCl: string
-  readonly pk?: string
-  readonly colName?: string
-
-  get definition () : string {
-    return this.type === 2 ? this.docCl : 
-      (this.type === 1 ? this.docCl + '/' + this.pk : this.docCl + '/' + this.colName + '/' + this.pk)
-  }
-
-  get isColl () { return this.type !== 1 }
-  colClass (svc: string) : string{ 
-    const dd = DocDescriptor.get(svc + '$' + this.docCl)
-    return dd ? dd.colClass(this.colName) : '' 
-  }
-  
-  constructor (definition: string) {
-      const defx = definition.split('/')
-      this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
-      this.docCl = defx[0]
-      if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
-      if (this.type === 3) this.colName = defx[1]
-  }
-}
-
-/* Classe immutable de définition d'un périmètre
-id est de la forme: docCl@code/docPk OU de la forme docCl/docPk
-*/
-export class $Perimeter {
-  readonly docCl: string
-  readonly code: string
-  readonly docPk: string 
-
-  readonly role: string
-  readonly plane: boolean
-  readonly defs: $Def[]
-
-  get id () { return this.code + '/' + this.docCl + '/' + this.docPk }
-
-  constructor (code: string, docCl: string, docPk: string, role: string, plane: boolean, definitions: string[]) {
-    this.docCl = docCl; this.code = code; this.docPk = docPk
-    this.role = role; this.plane = plane || false; this.defs = []
-    for(const d of definitions) this.defs.push(new $Def(d))
-  }
-
-  toObj () {
-    const obj = { docCl: this.docCl, code: this.code, docPk: this.docPk,
-      role: this.role, plane: this.plane, defs: [] }
-    for(const def of this.defs) obj.defs.push(def.definition)
-    return obj
-  }
-
 }
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).

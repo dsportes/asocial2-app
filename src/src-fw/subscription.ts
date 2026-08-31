@@ -4,11 +4,33 @@ import { encode, decode } from '@msgpack/msgpack'
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
-import { $Perimeter, $Def, $Credential } from '../src-fw/documents'
-import { IDocStore } from'../stores/docs'
+import { $Credential } from '../src-fw/documents'
+import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $ADocument, $Document } from '../src-fw/registry'
 
 
+// Map par svc/org des périmètres identifiés par leur id
+export type $Perims = Map<string, Map<string, $Perimeter>>
+// Map par svc/org du set des périmètres dont chaque def fait partie
+export type $DefsXref = Map<string, Map<string, Set<string>>>
+
+export const buildXref = () => {
+  const session = stores.session
+  const m0: Map<string, Map<string, Set<string>>> = new Map() 
+  for(const [so, m] of session.perims) {
+    for(const [pid, p] of m) {
+      for(const def of p.defs) {
+        const id = def.definition
+        let m1 : Map<string, Set<string>> = m0.get(so)
+        if (!m1) { m1 = new Map(); m0.set(so, m1)}
+        let s: Set<string> = m1.get(id)
+        if (!s) { s = new Set(); m1.set(id, s)}
+        s.add(pid)
+      }
+    }
+  }
+  session.setDefsXref(m0)
+}
 
 /* versions d'une souscription: sur le serveur, détenue localement
 si versions[0] === versions[1] la souscription est à jour en session 
@@ -22,6 +44,67 @@ export type $SubsObj = {
   title: string
   defs: string[]
   msgs: Object
+}
+
+/* Classe immutable de définition d'un document ou d'une collection */
+export class $Def {
+  /* 1: docCl/pk : le document de classe docCl de clé pk
+    2: docCl : la collection des documents de classe docCl
+    3: docCl/colName/pk : la collection des documents de classe docCl 
+    dont la propriété colName vaut pk
+  */
+  readonly type: number
+  readonly docCl: string
+  readonly pk?: string
+  readonly colName?: string
+
+  get definition () : string {
+    return this.type === 2 ? this.docCl : 
+      (this.type === 1 ? this.docCl + '/' + this.pk : this.docCl + '/' + this.colName + '/' + this.pk)
+  }
+
+  get isColl () { return this.type !== 1 }
+  colClass (svc: string) : string{ 
+    const dd = DocDescriptor.get(svc + '$' + this.docCl)
+    return dd ? dd.colClass(this.colName) : '' 
+  }
+  
+  constructor (definition: string) {
+      const defx = definition.split('/')
+      this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
+      this.docCl = defx[0]
+      if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
+      if (this.type === 3) this.colName = defx[1]
+  }
+}
+
+/* Classe immutable de définition d'un périmètre
+id est de la forme: docCl@code/docPk OU de la forme docCl/docPk
+*/
+export class $Perimeter {
+  readonly docCl: string
+  readonly code: string
+  readonly docPk: string 
+
+  readonly role: string
+  readonly plane: boolean
+  readonly defs: $Def[]
+
+  get id () { return this.code + '/' + this.docCl + '/' + this.docPk }
+
+  constructor (code: string, docCl: string, docPk: string, role: string, plane: boolean, definitions: string[]) {
+    this.docCl = docCl; this.code = code; this.docPk = docPk
+    this.role = role; this.plane = plane || false; this.defs = []
+    for(const d of definitions) this.defs.push(new $Def(d))
+  }
+
+  toObj () {
+    const obj = { docCl: this.docCl, code: this.code, docPk: this.docPk,
+      role: this.role, plane: this.plane, defs: [] }
+    for(const def of this.defs) obj.defs.push(def.definition)
+    return obj
+  }
+
 }
 
 /* Classe immuable après construction / setDef - Souscription d'une organisation */

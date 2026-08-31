@@ -10,11 +10,10 @@ import { getStore } from '../stores/docs'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
-import { idb, IDB, Perims, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
-import { $Perimeter } from '../src-fw/documents'
+import { idb, IDB, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
+import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-fw/subscription'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 import { AOperation } from 'src/src-fw/operation'
-import { $Subs } from 'src/src-fw/subscription'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
@@ -44,7 +43,8 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   const optionsTime = ref(0)
-  const perims: Ref<Perims> = ref()
+  const perims: Ref<$Perims> = ref()
+  const defsXref: Ref<$DefsXref> = ref()
   const getPerimeter = 
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
     const m = perims.value.get(svc + '/' + org)
@@ -52,6 +52,14 @@ export const useSessionStore = defineStore('session', () => {
     const id = (code || '') + '/' + docCl + '/' + pk
     return m.get(id)
   }
+  const setDefsXref = (xref: $DefsXref) => {
+    defsXref.value = xref
+  }
+  const getXref = (svc: string, org: string, def: $Def) : Set<string> => {
+    const m = !defsXref.value ? null : defsXref.value.get(svc + '/' + org)
+    return !m ? new Set() :(m.get(def.definition) || new Set())
+  }
+
   const prefs: Ref<Prefs> = ref()
 
   const pref: Ref<string> = ref()
@@ -60,7 +68,7 @@ export const useSessionStore = defineStore('session', () => {
   const orgRoles : Ref<Set<string>> = ref() // couples org/role
   const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
 
-  const getOrgRolesP = (perims: Perims) => {
+  const getOrgRolesP = (perims: $Perims) => {
     const s: Set<string> = new Set()
     for(const [so, m] of perims) {
       const org = so.substring(so.indexOf('/') + 1)
@@ -100,6 +108,7 @@ export const useSessionStore = defineStore('session', () => {
           orgRoles.value = new Set(opts.orgRoles)
       }
     }
+    buildXref()
     resetdb.value = false
   }
 
@@ -116,7 +125,7 @@ export const useSessionStore = defineStore('session', () => {
         const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
         const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
         for(const [,p] of px) if (p.plane) p2sync.push(p)
-        await st.fetch(p2sync)
+        await st.fetch(p2sync, false, 2)
       }
     }
   }
@@ -169,7 +178,7 @@ export const useSessionStore = defineStore('session', () => {
           if (lpBeforeIds.has(x) && !lpAfterIds.has(x))
             st.removeActiveP(x)
         }
-        await st.fetch(p2sync)
+        await st.fetch(p2sync, false, 1)
       }
     }
   }
@@ -426,7 +435,7 @@ export const useSessionStore = defineStore('session', () => {
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
     edPref, setEdPref, resetEdPref, updatePrefs, currentPref,
-    getPerimeter, chgOptions
+    getPerimeter, chgOptions, getXref, setDefsXref,
     // focus, getFocus, lostFocus, closingApp
   }
 })

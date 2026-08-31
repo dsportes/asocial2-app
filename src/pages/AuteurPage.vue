@@ -64,7 +64,8 @@
 // @ts-ignore
 import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
-import { $Credential, $Cred, $Def, $Perimeter } from '../src-fw/documents'
+import { $Credential, $Cred } from '../src-fw/documents'
+import { $Perimeter } from '../src-fw/subscription'
 import { $t, sty, dhcool } from '../src-fw/util'
 import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
@@ -103,7 +104,7 @@ const myPerims = computed(() => {
 const cred = ref(null)
 
 const aut = computed(() => 
-  cred.value ? std.value.getDoc('Auteur', cred.value.docPk) : null)
+  perimetre.value ? std.value.getDoc('Auteur', perimetre.value.docPk) : null)
 
 watch(aut, (v) => { 
   console.log(v ? v.nomAuteur : 'personne') })
@@ -123,23 +124,23 @@ onMounted(async () => {
 
 const selectp = async (p) => {
   org.value = p.org
-  perimetre.value = p.p 
-  watchUpdAut(perimetre.value, tx.value, (t) => {
-    console.log(`Le périmètre Auteur ${perimetre.value.docPk} a changé à ${dhcool(t)}`)
-  })
-  tx.value = await std.value.fetch([perimetre.value])
-  if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
+  perimetre.value = p.p
+  await std.value.fetch([perimetre.value])
 }
 
 const select = async (c: $Credential) => {
   cred.value = c
   org.value = c.org
-  perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk) 
-  watchUpdAut(perimetre.value, tx.value, (t) => {
-    console.log(`Le périmètre Auteur ${c.docPk} a changé à ${dhcool(t)}`)
-  })
-  tx.value = await std.value.fetch([perimetre.value])
-  if (tx.value === 0) tx.value = await std.value.listen(perimetre.value)
+  perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk)
+
+  setTimeout(async () => {
+    while (perimetre.value) {
+      await std.value.waitNextSync(perimetre.value)
+      const t = std.value.getLastSyncTime(perimetre.value)
+      console.log(`Le périmètre Auteur ${perimetre.value.docPk} a changé à ${dhcool(t, true)}`)
+    }
+  }, 1)
+  await std.value.fetch([perimetre.value], true)
 }
 
 const editTrig = async (trig: string) => {
@@ -165,7 +166,8 @@ const majSection = async (section: string) => {
 }
 
 const watchUpdAut = (p: $Perimeter, tx: number, onchg: Function) => {
-  std.value.listen(p, tx).then(v => { tx = v; onchg(v); watchUpdAut(p, tx, onchg) })
+  if (!session.planeMode)
+    std.value.listen(p, tx).then(v => { tx = v; onchg(v); watchUpdAut(p, tx, onchg) })
 }
 
 const majAut = async (nomAuteur: string, section: string) => {
@@ -175,9 +177,9 @@ const majAut = async (nomAuteur: string, section: string) => {
   if (section) op.args.section = section
   await op.sign(cred.value)
   try {
-    console.log('majaut1 ' + tx.value)
+    console.log('majaut1')
     const res = await op.post()
-    console.log('majaut2 ' + tx.value)
+    console.log('majaut2')
     if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
   } catch (e) { 

@@ -7,7 +7,7 @@ import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { AppExc } from '../src-fw/log'
 import { sleep } from '../src-fw/util'
-import { $Perimeter } from '../src-fw/documents'
+import { $Perimeter, $Perims, $Def } from '../src-fw/subscription'
 
 /*
 La base IDB est propriété d'un couple application / utilisateue. Son nom est: app-userId
@@ -98,8 +98,6 @@ type ValidP = {
   data: Uint8Array
 }
 
-// Map par svc/org des périmètres identifiés par leur id
-export type Perims = Map<string, Map<string, $Perimeter>>
 // Map des préférences identifiées par leur code
 export type Prefs = Map<string, Object>
 export type Options = {
@@ -108,7 +106,7 @@ export type Options = {
 }
 
 export type StartPlane = { 
-  perims: Perims,
+  perims: $Perims,
   prefs: Prefs, 
   options: Options
 }
@@ -221,8 +219,8 @@ export class IDB {
     }
   }
 
-  async getPerims () : Promise<Perims>{
-    const m: Perims = new Map()
+  async getPerims () : Promise<$Perims>{
+    const m: $Perims = new Map()
     const lp = await this.db.perims.toArray()
     for(const px of lp) {
       const obj = decode(await this.decryptData(px.data))
@@ -246,7 +244,7 @@ export class IDB {
   - OBSOLETES ayant un svc/org pour lesquel il existe toujours des périmètres
   - TOUS ceux ayant un svc/org pour lesquels il y avait au moins un périmètre mais il n'y en a plus
   */
-  async storePerims (perims: Perims, gc?:boolean): Promise<void> {
+  async storePerims (perims: $Perims, gc?:boolean): Promise<void> {
     try {
       const soAfter: Set<string> = new Set()
       const soBefore: Set<string> = new Set()
@@ -353,13 +351,12 @@ export class IDB {
     }
   }
 
-  async updLV (svc: string, org: string, def: string, lat: number, v: number) {
+  async updLV (svc: string, org: string, def: $Def, lat: number, v: number) {
     try {
-      const sodef = svc + '/' + org + '/' + def
-      const r = { sodef, lat, v }
-      const n = def.split('/')
-      if (n.length === 1) await this.db.docs.upsert(r)
-      else await this.db.colls.upsert(r)
+      const sodef = svc + '/' + org + '/' + def.definition
+      const r = { lat, v }
+      if (!def.isColl) await this.db.docs.update(sodef, r)
+      else await this.db.colls.update(sodef, r)
     } catch (e) {
       throw IDB.EX(e, 'updLV')
     }
