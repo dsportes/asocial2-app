@@ -209,8 +209,8 @@ export const useSafeStore = defineStore('safe', () => {
   const icvs : Ref<Map<string, ICVS>> = ref(new Map())
 
   const resetSafeBox = () => {
+    nbLoads.value = ref(0)
     icvs.value = new Map()
-    auth.value = null
     userId.value = null
     keyK.value = null
     auth.value = null
@@ -219,6 +219,8 @@ export const useSafeStore = defineStore('safe', () => {
     mySafeCreds.value = null
     mySafeOptions.value = null
     credsToCheck.value = null
+    credsBefore.value = null
+    credsAfter.value = null
   }
 
   /**********************************************************************
@@ -233,6 +235,9 @@ export const useSafeStore = defineStore('safe', () => {
     const t = trustings.value.get(userId.value)
     return t ? t.pseudo : ''
   })
+
+  /* nombre chargement / compilation de la Safe-box */
+  const nbLoads = ref(0)
 
   /* Section "auth" */
   const auth: Ref<Auth> = ref(null)
@@ -289,6 +294,9 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
+  const credsBefore = ref(null)
+  const credsAfter = ref(null)
+
   /* "Compilation" d'un objet Safe retour des opérations sur Safe
   Stocke en mémoire le dernier état du Safe revenu du serveur:
     - auth, devices, creds, prefs, profiles, invits
@@ -297,6 +305,8 @@ export const useSafeStore = defineStore('safe', () => {
     - soit a été décryptée au retour des opérations AP $openSafeByPin
   */
   const compileSafe = async (safe: Safe) => {
+    nbLoads.value++
+
     const privD = keyToB64(await Crypt.decrypt(keyK.value, keyFromB64(safe.auth.D)))
     const privS = keyToB64(await Crypt.decrypt(keyK.value, keyFromB64(safe.auth.S)))
     auth.value = {
@@ -317,13 +327,15 @@ export const useSafeStore = defineStore('safe', () => {
     } as Auth
 
     await loadDevices(safe) // devices
-    await loadCreds(safe) // creds
+    const chg = await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
     await loadOptions(safe) // option
     if (credsToCheck.value.length)
       await checkCreds()
     if (safe.auth.future !== null)
       await resetAliases(safe)
+    if (chg && nbLoads.value !== 1)
+      stores.session.credsChange()
   }
 
   /* Réalignement des alias actual / future sur la valeur détenue dans Master Directory.
@@ -512,7 +524,7 @@ export const useSafeStore = defineStore('safe', () => {
     - s'il n'existe pas elle invoque `AutoRevokeCreds`.
 
   ***********************************************************************************/
-  const loadCreds = async (safe: Safe) : Promise<void> => {
+  const loadCreds = async (safe: Safe) : Promise<boolean> => {
     const m = new Map<string, $Credential>()
     const msvc = stores.config.K.SERVICES
     const orgs = new Set<string>([])
@@ -532,9 +544,17 @@ export const useSafeStore = defineStore('safe', () => {
       } catch (e) {
         console.log(e)
       }
+    let chg = false
+    if (nbLoads.value > 1) {
+      const before = mySafeCreds.value ? new Set(mySafeCreds.value.keys()) : new Set()
+      const after = new Set(m.keys())
+      for(const x of after) if (!before.has(x)) { chg = true; break}
+      if (!chg) for(const x of before) if (!after.has(x)) { noteq = true; break}
+    }
     mySafeCreds.value = m
     credsToCheck.value = ctc
     stores.session.setOrgs(orgs)
+    return chg
   }
 
   /* Retourne une map des credentials de l'utilisateur

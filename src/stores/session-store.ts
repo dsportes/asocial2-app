@@ -42,7 +42,6 @@ export const useSessionStore = defineStore('session', () => {
     noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
   )
 
-  const optionsTime = ref(0)
   const perims: Ref<$Perims> = ref()
   const defsXref: Ref<$DefsXref> = ref()
   const getPerimeter = 
@@ -86,7 +85,6 @@ export const useSessionStore = defineStore('session', () => {
       const mt = sf.myTrusting
       if (mt) await mt.addAppsDb()
     }
-    optionsTime.value = Date.now()
     if (planeMode.value) {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
@@ -130,10 +128,87 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  const setStep = async (s: number, toPage?: string) => { 
+    const ui = stores.ui
+    const sf = stores.safe
+    const b = step.value
+    switch (s) {
+      case 0 : {
+        AOperation.reset()
+        ui.resetLoginPage()
+        sf.resetSafeBox()
+        if (b > 1) resetDocStores()
+        step.value = 0
+        return
+      }
+
+      case 1 : // authentification faite
+        await doStep1(sf, ui) // préparation pour permettre le choix des options
+        if (!toPage) { step.value = 1; return }
+        /* Sinon les options sont celles par défaut (sans choix)
+        et on lance la session immédiatement sur la page souhaitée */
+
+      case 2 : // ouverture effective de la session après les choix faits
+        if (syncMode.value) {
+          if (resetdb.value) {
+            idb.close()
+            await deleteIDB()
+            new IDB()
+            await idb.open()
+          }
+          const options = { pref: pref.value, orgRoles: orgRoles.value }
+          await idb.storeOptions(options)
+          await idb.storePrefs(prefs.value)
+          await idb.storePerims(perims.value)
+        }
+
+        await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
+        ui.setPage(toPage || 'app')
+        step.value = 2
+    }
+  }
+
+  const credsChange = () => {
+    if (sessionId.step >= 1) 
+      setTimeout(async () => { await onCredsOptionsChange() }, 1)
+  }
+
+  const chgOptions = async (_pref: string , _orgRoles: string[], toSave: boolean) => {
+    pref.value = _pref
+    orgRoles.value = _orgRoles
+
+    if (toSave) {
+      const _slor = _orgRoles.sort().join(' ')
+      if (hasNet.value) {
+        const sf = stores.safeStore
+        const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
+        const slor = opts.orgRoles.sort().join(' ')
+        if (slor !== _slor || opts.pref !== _pref) {
+          const options = { pref: _pref, orgRoles: _orgRoles }
+          await sf.setOptions(options)
+        }
+      } else if (planeMode.value) {
+        const opts = await idb.getOptions() || { pref: '', orgRoles: []}
+        const slor = opts.orgRoles.sort().join(' ')
+        if (slor !== _slor || opts.pref !== _pref) {
+          const options = { pref: _pref, orgRoles: _orgRoles }
+          await idb.storeOptions(options)
+        }
+      }
+    }
+
+    if (step.value === 1) { 
+      await setStep(2)
+    } else {
+      setTimeout(async () => { await onCredsOptionsChange() }, 1)
+    }
+  }
+
   const onCredsOptionsChange = async () => {
     const sf = stores.safe
     const svcOrgsBefore: Set<string> = new Set(perims.value.keys())
     perims.value = sf.getPerimeters()
+    buildXref()
     orgRolesP.value = getOrgRolesP(perims.value)
     const svcOrgs: Set<string> = new Set(perims.keys())
 
@@ -180,78 +255,6 @@ export const useSessionStore = defineStore('session', () => {
         }
         await st.fetch(p2sync, false, 1)
       }
-    }
-  }
-
-  const setStep = async (s: number, toPage?: string) => { 
-    const ui = stores.ui
-    const sf = stores.safe
-    const b = step.value
-    switch (s) {
-      case 0 : {
-        AOperation.reset()
-        ui.resetLoginPage()
-        sf.resetSafeBox()
-        if (b > 1) resetDocStores()
-        step.value = 0
-        return
-      }
-
-      case 1 : // authentification faite
-        await doStep1(sf, ui) // préparation pour permettre le choix des options
-        if (!toPage) { step.value = 1; return }
-        /* Sinon les options sont celles par défaut (sans choix)
-        et on lance la session immédiatement sur la page souhaitée */
-
-      case 2 : // ouverture effective de la session après les choix faits
-        if (syncMode.value) {
-          if (resetdb.value) {
-            idb.close()
-            await deleteIDB()
-            new IDB()
-            await idb.open()
-          }
-          const options = { pref: pref.value, orgRoles: orgRoles.value }
-          await idb.storeOptions(options)
-          await idb.storePrefs(prefs.value)
-          await idb.storePerims(perims.value)
-        }
-
-        await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
-        ui.setPage(toPage || 'app')
-        step.value = 2
-    }
-  }
-
-  const chgOptions = async (_pref: string , _orgRoles: string[], toSave: boolean) => {
-    pref.value = _pref
-    orgRoles.value = _orgRoles
-    optionsTime.value = Date.now()
-
-    if (toSave) {
-      const _slor = _orgRoles.sort().join(' ')
-      if (hasNet.value) {
-        const sf = stores.safeStore
-        const opts = sf.mySafeOptions || { pref: '', orgRoles: []}
-        const slor = opts.orgRoles.sort().join(' ')
-        if (slor !== _slor || opts.pref !== _pref) {
-          const options = { pref: _pref, orgRoles: _orgRoles }
-          await sf.setOptions(options)
-        }
-      } else if (planeMode.value) {
-        const opts = await idb.getOptions() || { pref: '', orgRoles: []}
-        const slor = opts.orgRoles.sort().join(' ')
-        if (slor !== _slor || opts.pref !== _pref) {
-          const options = { pref: _pref, orgRoles: _orgRoles }
-          await idb.storeOptions(options)
-        }
-      }
-    }
-
-    if (step.value === 1) { 
-      await setStep(2)
-    } else {
-      setTimeout(async () => { await onCredsOptionsChange() }, 1)
     }
   }
 
@@ -424,7 +427,7 @@ export const useSessionStore = defineStore('session', () => {
 
   return {
     step, setStep, prefs, pref, okOptions, haschgOptions, perims,
-    orgRoles, orgRolesP, optionsTime,
+    orgRoles, orgRolesP,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
@@ -435,7 +438,7 @@ export const useSessionStore = defineStore('session', () => {
     orgs, setOrgs, setOrg, addOrg, currentOrg,
     currentSvc, setSvc,
     edPref, setEdPref, resetEdPref, updatePrefs, currentPref,
-    getPerimeter, chgOptions, getXref, setDefsXref,
+    getPerimeter, chgOptions, getXref, setDefsXref, credsChange
     // focus, getFocus, lostFocus, closingApp
   }
 })
