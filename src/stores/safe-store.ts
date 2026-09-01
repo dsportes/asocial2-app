@@ -546,10 +546,10 @@ export const useSafeStore = defineStore('safe', () => {
       }
     let chg = false
     if (nbLoads.value > 1) {
-      const before = mySafeCreds.value ? new Set(mySafeCreds.value.keys()) : new Set()
-      const after = new Set(m.keys())
+      const before: Set<string> = mySafeCreds.value ? new Set(mySafeCreds.value.keys()) : new Set()
+      const after: Set<string> = new Set(m.keys())
       for(const x of after) if (!before.has(x)) { chg = true; break}
-      if (!chg) for(const x of before) if (!after.has(x)) { noteq = true; break}
+      if (!chg) for(const x of before) if (!after.has(x)) { chg = true; break}
     }
     mySafeCreds.value = m
     credsToCheck.value = ctc
