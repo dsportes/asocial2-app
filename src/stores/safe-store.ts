@@ -17,7 +17,9 @@ import { Crypt } from '../src-fw/crypt'
 import { IDBsafe, Trusting } from '../src-fw/idbsafe'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { Registry, SOA } from '../src-fw/registry'
-import { $Credential, $Perimeter } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
+import { $Perimeter } from '../src-fw/subscription'
+import { GetCredProps, AutoRevokeCred } from '../src-fw/operations'
 
 /*
 ### Safes stockés dans un directory
@@ -318,6 +320,8 @@ export const useSafeStore = defineStore('safe', () => {
     await loadCreds(safe) // creds
     await loadPrefs(safe) // prefs
     await loadOptions(safe) // option
+    if (credsToCheck.value.length)
+      await checkCreds()
     if (safe.auth.future !== null)
       await resetAliases(safe)
   }
@@ -363,6 +367,27 @@ export const useSafeStore = defineStore('safe', () => {
     if (a.a1K) a.a1K = await dcX(keyFromB64(a.a1K))
     if (a.a2K) a.a2K = await dcX(keyFromB64(a.a2K))
     return a
+  }
+
+  const checkCreds = async () => {
+    for(const credId of credsToCheck.value) {
+      const cred = mySafeCreds.value.get(credId)
+      if (!cred) continue
+      const op = new GetCredProps(cred.svc, cred.org)
+      if (await op.run(cred)) {
+        const signId = keyToB64(await Crypt.sign(keyFromB64(auth.value.S), encoder.encode(credId)))
+        const op2 = new SafeOperation('$FixOneCred', mySafeStore.value)
+        op2.setArgs({ userId: userId.value, credId, signId })
+        try {
+          await op2.post()
+        } catch (e) {
+          await op.ko(e)
+        }
+      } else {
+        const op3 = new AutoRevokeCred(cred.svc, cred.org)
+        await op.run(cred)
+      }
+    }
   }
 
   /* Devices de confiance *****************************************************************
@@ -479,6 +504,13 @@ export const useSafeStore = defineStore('safe', () => {
     - nameK : name correspondant au docPk du credential, crypté par K en base 64
     - credK : contenu du credential  { svc, org, docCl, docPk, privs privd } crypté par K en base 64
     - toCheck : si true, credential _indécis_ (existence réelle à vérifier).
+
+    Lorsqu'une session de l'utilisateur se lance ou rafraîchit sa _Safe Box_ 
+    en mémoire, elle peut lire des credentials `toCheck`. 
+    Pour chacun elle lit le document correspondant,
+    - s'il existe elle invoque `FixOneCred`, l'indécision est levée,
+    - s'il n'existe pas elle invoque `AutoRevokeCreds`.
+
   ***********************************************************************************/
   const loadCreds = async (safe: Safe) : Promise<void> => {
     const m = new Map<string, $Credential>()

@@ -1320,6 +1320,7 @@ bla bla
 
   AUTcol_id: 'Identifiant',
   AUTcol_na: 'Nom d\'auteur',
+  AUTcol_np: 'Nom du périmètre / credential',
   AUTcol_sec: 'Section',
   AUTcol_trig: 'Votre trigramme de "co-auteur"',
   AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',

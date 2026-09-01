@@ -8,7 +8,6 @@ import { $Credential } from '../src-fw/documents'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $ADocument, $Document } from '../src-fw/registry'
 
-
 // Map par svc/org des périmètres identifiés par leur id
 export type $Perims = Map<string, Map<string, $Perimeter>>
 // Map par svc/org du set des périmètres dont chaque def fait partie
@@ -82,25 +81,43 @@ export class $Def {
 id est de la forme: docCl@code/docPk OU de la forme docCl/docPk
 */
 export class $Perimeter {
+  readonly svc: string
+  readonly org: string
+
   readonly docCl: string
   readonly code: string
   readonly docPk: string 
 
   readonly role: string
   readonly plane: boolean
+  readonly _name: string
   readonly defs: $Def[]
 
   get id () { return this.code + '/' + this.docCl + '/' + this.docPk }
 
-  constructor (code: string, docCl: string, docPk: string, role: string, plane: boolean, definitions: string[]) {
+  credential () { 
+    const session = stores.session
+    if (session.planeMode) return null
+    const sf = stores.safe
+    return sf.myCredOfDoc(this.svc, this.org, this.docCl, this.docPk)
+  }
+
+  get name () { 
+    const c = this.credential()
+    return c ? c.name : this._name }
+
+  constructor (svc: string, org: string, code: string, docCl: string, docPk: string, 
+    role: string, plane: boolean, definitions: string[], name: string) {
+    this.svc = svc; this.org = org
     this.docCl = docCl; this.code = code; this.docPk = docPk
     this.role = role; this.plane = plane || false; this.defs = []
+    this._name = name
     for(const d of definitions) this.defs.push(new $Def(d))
   }
 
   toObj () {
     const obj = { docCl: this.docCl, code: this.code, docPk: this.docPk,
-      role: this.role, plane: this.plane, defs: [] }
+      role: this.role, plane: this.plane, name: this._name || '?', defs: [] }
     for(const def of this.defs) obj.defs.push(def.definition)
     return obj
   }

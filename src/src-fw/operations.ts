@@ -1,10 +1,5 @@
-// @ts-ignore
-import { decode } from '@msgpack/msgpack'
 
 import { Operation, ADMIN$Status } from '../src-fw/operation'
-
-// import stores from '../stores/all'
-// import { subsToSync } from '../stores/data-store'
 
 import { $Credential, $Cred } from '../src-fw/documents'
 
@@ -86,7 +81,7 @@ export class UpdateCredential extends Operation {
 }
 
 export class AutoRevokeCred extends Operation {
-  constructor (SVC: string, org: string) { super('AutoRevokeCred', SVC, org) }
+  constructor (svc: string, org: string) { super('AutoRevokeCred', svc, org) }
 
   async run (c: $Credential) : Promise<boolean> {
     try {
@@ -103,7 +98,7 @@ export class AutoRevokeCred extends Operation {
 
 /* Met à jour un $Credential avec les données [v, more] de son document en DB */
 export class GetCredProps extends Operation {
-  constructor (SVC: string, org: string) { super('GetCredProps', SVC, org) }
+  constructor (svc: string, org: string) { super('GetCredProps', svc, org) }
 
   async run (c: $Credential ) : Promise<boolean> {
     try {

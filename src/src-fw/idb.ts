@@ -223,12 +223,11 @@ export class IDB {
     const m: $Perims = new Map()
     const lp = await this.db.perims.toArray()
     for(const px of lp) {
+      const pk = px.pk
+      const y = pk.split('/')
+      const svc = y[0]; const org = y[1]; const so = svc + '/' + org
       const obj = decode(await this.decryptData(px.data))
-      const p = new $Perimeter(obj.code, obj.docCl, obj.docPk, obj.role, obj.plane, obj.defs)
-      const soid = px.pk
-      let i = soid.indexOf('/')
-      i = soid.indexOf('/', i + 1)
-      const so = soid.substring(0, i)
+      const p = new $Perimeter(svc, org, obj.code, obj.docCl, obj.docPk, obj.role, obj.plane, obj.defs, obj.name || '?')
       let m2: Map<string, $Perimeter> = m.get(so)
       if (!m2) { m2 = new Map(); m.set(so, m2) }
       m2.set(p.id, p)

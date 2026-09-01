@@ -1,5 +1,14 @@
 Options d'une session
 
-Éditeur de préférences à réviser
+Ajout / suppression de credential -> périmètres
+
+Vue analytique des périmètres
+
+Bulle d'état de synchronisation ...
 
 Vue des users locaux: suppressions ...
+
+Tests collections
+
+Fichiers attachés : gestion en Cache
+

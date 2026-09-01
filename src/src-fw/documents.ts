@@ -145,8 +145,6 @@ export class $Credential {
       await stores.ui.diagDisplay($t('CRRlimit', [dhcool(this.limit * 60000)]))
   }
 
-  to
-
 }
 
 export class $MDEvent {

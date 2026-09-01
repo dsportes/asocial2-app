@@ -5,17 +5,21 @@
     <btn-cond class="col-auto" icon="sync" round @ok="init"/>
   </div>
   <scroll-area class="pwsm" size="sm">
-    <div v-if="session.hasNet" v-for="([credId, c], idx) in creds" :key="c.credId"
+    <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
       :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
       @click="select(c)">
+      <div class="col-2">{{ c.org }}</div>
       <div class="col">{{ c.name }}</div>
       <div class="col-2">{{ c.props.trig || '' }}</div>
-      <div class="col-auto font-mono">{{ credId.substring(0,5) }}</div>
+      <div class="col-auto font-mono">{{ c.docPk.substring(0,5) }}</div>
     </div>
-    <div v-else v-for="(p, idx) in myPerims" :key="p.id" @click="selectp(p)"
-      :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)">
-      <div>{{ p.id }}</div>
-      <div>{{ p.docPk }}</div>
+    <div v-else v-for="(p, idx) in myPerims" :key="p.id"
+      :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
+      @click="selectp(p)">
+      <div class="col-2">{{ p.org }}</div>
+      <div class="col">{{ p.name }}</div>
+      <div class="col-2">{{ p.code }}</div>
+      <div class="col-auto font-mono">{{ p.docPk.substring(0,5) }}</div>
     </div>
   </scroll-area>
 
@@ -30,6 +34,10 @@
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_id') }}</div>
       <div class="col-7 q-pl-sm font-mono">{{ aut.autid }}</div>
+    </div>
+    <div class="row">
+      <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
+      <div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div>
     </div>
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
@@ -81,26 +89,10 @@ const session = stores.session
 const sf = stores.safe
 
 const creds: Ref<Map<string, $Credential>> = ref()
+const myPerims: Ref<$Perimeter[]> = ref()
 const org = ref()
 const std = computed(() => getStore('AS2', org.value))
 const perimetre = ref()
-const tx = ref(0)
-
-const myPerims = computed(() => {
-  const l = []
-  for (const [so, m2] of session.perims) {
-    if (so.startsWith('AS2')) { 
-      const i = so.indexOf('/')
-      const org = so.substring(i + 1)
-      for(const [pid, p] of m2) {
-      if(p.docCl === 'Auteur') 
-        l.push({ p, org, id: p.id, docPk: p.docPk })
-      }
-    }
-  }
-  return l
-})
-
 const cred = ref(null)
 
 const aut = computed(() => 
@@ -117,14 +109,23 @@ const coauts: Ref<$Cred[]> = computed(() => {
 })
 
 const init = async () => { 
-  creds.value = await sf.myFullCreds('AS2', '', 'Auteur') }
+  if (session.hasNet)
+    creds.value = await sf.myFullCreds('AS2', '', 'Auteur') 
+  else {
+    const l = []
+    for (const [so, m2] of session.perims)
+      if (so.startsWith('AS2'))
+        for(const [, p] of m2) 
+          if(p.docCl === 'Auteur') l.push(p)
+    myPerims.value = l
+  }
+}
 
-onMounted(async () => { 
-  if (session.hasNet) await init()})
+onMounted(async () => { await init()})
 
 const selectp = async (p) => {
   org.value = p.org
-  perimetre.value = p.p
+  perimetre.value = p
   await std.value.fetch([perimetre.value])
 }
 
@@ -157,17 +158,11 @@ const editTrig = async (trig: string) => {
 
 const majNA = async (nomAuteur: string) => {
   await majAut(nomAuteur, null)
-  if (await sf.updateCredName(cred.value.credId, nomAuteur))
-    cred.value.name = nomAuteur
+  // if (await sf.updateCredName(cred.value.credId, nomAuteur)) cred.value.name = nomAuteur
 }
 
 const majSection = async (section: string) => {
   await majAut(null, section)
-}
-
-const watchUpdAut = (p: $Perimeter, tx: number, onchg: Function) => {
-  if (!session.planeMode)
-    std.value.listen(p, tx).then(v => { tx = v; onchg(v); watchUpdAut(p, tx, onchg) })
 }
 
 const majAut = async (nomAuteur: string, section: string) => {
