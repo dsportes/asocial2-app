@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed, reactive, Ref } from 'vue'
+import { ref, computed, reactive, Ref, watch } from 'vue'
 // @ts-ignore
 // import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
@@ -32,6 +32,7 @@ export const useSessionStore = defineStore('session', () => {
   const resetdb = ref(false)
   const okOptions = ref(1)
   const haschgOptions = ref(false)
+  const syncOK = ref(true)
 
   const hasLocal = computed(() => !noLocal.value)
   const hasNet = computed(() => !noNet.value)
@@ -392,10 +393,14 @@ export const useSessionStore = defineStore('session', () => {
       permDialog.value = false
       permChange.value = false
     } else {
-      permDialog.value = true
+      if (hasNet.value) permDialog.value = true
       permChange.value = true
     }
   }
+
+  watch(noNet, (v) => {
+    if (!v) changePerm(permState.value)
+  })
 
   function askForPerm (p: string) {
     permState.value = p
@@ -426,7 +431,7 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, setStep, prefs, pref, okOptions, haschgOptions, perims,
+    step, syncOK, setStep, prefs, pref, okOptions, haschgOptions, perims,
     orgRoles, orgRolesP,
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,

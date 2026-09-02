@@ -356,10 +356,13 @@ export default {
   THbtwtc: 'btwtc: texte d\'un bouton warning',
   THmdtitre: 'mdtitre: texte des titres dans MD',
 
-  PEtit: 'Le navigateur bloque les "notifications',
-  PEinfo: 'L\'application ne peut pas fonctionner correctement si les notifications sont bloquées.',
-  PEopt1: 'Vous devez modifier VOUS-MEME les autorisations du navigateur pour cette application (dans la barre d\'adresse).',
-  PEopt2: 'Demander au navigateur d\'autoriser les notifications',
+  PEtit: 'Le navigateur bloque les "notifications"',
+  PEinfo: 'Quand elle n\'est pas en mode AVION, l\'application ne peut pas fonctionner correctement si les notifications ne sont pas autorisées par le navigateur.',
+  PEopt1: 'Vous devez modifier VOUS-MEME l\'autorisation du navigateur à traiter les notifications pour cette application.',
+  PEopt2: 'Il y a un bouton pour faire ça dans la BARRE D\'ADRESSE.',
+  PEsyncok: 'A priori la synchronisation des données fonctionne bien.',
+  PEsyncko: 'La synchronisation des données a été interrompue sur incident technique',
+  
 
   /* UAP : SafeCr */
   UAPtit_u: 'Création de votre Safe Box',
@@ -1112,6 +1115,9 @@ bla bla
   110: FW : Exception technique DB / réseau : configuration suspectée
   111: APP : Exception technique DB / réseau : configuration suspectée
   */
+  EX_site: 'Site:',
+  EX_svc: 'Service cloud:',
+  EX_org: 'Organisation:',
   EX_sync: 'Incident technique ayant bloqué la synchronisation des données avec le service cloud [{0}]. Essayer de continuer.',
   EX_isApp: 'Erreur détectée par l\'application s\'exécutant sur ce terminal.',
   EX_isSvc: 'Erreur détectée par un service "cloud" et remontée à l\'application s\'exécutant sur ce terminal.',

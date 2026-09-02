@@ -1,5 +1,7 @@
 <!-- Boîte d'affichage des permissions du browser -->
 <template>
+<!-- Contrôle de l'autorisation des notifications-->
+<q-dialog v-model="session.permDialog" persistent>
 <q-card :class="sty('sm')">
   <q-toolbar class="tbp">
     <q-toolbar-title>{{$t('PEtit')}}</q-toolbar-title>
@@ -28,6 +30,7 @@
 
   </div>
 </q-card>
+</q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -35,8 +38,8 @@
 import { computed } from 'vue'
 import stores from '../stores/all'
 import { sty, coolBye, reloadPage } from '../src-fw/util'
-import HelpButton from './HelpButton.vue'
-import BtnCond from './BtnCond.vue'
+import HelpButton from '../components-fw/HelpButton.vue'
+import BtnCond from '../components-fw/BtnCond.vue'
 
 const session = stores.session
 

@@ -221,8 +221,8 @@ export class AOperation {
     this.opName = opName
   }
 
-  async ko (e: any, svc?: string) {
-    if (this.background) { e.background = true; e.svc = svc }
+  async ko (e: any) {
+    e.op = this
     await stores.ui.displayExc(e)
   }
 

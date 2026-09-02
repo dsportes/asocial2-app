@@ -1,8 +1,8 @@
 <template>
   <q-btn flat class="q-mr-xs" padding="none" 
-    :color="session.step > 0 ? 'green-5' : 'grey-5'"
+    :color="color"
     :icon="icons[mode]">
-    <q-menu>
+    <q-menu class="q-pa-sm">
       <div class="titre-md text-italic q-pa-xs">{{ $t('LOGmode_' + mode) }}</div>
       <div v-if="sf.userId">
         <div v-if="session.hasLocal" class="q-pa-xs">
@@ -14,6 +14,19 @@
           <span class="q-ml-sm font-mono">{{ sf.userId }}</span>
         </div>
       </div>
+
+    <div v-if="session.hasNet">
+      <div v-if="session.permState !== 'granted'" class="q-pa-xs msg">{{ $t('PEinfo') }}</div>
+      <div v-else>
+        <div v-if="session.step > 1">
+          <div v-if="session.syncOK" class="q-my-xs text-italic"> {{  $t('PEsyncok') }}</div>
+          <div v-else>
+            <div class="q-pa-xs msg"> {{  $t('PEsyncko') }}</div> 
+
+          </div>
+        </div>
+      </div>
+    </div>
     </q-menu>
   </q-btn>
 </template>
@@ -29,6 +42,10 @@ const icons = ['', 'cloud_sync', 'cloud', 'flight', 'calculate']
 const sf = stores.safe
 const session = stores.session
 const mode = computed(() => session.loginMode )
+
+const color = computed(() => session.hasNet && session.permState !== 'granted' ? 'negative' :
+   (session.step > 0 ? 'green-5' : 'grey-5'))
+
 </script>
 
 <style lang="scss" scoped>

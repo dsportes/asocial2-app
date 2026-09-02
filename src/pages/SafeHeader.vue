@@ -2,10 +2,7 @@
 <div class="column full-width">
   <q-toolbar class="full-width tbp">
     <btn-mode/>
-    <btn-cond label="WP" disable :color="session.wpReady ? 'green' : 'red'">
-      <q-tooltip>{{session.sessionInfo}}</q-tooltip>
-    </btn-cond>
-    <q-toolbar-title class="titre-md q-mx-md">
+    <q-toolbar-title class="titre-md text-center q-mx-sm">
       {{sf.step === 3 ? $t('SFHreq') : $t('app_label')}}
     </q-toolbar-title>
     <settings-button class="q-ml-sm"/>

@@ -126,11 +126,6 @@
     </q-card>
   </q-dialog>
 
-  <!-- Contrôle de l'autorisation des notifications-->
-  <q-dialog v-model="session.permDialog" persistent>
-    <permission-box/>
-  </q-dialog>
-
   <!-- Information / option d'installation d'une nouvelle version -->
   <q-dialog v-model="session.newVersionDialog" persistent>
     <q-card :class="sty('sm')">
@@ -403,7 +398,6 @@ import { keyToB64 } from '../src-fw/b64'
 import { AOperation } from '../src-fw/operation'
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import PermissionBox from '../components-fw/PermissionBox.vue'
 import InputB from '../components-fw/InputB.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 import StatusSite from '../components-fw/StatusSite.vue'

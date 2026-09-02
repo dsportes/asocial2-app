@@ -3,12 +3,9 @@
   <q-toolbar class="full-width tbp">
     <btn-menu/>
     <btn-mode/>
-    <btn-cond label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
-      <q-tooltip>{{session.sessionInfo}}</q-tooltip>
-    </btn-cond>
 
     <btn-bubble class="q-ml-md" :text="$t('PAGEdemands_bub')"/>
-    <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEdemands_label')}}</q-toolbar-title>
+    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('PAGEdemands_label')}}</q-toolbar-title>
 
     <settings-button class="q-ml-sm"/>
     <div style="color:transparent;width:3px">*<q-tooltip>DemandsPage</q-tooltip></div>

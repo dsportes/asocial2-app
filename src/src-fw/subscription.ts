@@ -316,7 +316,7 @@ export class FW$Sync {
       const res = await this.op.post()
       return [res.now, res.syncs]
     } catch (e) {
-      await this.op.ko(e, this.svc)
+      await this.op.ko(e)
       return [0, null]
     }
   }

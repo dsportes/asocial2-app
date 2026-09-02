@@ -9,11 +9,8 @@
     <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
       <btn-menu/>
       <btn-mode/>
-      <btn-cond v-if="session.hasNet" label="WP" class="q-ml-xs" :color="session.wpReady ? 'green' : 'red'" disable>
-        <q-tooltip>{{session.sessionInfo}}</q-tooltip>
-      </btn-cond>
       
-      <q-toolbar-title v-if="ui.page" class="titre-md q-mx-md">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
+      <q-toolbar-title v-if="ui.page" class="titre-md text-center q-mx-sm">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
       <settings-button class="q-ml-sm"/>
       <help-button class="" page="DOCpg"/>
       <div style="color:transparent;width:3px">*<q-tooltip>{{ ui.page }}</q-tooltip></div>
@@ -76,6 +73,7 @@
     </transition>
   </q-page-container>
 
+  <permission-box v-if="session.permDialog"/>
   <got-it/>
   <confirm-quit/>
   <confirm-close/>
@@ -87,8 +85,6 @@
 </template>
 
 <script setup lang="ts">
-// import P1 from './tests/P1.vue'
-// import P2 from './tests/P2.vue'
 
 // @ts-ignore
 import { watchEffect, onMounted } from 'vue'
@@ -99,12 +95,13 @@ import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
 
-import { set$t, sty, sleep } from './src-fw/util'
+import { set$t, sty } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
 import BtnMenu from './components-fw/BtnMenu.vue'
 import BtnMode from './components-fw/BtnMode.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 import SafeHome from './pages/SafeHome.vue'
+import PermissionBox from './dialogs-fw/PermissionBox.vue'
 
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
@@ -137,8 +134,6 @@ import { AS2nbForms } from './as2/forms'
 import { AS2nbCreds } from './as2/credentials'
 import { FWnbDocs } from './src-fw/fwdocuments'
 
-// const decoder = new TextDecoder()
-// const encoder = new TextEncoder()
 const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
 
 const config = stores.config

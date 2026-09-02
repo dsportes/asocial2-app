@@ -5,7 +5,7 @@
     <btn-mode/>
     <q-icon v-if="adminPage.mdAdmin" name="security"
       color="negative" size="28px"/>
-    <q-toolbar-title class="titre-md q-mx-md">{{$t('PAGEadmin')}}</q-toolbar-title>
+    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('PAGEadmin')}}</q-toolbar-title>
 
     <settings-button class="q-ml-sm"/>
     <help-button class="" page="DOCpg"/>

@@ -7,10 +7,26 @@
         <q-toolbar-title class="titre-lg full-width text-center">{{$t('EX' + major + '_label')}}</q-toolbar-title>
       </q-toolbar>
       <q-card-section v-if="!abort">
-        <div v-if="exc.background">{{  $t('EX_sync', [exc.svc]) }}</div>
-        <div v-else class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
+        <div class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
         <div class="q-mb-xs titre-md" v-html="html"/>
         <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
+        <div v-if="site">
+          <div class="titre-italic q-mr-sm">{{  $t('EX_site') }}</div>
+          <div class="font-mono text-bold">{{ site }}</div>
+        </div>
+        <div v-if="site" class="row items-center">
+          <div class="titre-italic q-mr-sm">{{  $t('EX_site') }}</div>
+          <div class="font-mono text-bold">{{ site }}</div>
+          <div class="q-ml-sm font-mono fs-sm">[{{ url }}]</div>
+        </div>
+        <div v-if="svcl" class="row items-center">
+          <div class="titre-italic q-mr-sm">{{  $t('EX_svc') }}</div>
+          <div>{{ svcl }}</div>
+        </div>
+        <div v-if="org" class="row items-center">
+          <div class="titre-italic q-mr-sm">{{  $t('EX_org') }}</div>
+          <div class="font-mono text-bold">{{ org }}</div>
+        </div>
       </q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
         <btn-cond color="primary" icon="arrow_forward"
@@ -84,6 +100,13 @@ const equiv = {
 const ui = stores.ui
 const errstack = ref(false)
 const exc = computed(() => ui.exc.ex || { code: 0 })
+const op = computed(() => exc.value.op || null)
+const site = computed(() => op ? (op.args.site || '') : '')
+const url = computed(() => op ? (op.url || '') : '')
+const svcl = computed(() => { const svc = op ? (op.args.svc || '') : ''
+  return svc ? hasMessage(svc) + ' [' + svc + ']' : ''
+})
+const org = computed(() => op ? (op.args.org || '') : '')
 const major = computed(() => equiv[exc.value.code] || 8)
 const isApp = computed(() => exc.value.code < 100)
 const abort = computed(() => exc.value.code === 99)

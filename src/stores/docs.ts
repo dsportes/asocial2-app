@@ -6,7 +6,7 @@ Voir: https://alexop.dev/tils/dynamic-pinia-dsStores/
 */
 
 // @ts-ignore
-import { Ref, ref, reactive, watch } from 'vue'
+import { Ref, ref, reactive } from 'vue'
 // @ts-ignore
 import { defineStore } from 'pinia'
 // @ts-ignore
@@ -21,9 +21,20 @@ import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/subscription'
 import { $Document, Registry } from '../src-fw/registry'
 import { FW$Sync, $SubsGenerator } from 'src/src-fw/subscription'
-import { sleep } from '../src-fw/util'
 // import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
+
+let _session = null
+const session = () => {
+  if (!_session) _session = useSessionStore()
+  return _session
+}
+
+let _config = null
+const config = () => {
+  if (!_config) _config = useConfigStore()
+  return _config
+}
 
 // Si IDB a une lat plus ancienne il faut rafraîchir sa lat
 const MAXLATDELAY = 3 * 3600 * 1000
@@ -43,24 +54,22 @@ type MsgNotif = {
 - sur web-push,
 */
 export async function onPushMsg (payload: string) {
-  const config = useConfigStore()
-  const session = useSessionStore()
   const messageNotif =  decode(keyFromB64(payload)) as MsgNotif
   const st = getStore(messageNotif.svc, messageNotif.org, true)
-  if (st && messageNotif.defs && messageNotif.defs.length) {
+  if (session().syncOK && st && messageNotif.defs && messageNotif.defs.length) {
     const l: string[] = messageNotif.defs.split(' ')
     const defs: $Def[] = []
     for(const x of l) defs.push(new $Def(x))
     await st.onNotif(defs, messageNotif.now)
   }
   if (messageNotif.body) {
-    // if (config.K.myDebug) console.log('Show notif EXPLICITE from app')
+    // if (config().K.myDebug) console.log('Show notif EXPLICITE from app')
     const options = { body: messageNotif.body }
     // @ts-ignore
-    if (messageNotif.url) options.data = { url: messageNotif.url || config.location }
-    const t = messageNotif.title || (config.K.APPNAME + ' - ' + messageNotif.org)
+    if (messageNotif.url) options.data = { url: messageNotif.url || config().location }
+    const t = messageNotif.title || (config().K.APPNAME + ' - ' + messageNotif.org)
     // @ts-ignore
-    await session.registration.showNotification(t, options)
+    await session().registration.showNotification(t, options)
   }
 }
 
@@ -183,20 +192,15 @@ interface $CollData extends $DCData{
   deleted?: [string, number][]
 }
 
-export class SyncQueue {
-  std: IDocStore
-  svc: string
-  org: string
-  items: $DCItem[] = [] // items en queue ou en sync
-  syncRunning: boolean = false
-  runningItems: Map<string, $DCItem> = new Map()
-  sync: FW$Sync
+type Qitem = {
+  svc: string,
+  org: string,
+  item: $DCItem
+}
 
-  constructor (svc: string, org: string) {
-    this.svc = svc
-    this.org = org
-    this.std = getStore(svc, org)
-  }
+export class SyncQueue {
+  static qitems: Qitem[] = [] // items en queue ou en sync
+  static syncRunning: boolean = false
 
   /* Pousse en queue de synchronisation les items de la liste, SAUF,
     - ceux n'étant plus / pas référencés par un périmètre ACTIF (2)
@@ -210,64 +214,55 @@ export class SyncQueue {
       3: posté, revenu
       4: changement notifié, à resync
   */
-  push (items: $DCItem[], force?: boolean) {
+  static push (svc: string, org: string, items: $DCItem[], force?: boolean) {
     for(const item of items) {
-      if (item.syncSt === 1 || item.syncSt === 2) continue // en cours
-      if (force || item.syncSt === 0 || item.syncSt === 4) {
-        for(const pid of this.std.getXref(item.def)) {
-          const apstate = this.std.getApstate(pid)
-          if (apstate && apstate.status >= 2) {
-            this.items.push(item)
-            item.syncSt = 1 // pushed en queue, pas posté (prévient mise en q multiple)
-            break
-          }
-        }
-      }
+      if (item.syncSt !== 1 && item.syncSt !== 2 &&
+       (force || item.syncSt === 0 || item.syncSt === 4)) 
+        SyncQueue.qitems.push({ svc, org, item })
     }
-    if (this.syncRunning || !this.items.length) return
-    this.syncRunning = true
-    this.peakItemsToRun()
-    const self = this
+    if (SyncQueue.syncRunning || !SyncQueue.qitems.length || !session().syncOK) return
+    SyncQueue.syncRunning = true
     setTimeout(async () => {
-      await self.doSyncs()
+      await SyncQueue.doSyncs()
     }, 1)
   }
 
-  peakItemsToRun () {
-    this.runningItems.clear()
-    if (this.items.length === 0) return
-    this.sync = new FW$Sync(this.svc, this.org)
-    let n = 10
-    while (this.items.length) {
-      const item = this.items.shift()
-      this.runningItems.set(item.def.definition, item)
-      this.sync.addDef(item.def, item.lv)
-      if (!item.def.isColl) n--
-      else { if (item.lv) n--; else break }
-      if (n === 0) break
-    }
-  }
-
-  async doSyncs () {
-    while (this.runningItems.size !== 0) {
-      for(const [,item] of this.runningItems) item.syncSt = 2
-      const [sat, syncs] = await this.sync.post()
+  static async doSyncs () {
+    while (SyncQueue.qitems.length) {
+      let x = SyncQueue.qitems[0]
+      const svc = x.svc
+      const org = x.org
+      const std = getStore(svc, org)
+      const sync = new FW$Sync(svc, org)
+      const runningItems: Map<string, $DCItem> = new Map()
+      for(let n = 0; n < 10; n++) {
+        x = SyncQueue.qitems[0]
+        if (!x || x.svc !== svc || x.org !== org) break
+        SyncQueue.qitems.shift()
+        x.item.syncSt = 2
+        runningItems.set(x.item.def.definition, x.item)
+        sync.addDef(x.item.def, x.item.lv)
+        if (x.item.lv || x.item.def.isColl) break
+      }
+      const [sat, syncs] = await sync.post()
       if (sat !== 0) { 
         for(const definition in syncs) {
           const dcdata = syncs[definition] as $DCData
-          const item = this.runningItems.get(definition)
+          const item = runningItems.get(definition)
           item.syncSt = 3
-          await this.std.storeDC(item, sat, dcdata)
+          await std.storeDC(item, sat, dcdata)
         }
-        this.std.checkResolves()
-        this.runningItems.clear()
-      } else { // échec: nouvelle tentative (quand l'utilisateur aura validé l'erreur)
-        await sleep(3000)
+        std.checkResolves()
+      } else { // échec: remise en syncQueue des items
+        for (const [, item] of runningItems) {
+          item.syncSt = 2
+          SyncQueue.qitems.unshift({ svc, org, item})
+        }
+        session().syncOK = false
+        break
       }
-      if (this.runningItems.size === 0)
-        this.peakItemsToRun()
     }
-    this.syncRunning = false
+    SyncQueue.syncRunning = false
   }
 }
 
@@ -277,15 +272,12 @@ Ils sont détruits en fin de session.
 */ 
 const useStore = (id: string) =>
   defineStore(`store-${id}`, () => {
-    const session = useSessionStore()
 
     /* State *********************************************/
     const svc = id.substring(0, id.indexOf('/'))
     const org = id.substring(id.indexOf('/') + 1)
-    let hasLocal = session.hasLocal
-    let hasNet = session.hasNet
-
-    const syncQueue = new SyncQueue(svc, org)
+    let hasLocal = session().hasLocal
+    let hasNet = session().hasNet
 
     const subsOK: Ref<boolean>= ref(false)
 
@@ -299,7 +291,7 @@ const useStore = (id: string) =>
     const colls = reactive({  })
 
     const getXref = (def: $Def) : Set<string> => {
-      return session.getXref(svc, org, def)
+      return session().getXref(svc, org, def)
     }
     
     const upd = (item: $DCItem) => {
@@ -351,11 +343,19 @@ const useStore = (id: string) =>
       for(const def of defs) {
           const item = getItem(def)
           if (item) {
-            item.syncSt = 4
-            items.push(item)
+            const pids = getXref(def)
+            let ok = false
+            for (const pid of pids) {
+              const apstate = activePerims[pid]
+              if (apstate && apstate.status >= 2) { ok = true; break }
+            }
+            if (ok) {
+              item.syncSt = 4
+              items.push(item)
+            }
           }
         }
-      if (items.length) syncQueue.push(items)
+      if (items.length) SyncQueue.push(svc, org, items)
     }
 
     /* Ces documents sont modifiés mais SURTOUT NE SONT PLUS dans la collection
@@ -682,10 +682,12 @@ const useStore = (id: string) =>
         if (!activePerims[p.id]) 
           activePerims[p.id] = { status: 0, lastSync: 0, resolves: [], perimeter: p }
 
-      if (session.planeMode) {
+      if (session().planeMode) {
         for(const p of lp) await loadFromIDB(p)
         return
       }
+
+      if (!session().syncOK) return
 
       const lp2: $Perimeter[] = [] // périmètres à synchroniser
       if (force  === 2 || areSubsTodo()) await doSubs()
@@ -705,7 +707,7 @@ const useStore = (id: string) =>
           activePerims[p.id].status = 3
           for(const def of p.defs) items.push(getItem(def))
         }
-        if (items.length) syncQueue.push(items)
+        if (items.length) SyncQueue.push(svc, org, items)
       }
 
       if (waiting) {
@@ -739,7 +741,7 @@ const useStore = (id: string) =>
       const items = []
       for(const p of lp1)
         for(const def of p.defs) items.push(getItem(def))
-      if (items.length) syncQueue.push(items)
+      if (items.length) SyncQueue.push(svc, org, items, true)
     }
 
     /* Retourne le time de la dernière synchronisation COMPLETE
