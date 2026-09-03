@@ -27,10 +27,11 @@
     </div>
   </div>
 
+<!--
 <choose-it v-model="dialogs.close"
   prefix="OPTSquit" options="pw"
   @giveup="closeIt"
-  @option="dialogs.close = false"/>
+  @option="dialogs.close = false"/-->
 </div>
 </template>
 
@@ -38,9 +39,9 @@
 // @ts-ignore
 import { Ref, ref, computed, watch, reactive } from 'vue'
 import stores from '../stores/all'
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import ChooseIt from '../dialogs-fw/ChooseIt.vue'
+// import ChooseIt from '../dialogs-fw/ChooseIt.vue'
+import { checkStatus } from '../src-fw/operation'
 import { $t, dkli } from '../src-fw/util.js'
 
 type Org = {
@@ -63,9 +64,11 @@ session.haschgOptions = false
 
 watch(() => session.okOptions, async (v) => { if (v > okn.value) await ok() })
 
+/*
 const dialogs = reactive({
   close: false
 })
+*/
 
 watch(() => session.resetdb, async (v) => {
   if (v) await ui.diagDisplay($t('OPTSresetdb'))
@@ -138,15 +141,26 @@ const ok = async () => {
   console.log('orgRoles: ' + _orgRoles.join('  '))
 
   const _pref = selPref.value === defp.value ? '' : selPref.value
-
-  await session.chgOptions(_pref, _orgRoles, toSave.value)
+  const allOK = await checkStatus(_orgRoles)
+  if (allOK) {
+    if (session.dialogs.options) {
+      /* Si session.step === 1, vient de SafeBox
+        sinon la session est en cours, vient de LeftMenu */ 
+      session.dialogs.options = false
+    }
+    session.dialogs.netStatus = false
+    await session.chgOptions(_pref, _orgRoles, toSave.value)
+  } else 
+    session.dialogs.netStatus = true
 }
 
+/*
 const closeIt = async () => {
   if (session.step === 1) {
     await session.setStep(2)
   }
 }
+*/
 
 init()
 

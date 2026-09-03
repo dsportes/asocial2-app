@@ -361,9 +361,20 @@ export default {
   PEopt1: 'Vous devez modifier VOUS-MEME l\'autorisation du navigateur à traiter les notifications pour cette application.',
   PEopt2: 'Il y a un bouton pour faire ça dans la BARRE D\'ADRESSE.',
   PEsyncok: 'A priori la synchronisation des données fonctionne bien.',
-  PEsyncko: 'La synchronisation des données a été interrompue sur incident technique',
-  
+  PEsyncko: 'La synchronisation des données a été interrompue sur incident technique.',
+  PEsyncmore: 'Résoudre',
 
+  NSsyncKO: 'Une rupture de la synchronisation des documents a été détectée.',
+  NStit: 'Indisponibilité des accès cloud / rupture de synchronisation',
+  NSallOK: 'A priori tous les accès aux documents souhaités pour la session sont ouverts.',
+  NSallKO: 'Certains sites distants et services cloud pour certaines organisations sont INACCESSIBLES.',
+  NSsite: 'Site:',
+  NSsvc: 'Service cloud:',
+  NSst_0: 'techniquement inaccessible',
+  NSst_1: 'accessible, déclaré UP par l\'adminstrateur',
+  NSst_2: 'accessible, mais déclaré en LECTURE SEULEMENT par l\'adminstrateur',
+  NSst_3: 'inaccessible, déclaré DOWN par l\'adminstrateur',
+  
   /* UAP : SafeCr */
   UAPtit_u: 'Création de votre Safe Box',
   UAPtit_a: 'Changement des alias de votre Safe Box',

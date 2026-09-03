@@ -19,10 +19,12 @@
       <div v-if="session.permState !== 'granted'" class="q-pa-xs msg">{{ $t('PEinfo') }}</div>
       <div v-else>
         <div v-if="session.step > 1">
-          <div v-if="session.syncOK" class="q-my-xs text-italic"> {{  $t('PEsyncok') }}</div>
+          <div v-if="session.syncOK" class="q-my-sm text-italic"> {{  $t('PEsyncok') }}</div>
           <div v-else>
-            <div class="q-pa-xs msg"> {{  $t('PEsyncko') }}</div> 
-
+            <div class="q-my-smrow items-center">
+              <div class="col q-pa-xs msg"> {{  $t('PEsyncko') }}</div>
+              <btn-cond class="col-auto q-ml-sm":label="$t('PEsyncmore')" @ok="more"/>
+            </div>
           </div>
         </div>
       </div>
@@ -45,6 +47,10 @@ const mode = computed(() => session.loginMode )
 
 const color = computed(() => session.hasNet && session.permState !== 'granted' ? 'negative' :
    (session.step > 0 ? 'green-5' : 'grey-5'))
+
+const more = () => {
+  session.dialogs.netStatus = true
+}
 
 </script>
 

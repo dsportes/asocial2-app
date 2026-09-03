@@ -13,7 +13,7 @@ import { $t, sleep } from '../src-fw/util'
 import { idb, IDB, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
 import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-fw/subscription'
 import { myRegistration } from '../../src-pwa/register-service-worker'
-import { AOperation } from 'src/src-fw/operation'
+import { AOperation, checkStatus } from 'src/src-fw/operation'
 
 // const encoder = new TextEncoder()
 // const decoder = new TextDecoder()
@@ -33,6 +33,32 @@ export const useSessionStore = defineStore('session', () => {
   const okOptions = ref(1)
   const haschgOptions = ref(false)
   const syncOK = ref(true)
+  const allOK = ref(true)
+  const netStatus = ref(null)
+
+  const dialogs = reactive({
+    netStatus: false,
+    options: false
+  })
+
+  const reset = () => {
+    step.value = 0
+    noLocal.value = false
+    noNet.value = false
+    resetdb.value = false
+    haschgOptions.value = false
+    syncOK.value = true
+    netStatus.value = null
+    dialogs.netStatus = false
+    dialogs.options = false
+  }
+
+  watch(syncOK, async (v) => {
+    if (!v && orgRoles.value) {
+      allOK.value = await checkStatus(orgRoles.value)
+      dialogs.netStatus = true
+    }
+  })
 
   const hasLocal = computed(() => !noLocal.value)
   const hasNet = computed(() => !noNet.value)
@@ -68,11 +94,16 @@ export const useSessionStore = defineStore('session', () => {
   const orgRoles : Ref<Set<string>> = ref() // couples org/role
   const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
 
-  const getOrgRolesP = (perims: $Perims) => {
+  const getOrgRolesP = async (perims: $Perims) => {
     const s: Set<string> = new Set()
     for(const [so, m] of perims) {
       const org = so.substring(so.indexOf('/') + 1)
-      for(const [,p] of m) s.add(org + '/' + p.role)
+      for(const [,p] of m) {
+        const i = p.role.indexOf('_')
+        const svc = p.role.substring(0, i)
+        const site = await AOperation.getSiteOfOrgSvcUrl(org, svc)
+        if (site) s.add(org + '/' + p.role)
+      }
     }
     return s
   }
@@ -90,12 +121,12 @@ export const useSessionStore = defineStore('session', () => {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
       perims.value = sp.perims
-      orgRolesP.value = getOrgRolesP(perims.value)
+      orgRolesP.value = await getOrgRolesP(perims.value)
       orgRoles.value = new Set(sp.options.orgRoles || [])
       pref.value = sp.options.pref || ''
     } else {
       perims.value = sf.getPerimeters()
-      orgRolesP.value = getOrgRolesP(perims.value)
+      orgRolesP.value = await getOrgRolesP(perims.value)
       prefs.value = sf.mySafePrefs
       const x = sf.mySafeOptions
       pref.value = x ? x.pref || '' : ''
@@ -138,6 +169,7 @@ export const useSessionStore = defineStore('session', () => {
         AOperation.reset()
         ui.resetLoginPage()
         sf.resetSafeBox()
+        reset()
         if (b > 1) resetDocStores()
         step.value = 0
         return
@@ -210,7 +242,7 @@ export const useSessionStore = defineStore('session', () => {
     const svcOrgsBefore: Set<string> = new Set(perims.value.keys())
     perims.value = sf.getPerimeters()
     buildXref()
-    orgRolesP.value = getOrgRolesP(perims.value)
+    orgRolesP.value = await getOrgRolesP(perims.value)
     const svcOrgs: Set<string> = new Set(perims.keys())
 
     for(const svcOrg of svcOrgsBefore) {
@@ -431,19 +463,24 @@ export const useSessionStore = defineStore('session', () => {
   const setSvc = (svc: string) => { _currentSvc.value = svc }
 
   return {
-    step, syncOK, setStep, prefs, pref, okOptions, haschgOptions, perims,
-    orgRoles, orgRolesP,
-    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
     registration, setRegistration, setAppUpdated, subJSON, sessionId, wpReady, sessionInfo,
     callSW, swMessage, onSwMessage, newVersionDialog, newVersionReady,
     permState, permDialog, changePerm, askForPerm, permChange,
 
     hasNet, noNet, resetdb, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
 
-    orgs, setOrgs, setOrg, addOrg, currentOrg,
-    currentSvc, setSvc,
+    step, setStep, dialogs,
+    syncOK, allOK, netStatus,
+    perims, getPerimeter, chgOptions, getXref, setDefsXref, credsChange,
+    orgRoles, orgRolesP, 
+    prefs, pref, 
     edPref, setEdPref, resetEdPref, updatePrefs, currentPref,
-    getPerimeter, chgOptions, getXref, setDefsXref, credsChange
+    okOptions, haschgOptions, 
+
+    opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
+
+    orgs, setOrgs, setOrg, addOrg, currentOrg,
+    currentSvc, setSvc
     // focus, getFocus, lostFocus, closingApp
   }
 })

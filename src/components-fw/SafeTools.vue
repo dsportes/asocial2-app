@@ -125,7 +125,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
     </q-card>
   </q-dialog>
 
-  <select-optionsdial v-if="dialogs.options" v-model="dialogs.options"/>
+  <select-optionsdial v-if="session.dialogs.options" v-model="session.dialogs.options"/>
 
 </div>
 </template>
@@ -143,7 +143,6 @@ import BarOpen from '../components-fw/BarOpen.vue'
 import UserProfile from '../components-fw/UserProfile.vue'
 
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import PrefsMgr from '../dialogs-fw/PrefsMgr.vue'
 import CredsReview from '../dialogs-fw/CredsReview.vue'
 import ManageUsers from '../dialogs-fw/ManageUsers.vue'
@@ -180,8 +179,7 @@ const dialogs = reactive({
   DevTrustit: false,
   DevUntrustit: false,
   SafeExport: false,
-  delSafe: false,
-  options: false
+  delSafe: false
 })
 
 const untrustit = async () => {

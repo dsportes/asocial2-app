@@ -198,6 +198,11 @@ export class AOperation {
     return e
   }
 
+  static async getSiteOfOrgSvcUrl (org: string, svc: string) : Promise<string> {
+    const e = await AOperation.getOrgSvc(org)
+    return !e ? '' : e.get(svc) || ''
+  }
+
   static async setOrgSvc (org: string, svc: string, site: string) {
     const op = new MDOperation('$SetOrgSvcSite')
     op.args.params = [org, svc, site]
@@ -567,4 +572,44 @@ export class AuthRecord {
     this.signatures[c.docCl + '/' + c.docPk] = [c.credId, sign]
   }
 
+}
+
+export async function checkStatus (orgRoles: string[]) 
+: Promise<boolean> {
+  const status = {}
+  let allOK = true
+  for(const y of orgRoles) {
+    let i = y.indexOf('/')
+    const org = y.substring(0, i)
+    const role = y.substring(i + 1)
+    i = role.indexOf('_')
+    const svc = role.substring(0, i)
+    const site = await AOperation.getSiteOfOrgSvcUrl(org, svc)
+    // existe toujours quand on cherche un status
+    if (!site) continue
+    let esite = status[site]; if (!esite) { esite = { $ST$: 0 }; status[site]= { }}
+    let esvc = esite[svc]; if (!esvc) { esvc = { $ST$: 0 }; esite[svc] = esvc }
+    esvc[org] = 0
+  }
+  for(const site of Object.keys(status)) {
+    const op = new AdminOperation('ADMIN$getAllStatus', site)
+    op.args.status = status[site]
+    try {
+      const res = await op.post()
+      status[site] = res.status
+      if (allOK) {
+        for(const x of Object.keys(res.status)) {
+          let st = res.status[x]
+          if (st < 1 ||  st > 8) { allOK = false; break }
+        }
+      }
+    } catch (e) {
+      status[site]['$STS$'] = 0
+      allOK = false
+    }
+  }
+  const session = stores.session
+  session.netStatus = allOK ? null : status
+  session.allOK = allOK
+  return allOK
 }

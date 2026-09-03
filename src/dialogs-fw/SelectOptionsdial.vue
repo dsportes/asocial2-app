@@ -1,5 +1,5 @@
 <template>
-  <dialog-std0 v-model="model" vh="75"
+  <dialog-std0 v-model="session.dialogs.options" vh="75"
     @close="checkCloseOptions" 
     :title="$t('OPTStitle_2')"
     :help="$t('OPTStitle_bub')">
@@ -23,15 +23,14 @@ import SelectOptions from '../components-fw/SelectOptions.vue'
 
 const session = stores.session
 const ui = stores.ui
-const model = defineModel()
 
 const okOptions = () => {
   session.okOptions = session.okOptions + 1
 }
 
 const checkCloseOptions = async () => {
-  if (await ui.mayClose()) model.value = false
-  else model.value = true
+  // Ne ferme pas le dialogue, c'est <select-option> qui le fera (ou non)
+  if (await ui.mayClose()) okOptions()
 }
 
 </script>

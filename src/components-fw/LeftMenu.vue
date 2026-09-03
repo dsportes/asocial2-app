@@ -57,17 +57,17 @@ Contrôlé par ui.leftMenu
     </div>
   </q-page-container>
 
-  <select-optionsdial v-if="dialogs.options" v-model="dialogs.options"/>
+  <select-optionsdial v-if="session.dialogs.options" v-model="session.dialogs.option"/>
 
 </q-layout>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { reactive } from 'vue'
+// import { reactive } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
-import { ErrorTest } from '../src-fw/operations'
+// import { ErrorTest } from '../src-fw/operations'
 
 import HelpButton from '../components-fw/HelpButton.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -83,25 +83,19 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const test = async () => {
-  await new ErrorTest('AS2', 'doda').run()
-}
+// const test = async () => { await new ErrorTest('AS2', 'doda').run() }
 
-const dialogs = reactive({
-  options: false
-})
-
-const openAdmin = (svc) => {
+const openAdmin = () => {
   ui.closeMenu()
   ui.setPage('admin')
 }
 
-const openDemands = (svc) => {
+const openDemands = () => {
   ui.closeMenu()
   ui.setPage('demands')
 }
 
-const openSponsorings = (svc) => {
+const openSponsorings = () => {
   ui.closeMenu()
   ui.setPage('sponsorings')
 }
