@@ -62,7 +62,8 @@ const s1 = computed(() => session.step === 1 ? 1 : 2)
 const okn = ref(session.okOptions)
 session.haschgOptions = false
 
-watch(() => session.okOptions, async (v) => { if (v > okn.value) await ok() })
+watch(() => session.okOptions, async (v) => { 
+  if (v > okn.value) await ok() })
 
 /*
 const dialogs = reactive({
@@ -143,24 +144,14 @@ const ok = async () => {
   const _pref = selPref.value === defp.value ? '' : selPref.value
   const allOK = await checkStatus(_orgRoles)
   if (allOK) {
-    if (session.dialogs.options) {
-      /* Si session.step === 1, vient de SafeBox
-        sinon la session est en cours, vient de LeftMenu */ 
-      session.dialogs.options = false
-    }
+    /* Si session.step === 1, vient de SafeBox
+      sinon la session est en cours, vient de LeftMenu */ 
+    session.dialogs.options = false
     session.dialogs.netStatus = false
     await session.chgOptions(_pref, _orgRoles, toSave.value)
   } else 
     session.dialogs.netStatus = true
 }
-
-/*
-const closeIt = async () => {
-  if (session.step === 1) {
-    await session.setStep(2)
-  }
-}
-*/
 
 init()
 

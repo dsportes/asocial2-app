@@ -243,7 +243,7 @@ export const useSessionStore = defineStore('session', () => {
     perims.value = sf.getPerimeters()
     buildXref()
     orgRolesP.value = await getOrgRolesP(perims.value)
-    const svcOrgs: Set<string> = new Set(perims.keys())
+    const svcOrgs: Set<string> = new Set(perims.value.keys())
 
     for(const svcOrg of svcOrgsBefore) {
       if (!svcOrgs.has(svcOrg)) {

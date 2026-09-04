@@ -12,7 +12,7 @@ Event: close
 
 <template #hdr>
   <div :class="sty() + ' q-pa-xs'">
-    <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPunpin_1')"/>
+    <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPmanuinfo')"/>
 
     <div v-if="diag !== ''" class=" msg2">{{diag}}</div>
 

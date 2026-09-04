@@ -587,7 +587,7 @@ export async function checkStatus (orgRoles: string[])
     const site = await AOperation.getSiteOfOrgSvcUrl(org, svc)
     // existe toujours quand on cherche un status
     if (!site) continue
-    let esite = status[site]; if (!esite) { esite = { $ST$: 0 }; status[site]= { }}
+    let esite = status[site]; if (!esite) { esite = { $ST$: 0 }; status[site] = esite}
     let esvc = esite[svc]; if (!esvc) { esvc = { $ST$: 0 }; esite[svc] = esvc }
     esvc[org] = 0
   }
@@ -597,19 +597,28 @@ export async function checkStatus (orgRoles: string[])
     try {
       const res = await op.post()
       status[site] = res.status
+      status[site]['$ST$'] = 1
       if (allOK) {
-        for(const x of Object.keys(res.status)) {
-          let st = res.status[x]
-          if (st < 1 ||  st > 8) { allOK = false; break }
+        for(const svc of Object.keys(res.status)) {
+          const e = res.status[svc]
+          if (svc === '$ST$') {
+            if (e < 1 || e > 8) { allOK = false; break }
+          } else {
+            for(const org of Object.keys(e)) {
+              const st = e[org]
+              if (st < 1 ||  st > 8) { allOK = false; break }
+            }
+            if (!allOK) break
+          }
         }
       }
     } catch (e) {
-      status[site]['$STS$'] = 0
+      status[site]['$ST$'] = 0
       allOK = false
     }
   }
   const session = stores.session
-  session.netStatus = allOK ? null : status
+  session.netStatus = status
   session.allOK = allOK
   return allOK
 }

@@ -80,7 +80,7 @@
   <confirm-closesession/>
   <dialog-exc/>
   <dialog-help/>
-  <net-status v-if="session.dialogs.netStatus"/>
+  <net-statusdial v-if="session.dialogs.netStatus"/>
 
 </q-layout>
 </template>
@@ -103,7 +103,7 @@ import BtnMode from './components-fw/BtnMode.vue'
 import SafeHeader from './pages/SafeHeader.vue'
 import SafeHome from './pages/SafeHome.vue'
 import PermissionBox from './dialogs-fw/PermissionBox.vue'
-import NetStatus from './dialogs-fw/NetStatus.vue'
+import NetStatusdial from './dialogs-fw/NetStatusdial.vue'
 
 import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'

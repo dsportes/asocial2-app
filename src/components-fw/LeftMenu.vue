@@ -41,7 +41,7 @@ Contrôlé par ui.leftMenu
 
       <btn-cond class="q-mb-sm"
         flat :label="$t('OPTStitle_2')"
-        @ok="ui.closeMenu();dialogs.options = true"/>
+        @ok="ui.closeMenu(); session.dialogs.options = true"/>
       <btn-cond class="q-mb-sm"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>

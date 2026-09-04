@@ -300,6 +300,8 @@ export default {
   op_$UpdateCredName: 'Mise à jour d\'un nom de crdential',
   op_FW$Sync: 'Synchonisation des données',
   op_$PingStore: 'Test d\'accès à un store de Safe Box',
+  op_ADMIN$getAllStatus: 'Collecte des status des services / organisations',
+  op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
   
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -363,17 +365,38 @@ export default {
   PEsyncok: 'A priori la synchronisation des données fonctionne bien.',
   PEsyncko: 'La synchronisation des données a été interrompue sur incident technique.',
   PEsyncmore: 'Résoudre',
+  PEdetail: 'Détail des accessibilités aux documents',
 
+  NSnone: 'Aucun accès à aucun document n\'est déclaré.',
   NSsyncKO: 'Une rupture de la synchronisation des documents a été détectée.',
   NStit: 'Indisponibilité des accès cloud / rupture de synchronisation',
   NSallOK: 'A priori tous les accès aux documents souhaités pour la session sont ouverts.',
-  NSallKO: 'Certains sites distants et services cloud pour certaines organisations sont INACCESSIBLES.',
+  NSallKO: 'Au moins un site distant ou un service cloud pour une organisation est INACCESSIBLE.',
   NSsite: 'Site:',
   NSsvc: 'Service cloud:',
   NSst_0: 'techniquement inaccessible',
   NSst_1: 'accessible, déclaré UP par l\'adminstrateur',
-  NSst_2: 'accessible, mais déclaré en LECTURE SEULEMENT par l\'adminstrateur',
+  NSst_2: 'accessible en LECTURE SEULEMENT délaré par l\'adminstrateur',
   NSst_3: 'inaccessible, déclaré DOWN par l\'adminstrateur',
+  NSverif: 'Vérification en cours de la disponibilité des accès',
+  NSretry_label: 'Tester à nouveau la disponibilité des accès',
+  NSretry_bub: `### Tester à nouveau la disponibilité des accès
+Si l'indisponibilité était lié à un incident technique temporaire bla ble
+`,
+  NSresync_label: 'Tenter de relancer la synchronisation des documents',
+  NSresync_bub: `### Tenter de relancer la synchronisation des documents
+Si l'indisponibilité était lié à un incident technique temporaire bla ble
+`,
+  NSchgopts_label: 'Changer les options d\'accès de la session',
+  NSchgopts_bub: `### Changer les options d'accès de la session
+Si l'indisponibilité était lié à un incident technique temporaire bla ble
+`,
+  NSdcnx_label: 'Terminer cette session',
+  NSdcnx_bub: `### Terminer cette session
+Si l'indisponibilité était lié à un incident technique temporaire bla ble
+`,
+
+
   
   /* UAP : SafeCr */
   UAPtit_u: 'Création de votre Safe Box',
