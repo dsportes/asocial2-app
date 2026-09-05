@@ -135,8 +135,8 @@ export class Trusting {
     return this.appsDb.indexOf(app) !== -1
   }
 
-  async addAppsDb () {
-    const app = config.K.APPNAME
+  async addAppsDb (_app?: string) {
+    const app = _app || config.K.APPNAME
     if (!this.appsDb) this.appsDb = []
     const i = this.appsDb.indexOf(app)
     if (i === -1) {
@@ -145,13 +145,13 @@ export class Trusting {
     }
   }
 
-  async delAppsDb () {
-    const app = config.K.APPNAME
+  async delAppsDb (_app?: string) {
+    const app = _app || config.K.APPNAME
     if (!this.appsDb) this.appsDb = []
     const i = this.appsDb.indexOf(app)
     if (i !== -1) {
       this.appsDb.splice(i, 1)
-      await IDBsafe.delTrusting(this.userId)
+      await IDBsafe.saveTrusting(this)
     }
   }
 

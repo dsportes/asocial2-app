@@ -2,106 +2,40 @@
 Event: close
 -->
 <template>
-<dialog-std2 v-model="model" :title="$t('HPmanusers')"  vue="ManageUsers"
-  noclose @close="closeIt">
-<template #btn>
-  <btn-cond :label="$t('validate') + ' (' + nbdel2 + ')'"
-    :disable="nbdel2 === 0" icon="check"
-    @ok="dialogs.valcf = true"/>
-</template>
-
-<template #hdr>
-  <div :class="sty() + ' q-pa-xs'">
-    <bar-open passive :title="$t('HPmanu_1')" :bubbleleft="$t('HPmanuinfo')"/>
-
-    <div v-if="diag !== ''" class=" msg2">{{diag}}</div>
-
-    <div class="colum wsm justify-center">
-      <div class="row titre-md text-italic q-my-sm">
-        <div class="col-6 text-center">{{$t('HPsize_1')}}</div>
-        <div class="col-6 text-center">{{$t('HPsize_2')}}</div>
-      </div>
-      <div v-for="i in nbc" :key="i" class="row font-mono">
-        <div class="col-6 text-center">{{edvol(size[i-1])}}</div>
-        <div class="col-6 text-center">{{edvol(delSize[i-1])}}</div>
-      </div>
-    </div>
-
-    <q-separator class="q-mt-xs q-mb-sm"/>
-
-    <div v-if="usersNo && usersNo.size">
-      <div class="titre-md text-italic text-center q-mb-xs">{{$t('HPusersN')}}</div>
-      <div class="row q-gutter-sm justify-center">
-        <btn-cond v-for="[u, p] in usersNo" :key="u" no-caps
-          :icon="tDel2.has(u) ? 'undo' : 'delete'"
-          :color="tDel2.has(u) ? 'warning' : 'primary'"
-          :label="p + ' ['+ u.substring(0, 5) + ']'"
-          padding="none xs" @ok="delUserNo(u)"/>
-      </div>
-    </div>
-    <div class="titre-md text-center text-italic q-mt-sm">{{$t('HPusersY')}}</div>
-    <q-separator class="q-mt-xs"/>
-
-  </div>
-</template>
+<dialog-std2 v-model="model" :title="$t('HPmanusers')" vue="ManageUsers">
 
 <template #default>
 <div class="q-pa-xs column items-center">
-<div class="wmd full-width">
-  <div v-for="[id, u] of synthU" :key="u.id" class="q-my-sm">
-    <div class="row font-mono fs-md items-start bg-primary">
-      <div class="col-9 q-pr-xs">{{u.pseudo}}</div>
-      <div class="col-2 column justify-center">
-        <div v-for="i in nbc">{{edvol(u.size[i-1])}}</div>
+  <div class="wmd full-width q-pa-xs">
+    <div v-for="([uid, t], idx) of sf.trustings" :key="uid" 
+      :class="'q-my-sm ' + dkli(idx)">
+      <div class="row">
+        <btn-cond icon="delete" color="warning" confirm @ok="delu(uid)"
+          class="col-1"/>
+        <div class="col-3 q-pr-xs ellipsis text-bold font-mono fs-lg">{{t.pseudo}}</div>
+        <div class="col-6 q-pr-xs ellipsis font-mono fs-sm">{{ uid }}</div>
+        <div class="col-2 q-pr-xs ellipsis font-mono">{{ t.store }}</div>
       </div>
-      <q-checkbox class="col-1" dense size="md" v-model="u.ck"
-        @click="cku(u)"/>
-    </div>
-    <div v-for="[id, a] of u.ma" :key="a.app" class="q-my-sm q-ml-md">
-      <div class="row font-mono fs-md items-start bg-secondary">
-        <div class="col-9 q-pr-xs ">{{a.app}}</div>
-        <div class="col-2 column justify-center">
-          <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
-        </div>
-        <q-checkbox class="col-1" dense size="md" v-model="a.ck"
-          @click="cka(a)"/>
-      </div>
-      <div v-for="([id, s], idx) of a.ms" :key="s.id" class="q-my-xs q-ml-md">
-        <div :class="dkli(idx) + ' row font-mono fs-md items-start'">
-          <div class="col-9 q-pr-xs column">
-            <div>{{s.about}}</div>
-            <div class="q-ml-lg text-italic">{{dhcool(s.time)}}</div>
+      <div v-for="app of t.appsDb" :key="app">
+        <div class="row">
+          <div class="col-1"></div>
+          <div class="col-3 q-pr-xs ellipsis text-bold font-mono">{{app}}</div>
+          <btn-cond v-if="vol(uid, app) >= 0" icon="delete" color="warning" confirm
+            class="col-6 q-pr-sm" flat :label="$t('HPmanudeldb')"
+            @ok="delDb(uid, app)"/>
+          <btn-cond v-else icon="check" color="primary" 
+            class="col-6 q-pr-xs" flat :label="$t('HPmanuvol')"
+            @ok="compDb(uid, app)"/>
+          <div v-if="vol(uid, app) >= 0" class="col-2 ellipsis text-bold font-mono text-right">
+            {{ edvol(vol(uid, app))}}
           </div>
-          <div class="col-2 column justify-center">
-            <div v-for="i in nbc">{{edvol(a.size[i-1])}}</div>
+          <div v-else class="col-2 ellipsis text-italic text-right">
+            {{ $t('HPnocalc') }}
           </div>
-          <q-checkbox class="col-1" dense size="md" v-model="s.ck"
-            @click="cks(s)"/>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Confirmation de validation -->
-  <q-dialog v-model="dialogs.valcf" persistent>
-    <q-card :class="sty('md') + ' column items-center q-pa-sm'">
-    <q-icon class="q-my-md" name="warning" size="60px" color="negative"/>
-    <div class="q-my-sm titre-lg text-bold text-center">
-        {{$t('HPskull_0', [sDel ? sDel.size : 0, nbdel2])}}
-      </div>
-      <div class="q-my-sm titre-md text-bold text-italic text-center">
-        {{$t('HPskull_1')}}
-      </div>
-      <div class="row full-width justify-between items-center">
-        <btn-cond :label="$t('giveup')" @ok="dialogs.valcf = false"/>
-        <!--TODO A retester -->
-        <btn-cond :label="$t('iconfirm')" :disable="nbdel2 === 0 && (!sDel || !sDel.size)"
-          confirm @ok="close"/>
-      </div>
-    </q-card>
-  </q-dialog>
-
-</div>
 </div>
 </template>
 </dialog-std2>
@@ -109,115 +43,63 @@ Event: close
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, computed, Ref, reactive, watch, onMounted } from 'vue'
+import { ref, Ref, onMounted } from 'vue'
 import stores from '../stores/all'
-import { $t, sty, dkli, edvol, dhcool } from '../src-fw/util'
+import { $t, dkli, edvol } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
-import BarOpen from '../components-fw/BarOpen.vue'
-
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
+import { deleteIDB, volumeIDB } from '../src-fw/idb'
+import { IDBsafe } from '../src-fw/idbsafe'
 
 const sf = stores.safe
 
-const emit = defineEmits(['close'])
 const model = defineModel()
-const dialogs = reactive({
-  valcf: false
-})
 
-const closeIt = () => {
-  emit('close', true)
-  model.value = false
+/* volume des bases par "userId / app"
+  - undefined: pas de base
+  -1: volume non calculé
+  N : volume utile
+*/
+const dbs: Ref<Map<string, number>> = ref(new Map())
+const vol = (userId, app) => dbs.value.get(userId + '/' + app) || 0
+
+const setDbs = async () => {
+  for(const [u, t] of sf.trustings) {
+    if (t.appsDb.length) for(const app of t.appsDb) {
+      const k = u + '/' + app
+      const v = dbs.value.get(k)
+      if (v === undefined) dbs.value.set(k, -1)
+      else await compDb(u, app)
+    }
+  }
 }
 
 onMounted(async () => {
-  await init()
+  await setDbs()
 })
 
-const diag = ref('')
-
-const init = async () => {
-  const [sy, sz, sn] = await sf.synthUsers()
-  synthU.value = sy
-  size.value = sz
-  usersNo.value = sn
-  tDel2.value.clear()
+const delu = async (userId: string) => {
+  const t = sf.trustings.get(userId)
+  for(const app of t.appsDb)
+    await delDb(userId, app)
+  await IDBsafe.delTrusting(userId)
+  console.log('delete user:', userId)
 }
 
-const size: Ref<number[]> = ref(0)
-const nbc = computed(() => size.value ? size.value.length : 0 )
-const synthU = ref(0)
-const usersNo: Ref<Map<string, string>> = ref()
-
-const delSize: Ref<number[]> = ref(new Array(nbc.value).fill(0))
-
-const nbdel = ref(0)
-const sDel = ref()
-const tDel = ref()
-const tDel2 = ref(new Set())
-
-const cku = (u) => {
-  for(const [,a] of u.ma) {
-    a.ck = u.ck
-    for(const [,s] of a.ms) s.ck = u.ck
-  }
-  recalc()
+const delDb = async (userId: string, app: string) => {
+  await deleteIDB(app, userId)
+  console.log('delete Cache:  user:', userId, ' app:', app)
+  dbs.value.delete(userId + '/' + app)
+  const t = sf.trustings.get(userId)
+  await t.delAppsDb(app)
 }
 
-const cka = (a) => {
-  for(const [,s] of a.ms) s.ck = a.ck
-  recalc()
-}
-
-const cks = (s) => {
-  recalc()
-}
-
-const recalc = () => {
-  let nx = 0
-  const setS = new Set()
-  const setT = new Set()
-  delSize.value.fill(0)
-  for(const [,u] of synthU.value) {
-    if (u.ck) { nx++; setS.add(u.userId) }
-    for(const [,a] of u.ma) {
-      if (a.ck) nx++
-      for(const [,s] of a.ms) {
-        if (s.ck) {
-          nx++
-          setS.add(s.id)
-          for(let i = 0; i < nbc.value; i++) delSize.value[i] += s.size[i]
-        }
-      }
-    }
-  }
-  nbdel.value = nx
-  sDel.value = setS
-  tDel.value = setT
-}
-
-const nbdel2 = computed(() => nbdel.value + tDel2.value.size )
-
-const delUserNo = (u) => {
-  if (tDel2.value.has(u)) tDel2.value.delete(u)
-  else tDel2.value.add(u)
-}
-
-const close = async () => {
-  const l : any[] = []
-  const allSessions = await sf.getAllSessions()
-  if (sDel.value && sDel.value.size)
-    for(const id of sDel.value) {
-      const s = allSessions.get(id)
-      if (s) l.push(s)
-    }
-  if (l.length) await sf.delTSession(l)
-  if (tDel.value && tDel.value.size)
-    for(const id of tDel.value) await sf.delTrusting(id)
-  if (tDel2.value && tDel2.value.size)
-    for(const id of tDel2.value) await sf.delTrusting(id)
-  closeIt()
+const compDb = async (userId: string, app: string) => {
+  const [vp, vd, vc] = await volumeIDB(app, userId)
+  const v = vp + vd + vc
+  console.log('volume Cache:  user:', userId, ' app:', app, ' vol:', v)
+  dbs.value.set(userId + '/' + app, v)
 }
 
 </script>

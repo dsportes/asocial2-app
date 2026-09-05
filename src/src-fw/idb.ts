@@ -113,10 +113,10 @@ export type StartPlane = {
 
 export let idb : IDB = null // IDB courante
 
-export async function deleteIDB (appName?: string, userId?: string) {
+export async function deleteIDB (appName: string, userId: string) {
   const config = stores.config
   const myDebug = config.K.myDebug
-  const name = appName || (config.K.APPNAME + '_' + (userId || stores.safe.userId))
+  const name = appName + '_' + userId
   try {
     await Dexie.delete(name)
     await sleep(100)
@@ -125,6 +125,27 @@ export async function deleteIDB (appName?: string, userId?: string) {
     if (myDebug) console.log('IDB reset [' + name + '] failed: ' + e.toString())
   }
   idb = null
+}
+
+export async function volumeIDB (appName: string, userId: string)
+: Promise<number[]> {
+  const config = stores.config
+  const myDebug = config.K.myDebug
+  const name = appName + '_' + userId
+  try {
+    const db = new Dexie(name, { autoOpen: true })
+    db.version(1).stores(STORES)
+    let vp = 0, vd = 0, vc = 0
+    await db.docs.each((r) => { 
+      vd += (r.data ? r.data.length : 0)})
+    await db.colls.each((r) => { vc += (r.data ? r.data.length : 0)})
+    await db.perims.each((r) => { vp += (r.data ? r.data.length : 0)})
+
+    if (myDebug) console.log('IDB volume [' + name + '] : ', vp, vd, vc)
+    return [vp, vd, vc]
+  } catch (e: any) {
+    if (myDebug) console.log('IDB volume [' + name + '] failed: ' + e.toString())
+  }
 }
 
 /* Ne peut être construit et ouvert qu'après authentification

@@ -722,17 +722,16 @@ bla bla
   HPimpsafe_2: `# Importer un backup de ma Safe Box"
 bla bla
 `,
-  HPmanusers: 'Gérer les utilisateurs et leurs sessions',
+
+  HPmanusers: 'Gérer les utilisateurs confiants dans ce terminal',
   HPmanu_1: 'Vous disposez du login du terminal, vous pouvez nettoyer les ' +
    ' "utilisateurs" obsolètes (et leurs sessions) à votre convenance',
   HPmanuinfo: `# Gérer les utilisateurs ...
 Suppression sélective des utilisateurs et de leurs sessions.
 `,
-  HPpsab_label: 'A propos de la session ...',
-  HPpsab_ph: 'ma session pour ...',
-  HPoptstart: 'Options de lancement ...',
-  HPusersN: 'Utilisateur(s) sans sessions épinglées:',
-  HPusersY: 'Utilisateur(s) ayant des sessions épinglées:',
+  HPmanudeldb: 'Supprimer le Cache',
+  HPmanuvol: 'Analyser le Cache',
+  HPnocalc: '(pas calculé)',
 
   HPadminA_label: 'Gérer mes rôles d\'Adiministrateur',
   HPadminA_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
