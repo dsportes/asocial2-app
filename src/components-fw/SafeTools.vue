@@ -49,7 +49,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 
       <bar-open :bubble="$t('HPtrustings_2')" :disbubble="$t('HPtrustings_2')"
         :title="$t('HPtrustings_1')"
-        :disable="session.noNet || session.noLocal"
+        :disable="session.noNet"
         @open="dialogs.DevTrustings = true"/>
 
       <bar-open :bubble="$t('HPmanuinfo')"

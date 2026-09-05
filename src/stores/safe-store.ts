@@ -894,6 +894,7 @@ export const useSafeStore = defineStore('safe', () => {
   Login a récupéré le userId et le store depuis le Master Directory et un alias
   */
   const openSafeByAP = async ( safeId: string, store: string, shp: string ) => {
+    const session = stores.session
     AOperation.reset()
     const op = new SafeOperation('$GetSafe', store)
     let ret
@@ -912,6 +913,11 @@ export const useSafeStore = defineStore('safe', () => {
       mySafeStore.value = store
       const a = ret.safe.auth as Auth
       const K = a.hshp1 === hshp ? a.K1 : a.K2
+
+      const t = trustings.value.get(userId.value)
+      if (!t && session.hasLocal)
+        session.noLocal = true
+
       try {
         keyK.value = await Crypt.decrypt(x, keyFromB64(K))
         await compileSafe(ret.safe)
@@ -1070,6 +1076,7 @@ export const useSafeStore = defineStore('safe', () => {
   /* Certifie le device courant, le nomme name et attribue le pseudo de l'utilisateur.
   */
   const setTrust = async (name: string, pin: string, pseudo: string) => {
+    const session = stores.session
     await IDBsafe.openInAnyCase()
     if (!devId.value || name !== devName.value) { // save Header
       if (!devId.value) devId.value = Crypt.rnd(12)
@@ -1143,8 +1150,11 @@ export const useSafeStore = defineStore('safe', () => {
       op.ko(e)
       return -1
     }
-    if (!ret.status)
+    if (!ret.status) {
+      if (!session.hasLocal)
+        session.noLocal = false
       await compileSafe(ret.safe)
+    }
     return ret.status
   }
 
@@ -1154,10 +1164,15 @@ export const useSafeStore = defineStore('safe', () => {
     devIds: string[]
   }
   const setUntrust = async () => {
+    const session = stores.session
     await IDBsafe.openInAnyCase()
     const t: Trusting = myTrusting.value
     if (!t) return 0 // était déjà untrusted
+
     await IDBsafe.delTrusting(t.userId)
+    if (session.hasLocal)
+      session.noLocal = true
+    
     const untrustDev: UntrustDev = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,

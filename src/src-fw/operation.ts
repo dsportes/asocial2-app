@@ -330,8 +330,7 @@ export class OperationG extends AOperation {
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post',
-        [(this.url || '?'), e.toString()])
+      throw new AppExc(8, 'unexpected_network_service_response', 'post', [e.toString()])
     }
   }
 
@@ -474,8 +473,7 @@ abstract class A2Operation extends AOperation {
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post',
-        [(this.url || '?'), e.toString()])
+      throw new AppExc(8, 'unexpected_network_service_response', 'post', [e.toString()])
     }
   }
 }

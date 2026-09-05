@@ -162,6 +162,7 @@ export const useSessionStore = defineStore('session', () => {
 
   const setStep = async (s: number, toPage?: string) => { 
     const ui = stores.ui
+    const config = stores.config
     const sf = stores.safe
     const b = step.value
     switch (s) {
@@ -185,7 +186,7 @@ export const useSessionStore = defineStore('session', () => {
         if (syncMode.value) {
           if (resetdb.value) {
             idb.close()
-            await deleteIDB()
+            await deleteIDB(config.K.APPNAME, sf.auth.userId)
             new IDB()
             await idb.open()
           }

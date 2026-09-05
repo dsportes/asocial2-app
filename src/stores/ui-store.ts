@@ -81,7 +81,7 @@ export const useUiStore = defineStore('ui', () => {
   }
   const hideExc = () => {
     appDialogs.DialogExc = false
-    const f = exc.resolve.value
+    const f = exc.resolve
     exc.ex = null
     exc.resolve= null
     if (f) f()

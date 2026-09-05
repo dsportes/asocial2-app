@@ -5,6 +5,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { useSafeStore } from '../stores/safe-store'
 import { useConfigStore } from '../stores/config-store'
+import { deleteIDB } from '../src-fw/idb'
 import { AppExc } from '../src-fw/log'
 
 const STORES = {
@@ -101,8 +102,11 @@ export class IDBsafe {
 
   static async delTrusting (id: string) {
     if (IDBsafe.db) try {
-      await IDBsafe.db.trustings.where({id}).delete()
+      const t = safeBox.trustings.get(id)
+      if (t) for(const app of t.appsDb)
+        await deleteIDB(app, id)
       safeBox.trustings.delete(id)
+      await IDBsafe.db.trustings.where({id}).delete()
     } catch (e) {
       throw IDBsafe.EX(e, 'delTrusting')
     }
@@ -148,6 +152,7 @@ export class Trusting {
   async delAppsDb (_app?: string) {
     const app = _app || config.K.APPNAME
     if (!this.appsDb) this.appsDb = []
+    await deleteIDB(app, this.userId)
     const i = this.appsDb.indexOf(app)
     if (i !== -1) {
       this.appsDb.splice(i, 1)

@@ -10,10 +10,6 @@
         <div class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
         <div class="q-mb-xs titre-md" v-html="html"/>
         <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
-        <div v-if="site">
-          <div class="titre-italic q-mr-sm">{{  $t('EX_site') }}</div>
-          <div class="font-mono text-bold">{{ site }}</div>
-        </div>
         <div v-if="site" class="row items-center">
           <div class="titre-italic q-mr-sm">{{  $t('EX_site') }}</div>
           <div class="font-mono text-bold">{{ site }}</div>
@@ -48,7 +44,7 @@
 import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
-import { sty, $t } from '../src-fw/util'
+import { sty, $t, hasMessage } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -101,12 +97,12 @@ const ui = stores.ui
 const errstack = ref(false)
 const exc = computed(() => ui.exc.ex || { code: 0 })
 const op = computed(() => exc.value.op || null)
-const site = computed(() => op ? (op.args.site || '') : '')
-const url = computed(() => op ? (op.url || '') : '')
-const svcl = computed(() => { const svc = op ? (op.args.svc || '') : ''
+const site = computed(() => op.value ? (op.value.args.site || '') : '')
+const url = computed(() => op.value ? (op.value.url || '') : '')
+const svcl = computed(() => { const svc = op.value ? (op.value.args.svc || '') : ''
   return svc ? hasMessage(svc) + ' [' + svc + ']' : ''
 })
-const org = computed(() => op ? (op.args.org || '') : '')
+const org = computed(() => op.value ? (op.value.args.org || '') : '')
 const major = computed(() => equiv[exc.value.code] || 8)
 const isApp = computed(() => exc.value.code < 100)
 const abort = computed(() => exc.value.code === 99)

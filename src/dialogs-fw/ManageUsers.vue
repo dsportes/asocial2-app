@@ -23,9 +23,9 @@ Event: close
           <btn-cond v-if="vol(uid, app) >= 0" icon="delete" color="warning" confirm
             class="col-6 q-pr-sm" flat :label="$t('HPmanudeldb')"
             @ok="delDb(uid, app)"/>
-          <btn-cond v-else icon="check" color="primary" 
+          <!--btn-cond v-else icon="check" color="primary" 
             class="col-6 q-pr-xs" flat :label="$t('HPmanuvol')"
-            @ok="compDb(uid, app)"/>
+            @ok="compDb(uid, app)"/-->
           <div v-if="vol(uid, app) >= 0" class="col-2 ellipsis text-bold font-mono text-right">
             {{ edvol(vol(uid, app))}}
           </div>
@@ -49,7 +49,7 @@ import { $t, dkli, edvol } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
-import { deleteIDB, volumeIDB } from '../src-fw/idb'
+import { volumeIDB } from '../src-fw/idb'
 import { IDBsafe } from '../src-fw/idbsafe'
 
 const sf = stores.safe
@@ -66,11 +66,11 @@ const vol = (userId, app) => dbs.value.get(userId + '/' + app) || 0
 
 const setDbs = async () => {
   for(const [u, t] of sf.trustings) {
-    if (t.appsDb.length) for(const app of t.appsDb) {
+    if (t.appsDb) for(const app of t.appsDb) {
       const k = u + '/' + app
-      const v = dbs.value.get(k)
-      if (v === undefined) dbs.value.set(k, -1)
-      else await compDb(u, app)
+      const [vp, vd, vc] = await volumeIDB(app, u)
+      const v = vp + vd + vc
+      dbs.value.set(k, v)
     }
   }
 }
@@ -80,15 +80,11 @@ onMounted(async () => {
 })
 
 const delu = async (userId: string) => {
-  const t = sf.trustings.get(userId)
-  for(const app of t.appsDb)
-    await delDb(userId, app)
   await IDBsafe.delTrusting(userId)
   console.log('delete user:', userId)
 }
 
 const delDb = async (userId: string, app: string) => {
-  await deleteIDB(app, userId)
   console.log('delete Cache:  user:', userId, ' app:', app)
   dbs.value.delete(userId + '/' + app)
   const t = sf.trustings.get(userId)

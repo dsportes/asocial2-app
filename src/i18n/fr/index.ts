@@ -340,6 +340,7 @@ export default {
   PStrig: 'Initiales, trigramme ... :',
   PStrig_label: 'Initiales, trigramme ... :',
   PStrig_ph: 'Bob',
+  PSdup: 'Déjà attribué',
 
   THprimary: 'primary',
   THsecondary: 'secondary',
@@ -1236,7 +1237,7 @@ bla bla
   EX8_IDB_SAFE_error: 'IDB_error. Détail: [{0}]',
   EX8_HTTP_not_200: 'HTTP pas 200. Status: [{0}] - StatusText: [{1}]',
   EX8_HTTP_500_etc: 'HTTP 500 etc. Status: [{0}] - URL: [{1}] - StatusText: [{2}]',
-  EX8_unexpected_network_service_response: 'unexpected_network_service_response. URL: [{0}] - Détail: [{1}]',
+  EX8_unexpected_network_service_response: 'unexpected_network_service_response. Détail: [{0}]',
 
   EX101_masterdir_no_admin: 'masterdir_no_admin',
   EX101_masterdir_svc_unkown_or_not_implemented_by_op: 'Service: [{0}] - Opérateur: [{1}] - Organisation: [{2}]',
@@ -1247,6 +1248,8 @@ bla bla
   EX101_operation_bad_credentials: 'Rôles KO: [{0}]',
   EX101_invalid_json_topic_update: 'Détail: [{0}]',
   EX101_invalid_key_topic: 'Topic: [{0}] - Key: [{1}]',
+  EX101_operation_svcorg_read_required: 'Status svc / org invalide [{0}]',
+  EX101_operation_svcorg_readwrite_required: 'Status svc / org invalide [{0}]',
 
   EX102_error_test: 'Test d\'erreur. Arg1: [{0}] - Arg1: [{1}]',
 

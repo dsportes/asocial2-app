@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
