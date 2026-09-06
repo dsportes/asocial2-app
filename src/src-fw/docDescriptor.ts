@@ -78,7 +78,7 @@ export class DocDescriptor {
     const cl = i === -1 ? clazz : clazz.substring(0, i)
     const dd = this.all.get(cl)
     if (!dd) 
-      throw new AppExc(103, 'not_configured_doc_class', 'DocDescriptor.get', [cl])
+      throw new AppExc(103, 'invalid_class_name', 'DocDescriptor.get', [cl])
     return dd
   }
 
@@ -199,7 +199,7 @@ export class DocDescriptor {
       throw new AppExc(3, 'not_configured_service', 'docDescriptor', [svc])
     this.svc = svc
     if (!DocDescriptor.isDocName(arg.name)) 
-      throw new AppExc(3, 'document_name_syntax', 'docDescriptor', [arg.name])
+      throw new AppExc(3, 'invalid_class_name', 'docDescriptor', [arg.name])
     const fn = this.svc + '$' + arg.name
     if (DocDescriptor.all.get(fn))
       throw new AppExc(3, 'document_name_duplicated', 'docDescriptor', [fn])

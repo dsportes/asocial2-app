@@ -63,7 +63,8 @@ const okn = ref(session.okOptions)
 session.haschgOptions = false
 
 watch(() => session.okOptions, async (v) => { 
-  if (v > okn.value) await ok() })
+  if (v > okn.value) 
+    await ok() })
 
 /*
 const dialogs = reactive({

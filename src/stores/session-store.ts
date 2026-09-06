@@ -238,6 +238,7 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  // Sur changement des options OU resynchronisation
   const onCredsOptionsChange = async () => {
     const sf = stores.safe
     const svcOrgsBefore: Set<string> = new Set(perims.value.keys())
@@ -268,7 +269,7 @@ export const useSessionStore = defineStore('session', () => {
       const org = svcOrg.substring(i + 1)
       const st = getStore(svc, org)
 
-      if (!planeMode) {
+      if (!planeMode.value) {
         // Périmètres "potentiels" recalculés
         const perimsP: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
 
@@ -287,6 +288,7 @@ export const useSessionStore = defineStore('session', () => {
           if (lpBeforeIds.has(x) && !lpAfterIds.has(x))
             st.removeActiveP(x)
         }
+        syncOK.value = true
         await st.fetch(p2sync, false, 1)
       }
     }
@@ -472,7 +474,7 @@ export const useSessionStore = defineStore('session', () => {
 
     step, setStep, dialogs,
     syncOK, allOK, netStatus,
-    perims, getPerimeter, chgOptions, getXref, setDefsXref, credsChange,
+    perims, getPerimeter, chgOptions, onCredsOptionsChange, getXref, setDefsXref, credsChange,
     orgRoles, orgRolesP, 
     prefs, pref, 
     edPref, setEdPref, resetEdPref, updatePrefs, currentPref,

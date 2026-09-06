@@ -46,20 +46,6 @@ const ui = stores.ui
 const verif = ref(false)
 const status = computed(() => !session.allOK ? session.nsStatus : {})
 
-const elt = (site, svc?) => {
-  const e = status.value[site]
-  return !svc ? e : e[svc]
-}
-const st = (site, svc?, org?) => {
-  const e = elt(site, svc)
-  if (!org) {
-    const s = e.$ST$
-    return s == 9 ? 3 : s
-  }
-  const s = e[org]
-  return s == 9 ? 3 : s
-}
-
 /* session:
   syncOK: si false rupture de synchro détectée
   netStatus: status général calculé
@@ -81,7 +67,7 @@ const recheck = async () : Promise<boolean> => {
   verif.value = true
   const allOK = await checkStatus (session.orgRoles)
   const lapse = Date.now() - t0
-  if (lapse < 2000) await sleep(2000 - lapse)
+  if (lapse < 1000) await sleep(1000 - lapse)
   verif.value = false
   return allOK
 }
@@ -89,12 +75,12 @@ const recheck = async () : Promise<boolean> => {
 const retry = async () => {
   const ok = await recheck()
   if (ok) {
-    if (session.step === 1) {
-      session.dialogs.netStatus = false
-      okOptions()
-    } else { // step = 2
-      session.dialogs.options = true
-      okOptions()
+    session.dialogs.netStatus = false
+    if (session.step === 1) okOptions()
+    else { // step = 2
+      session.dialogs.options = false
+      setTimeout(async () => { 
+        await session.onCredsOptionsChange() }, 1)
     }
   }
 }

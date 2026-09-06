@@ -82,7 +82,7 @@ export class Registry {
     }
     const cl = Registry.classes.get(cln)
     if (!cl) 
-      throw new AppExc(103, 'not_configured_doc_class', 'Registry.getClass', [cln])
+      throw new AppExc(103, 'invalid_class_name', 'Registry.getClass', [cln])
     return cl
   }
 

@@ -8,20 +8,25 @@
       </q-toolbar>
       <q-card-section v-if="!abort">
         <div class="q-mb-xs titre-md text-italic">{{ $t('EX_' + (isApp ? 'isApp' : 'isSvc')) }}</div>
-        <div class="q-mb-xs titre-md" v-html="html"/>
+        <q-separator class="q-mt-md q-mb-xs q-mx-lg" color="orange"/>
+        <sd-nb class="q-my-xs" :text="mdtext"/>
+        <q-separator class="q-mt-xs q-mb-md q-mx-lg" color="orange"/>
         <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
-        <div v-if="site" class="row items-center">
-          <div class="titre-italic q-mr-sm">{{  $t('EX_site') }}</div>
-          <div class="font-mono text-bold">{{ site }}</div>
-          <div class="q-ml-sm font-mono fs-sm">[{{ url }}]</div>
-        </div>
-        <div v-if="svcl" class="row items-center">
-          <div class="titre-italic q-mr-sm">{{  $t('EX_svc') }}</div>
-          <div>{{ svcl }}</div>
-        </div>
-        <div v-if="org" class="row items-center">
-          <div class="titre-italic q-mr-sm">{{  $t('EX_org') }}</div>
-          <div class="font-mono text-bold">{{ org }}</div>
+        <div class="q-my-xs font-mono fs-sm">[{{ exc.label }}]</div>
+        <div class="row items-center">
+          <div v-if="org">
+            <span class="text-italic q-mr-sm">{{  $t('EX_org') }}</span>
+            <span class="font-mono text-bold q-mr-md">{{ org }}</span>
+          </div>
+          <div v-if="site">
+            <span class="text-italic q-mr-sm">{{  $t('EX_site') }}</span>
+            <span class="font-mono text-bold">{{ site }}</span>
+            <span class="q-ml-sm font-mono fs-sm q-mr-md">[{{ url }}]</span>
+          </div>
+          <div v-if="svcl">
+            <span class="text-italic q-mr-sm">{{  $t('EX_svc') }}</span>
+            <span>{{ svcl }}</span>
+          </div>
         </div>
       </q-card-section>
       <q-card-actions vertical align="center" class="q-gutter-sm">
@@ -48,6 +53,7 @@ import { sty, $t, hasMessage } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import SdNb from '../components-fw/SdNb.vue'
 
 /* code
 public code: number
@@ -106,14 +112,9 @@ const org = computed(() => op.value ? (op.value.args.org || '') : '')
 const major = computed(() => equiv[exc.value.code] || 8)
 const isApp = computed(() => exc.value.code < 100)
 const abort = computed(() => exc.value.code === 99)
-const i18e = computed(() => 
-  'EX' + exc.value.code + '_' + exc.value.label)
 
-const html = computed(() => {
-  const e = exc.value
-  const str = !e.args ? $t(i18e.value) : $t(i18e.value, e.args)
-  return str.replace(/\n/g, '<br>')
-})
+const mdtext = computed(() => 
+  $t('EX' + exc.value.code + '_' + exc.value.label, exc.value.args || []))
 
 async function bye () {
   ui.confirmQuit()

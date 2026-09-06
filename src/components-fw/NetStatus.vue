@@ -4,7 +4,7 @@
     <div v-else>
       <div class="q-my-sm">
         <div v-for="n in 4" :key="n" class="row no-wrap items-center">
-          <q-icon class="col-auto" :name="icons[n -1]" size="1em" :color="colors[n -1]"/>
+          <q-icon class="col-auto" :name="icons[n -1]" size="1.4em" :color="colors[n -1]"/>
           <div class="col q-ml-xs titre-sm text-italic">{{  $t('NSst_' + [n -1]) }}</div>
         </div>
       </div>
@@ -14,7 +14,7 @@
       <div v-for="site in entries" :key="site">
         <div class="row items-center q-gutter-sm">
           <div class="col-auto titre-md text-italic">{{$t('NSsite')}}</div>
-          <q-icon class="col-auto" :name="icons[st(site)]" size="1em" :color="colors[st(site)]"/>
+          <q-icon class="col-auto" :name="icons[st(site)]" size="1.4em" :color="colors[st(site)]"/>
           <div class="font-mono text-bold">{{ site }}</div>
         </div>
         <div v-if="st(site)" class="q-ml-lg">
@@ -22,15 +22,15 @@
             <div v-if="svc !== '$ST$'">
               <div class="row no-wrap items-center q-gutter-sm">
                 <div class="col-auto titre-md text-italic">{{$t('NSsvc')}}</div>
-                <q-icon class="col-auto" :name="icons[st(site, svc)]" size="1em" :color="colors[st(site, svc)]"/>
+                <q-icon class="col-auto" :name="icons[st(site, svc)]" size="1.4em" :color="colors[st(site, svc)]"/>
                 <div class="col-auto font-mono text-bold">[{{ svc }}]</div>
                 <div class="col ellipsis">{{ $t('services_' + svc) }}</div>
               </div>
               <div v-if="st(site, svc) === 1 || st(site, svc) === 2" class="q-ml-lg">
                 <div v-for="org in Object.keys(elt(site, svc))" :key="org"
-                  class="row q-gutter-md q-pb-sm">
+                  class="row q-gutter-md q-pt-xs q-pb-sm">
                   <div v-if="org !== '$ST$'" class="row no-wrap items-center">
-                    <q-icon class="q-mr-xs " :name="icons[st(site, svc, org)]" size="1em" 
+                    <q-icon class="q-mr-xs " :name="icons[st(site, svc, org)]" size="1.4em" 
                       :color="colors[st(site, svc, org)]"/>
                     <div class="font-mono">{{ org }}</div>
                   </div>

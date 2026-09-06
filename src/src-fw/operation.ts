@@ -324,13 +324,16 @@ export class OperationG extends AOperation {
         throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (this.url || '?'), txt])
+      throw new AppExc(8, 'HTTP_500_etc', 'post', 
+        ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
+      
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post', [e.toString()])
+      throw new AppExc(8, 'unexpected_network_service_response', 'post', 
+        [(this.args.svc || this.args.svc || '?'), e.toString()])
     }
   }
 
@@ -467,13 +470,15 @@ abstract class A2Operation extends AOperation {
         throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc(8, 'HTTP_500_etc', 'post', ['' + response.status, (this.url || '?'), txt])
+      throw new AppExc(8, 'HTTP_500_etc', 'post', 
+        ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post', [e.toString()])
+      throw new AppExc(8, 'unexpected_network_service_response', 'post', 
+        [(this.args.svc || this.args.svc || '?'), e.toString()])
     }
   }
 }
