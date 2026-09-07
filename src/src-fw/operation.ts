@@ -218,7 +218,6 @@ export class AOperation {
   url: string = ''
   controller: AbortController | null = null
   aborted: boolean = false
-  background: boolean = false
   args: any = {}
 
   constructor (opName: string) {
@@ -259,9 +258,8 @@ export class OperationG extends AOperation {
     return url
   }
 
-  constructor (opName: string, background?: boolean) {
+  constructor (opName: string) {
     super(opName)
-    this.background = background || false
   }
 
   get label () { return $t('OP_' + this.opName) }
@@ -348,20 +346,20 @@ export class Operation extends OperationG {
 
   get soa () { return { svc: this.args.svc, org: this.args.org } }
 
-  constructor (opName: string, svc: string, org: string, background?: boolean) {
-    super(opName, background)
+  constructor (opName: string, svc: string, org: string) {
+    super(opName)
     const i = opName.indexOf('$')
     this.args.svc = svc || opName.substring(0, i)
     if (!stores.config.K.SERVICES[this.args.svc])
-      throw new AppExc(3, 'not_configured_service', opName, [this.svc])
+      throw new AppExc(3, 'not_configured_service', opName, [this.args.svc])
     this.args.org = org
   }
 }
 
 export class AdminOperation extends OperationG {
 
-  constructor (opName: string, site: string, background?: boolean) {
-    super(opName, background)
+  constructor (opName: string, site: string) {
+    super(opName)
     this.args.site = site
   }
 }

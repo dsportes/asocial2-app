@@ -1,7 +1,7 @@
 <template>
   <div v-if="session.netStatus">
-    <div v-if="!entries.length" class="titre-md text-italic">{{ $t('NSnone') }}</div>
-    <div v-else>
+    <!--div v-if="session.noDoc" class="msg">{{ $t('NSnone') }}</div-->
+    <div>
       <div class="q-my-sm">
         <div v-for="n in 4" :key="n" class="row no-wrap items-center">
           <q-icon class="col-auto" :name="icons[n -1]" size="1.4em" :color="colors[n -1]"/>

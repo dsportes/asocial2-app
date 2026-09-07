@@ -1,6 +1,6 @@
 <template>
   <dialog-std0 v-model="session.dialogs.netStatus" vh="75"
-    @close="checkCloseOptions" 
+    @close="retry" 
     :title="$t('NStit')">
     <template #default>
       <div v-if="!session.syncOK" class="q-my-sm q-pas-xz msg titre-md">{{ $t('NSsyncKO') }}</div>
@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sleep } from '../src-fw/util'
@@ -44,7 +44,6 @@ const session = stores.session
 const ui = stores.ui
 
 const verif = ref(false)
-const status = computed(() => !session.allOK ? session.nsStatus : {})
 
 /* session:
   syncOK: si false rupture de synchro détectée
@@ -58,25 +57,18 @@ const status = computed(() => !session.allOK ? session.nsStatus : {})
     - sinon : problème de synchro, pas de dialogue option 
 */
 
-const okOptions = () => {
-  session.okOptions = session.okOptions + 1
-}
-
-const recheck = async () : Promise<boolean> => {
+const retry = async () => {
   const t0 = Date.now()
   verif.value = true
-  const allOK = await checkStatus (session.orgRoles)
+  const ok = await checkStatus (session.orgRoles)
   const lapse = Date.now() - t0
-  if (lapse < 1000) await sleep(1000 - lapse)
+  if (!ok && lapse < 1000) await sleep(1000 - lapse)
   verif.value = false
-  return allOK
-}
 
-const retry = async () => {
-  const ok = await recheck()
   if (ok) {
     session.dialogs.netStatus = false
-    if (session.step === 1) okOptions()
+    if (session.step === 1) 
+      session.okOptions = session.okOptions + 1
     else { // step = 2
       session.dialogs.options = false
       setTimeout(async () => { 
@@ -86,21 +78,17 @@ const retry = async () => {
 }
 
 const chgopts = async () => {
+  session.dialogs.netStatus = false
   if (session.step === 1) {
-    session.dialogs.netStatus = false
-    // okOptions()
+    session.okOptions = session.okOptions + 1
   } else { // step = 2
     session.dialogs.options = true
-    // okOptions()
   }
 }
 
 const dcnx = () => {
+  session.dialogs.netStatus = false
   ui.sessionClose()
-}
-
-const checkCloseOptions = async () => {
-  retry()
 }
 
 </script>

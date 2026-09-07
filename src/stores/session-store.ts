@@ -54,7 +54,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   watch(syncOK, async (v) => {
-    if (!v && orgRoles.value) {
+    if (!v && orgRoles.value.size) {
       allOK.value = await checkStatus(orgRoles.value)
       dialogs.netStatus = true
     }
@@ -92,6 +92,7 @@ export const useSessionStore = defineStore('session', () => {
   const currentPref = computed(() => !pref.value ? null : prefs.value[pref.value])
 
   const orgRoles : Ref<Set<string>> = ref() // couples org/role
+  const noDoc = computed(() => !orgRoles.value || !orgRoles.value.size)
   const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
 
   const getOrgRolesP = async (perims: $Perims) => {
@@ -130,7 +131,7 @@ export const useSessionStore = defineStore('session', () => {
       prefs.value = sf.mySafePrefs
       const x = sf.mySafeOptions
       pref.value = x ? x.pref || '' : ''
-      orgRoles.value = x ? x.orgRoles || [] : []
+      orgRoles.value = new Set(x ? x.orgRoles || [] : [])
       if (syncMode.value) {
         const opts = await idb.openSync()
         if (opts && opts.pref) pref.value = opts.pref
@@ -154,7 +155,9 @@ export const useSessionStore = defineStore('session', () => {
       if (hasLocal.value) {
         const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
         const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [,p] of px) if (p.plane) p2sync.push(p)
+        for(const [,p] of px) 
+          if (p.plane && orgRoles.value.has(p.org + '/' + p.role)) 
+            p2sync.push(p)
         await st.fetch(p2sync, false, 2)
       }
     }
@@ -190,7 +193,7 @@ export const useSessionStore = defineStore('session', () => {
             new IDB()
             await idb.open()
           }
-          const options = { pref: pref.value, orgRoles: orgRoles.value }
+          const options = { pref: pref.value, orgRoles: Array.from(orgRoles.value) }
           await idb.storeOptions(options)
           await idb.storePrefs(prefs.value)
           await idb.storePerims(perims.value)
@@ -209,7 +212,7 @@ export const useSessionStore = defineStore('session', () => {
 
   const chgOptions = async (_pref: string , _orgRoles: string[], toSave: boolean) => {
     pref.value = _pref
-    orgRoles.value = _orgRoles
+    orgRoles.value = new Set(_orgRoles || [])
 
     if (toSave) {
       const _slor = _orgRoles.sort().join(' ')
@@ -241,6 +244,8 @@ export const useSessionStore = defineStore('session', () => {
   // Sur changement des options OU resynchronisation
   const onCredsOptionsChange = async () => {
     const sf = stores.safe
+    const wasSync = syncOK.value
+    syncOK.value = true
     const svcOrgsBefore: Set<string> = new Set(perims.value.keys())
     perims.value = sf.getPerimeters()
     buildXref()
@@ -277,19 +282,31 @@ export const useSessionStore = defineStore('session', () => {
         const lpAfterIds: Set<string> = new Set() // actifs après
         const p2sync: $Perimeter[] = [] // ajouter à synchroniser
 
+        let force = 1
         for(const [x,p] of perimsP) {
-          // Maintenir ou ajouter "actif" ?
+
+          // Maintenir ou ajouter "actif"
           if ((syncMode.value && p.plane) || lpBeforeIds.has(p.id))
             lpAfterIds.add(x)
-          // A synchroniser parce que nouvellement actif ?
-          if (lpAfterIds.has(x) && !lpBeforeIds.has(x))
-            p2sync.push(p)
+
+          if (wasSync) {
+            // A synchroniser parce que nouvellement actif: la synchro est OK
+            if (lpAfterIds.has(x) && !lpBeforeIds.has(x))
+              p2sync.push(p)
+          } else {
+            force = 2
+            // TOUS à synchroniser pace que synchro KO
+            if (lpAfterIds.has(x))
+              p2sync.push(p)
+          }
+
           // A supprimer de la synchronisation ?
           if (lpBeforeIds.has(x) && !lpAfterIds.has(x))
             st.removeActiveP(x)
+
         }
-        syncOK.value = true
-        await st.fetch(p2sync, false, 1)
+        if (p2sync.length)
+          await st.fetch(p2sync, false, force)
       }
     }
   }
@@ -335,13 +352,17 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function opStart (op: any) {
-    opEncours.value = op
-    opEncoursName.value = $t('op_' + op.opName)
-    opSpinner.value = 0
-    opSignal.value = true
-    opDialog.value = true
-    opCount()
-    if (opTimer2) clearTimeout(opTimer2)
+    try {
+      opEncours.value = op
+      opEncoursName.value = $t('op_' + op.opName)
+      opSpinner.value = 0
+      opSignal.value = true
+      opDialog.value = true
+      opCount()
+      if (opTimer2) clearTimeout(opTimer2)
+    } catch(e) { // !!!!
+      console.log(e)
+    }
   }
 
   function opEnd () {
@@ -473,7 +494,7 @@ export const useSessionStore = defineStore('session', () => {
     hasNet, noNet, resetdb, hasLocal, noLocal, planeMode, syncMode, incMode, loginMode,
 
     step, setStep, dialogs,
-    syncOK, allOK, netStatus,
+    syncOK, allOK, netStatus, noDoc,
     perims, getPerimeter, chgOptions, onCredsOptionsChange, getXref, setDefsXref, credsChange,
     orgRoles, orgRolesP, 
     prefs, pref, 
