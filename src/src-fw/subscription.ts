@@ -7,6 +7,7 @@ import { Operation } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $ADocument, $Document } from '../src-fw/registry'
+import { getStore } from '../stores/docs'
 
 // Map par svc/org des périmètres identifiés par leur id
 export type $Perims = Map<string, Map<string, $Perimeter>>
@@ -161,6 +162,9 @@ export class $Subs extends $Document {
       }
       op.args.longLife = longLife
       const res = await op.post()
+      const hbc = res.hbc
+      const std = getStore(svc, org, true)
+      if (std) std.manageHbc(1, hbc)
       return true
     } catch(e) {
       await op.ko(e)
@@ -309,15 +313,16 @@ export class FW$Sync {
   }
 
 
-  async post () : Promise<[number, Object]> {
+  async post () : Promise<[number, Object, string]> {
     try {
       for(const cred of this.creds)
         await this.op.sign(cred)
       const res = await this.op.post()
-      return [res.now, res.syncs]
+      const hbc = res.hbc
+      return [res.now, res.syncs, hbc]
     } catch (e) {
       await this.op.ko(e)
-      return [0, null]
+      return [0, null, null]
     }
   }
 }

@@ -43,6 +43,7 @@ type MsgNotif = {
   svc: string
   org: string // 'demo'
   now: number // dh de l'opération ayant publié le message
+  hbc: string
   title: string // 'myApp - demo', 
   body: string // 'Chat reçu',
   url: string // 'http...'
@@ -60,7 +61,7 @@ export async function onPushMsg (payload: string) {
     const l: string[] = messageNotif.defs.split(' ')
     const defs: $Def[] = []
     for(const x of l) defs.push(new $Def(x))
-    await st.onNotif(defs, messageNotif.now)
+    await st.onNotif(defs, messageNotif.now, messageNotif.hbc)
   }
   if (messageNotif.body) {
     // if (config().K.myDebug) console.log('Show notif EXPLICITE from app')
@@ -90,9 +91,11 @@ export type IDocStore = {
   getColl (cl: string, pk: string) : Set<string>
   activePerimsIds () : Set<string>
 
-  onNotif (defs: $Def[], dh: number) : Promise<void>
+  onNotif (defs: $Def[], dh: number, hbc: string) : Promise<void>
   storeDC (item: $DCItem, now: number, dcdata: $DCData) : Promise<void>
   checkResolves () : void
+
+  manageHbc (hbcMode: number, hbc: string) : void
 }
 
 const dsStores = {}
@@ -244,8 +247,9 @@ export class SyncQueue {
         sync.addDef(x.item.def, x.item.lv)
         if (x.item.lv || x.item.def.isColl) break
       }
-      const [sat, syncs] = await sync.post()
+      const [sat, syncs, hbc] = await sync.post()
       if (sat !== 0) { 
+        std.manageHbc(2, hbc)
         for(const definition in syncs) {
           const dcdata = syncs[definition] as $DCData
           const item = runningItems.get(definition)
@@ -338,7 +342,9 @@ const useStore = (id: string) =>
     }
 
     // Avis de mises à jour de documents / collections - A RESYNCHRONISER
-    const onNotif = async (defs: $Def[], dh: number) => {
+    const onNotif = async (defs: $Def[], dh: number, hbc: string) => {
+      if (hbc)
+        manageHbc(5, hbc)
       const items: $DCItem[] = []
       for(const def of defs) {
           const item = getItem(def)
@@ -647,7 +653,7 @@ const useStore = (id: string) =>
         const aps = activePerims[p.id]
         if (aps.status < 2) aps.status = 2
       } else {
-        // TODO
+        session().syncOK = false
         console.log('subscription failed !')
       }
     }
@@ -807,11 +813,61 @@ const useStore = (id: string) =>
       })
     } 
 
+    const hb = reactive({
+      dh: 0, // dh de souscription
+      lc: [], // liste des compteurs accumulés pas en séquence
+      lost: 0 // dh de constat d'un trou (lc.length > 1)
+    })
+
+    /*
+    hbcMode 
+      1: souscription
+      2: synchronisation
+      3: heart beat (ne revient pas)
+      4: op avec notif
+      5: notification 
+    */
+    const manageHbc = (hbcMode: number, hbc: string) => {
+      const j = hbc.indexOf(' ')
+      const dh = parseInt(hbc.substring(0, j))
+      const c = parseInt(hbc.substring(j + 1))
+      if (hbcMode === 1) {
+        hb.dh = dh
+        hb.lc = [c]
+        hb.lost = 0
+        return
+      }
+      if (dh !== hb.dh) return // ignoré
+      if (hb.lc.indexOf(c) !== -1) return // doublon ??? ignoré
+      const lc = hb.lc
+      lc.push(c)
+      lc.sort()
+      let x = -1
+      for(let i = 1; i < lc.length; i++)
+        if (lc[i - 1] + 1 !== lc[i]) { x = i; break }
+      // En séquence continue jusqu'à x (premier divergent)
+      if (x === -1) { // tous en séquence
+        hb.lc = [lc[lc.length - 1]]
+        hb.lost = 0
+        return
+      }
+      hb.lc = lc.splice(0, x - 1)
+      const now = Date.now()
+      if (!hb.lost) hb.lost = now
+      const d = now - hb.lost
+      console.log('HBC leaks: ' + d + 'ms dh:' + hb.dh + ' seq:' + hb.lc.join(','))
+      if (d > 5000) {
+        // trouée depuis plus de 5 secondes
+        session().syncOK = false
+      }
+    }
+
     return { 
       svc, org, getXref, getApstate, subsOK,
       getItem,
       onNotif, storeDC, checkResolves,
       getDoc, getColl, activePerimsIds, removeActiveP,
-      fetch, waitNextSync, forcedResync, getLastSyncTime
+      fetch, waitNextSync, forcedResync, getLastSyncTime,
+      manageHbc
     } as IDocStore
   })()

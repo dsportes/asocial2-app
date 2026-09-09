@@ -140,7 +140,7 @@ const ok = async () => {
   const _orgRoles: string[] = []
   for(const r of orgRoles.value)
     for(const ox of r.orgs) if (ox.sel) _orgRoles.push(ox.org + '/' + r.role)
-  console.log('orgRoles: ' + _orgRoles.join('  '))
+  // console.log('orgRoles: ' + _orgRoles.join('  '))
 
   const _pref = selPref.value === defp.value ? '' : selPref.value
   const allOK = await checkStatus(_orgRoles)

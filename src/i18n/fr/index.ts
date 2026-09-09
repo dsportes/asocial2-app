@@ -1301,7 +1301,11 @@ Détail: [{0}]
 `,
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
   EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application (BUG probable): [service: {0}, classe:{1}, id:{2}]',
+  EX105_session_synch_failure: `Détection de la perte de la synchronisation des documents de la session par l'opération [{0}] du _service cloud_ [{1}] pour l'organisation [{2}].
+Détail: le compteur de suivi de la session a disparu (contrôle de synchronisation impossible).
 
+#### Une re-synchronisation générale va être relancée et devrait résoudre ce problème.
+`,
   EX108_SQLite_connexion_failed: `Incident technique inattendu d'accès à la Base de Données lors de l'opération [{0}] du _service cloud_ [{1}] pour l'organisation [{2}].
 Détail: [{3}]
 `,

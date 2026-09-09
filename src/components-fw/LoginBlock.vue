@@ -84,7 +84,7 @@ watch(() => sf.trustings, (t) => {
   const l = []
   for(const [,u] of t) if (u.hasAppDb()) l.push(u)
   trustingsCached.value = l
-  console.log('trustings', t.size, l.length)
+  // console.log('trustings', t.size, l.length)
 })
 
 /* Si IDB safe existe, on peut a minima la lire pour lister

@@ -9,6 +9,7 @@ import { onPushMsg } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Credential } from '../src-fw/documents'
+import { getStore } from '../stores/docs'
 
 const encoder = new TextEncoder()
 
@@ -237,6 +238,7 @@ export class AOperation {
 
 /* Opération générique ******************************************/
 export class OperationG extends AOperation {
+  static specialOps = new Set(['FW$setSubscription', 'FW$Sync', 'FW$HeartBeat'])
 
   authRecord: AuthRecord = new AuthRecord()
   svc: string
@@ -311,6 +313,11 @@ export class OperationG extends AOperation {
       const obj = decode(buf)
       if (response.status === 200) {
         session.opEnd()
+        const hbc = obj['hbc']
+        if (hbc && !OperationG.specialOps.has(this.args.opName)) {
+          const st = getStore(this.args.svc, this.args.org, true)
+          if (st) st.manageHbc(4, hbc)
+        }
         const ntf = obj['notification']
         if (ntf) {
           if (config.K.mydebug) console.log('Notification received on operation return')
@@ -331,7 +338,7 @@ export class OperationG extends AOperation {
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
       throw new AppExc(8, 'unexpected_network_service_response', 'post', 
-        [(this.args.svc || this.args.svc || '?'), e.toString()])
+        [(this.args.svc || this.args.svc || '?'), e.toString()], e.stack || '')
     }
   }
 
