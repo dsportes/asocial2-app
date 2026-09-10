@@ -128,7 +128,7 @@ class AS2$Form_coauteur extends $Form {
   }
   async checkEtc (etc: Object | null) : Promise<string> {
     const na = etc['nomAuteur']
-    if (!na) return $t('FORMdiag_AS2_nomAuteur2')
+    if (!na) return $t('FORM_AS2_diag_nomAuteur2')
     this.autid = await AS2$Auteur.autidParNom(this.soa, na)
     if (!this.autid) return $t('FORM_AS2_diag_nomInexistant')
     return ''

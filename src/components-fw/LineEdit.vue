@@ -11,19 +11,13 @@
     <q-icon v-if="!disable" size="20px" color="warning" class="q-mr-sm" name="edit"/>
     <span>{{ text }}</span>
     <q-menu v-model="menu"
-      anchor="top left" self="top left" class="bord q-pa-sm"
-      :style="styles[size || 'md']"
+      anchor="center middle" self="center middle"
+      :style="styles[size || 'md'] + ';border:2px solid var(--q-primary);border-radius:5px;'"
       transition-show="flip-up" transition-hide="flip-down">
-      <div class="row items-center">
-        <q-input class="col font-mono" standout v-model="ntext"
-          @keydown.enter.prevent="doOk"
-          :disable="disable || false"/>
-        <btn-cond v-if="ntext !== text" 
-          class="col-auto q-mx-xs" icon="undo" round @ok="undo"/>
-        <btn-cond v-if="ntext !== text" 
-          class="col-auto" :label="$t('ok')" color="warning" padding="2px" @ok="doOk"/>
-        <btn-cond class="q-ml-xs col-auto" icon="close" @ok="menu = false"/>
-      </div>
+      <input-a class="font-mono q-ma-sm" v-model="ntext" :initval="text"
+        :size="datasize" simple @validate="doOk"
+        :disable="disable || false"
+        style="position:relative;top:-5px;"/>
     </q-menu>
   </div>
 </div>
@@ -31,33 +25,40 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref } from 'vue'
-import BtnCond from '../components-fw/BtnCond.vue'
+import { ref, watch } from 'vue'
+import { asty, dkli } from '../src-fw/util'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import InputA from '../components-fw/InputA.vue'
 
 const props = defineProps({
   prefix: String,
   text: String,
   disable: Boolean,
   size: String,
+  datasize: String,
   ctx: Object
 })
 
 const styles = {
-  sm: 'max-width: 30rem; width: 30rem',
-  md: 'max-width: 40rem; width: 40rem',
-  lg: 'max-width: 50rem; width: 50rem'
+  sm: 'width: 30em !important',
+  md: 'width: 40em !important',
+  lg: 'width: 50em !important'
 }
 
 const emit = defineEmits(['change'])
 
 const menu = ref(false)
-const ntext = ref(props.text)
+const ntext = ref('')
+watch(() => menu.value, (v) => {
+  if (v) ntext.value = props.text
+})
 
+/*
 const undo = () => {
   ntext.value = props.text
   menu.value = false
 }
+*/
 
 const doOk = () => {
   if (ntext.value !== props.text) {
@@ -72,9 +73,5 @@ const doOk = () => {
 <style lang="scss" scoped>
 @import '../css/app.scss';
 // .w1 { background-color:rgba(255,255,255,0.1) }
-.bord { border: 2px solid $warning; border-radius: 2px;}
-.sm { max-width: 30rem; width: 95vw }
-.md { max-width: 40rem; width: 95vw }
-.lg { max-width: 50rem; width: 95vw }
-.mh { max-height: 1.3rem; overflow: hidden;}
+.bord { border: 2px solid var(--q-warning); border-radius: 2px;}
 </style>

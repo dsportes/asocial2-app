@@ -134,6 +134,10 @@ export function sty (sz?: string) {
   return (d ? 'dark bsfdark pw' : 'clear bsclear pw') + sz
 }
 
+export function asty () {
+  return stores.ui.isDark ? 'clear0 ' : 'dark0 '
+}
+
 /*
 export function styp (sz?: string) {
   const d = stores.ui.isDark

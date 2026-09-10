@@ -2,9 +2,14 @@
 <form-exp :name="champ" :label="$t('TYPE_' + svc + '_' + type + '_' + champ)">
   <div class="q-ml-sm">
     <div v-if="fst.visU" class="row q-px-xs items-center q-mt-sm">
-      <input-b v-if="fst.isDemand && fst.editable"
+      <!--input-b v-if="fst.isDemand && fst.editable"
         class="col font-mono text-bold" :size="size" prefix="FORMdem_2"
-        v-model="loc1" :noval="!valbtn" :initval="psU" @validate="valB"/>
+        v-model="loc1" :noval="!valbtn" :initval="psU" @validate="valB"/-->
+
+      <line-edit v-if="fst.isDemand && fst.editable"
+        class="col font-mono text-bold"
+        :text="loc1.inp" @change="valB2" prefix="FORMdem_2"/>
+
       <input-b v-else
         class="col font-mono text-bold q-mt-sm" prefix="FORMdem_2"
         v-model="loc2" noval :initval="loc2.inp" disable/>
@@ -15,9 +20,12 @@
     </div>
 
     <div v-if="fst.visT" class="row q-px-xs items-center">
-      <input-b v-if="!fst.isDemand && fst.editable"
+      <!--input-b v-if="!fst.isDemand && fst.editable"
         class="col font-mono text-bold q-mt-sm" :size="size" prefix="FORMprop_2"
-        v-model="loc1" :noval="!valbtn" :initval="psT" @validate="valB"/>
+        v-model="loc1" :noval="!valbtn" :initval="psT" @validate="valB"/-->
+      <line-edit v-if="!fst.isDemand && fst.editable"
+        class="col font-mono text-bold"
+        :text="loc1.inp" @change="valB2" prefix="FORMprop_2"/>
       <input-b v-else
         class="col font-mono text-bold q-mt-sm" prefix="FORMprop_2"
         v-model="loc2" noval :initval="loc2.inp" disable/>
@@ -36,6 +44,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
+import LineEdit from '../components-fw/LineEdit.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormExp from '../components-fw/FormExp.vue'
 
@@ -55,8 +64,8 @@ fst.setExp(props.champ)
 const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
 const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
 
-const loc1 = reactive({ inp: '', err: '' })
-const loc2 = reactive({ inp: '', err: '' })
+const loc1 = reactive({ inp: psU.value, err: '' })
+const loc2 = reactive({ inp: psT.value, err: '' })
 
 watch(loc1, async (v) => {
   err.value = v.err
@@ -68,10 +77,17 @@ watch(loc1, async (v) => {
   }
   await fst.onChange()
 })
+const valB2 = async (v) => {
+  loc1.inp = v
+  // fst.upd.etc[props.champ] = v
+  await fst.onChange()
+}
+/*
 const valB = async () => {
   fst.upd.etc[props.champ] = loc1.inp
   await fst.onChange()
 }
+*/
 watch(() => fst.upd.etc, (v) => {
   loc1.inp = v[props.champ]
 })

@@ -13,6 +13,10 @@
           <span class="titre-md text-italic">{{ $t('userid') }}</span>
           <span class="q-ml-sm font-mono">{{ sf.userId }}</span>
         </div>
+        <div class="q-pa-xs">
+          <span class="titre-md text-italic">{{ $t('sessionid') }}</span>
+          <span class="q-ml-sm font-mono">{{ session.sessionId }}</span>
+        </div>
       </div>
 
       <div v-if="session.hasNet">

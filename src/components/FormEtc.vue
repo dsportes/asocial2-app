@@ -33,7 +33,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
   <div v-if="fst.form.type === 'coauteur'">
     <form-inp2 v-model="errs.nomAuteur"
       type="coauteur" champ="nomAuteur" :svc="fst.form.svc"
-      size="auteur" valbtn />
+      size="auteur"  />
     <form-inp2 v-model="errs.trigramme"
       type="coauteur" champ="trigramme" :svc="fst.form.svc"
       size="trig" />

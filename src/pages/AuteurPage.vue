@@ -27,7 +27,8 @@
     <div v-if="session.hasNet" class="row q-mb-sm">
       <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
       <div class="col-7 q-pl-sm ">
-        <line-edit :text="cred.props.trig || $t('AUTnotrig')" @change="editTrig"/>
+        <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
+          size="sm" datasize="trig" @change="editTrig"/>
       </div>
     </div>
 
@@ -37,12 +38,17 @@
     </div>
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
-      <div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div>
+      <div class="col-7 q-pl-sm font-mono">
+        <line-edit :text="perimetre.name" @change="majNP"
+          :disable="session.planeMode"/>
+      </div>
+      <!--div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div-->
     </div>
     <div class="row">
       <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
       <div class="col-7 q-pl-sm font-mono">
-        <line-edit :text="aut.nomAuteur" @change="majNA"
+        <line-edit :text="aut.nomAuteur" @change="majNA" prefix="AUTna"
+          datasize="auteur" size="sm"
           :disable="session.planeMode"/>
       </div>
     </div>
@@ -50,7 +56,7 @@
       <div class="col-5">{{ $t('AUTcol_sec') }}</div>
       <div class="col-7 q-pl-sm font-mono">
         <select-enum1 svc="AS2" :org="org"
-          v-model="aut.section" enum="Section" size="md"
+          v-model="aut.section" enum="Section" size="sm"
           @select="majSection"
           :disable="session.planeMode"/>
       </div>
@@ -154,6 +160,10 @@ const editTrig = async (trig: string) => {
     if (res.status) await ui.diagDisplay($t('STCR_' + res.status))
     else creds.value.get(c.credId).props = res.props
   } catch (e) { op.ko(e) }
+}
+
+const majNP = async (nom: string) => {
+  if (await sf.updateCredName(cred.value.credId, nom)) cred.value.name = nom
 }
 
 const majNA = async (nomAuteur: string) => {

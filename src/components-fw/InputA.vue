@@ -3,12 +3,12 @@ Commentaires dans Input-B.
 -->
 <template>
 <div class="row">
-  <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
+  <btn-bubble v-if="prefix" class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
   <q-input class="col" v-model="model" counter dense
     :disable="disable"
     input-class="font-mono"
     :type="ui.visibility ? 'text' : 'password'"
-    :label="$t(prefix + '_label')"
+    :label="prefix ? $t(prefix + '_label') : ''"
     :placeholder="ph"
     bottom-slots
     :error="err !== ''"
@@ -21,11 +21,11 @@ Commentaires dans Input-B.
       <btn-cond v-if="!simple"
         round size="md" icon="close" @ok="model = ''"
         :disable="disable || model.length === 0" color="none"/>
-      <btn-cond v-if="!simple && hasInitVal && !disable && chg"
+      <btn-cond v-if="!noundo && hasInitVal && !disable && chg"
         size="md" icon="undo" color="none" round 
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK" padding="0 xs"
-        :disable="disable || err !== ''"
+        :disable="disable || err !== '' || !chg"
         @ok="emit('validate', true)" />
       <btn-cond v-if="!simple && mayStar" 
         size="md" icon="star" color="warning" round
@@ -61,6 +61,7 @@ const emit = defineEmits(['validate', 'change'])
 
 const props = defineProps({
   simple: Boolean,
+  noundo: Boolean,
   size: String, // obligatoire
   prefix: String, // obligatoire
   initval: String,
@@ -109,7 +110,7 @@ const fill = (v) => {
 }
 
 const hasInitVal = computed(() => props.initval && props.initval.length )
-const chg = computed(() => !props.disable && hasInitVal.value && props.initval.value !== model.value)
+const chg = computed(() => !props.disable && hasInitVal.value && props.initval !== model.value)
 const hint = computed(() => 
   $t('minmax', sz.value) + (!err.value && !nv.value ? $t('pressret') : ''))
 const undo = () => {
