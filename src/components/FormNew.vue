@@ -50,7 +50,7 @@ const props = defineProps({
 
 const sf = stores.safe
 const ui = stores.ui
-ui.navBar.hasback = false
+ui.navBar.hasBack = false
 
 const exp = ref(true)
 const diag = ref()

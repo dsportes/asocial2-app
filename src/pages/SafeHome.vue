@@ -1,6 +1,5 @@
 <template>
 <div class="column items-center">
-
   <div :class="sty('md')">
     <div v-if="ui.loginPage.tab === 'login' && session.step === 0">
       <mode-net/>
@@ -12,16 +11,15 @@
       <login-create class="full-width"
         @done="ui.loginPage.tab3 = 'newr'; step(3)"/>
     </div>
+
+    <select-options v-if="session.step === 1"/>
   </div>
-
-  <select-options v-if="session.step === 1"/>
-
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { watch, reactive } from 'vue'
+// import { watch, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'

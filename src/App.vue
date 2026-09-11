@@ -1,24 +1,16 @@
 <template>
 <q-layout view="hHh lpR fFf">
   <q-header>
+    <std-header v-if="!hdrPages.has(ui.page)"/>
     <safe-header v-if="ui.page === 'safeHome'"/>
     <admin-header v-if="ui.page === 'admin'"/>
     <demands-header v-if="ui.page === 'demands'"/>
     <sponsorings-header v-if="ui.page === 'sponsorings'"/>
-
-    <q-toolbar v-if="!hdrPages.has(ui.page)" class="full-width tbp">
-      <btn-menu/>
-      <btn-mode/>
-      
-      <q-toolbar-title v-if="ui.page" class="titre-md text-center q-mx-sm">{{$t('PAGE' + ui.page)}}</q-toolbar-title>
-      <settings-button class="q-ml-sm"/>
-      <help-button class="" page="DOCpg"/>
-      <div style="color:transparent;width:3px">*<q-tooltip>{{ ui.page }}</q-tooltip></div>
-    </q-toolbar>
+    <auteur-header v-if="ui.page === 'auteur'"/>
   </q-header>
 
   <q-drawer v-if="session.step === 2" v-model="ui.leftMenu" :class="sty()"
-    show-if-above overlay :width="350" :breakpoint="700" elevated >
+    show-if-above :width="350" :breakpoint="700" elevated >
     <left-menu/>
   </q-drawer>
 
@@ -98,29 +90,27 @@ import stores from './stores/all'
 
 import { set$t, sty } from './src-fw/util'
 import { keyFromB64, fromUrl } from './src-fw/b64'
-import BtnMenu from './components-fw/BtnMenu.vue'
-import BtnMode from './components-fw/BtnMode.vue'
+
+import StdHeader from './components-fw/StdHeader.vue'
 import SafeHeader from './pages/SafeHeader.vue'
-import SafeHome from './pages/SafeHome.vue'
-import PermissionBox from './dialogs-fw/PermissionBox.vue'
-import NetStatusdial from './dialogs-fw/NetStatusdial.vue'
-
-import AdminPage from './pages/AdminPage.vue'
 import AdminHeader from './pages/AdminHeader.vue'
-
-import DemandsPage from './pages/DemandsPage.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
-
-import SponsoringsPage from './pages/SponsoringsPage.vue'
 import SponsoringsHeader from './pages/SponsoringsHeader.vue'
+
+import AuteurHeader from './pages/AuteurHeader.vue'
+
+import SafeHome from './pages/SafeHome.vue'
+import AdminPage from './pages/AdminPage.vue'
+import DemandsPage from './pages/DemandsPage.vue'
+import SponsoringsPage from './pages/SponsoringsPage.vue'
 
 import AuteurPage from './pages/AuteurPage.vue'
 import TestPage from './pages/TestPage.vue'
 
-import SettingsButton from './components-fw/SettingsButton.vue'
-import HelpButton from './components-fw/HelpButton.vue'
+import PermissionBox from './dialogs-fw/PermissionBox.vue'
+import NetStatusdial from './dialogs-fw/NetStatusdial.vue'
+
 import LeftMenu from './components-fw/LeftMenu.vue'
-import BtnCond from './components-fw/BtnCond.vue'
 
 import GotIt from './dialogs-fw/GotIt.vue'
 import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
@@ -136,7 +126,7 @@ import { AS2nbForms } from './as2/forms'
 import { AS2nbCreds } from './as2/credentials'
 import { FWnbDocs } from './src-fw/fwdocuments'
 
-const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome'])
+const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome', 'auteur'])
 
 const config = stores.config
 config.initK()

@@ -17,7 +17,7 @@ Emit:
   <btn-cond icon="chevron_left" flat color="none" @ok="navig(2)"
     :disable="!nav.hasBack || nav.idx <= 0"/>
   <div class="q-mx-sm text-center" style="width:40px">
-    {{ nav.hasBack ? (nav.idx + 1) + ' / ' + nav.nb : ''}}
+    {{ nav.hasback ? (nav.idx + 1) + ' / ' + nav.nb : ''}}
   </div>
   <btn-cond icon="chevron_right" flat color="none" @ok="navig(1)"
     :disable="!nav.hasBack || nav.idx >= (nav.nb - 1)"/>

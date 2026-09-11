@@ -19,9 +19,15 @@ Contrôlé par ui.leftMenu
         @ok="ui.closeMenu(); ui.sessionClose()"/>
     </div>
 
-    <safe-tools v-if="sf.userId && session.step > 0" short class="q-mb-sm q-px-sm"
-      @close="ui.closeMenu()"/>
     <div v-if="session.step === 2" class="column q-px-sm">
+      <btn-cond v-if="sf.userId"
+        class="q-mb-sm" flat color="warning"
+        @ok="openAdmin" :disable="ui.page === 'admin'">
+        <img :src="superman" class="q-mr-xs" width="24px"/>
+        <div>{{ $t('PAGEadmin') }}</div>
+      </btn-cond>
+      <safe-tools v-if="sf.userId && session.step > 0" short class="q-mb-sm"
+        @close="ui.closeMenu()"/>
       <btn-cond class="q-mb-sm" flat color="primary"
         @ok="openDemands" :disable="ui.page === 'demands'">
         <img :src="invitation" class="q-mr-xs" width="24px"/>
@@ -32,17 +38,12 @@ Contrôlé par ui.leftMenu
         <img :src="invitation" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEsponsorings') }}</div>
       </btn-cond>
-      <btn-cond v-if="sf.userId"
-        class="q-mb-sm" flat color="warning"
-        @ok="openAdmin" :disable="ui.page === 'admin'">
-        <img :src="superman" class="q-mr-xs" width="24px"/>
-        <div>{{ $t('PAGEadmin') }}</div>
-      </btn-cond>
 
       <btn-cond class="q-mb-sm"
-        flat :label="$t('OPTStitle_2')"
+        flat :label="$t('OPTStitle_2')" icon="more_horiz"
         @ok="ui.closeMenu(); session.dialogs.options = true"/>
-      <btn-cond class="q-mb-sm"
+
+      <btn-cond class="q-mt-md q-mb-sm" icon="home"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
       <btn-cond class="q-mb-sm"

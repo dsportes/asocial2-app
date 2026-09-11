@@ -1,82 +1,89 @@
 <template>
-<div class="column items-center">
-  <div class="row justify-between q-gutter-md q-mb-md">
-    <bar-title class="col" prefix="PAGEauteur" large/>
-    <btn-cond class="col-auto" icon="sync" round @ok="init"/>
-  </div>
-  <scroll-area class="pwsm" size="sm">
-    <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
-      :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
-      @click="select(c)">
-      <div class="col-2">{{ c.org }}</div>
-      <div class="col">{{ c.name }}</div>
-      <div class="col-2">{{ c.props.trig || '' }}</div>
-      <div class="col-auto font-mono">{{ c.docPk.substring(0,5) }}</div>
-    </div>
-    <div v-else v-for="(p, idx) in myPerims" :key="p.id"
-      :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
-      @click="selectp(p)">
-      <div class="col-2">{{ p.org }}</div>
-      <div class="col">{{ p.name }}</div>
-      <div class="col-2">{{ p.code }}</div>
-      <div class="col-auto font-mono">{{ p.docPk.substring(0,5) }}</div>
-    </div>
-  </scroll-area>
+<div ref="autpage">
+<div v-if="tab === 1" class="column items-center">
+  <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="pageh">
+    <template v-slot:before>
+      <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
+        :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
+        @click="select(c)">
+        <div class="col-2">{{ c.org }}</div>
+        <div class="col">{{ c.name }}</div>
+        <div class="col-2">{{ c.props.trig || '' }}</div>
+        <div class="col-auto font-mono">{{ c.docPk.substring(0,5) }}</div>
+      </div>
+      <div v-else v-for="(p, idx) in myPerims" :key="p.id"
+        :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
+        @click="selectp(p)">
+        <div class="col-2">{{ p.org }}</div>
+        <div class="col">{{ p.name }}</div>
+        <div class="col-2">{{ p.code }}</div>
+        <div class="col-auto font-mono">{{ p.docPk.substring(0,5) }}</div>
+      </div>
+    </template>
 
-  <div v-if="aut" class="pwsm q-my-md">
-    <div v-if="session.hasNet" class="row q-mb-sm">
-      <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
-      <div class="col-7 q-pl-sm ">
-        <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
-          size="sm" datasize="trig" @change="editTrig"/>
-      </div>
-    </div>
+    <template v-slot:after>
+      <div v-if="aut" class="q-my-md" style="position:relative;">
+        <btn-cond icon="open_in_new" @ok="goto2" size="lg" flat
+          style="position:absolute;right:0;top:0" />
+        <div v-if="session.hasNet" class="row q-mb-sm">
+          <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
+          <div class="col-7 q-pl-sm ">
+            <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
+              size="sm" datasize="trig" @change="editTrig"/>
+          </div>
+        </div>
 
-    <div class="row">
-      <div class="col-5 text-italic">{{ $t('AUTcol_id') }}</div>
-      <div class="col-7 q-pl-sm font-mono">{{ aut.autid }}</div>
-    </div>
-    <div class="row">
-      <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
-      <div class="col-7 q-pl-sm font-mono">
-        <line-edit :text="perimetre.name" @change="majNP"
-          :disable="session.planeMode"/>
-      </div>
-      <!--div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div-->
-    </div>
-    <div class="row">
-      <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
-      <div class="col-7 q-pl-sm font-mono">
-        <line-edit :text="aut.nomAuteur" @change="majNA" prefix="AUTna"
-          datasize="auteur" size="sm"
-          :disable="session.planeMode"/>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-5">{{ $t('AUTcol_sec') }}</div>
-      <div class="col-7 q-pl-sm font-mono">
-        <select-enum1 svc="AS2" :org="org"
-          v-model="aut.section" enum="Section" size="sm"
-          @select="majSection"
-          :disable="session.planeMode"/>
-      </div>
-    </div>
-    <div v-if="session.hasNet" class="row">
-      <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
-      <div class="col-7 row q-gutter-md q-pl-sm">
-        <div v-for="cx in coauts" :key="cx.credId" @click="selCo(cx)"
-          class="font-mono text-bold cursor-pointer select">
-          [{{ cx.props.trig || cx.props.name }}]
+        <div class="row">
+          <div class="col-5 text-italic">{{ $t('AUTcol_id') }}</div>
+          <div class="col-7 q-pl-sm font-mono">{{ aut.autid }}</div>
+        </div>
+        <div class="row">
+          <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
+          <div class="col-7 q-pl-sm font-mono">
+            <line-edit :text="perimetre.name" @change="majNP"
+              :disable="session.planeMode"/>
+          </div>
+          <!--div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div-->
+        </div>
+        <div class="row">
+          <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
+          <div class="col-7 q-pl-sm font-mono">
+            <line-edit :text="aut.nomAuteur" @change="majNA" prefix="AUTna"
+              datasize="auteur" size="sm"
+              :disable="session.planeMode"/>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-5">{{ $t('AUTcol_sec') }}</div>
+          <div class="col-7 q-pl-sm font-mono">
+            <select-enum1 svc="AS2" :org="org"
+              v-model="aut.section" enum="Section" size="sm"
+              @select="majSection"
+              :disable="session.planeMode"/>
+          </div>
+        </div>
+        <div v-if="session.hasNet" class="row">
+          <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
+          <div class="col-7 row q-gutter-md q-pl-sm">
+            <div v-for="cx in coauts" :key="cx.credId" @click="selCo(cx)"
+              class="font-mono text-bold cursor-pointer select">
+              [{{ cx.props.trig || cx.props.name }}]
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </q-splitter>
+</div>
+<div v-if="tab === 2" class="column items-center">
+  <div class="q-ma-md">Mes publications ...</div>
+</div>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, watch } from 'vue'
+import { ref, Ref, computed, onMounted, watch, useTemplateRef } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
@@ -84,8 +91,6 @@ import { $t, sty, dhcool } from '../src-fw/util'
 import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
-import BarTitle from '../components-fw/BarTitle.vue'
-import ScrollArea from '../components-fw/ScrollArea.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
@@ -93,6 +98,48 @@ import { Operation } from '../src-fw/operation'
 const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
+
+const autpage = useTemplateRef('autpage')
+
+const pageh = ref(100)
+const ph = () => { setTimeout(() => {
+    const h = autpage.value.parentNode.style.minHeight
+    pageh.value = 'height:' + h + ';'
+    //console.log(pageh.value)
+  },5)
+}
+
+onMounted(() => {
+  ph()
+})
+
+watch(() => ui.screenHeight, () => {
+  ph()
+})
+
+ui.appPage.tab = 1
+ui.appPage.btnInit = 1
+ui.appPage.btnAdd = 1
+ui.appPage.btnVal = 1
+ui.appPage.btnUndo = 1
+ui.navBar.hasBack = true
+
+watch(() => ui.appPage.btnInit, async () => { await init() })
+watch(() => ui.appPage.btnVal, async () => { await val() })
+watch(() => ui.appPage.btnAdd, async () => { await add() })
+watch(() => ui.appPage.btnUndo, async () => { undo() })
+
+const tab = computed(() => ui.appPage.tab )
+
+const goto2 = () => {
+  ui.appPage.tab = 2
+  ui.appPage.aut = aut.value
+  ui.navBar.hasBack = true
+  ui.navBar.nb = 0
+  ui.navBar.idx = 0
+}
+
+const splitterModel = ref(33)
 
 const creds: Ref<Map<string, $Credential>> = ref()
 const myPerims: Ref<$Perimeter[]> = ref()
@@ -194,6 +241,16 @@ const majAut = async (nomAuteur: string, section: string) => {
 
 const selCo = (cx: $Cred) => {
   console.log('co-auteur', cx.credId, cx.props.name, cx.props.trig)
+}
+
+const add = async () => {
+
+}
+const val = async () => {
+
+}
+const undo = () => {
+
 }
 
 </script>

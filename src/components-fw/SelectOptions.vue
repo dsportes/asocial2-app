@@ -27,20 +27,14 @@
     </div>
   </div>
 
-<!--
-<choose-it v-model="dialogs.close"
-  prefix="OPTSquit" options="pw"
-  @giveup="closeIt"
-  @option="dialogs.close = false"/-->
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { Ref, ref, computed, watch, reactive } from 'vue'
+import { Ref, ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
-// import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import { checkStatus } from '../src-fw/operation'
 import { $t, dkli } from '../src-fw/util.js'
 

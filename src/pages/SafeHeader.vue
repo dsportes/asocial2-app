@@ -1,14 +1,6 @@
 <template>
-<div class="column full-width">
-  <q-toolbar class="full-width tbp">
-    <btn-mode/>
-    <q-toolbar-title class="titre-md text-center q-mx-sm">
-      {{sf.step === 3 ? $t('SFHreq') : $t('app_label')}}
-    </q-toolbar-title>
-    <settings-button class="q-ml-sm"/>
-    <help-button class="" page="DOCpg"/>
-    <div style="color:transparent;width:3px">*<q-tooltip>SafePage</q-tooltip></div>
-  </q-toolbar>
+<div>
+  <std-header/>
 
   <q-tabs v-if="session.step === 0" dense v-model="ui.loginPage.tab" breakpoint="2000px"
     class="full-width bg-primary text-white shadow-2">
@@ -27,7 +19,7 @@
     <btn-cond icon="chevron_left" color="none" :label="$t('login')"
       @ok="step(0)"/>
     <btn-cond :label="$t('OPTSok_1')" size="lg" padding="none xs" 
-      @ok="session.okOptions = session.okOptions + 1">
+      @ok="trigOptions">
       <q-badge v-if="session.haschgOptions" floating color="red" rounded />
     </btn-cond>
     <safe-tools/>
@@ -43,10 +35,8 @@
 // import { reactive } from 'vue'
 
 import stores from '../stores/all'
-import SettingsButton from '../components-fw/SettingsButton.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
+import StdHeader from '../components-fw/StdHeader.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnMode from '../components-fw/BtnMode.vue'
 import { $t } from '../src-fw/util'
 
 import SafeTools from '../components-fw/SafeTools.vue'
@@ -60,6 +50,8 @@ const session = stores.session
 const ui = stores.ui
 
 const step = async (s: number) => { await session.setStep(s) }
+
+const trigOptions = () => { session.okOptions = session.okOptions + 1 }
 
 </script>
 

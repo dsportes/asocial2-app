@@ -1,15 +1,6 @@
 <template>
 <div>
-  <q-toolbar class="full-width tbp">
-    <btn-menu/>
-    <btn-mode/>
-
-    <btn-bubble class="q-ml-md" :text="$t('PAGEsponsorings_bub')"/>
-    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('PAGEsponsorings_label')}}</q-toolbar-title>
-
-    <settings-button class="q-ml-sm"/>
-    <div style="color:transparent;width:3px">*<q-tooltip>SponsoringsPage</q-tooltip></div>
-  </q-toolbar>
+  <std-header/>
 
   <div :class="sty() + ' column full-width items-center' + (dialogs.newproposal ? ' disabled' : '')">
     <div class="full-width q-mb-lg">
@@ -61,11 +52,7 @@ import stores from '../stores/all'
 import { FormType } from '../src-fw/docDescriptor'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import BtnMenu from '../components-fw/BtnMenu.vue'
-import BtnMode from '../components-fw/BtnMode.vue'
-import SettingsButton from '../components-fw/SettingsButton.vue'
-import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
+import StdHeader from '../components-fw/StdHeader.vue'
 import NavBar from '../components-fw/NavBar.vue'
 import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'

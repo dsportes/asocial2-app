@@ -1,15 +1,6 @@
 <template>
 <div>
-  <q-toolbar class="full-width tbp">
-    <btn-menu/>
-    <btn-mode/>
-
-    <btn-bubble class="q-ml-md" :text="$t('PAGEdemands_bub')"/>
-    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('PAGEdemands_label')}}</q-toolbar-title>
-
-    <settings-button class="q-ml-sm"/>
-    <div style="color:transparent;width:3px">*<q-tooltip>DemandsPage</q-tooltip></div>
-  </q-toolbar>
+  <std-header/>
  
   <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')">
     <div class="tbs row items-center justify-between">
@@ -45,13 +36,9 @@
 import { ref, reactive } from 'vue'
 import stores from '../stores/all'
 
-import { $t, sty } from '../src-fw/util'
-
-import SettingsButton from '../components-fw/SettingsButton.vue'
+import { $t } from '../src-fw/util'
+import StdHeader from '../components-fw/StdHeader.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
-import BtnBubble from '../components-fw/BtnBubble.vue'
-import BtnMenu from '../components-fw/BtnMenu.vue'
-import BtnMode from '../components-fw/BtnMode.vue'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import NavBar from '../components-fw/NavBar.vue'
@@ -65,7 +52,7 @@ const ui = stores.ui
 const session = stores.session
 const fst = stores.form
 
-ui.navBar.hasback = false
+ui.navBar.hasBack = false
 
 const formType = ref(null)
 

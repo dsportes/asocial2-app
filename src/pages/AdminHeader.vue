@@ -1,16 +1,10 @@
 <template>
 <div>
-  <q-toolbar class="full-width tbp">
-    <btn-menu/>
-    <btn-mode/>
-    <q-icon v-if="adminPage.mdAdmin" name="security"
-      color="negative" size="28px"/>
-    <q-toolbar-title class="titre-md text-center q-mx-sm">{{$t('PAGEadmin')}}</q-toolbar-title>
-
-    <settings-button class="q-ml-sm"/>
-    <help-button class="" page="DOCpg"/>
-    <div style="color:transparent;width:3px">*<q-tooltip>AdminPage</q-tooltip></div>
-  </q-toolbar>
+  <std-header>
+    <template #btn>
+      <q-icon v-if="adminPage.mdAdmin" name="security" color="negative" size="28px"/>
+    </template>
+  </std-header>
 
   <q-tabs dense v-model="ui.adminPage.tab" breakpoint="2000px"
     class="full-width tbp shadow-2">
@@ -30,10 +24,7 @@ import { Ref, onMounted, ref } from 'vue'
 
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
-import SettingsButton from '../components-fw/SettingsButton.vue'
-import HelpButton from '../components-fw/HelpButton.vue'
-import BtnMenu from '../components-fw/BtnMenu.vue'
-import BtnMode from '../components-fw/BtnMode.vue'
+import StdHeader from '../components-fw/StdHeader.vue'
 import { isMDAdmin } from 'src/src-fw/operation'
 
 // @ts-ignore

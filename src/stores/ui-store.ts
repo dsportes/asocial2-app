@@ -170,11 +170,12 @@ export const useUiStore = defineStore('ui', () => {
       })
       return
     }
+    const pbf = page.value
     page.value = ''
     setTimeout(() => {
       page.value = p
-      if (p === 'app') openMenu()
-    }, 350)
+      if (p === 'app' && pbf !== '') openMenu()
+    }, 50)
   }
 
   // dialogues permanents rattachés à App.vue
@@ -226,9 +227,12 @@ export const useUiStore = defineStore('ui', () => {
     adminPage.mdAdmin = isAdmin
     return adminPage
   }
+   const appPage = reactive({
+    tab: ''
+   })
   
   const navBar = reactive({
-    hasback: false,
+    hasBack: false,
     idx: 0,
     nb: 0,
     fnnav: null
@@ -279,6 +283,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToLogin,
+    appPage,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     loginPage, resetLoginPage,

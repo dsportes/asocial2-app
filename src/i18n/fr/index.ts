@@ -175,7 +175,19 @@ export default {
   PAGEp2: 'Page TEST #2',
   PAGEhome: 'Connexion',
   PAGEadmin: 'Administration Technique',
-  PAGEapp: 'Auteurs et relecteurs',
+  PAGEadmin_label: 'Administration Technique',
+  PAGEadmin_bub: `### Administration Technique
+bla bla
+`,
+  PAGEsafeHome_label: 'Connexion et ouverture de session',
+  PAGEsafeHome_bub: `### Connexion et ouverture de session
+bla bla
+`,
+  PAGEapp: 'Accueil',
+  PAGEapp_label: 'Accueil de "Auteurs et relecteurs"',
+  PAGEapp_bub: `### A propos de "Auteurs et relecteurs"
+bla bla
+`,
   PAGEdemands: 'Mes demandes / propositions reçues',
   PAGEdemands_label: 'Mes demandes, création et suivi',
   PAGEdemands_bub: `### Mes demandes, création et suivi des propositions reçues:
@@ -184,7 +196,7 @@ export default {
     - mes demandes n'ayant pas encore été prises en compte par un tiers,
     - les propositions faites par tiers, soit suite à une de mes demandes, soit de leur propre inititiative.
 
-  `,
+`,
   PAGEsponsorings: 'Demandes des autres, suivi',
   PAGEsponsorings_label: 'Mes propositions aux demandes des autres, création et suivi',
   PAGEsponsorings_bub: `### Mes propositions aux demandes des autres, création et suivi
@@ -192,15 +204,7 @@ export default {
   - prendre l'initiative d'une proposition à un utilisateur avant qu'il l'ai sollicitée forellement.
   - suivre les procédures ouvertes et le cas échant y intervenir.
 
-  `,
-  PAGEauteur: 'Auteurs',
-  PAGEauteur_label: 'Mes interventions en tant "qu\'auteur"',
-  PAGEauteur_bub: `### Mes interventions en tant **qu'auteur**
-  - quels sont les _auteurs_ pour lesquels j'ai un pouvoir,
-  - mes _chats_ avec mes _co-auteurs_,
-  - liste des auteurs par section de rédaction,
-
-  `,
+`,
 
   PAGEtest: 'Page des tests',
 
@@ -1385,6 +1389,14 @@ Détail: url:[{3}] erreur:[{4}]
   bla bla 
   `,
 
+  PAGEauteur: 'Auteurs',
+  PAGEauteur_label: 'Mes rôles "d\'auteur"',
+  PAGEauteur_bub: `### Mes interventions en tant **qu'auteur**
+- quels sont les _auteurs_ pour lesquels j'ai un pouvoir,
+- mes _chats_ avec mes _co-auteurs_,
+- liste des auteurs par section de rédaction,
+
+`,
   AUTcol_id: 'Identifiant',
   AUTcol_na: 'Nom d\'auteur',
   AUTcol_np: 'Nom du périmètre / credential',
@@ -1396,7 +1408,10 @@ Détail: url:[{3}] erreur:[{4}]
   AUTko: 'Auteur inconnu',
   AUTna_label: 'Nom d\'auteur',
   AUTna_bub: 'Nom d\'auteur',
-
+  AUTpubs_label: 'Publications de "{0}"',
+  AUTpubs_bub: `### Publications
+bla bla
+`,
   ENUM_Section_roman: 'Roman',
   ENUM_Section_histoire: 'Histoire',
   ENUM_Section_sf: 'Science fiction',
