@@ -49,7 +49,7 @@
           </div>
 
           <div v-if="step === 3" class="q-mt-sm q-mb-sm">
-            <line-edit size="sm"
+            <line-edit width="sm"
               class="q-my-sm" prefix="CRRabout" :text="curcr.name || ''"
               @change="chgName"/>
 

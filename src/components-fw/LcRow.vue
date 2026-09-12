@@ -10,7 +10,7 @@
     <btn-cond v-if="!restricted && !model.ex" class="col-auto" icon="undo" round 
       @ok="emit('undo', model)"/>
 
-    <line-edit class="col q-ml-sm" :text="model.name" size="sm" :disable="restricted" @change="doOk"/>
+    <line-edit class="col q-ml-sm" :text="model.name" width="md" :disable="restricted" @change="doOk"/>
 
     <div class="col-auto row items-center q-gutter-xs justify-center">
       <div :class="cl(model.crIds.size)">{{ model.crIds.size }}</div>

@@ -1,9 +1,12 @@
-<!-- Saisie d'une énumération
+<!-- Saisie du couple Service / Organisation
+ :class="'row selx' + (disable ? ' disabled' : ' cursor-pointer')"
+ :style="'width:' + sizes[size || 'sm']"
 -->
 <template>
-  <div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
-    <q-icon name="arrow_drop_down" size="22px"/>
-    <div :style="widths[width || 'sm']"
+  <div :class="(disable ? 'disabled' : 'sely') + ' row items-center'"
+    @click="menu = true">
+    <q-icon name="edit" size="22px"/>
+    <div :style="widths[size || 'sm']"
       class="q-ml-xs font-mono ellipsis">
       {{ dv }}</div>
     <q-menu v-if="!disable" v-model="menu" 
@@ -29,6 +32,8 @@
 import { ref, Ref, computed, onMounted } from 'vue'
 import { DocEnums, getSite } from '../src-fw/operation'
 import { $t, hasMessage } from '../src-fw/util'
+
+const sizes = { sm: '150px', md: '250px', lg: '350px '}
 
 const widths = {
   sm: 'max-width: 10em !important; overflow:hidden',
@@ -99,6 +104,6 @@ const cr = () => {
 <style lang="scss" scoped>
 @import '../css/app.scss';
 .lst { overflow-x:hidden; overflow-y:auto; border: 1px solid $grey-5 }
-.sely:hover { border-color: $yellow-5;}
-.sely { border:1px solid transparent; border-radius: 5px; cursor:pointer!important;}
+.sely:hover { border-color: $yellow-5; cursor:pointer;}
+.sely { border:1px solid transparent; border-radius: 5px;}
 </style>

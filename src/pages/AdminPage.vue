@@ -18,7 +18,7 @@
         <div class="col-3 font-mono">{{ site }}</div>
         <div class="col-8 font-mono">
           <div v-if="!adp.mdAdmin" class="font-mono">{{ url }}</div>
-          <line-edit v-else size="sm" :text="url" :ctx="{site: site}"
+          <line-edit v-else width="sm" :text="url" :ctx="{site: site}"
             @change="editSite"/>
         </div>
       </div>

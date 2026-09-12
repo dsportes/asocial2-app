@@ -1398,8 +1398,7 @@ Détail: url:[{3}] erreur:[{4}]
 
 `,
   AUTcol_id: 'Identifiant',
-  AUTcol_na: 'Nom d\'auteur',
-  AUTcol_np: 'Nom du périmètre / credential',
+  AUTcol_np: 'Nom dans le "pouvoir"',
   AUTcol_sec: 'Section',
   AUTcol_trig: 'Votre trigramme de "co-auteur"',
   AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',
@@ -1412,9 +1411,8 @@ Détail: url:[{3}] erreur:[{4}]
   AUTpubs_bub: `### Publications
 bla bla
 `,
-  ENUM_Section_roman: 'Roman',
-  ENUM_Section_histoire: 'Histoire',
-  ENUM_Section_sf: 'Science fiction',
+  ENUM_Section_10: 'Roman',
+  ENUM_Section_30: 'Science fiction',
   
   moins1: 'Moins 1',
   plus1: 'Plus 1',

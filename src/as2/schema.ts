@@ -16,7 +16,8 @@ try {
   new DocDescriptor(svc, { name: 'Redaction', virtual: true } )
   new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
-  new DocDescriptor(svc, { name: 'Section', virtual: true, enum: ['roman', 'histoire', 'sf'] })
+  new DocDescriptor(svc, { name: 'Section', virtual: true, 
+    enum: ['10 roman', '20 Histoire', '30 sf'] })
   new DocDescriptor(svc, { name: 'Auteur', pk: ['autid'] },
     new Map<string, collection>([
       ['section',  { key: ['section'], mutable: true, class: 'Section' }]

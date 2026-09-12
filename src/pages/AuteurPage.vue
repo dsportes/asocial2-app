@@ -22,42 +22,40 @@
     </template>
 
     <template v-slot:after>
-      <div v-if="aut" class="q-my-md" style="position:relative;">
+      <div v-if="aut" class="q-my-sm" style="position:relative;">
         <btn-cond icon="open_in_new" @ok="goto2" size="lg" flat
           style="position:absolute;right:0;top:0" />
-        <div v-if="session.hasNet" class="row q-mb-sm">
+        <div class="fs-xs font-mono">{{ aut.autid }}</div>
+        <div v-if="session.hasNet" class="row">
           <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
           <div class="col-7 q-pl-sm ">
             <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
-              size="sm" datasize="trig" @change="editTrig"/>
+              width="sm" datasize="trig" @change="editTrig"/>
           </div>
-        </div>
-
-        <div class="row">
-          <div class="col-5 text-italic">{{ $t('AUTcol_id') }}</div>
-          <div class="col-7 q-pl-sm font-mono">{{ aut.autid }}</div>
         </div>
         <div class="row">
           <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
           <div class="col-7 q-pl-sm font-mono">
             <line-edit :text="perimetre.name" @change="majNP"
-              :disable="session.planeMode"/>
+              width="sm" :disable="session.planeMode"/>
           </div>
-          <!--div class="col-7 q-pl-sm font-mono"> {{  perimetre.name }}</div-->
         </div>
         <div class="row">
-          <div class="col-5 text-italic">{{ $t('AUTcol_na') }}</div>
+          <div class="col-5 row items-center q-gutter-xs">
+            <span class="text-italic">{{ $t('AUTna_label') }}</span>
+            <btn-bubble :text="$t('AUTna_bub')"/>
+          </div>
           <div class="col-7 q-pl-sm font-mono">
-            <line-edit :text="aut.nomAuteur" @change="majNA" prefix="AUTna"
-              datasize="auteur" size="sm"
+            <line-edit :text="aut.nomAuteur" @change="majNA"
+              datasize="auteur" width="md"
               :disable="session.planeMode"/>
           </div>
         </div>
         <div class="row">
           <div class="col-5">{{ $t('AUTcol_sec') }}</div>
-          <div class="col-7 q-pl-sm font-mono">
+          <div class="col-7 q-pl-sm">
             <select-enum1 svc="AS2" :org="org"
-              v-model="aut.section" enum="Section" size="sm"
+              v-model="aut.section" enum="Section" width="md"
               @select="majSection"
               :disable="session.planeMode"/>
           </div>
@@ -91,6 +89,7 @@ import { $t, sty, dhcool } from '../src-fw/util'
 import { getStore } from '../stores/docs'
 // import { AS2$Auteur } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
+import BtnBubble from '../components-fw/BtnBubble.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
 import { Operation } from '../src-fw/operation'
@@ -257,4 +256,6 @@ const undo = () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
+.selx:hover { background-color: $yellow-5; color: black }
+.selx { cursor:pointer !important }
 </style>
