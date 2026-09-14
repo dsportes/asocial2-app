@@ -3,6 +3,7 @@
 <div v-if="tab === 1" class="column items-center">
   <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="pageh">
     <template v-slot:before>
+      <btn-cond label="test-setenum" @ok="setEnum"/>
       <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
         :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
         @click="select(c)">
@@ -92,7 +93,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum1 from '../components-fw/SelectEnum1.vue'
-import { Operation } from '../src-fw/operation'
+import { Operation, DocEnums } from '../src-fw/operation'
 
 const ui = stores.ui
 const session = stores.session
@@ -252,6 +253,11 @@ const undo = () => {
 
 }
 
+const setEnum = async () => {
+  const val = ["10 roman", "20 Histoire", "30 sf", "40 politique"]
+  const res = await DocEnums.set('AS2$Section', val, 'doda')
+  console.log('ok')
+}
 </script>
 
 <style lang="scss" scoped>

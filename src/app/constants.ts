@@ -49,12 +49,15 @@ export const K = {
     auteur: [6, 24],
     minor: [0, 12, 'an2'],
     pseudo: [3, 16],
-    trig: [3, 6, 'an1']
+    trig: [3, 6, 'an1'],
+    sectionC: [1, 8, 'an0'],
+    sectionL: [1, 24]
   },
 
   regexp: {
     b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
     num: new RegExp('^[0-9]*$'),
+    an0: new RegExp('^[0-9a-zA-Z]*$'),
     an1: new RegExp('^[a-z][0-9a-z]*$'),
     an2: new RegExp('^[a-zA-Z][0-9a-zA-Z]*$'),
     oper: new RegExp('^[$][0-9A-Z]*$'),

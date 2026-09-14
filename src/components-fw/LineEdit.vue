@@ -19,7 +19,7 @@
       transition-show="flip-up" transition-hide="flip-down">
       <input-a class="font-mono q-ma-sm" v-model="ntext" :initval="text"
         :size="datasize" simple @validate="doOk"
-        :disable="disable || false"
+        :disable="disable || false" :fncheck="fncheck" :ctx="ctx"
         style="position:relative;top:-5px;"/>
     </q-menu>
   </div>
@@ -39,7 +39,9 @@ const props = defineProps({
   widthmenu: String,
   width: String,
   datasize: String,
-  ctx: Object
+  ctx: Object,
+  fncheck: Function,
+  idx: Number
 })
 
 const styles = {

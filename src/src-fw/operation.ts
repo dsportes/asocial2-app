@@ -30,22 +30,20 @@ export class DocEnums {
   de l'énumération enumName : svc$name OU svc$name_org
   En l'absence du suffixe org, un nom de site est requis.
   */
-  static async get (enumName: string, site?: string) : Promise<string[]> {
+  static async get (enumName: string, org: string) : Promise<string[]> {
     const dd = DocDescriptor.get(enumName)
-    if (dd.enum) return dd.enum
-    let values = DocEnums.m.get(enumName)
+    if (dd.enum && dd.enum.length) return dd.enum
+    // enum externe - 
+    const cred = dd.enumCred || ''
+    const i = enumName.indexOf('$')
+    const svc = enumName.substring(0, i)
+    const n = svc + '$' + dd.name + (cred ? '_' + org : '')
+    let values = DocEnums.m.get(n)
     if (values) return values
-    let s = site
-    if (!s) {
-    let i = enumName.indexOf('$')
-      const svc = enumName.substring(i + 1)
-      i = enumName.indexOf('_')
-      const org = i === -1 ? '' : enumName.substring(i + 1)
-      s = await getSite(svc, org)
-    }
+    const s = await getSite(svc, org)
     const op = new AdminOperation('ADMIN$getEnum', s)
     try {
-      op.args.enumName = enumName
+      op.args.enumName = n
       const res = await op.post(true)
       values = res['enum'] || []
       this.m.set(enumName, values)
@@ -56,22 +54,29 @@ export class DocEnums {
     }
   }
 
-  static async set (enumName: string, values: string[], site?: string) 
+  static async set (enumName: string, value: string[], org: string) 
     : Promise<boolean> { 
-    let s = site
-    if (!s) {
-    let i = enumName.indexOf('$')
-      const svc = enumName.substring(i + 1)
-      i = enumName.indexOf('_')
-      const org = i === -1 ? '' : enumName.substring(i + 1)
-      s = await getSite(svc, org)
-    }
-    const op = new AdminOperation('ADMIN$GetEnum', s)
+    const sf = stores.safe
+    const dd = DocDescriptor.get(enumName)
+    if (dd.enum && dd.enum.length) return false
+    // enum externe - 
+    const cred = dd.enumCred || ''
+    const i = enumName.indexOf('$')
+    const svc = enumName.substring(0, i)
+    const n = svc + '$' + dd.name + (cred ? '_' + org : '')
+    let s = await getSite(svc, org)
+    const op = new AdminOperation('ADMIN$setEnum', s)
     try {
-      op.args.enumName = enumName
-      op.args.values = values
-      await op.post(true)
-      this.m.set(enumName, values)
+      op.args.enumName = n
+      op.args.org = org
+      op.args.value = value
+      if (dd.enumCred) {
+        const c = sf.myCredOfDoc(svc, org, dd.enumCred, '1')
+        if (!c) return false
+        await op.sign(c)
+      }
+      await op.post()
+      this.m.set(n, value)
       return true
     } catch(e) {
       await op.ko(e)

@@ -307,7 +307,8 @@ bla bla
   op_$PingStore: 'Test d\'accès à un store de Safe Box',
   op_ADMIN$getAllStatus: 'Collecte des status des services / organisations',
   op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
-  
+  op_ADMIN$getEnum: 'Lecture d\'une énumération',
+
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
   STSF_2: 'Preuve de propriété de la Safe Box non reconnue (phrase ou autre).',
@@ -1313,6 +1314,7 @@ Détail: le compteur de suivi de la session a disparu (contrôle de synchronisat
 
 #### Une re-synchronisation générale va être relancée et devrait résoudre ce problème.
 `,
+
   EX108_SQLite_connexion_failed: `Incident technique inattendu d'accès à la Base de Données lors de l'opération [{0}] du _service cloud_ [{1}] pour l'organisation [{2}].
 Détail: [{3}]
 `,
@@ -1397,6 +1399,14 @@ Détail: url:[{3}] erreur:[{4}]
 - liste des auteurs par section de rédaction,
 
 `,
+  PAGEcoredac: 'Comité de Rédaction',
+  PAGEcoredac_label: 'Comité de Rédaction',
+  PAGEcoredac_bub: `### Comité de Rédaction
+- définition des "Sections",
+- liste des auteurs par section,
+
+`,
+  CODIRdup: 'Code déjà attribué',
   AUTcol_id: 'Identifiant',
   AUTcol_np: 'Nom dans le "pouvoir"',
   AUTcol_sec: 'Section',
@@ -1411,8 +1421,12 @@ Détail: url:[{3}] erreur:[{4}]
   AUTpubs_bub: `### Publications
 bla bla
 `,
-  ENUM_Section_10: 'Roman',
-  ENUM_Section_30: 'Science fiction',
+  ENUM_AS2$Section_10: 'Roman',
+  ENUM_AS2$Section_30: 'Science fiction',
+  CORED_section_tit: 'Sections',
+  CORED_aut_tit: 'Sections',
+
+
   
   moins1: 'Moins 1',
   plus1: 'Plus 1',

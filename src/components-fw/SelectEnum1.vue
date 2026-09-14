@@ -26,8 +26,8 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted } from 'vue'
-import { DocEnums, getSite } from '../src-fw/operation'
+import { ref, Ref, computed, onMounted, watch } from 'vue'
+import { DocEnums } from '../src-fw/operation'
 import { $t, hasMessage } from '../src-fw/util'
 
 const widths = {
@@ -60,7 +60,7 @@ const edv = (e) => {
   if (e) {
     const i = e.indexOf(' ')
     code = i === -1 ? e : e.substring(0, i)
-    lbl1 = hasMessage('ENUM_' + props.enum + '_' + code) || (i !== -1 ? e.substring(i + 1): e)
+    lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + code) || (i !== -1 ? e.substring(i + 1): e)
     lbl2 = lbl1.toLowerCase()
   }
   const t = [code, lbl1, lbl2]
@@ -68,13 +68,18 @@ const edv = (e) => {
   return t
 }
 
-onMounted(async () => { 
+const load = async () => { 
   const l = []
-  const lx = await DocEnums.get(props.svc + '$' + props.enum, await getSite(props.svc, props.org))
+  const lx = await DocEnums.get(props.svc + '$' + props.enum, props.org)
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
   lst.value = l
+}
+
+watch(() => [props.svc, props.org, props.enum], async () => {
+  await load()
 })
+onMounted(async () => { await load()})
 
 const shl = computed(() => {
   const l = []

@@ -47,6 +47,9 @@ Contrôlé par ui.leftMenu
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
       <btn-cond class="q-mb-sm"
+        flat :label="$t('PAGEcoredac')"
+        @ok="ui.closeMenu(); ui.setPage('coredac')"/>
+      <btn-cond class="q-mb-sm"
         flat :label="$t('PAGEauteur')"
         @ok="ui.closeMenu(); ui.setPage('auteur')"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"

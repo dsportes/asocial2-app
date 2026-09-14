@@ -7,6 +7,7 @@
     <demands-header v-if="ui.page === 'demands'"/>
     <sponsorings-header v-if="ui.page === 'sponsorings'"/>
     <auteur-header v-if="ui.page === 'auteur'"/>
+    <coredac-header v-if="ui.page === 'coredac'"/>
   </q-header>
 
   <q-drawer v-if="session.step === 2" v-model="ui.leftMenu" :class="sty()"
@@ -49,6 +50,10 @@
       </q-page>
     </transition>
     <transition name="anim1">
+      <q-page v-if="ui.page === 'coredac'">
+        <coredac-page/>
+      </q-page>
+    </transition>    <transition name="anim1">
       <q-page v-if="ui.page === 'auteur'">
         <auteur-page/>
       </q-page>
@@ -96,6 +101,7 @@ import SafeHeader from './pages/SafeHeader.vue'
 import AdminHeader from './pages/AdminHeader.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
 import SponsoringsHeader from './pages/SponsoringsHeader.vue'
+import CoredacHeader from './pages/CoredacHeader.vue'
 
 import AuteurHeader from './pages/AuteurHeader.vue'
 
@@ -103,6 +109,7 @@ import SafeHome from './pages/SafeHome.vue'
 import AdminPage from './pages/AdminPage.vue'
 import DemandsPage from './pages/DemandsPage.vue'
 import SponsoringsPage from './pages/SponsoringsPage.vue'
+import CoredacPage from './pages/CoredacPage.vue'
 
 import AuteurPage from './pages/AuteurPage.vue'
 import TestPage from './pages/TestPage.vue'
@@ -126,7 +133,7 @@ import { AS2nbForms } from './as2/forms'
 import { AS2nbCreds } from './as2/credentials'
 import { FWnbDocs } from './src-fw/fwdocuments'
 
-const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome', 'auteur'])
+const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome', 'auteur', 'coredac'])
 
 const config = stores.config
 config.initK()

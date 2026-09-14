@@ -68,7 +68,8 @@ const props = defineProps({
   disable: Boolean,
   noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
   list: Array,
-  fncheck: Function
+  fncheck: Function,
+  ctx: Object
 })
 
 const star = config.K.phrasestar[props.size] || 0
@@ -122,7 +123,7 @@ const xe = () => {
   if (model.value.length < sz.value[0]) return 'tooshort'
   if (model.value.length > sz.value[1]) return 'toolong'
   if (props.size === 'isotime' && isNaN(Date.parse(model.value))) return 'badform'
-  return props.fncheck ?  props.fncheck(model.value) : ''
+  return props.fncheck ?  props.fncheck(model.value, props.ctx) : ''
 }
 
 watch(() => model.value, (v) => { 
