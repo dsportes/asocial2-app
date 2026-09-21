@@ -50,8 +50,8 @@ export const K = {
     minor: [0, 12, 'an2'],
     pseudo: [3, 16],
     trig: [3, 6, 'an1'],
-    sectionC: [1, 8, 'an0'],
-    sectionL: [1, 24]
+    AS2$SectionC: [1, 8, 'an0'],
+    AS2$SectionL: [1, 24]
   },
 
   regexp: {

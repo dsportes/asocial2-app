@@ -1031,6 +1031,20 @@ Fermer la fenêtre corespond à un NON sélection.
 `,
   SLCsel: 'Quelques caractères dans le code recherché',
 
+  ENUfiltc: 'Filtre sur le code',
+  ENUfiltl: 'Filtre sur le libellé',
+  ENUMdup: 'Code déjà attribué',
+  ENUtit_bub: `### Sélection d'un code dans la liste proposée
+Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'intérieur du code recherché:
+- la liste affichée se rétrécit au fur et à mesure de la sélection demandée.
+- la sélection ignore les majuscules / minuscules.
+- cliquer sur le code de la liste affichée dès que celui attendu apparaît.
+- le premier code listé apparaît comme _sélectionné_.
+- appuyer sur le bouton **OK** dans la barre de titre le sélectionne.
+
+Fermer la fenêtre corespond à un NON sélection.
+`,
+
   OPTStitle_1: 'Options de la session',
   OPTStitle_2: 'Changer les options de la session',
   OPTSok_1: 'Ouvrir la session',
@@ -1423,11 +1437,8 @@ bla bla
 `,
   ENUM_AS2$Section_10: 'Roman',
   ENUM_AS2$Section_30: 'Science fiction',
-  CORED_section_tit: 'Sections',
-  CORED_aut_tit: 'Sections',
+  CORED_section_tit: 'Sections déclarées',
 
-
-  
   moins1: 'Moins 1',
   plus1: 'Plus 1',
   pickfile: 'Choisir un fichier local',
