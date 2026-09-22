@@ -1,7 +1,7 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
-import { $t } from '../src-fw/util'
+import { $t, hasMessage } from '../src-fw/util'
 import { AppExc } from '../src-fw/log'
 import { DocDescriptor } from '../src-fw/docDescriptor'
 import stores from '../stores/all'
@@ -26,6 +26,16 @@ export type SubsToSync = {
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
+  static label (enumName: string, org: string, code: string) : string {
+    const l = hasMessage('ENUM_' + enumName + '_' + code)
+    if (l) return l
+    const n = enumName + (org ? '_' + org : '')
+    const lx = DocEnums.m.get(n)
+    if (!lx) return ''
+    for (const e of lx) if (e[0] === code) return e[1]
+    return ''
+  }
+
   /* DocEnums.get retourne la liste des valeurs (string) 
   de l'énumération enumName : svc$name OU svc$name_org
   En l'absence du suffixe org, un nom de site est requis.
@@ -46,7 +56,7 @@ export class DocEnums {
       op.args.enumName = n
       const res = await op.post(true)
       values = res['enum'] || []
-      this.m.set(enumName, values)
+      this.m.set(n, values)
       return values
     } catch(e) {
       await op.ko(e)

@@ -37,6 +37,7 @@ const widths = {
 }
 
 const props = defineProps({
+  title: String,
   disable: Boolean,
   svc: String,
   org: String,
@@ -52,19 +53,14 @@ const sel = ref('')
 const map: Ref<Object> = ref({})
 const dv = computed(() => {
   const x = map.value[model.value]
-  return x ? x[1] : '?'
+  return x ? x[1] : props.title
 })
 
 const edv = (e) => {
-  let code:string = '?', lbl1: string = '?', lbl2: string = '?'
-  if (e) {
-    const i = e.indexOf(' ')
-    code = i === -1 ? e : e.substring(0, i)
-    lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + code) || (i !== -1 ? e.substring(i + 1): e)
-    lbl2 = lbl1.toLowerCase()
-  }
-  const t = [code, lbl1, lbl2]
-  map.value[code] = t
+  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0]) 
+  const lbl2 = (lbl1 || e[1]).toLowerCase()
+  const t = [e[0], lbl1 || e[1], lbl2]
+  map.value[e[0]] = t
   return t
 }
 
@@ -92,7 +88,7 @@ const shl = computed(() => {
 const clic = (t) => {
   model.value = t[0]
   menu.value = false
-  emit('select', t[0])
+  emit('select', t)
 }
 
 const cr = () => {

@@ -308,6 +308,7 @@ bla bla
   op_ADMIN$getAllStatus: 'Collecte des status des services / organisations',
   op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
   op_ADMIN$getEnum: 'Lecture d\'une énumération',
+  op_ListeAuteursSection: 'Liste des auteurs par section',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1033,8 +1034,10 @@ Fermer la fenêtre corespond à un NON sélection.
 
   ENUfiltc: 'Filtre sur le code',
   ENUfiltl: 'Filtre sur le libellé',
-  ENUMdup: 'Code déjà attribué',
-  ENUtit_bub: `### Sélection d'un code dans la liste proposée
+  ENUMdup: 'Code déjà attribué ligne #{0}',
+  ENUMcm: 'Code vide interdit',
+  ENUMlm: 'Libellé vide interdit',
+  ENUMtit_bub: `### Sélection d'un code dans la liste proposée
 Dans la zone de sélection, taper quelques lettres qui doivent figurer à l'intérieur du code recherché:
 - la liste affichée se rétrécit au fur et à mesure de la sélection demandée.
 - la sélection ignore les majuscules / minuscules.
@@ -1421,6 +1424,12 @@ Détail: url:[{3}] erreur:[{4}]
 
 `,
   CODIRdup: 'Code déjà attribué',
+  CODIRnoorg: 'Sélectionner l\'organisation souhaitée.',
+  CODIRnosect: 'Sélectionner la section souhaitée.',
+  CODIRtit1: 'Liste des auteurs de la section',
+  CODIRnoaut: 'Aucun auteur répertorié dans cette section',
+  CODIRna: 'Nom d\'auteur actuel:',
+  CODIRsa: 'Section actuelle:',
   AUTcol_id: 'Identifiant',
   AUTcol_np: 'Nom dans le "pouvoir"',
   AUTcol_sec: 'Section',
@@ -1435,7 +1444,7 @@ Détail: url:[{3}] erreur:[{4}]
   AUTpubs_bub: `### Publications
 bla bla
 `,
-  ENUM_AS2$Section_10: 'Roman',
+  // ENUM_AS2$Section_10: 'Roman',
   ENUM_AS2$Section_30: 'Science fiction',
   CORED_section_tit: 'Sections déclarées',
 

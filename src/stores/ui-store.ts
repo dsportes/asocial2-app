@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, useTemplateRef } from 'vue'
 // @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
@@ -159,6 +159,18 @@ export const useUiStore = defineStore('ui', () => {
     })
   }
 
+  // Get hauteur page
+  const declarePh = (refName: string) => {
+    appPage.ph = '100px'
+    appPage.refp = useTemplateRef(refName)
+    resetPh()
+  }
+  const resetPh = () => {
+    setTimeout(() => {
+      appPage.ph = appPage.refp.parentNode.style.minHeight
+    },5)
+  }
+
   // Gestion des pages
   const page = ref(HOME)
 
@@ -277,7 +289,8 @@ export const useUiStore = defineStore('ui', () => {
     idc,
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
-    setScreenWH, portrait, screenHeight, screenWidth, isShort,
+    setScreenWH, portrait, screenHeight, screenWidth, isShort, 
+    declarePh, resetPh,
     appDialogs, confirmQuit,
     exc, displayExc, hideExc,
     diag, diagDisplay,

@@ -55,7 +55,7 @@
         <div class="row">
           <div class="col-5">{{ $t('AUTcol_sec') }}</div>
           <div class="col-7 q-pl-sm">
-            <select-enum1 svc="AS2" :org="org"
+            <select-enum svc="AS2" :org="org"
               v-model="aut.section" enum="Section" width="md"
               @select="majSection"
               :disable="session.planeMode"/>
@@ -92,7 +92,7 @@ import { getStore } from '../stores/docs'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
-import SelectEnum1 from '../components-fw/SelectEnum1.vue'
+import SelectEnum from '../components-fw/SelectEnum.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
 
 const ui = stores.ui
