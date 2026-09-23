@@ -79,7 +79,7 @@ watch(loc1, async (v) => {
 })
 const valB2 = async (v) => {
   loc1.inp = v
-  // fst.upd.etc[props.champ] = v
+  fst.upd.etc[props.champ] = v
   await fst.onChange()
 }
 /*

@@ -4,11 +4,14 @@
   <q-splitter v-model="splitterModel" horizontal 
     :style="'height:' + ui.appPage.ph">
     <template v-slot:before>
-      <div v-if="!auteurs.length" class="titre-md text-italic">{{ $t('CODIRnoaut') }}</div>
-      <div v-else class="q-pa-xs">
-        <div v-for="(a, idx) in auteurs" :key="idx"
-          :class="'row select cursor-pointer ' + dkli(idx)"
-          @click="selAut(a)">{{ a.nomAuteur }}</div>
+      <div v-if="session.planeMode" class="titre-md text-italic">{{ $t('CODIRplane') }}</div>
+      <div v-else>
+        <div v-if="!auteurs.length" class="titre-md text-italic">{{ $t('CODIRnoaut') }}</div>
+        <div v-else class="q-pa-xs">
+          <div v-for="(a, idx) in auteurs" :key="idx"
+            :class="'row select cursor-pointer ' + dkli(idx)"
+            @click="selAut(a)">{{ a.nomAuteur }}</div>
+        </div>
       </div>
     </template>
 
@@ -21,7 +24,7 @@
 
         <div class="row items-center q-gutter-md">
           <div class="titre-md text-italic col-auto">{{ $t('CODIRsa') }}</div>
-          <div class="font-mono">{{ aut.a.section }} - {{ DocEnums.label('AS2$Section', ui.appPage.org, aut.a.section) }}</div>
+          <div class="font-mono">{{ aut.a.section }} - {{ aut.edv }}</div>
         </div>
         <select-enum svc="AS2" :org="ui.appPage.org" class="q-mb-sm q-ml-lg"
           v-model="aut.newSection" enum="Section" width="md"
@@ -34,6 +37,13 @@
         <line-edit :text="aut.newNa" @change="majNa" class="q-ml-lg"
           datasize="auteur" width="md"/>
 
+        <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
+        <div v-for="[credId, c] in aut.creds" :key="credId" 
+          class="row q-ml-lg">
+          <div class="col-3 font-mono q-pr-sm text-bold">{{ c.trig }}</div>
+          <div class="col-5 font-mono q-pr-sm">{{ c.name }}</div>
+          <div class="col-4 font-mono fs-xs ellipsis">{{ credId }}</div>
+        </div>
       </div>
     </template>
   </q-splitter>
@@ -60,12 +70,18 @@ const sf = stores.safe
 
 const splitterModel = ref(33)
 const auteurs = ref([])
-const aut = reactive({ a: null, newSection: '', newNa: '' })
+const aut = reactive({ a: null, newSection: '', newNa: '', edv: '', creds: new Map() })
 
-const selAut = (a) => {
+const selAut = async (a) => {
   aut.a = a
   aut.newSection = a ? a.section : ''
   aut.newNa = a ? a.nomAuteur : ''
+  if (a) {
+    aut.creds = new Map()
+    for(let credId in a.creds) 
+      aut.creds.set(credId, a.creds[credId])
+    aut.edv = await DocEnums.label('AS2$Section', ui.appPage.org, aut.a.section)
+  }
 }
 
 const majNa = (n) => { aut.newNa = n }
@@ -81,7 +97,7 @@ const cred = computed(() => {
 })
 
 const listeAuteurs = async () => {
-  if (!ui.appPage.org || !ui.appPage.section) return
+  if (!ui.appPage.org || !ui.appPage.section || session.planeMode) return
   const op = new Operation('ListeAuteursSection', 'AS2', ui.appPage.org)
   try {
     op.args.section = ui.appPage.section
@@ -94,10 +110,7 @@ const listeAuteurs = async () => {
   }
 }
 
-ui.appPage.org = ''
-ui.appPage.section = ''
-
-watch(() => [ui.appPage.org, ui.appPage.section], async () => { 
+watch(() => [ui.appPage.org, ui.appPage.count], async () => { 
   await listeAuteurs() 
 })
 

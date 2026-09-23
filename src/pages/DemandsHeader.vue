@@ -21,7 +21,7 @@
 
   <dialog-std0 v-if="dialogs.newdemand" v-model="dialogs.newdemand" width="pwsm" vh="80"
     :title="$t('FORMnewd', [$t('TYPE_' + formType.svc + '_' +formType.type).substring(2)])"
-    hdrclass="tbs" vue="DemandsHdr" @close="close">
+    hdrclass="tbs" vue="DemandsHeader" @close="close">
     <template #default>
       <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
       <form-new v-else :form-type="formType" :isDemand="true" @done="onForm"/>

@@ -10,6 +10,7 @@ import { Crypt } from '../src-fw/crypt'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Credential } from '../src-fw/documents'
 import { getStore } from '../stores/docs'
+import { idb } from '../src-fw/idb'
 
 const encoder = new TextEncoder()
 
@@ -26,11 +27,13 @@ export type SubsToSync = {
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
-  static label (enumName: string, org: string, code: string) : string {
+  static async label (enumName: string, org: string, code: string) : Promise<string> {
     const l = hasMessage('ENUM_' + enumName + '_' + code)
     if (l) return l
     const n = enumName + (org ? '_' + org : '')
-    const lx = DocEnums.m.get(n)
+    let lx = DocEnums.m.get(n)
+    if (!lx) 
+      lx = await DocEnums.get(enumName, org)
     if (!lx) return ''
     for (const e of lx) if (e[0] === code) return e[1]
     return ''
@@ -50,12 +53,24 @@ export class DocEnums {
     const n = svc + '$' + dd.name + (cred ? '_' + org : '')
     let values = DocEnums.m.get(n)
     if (values) return values
+
+    const session = stores.session
+    if (session.planeMode) {
+      values = await idb.getEnum(n)
+      if (values) {
+        this.m.set(n, values)
+        return values
+      } else return []
+    }
+
     const s = await getSite(svc, org)
     const op = new AdminOperation('ADMIN$getEnum', s)
     try {
       op.args.enumName = n
       const res = await op.post(true)
       values = res['enum'] || []
+      if (session.syncMode)
+        await idb.storeEnum(n, values)
       this.m.set(n, values)
       return values
     } catch(e) {

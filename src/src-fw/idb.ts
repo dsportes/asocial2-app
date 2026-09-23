@@ -211,6 +211,22 @@ export class IDB {
     return obj
   }
 
+  async getEnum (enumName: string) : Promise<string[]>{
+    const x = await this.db.singletons.get('$ENUM$' + enumName)
+    if (!x) return null
+    const obj = decode(await this.decryptData(x.data))
+    return obj
+  }
+
+  async storeEnum (enumName: string, values: string[]) {
+    try {
+      const data = await this.cryptData(encode(values))
+      await this.db.singletons.put({ name: '$ENUM$' + enumName, data })
+    } catch (e) {
+      throw IDB.EX(e, 'storeEnum')
+    }
+  }
+
   /* Enregistre l'objet options */
   async storeOptions (options: Object) {
     try {

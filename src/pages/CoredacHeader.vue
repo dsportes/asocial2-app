@@ -46,6 +46,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 
 const ui = stores.ui
 const sf = stores.safe
+const session = stores.session
 const orgs = ref([])
 const dialogs = reactive({
   edit: false
@@ -53,13 +54,22 @@ const dialogs = reactive({
 
 const selSection = (t) => {
   ui.appPage.section = t[0]
-  ui.appPage.sectionL = t[1]
+  ui.trigPage()
 }
 
 const init = () => {
+  ui.appPage.org = ''
+  ui.appPage.section = ''
   const s = new Set()
-  for(const [,c] of sf.mySimpleCreds('AS2', '', 'Redaction')) s.add(c.org)
+  if (session.planeMode) {
+    for(const x of session.orgRolesP) {
+      const i = x.indexOf('/')
+      s.add(x.substring(0, i))
+    }
+  } else 
+    for(const [,c] of sf.mySimpleCreds('AS2', '', 'Redaction')) s.add(c.org)
   orgs.value = Array.from(s).sort()
+  if (orgs.value.length) ui.appPage.org = orgs.value[0]
 }
 
 const onEdit = () => {

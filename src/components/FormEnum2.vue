@@ -11,7 +11,7 @@
         <btn-cond v-if="fst.isDemand && fst.editable" class="col-auto q-ml-sm"
           flat icon="star" @ok="initLocU"/>
       </div>
-      <div v-else class="font-mono text-bold">{{  edv(loc2) }}</div>
+      <div v-else class="font-mono text-bold">{{  edv }}</div>
     </div>
 
     <div v-if="fst.visT" class="q-my-sm q-pl-md">
@@ -24,7 +24,7 @@
         <btn-cond v-if="!fst.isDemand && fst.editable" class="col-auto q-ml-sm"
           flat icon="star" @ok="initLocT"/>
       </div>
-      <div v-else class="col font-mono text-bold">{{  edv(loc2) }}</div>
+      <div v-else class="col font-mono text-bold">{{  edv }}</div>
     </div>
   </div>
 </form-exp>
@@ -37,7 +37,7 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormExp from '../components-fw/FormExp.vue'
-import { hasMessage } from '../src-fw/util'
+import { DocEnums } from '../src-fw/operation'
 
 import SelectEnum from '../components-fw/SelectEnum.vue'
 
@@ -52,11 +52,7 @@ const err = defineModel()
 
 const fst = stores.form
 
-const edv = (e) => {
-  if (!e) return '?'
-  const m = hasMessage('ENUM_' + props.enum + '_' + e)
-  return m || e
-}
+const edv = ref('')
 
 const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
 const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
@@ -76,7 +72,11 @@ watch(() => fst.upd.etc, (v) => {
   loc1.value = v[props.champ]
 })
 
-onMounted(async () => { await chk(loc1.value) })
+onMounted(async () => { 
+  await chk(loc1.value) 
+  if (loc2.value) edv.value = await DocEnums.label(fst.form.svc + '$' + props.enum, fst.form.org, loc2.value)
+  // console.log(edv.value)
+})
 
 const copyLocU = () => { loc1.value = psT.value }
 const copyLocT = () => { loc1.value = psU.value }

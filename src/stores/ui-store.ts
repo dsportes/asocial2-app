@@ -239,9 +239,14 @@ export const useUiStore = defineStore('ui', () => {
     adminPage.mdAdmin = isAdmin
     return adminPage
   }
-   const appPage = reactive({
-    tab: ''
-   })
+
+  const appPage = reactive({
+  tab: '',
+  count: 0
+  })
+  const trigPage = () => {
+    appPage.count = appPage.count + 1
+  }
   
   const navBar = reactive({
     hasBack: false,
@@ -296,7 +301,7 @@ export const useUiStore = defineStore('ui', () => {
     diag, diagDisplay,
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToLogin,
-    appPage,
+    appPage, trigPage,
     setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     loginPage, resetLoginPage,

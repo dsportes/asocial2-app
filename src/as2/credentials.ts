@@ -27,6 +27,11 @@ class AS2$Credential_Redaction extends $Credential {
   static _manager = true
   static _role = 'ad'
 
+  getPerimeters () : $Perimeter[] {
+    return [ 
+      new $Perimeter(this.svc, this.org, '', 'Redaction', '1', 'AS2_ad', false, ['Redaction'], this.name )
+    ]
+  }
   get hasDispProps () { return true }
 
   async dispProps () { 
