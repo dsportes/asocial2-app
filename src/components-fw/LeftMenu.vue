@@ -22,7 +22,7 @@ Contrôlé par ui.leftMenu
     <div v-if="session.step === 2" class="column q-px-sm">
       <btn-cond v-if="sf.userId"
         class="q-mb-sm" flat color="warning"
-        @ok="openAdmin" :disable="ui.page === 'admin'">
+        @ok="openAdmin">
         <img :src="superman" class="q-mr-xs" width="24px"/>
         <div>{{ $t('PAGEadmin') }}</div>
       </btn-cond>

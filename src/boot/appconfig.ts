@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { defineBoot } from '#q-app/wrappers'
 
-export let app = null
+export let app = ''
 
 // export default defineBoot(async ({ app }) => {
 export default defineBoot(async (arg) => {

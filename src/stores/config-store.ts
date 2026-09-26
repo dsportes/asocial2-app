@@ -5,8 +5,11 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
+import { Lang } from 'quasar'
+// @ts-ignore
 import customR from '../assets/custom.json?raw'
 import { K as AppK } from '../app/constants'
+import { langs } from '../boot/quasar-lang-pack.js'
 
 export interface localeOption { value: string, label: string, flag: string }
 
@@ -26,7 +29,11 @@ export const useConfigStore = defineStore('config', () => {
   // Gestion des langues ***************************************************
   const localeMap = new Map()
   const locale: Ref<string> = ref()
-  const setLocale = (loc:string) => { locale.value = loc}
+  const setLocale = (loc:string) => { 
+    Lang.set(loc)
+    const lx = Lang.getLocale()
+    locale.value = loc
+  }
   const optionLocale = computed(() => localeMap.get(locale.value))
 
   const appname = ref('')
@@ -39,9 +46,11 @@ export const useConfigStore = defineStore('config', () => {
     location.value = window.location['href']
     K.value = { ...AppK}
     for(const f in custom) K.value[f] = custom[f]
+
     K.value.localeOptions.forEach(l => { localeMap.set(l.value, l) })
     locale.value = K.value.localeOptions[0].value
     useI18n().locale.value = locale.value
+    Lang.set(locale.value)
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
   }

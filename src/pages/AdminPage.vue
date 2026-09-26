@@ -133,7 +133,7 @@
     <div v-if="so.admin">
       <div class="row nowrap justify-between q-gutter-sm q-my-sm items-center">
         <div class="titre-md text-italic">{{ $t('APlstmanagers') }}</div>
-        <btn-cond class="col-auto q-mx-sm self-end"
+        <btn-cond class="col-auto q-mx-sm self-end" :ctx="so"
           icon="refresh" round @ok="setOS2"/>
       </div>
 
