@@ -18,8 +18,7 @@ export function gzipT (data: Uint8Array) : Uint8Array | undefined { return gzip(
 export function ungzipT (data: Uint8Array) { return ungzip(data) }
 
 export function hasMessage (code: string) : string {
-  const k = stores.config.K
-  for (const opt of k.localeOptions) {
+  for (const [lg, opt] of stores.config.localeMap) {
     const mx = i18n.messages.value[opt.value]
     if (mx && mx[code]) return mx[code]
   }

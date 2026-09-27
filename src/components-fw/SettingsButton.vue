@@ -22,10 +22,10 @@
 
         <q-separator />
 
-        <q-item v-for="lg in config.K.localeOptions" :key="lg.value" dense
-          :class="cl(lg) + ' text-center'"
-          @click="choix(lg)" clickable v-close-popup>
-          <q-item-section class="fs-lg">{{lg.label}}</q-item-section>
+        <q-item v-for="[, opt] of config.localeMap" :key="opt.value" dense
+          :class="cl(opt) + ' text-center'"
+          @click="choix(opt)" clickable v-close-popup>
+          <q-item-section class="fs-lg">{{opt.label}}</q-item-section>
         </q-item>
 
         <q-separator />
@@ -92,6 +92,8 @@
           <btn-cond label="Import Safe" size="sm" flat icon="warning"
             color="warning" @ok="dialogs.SafeExport = true"/>
         </div>
+
+        <!--q-date v-model="dateed" title="Test FR" today-btn/-->
       </q-list>
     </q-menu>
   </q-btn>
@@ -417,6 +419,8 @@ const session = stores.session
 const sf = stores.safe
 const ui = stores.ui
 
+const dateed = ref('2026/09/27')
+
 const dialogs = reactive({
   SafeExport: false,
   ServiceStatus: false,
@@ -479,7 +483,8 @@ watch(tab, (t) => {
   if (t === 'hot') resetHot()
 })
 
-const cl = (lg: localeOption) => config.optionLocale.value === lg.value ? 'disabled' : ''
+const cl = (lg: localeOption) => 
+  config.optionLocale.value === lg.value ? 'disabled' : ''
 
 const choix = (lg: localeOption) : void => {
   i18n.locale.value = lg.value

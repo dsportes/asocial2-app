@@ -29,7 +29,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['i18n', 'appconfig', 'quasar-lang-pack' ],
+    boot: ['i18n', 'appconfig' ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -134,7 +134,7 @@ export default defineConfig((ctx) => {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
       config: {
-        lang: 'en-EN'
+        // lang: 'fr'
       },
 
       // iconSet: 'material-icons', // Quasar icon set

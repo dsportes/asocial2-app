@@ -41,7 +41,7 @@ const session = stores.session
 const config = stores.config
 const ui = stores.ui
 const i18n = useI18n()
-const opts = config.K.localeOptions
+const opts = config.localeMap
 
 const obj = ref(session.edPref.obj)
 const orig = ref(session.edPref.orig)
@@ -65,8 +65,8 @@ const setLang = (opt) => {
 for(const p in defaults)
   if (!obj.value[p]) obj.value[p] = defaults[p]
 
-let x; for (const opt of opts) if (orig.value.lang === opt.value) x = opt
-lang.value = x || opts[0]
+let x; for (const [,opt] of opts) if (orig.value.lang === opt.value) x = opt
+lang.value = x || Array.from(opts.values())[0]['value']
 setLang(lang.value)
 
 ui.setDark(obj.value.dark)

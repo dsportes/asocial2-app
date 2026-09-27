@@ -9,14 +9,9 @@ import { Lang } from 'quasar'
 // @ts-ignore
 import customR from '../assets/custom.json?raw'
 import { K as AppK } from '../app/constants'
-import { langs } from '../boot/quasar-lang-pack.js'
+import { localeOptions } from '../boot/appconfig'
 
-export interface localeOption { value: string, label: string, flag: string }
-
-type typeK ={
-  localeOptions: localeOption[]
-  vapidPublicKey: string
-}
+export interface localeOption { value: string, label: string, flag: string, props: any }
 
 type service = {
   url: string
@@ -27,14 +22,14 @@ export const useConfigStore = defineStore('config', () => {
   const location = ref(null) // le href
 
   // Gestion des langues ***************************************************
-  const localeMap = new Map()
+  const localeMap = ref(new Map())
   const locale: Ref<string> = ref()
   const setLocale = (loc:string) => { 
-    Lang.set(loc)
-    const lx = Lang.getLocale()
+    const lgp = localeMap.value.get(loc).props
+    Lang.set(lgp)
     locale.value = loc
   }
-  const optionLocale = computed(() => localeMap.get(locale.value))
+  const optionLocale = computed(() => localeMap.value.get(locale.value))
 
   const appname = ref('')
   const services: Ref<Map<string, service>> = ref(new Map()) 
@@ -46,17 +41,18 @@ export const useConfigStore = defineStore('config', () => {
     location.value = window.location['href']
     K.value = { ...AppK}
     for(const f in custom) K.value[f] = custom[f]
-
-    K.value.localeOptions.forEach(l => { localeMap.set(l.value, l) })
-    locale.value = K.value.localeOptions[0].value
-    useI18n().locale.value = locale.value
-    Lang.set(locale.value)
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
+
+    Lang.set(localeOptions[0].props)
+    localeOptions.forEach(l => { localeMap.value.set(l.value, l) })
+    locale.value = localeOptions[0].value
+    useI18n().locale.value = locale.value
+    console.log(Array.from(localeMap.value.values())[0]['label'])
   }
 
   return {
-    location, K, initK, locale, optionLocale, setLocale, appname, services
+    location, K, initK, locale, optionLocale, setLocale, appname, services, localeMap
   }
 
 })

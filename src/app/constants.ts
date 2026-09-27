@@ -22,10 +22,6 @@ export const K = {
 
   docsurls: { en: 'https://asocialapps.github.io/frdocs/', fr: 'https://asocialapps.github.io/frdocs/'},
 
-  localeOptions: [
-    { value: 'en', label: 'English 🇬🇧',  flag: '🇬🇧', name: 'English' },
-    { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', name: 'Français' }
-  ],
   SYNCINCRNBD: 90, // nombre de jours de validité des synchros incrémentales
 
   sizes: {
