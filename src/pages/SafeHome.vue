@@ -47,20 +47,13 @@ const dt = ref({
 })
 
 const chgdt = (okdt) => {
-  console.log(date.formatDate(okdt.start, 'YYYY-MM-DD HH:mm'), 
-    date.formatDate(okdt.end, 'YYYY-MM-DD HH:mm'))
+  console.log(okdt.star ? date.formatDate(okdt.start, 'YYYY-MM-DD HH:mm') : 0, 
+    okdt.end ? date.formatDate(okdt.end, 'YYYY-MM-DD HH:mm') : 0)
 }
-
-/*
-watch(() => dt.value, (v) => {
-  console.log('watch', date.formatDate(v.start, 'YYYY-MM-DD HH:mm'), 
-    date.formatDate(v.end, 'YYYY-MM-DD HH:mm'))
-})
-*/
 
 const checkDT = (v) => {
   if (!v) return 'obligatoire'
-  if (v.end < v.start + 600000) return 'minimum 10 minutes'
+  if (v.start && v.end && v.end < v.start + 600000) return 'minimum 10 minutes'
   return ''
 }
 /* Fin test Date-time */

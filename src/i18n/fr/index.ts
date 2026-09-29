@@ -44,6 +44,8 @@ export default {
   build: 'Build',
   alias: 'Alias',
   close: 'Fermer',
+  ns: ' (ns)',
+  ns2: '(non significative)',
   startdt: 'Début de la période',
   enddt: 'Fin de la période',
   startm: 'Début de période absente',

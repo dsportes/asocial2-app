@@ -1,7 +1,7 @@
 <template>
 <div class="q-pa-sm column items-center">
   <div class="q-pb-xs row items-center justify-between" 
-    style="height:36px !important; min-width:300px; max-width:600px;">
+    style="height:36px !important; min-width:260px; max-width:600px;">
     <div v-if="!diag" class="col titre-md text-italic">
       {{ title }}
     </div>
@@ -17,9 +17,9 @@
   
   <div class="row col-auto justify-around">
     <date-time v-model="m1" :label="$t('startdt')" no-ok-btn class="q-mx-sm col-auto"
-      :undoFn="next.start !== m1 ? undoM1 : null"/>
+      :undoFn="next.start !== m1 ? undoM1 : null" :disable="disable"/>
     <date-time v-model="m2" :label="$t('enddt')" no-ok-btn class="q-mx-sm col-auto"
-      :undoFn="next.end !== m2 ? undoM2 : null"/>
+      :undoFn="next.end !== m2 ? undoM2 : null" :disable="disable"/>
   </div>
 </div>
 </template>
@@ -42,7 +42,8 @@ const model: Ref<startEnd> = defineModel()
 const emit = defineEmits(['ok']) 
 const props = defineProps({
   checkfn: Function,
-  title: String
+  title: String,
+  disable: Boolean
 })
 const diag = ref('')
 const m1 = ref('')
@@ -59,34 +60,40 @@ const chg = computed(() => next.start !== model.value.start || next.end !== mode
 const init = () => {
   m1i.value = Math.floor(model.value.start / 60000) * 60000
   m2i.value = Math.floor(model.value.end / 60000) * 60000
-  m1.value = date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm')
-  m2.value = date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm')
+  m1.value = m1i.value ? date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm') : ''
+  m2.value = m2i.value ? date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm') : ''
   check()
 }
 
 const undoM1 = () => {
-  m1.value = date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm')
+  m1.value = m1i.value ? date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm') : ''
 }
 
 const undoM2 = () => {
-  m2.value = date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm')
+  m2.value = m2i.value ? date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm') : ''
 }
 
 watch(() => [m1.value, m2.value], () => { 
   check()
   /* console.log('check', 
-    date.formatDate(next.start, 'YYYY-MM-DD HH:mm'),
-    date.formatDate(next.end, 'YYYY-MM-DD HH:mm')) */
+    next.start ? date.formatDate(next.start, 'YYYY-MM-DD HH:mm') : 0,
+    next.end ? date.formatDate(next.end, 'YYYY-MM-DD HH:mm') : 0) */
 })
 
 const check = () => {
-  if (!m1.value) { diag.value = $t('startm'); return }
-  if (!m2.value) { diag.value = $t('endm'); return }
-  next.start = date.extractDate(m1.value, 'YYYY-MM-DD HH:mm').getTime()
-  if (next.start < Date.now() && next.start !== m1i.value) { diag.value = $t('startReg'); return }
-  next.end = date.extractDate(m2.value, 'YYYY-MM-DD HH:mm').getTime()
-  if (next.start > next.end) { diag.value = $t('startEnd1'); return }
-  if (next.start === next.end) { diag.value = $t('startEnd2'); return }
+  if (props.disable) { diag.value = ''; return }
+  const now = Math.floor(Date.now() / 60000) * 60000
+  next.start = m1.value ? date.extractDate(m1.value, 'YYYY-MM-DD HH:mm').getTime() : 0
+  next.end = m2.value ? date.extractDate(m2.value, 'YYYY-MM-DD HH:mm').getTime() : 0
+  if (next.start && next.start < now && next.start !== m1i.value) { 
+    diag.value = $t('startReg')
+    return }
+  if (next.start && next.end && next.start > next.end) { 
+    diag.value = $t('startEnd1')
+    return }
+  if (next.start && next.end && next.start === next.end) { 
+    diag.value = $t('startEnd2')
+    return }
   diag.value = props.checkfn ? props.checkfn(next) : ''
 }
 
