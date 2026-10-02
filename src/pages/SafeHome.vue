@@ -15,8 +15,8 @@
     <select-options v-if="session.step === 1"/>
   </div>
 
-  <date-time2 v-model="dt" :class="sty('md') + ' q-my-md'" 
-    @ok="chgdt" title="Test saisie période" :checkfn="checkDT"/>
+  <!--date-time2 v-model="dt" :class="sty('md') + ' q-my-md'" 
+    @ok="chgdt" title="Test saisie période" :checkfn="checkDT"/-->
 </div>
 </template>
 
@@ -34,12 +34,12 @@ import ModeLocal from '../components-fw/ModeLocal.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
 import SelectOptions from '../components-fw/SelectOptions.vue'
 
-import DateTime2 from '../components-fw/DateTime2.vue'
+// import DateTime2 from '../components-fw/DateTime2.vue'
 
 const ui = stores.ui
 const session = stores.session
 
-/* Test Date-time */
+/* Test Date-time 
 const nowInMin = Math.floor(Date.now() / 60000) * 60000
 const dt = ref({
   start: nowInMin - 60000,
@@ -56,7 +56,7 @@ const checkDT = (v) => {
   if (v.start && v.end && v.end < v.start + 600000) return 'minimum 10 minutes'
   return ''
 }
-/* Fin test Date-time */
+Fin test Date-time */
 
 const logok = async (x) => {
   if (x === 'calc') await step(2)

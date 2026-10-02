@@ -50,6 +50,7 @@ export default {
   enddt: 'Fin de la période',
   startm: 'Début de période absente',
   startReg: 'Régression dans le passé interdite',
+  startPh: 'Par exemple: 2028-12-25 15:50',
   endm: 'Fin de période absente',
   startEnd1: 'Fin antérieure au début',
   startEnd2: 'Période vide (début = fin)',
@@ -319,6 +320,7 @@ bla bla
   op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
   op_ADMIN$getEnum: 'Lecture d\'une énumération',
   op_ListeAuteursSection: 'Liste des auteurs par section',
+  op_UpdateCredentialRedaction: 'Mise à jour d\'un pouvoir d\èun auteur',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1442,6 +1444,22 @@ Détail: url:[{3}] erreur:[{4}]
   CODIRna: 'Nom d\'auteur actuel:',
   CODIRsa: 'Section actuelle:',
   CODIRcreds: 'Pouvoirs d\'auteur déclarés:',
+  CODIRcred_tit: 'Auteur: {0} - Pouvoir de [{1}]',
+  CODIRcred_del: 'Supprimer',
+  CODIRcred_del1: 'Date-heure de suppression',
+  CODIRcred_del2: 'Suppression irrémédiable et immédiate du pouvoir à la date et l\'heure indiquée.',
+  CODIRcred_susp: 'Suspendre',
+  CODIRcred_susp1: 'Dates-heures de suspension',
+  CODIRcred_susp2: 'Suspension du pouvoir entre les dates et heures suivantes.',
+  CODIRcred_susp3: 'Rectification des dates et heures de suspension.',
+  CODIRcred_susp4: 'Annulation de la suspension du pouvoir.',
+
+  SUSPcred_0: 'Pouvoir actif',
+  SUSPcred_1: 'Pouvoir suspendu à partir de: {0}',
+  SUSPcred_2: 'Pouvoir suspendu jusqu\'à: {0}',
+  SUSPcred_3: 'Pouvoir suspendu de [{0}] à [{1}]',
+  SUSPcred_4: 'Pouvoir suspendu (sans limite)',
+
   AUTcol_id: 'Identifiant',
   AUTcol_np: 'Nom dans le "pouvoir"',
   AUTcol_sec: 'Section',

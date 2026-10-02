@@ -9,10 +9,10 @@
       <div class="titre-xs text-italic">{{ title }}</div>
       <div class="msg4">{{ diag }}</div>
     </div>
-    <btn-cond v-if="diag === ''" :round="!chg" icon="check" @ok="dook"
-      :label="chg ? $t('validate') : ''"
+    <btn-cond v-if="diag === ''" round icon="check" @ok="dook"
       class="col-auto q-ml-sm"
-      :color="!chg ? 'grey-5' : 'warning'"/>
+      :disable="diag !== ''"
+      :color="diag ? 'grey-5' : 'green-5'"/>
   </div>
   
   <div class="row col-auto justify-around">
@@ -55,11 +55,9 @@ const next = reactive({
   end: model.value.end
 })
 
-const chg = computed(() => next.start !== model.value.start || next.end !== model.value.end)
-
 const init = () => {
-  m1i.value = Math.floor(model.value.start / 60000) * 60000
-  m2i.value = Math.floor(model.value.end / 60000) * 60000
+  m1i.value = Math.floor(model.value[0] / 60000) * 60000
+  m2i.value = Math.floor(model.value[1] / 60000) * 60000
   m1.value = m1i.value ? date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm') : ''
   m2.value = m2i.value ? date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm') : ''
   check()
@@ -85,28 +83,22 @@ const check = () => {
   const now = Math.floor(Date.now() / 60000) * 60000
   next.start = m1.value ? date.extractDate(m1.value, 'YYYY-MM-DD HH:mm').getTime() : 0
   next.end = m2.value ? date.extractDate(m2.value, 'YYYY-MM-DD HH:mm').getTime() : 0
-  if (next.start && next.start < now && next.start !== m1i.value) { 
+  if (next.start && next.start < now && next.start !== m1i.value)
     diag.value = $t('startReg')
-    return }
-  if (next.start && next.end && next.start > next.end) { 
+  else if (next.start && next.end && next.start > next.end)
     diag.value = $t('startEnd1')
-    return }
-  if (next.start && next.end && next.start === next.end) { 
+  else if (next.start && next.end && next.start === next.end)
     diag.value = $t('startEnd2')
-    return }
-  diag.value = props.checkfn ? props.checkfn(next) : ''
+  else diag.value = props.checkfn ? props.checkfn(next) : ''
+  const x = [next.start, next.end]
+  if (diag.value) x.push(1)
+  model.value = x
 }
 
 const dook = () => {
   check()
-  if (!diag.value) {
-    const x = { start: next.start, end: next.end }
-    /* console.log('emit', 
-      date.formatDate(x.start, 'YYYY-MM-DD HH:mm'),
-      date.formatDate(x.end, 'YYYY-MM-DD HH:mm')) */
-    emit('ok', x)
-    model.value = x
-  }
+  if (!diag.value)
+    emit('ok', model.value)
 }
 
 init()

@@ -2,11 +2,9 @@
 <div class="row items-center">
   <q-toggle class="col-auto q-mr-sm" v-model="valid" dense 
     :disable="disable" size="sm" color="green"/>
-  <q-input v-if="!valid" filled v-model="model2" :label="label" disable
-    style="width:220px"/>
-  <q-input v-else filled v-model="model" :label="label"
-    :disable="disable" style="width:220px"
-    placeholder="2028-12-31 22:30">
+  <q-input filled v-model="model" :label="label"
+    :disable="disable" style="width:250px"
+    :placeholder="$t('startPh')">
     <template #prepend>
       <q-icon name="event" class="cursor-pointer">
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -46,7 +44,6 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import { $t } from '../src-fw/util'
 
 const model = defineModel()
-const model2 = ref($t('ns2'))
 const emit = defineEmits(['ok']) 
 const props = defineProps({
   checkfn: Function,
@@ -60,6 +57,10 @@ const diag = ref('')
 const valid = ref(model.value !== '')
 watch(valid, (v) => {
   if (!v) model.value = ''})
+
+watch(() => model.value, (v) => {
+  if (!v) valid.value = false
+})
 
 const dook = () => {
   const v = model.value
