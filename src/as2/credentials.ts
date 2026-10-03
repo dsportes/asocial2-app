@@ -1,9 +1,11 @@
+// @ts-ignore
+import { date } from 'quasar'
 import { schemaExcAS2 } from '../as2/schema'
 
 import { Registry } from '../src-fw/registry'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
-import { $Credential } from '../src-fw/documents'
+import { $Credential} from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 
 const ok = !schemaExcAS2()
@@ -56,6 +58,7 @@ export class AS2$Credential_Auteur extends $Credential {
     if (this.props.trig) m += ' \n ' + $t('TYPE_AS2_auteur_trigramme_det', [this.props.trig])
     await ui.diagDisplay(m)
   }
+
 }
 if (ok) { n++; Registry.register(AS2$Credential_Auteur) }
 

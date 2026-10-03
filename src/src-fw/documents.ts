@@ -1,7 +1,9 @@
 // @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
+// @ts-ignore
+import { date } from 'quasar'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document, $ADocument, SOA, topCl } from '../src-fw//registry'
+import { Registry, $Document, SOA, topCl } from '../src-fw//registry'
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { $Perimeter } from '../src-fw/subscription'
@@ -61,6 +63,34 @@ export class $CredTempl {
     return t
   }
 
+}
+
+export class EmbedCred {
+  credId: string
+  props: any
+  docCl: string
+  docPk: string
+
+  constructor (credId: string, props: any, docCl: string, docPk: string) {
+    this.credId = credId
+    this.props = props
+    this.docPk = docPk
+    this.docCl = docCl
+  }
+
+  editSusp (susp?: number[], limit?: number) : string {
+    const su = susp || this.props.susp
+    const li = limit || this.props.limit || 0
+    const b = li !== 0 && li < Math.floor(Date.now() / 60000)
+    const s1 = li ? $t('SUSPcred_' + (b ? '6' : '5'), [dhcool(li * 60000)]) : ''
+    if (b) return s1
+    if (!su) return s1 + $t('SUSPcred_0')
+    const s = su[0] ? dhcool(su[0]) : ''
+    const e = su[1] ? dhcool(su[1]) : ''
+    if (su[0] === 0) 
+      return s1 + (!e ? $t('SUSPcred_4') : $t('SUSPcred_2', [e]))
+    return s1 + (!e ? $t('SUSPcred_1', [s]) : $t('SUSPcred_3', [s, e]))
+  }
 }
 
 export type $Cred = {

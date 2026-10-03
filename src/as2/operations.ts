@@ -1,13 +1,13 @@
 import { Operation } from '../src-fw/operation'
-import { $Credential } from '../src-fw/documents'
+import { $Credential, EmbedCred } from '../src-fw/documents'
 
 export class UpdateCredentialRedaction extends Operation {
   constructor (svc: string, org: string) { super('UpdateCredentialRedaction', svc, org) }
 
-  async run (credId: string, docCl: string, docPk: string, props: Object, cred: $Credential) {
+  async run (cred: EmbedCred, props: Object, reqCred: $Credential) {
     try {
-      this.setArgs({ credId, docCl, docPk, props } )
-      await this.sign(cred)
+      this.setArgs({ credId: cred.credId, docCl: cred.docCl, docPk: cred.docPk, props } )
+      await this.sign(reqCred)
       const res = await this.post()
       return res.status
     } catch(e) {
