@@ -2,7 +2,7 @@
 event : 'select', svc (org est session.orgs.c)
 -->
 <template>
-<div>
+<div style="min-height:80px">
   <div class="row q-gutter-xs items-center full-width nowrap">
     <btn-cond class="col-auto" icon="backspace" flat color="warning" @ok="doreset"/>
     <div class="col">

@@ -8,15 +8,10 @@ import { setCssVar } from 'quasar'
 import { hasPage } from '../src-fw/help'
 import { useConfigStore } from '../stores/config-store'
 import { useSessionStore } from '../stores/session-store'
+import { SOA } from '../src-fw/registry'
 
 const large = 900
 const HOME = 'safeHome'
-
-export type SOA = {
-   svc: string
-   org: string
-   admin: boolean
-}
 
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
@@ -220,24 +215,25 @@ export const useUiStore = defineStore('ui', () => {
     }, 50)
   }
 
+  /* export type SOA = {
+    svc: string
+    org: string
+    svcLabel?: string
+    site?: string
+    admin? : boolean
+  } */
   const adminPage = reactive({
     tab: 'sites', // orgs
-    site: '',
-    org: '',
-    svc: '',
+    soa: { svc: '', org: '', svcLabel: '', site: '', admin: false },
     pingop: '',
     pingst: '',
     mdAdmin: false
   })
 
   const resetAdminPage = (isAdmin: boolean) => {
-    adminPage.site = ''
-    adminPage.org = ''
-    adminPage.org = ''
     adminPage.pingop = ''
     adminPage.pingst = ''
     adminPage.mdAdmin = isAdmin
-    return adminPage
   }
 
   const appPage = reactive({

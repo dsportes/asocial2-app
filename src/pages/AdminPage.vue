@@ -106,55 +106,47 @@
     @option="confirmDS"/>
 
   <div v-if="adp.tab === 'orgs'" class="pwmd">
-    <div class="full-width q-mx-xs"><select-svcorg initorg="?" initsvc="?" @select="setOS"/></div>
+    <status-site v-if="ui.adminPage.soa.site" v-model="ui.adminPage.soa" class="q-mt-md"/>
 
-    <status-site v-if="so.site" v-model="so" class="q-mt-md"/>
-
-    <div v-if="so.site" class="q-my-sm titre-md">
-      <div v-if="so.admin" class="row q-gutter-sm items-center">
+    <div v-if="ui.adminPage.soa.site" class="q-my-sm titre-md">
+      <div v-if="ui.adminPage.soa.admin" class="row q-gutter-sm items-center">
         <img :src="superman" width="24px"/>
         <div class="titre-md text-bold">{{ $t('APsiteadmin') }}</div>
       </div>
-      <div class="titre-md">{{ $t('APsinfo', [so.site, surl]) }}</div>
+      <div class="titre-md">{{ $t('APsinfo', [ui.adminPage.soa.site, surl]) }}</div>
     </div>
 
-    <div v-if="so.site && so.org" class="q-my-md">
-      <div class="q-mb-sm titre-md">{{ $t('orgStatus', [so.org, so.svcLabel, so.site]) }}</div>
-      <status-org v-model="so"/>
+    <div v-if="ui.adminPage.soa.site && ui.adminPage.soa.org" class="q-my-md">
+      <div class="q-mb-sm titre-md">
+        {{ $t('orgStatus', [ui.adminPage.soa.org, ui.adminPage.soa.svcLabel, ui.adminPage.soa.site]) }}
+      </div>
+      <status-org v-model="ui.adminPage.soa"/>
     </div>
   </div>
 
-  <div v-if="ui.adminPage.tab === 'managers'" class="pwsm">
-    <select-svcorg initorg="?" initsvc="?" @select="setOS2"/>
+  <div v-if="ui.adminPage.tab === 'managers' && ui.adminPage.soa.svc && ui.adminPage.soa.org" class="pwsm">
+    <div v-if="!lstMgr.length" class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
 
-    <div v-if="so.ready && !so.admin">
-      <div class="msg q-my-sm">{{ $t('APnoadm') }}</div>
-    </div>
-    <div v-if="so.admin">
-      <div class="row nowrap justify-between q-gutter-sm q-my-sm items-center">
-        <div class="titre-md text-italic">{{ $t('APlstmanagers') }}</div>
-        <btn-cond class="col-auto q-mx-sm self-end" :ctx="so"
-          icon="refresh" round @ok="setOS2"/>
+    <div v-else class="q-my-xs" v-for="(m, idx) in lstMgr" :key="m.credId" :class="dkli(idx)">
+      <div class="row">
+        <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
+        <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
       </div>
-
-      <scroll-area v-if="lstMgr.length"
-        class="full-width bord1">
-        <div class="q-my-xs" v-for="(m, idx) in lstMgr" :key="m.credId" :class="dkli(idx)">
-          <div class="row">
-            <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
-            <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
-          </div>
-          <div class="row">
-            <div class="col-1"></div>
-            <div class="col-5 row">
-              <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-              <div class="col ellipsis">{{m.props.name || '?'}}</div>
-            </div>
-            <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
-          </div>
+      <div class="row">
+        <div class="col-1"></div>
+        <div class="col-11 row">
+          <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
+          <div class="col ellipsis">{{m.props.name || '?'}}</div>
         </div>
-      </scroll-area>
-      <div v-else class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
+      </div>
+      <div class="row">
+        <div class="col-1"></div>
+        <div class="col-5 row">
+          <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
+          <div class="col ellipsis">{{m.props.name || '?'}}</div>
+        </div>
+        <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
+      </div>
     </div>
   </div>
 
@@ -220,6 +212,15 @@ import { AOperation, MDOperation, isAdmin, services, pingStore } from '../src-fw
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // @ts-ignore
 import superman from '../assets/superman.jpg'
+
+
+/* export type SOA = {
+  svc: string
+  org: string
+  svcLabel?: string
+  site?: string
+  admin? : boolean
+} */
 
 const ui = stores.ui
 const sf = stores.safe
@@ -306,7 +307,7 @@ const init1 = () => {
   curSite.svcLabel = ''
   curSite.admin = false
   curSite.services = new Set(),
-  adp.value.site = ''
+  adp.value.soa.site = ''
   newsite.value = false
   nsite.inp = ''; nsite.err = ''
   nurl.inp = ''; nurl.err = ''
@@ -322,16 +323,16 @@ const init1 = () => {
 }
 
 const setCurSite = async (site: string) => {
-  if (adp.value.site === site) {
+  if (adp.value.soa.site === site) {
     curSite.site = ''
-    adp.value.site = ''
+    adp.value.soa.site = ''
   } else {
     curSite.site = site
     curSite.admin = false
     curSite.svc = ''
     curSite.services = new Set()
     curSite.svcLabel = ''
-    adp.value.site = site
+    adp.value.soa.site = site
     if (site) {
       adp.value.pingop = ''
       adp.value.pingst = ''
@@ -463,49 +464,22 @@ const confirm = async (c) => {
   siteNv.value = ''
 }
 
-const so = reactive({
-  org: '',
-  site: '',
-  svc: '',
-  ready: false,
-  admin: false
-})
-
-const surl = computed(() => AOperation.urls.get(so.site) || '?')
-
-const setOS = async (soa: SOA) => {
-  so.org = soa.org
-  so.svc = soa.svc
-  so.svcLabel = soa.svcLabel
-  so.site = soa.site
-  so.admin = soa.admin
-  so.ready = true
-}
+const surl = computed(() => AOperation.urls.get(ui.adminPage.soa.site) || '?')
 
 const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
 
-const init2 = () => {
-  so.org = ''; so.site = ''; so.svc = ''; so.ready = false
-  lstMgr.value = []
-}
-
-watch(() => adp.tab, (t) => {
+watch(() => adp.value.tab, (t) => {
   if (t === 'sites') init1()
-  if (t === 'orgs') init2()
-  if (t === 'managers') init2()
 })
 
-adp.value.tab = 'sites'
-init2()
-
-const setOS2 = async (soa: SOA) => {
-  await setOS(soa)
-  await dolist()
-}
+watch(() => adp.value.soa, async (soa) => {
+  if (adp.value.tab === 'managers' && adp.value.soa.svc && adp.value.soa.org) 
+    await dolist()
+})
 
 const dolist = async () => {
   lstMgr.value = []
-  const op = new ListManagers(so.svc, so.org)
+  const op = new ListManagers(adp.value.soa.svc, adp.value.soa.org)
   lstMgr.value = await op.run()
   // console.log(lstMgr.value.length)
 }
@@ -575,7 +549,7 @@ const confirm2 = async (b) => {
   if (toDel.value) c.props.limit = 1
   else c.props.limit = !curT.value ? 0 : Math.floor(curT.value / 60000)
   if (targetUser.inp !== (c.props.name || '')) c.props.name = targetUser.inp
-  const op = new UpdateCredential(so.svc, so.org)
+  const op = new UpdateCredential(ui.adminPage.soa.svc, ui.adminPage.soa.org)
   const status = await op.run(c.credId, c.docCl, c.docPk, c.props)
   if (status) await ui.diagDisplay($t('APupdko'))
   else await ui.diagDisplay($t(toDel.value ? 'APdelok' : 'APupdok'))
