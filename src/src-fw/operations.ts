@@ -1,7 +1,7 @@
 
 import { Operation, ADMIN$Status } from '../src-fw/operation'
 
-import { $Credential, $Cred } from '../src-fw/documents'
+import { $Credential, $Cred, EmbedCred } from '../src-fw/documents'
 
 export class Bug extends Operation {
   constructor (SVC: string, org: string) { super('Bug', SVC, org) }
@@ -55,10 +55,13 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
 
 export class ListManagers extends Operation {
   constructor (svc: string, org: string) { super('ListManagers', svc, org) }
-  async run () : Promise<$Cred[]>{
+  async run () : Promise<EmbedCred[]>{
     try {
       const res = await this.post()
-      return res['creds'] as $Cred[]
+      const lst = res['creds'] as $Cred[]
+      const l:EmbedCred[] = []
+      for (const c of lst) l.push(new EmbedCred(c.credId, c.props, c.docCl, c.docPk))
+      return l
     } catch(e) {
       await this.ko(e)
       return []

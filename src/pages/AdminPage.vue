@@ -124,65 +124,27 @@
     </div>
   </div>
 
-  <div v-if="ui.adminPage.tab === 'managers' && ui.adminPage.soa.svc && ui.adminPage.soa.org" class="pwsm">
+  <div v-if="ui.adminPage.tab === 'managers' && ui.adminPage.soa.svc && ui.adminPage.soa.org" class="pwmd">
     <div v-if="!lstMgr.length" class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
 
     <div v-else class="q-my-xs" v-for="(m, idx) in lstMgr" :key="m.credId" :class="dkli(idx)">
+      <div class="ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
       <div class="row">
-        <btn-cond class="col-1" icon="edit" color="warning" @ok="edit(m)"/>
-        <div class="col-11 ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
+        <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
+        <line-edit class="col" width="sm" :text="m.props.name || '?'"
+          :ctx="{ m: m }" @change="chgName"/>
       </div>
-      <div class="row">
-        <div class="col-1"></div>
-        <div class="col-11 row">
-          <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-          <div class="col ellipsis">{{m.props.name || '?'}}</div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-1"></div>
-        <div class="col-5 row">
-          <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-          <div class="col ellipsis">{{m.props.name || '?'}}</div>
-        </div>
-        <div class="font-mono">{{m.props.limit ? dhcool(m.props.limit * 60000) : $t('APnolimit')}}</div>
+      <div class="row q-gutter-sm no-wrap">
+        <btn-cond class="col-auto" icon="edit" @ok="edCred(m)"/>
+        <div class="col font-mono">{{ m.editSusp() }}</div>
       </div>
     </div>
   </div>
 
-  <dialog-std0 v-if="dialogs.edit" v-model="dialogs.edit" @close="dialogs.edit = false"
-    :title="$t('APlistmgr')" vh="75">
-    <template #hdr>
-      <div class="row justify-between q-pa-xs">
-        <btn-cond icon="close" :label="$t('APdelcred')" color="warning" @ok="delcred"/>
-        <btn-cond :label="$t('iconfirm')" confirm @ok="confirm2" 
-          :disable="!changes"/>
-      </div>
-      <div class="row items-center q-my-xs q-gutter-xs">
-        <div class="titre-md text-italic text-bold">{{ $t('APvallimit') }}</div>
-        <btn-cond v-if="chgT"
-          icon="undo" :label="$t('APundolimit')" @ok="undolimit"/>
-        <btn-cond v-if="!current.props.limit && !curT"
-          icon="add" :label="$t('APaddlimit')" @ok="addlimit"/>
-        <btn-cond v-if="current.props.limit"
-          icon="delete" :label="$t('APdellimit')" @ok="dellimit"/>
-      </div>
-    </template>
-    <template #default>
-      <div v-if="!toDel">
-      <input-b class="full-width" prefix="APtarget" size="about" noval
-        :initval="initName"
-        v-model="targetUser" :disable="toDel"/>
-
-      <div v-if="curT" class="column items-center q-gutter-sm">
-        <div v-if="diagD" class="msg">{{  diagD }}</div>
-        <q-date v-model="dateed" :title="dhcool(curT)" today-btn/>
-        <q-time v-model="timeed" format24h/>
-      </div>
-      <div v-else class="titre-lg text-italic text-center q-my-md">{{$t('APnovallimit')}}</div>
-      </div>
-    </template>
-  </dialog-std0>
+  <rev-susp v-if="dialogs.credmgnt" v-model="dialogs.credmgnt"
+    :svc="ui.adminPage.soa.svc" :org="ui.adminPage.soa.org" :curcred="curcred"
+    :title="tit"
+    @done="onDone" />
 
 </div>
 </template>
@@ -193,7 +155,6 @@
 import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'
 import stores from '../stores/all'
 import { $t, dkli, dhcool, sty, zp } from '../src-fw/util'
-import { SOA } from '../src-fw/registry'
 import StatusSite from '../components-fw/StatusSite.vue'
 import StatusOrg from '../components-fw/StatusOrg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -203,11 +164,11 @@ import ScrollArea from '../components-fw/ScrollArea.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
-import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import { $Cred } from '../src-fw/documents'
-import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
+import RevSusp from '../dialogs-fw/RevSusp.vue'
+// import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { AOperation, MDOperation, isAdmin, services, pingStore } from '../src-fw/operation'
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
 // @ts-ignore
@@ -227,7 +188,7 @@ const sf = stores.safe
 
 const dialogs = reactive({
   confirmrevoke: false,
-  edit: false,
+  credmgnt: false,
   cf: false,
   ds: false
 })
@@ -484,76 +445,24 @@ const dolist = async () => {
   // console.log(lstMgr.value.length)
 }
 
-const timeed = ref('')
-const dateed = ref('')
-const initName = ref('')
-const current = ref({ props: {} })
-const toDel = ref(false)
-
-const targetUser = reactive({ inp: '', err: '' })
-
-const edit = (m) => {
-  current.value = m
-  initName.value = m.props.name || ''
-  targetUser.inp = m.props.name || ''
-  targetUser.err = ''
-  dialogs.edit = true
-  toDel.value = false
-  undolimit()
-}
-
-const setD = (d: Date) => {
-  dateed.value = !d ? '' : d.getFullYear() + '/' + zp(d.getMonth() + 1) + '/' + zp(d.getDate())
-  timeed.value = !d ? '' : zp(d.getHours()) + ':' + zp(d.getMinutes())
-}
-
-const curT = computed(() => 
-  dateed.value && timeed.value ? new Date(dateed.value + ' ' + timeed.value).getTime() : 0)
-const diagD = computed(() => 
-  !curT.value || curT.value > Date.now() ? '' : $t('APlimitpast'))
-const chgT = computed(() => 
-  (current.value.props.limit || 0) * 60000 !== curT.value)
-
-const undolimit = () => {
-  setD(current.value.props.limit ? new Date(current.value.props.limit * 60000) : null)
-}
-
-const changes = computed(() =>
-  toDel.value || chgT.value || targetUser.inp !== (current.value.props.name || '') )
-
-
-const delcred = () => {
-  toDel.value = true
-}
-
-const addlimit = () => {
-  setD(new Date(Date.now() + 3600000))
-}
-
-const dellimit = () => {
-  setD(null)
-}
-
-const undoAll = () => {
-  undolimit()
-  targetUser.inp = initName.value
-  toDel.value = false
-}
-
-const confirm2 = async (b) => {
-  if (b === false) {
-    undoAll()
-    return
-  }
-  const c = current.value
-  if (toDel.value) c.props.limit = 1
-  else c.props.limit = !curT.value ? 0 : Math.floor(curT.value / 60000)
-  if (targetUser.inp !== (c.props.name || '')) c.props.name = targetUser.inp
+const chgName = async (ctx) => {
   const op = new UpdateCredential(ui.adminPage.soa.svc, ui.adminPage.soa.org)
-  const status = await op.run(c.credId, c.docCl, c.docPk, c.props)
+  const props = { ...ctx.m.props, name: ctx.value }
+  const status = await op.run(ctx.m.credId, ctx.m.docCl, ctx.m.docPk, props)
   if (status) await ui.diagDisplay($t('APupdko'))
-  else await ui.diagDisplay($t(toDel.value ? 'APdelok' : 'APupdok'))
-  dialogs.edit = false
+  else await dolist()
+}
+
+const curcred = ref()
+const tit = ref()
+const edCred = (m) => {
+  curcred.value = m
+  tit.value = $t('CREDON_' + m.docCl) + ' - ' + m.props.name
+  dialogs.credmgnt = true
+}
+
+const onDone = async () => {
+  dialogs.credmgnt = false
   await dolist()
 }
 

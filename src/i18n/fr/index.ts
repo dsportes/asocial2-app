@@ -320,7 +320,8 @@ bla bla
   op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
   op_ADMIN$getEnum: 'Lecture d\'une énumération',
   op_ListeAuteursSection: 'Liste des auteurs par section',
-  op_UpdateCredentialRedaction: 'Mise à jour d\'un pouvoir d\èun auteur',
+  op_UpdateCredentialSusp: 'Mise à jour d\'un pouvoir d\èun auteur',
+  op_UpdateCredential: 'Misqe à jour d\'un pouvoir d\'un "manager"',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',

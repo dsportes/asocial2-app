@@ -2,7 +2,7 @@
 :class="'selx font-mono ellipsis' + (disable ? ' disabled' : ' cursor-pointer')">
 -->
 <template>
-<div class="column">
+<div :class="'column pw' + (width || 'md')">
   <div v-if="prefix" class="row items-center">
     <btn-bubble class="col-auto" :text="$t(prefix + '_bub')"/>
     <div class="col q-mx-sm mh titre-md text-italic ellipsis">{{ $t(prefix + '_label') }}</div>
@@ -10,12 +10,10 @@
 
   <div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
     <q-icon name="edit" size="22px"/>
-    <div :style="widths[width || 'sm']"
-      class="q-ml-xs font-mono ellipsis">
+    <div class="q-ml-xs font-mono ellipsis overflow-hidden">
       {{ text }}</div>
-    <q-menu v-model="menu"
+    <q-menu v-model="menu" :class="'w' + (widthmenu || 'md') + ' b1'"  
       anchor="center middle" self="center middle"
-      :style="styles[widthmenu || 'md'] + ';border:2px solid var(--q-primary);border-radius:5px;'"
       transition-show="flip-up" transition-hide="flip-down">
       <input-a class="font-mono q-ma-sm" v-model="ntext" :initval="text"
         :size="datasize" simple @validate="doOk"
@@ -44,18 +42,6 @@ const props = defineProps({
   idx: Number
 })
 
-const styles = {
-  sm: 'width: 30em !important',
-  md: 'width: 40em !important',
-  lg: 'width: 50em !important'
-}
-
-const widths = {
-  sm: 'max-width: 10em !important; overflow:hidden',
-  md: 'max-width: 20em !important; overflow:hidden',
-  lg: 'max-width: 30em !important; overflow:hidden'
-}
-
 const emit = defineEmits(['change'])
 
 const menu = ref(false)
@@ -76,7 +62,7 @@ const doOk = () => {
 
 <style lang="scss" scoped>
 @import '../css/app.scss';
-// .w1 { background-color:rgba(255,255,255,0.1) }
+.b1 { border:2px solid var(--q-primary);border-radius:5px; }
 .bord { border: 2px solid var(--q-warning); border-radius: 2px;}
 .sely:hover { border-color: $yellow-5;}
 .sely { border:1px solid transparent; border-radius: 5px; cursor:pointer!important;}

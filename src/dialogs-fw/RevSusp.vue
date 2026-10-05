@@ -46,7 +46,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import DateTime from '../components-fw/DateTime.vue'
 import DateTime2 from '../components-fw/DateTime2.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { UpdateCredentialRedaction } from '../as2/operations'
+import { UpdateCredentialSusp } from '../as2/operations'
 
 const model = defineModel()
 const props = defineProps({
@@ -91,7 +91,7 @@ const okSusp = async (t: number) => {
   else if (t === 2) delete lprops.susp
   else lprops.susp = dsusp.value
 
-  const op = new UpdateCredentialRedaction(props.svc, props.org)
+  const op = new UpdateCredentialSusp(props.svc, props.org)
   const status = await op.run(cc, lprops, props.cred)
 
   dsusp.value = [0, 0]
