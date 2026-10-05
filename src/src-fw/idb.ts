@@ -308,8 +308,10 @@ export class IDB {
         const lp = []
         for(const [, x] of livingP)
           lp.push(this.db.perims.put(x))
-        for(const pk of toDelP)
-          lp.push(this.db.perims.get(pk).delete())
+        for(const pk of toDelP) {
+          const y = this.db.perims.delete(pk)
+          if (y) lp.push(y)
+        }
         await Promise.all(lp)
       })
 

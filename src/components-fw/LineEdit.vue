@@ -2,7 +2,7 @@
 :class="'selx font-mono ellipsis' + (disable ? ' disabled' : ' cursor-pointer')">
 -->
 <template>
-<div :class="'column pw' + (width || 'md')">
+<div :class="'column'">
   <div v-if="prefix" class="row items-center">
     <btn-bubble class="col-auto" :text="$t(prefix + '_bub')"/>
     <div class="col q-mx-sm mh titre-md text-italic ellipsis">{{ $t(prefix + '_label') }}</div>
@@ -35,7 +35,7 @@ const props = defineProps({
   text: String,
   disable: Boolean,
   widthmenu: String,
-  width: String,
+  // width: String,
   datasize: String,
   ctx: Object,
   fncheck: Function,

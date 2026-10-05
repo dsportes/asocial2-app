@@ -33,46 +33,54 @@
     </template>
 
     <template #default>
-      <q-separator color="orange" class="q-my-sm"/>
-      <div class="column items-center">
-        <div class="pwsm">
+    <div class="dialog-std">
+      <div v-if="step >= 2">
+        <div class="q-pt-sm titre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
 
-          <div v-if="step >= 2" class="sep q-my-sm">
-            <div class="titre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
-            <scroll-area size="md" class="q-py-xs" noborder>
+        <q-splitter v-model="splitterModel" horizontal 
+          :style="'height:' + (ui.appPage.height - 70) + 'px'">
+          <template v-slot:before>
+            <div class="q-my-sm">
               <div v-for="(c, idx) in curso.creds" :key="c.credId"
                 :class="'row cursor-pointer select q-my-sm ' + dkli(idx) + curSty2(c)">
                 <cred-row2 class="full-width" :cred="c" comment
                   @undo="undodel(c)" @select="selectCr(c)"/>
               </div>
-            </scroll-area>
-          </div>
-
-          <div v-if="step === 3" class="q-mt-sm q-mb-sm">
-            <line-edit width="sm"
-              class="q-my-sm" prefix="CRRabout" :text="curcr.name || ''"
-              @change="chgName"/>
-
-            <cred-row2 :cred="curcr" class="q-my-sm"/>
-
-            <div v-if="curcr.alert === 1" 
-              class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
-
-            <div v-if="curcr.alert === 2" class="row">
-              <div class="col titre-md text-bold">{{ $t('CRRdel2') }}</div>
-              <btn-cond class="col-auto q-ml-xs" round 
-                icon="undo" color="primary"
-                @ok="undodel"/>
             </div>
+          </template>
 
-            <div v-if="curcr.alert === 0" class="row">
-              <div class="col titre-md text-bold text-warning">{{ $t('CRRdel') }}</div>
-              <btn-cond class="col-auto q-ml-xs" round icon="delete" color="negative"
-                confirm @ok="cftodel"/>
+          <template #separator>
+            <q-btn color="primary" round size="xs" icon="drag_indicator"/>
+          </template>
+
+          <template v-slot:after>
+            <div v-if="step === 3" class="q-my-sm">
+              <line-edit width="sm"
+                class="q-my-sm" prefix="CRRabout" :text="curcr.name || ''"
+                @change="chgName"/>
+
+              <cred-row2 :cred="curcr" class="q-my-sm"/>
+
+              <div v-if="curcr.alert === 1" 
+                class="q-mb-sm titre-md text-bold text-warning">{{ $t('CRRobs1') }}</div>
+
+              <div v-if="curcr.alert === 2" class="row">
+                <div class="col titre-md text-bold">{{ $t('CRRdel2') }}</div>
+                <btn-cond class="col-auto q-ml-xs" round 
+                  icon="undo" color="primary"
+                  @ok="undodel"/>
+              </div>
+
+              <div v-if="curcr.alert === 0" class="row">
+                <div class="col titre-md text-bold text-warning">{{ $t('CRRdel') }}</div>
+                <btn-cond class="col-auto q-ml-xs" round icon="delete" color="negative"
+                  confirm @ok="cftodel"/>
+              </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </q-splitter>
       </div>
+    </div>
     </template>
   </dialog-std2>
 </div>
@@ -100,6 +108,7 @@ const ui = stores.ui
 
 const model = defineModel()
 const emit = defineEmits(['close'])
+const splitterModel = ref(60)
 
 const checkClose = async () => {
   if (todel.value.size) await cleanUp()

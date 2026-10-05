@@ -65,18 +65,11 @@ export class $CredTempl {
 
 }
 
-export class EmbedCred {
+abstract class BasicCred {
   credId: string
   props: any
   docCl: string
   docPk: string
-
-  constructor (credId: string, props: any, docCl: string, docPk: string) {
-    this.credId = credId
-    this.props = props
-    this.docPk = docPk
-    this.docCl = docCl
-  }
 
   editSusp (susp?: number[], limit?: number) : string {
     const su = susp || this.props.susp
@@ -93,6 +86,18 @@ export class EmbedCred {
   }
 }
 
+export class EmbedCred extends BasicCred {
+
+  constructor (credId: string, props: any, docCl: string, docPk: string) {
+    super()
+    this.credId = credId
+    this.props = props
+    this.docPk = docPk
+    this.docCl = docCl
+  }
+
+}
+
 export type $Cred = {
   credId: string
   svc: string
@@ -106,7 +111,7 @@ export type $Cred = {
 
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
-export class $Credential {
+export class $Credential extends BasicCred {
   descriptor() { 
     return this.constructor['docDescriptor']
   }
@@ -141,7 +146,6 @@ export class $Credential {
   name: string = '' // "nom" associé au docId.
 
   v: number = 0 // version du document
-  props?: any
 
   alert?: number // 0:safe et db,  1:safe pas db, 2: limit dépassée
 

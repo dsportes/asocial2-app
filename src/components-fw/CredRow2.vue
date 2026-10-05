@@ -14,15 +14,13 @@
             <btn-bubbletxt :text="$t('CREDON_' + cred.docCl)" 
               :bub="$t('CREDON_' + cred.docCl + '_bub')"/>
           </div>
-          <div class="col-2 text-italic ellipsis">{{cred.docPk || '(na)'}}</div>
-          <div class="col-2 justify-end row">
-            <btn-cond v-if="cred.props && cred.hasDispProps" 
-              class="self-start" icon="star" size="md" round
-              @ok="disp(cred)" color="green-5"/>
-            <btn-cond v-if="cred.props && cred.limit" class="self-start" icon="hourglass" size="md" round 
-              @ok="cred.dispLimit" color="warning"/>
-          </div>
+          <div class="col-3 text-italic ellipsis">{{cred.docPk || '(na)'}}</div>
+          <btn-cond v-if="cred.props && cred.hasDispProps" 
+            class="col-1 text-right" icon="star" size="md" round
+            @ok="disp(cred)" color="green-5"/>
         </div>
+        <div v-if="cred.props && (cred.props.limit || cred.props.susp)"
+          class="text-bold text-warning">{{ cred.editSusp() }}</div>
         <div class="row">
           <div class="col-10 font-mono fs-md mh text-italic">
             {{cred.props && cred.props.name ?  cred.props.name : '?'}}</div>
@@ -39,7 +37,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import { $Credential } from '../src-fw/documents'
 
 const props = defineProps({
-  cred: Object,
+  cred: $Credential,
   comment: Boolean
 })
 
@@ -48,7 +46,6 @@ const emit = defineEmits(['undo', 'select'])
 const disp = async (cred: $Credential) => {
   await cred.dispProps()
 }
-
 
 </script>
 

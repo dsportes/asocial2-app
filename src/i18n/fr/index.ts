@@ -322,6 +322,7 @@ bla bla
   op_ListeAuteursSection: 'Liste des auteurs par section',
   op_UpdateCredentialSusp: 'Mise à jour d\'un pouvoir d\èun auteur',
   op_UpdateCredential: 'Misqe à jour d\'un pouvoir d\'un "manager"',
+  op_AutoRevokeCred: 'Auto révocation d\'un pouvoir',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
@@ -1317,6 +1318,7 @@ Détail: supporté par l\'application:[{3}] - acceptés par le service: de [{1}]
   EX103_missing_argument_name: '(BUG) - Argument de non inconnu sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
   EX103_missing_argument: '(BUG) - Argument [{2}] manquant sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
   EX103_invalid_argument: '(BUG) - Argument [{2}] invalide sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
+  EX103_invalid_class_name: '(BUG) - Nom de classe de document [{0}] non configurée (forme svc$DocCl_subClass attendue).',
 
   EX103_missing_credential: '(BUG) - Pouvoir requis sur le document de classe [{3}], clé [{4}] non trouvé sur appel de l\'opération [{0}] du _service cloud_ [{1}] pour l\'organisation [{2}].',
   EX103_no_cred_owner: 'Tentative de révocation du pouvoir sur le document de classe [{3}], clé [{4}] dont l\'utilisateur n\'est pas détenteur dans l\'organisation: [{2}]',

@@ -1,8 +1,8 @@
 <template>
-<div ref="coredacpage" class="column items-center">
+<div class="column items-center">
 <div class="pwmd" style="position:relative">
   <q-splitter v-model="splitterModel" horizontal 
-    :style="'height:' + ui.appPage.ph">
+    :style="sth">
     <template v-slot:before>
       <div v-if="session.planeMode" class="titre-md text-italic">{{ $t('CODIRplane') }}</div>
       <div v-else>
@@ -13,6 +13,10 @@
             @click="selAut(a)">{{ a.nomAuteur }}</div>
         </div>
       </div>
+    </template>
+
+    <template #separator>
+      <q-btn color="primary" round size="xs" icon="drag_indicator"/>
     </template>
 
     <template v-slot:after>
@@ -35,7 +39,7 @@
           <div class="font-mono">{{ aut.a.nomAuteur }}</div>
         </div>
         <line-edit :text="aut.newNa" @change="majNa" class="q-ml-lg"
-          datasize="auteur" width="md"/>
+          datasize="auteur" width="sm"/>
 
         <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
         <div v-for="([, c], idx) in aut.a.creds" :key="c.credId" 
@@ -81,6 +85,11 @@ const dialogs = reactive({
   credmgnt : false
 })
 
+const sth = ref('height:100px')
+onMounted(() => {
+  sth.value = 'height:' + ui.appPage.height + 'px'
+})
+
 const splitterModel = ref(33)
 const auteurs: Ref<AS2$Auteur[]> = ref([])
 const aut = reactive({ a: null, newSection: '', newNa: '', edv: '' })
@@ -98,9 +107,6 @@ const selAut = async (a) => {
 const majNa = (n) => { aut.newNa = n }
 const majSection = (n) => { 
   aut.newSection = n[0] }
-
-onMounted(() => {  ui.declarePh('coredacpage') })
-watch(() => ui.screenHeight, () => { ui.resetPh() })
 
 const cred = computed(() => {
   const m = sf.mySimpleCreds('AS2', ui.appPage.org, 'Redaction') as Map<string, $Credential>

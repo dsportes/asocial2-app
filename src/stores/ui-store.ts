@@ -53,6 +53,7 @@ export const useUiStore = defineStore('ui', () => {
     } else {
       if (et !== isShort.value) isShort.value = et
     }
+    getPh()
     // console.log(screenWidth.value, screenHeight.value)
   }
 
@@ -154,20 +155,22 @@ export const useUiStore = defineStore('ui', () => {
     })
   }
 
-  // Get hauteur page
-  const declarePh = (refName: string) => {
-    appPage.ph = '100px'
-    appPage.refp = useTemplateRef(refName)
-    resetPh()
-  }
-  const resetPh = () => {
-    setTimeout(() => {
-      appPage.ph = appPage.refp.parentNode.style.minHeight
-    },5)
-  }
-
   // Gestion des pages
   const page = ref(HOME)
+
+  const getPh = () => {
+    setTimeout(() => {  
+      let eltp = document.querySelector('.dialog-std')
+      if (!eltp) eltp = document.querySelector('.q-page')
+      if (!eltp) appPage.height = 100
+      else {
+        const t = eltp.getBoundingClientRect().top
+        const h1 = screenHeight.value - t
+        appPage.height = Math.floor(h1 * 0.95)
+        // console.log(appPage.height)
+      }
+    }, 20)
+  }
 
   const setPage = (p: string) => {
     if (editing.flag) {
@@ -181,6 +184,7 @@ export const useUiStore = defineStore('ui', () => {
     page.value = ''
     setTimeout(() => {
       page.value = p
+      getPh()
       if (p === 'app' && pbf !== '') openMenu()
     }, 50)
   }
@@ -238,7 +242,8 @@ export const useUiStore = defineStore('ui', () => {
 
   const appPage = reactive({
   tab: '',
-  count: 0
+  count: 0,
+  height: '100px'
   })
   const trigPage = () => {
     appPage.count = appPage.count + 1
@@ -291,7 +296,6 @@ export const useUiStore = defineStore('ui', () => {
     set$t$q, setDark, isDark, $q, visibility,
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort, 
-    declarePh, resetPh,
     appDialogs, confirmQuit,
     exc, displayExc, hideExc,
     diag, diagDisplay,
