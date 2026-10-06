@@ -56,19 +56,19 @@ const next = reactive({
 })
 
 const init = () => {
-  m1i.value = Math.floor(model.value[0] / 60000) * 60000
-  m2i.value = Math.floor(model.value[1] / 60000) * 60000
-  m1.value = m1i.value ? date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm') : ''
-  m2.value = m2i.value ? date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm') : ''
+  m1i.value = model.value[0]
+  m2i.value = model.value[1]
+  m1.value = m1i.value ? date.formatDate(m1i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
+  m2.value = m2i.value ? date.formatDate(m2i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
   check()
 }
 
 const undoM1 = () => {
-  m1.value = m1i.value ? date.formatDate(m1i.value, 'YYYY-MM-DD HH:mm') : ''
+  m1.value = m1i.value ? date.formatDate(m1i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
 }
 
 const undoM2 = () => {
-  m2.value = m2i.value ? date.formatDate(m2i.value, 'YYYY-MM-DD HH:mm') : ''
+  m2.value = m2i.value ? date.formatDate(m2i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
 }
 
 watch(() => [m1.value, m2.value], () => { 
@@ -80,9 +80,9 @@ watch(() => [m1.value, m2.value], () => {
 
 const check = () => {
   if (props.disable) { diag.value = ''; return }
-  const now = Math.floor(Date.now() / 60000) * 60000
-  next.start = m1.value ? date.extractDate(m1.value, 'YYYY-MM-DD HH:mm').getTime() : 0
-  next.end = m2.value ? date.extractDate(m2.value, 'YYYY-MM-DD HH:mm').getTime() : 0
+  const now = Math.floor(Date.now() / 60000)
+  next.start = m1.value ? Math.floor(date.extractDate(m1.value, 'YYYY-MM-DD HH:mm').getTime() / 60000) : 0
+  next.end = m2.value ? Math.floor(date.extractDate(m2.value, 'YYYY-MM-DD HH:mm').getTime() / 60000) : 0
   if (next.start && next.start < now && next.start !== m1i.value)
     diag.value = $t('startReg')
   else if (next.start && next.end && next.start > next.end)

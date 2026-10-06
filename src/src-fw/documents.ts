@@ -78,8 +78,8 @@ abstract class BasicCred {
     const s1 = li ? $t('SUSPcred_' + (b ? '6' : '5'), [dhcool(li * 60000)]) : ''
     if (b) return s1
     if (!su) return s1 + $t('SUSPcred_0')
-    const s = su[0] ? dhcool(su[0]) : ''
-    const e = su[1] ? dhcool(su[1]) : ''
+    const s = su[0] ? dhcool(su[0] * 60000) : ''
+    const e = su[1] ? dhcool(su[1] * 60000) : ''
     if (su[0] === 0) 
       return s1 + (!e ? $t('SUSPcred_4') : $t('SUSPcred_2', [e]))
     return s1 + (!e ? $t('SUSPcred_1', [s]) : $t('SUSPcred_3', [s, e]))

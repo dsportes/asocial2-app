@@ -3,8 +3,7 @@
 <template>
   <div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
     <q-icon name="arrow_drop_down" size="22px"/>
-    <div :style="widths[width || 'sm']"
-      class="q-ml-xs font-mono ellipsis">
+    <div :class="'q-ml-xs font-mono ellipsis mw' + (width || 'sm')">
       {{ dv }}</div>
     <q-menu v-if="!disable" v-model="menu" 
       anchor="center middle" self="center middle"

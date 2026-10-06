@@ -27,16 +27,27 @@ export type SubsToSync = {
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
-  static async label (enumName: string, org: string, code: string) : Promise<string> {
-    const l = hasMessage('ENUM_' + enumName + '_' + code)
-    if (l) return l
+  static async fetch (enumName: string, org: string) : Promise<void> {
     const n = enumName + (org ? '_' + org : '')
     let lx = DocEnums.m.get(n)
     if (!lx) 
       lx = await DocEnums.get(enumName, org)
+  }
+
+  static labelSync (enumName: string, org: string, code: string) {
+    const l = hasMessage('ENUM_' + enumName + '_' + code)
+    if (l) return l
+    const n = enumName + (org ? '_' + org : '')
+    let lx = DocEnums.m.get(n)
     if (!lx) return ''
     for (const e of lx) if (e[0] === code) return e[1]
     return ''
+  }
+
+
+  static async label (enumName: string, org: string, code: string) : Promise<string> {
+    await DocEnums.fetch(enumName, org)
+    return DocEnums.labelSync (enumName, org, code)
   }
 
   /* DocEnums.get retourne la liste des valeurs (string) 

@@ -1321,6 +1321,8 @@ Détail: supporté par l\'application:[{3}] - acceptés par le service: de [{1}]
   EX103_invalid_class_name: '(BUG) - Nom de classe de document [{0}] non configurée (forme svc$DocCl_subClass attendue).',
 
   EX103_missing_credential: '(BUG) - Pouvoir requis sur le document de classe [{3}], clé [{4}] non trouvé sur appel de l\'opération [{0}] du _service cloud_ [{1}] pour l\'organisation [{2}].',
+  EX103_suspended_credential: 'Pouvoir SUSPENDU sur le document de classe [{3}], clé [{4}] sur appel de l\'opération [{0}] du _service cloud_ [{1}] pour l\'organisation [{2}].' +
+    ' De: {5} à {6}',
   EX103_no_cred_owner: 'Tentative de révocation du pouvoir sur le document de classe [{3}], clé [{4}] dont l\'utilisateur n\'est pas détenteur dans l\'organisation: [{2}]',
   EX103_missing_p1_and_p2: 'Tentative de remplacement des phrases secrètes sans les fournir.',
 
@@ -1470,6 +1472,7 @@ Détail: url:[{3}] erreur:[{4}]
   AUTcol_np: 'Nom dans le "pouvoir"',
   AUTcol_sec: 'Section',
   AUTcol_trig: 'Votre trigramme de "co-auteur"',
+  AUTcol_stp: 'État du pouvoir',
   AUTcol_co: 'Pas de co-auteur | Un co-auteur | {count} co-auteurs',
   AUTko_1: 'Auteur non trouvé (disparu ?, BUG ?)',
   AUTnotrig: '(pas de trigramme)',
