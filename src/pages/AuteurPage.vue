@@ -15,7 +15,8 @@
           </div>
           <div class="row">
             <div class="col-2"></div>
-            <div class="col-10 text-italic">{{ c.editSusp() }}</div>
+            <div :class="'col-10 ' + (c.isSuspended ? 'text-bold text-warning' : 'text-italic')">
+              {{ c.editSusp() }}</div>
           </div>
         </div>
       </div>
@@ -35,53 +36,65 @@
     </template>
 
     <template v-slot:after>
-      <div v-if="aut" class="q-my-sm" style="position:relative;">
-        <btn-cond icon="open_in_new" @ok="goto2" size="lg" flat
-          style="position:absolute;right:0;top:0" />
-        <div class="fs-xs font-mono">{{ aut.autid }}</div>
-        <div v-if="session.hasNet" class="row">
-          <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
-          <div class="col-7 q-pl-sm ">
-            <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
-              width="sm" datasize="trig" @change="editTrig"/>
+    <div style="position:relative;" class="q-mt-md">
+      <div v-if="cred">
+      <div v-if="session.hasNet" class="row">
+        <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
+        <div class="col-7 q-pl-sm ">
+          <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
+            width="sm" datasize="trig" @change="editTrig"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-5 text-italic">{{ $t('AUTcol_stp') }}</div>
+        <div :class="'col-7 ' + (cred.isSuspended ? 'text-bold text-warning' : 'text-italic')">
+          {{ cred.editSusp() }}</div>
+      </div>
+      <div class="row">
+        <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
+        <div class="col-7 q-pl-sm font-mono">
+          <line-edit :text="perimetre.name" @change="majNP"
+            width="sm" :disable="session.planeMode"/>
+        </div>
+      </div>
+      </div>
+
+      <div v-if="aut" class="q-my-sm">
+        <div v-if="aut.v === -1" class="text-bold text-warning">
+          {{ $t('nopower') }}
+        </div>
+        <div v-else>
+          <btn-cond icon="open_in_new" @ok="goto2" size="lg" flat
+            style="position:absolute;right:0;top:0" />
+          <div class="fs-xs font-mono">{{ aut.autid }}</div>
+
+          <div class="row">
+            <div class="col-5 row items-center q-gutter-xs">
+              <span class="text-italic">{{ $t('AUTna_label') }}</span>
+              <btn-bubble :text="$t('AUTna_bub')"/>
+            </div>
+            <div class="col-7 q-pl-sm font-mono">
+              <line-edit :text="aut.nomAuteur" @change="majAut"
+                datasize="auteur" width="md"
+                :disable="session.planeMode"/>
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="col-5 text-italic">{{ $t('AUTcol_stp') }}</div>
-          <div class="col-7">{{ cred.editSusp() }}</div>
-        </div>
-        <div class="row">
-          <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
-          <div class="col-7 q-pl-sm font-mono">
-            <line-edit :text="perimetre.name" @change="majNP"
-              width="sm" :disable="session.planeMode"/>
+          <div class="row">
+            <div class="col-5">{{ $t('AUTcol_sec') }}</div>
+            <div class="col-7 q-pl-sm">{{ aut.section + ' - ' + lbls(aut.section)}}</div>
           </div>
-        </div>
-        <div class="row">
-          <div class="col-5 row items-center q-gutter-xs">
-            <span class="text-italic">{{ $t('AUTna_label') }}</span>
-            <btn-bubble :text="$t('AUTna_bub')"/>
-          </div>
-          <div class="col-7 q-pl-sm font-mono">
-            <line-edit :text="aut.nomAuteur" @change="majAut"
-              datasize="auteur" width="md"
-              :disable="session.planeMode"/>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-5">{{ $t('AUTcol_sec') }}</div>
-          <div class="col-7 q-pl-sm">{{ aut.section + ' - ' + lbls(aut.section)}}</div>
-        </div>
-        <div v-if="session.hasNet" class="row">
-          <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
-          <div class="col-7 row q-gutter-md q-pl-sm">
-            <div v-for="cx in coauts" :key="cx.credId" @click="selCo(cx)"
-              class="font-mono text-bold cursor-pointer select">
-              [{{ cx.props.trig || cx.props.name }}]
+          <div v-if="session.hasNet" class="row">
+            <div class="col-5">{{ $t('AUTcol_co', coauts.length) }}</div>
+            <div class="col-7 row q-gutter-md q-pl-sm">
+              <div v-for="cx in coauts" :key="cx.credId" @click="selCo(cx)"
+                class="font-mono text-bold cursor-pointer select">
+                [{{ cx.props.trig || cx.props.name }}]
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     </template>
   </q-splitter>
 </div>
@@ -112,7 +125,7 @@ const sf = stores.safe
 const pageh = ref('height:100px;')
 
 onMounted(() => {
-  pageh.value = 'height:' + ui.appPage.height + 'px;'
+  pageh.value = 'height:' + (ui.appPage.height - 30) + 'px;'
 })
 
 ui.appPage.tab = 1
@@ -158,9 +171,10 @@ const coauts: Ref<$Cred[]> = computed(() => {
 })
 
 const init = async () => { 
-  if (session.hasNet)
+  if (session.hasNet) {
     creds.value = await sf.myFullCreds('AS2', '', 'Auteur') 
-  else {
+    // console.log(creds.value.size)
+  } else {
     const l = []
     for (const [so, m2] of session.perims)
       if (so.startsWith('AS2'))
@@ -181,9 +195,9 @@ const selectp = async (p) => {
 }
 
 const select = async (c: $Credential) => {
+  await DocEnums.fetch('AS2$Section', c.org)
   cred.value = c
   org.value = c.org
-  await DocEnums.fetch('AS2$Section', org.value)
   perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk)
 
   setTimeout(async () => {

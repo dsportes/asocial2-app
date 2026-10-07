@@ -87,7 +87,7 @@ const dialogs = reactive({
 
 const sth = ref('height:100px')
 onMounted(() => {
-  sth.value = 'height:' + ui.appPage.height + 'px'
+  sth.value = 'height:' + (ui.appPage.height - 30) + 'px'
 })
 
 const splitterModel = ref(33)

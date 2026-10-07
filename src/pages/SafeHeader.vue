@@ -1,6 +1,6 @@
 <template>
 <div>
-  <std-header/>
+  <std-header :title="tit"/>
 
   <q-tabs v-if="session.step === 0" dense v-model="ui.loginPage.tab" breakpoint="2000px"
     class="full-width bg-primary text-white shadow-2">
@@ -20,7 +20,7 @@
       @ok="step(0)"/>
     <btn-cond :label="$t('OPTSok_1')" size="lg" padding="none xs" 
       @ok="trigOptions">
-      <q-badge v-if="session.haschgOptions" floating color="red" rounded />
+      <!--q-badge v-if="session.haschgOptions" floating color="red" rounded /-->
     </btn-cond>
     <safe-tools/>
   </div>
@@ -32,7 +32,7 @@
 // @ts-ignore
 // import { useI18n } from 'vue-i18n'
 // @ts-ignore
-// import { reactive } from 'vue'
+import { computed } from 'vue'
 
 import stores from '../stores/all'
 import StdHeader from '../components-fw/StdHeader.vue'
@@ -45,11 +45,11 @@ import anonymous from '../assets/anonymous-w.svg'
 // @ts-ignore
 import flowers from '../assets/flowers.png'
 
-const sf = stores.safe
 const session = stores.session
 const ui = stores.ui
 
 const step = async (s: number) => { await session.setStep(s) }
+const tit = computed(() => $t('PAGEsafeHome_label') + '-' + session.step )
 
 const trigOptions = () => { session.okOptions = session.okOptions + 1 }
 

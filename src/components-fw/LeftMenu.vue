@@ -46,10 +46,10 @@ Contrôlé par ui.leftMenu
       <btn-cond class="q-mt-md q-mb-sm" icon="home"
         flat :label="$t('PAGEapp')"
         @ok="ui.closeMenu(); ui.setPage('app')"/>
-      <btn-cond class="q-mb-sm"
+      <btn-cond v-if="hasRedaction" class="q-mb-sm"
         flat :label="$t('PAGEcoredac')"
         @ok="ui.closeMenu(); ui.setPage('coredac')"/>
-      <btn-cond class="q-mb-sm"
+      <btn-cond v-if="hasAuteur" class="q-mb-sm"
         flat :label="$t('PAGEauteur')"
         @ok="ui.closeMenu(); ui.setPage('auteur')"/>
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
@@ -68,7 +68,7 @@ Contrôlé par ui.leftMenu
 
 <script setup lang="ts">
 // @ts-ignore
-// import { reactive } from 'vue'
+import { computed } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
 // import { ErrorTest } from '../src-fw/operations'
@@ -87,6 +87,9 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
+const hasRedaction = computed(() => sf.mySimpleCreds('AS2', null, 'Redaction').size !== 0)
+const hasAuteur = computed(() => 
+  sf.mySimpleCreds('AS2', null, 'Auteur').size !== 0)
 // const test = async () => { await new ErrorTest('AS2', 'doda').run() }
 
 const openAdmin = () => {

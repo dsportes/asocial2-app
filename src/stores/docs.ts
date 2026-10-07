@@ -333,7 +333,9 @@ const useStore = (id: string) =>
 
     const getDoc = (cl: string, pk: string) : $Document => {
       const item = docs[cl + '/' + pk]
-      return item ? item.doc : null
+      if (!item) return null
+      if (item.doc) return item.doc
+      return Registry.buildMasked(svc, cl, org, pk)
     }
 
     const getColl = (cl: string, pk: string) : Set<string> => {
@@ -467,10 +469,15 @@ const useStore = (id: string) =>
       const v  = cd.v
       const data = cd['data']
       if (cd.v === -1) { // credential NON accepté
-        // TODO
+        // TOTEST
+        if (item.sv !== -1) {
+          item.sv = -1
+          item.doc = null
+          upd(item)
+        }
         return
       }
-      if (!cd.incr) { // INREGRAL
+      if (!cd.incr) { // INTEGRAL
         if (v === 0) { // n'existe pas / plus - enregistré comme deleted
           if (item.sv === 0) return // n'existait pas, n'existe toujours pas
           if (item.sat < sat) {
@@ -533,7 +540,12 @@ const useStore = (id: string) =>
     const storeColl = async (item: $CollItem, sat: number, cd: $CollData) : Promise<void> => {
       const v = cd.v
       if (v === -1) { // credential NON accepté
-        // TODO
+        // TOTEST
+        if (item.sv !== -1) {
+          item.sv = -1
+          item.pks = new Set()
+          upd(item)
+        }
         return
       }
       if (!cd.incr) { // INTEGRAL

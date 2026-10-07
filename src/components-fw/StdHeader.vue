@@ -29,7 +29,8 @@ const props = defineProps({
   title: String
 })
 
-const tit = computed(() => props.title || ui.page ? $t('PAGE' + ui.page + '_label') : '')
+const tit = computed(() => 
+  props.title || (ui.page ? $t('PAGE' + ui.page + '_label') : ''))
 
 </script>
 

@@ -114,6 +114,15 @@ export class Registry {
     doc.deleted = true
     return doc
   }
+
+  static buildMasked (svc: string, docCl: string, org: string, pk: string) : $Document {
+    const doc = Registry.newD(svc, docCl) as $Document
+    doc._org = org
+    doc._pk = pk
+    doc.v = -1
+    doc.deleted = false
+    return doc
+  }
 }
 
 export class $ADocument {

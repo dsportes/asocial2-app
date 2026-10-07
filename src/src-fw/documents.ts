@@ -84,6 +84,19 @@ abstract class BasicCred {
       return s1 + (!e ? $t('SUSPcred_4') : $t('SUSPcred_2', [e]))
     return s1 + (!e ? $t('SUSPcred_1', [s]) : $t('SUSPcred_3', [s, e]))
   }
+
+  get isSuspended () {
+    const n = Date.now()
+    const p = this.props
+    if (p && p.limit && p.limit * 60000 <= n) return true
+    if (!p || !p.susp) return false
+    const d = p.susp[0] * 60000
+    const f = p.susp[1] * 60000
+    if (d === 0 && f === 0) return true
+    if (d === 0) return f >= n
+    if (f === 0) return d <= n
+    return d <= n && f >= n
+  }
 }
 
 export class EmbedCred extends BasicCred {

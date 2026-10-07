@@ -1,8 +1,6 @@
 // @ts-ignore
 import { ref, computed, reactive, Ref, watch } from 'vue'
 // @ts-ignore
-// import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
@@ -14,9 +12,6 @@ import { idb, IDB, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
 import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-fw/subscription'
 import { myRegistration } from '../../src-pwa/register-service-worker'
 import { AOperation, checkStatus } from 'src/src-fw/operation'
-
-// const encoder = new TextEncoder()
-// const decoder = new TextDecoder()
 
 export const useSessionStore = defineStore('session', () => {
 
@@ -180,8 +175,13 @@ export const useSessionStore = defineStore('session', () => {
       }
 
       case 1 : // authentification faite
+        // console.log('bip1')
         await doStep1(sf, ui) // préparation pour permettre le choix des options
-        if (!toPage) { step.value = 1; return }
+        // console.log('bip2')
+        if (!toPage) { 
+          step.value = 1
+          return
+        }
         /* Sinon les options sont celles par défaut (sans choix)
         et on lance la session immédiatement sur la page souhaitée */
 

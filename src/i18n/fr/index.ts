@@ -46,6 +46,7 @@ export default {
   close: 'Fermer',
   ns: ' (ns)',
   ns2: '(non significative)',
+  nopower: 'Données inaccessibles, pouvoir d\'accès révoqué ou suspendu',
   startdt: 'Début de la période',
   enddt: 'Fin de la période',
   startm: 'Début de période absente',
@@ -1191,6 +1192,7 @@ bla bla
   EX_site: 'Site:',
   EX_svc: 'Service cloud:',
   EX_org: 'Organisation:',
+  EX_op: 'Opération:',
   EX_sync: 'Incident technique ayant bloqué la synchronisation des données avec le service cloud [{0}]. Essayer de continuer.',
   EX_isApp: 'Erreur détectée par l\'application s\'exécutant sur ce terminal.',
   EX_isSvc: 'Erreur détectée par un service "cloud" et remontée à l\'application s\'exécutant sur ce terminal.',
@@ -1342,7 +1344,8 @@ Détail: [{0}]
 Détail: [{0}]
 `,
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
-  EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application (BUG probable): [service: {0}, classe:{1}, id:{2}]',
+  EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application: [classe:{1}, id:{2}];' + 
+    ' Le pouvoir a été récemment supprimé ou suspendu (ou c\'est un BUG)',
   EX105_session_synch_failure: `Détection de la perte de la synchronisation des documents de la session par l'opération [{0}] du _service cloud_ [{1}] pour l'organisation [{2}].
 Détail: le compteur de suivi de la session a disparu (contrôle de synchronisation impossible).
 

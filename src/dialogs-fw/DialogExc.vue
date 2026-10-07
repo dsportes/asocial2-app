@@ -13,7 +13,7 @@
         <q-separator class="q-mt-xs q-mb-md q-mx-lg" color="orange"/>
         <div v-if="important.has(exc.code)" class="q-mt-xs titre-md text-italic">{{ $t('EX_toAdmin') }}</div>
         <div class="q-my-xs font-mono fs-sm">[{{ exc.label }}]</div>
-        <div class="row items-center">
+        <div>
           <div v-if="org">
             <span class="text-italic q-mr-sm">{{  $t('EX_org') }}</span>
             <span class="font-mono text-bold q-mr-md">{{ org }}</span>
@@ -26,6 +26,10 @@
           <div v-if="svcl">
             <span class="text-italic q-mr-sm">{{  $t('EX_svc') }}</span>
             <span>{{ svcl }}</span>
+          </div>
+          <div v-if="exc.opName">
+            <span class="text-italic q-mr-sm">{{  $t('EX_op') }}</span>
+            <span>[{{ exc.opName }}] - {{ $t('op_' + exc.opName) }}</span>
           </div>
         </div>
       </q-card-section>
@@ -106,7 +110,7 @@ const op = computed(() => exc.value.op || null)
 const site = computed(() => op.value ? (op.value.args.site || '') : '')
 const url = computed(() => op.value ? (op.value.url || '') : '')
 const svcl = computed(() => { const svc = op.value ? (op.value.args.svc || '') : ''
-  return svc ? hasMessage(svc) + ' [' + svc + ']' : ''
+  return svc ? '[' + svc + '] - ' + hasMessage('services_' + svc) : ''
 })
 const org = computed(() => op.value ? (op.value.args.org || '') : '')
 const major = computed(() => equiv[exc.value.code] || 8)
