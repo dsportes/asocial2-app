@@ -1,6 +1,6 @@
 <template>
 <div>
-<div v-if="ui.appPage.tab === 1" class="column items-center">
+<div v-if="ui.appPage.tab === 'auteurs'" class="column items-center">
   <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="pageh">
     <template v-slot:before>
       <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
@@ -64,8 +64,8 @@
           {{ $t('nopower') }}
         </div>
         <div v-else>
-          <btn-cond icon="open_in_new" @ok="goto2" size="lg" flat
-            style="position:absolute;right:0;top:0" />
+          <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'articles'" 
+            size="lg" flat style="position:absolute;right:0;top:0" />
           <div class="fs-xs font-mono">{{ aut.autid }}</div>
 
           <div class="row">
@@ -98,7 +98,7 @@
     </template>
   </q-splitter>
 </div>
-<div v-if="ui.appPage.tab === 2" class="column items-center">
+<div v-if="ui.appPage.tab === 'articles'" class="column items-center">
   <div class="q-ma-md">Mes publications ...</div>
 </div>
 </div>
@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, watch, useTemplateRef } from 'vue'
+import { ref, Ref, computed, onMounted, watch } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
@@ -128,25 +128,16 @@ onMounted(() => {
   pageh.value = 'height:' + (ui.appPage.height - 30) + 'px;'
 })
 
-ui.appPage.tab = 1
+ui.appPage.tab = "auteurs"
 ui.appPage.btnInit = 1
 ui.appPage.btnAdd = 1
 ui.appPage.btnVal = 1
 ui.appPage.btnUndo = 1
-ui.navBar.hasBack = true
 
 watch(() => ui.appPage.btnInit, async () => { await init() })
 watch(() => ui.appPage.btnVal, async () => { await val() })
 watch(() => ui.appPage.btnAdd, async () => { await add() })
 watch(() => ui.appPage.btnUndo, async () => { undo() })
-
-const goto2 = () => {
-  ui.appPage.tab = 2
-  ui.appPage.aut = aut.value
-  ui.navBar.hasBack = true
-  ui.navBar.nb = 0
-  ui.navBar.idx = 0
-}
 
 const splitterModel = ref(50)
 
@@ -157,11 +148,17 @@ const std = computed(() => getStore('AS2', org.value))
 const perimetre = ref()
 const cred = ref(null)
 
-const aut = computed(() => 
-  perimetre.value ? std.value.getDoc('Auteur', perimetre.value.docPk) : null)
+watch(perimetre, (p) => {
+  ui.appPage.aut = p ? std.value.getDoc('Auteur', p.docPk) : null
+  ui.appPage.articles = std.value.getSColl('Auteur', p.docPk)
+})
 
+const aut = computed(() => ui.appPage.aut)
+/*
+  perimetre.value ? std.value.getDoc('Auteur', perimetre.value.docPk) : null)
 watch(aut, (v) => { 
   console.log(v ? v.nomAuteur : 'personne') })
+*/
 
 const coauts: Ref<$Cred[]> = computed(() => {
   const co = []
@@ -256,11 +253,6 @@ const undo = () => {
 
 }
 
-const setEnum = async () => {
-  const val = ["10 roman", "20 Histoire", "30 sf", "40 politique"]
-  const res = await DocEnums.set('AS2$Section', val, 'doda')
-  console.log('ok')
-}
 </script>
 
 <style lang="scss" scoped>

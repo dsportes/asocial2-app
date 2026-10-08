@@ -1428,14 +1428,16 @@ Détail: url:[{3}] erreur:[{4}]
   bla bla 
   `,
 
-  PAGEauteur: 'Auteurs',
-  PAGEauteur_label: 'Mes rôles "d\'auteur"',
+  PAGEauteur: 'Mes articles',
+  PAGEauteur_label: 'Mes rôles "d\'auteur" et mes articles',
   PAGEauteur_bub: `### Mes interventions en tant **qu'auteur**
 - quels sont les _auteurs_ pour lesquels j'ai un pouvoir,
 - mes _chats_ avec mes _co-auteurs_,
 - liste des auteurs par section de rédaction,
 
 `,
+  PAGEauteur_auteurs: 'Rôles "d\'auteur"',
+  PAGEauteur_articles: 'Articles',
   PAGEcoredac: 'Comité de Rédaction',
   PAGEcoredac_label: 'Comité de Rédaction',
   PAGEcoredac_bub: `### Comité de Rédaction

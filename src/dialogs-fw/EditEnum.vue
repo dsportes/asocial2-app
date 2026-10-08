@@ -117,7 +117,8 @@ const init1 = async () => {
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
   lst.value = l
-  lst0.value = [...l]
+  lst0.value = []
+  for(const x of lst.value) lst0.value.push([...x])
   ui.resetEditing()
 }
 

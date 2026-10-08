@@ -88,6 +88,7 @@ export type IDocStore = {
 
   getItem (def: $Def, create?: boolean) : $DCItem
   getDoc (cl: string, pk: string) : $Document
+  getSColl (cl: string, colName: string, pk: string) : Set<string>
   getColl (cl: string, pk: string) : Set<string>
   activePerimsIds () : Set<string>
 
@@ -336,6 +337,12 @@ const useStore = (id: string) =>
       if (!item) return null
       if (item.doc) return item.doc
       return Registry.buildMasked(svc, cl, org, pk)
+    }
+
+    
+    const getSColl = (cl: string, colName: string, pk: string) : Set<string> => {
+      const item = colls[cl + '/' + colName + '/' + pk]
+      return item ? item.pks : new Set()
     }
 
     const getColl = (cl: string, pk: string) : Set<string> => {
@@ -878,7 +885,7 @@ const useStore = (id: string) =>
       svc, org, getXref, getApstate, subsOK,
       getItem,
       onNotif, storeDC, checkResolves,
-      getDoc, getColl, activePerimsIds, removeActiveP,
+      getDoc, getColl, getSColl, activePerimsIds, removeActiveP,
       fetch, waitNextSync, forcedResync, getLastSyncTime,
       manageHbc
     } as IDocStore

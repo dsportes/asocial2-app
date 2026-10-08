@@ -1,4 +1,4 @@
-import { DocDescriptor, FormType, collection } from '../src-fw/docDescriptor'
+import { DocDescriptor, FormType, collection, idx, propType } from '../src-fw/docDescriptor'
 
 let exc: Error | null = null
 
@@ -17,9 +17,36 @@ try {
   new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
   new DocDescriptor(svc, { name: 'Section', virtual: true, enumCred: 'Redaction' })
+  new DocDescriptor(svc, { name: 'Sujet', virtual: true, enumCred: 'CoDir' })
   new DocDescriptor(svc, { name: 'Auteur', pk: ['autid'] },
     new Map<string, collection>([
       ['section',  { key: ['section'], mutable: true, class: 'Section' }]
+    ])
+  )
+
+  /* Publication
+  - Propriétés:
+    id : générée aléatoirement.
+    auteurs: liste des auteurs.
+    sujets: liste des sujets traités par la publication.
+    resume: court de résumé de la publication.
+    fichiers: fichiers attachés et leur tailles.
+    volume: volume total des fichiers attachés.
+  - Clés _identifiantes et de synchronisation_
+    - pk: [id]
+    - auteurs: [auteurs]
+    - sujets: [sujets]
+  - Index _de filtrage_
+    - volume: volume, entier
+  */
+  new DocDescriptor(svc, 
+    { name: 'Publication', pk: ['pubid'], sync: true },
+    new Map<string, collection>([
+      ['sujets',  { key: ['sujets'], list: true, mutable: true, class: 'Sujet' }],
+      ['auteurs',  { key: ['auteurs'], list: true, mutable: true, class: "Auteur" }]
+    ]),
+    new Map<string, idx>([
+      ['volume',  { type: propType.INTEGER, key: ['volume'] }]
     ])
   )
 
