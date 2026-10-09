@@ -33,13 +33,12 @@
     </template>
 
     <template #default>
-    <div class="dialog-std">
+      <q-resize-observer @resize="ui.setPh"/>
       <div v-if="step >= 2">
         <div class="q-pt-sm titre-md text-italic">{{ $t('CRRstep_2', [$t('services_' + curso.svc), curso.org]) }}</div>
-
-        <q-splitter v-model="splitterModel" horizontal 
-          :style="'height:' + (ui.appPage.height - 70) + 'px'">
+        <q-splitter v-model="splitterModel" horizontal :style="sth">
           <template v-slot:before>
+ 
             <div class="q-my-sm">
               <div v-for="(c, idx) in curso.creds" :key="c.credId"
                 :class="'row cursor-pointer select q-my-sm ' + dkli(idx) + curSty2(c)">
@@ -80,7 +79,6 @@
           </template>
         </q-splitter>
       </div>
-    </div>
     </template>
   </dialog-std2>
 </div>
@@ -88,7 +86,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, watch } from 'vue'
+import { ref, Ref, watch, computed } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
 import stores from '../stores/all'
@@ -105,6 +103,8 @@ import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 
 const sf = stores.safe
 const ui = stores.ui
+
+const sth = computed(() => 'height:' + (ui.appPage.height - 50) + 'px;' )
 
 const model = defineModel()
 const emit = defineEmits(['close'])

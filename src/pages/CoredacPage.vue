@@ -1,57 +1,56 @@
 <template>
 <div class="column items-center">
-<div class="pwmd" style="position:relative">
-  <q-splitter v-model="splitterModel" horizontal 
-    :style="sth">
-    <template v-slot:before>
-      <div v-if="session.planeMode" class="titre-md text-italic">{{ $t('CODIRplane') }}</div>
-      <div v-else>
-        <div v-if="!auteurs.length" class="titre-md text-italic">{{ $t('CODIRnoaut') }}</div>
-        <div v-else class="q-pa-xs">
-          <div v-for="(a, idx) in auteurs" :key="idx"
-            :class="'row select cursor-pointer ' + dkli(idx)"
-            @click="selAut(a)">{{ a.nomAuteur }}</div>
+  <div class="pwmd" style="position:relative">
+    <q-splitter v-model="splitterModel" horizontal :style="sth">
+      <template v-slot:before>
+        <div v-if="session.planeMode" class="titre-md text-italic">{{ $t('COREDplane') }}</div>
+        <div v-else>
+          <div v-if="!auteurs.length" class="titre-md text-italic">{{ $t('COREDnoaut') }}</div>
+          <div v-else class="q-pa-xs">
+            <div v-for="(a, idx) in auteurs" :key="idx"
+              :class="'row select cursor-pointer ' + dkli(idx)"
+              @click="selAut(a)">{{ a.nomAuteur }}</div>
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template #separator>
-      <q-btn color="primary" round size="xs" icon="drag_indicator"/>
-    </template>
+      <template #separator>
+        <q-btn color="primary" round size="xs" icon="drag_indicator"/>
+      </template>
 
-    <template v-slot:after>
-      <div v-if="!session.planeMode && aut.a" class="q-pa-xs">
-        <div class="row justify-end">
-          <btn-cond :label="$t('validate')" icon="check" confirm @ok="majAut"
-            v-if="aut.newSection !== aut.a.section || aut.newNa !== aut.a.nomAuteur"/>
+      <template v-slot:after>
+        <div v-if="!session.planeMode && aut.a" class="q-pa-xs">
+          <div class="row justify-end">
+            <btn-cond :label="$t('validate')" icon="check" confirm @ok="majAut"
+              v-if="aut.newSection !== aut.a.section || aut.newNa !== aut.a.nomAuteur"/>
+          </div>
+
+          <div class="row items-center q-gutter-md">
+            <div class="titre-md text-italic col-auto">{{ $t('CODIRsa') }}</div>
+            <div class="font-mono">{{ aut.a.section }} - {{ aut.edv }}</div>
+          </div>
+          <select-enum2 svc="AS2" :org="ui.appPage.org" class="q-mb-sm q-ml-lg"
+            enum="Section" width="md"
+            @select="majSection"/>
+
+          <div class="row items-center q-gutter-md">
+            <div class="titre-md text-italic col-auto">{{ $t('CODIRna') }}</div>
+            <div class="font-mono">{{ aut.a.nomAuteur }}</div>
+          </div>
+          <line-edit :text="aut.newNa" @change="majNa" class="q-ml-lg"
+            datasize="auteur" width="sm"/>
+
+          <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
+          <div v-for="([, c], idx) in aut.a.creds" :key="c.credId" 
+            :class="'row q-ml-lg cursor-pointer ' + dkli(idx)" @click="openCred(c)">
+            <div class="col-3 font-mono q-pr-sm text-bold">{{ c.props.trig }}</div>
+            <div class="col-9 text-italic q-pr-sm">{{ c.editSusp() }}</div>
+          </div>
         </div>
+      </template>
+    </q-splitter>
 
-        <div class="row items-center q-gutter-md">
-          <div class="titre-md text-italic col-auto">{{ $t('CODIRsa') }}</div>
-          <div class="font-mono">{{ aut.a.section }} - {{ aut.edv }}</div>
-        </div>
-        <select-enum svc="AS2" :org="ui.appPage.org" class="q-mb-sm q-ml-lg"
-          v-model="aut.newSection" enum="Section" width="md"
-          @select="majSection"/>
-
-        <div class="row items-center q-gutter-md">
-          <div class="titre-md text-italic col-auto">{{ $t('CODIRna') }}</div>
-          <div class="font-mono">{{ aut.a.nomAuteur }}</div>
-        </div>
-        <line-edit :text="aut.newNa" @change="majNa" class="q-ml-lg"
-          datasize="auteur" width="sm"/>
-
-        <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
-        <div v-for="([, c], idx) in aut.a.creds" :key="c.credId" 
-          :class="'row q-ml-lg cursor-pointer ' + dkli(idx)" @click="openCred(c)">
-          <div class="col-3 font-mono q-pr-sm text-bold">{{ c.props.trig }}</div>
-          <div class="col-9 text-italic q-pr-sm">{{ c.editSusp() }}</div>
-        </div>
-      </div>
-    </template>
-  </q-splitter>
-
-</div>
+  </div>
 
 <rev-susp v-if="dialogs.credmgnt" v-model="dialogs.credmgnt"
   svc="AS2" :org="ui.appPage.org" :cred="cred" :curcred="curcred"
@@ -71,7 +70,7 @@ import { $t, dkli } from '../src-fw/util'
 import RevSusp from '../dialogs-fw/RevSusp.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
-import SelectEnum from '../components-fw/SelectEnum.vue'
+import SelectEnum2 from '../components-fw/SelectEnum2.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { DocDescriptor } from '../src-fw/docDescriptor'
@@ -85,10 +84,7 @@ const dialogs = reactive({
   credmgnt : false
 })
 
-const sth = ref('height:100px')
-onMounted(() => {
-  sth.value = 'height:' + (ui.appPage.height - 50) + 'px'
-})
+const sth = computed(() => 'height:' + (ui.appPage.height - 30) + 'px;' )
 
 const splitterModel = ref(33)
 const auteurs: Ref<AS2$Auteur[]> = ref([])
@@ -106,7 +102,7 @@ const selAut = async (a) => {
 
 const majNa = (n) => { aut.newNa = n }
 const majSection = (n) => { 
-  aut.newSection = n[0] }
+  aut.newSection = n }
 
 const cred = computed(() => {
   const m = sf.mySimpleCreds('AS2', ui.appPage.org, 'Redaction') as Map<string, $Credential>

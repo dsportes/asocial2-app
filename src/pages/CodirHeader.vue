@@ -11,8 +11,8 @@
 
     <select-enum2 v-if="ui.appPage.org"
       class="col q-mr-md" svc="AS2" :org="ui.appPage.org"
-      enum="Section" width="md"
-      :title="$t('COREDnosect')" @select="selSection"
+      enum="Sujet" width="md"
+      :title="$t('CODIRnosuj')" @select="selSujet"
       :disable="ui.editingInCourse"/>
 
     <btn-cond v-if="ui.appPage.org" icon="edit" class="col-auto" color="warning" 
@@ -22,20 +22,20 @@
   <div class="q-pa-xs">
     <div v-if="!ui.appPage.org" class="msg">{{ $t('CODIRnoorg') }}</div>
     <div v-else>
-      <div v-if="!ui.appPage.section" class="msg">{{ $t('COREDnosect') }}</div>
-      <div v-else class="titre-md text-center">{{$t('COREDtit1')}}</div>
+      <div v-if="!ui.appPage.section" class="msg">{{ $t('CODIRnosuj') }}</div>
+      <div v-else class="titre-md text-center">{{$t('CODIRtit1')}}</div>
     </div>
   </div>
 
   <edit-enum v-if="dialogs.edit" v-model="dialogs.edit"
-    svc="AS2" name="Section" :org="ui.appPage.org" :title="$t('CORED_section_tit')"
+    svc="AS2" name="Sujet" :org="ui.appPage.org" :title="$t('CODIR_sujet_tit')"
     @done="onEdit"/>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive } from 'vue'
 import stores from '../stores/all'
 
 import { $t } from '../src-fw/util'
@@ -52,14 +52,14 @@ const dialogs = reactive({
   edit: false
 })
 
-const selSection = (t) => {
-  ui.appPage.section = t
+const selSujet = (t) => {
+  ui.appPage.sujet = t
   ui.trigPage()
 }
 
 const init = () => {
   ui.appPage.org = ''
-  ui.appPage.section = ''
+  ui.appPage.sujet = ''
   const s = new Set()
   if (session.planeMode) {
     for(const x of session.orgRolesP) {
@@ -67,7 +67,7 @@ const init = () => {
       s.add(x.substring(0, i))
     }
   } else 
-    for(const [,c] of sf.mySimpleCreds('AS2', '', 'Redaction')) s.add(c.org)
+    for(const [,c] of sf.mySimpleCreds('AS2', '', 'CoDir')) s.add(c.org)
   orgs.value = Array.from(s).sort()
   if (orgs.value.length) ui.appPage.org = orgs.value[0]
 }

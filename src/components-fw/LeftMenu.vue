@@ -52,12 +52,14 @@ Contrôlé par ui.leftMenu
       <btn-cond v-if="hasAuteur" class="q-mb-sm"
         flat :label="$t('PAGEauteur')"
         @ok="ui.closeMenu(); ui.setPage('auteur')"/>
+      <btn-cond v-if="hasCodir" class="q-mb-sm"
+        flat :label="$t('PAGEcodir')"
+        @ok="ui.closeMenu(); ui.setPage('codir')"/>
+
       <btn-cond v-if="ui.page !== 'test'" class="q-mb-sm"
         flat :label="$t('PAGEtest')"
         @ok="ui.closeMenu(); ui.setPage('test')"/>
-      <!--div class="q-my-lg q-pa-sm">
-        <div v-for="n in 10" :key="n">Drawer {{ n }} / 50</div>
-      </div-->
+
     </div>
   </q-page-container>
 
@@ -71,6 +73,7 @@ Contrôlé par ui.leftMenu
 import { computed } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
+
 // import { ErrorTest } from '../src-fw/operations'
 
 import HelpButton from '../components-fw/HelpButton.vue'
@@ -87,9 +90,11 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
+const hasCodir = computed(() => 
+  sf.mySimpleCreds('AS2', null, 'CoDir').size !== 0)
 const hasRedaction = computed(() => sf.mySimpleCreds('AS2', null, 'Redaction').size !== 0)
-const hasAuteur = computed(() => 
-  sf.mySimpleCreds('AS2', null, 'Auteur').size !== 0)
+const hasAuteur = computed(() => sf.mySimpleCreds('AS2', null, 'Auteur').size !== 0)
+
 // const test = async () => { await new ErrorTest('AS2', 'doda').run() }
 
 const openAdmin = () => {

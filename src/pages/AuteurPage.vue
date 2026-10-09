@@ -1,7 +1,7 @@
 <template>
 <div>
 <div v-if="ui.appPage.tab === 'auteurs'" class="column items-center">
-  <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="pageh">
+  <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="sth">
     <template v-slot:before>
       <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
         :class="'cursor-pointer q-my-sm select ' + sty(idx)"
@@ -122,11 +122,7 @@ const ui = stores.ui
 const session = stores.session
 const sf = stores.safe
 
-const pageh = ref('height:100px;')
-
-onMounted(() => {
-  pageh.value = 'height:' + (ui.appPage.height - 30) + 'px;'
-})
+const sth = computed(() => 'height:' + (ui.appPage.height - 30) + 'px;' )
 
 ui.appPage.tab = "auteurs"
 ui.appPage.btnInit = 1

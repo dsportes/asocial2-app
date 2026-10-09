@@ -1,13 +1,14 @@
 <template>
 <q-layout view="hHh lpR fFf">
   <q-header>
-    <std-header v-if="!hdrPages.has(ui.page)"/>
+    <std-header v-if="hdrPages.has(ui.page)"/>
     <safe-header v-if="ui.page === 'safeHome'"/>
     <admin-header v-if="ui.page === 'admin'"/>
     <demands-header v-if="ui.page === 'demands'"/>
     <sponsorings-header v-if="ui.page === 'sponsorings'"/>
     <auteur-header v-if="ui.page === 'auteur'"/>
     <coredac-header v-if="ui.page === 'coredac'"/>
+    <codir-header v-if="ui.page === 'codir'"/>
   </q-header>
 
   <q-drawer v-if="session.step === 2" v-model="ui.leftMenu" :class="sty()"
@@ -51,10 +52,19 @@
     </transition>
     <transition name="anim1">
       <q-page v-if="ui.page === 'coredac'">
+            <q-resize-observer @resize="ui.setPh" />
         <coredac-page/>
       </q-page>
-    </transition>    <transition name="anim1">
+    </transition>
+    <transition name="anim1">
+      <q-page v-if="ui.page === 'codir'">
+            <q-resize-observer @resize="ui.setPh" />
+        <codir-page/>
+      </q-page>
+    </transition>    
+    <transition name="anim1">
       <q-page v-if="ui.page === 'auteur'">
+            <q-resize-observer @resize="ui.setPh" />
         <auteur-page/>
       </q-page>
     </transition>
@@ -85,7 +95,7 @@
 <script setup lang="ts">
 
 // @ts-ignore
-import { watchEffect, onMounted } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 // @ts-ignore
 import { useI18n } from 'vue-i18n'
 // @ts-ignore
@@ -102,6 +112,7 @@ import AdminHeader from './pages/AdminHeader.vue'
 import DemandsHeader from './pages/DemandsHeader.vue'
 import SponsoringsHeader from './pages/SponsoringsHeader.vue'
 import CoredacHeader from './pages/CoredacHeader.vue'
+import CodirHeader from './pages/CodirHeader.vue'
 
 import AuteurHeader from './pages/AuteurHeader.vue'
 
@@ -110,6 +121,7 @@ import AdminPage from './pages/AdminPage.vue'
 import DemandsPage from './pages/DemandsPage.vue'
 import SponsoringsPage from './pages/SponsoringsPage.vue'
 import CoredacPage from './pages/CoredacPage.vue'
+import CodirPage from './pages/CodirPage.vue'
 
 import AuteurPage from './pages/AuteurPage.vue'
 import TestPage from './pages/TestPage.vue'
@@ -133,7 +145,7 @@ import { AS2nbForms } from './as2/forms'
 import { AS2nbCreds } from './as2/credentials'
 import { FWnbDocs } from './src-fw/fwdocuments'
 
-const hdrPages = new Set(['admin', 'demands', 'sponsorings', 'safeHome', 'auteur', 'coredac'])
+const hdrPages = ref(new Set(['test']))
 
 const config = stores.config
 config.initK()
@@ -169,6 +181,10 @@ ui.setScreenWH($q.screen.width, $q.screen.height)
 watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
+
+const onResize = (size) => {
+  ui.setPh(size.height)
+}
 
 </script>
 

@@ -13,7 +13,9 @@
     <slot name="hdr"/>
   </q-header>
   <q-page-container>
-    <slot name="default"/>
+    <q-page>
+      <slot name="default"/>
+    </q-page>
   </q-page-container>
 </q-layout>
 </q-dialog>

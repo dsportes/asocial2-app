@@ -3896,7 +3896,7 @@ __metadata:
     js-sha256: "npm:^0.11.1"
     pinia: "npm:^3.0.1"
     postcss: "npm:^8.4.14"
-    quasar: "npm:^2.16.0"
+    quasar: "npm:^2.34.0"
     register-service-worker: "npm:^1.7.2"
     typescript: "npm:~5.5.3"
     vite: "npm:^7.3.0"
@@ -7855,10 +7855,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"quasar@npm:^2.16.0":
-  version: 2.18.6
-  resolution: "quasar@npm:2.18.6"
-  checksum: 10c0/f55a30b9da73a3b91e385afec5ab13480f49e259918966e37eccf8c826bcb3946c2e31bd8cee9697bf04aa19ff4d80d464f7dcb1fefc762ccab76e08014b11e4
+"quasar@npm:^2.34.0":
+  version: 2.35.0
+  resolution: "quasar@npm:2.35.0"
+  checksum: 10c0/db974871d18be9a8c9cc49e0cdc6ff7559813ae0e56bff3a60eba69efc3cbc6e92be91720755daadba5885ad6828de268c5c4c6be31a661929e40102bd5acceb
   languageName: node
   linkType: hard
 

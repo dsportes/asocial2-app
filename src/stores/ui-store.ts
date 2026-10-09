@@ -8,7 +8,6 @@ import { setCssVar } from 'quasar'
 import { hasPage } from '../src-fw/help'
 import { useConfigStore } from '../stores/config-store'
 import { useSessionStore } from '../stores/session-store'
-import { SOA } from '../src-fw/registry'
 
 const large = 900
 const HOME = 'safeHome'
@@ -53,7 +52,6 @@ export const useUiStore = defineStore('ui', () => {
     } else {
       if (et !== isShort.value) isShort.value = et
     }
-    getPh()
     // console.log(screenWidth.value, screenHeight.value)
   }
 
@@ -158,6 +156,7 @@ export const useUiStore = defineStore('ui', () => {
   // Gestion des pages
   const page = ref(HOME)
 
+  /*
   const getPh = () => {
     setTimeout(() => {  
       let eltp = document.querySelector('.dialog-std')
@@ -165,12 +164,14 @@ export const useUiStore = defineStore('ui', () => {
       if (!eltp) appPage.height = 100
       else {
         const t = eltp.getBoundingClientRect().top
-        const h1 = screenHeight.value - t
-        appPage.height = Math.floor(h1 * 0.95)
-        // console.log(appPage.height)
+        const s = screenHeight.value
+        const h = Math.floor(s - t)
+        console.log('PH', s, t, h)
+        appPage.height = h
       }
-    }, 20)
+    }, 250)
   }
+  */
 
   const setPage = (p: string) => {
     if (editing.flag) {
@@ -184,7 +185,6 @@ export const useUiStore = defineStore('ui', () => {
     page.value = ''
     setTimeout(() => {
       page.value = p
-      getPh()
       if (p === 'app' && pbf !== '') openMenu()
     }, 50)
   }
@@ -243,10 +243,14 @@ export const useUiStore = defineStore('ui', () => {
   const appPage = reactive({
   tab: '',
   count: 0,
-  height: '100px'
+  height: 0
   })
   const trigPage = () => {
     appPage.count = appPage.count + 1
+  }
+  const setPh = (size) => { 
+    appPage.height = size.height
+    // console.log('RESIZE', size.height)
   }
   
   const navBar = reactive({
@@ -293,7 +297,7 @@ export const useUiStore = defineStore('ui', () => {
 
   return {
     idc,
-    set$t$q, setDark, isDark, $q, visibility,
+    set$t$q, setDark, isDark, $q, visibility, setPh,
     openMenu, closeMenu, leftMenu,
     setScreenWH, portrait, screenHeight, screenWidth, isShort, 
     appDialogs, confirmQuit,

@@ -1,7 +1,15 @@
-<!-- Saisie d'une énumération
--->
 <template>
-  <div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
+  <q-select dense options-dense 
+    v-model="modelloc" :options="options" :label="title"
+    :class="'q-ml-xs font-mono ellipsis mw' + (width || 'sm')"
+    :disable="disable" 
+    use-input
+    hide-selected
+    fill-input
+    input-debounce="0"
+    @filter="filterFn"/>
+
+  <!--div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
     <q-icon name="arrow_drop_down" size="22px"/>
     <div :class="'q-ml-xs font-mono ellipsis mw' + (width || 'sm')">
       {{ dv }}</div>
@@ -20,7 +28,7 @@
           @click="clic(t)">{{ t[1] }}</div>  
       </div>
     </q-menu>
-  </div>
+  </div!!-->
 </template>
 
 <script setup lang="ts">
@@ -38,8 +46,16 @@ const props = defineProps({
   width: String
 })
 
-const model = defineModel()
+const modelloc = ref()
+const options = ref([])
+const lst = ref([])
+
 const emit = defineEmits(['select'])
+watch(() => modelloc.value, (t) => {
+  emit('select', t.value)
+})
+
+/*
 const menu = ref(false)
 const lst = ref()
 const sel = ref('')
@@ -48,12 +64,20 @@ const dv = computed(() => {
   const x = map.value[model.value]
   return x ? x[1] : props.title
 })
+  */
+
+function filterFn(val, update) {
+  update(() => {
+    const needle = val.toLowerCase()
+    options.value = lst.value.filter(v => 
+      v.label2.includes(needle))
+  })
+}
 
 const edv = (e) => {
   const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0]) 
   const lbl2 = (lbl1 || e[1]).toLowerCase()
-  const t = [e[0], lbl1 || e[1], lbl2]
-  map.value[e[0]] = t
+  const t = { value: e[0], label: lbl1 || e[1], label2: lbl2 }
   return t
 }
 
@@ -61,8 +85,13 @@ const load = async () => {
   const l = []
   const lx = await DocEnums.get(props.svc + '$' + props.enum, props.org)
   for(const e of lx) l.push(edv(e))
-  l.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
+  l.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
   lst.value = l
+  options.value = [ ...lst.value ]
+  if (l.length === 1) {
+    modelloc.value = l[0]
+    emit('select', l[0].value)
+  }
 }
 
 watch(() => [props.svc, props.org, props.enum], async () => {
@@ -70,6 +99,7 @@ watch(() => [props.svc, props.org, props.enum], async () => {
 })
 onMounted(async () => { await load()})
 
+/*
 const shl = computed(() => {
   const l = []
   const s = sel.value.toLowerCase()
@@ -87,6 +117,7 @@ const clic = (t) => {
 const cr = () => {
   if (shl.value.length === 1) clic(shl.value[0])
 }
+  */
 
 </script>
 
