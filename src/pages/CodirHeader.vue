@@ -9,10 +9,10 @@
       :disable="ui.editingInCourse"
       :options="orgs"/>
 
-    <select-enum2 v-if="ui.appPage.org"
-      class="col q-mr-md" svc="AS2" :org="ui.appPage.org"
-      enum="Sujet" width="md"
-      :title="$t('CODIRnosuj')" @select="selSujet"
+    <select-enum2 v-if="ui.appPage.org" class="col q-mr-md" width="md" 
+      svc="AS2" :org="ui.appPage.org" enum="Sujet" 
+      :title="$t('CODIRnosuj')" 
+      v-model="ui.appPage.sujet"
       :disable="ui.editingInCourse"/>
 
     <btn-cond v-if="ui.appPage.org" icon="edit" class="col-auto" color="warning" 
@@ -22,7 +22,7 @@
   <div class="q-pa-xs">
     <div v-if="!ui.appPage.org" class="msg">{{ $t('CODIRnoorg') }}</div>
     <div v-else>
-      <div v-if="!ui.appPage.section" class="msg">{{ $t('CODIRnosuj') }}</div>
+      <div v-if="!ui.appPage.sujet" class="msg">{{ $t('CODIRnosuj') }}</div>
       <div v-else class="titre-md text-center">{{$t('CODIRtit1')}}</div>
     </div>
   </div>
@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 
 import { $t } from '../src-fw/util'
@@ -52,10 +52,9 @@ const dialogs = reactive({
   edit: false
 })
 
-const selSujet = (t) => {
-  ui.appPage.sujet = t
+watch(() => ui.appPage.sujet, (v) => {
   ui.trigPage()
-}
+})
 
 const init = () => {
   ui.appPage.org = ''

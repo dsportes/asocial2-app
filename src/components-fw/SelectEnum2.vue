@@ -8,27 +8,6 @@
     fill-input
     input-debounce="0"
     @filter="filterFn"/>
-
-  <!--div :class="(disable ? 'disabled' : 'sely') + ' row items-center'">
-    <q-icon name="arrow_drop_down" size="22px"/>
-    <div :class="'q-ml-xs font-mono ellipsis mw' + (width || 'sm')">
-      {{ dv }}</div>
-    <q-menu v-if="!disable" v-model="menu" 
-      anchor="center middle" self="center middle"
-      transition-show="flip-up" transition-hide="flip-down">
-      <q-input v-model="sel" standout dense
-        @keydown.enter.prevent="cr"
-        placeholder="abc" :hint="$t('containing')">
-        <template v-if="sel" v-slot:prepend>
-          <q-icon name="cancel" @click.stop.prevent="sel = ''" class="cursor-pointer"/>
-        </template>
-      </q-input>
-      <div class="lst q-pa-xs" style="width:300px; height:120px">
-        <div v-for="t in shl" class="font-mono cursor-pointer selx"
-          @click="clic(t)">{{ t[1] }}</div>  
-      </div>
-    </q-menu>
-  </div!!-->
 </template>
 
 <script setup lang="ts">
@@ -46,25 +25,19 @@ const props = defineProps({
   width: String
 })
 
+const model = defineModel()
+
 const modelloc = ref()
 const options = ref([])
 const lst = ref([])
 
 const emit = defineEmits(['select'])
 watch(() => modelloc.value, (t) => {
-  emit('select', t.value)
+  if (model.value !== t.value) {
+    model.value = t.value
+    emit('select', t.value)
+  }
 })
-
-/*
-const menu = ref(false)
-const lst = ref()
-const sel = ref('')
-const map: Ref<Object> = ref({})
-const dv = computed(() => {
-  const x = map.value[model.value]
-  return x ? x[1] : props.title
-})
-  */
 
 function filterFn(val, update) {
   update(() => {
@@ -88,10 +61,17 @@ const load = async () => {
   l.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
   lst.value = l
   options.value = [ ...lst.value ]
-  if (l.length === 1) {
-    modelloc.value = l[0]
-    emit('select', l[0].value)
-  }
+  const iv = initv()
+  if (iv) modelloc.value = iv
+  else if (lst.value.length === 1)
+    modelloc.value = lst.value[0]
+}
+
+const initv = () => {
+  const v = model.value
+  if (v) for (const x of lst.value) if (v === x.value) 
+    return x
+  return null
 }
 
 watch(() => [props.svc, props.org, props.enum], async () => {

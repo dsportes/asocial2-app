@@ -4,7 +4,7 @@
     <div v-if="fst.visU" class="q-my-sm q-pl-md">
       <div class="text-italic">{{ $t('FORMdem_2_label') }}</div>
       <div v-if="fst.isDemand && fst.editable" class="row q-px-xs items-center">
-        <select-enum class="col"
+        <select-enum2 class="col"
           v-model="loc1" :svc="fst.form.svc" :org="fst.form.org" :enum="enum"/>
         <btn-cond v-if="fst.visT && psT" class="col-auto q-ml-sm"
           flat icon="content_paste" @ok="copyLocU"/>
@@ -17,7 +17,7 @@
     <div v-if="fst.visT" class="q-my-sm q-pl-md">
       <div class="text-italic">{{ $t('FORMprop_2_label') }}</div>
       <div v-if="!fst.isDemand && fst.editable" class="row q-px-xs items-center">
-        <select-enum class="col"
+        <select-enum2 class="col"
           v-model="loc1" :svc="fst.form.svc" :org="fst.form.org" :enum="enum"/>
         <btn-cond v-if="fst.visU && psU" class="col-auto q-ml-sm"
           flat icon="content_paste" @ok="copyLocT"/>
@@ -39,7 +39,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import FormExp from '../components-fw/FormExp.vue'
 import { DocEnums } from '../src-fw/operation'
 
-import SelectEnum from '../components-fw/SelectEnum.vue'
+import SelectEnum2 from '../components-fw/SelectEnum2.vue'
 
 const props = defineProps({
   type: String,

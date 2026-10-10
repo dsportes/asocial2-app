@@ -9,10 +9,10 @@
       :disable="ui.editingInCourse"
       :options="orgs"/>
 
-    <select-enum2 v-if="ui.appPage.org"
-      class="col q-mr-md" svc="AS2" :org="ui.appPage.org"
-      enum="Section" width="md"
-      :title="$t('COREDnosect')" @select="selSection"
+    <select-enum2 v-if="ui.appPage.org" class="col q-mr-md"
+      svc="AS2" :org="ui.appPage.org" enum="Section" width="md"
+      :title="$t('COREDnosect')" 
+      v-model="ui.appPage.section"
       :disable="ui.editingInCourse"/>
 
     <btn-cond v-if="ui.appPage.org" icon="edit" class="col-auto" color="warning" 
@@ -52,7 +52,12 @@ const dialogs = reactive({
   edit: false
 })
 
+watch(() => ui.appPage.section, (v) => {
+  ui.trigPage()
+})
+
 const selSection = (t) => {
+  const iv = ui.appPage.section
   ui.appPage.section = t
   ui.trigPage()
 }

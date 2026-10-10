@@ -29,8 +29,10 @@
             <div class="titre-md text-italic col-auto">{{ $t('CODIRsa') }}</div>
             <div class="font-mono">{{ aut.a.section }} - {{ aut.edv }}</div>
           </div>
-          <select-enum2 svc="AS2" :org="ui.appPage.org" class="q-mb-sm q-ml-lg"
-            enum="Section" width="md"
+
+          <select-enum2 svc="AS2" :org="ui.appPage.org" enum="Section"
+            v-model="aut.a.section"
+            class="q-mb-sm q-ml-lg" width="md"
             @select="majSection"/>
 
           <div class="row items-center q-gutter-md">
@@ -101,8 +103,10 @@ const selAut = async (a) => {
 }
 
 const majNa = (n) => { aut.newNa = n }
-const majSection = (n) => { 
-  aut.newSection = n }
+const majSection = async (n) => { 
+  aut.newSection = n 
+  await majAut()
+}
 
 const cred = computed(() => {
   const m = sf.mySimpleCreds('AS2', ui.appPage.org, 'Redaction') as Map<string, $Credential>
@@ -110,6 +114,7 @@ const cred = computed(() => {
 })
 
 const listeAuteurs = async () => {
+  await selAut(null)
   if (!ui.appPage.org || !ui.appPage.section || session.planeMode) return
   auteurs.value = await AS2$Auteur.listeParSection(ui.appPage.org, ui.appPage.section, cred.value)
 }
