@@ -1,8 +1,9 @@
 <template>
   <q-select dense options-dense 
     v-model="modelloc" :options="options" :label="title"
-    :class="'q-ml-xs font-mono ellipsis mw' + (width || 'sm')"
+    class="q-ml-xs font-mono"
     :disable="disable" 
+    clearable
     use-input
     hide-selected
     fill-input
@@ -12,7 +13,7 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { DocEnums } from '../src-fw/operation'
 import { $t, hasMessage } from '../src-fw/util'
 
@@ -21,8 +22,7 @@ const props = defineProps({
   disable: Boolean,
   svc: String,
   org: String,
-  enum: String,
-  width: String
+  enum: String
 })
 
 const model = defineModel()
@@ -41,9 +41,8 @@ watch(() => modelloc.value, (t) => {
 
 function filterFn(val, update) {
   update(() => {
-    const needle = val.toLowerCase()
     options.value = lst.value.filter(v => 
-      v.label2.includes(needle))
+      v.label2.includes(val.toLowerCase()))
   })
 }
 

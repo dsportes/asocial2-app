@@ -7,6 +7,13 @@
       <div v-if="session.planeMode" class="titre-md text-italic">{{ $t('CODIRplane') }}</div>
       <div v-else>
         <div class="titre-md text-italic">{{ $t('CODIRnogr') }}</div>
+      <selmulti-enum v-if="ui.appPage.org" class="col q-mr-md mwlg"
+        svc="AS2" :org="ui.appPage.org" enum="Sujet" width="lg"
+        title="Choix sujets" 
+        :max-values="2"
+        v-model="ui.appPage.sujets"
+        @ok="doOk"
+        />
       </div>
     </template>
 
@@ -26,16 +33,22 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, onMounted, watch, computed, reactive } from 'vue'
+import { ref, computed } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
+import SelmultiEnum from '../components-fw/SelmultiEnum.vue'
 
 const ui = stores.ui
 const session = stores.session
 
+ui.appPage.sujets = ['10', '20']
+
+const doOk = () => {
+  console.log(ui.appPage.sujets.join(','))
+}
+
 const sth = computed(() => 'height:' + (ui.appPage.height - 30) + 'px;' )
-// onMounted(() => { ui.getPh() })
 
 const splitterModel = ref(33)
 

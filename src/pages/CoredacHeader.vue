@@ -9,7 +9,7 @@
       :disable="ui.editingInCourse"
       :options="orgs"/>
 
-    <select-enum2 v-if="ui.appPage.org" class="col q-mr-md"
+    <select-enum v-if="ui.appPage.org" class="col q-mr-md"
       svc="AS2" :org="ui.appPage.org" enum="Section" width="md"
       :title="$t('COREDnosect')" 
       v-model="ui.appPage.section"
@@ -41,7 +41,7 @@ import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import StdHeader from '../components-fw/StdHeader.vue'
 import EditEnum from '../dialogs-fw/EditEnum.vue'
-import SelectEnum2 from '../components-fw/SelectEnum2.vue'
+import SelectEnum from '../components-fw/SelectEnum.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
 const ui = stores.ui

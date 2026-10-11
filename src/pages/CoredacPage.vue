@@ -30,7 +30,7 @@
             <div class="font-mono">{{ aut.a.section }} - {{ aut.edv }}</div>
           </div>
 
-          <select-enum2 svc="AS2" :org="ui.appPage.org" enum="Section"
+          <select-enum svc="AS2" :org="ui.appPage.org" enum="Section"
             v-model="aut.a.section"
             class="q-mb-sm q-ml-lg" width="md"
             @select="majSection"/>
@@ -72,7 +72,7 @@ import { $t, dkli } from '../src-fw/util'
 import RevSusp from '../dialogs-fw/RevSusp.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
-import SelectEnum2 from '../components-fw/SelectEnum2.vue'
+import SelectEnum from '../components-fw/SelectEnum.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { DocDescriptor } from '../src-fw/docDescriptor'
