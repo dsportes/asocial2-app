@@ -128,12 +128,14 @@ export default {
   closeCf: 'Saisies en cours, confirmer ...',
   closeCf_label: `### Des saisies sont en cours ...
   - Si vous confirmez, elles seront perdues.
-  - Si vous renoncez, vous pourrez continuer votre travail normalement.
+  - Si vous renoncez, vous pourrez continuer votre saisie normalement.
   `,
   closeCf_1s: 'Je confirme fermer ma session',
   closeCf_2s: 'Je renonce, ma session se poursuit',
   closeCf_1d: 'Je confirme fermer ce dialogue',
   closeCf_2d: 'Je renonce, le dialogue se poursuit',
+  closeCf_12: 'Je confirme renoncer à ma saisie',
+  closeCf_22: 'Je poursuis ma saisie',
   backopen: 'Fin de session ?',
   backopen_label: `### Confirmation de clôture de cette session.
 - en cas de confirmation la session sera fermée et la page de "login" s'affichera.
@@ -1436,8 +1438,12 @@ Détail: url:[{3}] erreur:[{4}]
 - liste des auteurs par section de rédaction,
 
 `,
+  PAGEauteur_pubs_bub: `### Mes publications en tant **qu'auteur**
+- liste de mes publications,
+
+`,
   PAGEauteur_auteurs: 'Rôles "d\'auteur"',
-  PAGEauteur_articles: 'Articles',
+  PAGEauteur_pubs: 'Publications',
   PAGEcoredac: 'Comité de Rédaction',
   PAGEcoredac_label: 'Comité de Rédaction',
   PAGEcoredac_bub: `### Comité de Rédaction

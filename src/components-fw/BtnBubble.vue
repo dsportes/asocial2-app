@@ -17,16 +17,16 @@ Les liens vers les images sont de cette forme:
 L'image doit figurer dans public/images
 -->
 <template>
-  <q-icon flat class="cursor-pointer"
-    name="question_mark" 
+  <q-btn round padding="none"
+    icon="question_mark" 
     :color="!$q.dark.isActive || clear ? 'indigo-2' : 'indigo-9'" 
-    size="20px">
+    size="md">
     <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
       anchor="center middle" self="center middle"
       style="height: 300px; max-height:70vh; width: 400px; max-width:90vw">
       <scroll-md height="300px" :text="text" inverse />
     </q-menu>
-  </q-icon>
+  </q-btn>
 </template>
 
 <script setup lang="ts">

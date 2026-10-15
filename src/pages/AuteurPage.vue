@@ -64,7 +64,7 @@
           {{ $t('nopower') }}
         </div>
         <div v-else>
-          <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'articles'" 
+          <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'pubs'" 
             size="lg" flat style="position:absolute;right:0;top:0" />
           <div class="fs-xs font-mono">{{ aut.autid }}</div>
 
@@ -97,23 +97,46 @@
     </div>
     </template>
   </q-splitter>
+
+  <q-page-sticky position="top-right" :offset="[7, 7]">
+    <btn-cond icon="sync" round @ok="init"/>
+  </q-page-sticky>
 </div>
-<div v-if="ui.appPage.tab === 'articles'" class="column items-center">
-  <div class="q-ma-md">Mes publications ...</div>
+
+
+<div v-if="ui.appPage.tab === 'pubs'" class="column items-center">
+  <div class="self-end q-ma-xs text-italic text-bold titre-md">{{ ui.appPage.aut.nomAuteur }}</div>
+
+  <q-page-sticky position="top-left" :offset="[7, 7]">
+    <q-toolbar :class="sty()">
+      <nav-bar2 v-model="ui.navBar" @navigate="navigate"/>
+      <btn-cond v-if="session.hasNet && !ui.navBar.editing && !ui.navBar.disable"
+        class="col-auto q-ml-xs" icon="add" round @ok="add"/>
+      <btn-cond v-if="session.hasNet && ui.navBar.editing && !ui.navBar.disable"
+        class="col-auto q-ml-xs" icon="edit_off" round @ok="resetEdit"/>
+      <btn-cond v-if="session.hasNet && !ui.navBar.editing && ui.navBar.nb && !ui.navBar.disable"
+        class="col-auto q-ml-xs" icon="edit" round @ok="edit"/>
+      <btn-cond v-if="session.hasNet && ui.navBar.editing && ui.navBar.changes.size && !ui.navBar.disable"
+        class="col-auto q-ml-xs" icon="undo" round @ok="undo"/>
+      <btn-cond v-if="session.hasNet && ui.navBar.editing && ui.navBar.changes.size && !ui.navBar.disable"
+        class="col-auto q-ml-xs" icon="check" round @ok="val"/>
+    </q-toolbar>
+  </q-page-sticky>
 </div>
 </div>
 </template>
 
 <script setup lang="ts">
 // @ts-ignore
-import { ref, Ref, computed, onMounted, watch } from 'vue'
+import { ref, Ref, computed, onMounted, watch, reactive } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 import { $t, sty, dhcool } from '../src-fw/util'
 import { getStore } from '../stores/docs'
-// import { AS2$Auteur } from '../as2/documents'
+import { AS2$Auteur, AS2$Publication } from '../as2/documents'
 import BtnCond from '../components-fw/BtnCond.vue'
+import NavBar2 from '../components-fw/NavBar2.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
@@ -125,15 +148,12 @@ const sf = stores.safe
 const sth = computed(() => 'height:' + (ui.appPage.height - 30) + 'px;' )
 
 ui.appPage.tab = "auteurs"
-ui.appPage.btnInit = 1
-ui.appPage.btnAdd = 1
-ui.appPage.btnVal = 1
-ui.appPage.btnUndo = 1
-
-watch(() => ui.appPage.btnInit, async () => { await init() })
-watch(() => ui.appPage.btnVal, async () => { await val() })
-watch(() => ui.appPage.btnAdd, async () => { await add() })
-watch(() => ui.appPage.btnUndo, async () => { undo() })
+watch(() => ui.appPage.tab, async (t) => {
+  if (t === 'pubs') {
+    pubsInit()
+    await listPubs()
+  }
+})
 
 const splitterModel = ref(50)
 
@@ -239,14 +259,95 @@ const selCo = (cx: $Cred) => {
   console.log('co-auteur', cx.credId, cx.props.name, cx.props.trig)
 }
 
+type Pubs = {
+  a: AS2$Publication[]
+  m: Map<string, AS2$Publication>
+  c: AS2$Publication
+}
+
+const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null })
+
+const pubsItem = computed(() => std.value.getItem('Publication/auteur/' + perimetre.value.docPk))
+
+const pubsInit = () => {
+  pubs.a = []; pubs.m.clear(); pubs.c = null
+  ui.navBar.listMode = true
+  ui.navBar.nb = 0
+  ui.navBar.idx = -1
+}
+
+watch(pubsItem, async () => {
+  await listPubs()
+})
+
+const listPubs = async () => {
+  if (!pubsItem.value) { pubsInit(); return }
+  const pk = aut.value.pk
+  // const s = std.value.getSColl('Publication', 'auteur', perimetre.value.docPk)
+  for(const pubpk of pubsItem.value.pks)
+    pubs.m.set(pubpk, std.value.getDoc('Publication', pubpk))
+  pubs.a = Array.from(pubs.m.values())
+  pubs.a.sort((a,b) => (a.v > b.v ? -1 : (a.v < b.v ? 1 : 0)))
+  ui.navBar.nb = pubs.a.length
+  ui.navBar.idx = -1
+  if (pubs.c && pubs.a.length) {
+    let i = 0; for(const p of pubs.a)
+      if (p.pubid === pubs.c.pubid) { ui.navBar.idx = i; break } else i++
+  }
+  if (ui.navBar.idx === -1) {
+    if (pubs.a.length) { ui.navBar.idx = 0; pubs.c = pubs.a[0] }
+    else pubs.c = null
+  }
+}
+
 const add = async () => {
-
+  // TODO
+  ui.navBar.editing = true
+  ui.navBar.listMode = false
+  ui.navBar.changes = new Set()
 }
+
+const edit = () => {
+  ui.navBar.editing = true
+  ui.navBar.listMode = false
+  ui.changes = new Set()
+}
+
+const resetEdit = async () => {
+  if (await ui.mayClose2()) {
+    ui.resetEditing()
+    ui.navBar.editing = false
+    ui.changes = new Set()
+  }
+}
+
 const val = async () => {
-
+  // TODO
+  ui.resetEditing()
+  ui.navBar.editing = false
+  ui.changes = new Set()
 }
-const undo = () => {
 
+const undo = () => {
+  // TODO
+  ui.resetEditing()
+  ui.changes = new Set()
+}
+
+const navigate = async (n) => {
+  console.log('n=', n)
+  if (n < 5) {
+    switch (n) { // 1:next 2: previous, 3:first, 4:last
+      case 1 : ui.navBar.idx++; break
+      case 2 : ui.navBar.idx--; break
+      case 3 : ui.navBar.idx = 0; break
+      case 4 : ui.navBar.idx = pubs.value.length - 1; break
+    }
+    pubs.c = pubs.a[ui.navBar.idx]
+    ui.resetEditing()
+    ui.navBar.editing = false
+    ui.changes = new Set()
+  }
 }
 
 </script>

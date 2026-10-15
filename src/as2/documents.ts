@@ -105,4 +105,16 @@ export class AS2$SubsGenerator extends $SubsGenerator {
 }
 if (ok) { n++; Registry.register(AS2$SubsGenerator)}
 
+export class AS2$Publication extends $Document {
+
+  async compile () {}
+
+  sujets: string[]
+  autid: string
+  resume: string
+  volume: number
+
+}
+if (ok) { n++; Registry.register(AS2$Publication)}
+
 export const AS2nbDocs = () : number => n

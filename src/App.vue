@@ -84,6 +84,7 @@
   <got-it/>
   <confirm-quit/>
   <confirm-close/>
+  <confirm-close2/>
   <confirm-closesession/>
   <dialog-exc/>
   <dialog-help/>
@@ -134,6 +135,7 @@ import LeftMenu from './components-fw/LeftMenu.vue'
 import GotIt from './dialogs-fw/GotIt.vue'
 import ConfirmQuit from './dialogs-fw/ConfirmQuit.vue'
 import ConfirmClose from './dialogs-fw/ConfirmClose.vue'
+import ConfirmClose2 from './dialogs-fw/ConfirmClose2.vue'
 import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'

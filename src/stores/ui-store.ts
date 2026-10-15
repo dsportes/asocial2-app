@@ -153,6 +153,14 @@ export const useUiStore = defineStore('ui', () => {
     })
   }
 
+  const mayClose2 = async () => {
+    if (!editing.flag) return true
+    return new Promise((resolve) => {
+      editing.resolve = resolve
+      appDialogs.ConfirmClose2 = true
+    })
+  }
+
   // Gestion des pages
   const page = ref(HOME)
 
@@ -193,6 +201,7 @@ export const useUiStore = defineStore('ui', () => {
   const appDialogs = reactive({
     ConfirmQuit: false,
     ConfirmClose: false,
+    ConfirmClose2: false,
     ConfirmCloseSession: false,
     DialogExc: false,
     DialogHelp: false,
@@ -306,7 +315,7 @@ export const useUiStore = defineStore('ui', () => {
     openHelp, helpstack, fermerHelp, pushhelp, pophelp,
     page, setPage, backToLogin,
     appPage, trigPage,
-    setEditing, resetEditing, resolveEditing, editingInCourse, mayClose,
+    setEditing, resetEditing, resolveEditing, editingInCourse, mayClose, mayClose2,
     currentEvent, navBar, currentForm, adminPage, resetAdminPage,
     loginPage, resetLoginPage,
     emojiIndex, setEmoji,
