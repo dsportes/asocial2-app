@@ -133,8 +133,10 @@ import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 import { $t, sty, dhcool } from '../src-fw/util'
+import { Crypt } from '../src-fw/crypt'
 import { getStore } from '../stores/docs'
 import { AS2$Auteur, AS2$Publication } from '../as2/documents'
+import { Registry } from '../src-fw/registry'
 import BtnCond from '../components-fw/BtnCond.vue'
 import NavBar2 from '../components-fw/NavBar2.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -266,14 +268,19 @@ type Pubs = {
 }
 
 const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null })
+const curPub = computed(() => pubs.n || (ui.navBar.nb ? pubs.a[ui.navBar.idx] : null))
 
 const pubsItem = computed(() => std.value.getItem('Publication/auteur/' + perimetre.value.docPk))
 
 const pubsInit = () => {
-  pubs.a = []; pubs.m.clear(); pubs.c = null
-  ui.navBar.listMode = true
-  ui.navBar.nb = 0
-  ui.navBar.idx = -1
+  pubs.a = []
+  pubs.m.clear()
+  pubs.n = null // new
+  const b = ui.navBar
+  b.listMode = true
+  b.disable = false
+  b.nb = 0
+  b.idx = 0 // si nb == 0 ou isnew, ns. Sinon index de l'élément "courant" dans a.
 }
 
 watch(pubsItem, async () => {
@@ -282,6 +289,7 @@ watch(pubsItem, async () => {
 
 const listPubs = async () => {
   if (!pubsItem.value) { pubsInit(); return }
+  const pubidAv = curPub.value ? curPub.value.pubid : ''
   const pk = aut.value.pk
   // const s = std.value.getSColl('Publication', 'auteur', perimetre.value.docPk)
   for(const pubpk of pubsItem.value.pks)
@@ -289,22 +297,27 @@ const listPubs = async () => {
   pubs.a = Array.from(pubs.m.values())
   pubs.a.sort((a,b) => (a.v > b.v ? -1 : (a.v < b.v ? 1 : 0)))
   ui.navBar.nb = pubs.a.length
-  ui.navBar.idx = -1
-  if (pubs.c && pubs.a.length) {
-    let i = 0; for(const p of pubs.a)
-      if (p.pubid === pubs.c.pubid) { ui.navBar.idx = i; break } else i++
-  }
-  if (ui.navBar.idx === -1) {
-    if (pubs.a.length) { ui.navBar.idx = 0; pubs.c = pubs.a[0] }
-    else pubs.c = null
+  ui.navBar.idx = 0
+  if (!pubs.a.length) return
+  if (pubidAv) {
+    let i = 0
+    for(const p of pubs.a)
+      if (p.pubid === pubidAv) { ui.navBar.idx = i; return } 
+      else i++
   }
 }
 
 const add = async () => {
-  // TODO
   ui.navBar.editing = true
   ui.navBar.listMode = false
   ui.navBar.changes = new Set()
+  const obj = {
+    pubid: Crypt.rnd(15),
+    autid: aut.value.autid,
+    volume: 0,
+    resume: ''
+  }
+  pubs.n = await Registry.compile('AS2', 'Publication', std.value.org, obj)
 }
 
 const edit = () => {
@@ -329,9 +342,9 @@ const val = async () => {
 }
 
 const undo = () => {
-  // TODO
   ui.resetEditing()
   ui.changes = new Set()
+  if (pubs.n) pubs.n = null
 }
 
 const navigate = async (n) => {
