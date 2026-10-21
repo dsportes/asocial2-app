@@ -113,7 +113,13 @@ self.addEventListener('notificationclick', (event) => {
 // Gestion de Web-Push *******************************************************************
 self.addEventListener('push', async (event) => {
   // @ts-ignore
-  const buf = event.data ? event.data.text() : null
+  const x = event.data ? event.data.text() : null
+  let buf
+  if (x && x.startsWith('{')) {
+    const y = JSON.parse(x)
+    buf = y.body
+  } else buf = x
+  // console.log(buf)
   /* buf : objet "message" sérialisé en base64
   const message = {
     org: 'demo',
