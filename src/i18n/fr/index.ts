@@ -1237,7 +1237,7 @@ bla bla
   La relance de l'application, _peut_ (parfois) modifier les circonstances et permettre une poursuite de l'exécution.
   `,
 
-  EX105_label: 'Une situation inattendue des données a été détectée ("BUG" probable).',
+  EX105_label: 'Une situation inattendue des données a été détectée ("BUG" très probable).',
   EX105_bub: `### Une situation inattendue des données a été détectée par le serveur
   - les données ne sont pas dans un état _normal_ pour supporter cette opération.
   - ceci peut provenir d'un BUG de traitement bien antérieur mais aussi peut-être de l'opération qui vient d'échouer.
@@ -1330,6 +1330,7 @@ Détail: supporté par l\'application:[{3}] - acceptés par le service: de [{1}]
   EX103_no_cred_owner: 'Tentative de révocation du pouvoir sur le document de classe [{3}], clé [{4}] dont l\'utilisateur n\'est pas détenteur dans l\'organisation: [{2}]',
   EX103_missing_p1_and_p2: 'Tentative de remplacement des phrases secrètes sans les fournir.',
 
+  EX105_unexpected_null_object: 'La variable [{0}] n\'a pas de valeur alors qu\'elle était attendue existante à ce point du code.',
   EX105_service_unexpected_exception: `Opération sur _service cloud_ en échec inattendu.
 Détail: [{0}]
 `,
