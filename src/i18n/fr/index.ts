@@ -326,6 +326,7 @@ bla bla
   op_UpdateCredentialSusp: 'Mise à jour d\'un pouvoir d\èun auteur',
   op_UpdateCredential: 'Misqe à jour d\'un pouvoir d\'un "manager"',
   op_AutoRevokeCred: 'Auto révocation d\'un pouvoir',
+  op_post: 'Requête HTTP',
 
   /* Status de retour d'une opération sur Safe / Master Directory */
   STSF_1: 'Aucune Safe Box n\'est enregistrée avec cet alias',
