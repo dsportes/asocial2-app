@@ -662,7 +662,7 @@ export async function checkStatus (orgRoles: string[])
         }
       }
     } catch (e) {
-      await (op.ko(e))
+      // await (op.ko(e))
       status[site]['$ST$'] = 0
       allOK = false
     }
