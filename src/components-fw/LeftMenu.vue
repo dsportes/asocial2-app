@@ -68,7 +68,7 @@ Contrôlé par ui.leftMenu
 </q-layout>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { computed } from 'vue'
 import stores from '../stores/all'

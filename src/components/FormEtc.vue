@@ -42,7 +42,7 @@ new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { reactive } from 'vue'
 import stores from '../stores/all'

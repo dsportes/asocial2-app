@@ -9,7 +9,7 @@ Affiche une bulle et un titre
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { computed } from 'vue'
 

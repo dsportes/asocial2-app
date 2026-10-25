@@ -11,7 +11,7 @@
     @filter="filterFn"/>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, onMounted, watch } from 'vue'
 import { DocEnums } from '../src-fw/operation'

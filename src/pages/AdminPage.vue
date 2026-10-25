@@ -149,7 +149,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 
 // @ts-ignore
 import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'

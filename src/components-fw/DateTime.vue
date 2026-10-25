@@ -37,7 +37,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, computed, reactive, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'

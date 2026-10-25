@@ -24,7 +24,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 export type startEnd = {
   start: number
   end: number

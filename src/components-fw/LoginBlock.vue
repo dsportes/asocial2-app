@@ -62,7 +62,7 @@ Event émis: logged
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'

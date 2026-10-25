@@ -24,7 +24,7 @@
 </dialog-std0>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, watch } from 'vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'

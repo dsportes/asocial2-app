@@ -38,7 +38,7 @@
 </form-exp>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, reactive, computed, watch } from 'vue'
 import stores from '../stores/all'

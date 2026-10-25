@@ -26,7 +26,7 @@ Emit:
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 

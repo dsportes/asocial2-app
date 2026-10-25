@@ -39,7 +39,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { Ref, ref, onMounted, watch } from 'vue'
 

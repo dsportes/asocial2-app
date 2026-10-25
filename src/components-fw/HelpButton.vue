@@ -3,7 +3,7 @@
   <btn-cond icon="help" @ok="stores.ui.openHelp(page)" color="none"/>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import stores from '../stores/all'
 import BtnCond from './BtnCond.vue'
 

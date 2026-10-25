@@ -130,7 +130,7 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 
 // @ts-ignore
 import { reactive } from 'vue'

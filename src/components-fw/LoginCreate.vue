@@ -21,7 +21,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { reactive, ref } from 'vue'
 import stores from '../stores/all'

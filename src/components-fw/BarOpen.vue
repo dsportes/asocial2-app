@@ -23,7 +23,7 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { computed } from 'vue'
 

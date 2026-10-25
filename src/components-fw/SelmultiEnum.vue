@@ -29,7 +29,7 @@
   </q-select>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, onMounted, watch, computed } from 'vue'
 import { DocEnums } from '../src-fw/operation'

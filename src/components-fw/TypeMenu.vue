@@ -28,7 +28,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { Ref, ref } from 'vue'
 import { FormType } from '../src-fw/docDescriptor'

@@ -29,7 +29,7 @@
   </dialog-std0>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref } from 'vue'
 

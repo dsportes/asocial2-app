@@ -8,7 +8,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import stores from '../stores/all'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 

@@ -7,7 +7,7 @@
     @validate="val"/>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 // @ts-ignore

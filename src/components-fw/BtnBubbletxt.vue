@@ -33,7 +33,7 @@ L'image doit figurer dans public/images
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import ScrollMd from '../components-fw/ScrollMd.vue'
 
 const props = defineProps({ 

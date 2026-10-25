@@ -20,7 +20,7 @@
   </q-dialog>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { watch } from 'vue'
 import stores from '../stores/all'

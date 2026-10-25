@@ -41,7 +41,7 @@ Event: close
 </dialog-std2>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, onMounted } from 'vue'
 import stores from '../stores/all'

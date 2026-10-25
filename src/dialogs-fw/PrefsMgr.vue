@@ -83,7 +83,7 @@ Events: close done
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, reactive, computed, watch } from 'vue'
 // @ts-ignore

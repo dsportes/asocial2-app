@@ -20,7 +20,7 @@ event : 'select', svc (org est session.orgs.c)
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'

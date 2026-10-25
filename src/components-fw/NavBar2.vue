@@ -31,7 +31,7 @@ Emit: 'navigate', n' quand navigation vers,
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { computed } from 'vue'
 import { sty } from '../src-fw/util'

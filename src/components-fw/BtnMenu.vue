@@ -5,7 +5,7 @@
   </q-btn>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import stores from '../stores/all'
 
 const ui = stores.ui

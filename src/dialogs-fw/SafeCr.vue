@@ -88,7 +88,7 @@ Events: close done
     @option="chooseBack"/>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, reactive, watch, computed } from 'vue'
 

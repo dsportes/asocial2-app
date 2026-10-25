@@ -26,7 +26,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, onMounted, watch } from 'vue'
 import { $t, dhcool, sty } from '../src-fw/util'

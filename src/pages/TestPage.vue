@@ -25,7 +25,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 
 // @ts-ignore
 import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'

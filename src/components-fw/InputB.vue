@@ -98,7 +98,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 
 // @ts-ignore
 import { ref, computed, watch } from 'vue'

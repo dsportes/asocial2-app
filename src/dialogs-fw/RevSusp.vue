@@ -36,7 +36,7 @@
 
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, watch, computed } from 'vue'
 // @ts-ignore

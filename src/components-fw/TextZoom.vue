@@ -23,7 +23,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, reactive, watch } from 'vue'
 

@@ -31,7 +31,7 @@
   </q-dialog>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, computed, watch, reactive } from 'vue'
 

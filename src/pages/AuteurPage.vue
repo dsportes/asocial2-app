@@ -126,7 +126,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, Ref, computed, onMounted, watch, reactive } from 'vue'
 import stores from '../stores/all'

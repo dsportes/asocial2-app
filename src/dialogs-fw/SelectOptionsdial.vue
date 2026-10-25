@@ -14,7 +14,7 @@
   </dialog-std0>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'

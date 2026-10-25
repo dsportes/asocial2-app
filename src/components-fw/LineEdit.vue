@@ -24,7 +24,7 @@
 </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 // @ts-ignore
 import { ref, watch } from 'vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
