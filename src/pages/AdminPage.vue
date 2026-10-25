@@ -238,7 +238,7 @@ const saveLabels = async (json: string) => {
   }
 }
 
-const curSite = reactive({
+let curSite = reactive({
   org: '',
   site: '',
   services: new Set(),
@@ -246,8 +246,8 @@ const curSite = reactive({
   admin: false
 })
 const newsite = ref(false)
-const nsite = reactive({ inp: '', err: ''})
-const nurl = reactive({ inp: '', err: ''})
+let nsite = reactive({ inp: '', err: ''})
+let nurl = reactive({ inp: '', err: ''})
 const sitedel = ref('')
 const orgSvcs: Ref<Map<string, string>> = ref(new Map())
 const svc = ref()

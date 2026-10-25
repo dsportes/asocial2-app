@@ -270,7 +270,8 @@ type Pubs = {
 const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null })
 const curPub = computed(() => pubs.n || (ui.navBar.nb ? pubs.a[ui.navBar.idx] : null))
 
-const pubsItem = computed(() => std.value.getItem('Publication/auteur/' + perimetre.value.docPk))
+const pubsItem = computed(() => 
+  !perimetre.value ? null : std.value.getItem('Publication/auteur/' + perimetre.value.docPk))
 
 const pubsInit = () => {
   pubs.a = []

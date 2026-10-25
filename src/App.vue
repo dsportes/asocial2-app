@@ -93,7 +93,7 @@
 </q-layout>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" vapor>
 
 // @ts-ignore
 import { ref, watchEffect, onMounted } from 'vue'

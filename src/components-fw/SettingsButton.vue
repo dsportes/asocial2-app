@@ -431,7 +431,7 @@ const dialogs = reactive({
   userProfile: false
 })
 
-const so = reactive({
+let so = reactive({
   org: '',
   site: '',
   svc: '',
@@ -520,8 +520,8 @@ const edValid = async () => {
   dialogs.edpref = false
 }
 
-const cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '', x: 0 })
-const ps = reactive({ inp: '', err: ''})
+let cr = reactive({ b64: '', shaps: '', shaSps: '', pems: '', x: 0 })
+let ps = reactive({ inp: '', err: ''})
 
 const validPs = async () => {
   const sh = await Crypt.strongHash(ps.inp, false, true) as Uint8Array

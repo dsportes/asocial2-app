@@ -59,8 +59,8 @@ const estComite = computed(() => props.formType.svc === 'AS2' && (
   props.formType.type === 'membreredaction'))
 
 // Proposition par un tiers au user ayant cet alias
-const alias = reactive({ inp: '', err: '' })
-const pfx = reactive({ inp: '', err: '' })
+let alias = reactive({ inp: '', err: '' })
+let pfx = reactive({ inp: '', err: '' })
 const invitCode = ref('')
 
 const valA = async () => {

@@ -139,7 +139,7 @@ onMounted(async () => {
   await init()
 })
 
-const entryP = reactive( { inp: '', err: '', np: 0, shp: null } )
+let entryP = reactive( { inp: '', err: '', np: 0, shp: null } )
 const filename = ref('')
 
 const doExport = async () => {
@@ -235,7 +235,7 @@ const alias = ref('')
 const freeA = ref(true)
 const errVA = ref(false)
 const initA = ref('')
-const entryA = reactive({ inp: '', err: '' })
+let entryA = reactive({ inp: '', err: '' })
 
 const resetA = () => {
   alias.value = ''

@@ -137,8 +137,8 @@ type al = {
   sh?: Uint8Array
 }
 
-const entryA = reactive({ inp: '', err: '' })
-const entryP = reactive({ inp: '', err: '' })
+let entryA = reactive({ inp: '', err: '' })
+let entryP = reactive({ inp: '', err: '' })
 
 const aliases: Ref<al[]> = reactive([])
 const expandA = ref(false)

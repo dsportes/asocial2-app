@@ -64,8 +64,8 @@ fst.setExp(props.champ)
 const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
 const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
 
-const loc1 = reactive({ inp: psU.value, err: '' })
-const loc2 = reactive({ inp: psT.value, err: '' })
+let loc1 = reactive({ inp: psU.value, err: '' })
+let loc2 = reactive({ inp: psT.value, err: '' })
 
 watch(loc1, async (v) => {
   err.value = v.err

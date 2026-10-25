@@ -48,9 +48,9 @@ const emit = defineEmits(['close', 'done'])
 const model = defineModel()
 
 const newDev = ref(false)
-const devName = reactive({ inp: '', err: '' })
-const newPIN = reactive({ inp: '', err: '' })
-const newPseudo = reactive({ inp: '', err: '' })
+let devName = reactive({ inp: '', err: '' })
+let newPIN = reactive({ inp: '', err: '' })
+let newPseudo = reactive({ inp: '', err: '' })
 
 const init = () => {
   const t = sf.myTrusting

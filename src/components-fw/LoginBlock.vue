@@ -98,8 +98,8 @@ onMounted(async () => {
 
 const emit = defineEmits(['logged'])
 
-const pin = reactive({ inp: '', err: '' })
-const entryPP = reactive({inp:'', err:''})
+let pin = reactive({ inp: '', err: '' })
+let entryPP = reactive({inp:'', err:''})
 const selectedUser = ref(null)
 const selectedUserpl = ref(null)
 
@@ -153,8 +153,8 @@ const authPlane = async () => {
   else if (status > 0) await ui.diagDisplay($t('STSF_' + status))
 }
 
-const entryA = reactive({inp:'', err:''})
-const entryP = reactive({inp:'', err:''})
+let entryA = reactive({inp:'', err:''})
+let entryP = reactive({inp:'', err:''})
 const stepAP = ref(0)
 const diagAP = ref(1)
 const safeIS = ref(null)
