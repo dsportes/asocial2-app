@@ -49,7 +49,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   watch(syncOK, async (v) => {
-    if (!v && orgRoles.value.size) {
+    if (!v && orgRoles.value && orgRoles.value.size) {
       // TOCHECK
       // @ts-expect-error
       allOK.value = await checkStatus(orgRoles.value)
@@ -66,11 +66,11 @@ export const useSessionStore = defineStore('session', () => {
     noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
   )
 
-  const perims: Ref<$Perims> = ref()
-  const defsXref: Ref<$DefsXref> = ref()
+  const perims: Ref<$Perims | undefined> = ref()
+  const defsXref: Ref<$DefsXref | undefined> = ref()
   const getPerimeter = 
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
-    const m = perims.value.get(svc + '/' + org)
+    const m = !perims.value ? undefined : perims.value.get(svc + '/' + org)
     if (!m) return null
     const id = (code || '') + '/' + docCl + '/' + pk
     return m.get(id)
@@ -83,14 +83,14 @@ export const useSessionStore = defineStore('session', () => {
     return !m ? new Set() :(m.get(def.definition) || new Set())
   }
 
-  const prefs: Ref<Prefs> = ref()
+  const prefs: Ref<Prefs | undefined> = ref()
 
-  const pref: Ref<string> = ref()
-  const currentPref = computed(() => !pref.value ? null : prefs.value[pref.value])
+  const pref: Ref<string> = ref('')
+  const currentPref = computed(() => !pref.value ? null : (prefs.value as any)[pref.value])
 
-  const orgRoles : Ref<Set<string>> = ref() // couples org/role
+  const orgRoles : Ref<Set<string> | undefined> = ref() // couples org/role
   const noDoc = computed(() => !orgRoles.value || !orgRoles.value.size)
-  const orgRolesP : Ref<Set<string>> = ref() // couples org/role "Potentiels"
+  const orgRolesP : Ref<Set<string> | undefined> = ref() // couples org/role "Potentiels"
 
   const getOrgRolesP = async (perims: $Perims) => {
     const s: Set<string> = new Set()

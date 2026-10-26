@@ -21,9 +21,9 @@ export const buildXref = () => {
     for(const [pid, p] of m) {
       for(const def of p.defs) {
         const id = def.definition
-        let m1 : Map<string, Set<string>> = m0.get(so)
+        let m1 : Map<string, Set<string>> | undefined = m0.get(so)
         if (!m1) { m1 = new Map(); m0.set(so, m1)}
-        let s: Set<string> = m1.get(id)
+        let s: Set<string> | undefined = m1.get(id)
         if (!s) { s = new Set(); m1.set(id, s)}
         s.add(pid)
       }
@@ -66,7 +66,7 @@ export class $Def {
   get isColl () { return this.type !== 1 }
   colClass (svc: string) : string{ 
     const dd = DocDescriptor.get(svc + '$' + this.docCl)
-    return dd ? dd.colClass(this.colName) : '' 
+    return dd && this.colName ? dd.colClass(this.colName) : '' 
   }
   
   constructor (definition: string) {
@@ -117,8 +117,9 @@ export class $Perimeter {
   }
 
   toObj () {
+    const defs: string[] = []
     const obj = { docCl: this.docCl, code: this.code, docPk: this.docPk,
-      role: this.role, plane: this.plane, name: this._name || '?', defs: [] }
+      role: this.role, plane: this.plane, name: this._name || '?', defs }
     for(const def of this.defs) obj.defs.push(def.definition)
     return obj
   }
@@ -142,7 +143,7 @@ export class $Subs extends $Document {
   setDef (def: $Def, msg?: string) {
     const i = this.defs.indexOf(def.definition)
     if (i === -1) this.defs.push(def.definition)
-    if (msg) this.msgs[def.definition] = msg
+    if (msg) (this.msgs as any)[def.definition] = msg
     return this
   }
 
@@ -175,11 +176,11 @@ export class $Subs extends $Document {
 }
 
 export class $SubsGenerator extends $ADocument {
-  subs: $Subs
-  svc: string
-  org: string
-  creds: Map<string, $Credential>
-  pref: Object
+  subs?: $Subs
+  svc: string = ''
+  org: string = ''
+  creds?: Map<string, $Credential>
+  pref?: Object
   roles: Set<string> = new Set()
 
   init (svc: string, org: string) {
@@ -199,13 +200,13 @@ export class $SubsGenerator extends $ADocument {
   }
 
   credOf (docCl: string, pk: string) : $Credential | null {
-    for(const [,c] of this.creds)
+    if (this.creds) for(const [,c] of this.creds)
       if (c.docCl === docCl && c.docPk === pk) return c
     return null
   }
 
   processPerimeters (lp: $Perimeter[]) {
-    for(const p of lp)
+    if (this.subs) for(const p of lp)
       for(const def of p.defs) this.subs.setDef(def)
   }
 }
@@ -222,7 +223,7 @@ class $DefSigner {
       this.creds.set(c.docCl + '/' + c.docPk, c)
   }
 
-  getCred (def: $Def): $Credential {
+  getCred (def: $Def): $Credential | undefined {
     switch (def.type) {
       case 1 : return this.creds.get(def.definition)
       case 2 : return this.creds.get(def.docCl + '/1')
@@ -313,7 +314,7 @@ export class FW$Sync {
   }
 
 
-  async post () : Promise<[number, Object, string]> {
+  async post () : Promise<[number, Object | null, string]> {
     try {
       for(const cred of this.creds)
         await this.op.sign(cred)
@@ -322,7 +323,7 @@ export class FW$Sync {
       return [res.now, res.syncs, hbc]
     } catch (e) {
       await this.op.ko(e)
-      return [0, null, null]
+      return [0, null, '']
     }
   }
 }

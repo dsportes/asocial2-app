@@ -33,25 +33,25 @@ class AS2$Form_membrecomite extends AS2$Form {
 
   /* Méthodes surchargées par type *******************************/
   cloneEtc (byU: boolean) : Object {
-    if (byU) return { pseudo: this.etcU ? this.etcU['pseudo'] : '' }
+    if (byU) return { pseudo: this.etcU ? (this.etcU as any)['pseudo'] : '' }
     const alias = this.opts ? this.opts.alias || '' : ''
-    return { pseudo: this.etcT ? this.etcT['pseudo'] : alias }
+    return { pseudo: this.etcT ? (this.etcT as any)['pseudo'] : alias }
   }
   eqEtc (x: any, y: any) : boolean {
     const x1 = x || this.emptyEtc
     const y1 = y || this.emptyEtc
     return x1.pseudo === y1.pseudo
   }
-  async checkEtc (etc: Object) : Promise<string> {
+  async checkEtc (etc: any) : Promise<string> {
     const p = etc['pseudo'] || ''
     return p.length < 4 || p.length > 24 ? $t('FORM_AS2_diag_lgp') : ''
   }
 
-  async compileEtc (etc: Object, byU: boolean) : Promise<void> {
+  async compileEtc (etc: any, byU: boolean) : Promise<void> {
     if (!byU) return
     const comment = $t('CREDON_' + this.docCl)
     const name = etc['pseudo']
-    const ct = await $CredTempl.new(this.userId, this.svc, this.org, this.docCl, 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', this.docCl, 
       { pk: '1' }, comment, { name })
     this.opts.credTemplates[ct.credId] = ct
   }
@@ -72,31 +72,31 @@ class AS2$Form_auteur extends $Form {
 
   constructor () { super() }
 
-  cloneEtc (byU: boolean) : Object | null {
-    const etc = byU ? this.etcU : this.etcT
+  cloneEtc (byU: boolean) : Object {
+    const etc: any = byU ? this.etcU : this.etcT
     return { 
       nomAuteur: !etc ? '' : etc['nomAuteur'],
       section: !etc ? '' : etc['section']
     }
   }
   eqEtc (x: Object | null, y: Object | null) : boolean {
-    const x1 = x || this.emptyEtc
-    const y1 = y || this.emptyEtc
+    const x1: any = x || this.emptyEtc
+    const y1: any = y || this.emptyEtc
     return (x1['nomAuteur'] === y1['nomAuteur']) && (x1['section'] === y1['section'])
   }
-  async checkEtc (etc: Object | null) : Promise<string> {
-    const na = etc['nomAuteur']
+  async checkEtc (etc: any | null) : Promise<string> {
+    const na = etc ? etc['nomAuteur'] : undefined
     if (!na) return $t('FORM_AS2_diag_nomAuteur2')
     const autid = await AS2$Auteur.autidParNom(this.soa, na)
     if (autid) return $t('FORM_AS2_diag_nomDupl')
     return ''
   }
 
-  async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
+  async compileEtc (etc: any, byU: boolean) : Promise<void> { // en chantier
     if (!byU) return
     const nomAuteur = etc['nomAuteur']
     const autid = Crypt.rnd(15)
-    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
       { autid: autid }, nomAuteur, { name: nomAuteur })
     this.opts = {
       auteur: { autid, nomAuteur, section: etc['section'] },
@@ -114,19 +114,19 @@ class AS2$Form_coauteur extends $Form {
 
   constructor () { super() }
 
-  cloneEtc (byU: boolean) : Object | null {
-    const etc = byU ? this.etcU : this.etcT
+  cloneEtc (byU: boolean) : Object {
+    const etc: any = byU ? this.etcU : this.etcT
     return { 
       trigramme: !etc ? '' : etc['trigramme'],
       nomAuteur: !etc ? '' : etc['nomAuteur']
     }
   }
   eqEtc (x: Object | null, y: Object | null) : boolean {
-    const x1 = x || this.emptyEtc
-    const y1 = y || this.emptyEtc
+    const x1: any = x || this.emptyEtc
+    const y1: any = y || this.emptyEtc
     return (x1['trigramme'] === y1['trigramme']) && (x1['nomAuteur'] === y1['nomAuteur'])
   }
-  async checkEtc (etc: Object | null) : Promise<string> {
+  async checkEtc (etc: any | null) : Promise<string> {
     const na = etc['nomAuteur']
     if (!na) return $t('FORM_AS2_diag_nomAuteur2')
     this.autid = await AS2$Auteur.autidParNom(this.soa, na)
@@ -134,11 +134,11 @@ class AS2$Form_coauteur extends $Form {
     return ''
   }
 
-  async compileEtc (etc: Object, byU: boolean) : Promise<void> { // en chantier
+  async compileEtc (etc: any, byU: boolean) : Promise<void> { // en chantier
     if (!byU || !this.autid) return
     const na = etc['nomAuteur']
     const trigramme = etc['trigramme']
-    const ct = await $CredTempl.new(this.userId, this.svc, this.org, 'Auteur', 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
       $1: DocDescriptor.get(this.svc + '$Auteur').pkValue({ autid: this.autid }),

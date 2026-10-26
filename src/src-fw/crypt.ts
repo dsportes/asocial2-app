@@ -94,7 +94,7 @@ export function fromPem(pem: string) : Uint8Array {
 }
 
 export class Crypt {
-  static algs = {
+  static algs: any = {
     ecdh: { name: 'ECDH', namedCurve: 'P-521' },
     ecdsa: { name: 'ECDSA', namedCurve: 'P-521' },
     ecdsasv: { name: 'ECDSA', hash: 'SHA-256' },
@@ -107,8 +107,9 @@ export class Crypt {
   // static alg = 'rsa'
   static alg = 'ecdsa'
 
-  static async crypt (cle: Uint8Array, buf: Uint8Array) : Promise<Uint8Array | null> {
+  static async crypt (cle: Uint8Array | null, buf: Uint8Array | null) : Promise<Uint8Array | null> {
     try {
+      if (buf === null || cle === null) return null
       const iv = crypto.getRandomValues(new Uint8Array(12))
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['encrypt'])
       const enc = new Uint8Array(await crypto.subtle.encrypt(
@@ -122,9 +123,9 @@ export class Crypt {
     }
   }
 
-  static async decrypt (cle: Uint8Array, buf: Uint8Array | null) : Promise<Uint8Array | null> {
+  static async decrypt (cle: Uint8Array | null, buf: Uint8Array | null) : Promise<Uint8Array | null> {
     try {
-      if (buf === null) return null
+      if (buf === null || cle === null) return null
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['decrypt'])
       const iv = buf.subarray(0, 12) as BufferSource
       const enc = buf.subarray(12) as BufferSource
@@ -169,6 +170,7 @@ export class Crypt {
   static signToAsn1 (sign: Uint8Array) : Uint8Array {
     const x1 = u8ToHex(sign)
     // const x2 = rsa.KJUR.crypto.ECDSA.concatSigToASN1Sig(x1)
+    // @ts-expect-error
     const x2 = KJUR.crypto.ECDSA.concatSigToASN1Sig(x1)
     return new Uint8Array(hexToArrayBuffer(x2))
   }
@@ -176,6 +178,7 @@ export class Crypt {
   static signFromAsn1 (sign: Uint8Array) : Uint8Array {
     const x1 = u8ToHex(sign)
     // const x2 = rsa.KJUR.crypto.ECDSA.asn1SigToConcatSig(x1)
+    // @ts-expect-error
     const x2 = KJUR.crypto.ECDSA.asn1SigToConcatSig(x1)
     return new Uint8Array(hexToArrayBuffer(x2))
   }

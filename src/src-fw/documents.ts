@@ -32,16 +32,9 @@ export class $CredTempl {
 
   static async new (userId: string, svc: string, org: string, 
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
+    const t = new $CredTempl(userId, svc, docCl, src, name, props)
     const sf = stores.safe
-    const docPk = DocDescriptor.get(topCl(svc, docCl)).pkValue(src)
-    const credId = Crypt.rnd(15)
-    const t = new $CredTempl()
-    t.svc = svc
-    t.userId = userId
-    t.credId = credId
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
-    t.docCl = docCl
-    t.docPk = docPk
     t.nameK = keyToB64(await Crypt.crypt(sf.keyK, encoder.encode(name || '')))
     const sv = await Crypt.getSVKeyPair()
     t.pubv = sv.pub
@@ -52,9 +45,9 @@ export class $CredTempl {
     const cred = encode({
       svc: svc,
       org: org,
-      credId: credId,
+      credId: t.credId,
       docCl: docCl,
-      docPk: docPk,
+      docPk: t.docPk,
       privs: sv.priv,
       privd: dc.priv
     })
@@ -63,13 +56,27 @@ export class $CredTempl {
     return t
   }
 
+  constructor (userId: string, svc: string, docCl: string, src: Object, name: string, props: Object ) {
+    this.userId = userId
+    this.svc = svc
+    this.docCl = docCl
+    this.docPk = DocDescriptor.get(topCl(svc, docCl)).pkValue(src)
+    this.credId = Crypt.rnd(15)
+    this.props = props
+    this.signId = ''
+    this.nameK = ''
+    this.pubv = new Uint8Array(0)
+    this.pubc = new Uint8Array(0)
+    this.credK = ''
+  }
+  
 }
 
 abstract class BasicCred {
-  credId: string
+  credId: string = ''
   props: any
-  docCl: string
-  docPk: string
+  docCl: string = ''
+  docPk: string = ''
 
   editSusp (susp?: number[], limit?: number) : string {
     const su = susp || this.props.susp
@@ -126,7 +133,7 @@ export type $Cred = {
 */
 export class $Credential extends BasicCred {
   descriptor() { 
-    return this.constructor['docDescriptor']
+    return (this.constructor as any)['docDescriptor']
   }
 
   // Surchargé par sous-classe
@@ -138,8 +145,8 @@ export class $Credential extends BasicCred {
   static lp2 = [ 'credId', 'svc', 'org', 'docCl', 'docPk' ]
 
   toCred() : $Cred {
-    const x = {}
-    for(const p of $Credential.lp2) x[p] = this[p]
+    const x: any = {}
+    for(const p of $Credential.lp2) x[p] = (this as any)[p]
     return x as $Cred
   }
 
@@ -164,10 +171,10 @@ export class $Credential extends BasicCred {
 
   /* Factory similaire au constructor
   mais créé la sous-classe correspondant à docCl */
-  static new (obj): $Credential {
+  static new (obj: any): $Credential {
     // @ts-expect-error
     const c = Registry.newD(obj.svc, 'Credential', obj) as $Credential
-    for (const p of $Credential.lp1) c[p] = obj[p] || null
+    for (const p of $Credential.lp1) (c as any)[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
     return c
   }
@@ -175,8 +182,8 @@ export class $Credential extends BasicCred {
   get limit () { return this.props && this.props.limit ? this.props.limit : 0 }
 
   get serial () : Uint8Array {
-    const obj = {}
-    for (const p of $Credential.lp1) obj[p] = this[p] || null
+    const obj: any = {}
+    for (const p of $Credential.lp1) obj[p] = (this as any)[p] || null
     return encode(obj)
   }
 
@@ -196,19 +203,19 @@ export class $Credential extends BasicCred {
 
 export class $MDEvent {
   // Immuables
-  eventId: string // (PK) identifiant universel de l’événement / processus (formId pour un Form).
-  type: string // code du type d'événement / processus.
-  userId: string // utilisateur cible (INDEX).
-  svc: string // service concerné.
-  org: string // organisation concernée.
+  eventId: string = '' // (PK) identifiant universel de l’événement / processus (formId pour un Form).
+  type: string = '' // code du type d'événement / processus.
+  userId: string = '' // utilisateur cible (INDEX).
+  svc: string = '' // service concerné.
+  org: string = '' // organisation concernée.
   // Modifiables par les opérations seulement:
-  v: number // version, date-heure (_epoch_) du _document_.
-  maxLife: number // time-to-live calculé depuis `v` et `type`. (INDEX pour purges périodiques).
-  status: number // son statut courant.
-  detail: string[] // objet de structure dépendant de _type_.
+  v: number = 0 // version, date-heure (_epoch_) du _document_.
+  maxLife: number = 0 // time-to-live calculé depuis `v` et `type`. (INDEX pour purges périodiques).
+  status: number  = 0// son statut courant.
+  detail: string[] = [] // objet de structure dépendant de _type_.
   // Lisibles et modifiables par U seulement:
-  comment: string // commentaire de l'utilisateur cible crypté par lui.
-  lv: number // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
+  comment: string = '' // commentaire de l'utilisateur cible crypté par lui.
+  lv: number = 0 // last view, date-heure du dernier état _vu_ par U. La comparaison avec `v` permet de détecter ce qui a _changé_ depuis le dernier scan par U.
 
   get typeEd () { return ($t('TYPE_' + this.svc + '_' + this.type)).substring(2)}
 
@@ -220,8 +227,9 @@ export class $MDEvent {
   static async new (obj: any) : Promise<$MDEvent> {
     const sf = stores.safe
     const e = new $MDEvent()
-    for(const p of Object.keys(obj)) if (p !== 'comment') e[p] = obj[p]
-    e.comment = obj.comment === null ? '' :
+    Object.assign(e, obj)
+    e.comment = !obj.comment || !sf.keyK ? '' :
+      // @ts-expect-error
       decoder.decode(await Crypt.decrypt(sf.keyK, obj.comment))
     return e
   }
@@ -311,7 +319,7 @@ Sous-classes applicatives $Form_type par "type"
 */
 export class $Form extends $Document {
   descriptor() { 
-    return this.constructor['docDescriptor']
+    return (this.constructor as any)['docDescriptor']
   }
 
   /* Par commodité svc et org sont ajoutés au $Form lu (par Get ou List)
@@ -344,7 +352,7 @@ export class $Form extends $Document {
     return $t('TYPE_' + this.svc + '_' + this.type).substring(2)
   }
 
-  get soa () : SOA { return { svc: this.svc, org: this.org }}
+  get soa () : SOA { return { svc: this.svc || '', org: this.org || '' }}
 
   static basicForm (soa: SOA, type: string, userId: string) {
     return $Form.new({
@@ -361,9 +369,9 @@ export class $Form extends $Document {
   ****************************************************************/
   /* Clone etc passé en argument OU s'il est null initilise un etc
   avec des valeurs initiales / par défaut */
-  cloneEtc (byU: boolean) : Object{
+  cloneEtc (byU: boolean) : Object {
     const etc = byU ? this.etcU : this.etcT
-    return etc === null ? { } : decode(encode(etc))
+    return etc === null ? { } : decode(encode(etc)) as Object
   }
 
   /* Test l'égalité entre 2 etc */
@@ -396,9 +404,9 @@ export class $Form extends $Document {
   static lp2 = ['formId', 'type', 'userId', 'v', 'maxLife',
     'status', 'etcU', 'etcT', 'msgU', 'msgT', 'isInvit', 'opts' ]
 
-  static new (obj) : $Form {
+  static new (obj: any) : $Form {
     const f = Registry.newD(obj.svc, 'Form', obj) as $Form
-    for (const p of $Form.lp1) f[p] = obj[p]
+    for (const p of $Form.lp1) (f as any)[p] = obj[p]
     if (!f.opts) f.opts = {}
     if (!f.opts.credTemplates) f.opts.credTemplates = {}
     return f
@@ -406,8 +414,8 @@ export class $Form extends $Document {
 
   // Pour création: envoi au service
   toFormObj () : $FormObj {
-    const obj = {}
-    for (const p of $Form.lp2) obj[p] = this[p]
+    const obj: any = {}
+    for (const p of $Form.lp2) obj[p] = (this as any)[p]
     if (this.ch) obj['ch'] = this.ch
     return obj as $FormObj
   }
@@ -418,16 +426,16 @@ export class $Form extends $Document {
 
   getCh () { return Crypt.rnd(9) }
 
-  get ft () : FormType { 
-    return FormType.get(this.svc, this.type) }
+  get ft () : FormType | undefined { 
+    return FormType.get(this.svc || '', this.type) }
 
-  async aesU () : Promise<Uint8Array> {
-    if (!this._aesU) {
-      const fk = await CVKeys.getCKey(await getSite(this.svc, this.org), this.ft.key)
+  async aesU () : Promise<Uint8Array | null> {
+    if (!this._aesU && this.ft) {
+      const fk = await CVKeys.getCKey(await getSite(this.svc || '', this.org || ''), this.ft.key)
       const sf = stores.safe
       this._aesU = await Crypt.getAESKey(fk, keyFromB64(sf.auth.D))
     }
-    return this._aesU
+    return this._aesU || null
   }
 
   /* Une opération de lecture du formulaire peut décrypter `msgU` en utilisant le couple,
@@ -441,7 +449,7 @@ export class $Form extends $Document {
     }
   }
 
-  async cryptMsgU (msg: Uint8Array) : Promise<Uint8Array> {
+  async cryptMsgU (msg: Uint8Array) : Promise<Uint8Array | null> {
     const x = !msg ? null : await Crypt.crypt(await this.aesU(), msg)
     return x
   }
@@ -456,7 +464,8 @@ export class $Form extends $Document {
     return creds
   }
 
-  static async get(svc: string, org: string, formId: string, type: string, userId: string) : Promise<$Form> {
+  static async get(svc: string, org: string, formId: string, type: string, userId: string) 
+  : Promise<$Form | null> {
     const sf = stores.safe
     const creds = userId === sf.userId ? null : $Form.credsForTP(svc, org)
     const op = new Operation('FormGet', svc, org)
@@ -562,8 +571,8 @@ export class $Form extends $Document {
     const sf = stores.safe
     const ui = stores.ui
     this.ch = this.getCh()
-    const op = new Operation('FormCreateBy' + (byU ? 'U' : 'T'), this.svc, this.org)
-    const creds = byU ? null : $Form.credsForTP(this.svc, this.org)
+    const op = new Operation('FormCreateBy' + (byU ? 'U' : 'T'), this.svc || '', this.org || '')
+    const creds = byU ? null : $Form.credsForTP(this.svc || '', this.org || '')
     if (creds && creds.size)
       for(const cred of creds) await op.sign(cred)
     try {
@@ -571,7 +580,7 @@ export class $Form extends $Document {
       const ret = await op.post()
       if (ret.status) {
         await ui.diagDisplay($t('STFO_' + ret.status))
-        return
+        return false
       }
       const op2 = new MDOperation('$mdEventNew')
       op2.setArgs({
@@ -601,8 +610,8 @@ export class $Form extends $Document {
   async updateByUT (args: Object, opName: string, byU: boolean) : Promise<boolean> {
     const ui = stores.ui
     const sf = stores.safe
-    const op = new Operation(opName, this.svc, this.org)
-    const creds = byU ? null : $Form.credsForTP(this.svc, this.org)
+    const op = new Operation(opName, this.svc || '', this.org || '')
+    const creds = byU ? null : $Form.credsForTP(this.svc || '', this.org || '')
     if (creds && creds.size)
       for(const cred of creds) await op.sign(cred)
     try {

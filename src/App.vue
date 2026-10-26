@@ -184,7 +184,7 @@ watchEffect(() => {
   ui.setScreenWH($q.screen.width, $q.screen.height)
 })
 
-const onResize = (size) => {
+const onResize = (size: any) => {
   ui.setPh(size.height)
 }
 

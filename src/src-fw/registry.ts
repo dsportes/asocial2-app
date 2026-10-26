@@ -56,13 +56,13 @@ export class Registry {
     const docCl = topcl.substring(i + 1)
     if (!svc || !docCl) {
       console.log('clazzName', clazzName, topcl, svc, docCl)
-      throw new AppExc(103, 'invalid_class_name (2)', null, [clazzName])
+      throw new AppExc(103, 'invalid_class_name (2)', '', [clazzName])
     }
-    clazz['clazzName'] = clazzName
-    if (!clazz['_unregistered'])
+    (clazz as any)['clazzName'] = clazzName
+    if (!(clazz as any)['_unregistered'])
       DocDescriptor.get(topcl)
-    if (clazz['_manager']) Registry.managers.add(clazzName)
-    const role = clazz['_role']
+    if ((clazz as any)['_manager']) Registry.managers.add(clazzName)
+    const role = (clazz as any)['_role']
     if (role) {
       const cl = svc + '$' + subCl(clazzName)
       const r = svc + '$' + role
@@ -76,7 +76,7 @@ export class Registry {
   }
 
   // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
-  static getClass (svc: string, docCl: string, data?: Object, nohash?: boolean ) : Function {
+  static getClass (svc: string, docCl: string, data?: any, nohash?: boolean ) : Function {
     const topcl = topCl(svc, docCl)
     let cln = topcl
     if (data) {
@@ -96,14 +96,14 @@ export class Registry {
     return new cl() as $ADocument
   }
 
-  static async compile (svc: string, docCl: string, org: string, obj: Object) : Promise<$Document | null>{
+  static async compile (svc: string, docCl: string, org: string, obj: any) : Promise<$Document | null>{
     const doc = Registry.newD(svc, docCl, obj) as $Document
     doc._org = org
     doc._pk = doc._docDescriptor.pkValue(obj)
     doc.v = obj['v']
     if (obj['deleted']) doc.deleted = true
     else {
-      for(const f in obj) doc[f] = obj[f]
+      for(const f in obj) (doc as any)[f] = obj[f]
       await doc.compile()
     }
     return doc
@@ -143,7 +143,7 @@ export class $Document extends $ADocument{
   get _svc () { return svcCl(this.constructor.name) }
   get _clazz () { return medCl(this.constructor.name) }
 
-  _org: string
+  _org: string = ''
   _pk: string = ''
   deleted?: boolean = false
   v: number = 0
@@ -153,7 +153,7 @@ export class $Document extends $ADocument{
   serial () : Uint8Array {
     const obj: any = {}
     if (!this.deleted) for(const p of Object.keys(this))
-      if (!p.startsWith('_')) obj[p] = this[p]
+      if (!p.startsWith('_')) obj[p] = (this as any)[p]
     else this.deleted = true
     obj._clazz = topCl('', this.constructor.name)
     obj._org = this._org

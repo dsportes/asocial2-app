@@ -27,8 +27,8 @@ export class AS2$Auteur extends $Document {
 
   async compile () {}
 
-  nomAuteur: string // nom d'auteur
-  section: string // section du Comité de Rédaction en charge de l'auteur
+  nomAuteur: string = '' // nom d'auteur
+  section: string = '' // section du Comité de Rédaction en charge de l'auteur
   creds?: Map<string, AS2$EmbedCred>
 
   static async autidParNom (soa: SOA, nom: string) : Promise<string> {
@@ -82,6 +82,7 @@ export class AS2$Auteur extends $Document {
       return lst
     } catch (e) {
       await op.ko(e)
+      return []
     }
   }
 
@@ -96,7 +97,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
       if (p.docCl === 'Auteur') {
         if (this.roles.has('AS2_auteurs')) {
           const def = p.defs[0]
-          const cred = this.credOf('Auteur', def.pk)
+          const cred = this.credOf('Auteur', def.pk || '')
           const nom = cred ? cred.name || '' : ''
           this.subs.setDef(def, nom ? 'Salut ' + nom : '')
         }
@@ -109,10 +110,10 @@ export class AS2$Publication extends $Document {
 
   async compile () {}
 
-  sujets: string[]
-  autid: string
-  resume: string
-  volume: number
+  sujets: string[] = []
+  autid: string = ''
+  resume: string = ''
+  volume: number = 0
 
 }
 if (ok) { n++; Registry.register(AS2$Publication, 'AS2$Publication')}
