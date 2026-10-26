@@ -39,37 +39,35 @@ const mf = self.__WB_MANIFEST
   console.log('SW: WB_MANIFEST >>>>>>>') 
   mf.forEach(x => { 
     n++
-    // console.log('WB_MANIFEST: ' + x.url) 
+    console.log('WB_MANIFEST: ' + x.url) 
   })
   console.log('SW: WB_MANIFEST <<<<<<< ' + n)
 }
 
 // Use with precache injection
 // @ts-ignore
-/*
-if (process.env.PROD) {
+// if (process.env.PROD) {
   console.log('precacheAndRoute')
   precacheAndRoute(mf)
-}
-*/
+// }
 
 cleanupOutdatedCaches()
 
+/*
 // Non-SSR fallbacks to index.html
 // Production SSR fallbacks to offline.html (except for dev)
 
 // @ts-ignore
-/*
 if (process.env.PROD) {
   registerRoute(
     new NavigationRoute(
       // @ts-ignore
-      createHandlerBoundToURL(process.env.PWA_FALLBACK_HTML),
+      createHandlerBoundToURL(import.meta.env.QUASAR_PWA_FALLBACK_HTML),
       // @ts-ignore
       { denylist: [new RegExp(process.env.PWA_SERVICE_WORKER_REGEX), /workbox-(.)*\.js$/] }
     )
   )
-}
+} 
 */
 
 const localState = { }

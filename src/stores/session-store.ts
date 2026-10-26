@@ -389,9 +389,10 @@ export const useSessionStore = defineStore('session', () => {
   const sessionInfo = computed(() => subJSON.value.startsWith('???') ? subJSON.value : sessionId.value)
   
   async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
+    let nn = 1
     while (!myRegistration) {
       console.log('Waiting registration ...')
-      await sleep(100)
+      await sleep(300 * nn++)
     }
     registration.value = myRegistration
     // @ts-ignore

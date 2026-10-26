@@ -14,7 +14,7 @@ let n = 0
 
 class AS2$Status extends ADMIN$Status {
 }
-if (ok) { n++; Registry.register(AS2$Status) }
+if (ok) { n++; Registry.register(AS2$Status, 'AS2$Status') }
 
 export class AS2$EmbedCred extends EmbedCred {
   constructor (credId: string, props: any, docCl: string, docPk: string) { 
@@ -86,7 +86,7 @@ export class AS2$Auteur extends $Document {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Auteur)}
+if (ok) { n++; Registry.register(AS2$Auteur, 'AS2$Auteur')}
 
 export class AS2$SubsGenerator extends $SubsGenerator {
 
@@ -103,7 +103,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
       }
   }
 }
-if (ok) { n++; Registry.register(AS2$SubsGenerator)}
+if (ok) { n++; Registry.register(AS2$SubsGenerator, 'AS2$SubsGenerator')}
 
 export class AS2$Publication extends $Document {
 
@@ -115,6 +115,6 @@ export class AS2$Publication extends $Document {
   volume: number
 
 }
-if (ok) { n++; Registry.register(AS2$Publication)}
+if (ok) { n++; Registry.register(AS2$Publication, 'AS2$Publication')}
 
 export const AS2nbDocs = () : number => n

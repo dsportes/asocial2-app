@@ -84,17 +84,11 @@ export default defineConfig((ctx) => {
           // assetsInclude: ['**/*.gltf'],
           assetsInclude: ['./assets/*.*'],
         }
-        // equivalent of following vite.config.js/vite.config.ts:
-        // export default defineConfig({
-        //   build: {
-        //     chunkSizeWarningLimit: 750
-        //   }
-        // })
       }, 
 
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
-             // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
+            // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
             // compositionOnly: false,
 
             // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
@@ -104,19 +98,8 @@ export default defineConfig((ctx) => {
             ssr: ctx.mode.ssr || ctx.mode.ssg,
 
             // you need to set i18n resource including paths !
-            include: [ctx.appPaths.resolve.app("src/i18n")]        }],
-        /*
-        [VitePWA, {
-          registerType: 'autoUpdate',
-          strategies: 'injectManifest',
-          injectManifest: { maximumFileSizeToCacheInBytes: 3000000 },
-          srcDir: 'src-pwa',
-          // filename: 'custom-service-worker.ts',
-          // filename: 'firebase-messaging-sw.js',
-          injectRegister: null,
-          manifest: false // pris dans src-pwa
+            include: [ctx.appPaths.resolve.app("src/i18n")]        
         }],
-        */
         [htmlPlugin, {}]
       ]
     },

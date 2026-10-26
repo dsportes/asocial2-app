@@ -49,19 +49,22 @@ export class Registry {
   static getCredsOfRole(role: string) { return this.roles.get(role) }
   static getRoleOfCred(cred: string) { return this.roleOfCred.get(cred) }
 
-  static register (clazz: Function) { 
-    const topcl = topCl('', clazz.name)
-    const i = clazz.name.indexOf('$')
+  static register (clazz: Function, clazzName: string) { 
+    const topcl = topCl('', clazzName)
+    const i = clazzName.indexOf('$')
     const svc = topcl.substring(0, i)
     const docCl = topcl.substring(i + 1)
-    if (!svc || !docCl)
-      throw new AppExc(103, 'invalid_class_name', null, [clazz.name])
+    if (!svc || !docCl) {
+      console.log('clazzName', clazzName, topcl, svc, docCl)
+      throw new AppExc(103, 'invalid_class_name (2)', null, [clazzName])
+    }
+    clazz['clazzName'] = clazzName
     if (!clazz['_unregistered'])
       DocDescriptor.get(topcl)
-    if (clazz['_manager']) Registry.managers.add(clazz.name)
+    if (clazz['_manager']) Registry.managers.add(clazzName)
     const role = clazz['_role']
     if (role) {
-      const cl = svc + '$' + subCl(clazz.name)
+      const cl = svc + '$' + subCl(clazzName)
       const r = svc + '$' + role
       let e = Registry.roles.get(r)
       if (!e) { e = new Set(); Registry.roles.set(r, e)}
@@ -69,7 +72,7 @@ export class Registry {
       Registry.roleOfCred.set(cl, r)
     }
 
-    this.classes.set(clazz.name, clazz)
+    this.classes.set(clazzName, clazz)
   }
 
   // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
@@ -82,7 +85,7 @@ export class Registry {
     }
     const cl = Registry.classes.get(cln)
     if (!cl) 
-      throw new AppExc(103, 'invalid_class_name', 'Registry.getClass', [cln])
+      throw new AppExc(103, 'invalid_class_name (3)', 'Registry.getClass', [cln])
     return cl
   }
 

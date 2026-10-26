@@ -16,6 +16,6 @@ export class ADMIN$Status extends $Document {
   isRW () { return this.st === 1 }
   isDOWN () { return this.st === 9 }
 }
-if (ok) { n++; Registry.register(ADMIN$Status) }
+if (ok) { n++; Registry.register(ADMIN$Status, 'ADMIN$Status') }
 
 export const FWnbDocs = () : number => n

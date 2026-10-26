@@ -21,7 +21,7 @@ new FormType(svc, 'coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
 class AS2$Form extends $Form {
   constructor () { super() }
 }
-if (ok) { n++; Registry.register(AS2$Form) }
+if (ok) { n++; Registry.register(AS2$Form, 'AS2$Form') }
 
 class AS2$Form_membrecomite extends AS2$Form {
   docCl: string
@@ -60,12 +60,12 @@ class AS2$Form_membrecomite extends AS2$Form {
 class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }
 }
-if (ok) { n++; Registry.register(AS2$Form_membrecodir) }
+if (ok) { n++; Registry.register(AS2$Form_membrecodir, 'AS2$Form_membrecodir') }
 
 class AS2$Form_membreredaction extends AS2$Form_membrecomite {
   constructor () { super('Redaction') }
 }
-if (ok) { n++; Registry.register(AS2$Form_membreredaction) }
+if (ok) { n++; Registry.register(AS2$Form_membreredaction, 'AS2$Form_membreredaction') }
 
 class AS2$Form_auteur extends $Form {
   emptyEtc = { nomAuteur: '', section: '' }
@@ -106,7 +106,7 @@ class AS2$Form_auteur extends $Form {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Form_auteur) }
+if (ok) { n++; Registry.register(AS2$Form_auteur, 'AS2$Form_auteur') }
 
 class AS2$Form_coauteur extends $Form {
   autid: string = ''
@@ -148,6 +148,6 @@ class AS2$Form_coauteur extends $Form {
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-if (ok) { n++; Registry.register(AS2$Form_coauteur) }
+if (ok) { n++; Registry.register(AS2$Form_coauteur, 'AS2$Form_coauteur') }
 
 export const AS2nbForms = () : number => n

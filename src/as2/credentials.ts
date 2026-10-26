@@ -23,7 +23,7 @@ class AS2$Credential_CoDir extends $Credential {
     await ui.diagDisplay($t('TYPE_AS2_membrecodir_det', [this.props.name]))
   }
 }
-if (ok) { n++; Registry.register(AS2$Credential_CoDir) }
+if (ok) { n++; Registry.register(AS2$Credential_CoDir, 'AS2$Credential_CoDir') }
 
 class AS2$Credential_Redaction extends $Credential {
   static _manager = true
@@ -41,7 +41,7 @@ class AS2$Credential_Redaction extends $Credential {
     await ui.diagDisplay($t('TYPE_AS2_membreredaction_det', [this.props.name]))
   }
 }
-if (ok) { n++; Registry.register(AS2$Credential_Redaction) }
+if (ok) { n++; Registry.register(AS2$Credential_Redaction, 'AS2$Credential_Redaction') }
 
 export class AS2$Credential_Auteur extends $Credential {
 
@@ -60,6 +60,6 @@ export class AS2$Credential_Auteur extends $Credential {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Credential_Auteur) }
+if (ok) { n++; Registry.register(AS2$Credential_Auteur, 'AS2$Credential_Auteur') }
 
 export const AS2nbCreds = () : number => n
