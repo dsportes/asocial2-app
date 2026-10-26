@@ -1,5 +1,5 @@
 // @ts-ignore
-import { defineStore } from '#q-app/wrappers'
+import { defineStore } from '#q-app'
 // @ts-ignore
 import { createPinia } from 'pinia'
 

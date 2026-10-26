@@ -20,7 +20,7 @@ import { useConfigStore } from '../stores/config-store'
 import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/subscription'
 import { $Document, Registry } from '../src-fw/registry'
-import { FW$Sync, $SubsGenerator } from 'src/src-fw/subscription'
+import { FW$Sync, $SubsGenerator } from '../src-fw/subscription'
 // import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
 
@@ -286,7 +286,7 @@ const useStore = (id: string) =>
 
     const subsOK: Ref<boolean>= ref(false)
 
-    const docs: Ref<reactive> = reactive({  })
+    let docs = reactive({  })
 
     /* Deux formes de collections selon leur def:
       0: Auteur : tous les auteurs
@@ -636,12 +636,14 @@ const useStore = (id: string) =>
       const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
       if (r.v > item.sv) try { // sinon celui de retour de sync est plus récent
         const x = decode(r.data)
+        // TOCHECK
+        // @ts-expect-error
         item.pks = new Set(x)
         item.lat = r.lat
         item.lv = r.v
         upd(item)
         const cl = item.def.type === 3 ? item.def.colClass(svc) : item.def.docCl
-        for(const pk of x) {
+        for(const pk of (x as any)) {
           const itemd = getItem(new $Def(cl + '/' + pk), true)
           await initDocFromIDB(itemd)
         }

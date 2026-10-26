@@ -1,17 +1,12 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-// @ts-ignore
-import { defineConfig } from '#q-app/wrappers'
-// @ts-ignore
-import { fileURLToPath } from 'node:url'
-// @ts-ignore
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from '#q-app'
 
 const htmlPlugin = () => {
   return {
     name: 'html-transform',
-    transformIndexHtml(html) {
+    transformIndexHtml(html: any) {
       return html.replaceAll('href="/', 'href="./').replaceAll('content="/', 'content="./')
     },
   }
@@ -56,7 +51,7 @@ export default defineConfig((ctx) => {
         browser: [ 'es2022', 'firefox115', 'chrome115', 'safari14' ],
         node: 'node20'
       },
-
+      
       vueRouterMode: 'hash', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
@@ -85,6 +80,7 @@ export default defineConfig((ctx) => {
             assetsInlineLimit: 50000,
             chunkSizeWarningLimit: 3000
           },
+          compilerOptions: { mode: 'vapor' },
           // assetsInclude: ['**/*.gltf'],
           assetsInclude: ['./assets/*.*'],
         }
@@ -94,31 +90,33 @@ export default defineConfig((ctx) => {
         //     chunkSizeWarningLimit: 750
         //   }
         // })
-      },
+      }, 
 
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
-          // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
-          // compositionOnly: false,
+             // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
+            // compositionOnly: false,
 
-          // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
-          // you need to set `runtimeOnly: false`
-          // runtimeOnly: false,
+            // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
+            // you need to set `runtimeOnly: false`
+            // runtimeOnly: false,
 
-          ssr: ctx.modeName === 'ssr',
+            ssr: ctx.mode.ssr || ctx.mode.ssg,
 
-          // you need to set i18n resource including paths !
-          include: [ fileURLToPath(new URL('./src/i18n', import.meta.url)) ]
-        }],
+            // you need to set i18n resource including paths !
+            include: [ctx.appPaths.resolve.app("src/i18n")]        }],
+        /*
         [VitePWA, {
           registerType: 'autoUpdate',
           strategies: 'injectManifest',
           injectManifest: { maximumFileSizeToCacheInBytes: 3000000 },
           srcDir: 'src-pwa',
-          filename: 'firebase-messaging-sw.js',
+          // filename: 'custom-service-worker.ts',
+          // filename: 'firebase-messaging-sw.js',
           injectRegister: null,
           manifest: false // pris dans src-pwa
         }],
+        */
         [htmlPlugin, {}]
       ]
     },
@@ -133,9 +131,7 @@ export default defineConfig((ctx) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
-      config: {
-        // lang: 'fr'
-      },
+      config: {},
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
@@ -160,8 +156,8 @@ export default defineConfig((ctx) => {
     //   rootComponent: 'src/App.vue',
     //   router: 'src/router/index',
     //   store: 'src/store/index',
-    //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
-    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
+    // pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
+    // pwaServiceWorker: 'src-pwa/custom-service-worker',
     //   pwaManifestFile: 'src-pwa/manifest.json',
     //   electronMain: 'src-electron/electron-main',
     //   electronPreload: 'src-electron/electron-preload'
@@ -171,8 +167,11 @@ export default defineConfig((ctx) => {
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'totosw.ts',
-      swFilename: 'firebase-messaging-sw.js',
+      extendPWASwTsConfig (tsConfig) {
+        tsConfig.compilerOptions!.lib!.push('WebWorker.AsyncIterable')
+      },
+      // manifest: false,
+      // swFilename: 'firebase-messaging-sw.js',
       // manifestFilename: 'manifest.json',
       // extendManifestJson (json) {},
       // useCredentialsForManifestTag: true,

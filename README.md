@@ -17,3 +17,8 @@ Run
         npx http-server . -p 8086 --cors -c-1 -S -C "../../../asocial2-srv/cert/fullchain.pem" -K "../../../asocial2-srv/cert/privkey.pem" -a test.sportes.fr
 
 ET PUIS: localhost:8086/pwa
+
+# Install yarn
+Par npm installe la version legacy 1.22
+
+Dernière version: yarn set version stable

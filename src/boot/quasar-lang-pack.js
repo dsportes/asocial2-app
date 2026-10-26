@@ -1,5 +1,5 @@
 // @ts-ignore
-import { defineBoot } from '#q-app/wrappers'
+import { defineBoot } from '#q-app'
 // @ts-ignore
 import { Lang } from 'quasar'
 // import langFr from 'quasar/lang/fr'

@@ -2,6 +2,7 @@
 declare const self: ServiceWorkerGlobalScope &
   typeof globalThis & { skipWaiting: () => void };
 
+console.log('In MY custom-sw')
 /*
  * This file (which will be your service worker)
  * is picked up by the build system ONLY if
@@ -18,7 +19,7 @@ import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { decode } from '@msgpack/msgpack'
 
 function keyFromB64 (key: string) : Uint8Array {
-  if (!key) new Uint8Array([])
+  if (!key) return new Uint8Array([])
   const s = self.atob(key)
   const u8 = new Uint8Array(s.length)
   for (let i = 0, strLen = key.length; i < strLen; i++) u8[i] = s.charCodeAt(i)
@@ -45,10 +46,12 @@ const mf = self.__WB_MANIFEST
 
 // Use with precache injection
 // @ts-ignore
+/*
 if (process.env.PROD) {
   console.log('precacheAndRoute')
   precacheAndRoute(mf)
 }
+*/
 
 cleanupOutdatedCaches()
 
@@ -56,6 +59,7 @@ cleanupOutdatedCaches()
 // Production SSR fallbacks to offline.html (except for dev)
 
 // @ts-ignore
+/*
 if (process.env.PROD) {
   registerRoute(
     new NavigationRoute(
@@ -66,6 +70,7 @@ if (process.env.PROD) {
     )
   )
 }
+*/
 
 const localState = { }
 
@@ -84,6 +89,7 @@ self.addEventListener('message', async (event) => {
     console.log('SW: App closing')
   } else if (event.data && event.data.type === 'SETSTATE') {
     const state = event.data.state
+    // @ts-expect-error
     if (state) for(const f in state) localState[f] = state[f]
     console.log('SW: call from App:' + JSON.stringify(event.data))
   }
@@ -91,16 +97,18 @@ self.addEventListener('message', async (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   console.log('SW: On notification click')
-
+  // @ts-ignore
   event.notification.close()
   // @ts-ignore
   const u = event?.notification?.data?.url
+  // @ts-expect-error
   const urlToOpen = u || localState['location']
   if (!urlToOpen) return
 
   // This looks to see if the current is already open and focuses if it is
   // @ts-ignore
   event.waitUntil( clients.matchAll({type: 'window'})
+  // @ts-expect-error
     .then((clientList) => {
       for (const client of clientList)
         if ('focus' in client) return client.focus()
@@ -146,7 +154,9 @@ self.addEventListener('push', async (event) => {
         body: payload.body, // texte à afficher
         data: { url: payload.url } // données arbitraires à transmettre sur click
       }
+      // @ts-expect-error
       const title = payload.title || (localState['APPNAME'] + ' - ' + payload.org)
+      // @ts-ignore
       await self.registration.showNotification(title, options)
       /*
       // @ts-ignore

@@ -97,7 +97,7 @@ import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
 import InputB from '../components-fw/InputB.vue'
-import SafestoreSelect from 'src/components-fw/SafestoreSelect.vue'
+import SafestoreSelect from '../components-fw/SafestoreSelect.vue'
 
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 
@@ -249,7 +249,7 @@ const resetA = () => {
 const valA = async () => {
   if (!initA.value) {
     freeA.value = await sf.mdAliasFree(entryA.inp)
-    if (freeA.value === -1) { // exception op
+    if (freeA.value) { // exception op
       resetA()
       return
     }

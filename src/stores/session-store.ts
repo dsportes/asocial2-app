@@ -10,8 +10,8 @@ import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
 import { idb, IDB, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
 import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-fw/subscription'
-import { myRegistration } from '../../src-pwa/register-service-worker'
-import { AOperation, checkStatus } from 'src/src-fw/operation'
+import { myRegistration } from '../../src-pwa/register-sw'
+import { AOperation, checkStatus } from '../src-fw/operation'
 
 export const useSessionStore = defineStore('session', () => {
 
@@ -50,6 +50,8 @@ export const useSessionStore = defineStore('session', () => {
 
   watch(syncOK, async (v) => {
     if (!v && orgRoles.value.size) {
+      // TOCHECK
+      // @ts-expect-error
       allOK.value = await checkStatus(orgRoles.value)
       dialogs.netStatus = true
     }
@@ -206,6 +208,8 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   const credsChange = () => {
+    // TOCHECK
+    // @ts-expect-error
     if (sessionId.step >= 1) 
       setTimeout(async () => { await onCredsOptionsChange() }, 1)
   }
@@ -345,6 +349,7 @@ export const useSessionStore = defineStore('session', () => {
 
   function opCount () {
     if (opTimer) clearTimeout(opTimer)
+    // @ts-expect-error
     opTimer = setTimeout(() => {
       opSpinner.value += 2
       opCount()
@@ -370,6 +375,7 @@ export const useSessionStore = defineStore('session', () => {
     opEncours.value = null
     opSpinner.value = 0
     opDialog.value = false
+    // @ts-expect-error
     opTimer2 = setTimeout(() => { opSignal.value = false }, 1000)
   }
 

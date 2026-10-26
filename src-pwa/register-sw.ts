@@ -45,18 +45,21 @@ onbeforeunload = (event) => { useConfigStore().closingApp() }
 
 export let myRegistration = null
 
-register('./firebase-messaging-sw.js', {
+register('./sw.js', {
 
   registered (registration) { 
+    // @ts-expect-error
     myRegistration = registration
     const ok = myRegistration ? 'ok' : 'KO'
     console.log('Service worker is registered', ok)
   },
 
   ready (registration) { 
+    // @ts-expect-error
     myRegistration = registration
     const ok = myRegistration ? 'ok' : 'KO'
     console.log('Service worker is active', ok)
+    // @ts-expect-error
     registration.active.postMessage({ type: 'STARTING' })
   },
 

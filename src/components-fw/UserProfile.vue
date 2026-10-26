@@ -56,7 +56,7 @@ import { $t } from '../src-fw/util'
 import { AutoRevokeCred } from '../src-fw/operations'
 import BtnCond from '../components-fw/BtnCond.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
-import { isMDAdmin } from 'src/src-fw/operation'
+import { isMDAdmin } from '../src-fw/operation'
 
 const sf = stores.safe
 const ui = stores.ui

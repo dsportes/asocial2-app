@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "^3.1.1",
-    "@quasar/extras": "^1.16.4",
-    "@types/node": "^22.15.3",
+    "@quasar/extras": "^2.1.0",
     "dexie": "^4.2.1",
     "emoji-mart-vue-fast": "^15.0.5",
     "ext2mime": "^2.0.1",
@@ -21,51 +20,27 @@
     "firebase": "^11.7.3",
     "github-markdown-css": "^5.6.1",
     "js-sha256": "^0.11.1",
-    "pinia": "^3.0.1",
-    "quasar": "^2.34.0",
-    "register-service-worker": "^1.7.2",
-    "vue": "^3.5.0",
-    "vue-i18n": "^11.2.2",
-    "vue-router": "^4.0.0",
+    "pinia": "^4.1.0",
+    "quasar": "^2.35.2",
+    "vue": "^3.5.22",
+    "vue-i18n": "^11.3.0",
+    "vue-router": "^5.0.6",
     "vue-showdown": "^4.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.14.0",
-    "@intlify/unplugin-vue-i18n": "^4.0.0",
-    "@quasar/app-vite": "^2.2.0",
-    "@types/file-saver": "^2",
-    "@vue/eslint-config-typescript": "^14.4.0",
-    "autoprefixer": "^10.4.2",
-    "eslint": "^9.14.0",
-    "eslint-plugin-vue": "^9.30.0",
-    "globals": "^15.12.0",
-    "postcss": "^8.4.14",
-    "typescript": "~5.5.3",
-    "vite": "^7.3.0",
-    "vite-plugin-checker": "^0.9.0",
-    "vite-plugin-pwa": "^1.0.0",
-    "vue-tsc": "^2.0.29",
-    "workbox-build": "^7.0.0",
-    "workbox-cacheable-response": "^7.0.0",
-    "workbox-core": "^7.0.0",
-    "workbox-expiration": "^7.0.0",
-    "workbox-precaching": "^7.0.0",
-    "workbox-routing": "^7.3.0",
-    "workbox-strategies": "^7.0.0"
+    "@intlify/unplugin-vue-i18n": "^11.0.0",
+    "@quasar/app-vite": "^3.10.3",
+    "@types/node": "^22.19.11",
+    "autoprefixer": "^10.4.27",
+    "oxfmt": "^0.x",
+    "oxlint": "^1.x",
+    "oxlint-tsgolint": "^7.0.2001",
+    "postcss": "^8.5.8",
+    "typescript": "^6.0.0",
+    "vue-tsc": "^3.3.3"
   },
-  "browserslist": [
-    "last 10 Chrome versions",
-    "last 10 Firefox versions",
-    "last 4 Edge versions",
-    "last 7 Safari versions",
-    "last 8 Android versions",
-    "last 8 ChromeAndroid versions",
-    "last 8 FirefoxAndroid versions",
-    "last 10 iOS versions",
-    "last 5 Opera versions"
-  ],
   "engines": {
-    "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18"
+    "node": ">= 26 || ^24 || ^22.12"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.18.1"
 }
