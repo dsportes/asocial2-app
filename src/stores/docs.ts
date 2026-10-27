@@ -5,13 +5,8 @@ Stockage par clazz / pk : quand une classe n'a pas de document elle n'apparaît 
 Voir: https://alexop.dev/tils/dynamic-pinia-dsStores/
 */
 
-// @ts-ignore
 import { Ref, ref, reactive } from 'vue'
-// @ts-ignore
 import { defineStore } from 'pinia'
-// @ts-ignore
-import cloneDeep from 'lodash.clonedeep'
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import { useSessionStore } from '../stores/session-store'
@@ -24,13 +19,13 @@ import { FW$Sync, $SubsGenerator } from '../src-fw/subscription'
 // import { AppExc } from '../src-fw/log'
 import { idb } from '../src-fw/idb'
 
-let _session = null
+let _session: any = null
 const session = () => {
   if (!_session) _session = useSessionStore()
   return _session
 }
 
-let _config = null
+let _config: any = null
 const config = () => {
   if (!_config) _config = useConfigStore()
   return _config
@@ -99,13 +94,13 @@ export type IDocStore = {
   manageHbc (hbcMode: number, hbc: string) : void
 }
 
-const dsStores = {}
+const dsStores: any = {}
 
 /* Retourne le "store" dédié à ce service et cette organisation.
 S'il n'existe pas le CREE vide (sauf si noforce  (optionel) est true)
 */
 export const getStore = (svc: string, org: string, noforce?: boolean)
-  : IDocStore => {
+  : IDocStore | undefined => {
   const k = svc + '/' + org
   let st = dsStores[k]
   if (!st) {
@@ -157,7 +152,7 @@ export class $CollItem extends $DCItem {
 }
 
 export class $DocItem extends $DCItem {
-  doc: $Document = null // Document compilé
+  doc: $Document | null = null // Document compilé
   constructor (def: $Def) { super(def) }
 }
 
@@ -237,6 +232,7 @@ export class SyncQueue {
       const svc = x.svc
       const org = x.org
       const std = getStore(svc, org)
+      if (!std) continue
       const sync = new FW$Sync(svc, org)
       const runningItems: Map<string, $DCItem> = new Map()
       for(let n = 0; n < 10; n++) {
@@ -252,10 +248,12 @@ export class SyncQueue {
       if (sat !== 0) { 
         std.manageHbc(2, hbc)
         for(const definition in syncs) {
-          const dcdata = syncs[definition] as $DCData
+          const dcdata = (syncs as any)[definition] as $DCData
           const item = runningItems.get(definition)
-          item.syncSt = 3
-          await std.storeDC(item, sat, dcdata)
+          if (item) {
+            item.syncSt = 3
+            await std.storeDC(item, sat, dcdata)
+          }
         }
         std.checkResolves()
       } else { // échec: remise en syncQueue des items
@@ -286,14 +284,14 @@ const useStore = (id: string) =>
 
     const subsOK: Ref<boolean>= ref(false)
 
-    let docs = reactive({  })
+    let docs = reactive({  } as any)
 
     /* Deux formes de collections selon leur def:
       0: Auteur : tous les auteurs
       2: Article/auteur/pkauteur : les messages dont l'auteur est pkauteur
       value: CollItem
     */
-    const colls = reactive({  })
+    const colls = reactive({  } as any)
 
     const getXref = (def: $Def) : Set<string> => {
       return session().getXref(svc, org, def)
@@ -318,7 +316,7 @@ const useStore = (id: string) =>
       return item
     }
 
-    const activePerims = reactive({  })
+    const activePerims = reactive({  } as any)
     const activePerimsIds = () : Set<string> => {
       const s = new Set<string>()
       for(const x in activePerims) s.add(x)
@@ -332,14 +330,13 @@ const useStore = (id: string) =>
     }
     /************************************************/
 
-    const getDoc = (cl: string, pk: string) : $Document => {
+    const getDoc = (cl: string, pk: string) : $Document | undefined => {
       const item = docs[cl + '/' + pk]
-      if (!item) return null
+      if (!item) return undefined
       if (item.doc) return item.doc
       return Registry.buildMasked(svc, cl, org, pk)
     }
 
-    
     const getSColl = (cl: string, colName: string, pk: string) : Set<string> => {
       const item = colls[cl + '/' + colName + '/' + pk]
       return item ? item.pks : new Set()
@@ -382,17 +379,20 @@ const useStore = (id: string) =>
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
       if (!docCl) return pks
       for(const data of datas) {
-        const doc = await getDocument(docCl, data)
-        const v = doc.v
-        pks.add(doc._pk)
-        const def = new $Def(docCl + '/' + doc._pk)
-        let itemd = getItem(def) as $DocItem
-        // Si itemd n'existait pas on N'EN CREE PAS
-        if (itemd && itemd.sat < sat) {
-          itemd.doc = doc
-          await manageData(itemd, sat, v, data)
+        const doc = await compileDoc(docCl, data)
+        if (doc) {
+          const v = doc.v
+          pks.add(doc._pk)
+          const def = new $Def(docCl + '/' + doc._pk)
+          let itemd = getItem(def) as $DocItem
+          // Si itemd n'existait pas on N'EN CREE PAS
+          if (itemd && itemd.sat < sat) {
+            itemd.doc = doc
+            await manageData(itemd, sat, v, data)
+          }
         }
       }
+      return pks
     }
 
     /* Ces documents sont ajoutés ou modifiés mais SONT dans la collection
@@ -404,32 +404,36 @@ const useStore = (id: string) =>
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
       if (!docCl) return pks
       for(const data of datas) {
-        const doc = await getDocument(docCl, data)
-        const v = doc.v
-        pks.add(doc._pk)
-        const def = new $Def(docCl + '/' + doc._pk)
-        let itemd = getItem(def, true) as $DocItem
-        itemd = new $DocItem(def)
-        if (itemd.sat < sat) {
-          itemd.doc = doc
-          await manageData(itemd, sat, v, data)
+        const doc = await compileDoc(docCl, data)
+        if (doc) {
+          const v = doc.v
+          pks.add(doc._pk)
+          const def = new $Def(docCl + '/' + doc._pk)
+          let itemd = getItem(def, true) as $DocItem
+          itemd = new $DocItem(def)
+          if (itemd.sat < sat) {
+            itemd.doc = doc
+            await manageData(itemd, sat, v, data)
+          }
         }
       }
       return pks
     }
 
-    async function  getDocument(docCl: string, data: Uint8Array) : Promise<$Document> {
+    async function  compileDoc(docCl: string, data: Uint8Array) : Promise<$Document | undefined> {
       try {
         const row = decode(data) as Row
         return await Registry.compile(svc, docCl, org, row)
       } catch (e) {
         console.log(e)
-        return null
+        return undefined
         // TODO
       }
     }
 
-    async function manageData (item: $DCItem, sat: number, v: number, data: Uint8Array) {
+    async function manageData (item: $DCItem, sat: number, v: number, data: Uint8Array | null) {
+      // d: null - deleted
+      // d: doc OU pks sérialisé
       item.sat = sat
       item.sv = v
       upd(item)
@@ -438,12 +442,12 @@ const useStore = (id: string) =>
           item.lat = sat
           item.lv = v
           upd(item)
-          await idb.setDC(svc, org, item.def.definition, sat, v, data)
+          if (idb) await idb.setDC(svc, org, item.def.definition, sat, v, data)
         }
         if ((item.lv === v) && (sat - item.lat > MAXLATDELAY)) {
           item.lat = sat
           upd(item)
-          await idb.updLV(svc, org, item.def, sat, v)
+          if (idb) await idb.updLV(svc, org, item.def, sat, v)
         }
       }
     }
@@ -474,7 +478,7 @@ const useStore = (id: string) =>
     */
     const storeDoc = async (item: $DocItem, sat: number, cd: $DocData) : Promise<void> => {
       const v  = cd.v
-      const data = cd['data']
+      const data: Uint8Array | undefined = cd.data
       if (cd.v === -1) { // credential NON accepté
         // TOTEST
         if (item.sv !== -1) {
@@ -492,10 +496,12 @@ const useStore = (id: string) =>
             await manageData(item, sat, v, null)
           }
         } else { // Le document existe
-          const doc = await getDocument(item.def.docCl, data)
-          if (item.sat < sat) {
-            item.doc = doc
-            await manageData(item, sat, v, data)
+          if (data) { // toujours
+            const doc = await compileDoc(item.def.docCl, data)
+            if (item.sat < sat) {
+              item.doc = doc
+              await manageData(item, sat, v, data)
+            }
           }
         }
       } else { // INCREMENTAL
@@ -515,7 +521,7 @@ const useStore = (id: string) =>
               await manageData(item, sat, v, null)
             }
           } else { // Existe toujours mais a changé
-            const doc = await getDocument(item.def.docCl, data)
+            const doc = await compileDoc(item.def.docCl, data)
             if (item.sat < sat) {
               item.doc = doc
               await manageData(item, sat, v, data)
@@ -563,11 +569,13 @@ const useStore = (id: string) =>
             await manageData(item, sat, v, null)
           }
         } else { // La collection n'est pas vide
-          const pks: Set<string> = await manageDatas(item, sat, cd.datas)
-          if (item.sat < sat) {
-            item.pks = pks
-            const data = encode(Array.from(pks))
-            await manageData(item, sat, v, data)
+          if (cd.datas) { // tojours, au pire []
+            const pks = await manageDatas(item, sat, cd.datas)
+            if (item.sat < sat) {
+              item.pks = pks
+              const data = encode(Array.from(pks))
+              await manageData(item, sat, v, data)
+            }
           }
         }
       } else { 
@@ -577,7 +585,7 @@ const useStore = (id: string) =>
           if (hasLocal && (sat - item.lat > MAXLATDELAY)) {
             item.lat = sat
             upd(item)
-            await idb.updLV(svc, org, item.def, sat, v)
+            if (idb) await idb.updLV(svc, org, item.def, sat, v)
           }
         } else { 
           /* La collection a changé
@@ -586,9 +594,9 @@ const useStore = (id: string) =>
           moved : seulement pour type 3 */
           const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
           const pks = new Set(item.pks)
-          let pks1: Set<string>
+          let pks1: Set<string> = new Set()
           let pks2: Set<string> = new Set()
-          let pks3: Set<string>
+          let pks3: Set<string> = new Set()
           if (cd.datas) {
             pks1 = await manageDatas(item, sat, cd.datas)
           }
@@ -616,40 +624,44 @@ const useStore = (id: string) =>
 
     const initDocFromIDB = async (item: $DocItem) => {
       // Item est vierge
-      const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
-      if (r) try {
-        const obj = decode(r.data)
-        const doc = await Registry.compile(svc, item.def.docCl, org, obj)
-        if (item.sv < doc.v) { // sinon l'item retour de sync est plus récent
-          item.doc = doc
-          item.lat = r.lat
-          item.lv = r.v
-          upd(item)
+      if (!idb) return
+      const r = await idb.getDC(svc, org, item.def.definition)
+      if (r && r.data) 
+        try {
+          const obj = decode(r.data)
+          const doc = await Registry.compile(svc, item.def.docCl, org, obj) as $Document
+          if (item.sv < doc.v) { // sinon l'item retour de sync est plus récent
+            item.doc = doc
+            item.lat = r.lat
+            item.lv = r.v
+            upd(item)
+          }
+        } catch (e) {
+          console.error(e.toString)
         }
-      } catch (e) {
-        console.error(e.toString)
-      }
     }
 
     const initCollFromIDB = async (item: $CollItem) => {
+      if (!idb) return
       // Item est vierge
-      const r: IDBrow = await idb.getDC(svc, org, item.def.definition)
-      if (r.v > item.sv) try { // sinon celui de retour de sync est plus récent
-        const x = decode(r.data)
-        // TOCHECK
-        // @ts-expect-error
-        item.pks = new Set(x)
-        item.lat = r.lat
-        item.lv = r.v
-        upd(item)
-        const cl = item.def.type === 3 ? item.def.colClass(svc) : item.def.docCl
-        for(const pk of (x as any)) {
-          const itemd = getItem(new $Def(cl + '/' + pk), true)
-          await initDocFromIDB(itemd)
+      const r = await idb.getDC(svc, org, item.def.definition)
+      if (r && r.data && r.v > item.sv) 
+        try { // sinon celui de retour de sync est plus récent
+          const x = decode(r.data)
+          // TOCHECK
+          // @ts-expect-error
+          item.pks = new Set(x)
+          item.lat = r.lat
+          item.lv = r.v
+          upd(item)
+          const cl = item.def.type === 3 ? item.def.colClass(svc) : item.def.docCl
+          for(const pk of (x as any)) {
+            const itemd = getItem(new $Def(cl + '/' + pk), true)
+            await initDocFromIDB(itemd)
+          }
+        } catch (e: any) {
+          console.error(e.toString)
         }
-      } catch (e) {
-        console.error(e.toString)
-      }
     }
 
     const loadFromIDB = async (p: $Perimeter) => {

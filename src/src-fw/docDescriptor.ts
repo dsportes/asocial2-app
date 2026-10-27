@@ -78,16 +78,14 @@ export class DocDescriptor {
     return svc
   }
 
-  /* clazz de la forme SVC@docCl_sub : 
-  - sub est ignoré si présent
-  */
-  static get(clazz: string, noex?: boolean) { 
-    let i = clazz.indexOf('_')
-    const cl = i === -1 ? clazz : clazz.substring(0, i)
-    const dd = this.all.get(cl)
-    if (!dd) 
-      throw new AppExc(103, 'invalid_class_name (1)', 'DocDescriptor.get', [clazz])
-    return dd
+  static get(svc: string, docCl: string) : DocDescriptor { 
+    const dd = this.all.get(svc + '$' + docCl)
+    if (dd) return dd
+    throw new AppExc(103, 'invalid_class_name', 'DocDescriptor.get', [svc + '$' + docCl])
+  }
+
+  static getNoexc(svc: string, docCl: string) : DocDescriptor | undefined{ 
+    return this.all.get(svc + '$' + docCl)
   }
 
   svc: string
@@ -113,44 +111,44 @@ export class DocDescriptor {
   get hasIndexes () { return this.indexes ? true : false }
 
   /* Retourne la valeur du pk d'une "source" ayant les propriétés citées dans pk */
-  pkValue (src?: Object, nohash?: boolean) : string {
+  pkValue (src?: any, nohash?: boolean) : string {
     if (!this.pk || !this.pk.length || !src) return '1'
     let p = src['pk']
     if (p) return p
-    const x = []
+    const x: string[] = []
     if (src) this.pk.forEach(pr => { x.push(src[pr] || '') })
     p = x.join('/')
     return nohash || this.nohash ? p : Crypt.shaS(p)
   }
 
   colClass (name: string) {
-    const c = this.colls.get(name)
+    const c = this.colls ? this.colls.get(name) : undefined
     return c ? c.class : ''
   }
 
   isTestable (idxName: string) : boolean {
-    const idx = this.indexes.get(idxName)
-    return idx && idx.testable
+    const idx = this.indexes ? this.indexes.get(idxName) : undefined
+    return !idx ? false : idx.testable || false
   }
  
   /* Retourne la valeur d'une collection name d'une "source" ayant les propriétés citées */
-  getCollId (src: Object, name: string) : string[] | null {
-    const c = this.hasColls ? this.colls.get(name) : null
+  getCollId (src: any, name: string) : string[] | null {
+    const c = this.hasColls && this.colls ? this.colls.get(name) : null
     if (!c) return null
     if (c.list) {
-      const x = []
+      const x: string[] = []
       const p = src[name] as string[]
       if (p) p.forEach(v => { if (v) x.push(Crypt.shaS(v))})
       return x
     }
-    const x = []
+    const x: string[] = []
     c.key.forEach(p => { x.push(src[p] || '') })
     return [Crypt.shaS(x.join('/'))]
   }
 
   /* Retourne la valeur d'un idx name d'une "source" ayant les propriétés citées */
-  getIdx (src: Object, name: string) : any {
-    const i = this.hasIndexes ? this.indexes.get(name) : null
+  getIdx (src: any, name: string) : any {
+    const i = this.hasIndexes && this.indexes ? this.indexes.get(name) : null
     if (!i) return null
     const key0 = i.key ? i.key[0] : name
     const v0 = src[key0]
@@ -165,7 +163,7 @@ export class DocDescriptor {
         return Crypt.shaS(x.join('/'))
       }
       case propType.LIST : {
-        const x = []
+        const x: string[] = []
         const v = src[name] as string[]
         if (v) v.forEach(t => { if (t) x.push(i.nohash ? t : Crypt.shaS(t))})
         return x
@@ -180,7 +178,7 @@ export class DocDescriptor {
   extractColls (src: Object) : Map<string, string[]> {
     const m = new Map()
     if (!this.hasColls) return m
-    for(const [colName, ] of this.colls) {
+    if (this.colls) for(const [colName, ] of this.colls) {
       const val = this.getCollId(src, colName)
       if (val) m.set(colName, val)
     }

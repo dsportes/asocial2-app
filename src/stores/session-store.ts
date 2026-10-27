@@ -66,8 +66,8 @@ export const useSessionStore = defineStore('session', () => {
     noLocal.value ? (noNet.value ? 4 : 2) : (noNet.value ? 3 : 1)
   )
 
-  const perims: Ref<$Perims | undefined> = ref()
-  const defsXref: Ref<$DefsXref | undefined> = ref()
+  const perims: Ref<$Perims> = ref(new Map())
+  const defsXref: Ref<$DefsXref> = ref(new Map())
   const getPerimeter = 
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
     const m = !perims.value ? undefined : perims.value.get(svc + '/' + org)
@@ -83,12 +83,12 @@ export const useSessionStore = defineStore('session', () => {
     return !m ? new Set() :(m.get(def.definition) || new Set())
   }
 
-  const prefs: Ref<Prefs | undefined> = ref()
+  const prefs: Ref<Prefs> = ref(new Map())
 
   const pref: Ref<string> = ref('')
   const currentPref = computed(() => !pref.value ? null : (prefs.value as any)[pref.value])
 
-  const orgRoles : Ref<Set<string> | undefined> = ref() // couples org/role
+  const orgRoles : Ref<Set<string>> = ref(new Set()) // couples org/role
   const noDoc = computed(() => !orgRoles.value || !orgRoles.value.size)
   const orgRolesP : Ref<Set<string> | undefined> = ref() // couples org/role "Potentiels"
 
@@ -106,7 +106,7 @@ export const useSessionStore = defineStore('session', () => {
     return s
   }
 
-  const doStep1 = async (sf, ui) => {
+  const doStep1 = async (sf: any, ui: any) => {
     AOperation.reset()
     resetDocStores()
     if (hasLocal.value) {
@@ -115,7 +115,7 @@ export const useSessionStore = defineStore('session', () => {
       const mt = sf.myTrusting
       if (mt) await mt.addAppsDb()
     }
-    if (planeMode.value) {
+    if (planeMode.value && idb) {
       const sp: StartPlane = await idb.openPlane()
       prefs.value = sp.prefs
       perims.value = sp.perims
@@ -129,7 +129,7 @@ export const useSessionStore = defineStore('session', () => {
       const x = sf.mySafeOptions
       pref.value = x ? x.pref || '' : ''
       orgRoles.value = new Set(x ? x.orgRoles || [] : [])
-      if (syncMode.value) {
+      if (syncMode.value && idb) {
         const opts = await idb.openSync()
         if (opts && opts.pref) pref.value = opts.pref
         if (opts && opts.orgRoles && opts.orgRoles.length)
@@ -140,7 +140,7 @@ export const useSessionStore = defineStore('session', () => {
     resetdb.value = false
   }
 
-  const doStep2 = async (sf, ui) => {
+  const doStep2 = async () => {
     const svcOrgs: Set<string> = new Set(perims.value.keys())
     for(const svcOrg of svcOrgs) {
       const i = svcOrg.indexOf('/')
@@ -149,10 +149,10 @@ export const useSessionStore = defineStore('session', () => {
       const st = getStore(svc, org)
 
       // Sauf en incognito, fetch les documents / collections des périmètres "avion"
-      if (hasLocal.value) {
+      if (hasLocal.value && st) {
         const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
-        const px: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
-        for(const [,p] of px) 
+        const px: Map<string, $Perimeter> | undefined = perims.value.get(svc + '/' + org)
+        if (px) for(const [,p] of px) 
           if (p.plane && orgRoles.value.has(p.org + '/' + p.role)) 
             p2sync.push(p)
         await st.fetch(p2sync, false, 2)
@@ -188,7 +188,7 @@ export const useSessionStore = defineStore('session', () => {
         et on lance la session immédiatement sur la page souhaitée */
 
       case 2 : // ouverture effective de la session après les choix faits
-        if (syncMode.value) {
+        if (syncMode.value && idb) {
           if (resetdb.value) {
             idb.close()
             await deleteIDB(config.K.APPNAME, sf.auth.userId)
@@ -201,7 +201,7 @@ export const useSessionStore = defineStore('session', () => {
           await idb.storePerims(perims.value)
         }
 
-        await doStep2(sf, ui) // initialisation des DocStore, subs / sync en syncMode
+        await doStep2() // initialisation des DocStore, subs / sync en syncMode
         ui.setPage(toPage || 'app')
         step.value = 2
     }
@@ -228,7 +228,7 @@ export const useSessionStore = defineStore('session', () => {
           const options = { pref: _pref, orgRoles: _orgRoles }
           await sf.setOptions(options)
         }
-      } else if (planeMode.value) {
+      } else if (planeMode.value && idb) {
         const opts = await idb.getOptions() || { pref: '', orgRoles: []}
         const slor = opts.orgRoles.sort().join(' ')
         if (slor !== _slor || opts.pref !== _pref) {
@@ -278,16 +278,16 @@ export const useSessionStore = defineStore('session', () => {
       const org = svcOrg.substring(i + 1)
       const st = getStore(svc, org)
 
-      if (!planeMode.value) {
+      if (!planeMode.value && st) {
         // Périmètres "potentiels" recalculés
-        const perimsP: Map<string, $Perimeter> = perims.value.get(svc + '/' + org)
+        const perimsP: Map<string, $Perimeter> | undefined = perims.value.get(svc + '/' + org)
 
         const lpBeforeIds = st.activePerimsIds() // actifs avant
         const lpAfterIds: Set<string> = new Set() // actifs après
         const p2sync: $Perimeter[] = [] // ajouter à synchroniser
 
         let force = 1
-        for(const [x,p] of perimsP) {
+        if (perimsP) for(const [x,p] of perimsP) {
 
           // Maintenir ou ajouter "actif"
           if ((syncMode.value && p.plane) || lpBeforeIds.has(p.id))
@@ -315,8 +315,15 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  const edPref = reactive({code:'', obj: {}, orig: {}, diag: '', chg: false})
-  const setEdPref = (code: string, obj: Object, orig: Object) => {
+  type EdPref = {
+    code: string
+    obj: any | null
+    orig: any | null
+    diag: string
+    chg: false
+  }
+  let edPref = reactive({ code:'', obj: {}, orig: {}, diag: '', chg: false } as EdPref)
+  const setEdPref = (code: string, obj: any, orig: any) => {
     edPref.code = code
     edPref.obj = obj
     edPref.orig = orig
@@ -332,7 +339,7 @@ export const useSessionStore = defineStore('session', () => {
   }
   const updatePrefs = async (_prefs: Prefs, toSave: boolean) => {
     prefs.value = _prefs
-    if (toSave) {
+    if (toSave && idb) {
       if (planeMode.value) await idb.storePrefs(_prefs)
       else stores.safe.updatePrefs(_prefs)
     }
@@ -372,7 +379,7 @@ export const useSessionStore = defineStore('session', () => {
 
   function opEnd () {
     if (opTimer) clearTimeout(opTimer)
-    opEncours.value = null
+    opEncours.value = ''
     opSpinner.value = 0
     opDialog.value = false
     // @ts-expect-error
@@ -380,7 +387,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   // Gestion du SW ******************************************************
-  const registration = ref(null)
+  const registration: Ref<any> = ref(null)
   const newVersionReady = ref(false)
   const newVersionDialog = ref(false)
   const subJSON = ref('')
@@ -470,11 +477,15 @@ export const useSessionStore = defineStore('session', () => {
     permDialog.value = true
   }
 
-  const orgs = reactive({ c: '', lst: [] })
+  type CLst = {
+    c: string
+    lst: string[]
+  }
+  const orgs = reactive({ c: '', lst: [] } as CLst)
   const currentOrg = computed(() => orgs.c || '')
   const setOrg = (org: string) => { orgs.c = org }
   const setOrgs = (s: Set<string>) => {
-    const s1 = new Set(orgs.lst)
+    const s1: Set<string> = new Set(orgs.lst)
     for(const o of s) s1.add(o)
     if (orgs.c) {
       s1.delete(orgs.c)

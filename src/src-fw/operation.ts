@@ -14,7 +14,7 @@ import { idb } from '../src-fw/idb'
 
 const encoder = new TextEncoder()
 
-export async function getSite (svc: string, org: string) : Promise<string> {
+export async function getSite (svc: string, org: string) : Promise<string | undefined> {
   const e = await AOperation.getOrgSvc(org)
   return e ? e.get(svc) : undefined
 }
@@ -27,11 +27,11 @@ export type SubsToSync = {
 export class DocEnums {
   static m : Map<string, string[]> = new Map()
 
-  static async fetch (enumName: string, org: string) : Promise<void> {
+  static async fetch (svc: string, enumName: string, org: string) : Promise<void> {
     const n = enumName + (org ? '_' + org : '')
     let lx = DocEnums.m.get(n)
     if (!lx) 
-      lx = await DocEnums.get(enumName, org)
+      lx = await DocEnums.get(svc, enumName, org)
   }
 
   static labelSync (enumName: string, org: string, code: string) {
@@ -45,8 +45,8 @@ export class DocEnums {
   }
 
 
-  static async label (enumName: string, org: string, code: string) : Promise<string> {
-    await DocEnums.fetch(enumName, org)
+  static async label (svc: string, enumName: string, org: string, code: string) : Promise<string> {
+    await DocEnums.fetch(svc, enumName, org)
     return DocEnums.labelSync (enumName, org, code)
   }
 
@@ -54,19 +54,18 @@ export class DocEnums {
   de l'énumération enumName : svc$name OU svc$name_org
   En l'absence du suffixe org, un nom de site est requis.
   */
-  static async get (enumName: string, org: string) : Promise<string[]> {
-    const dd = DocDescriptor.get(enumName)
+  static async get (svc: string, enumName: string, org: string) : Promise<string[]> {
+    const dd = DocDescriptor.get(svc, enumName)
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe - 
     const cred = dd.enumCred || ''
-    const i = enumName.indexOf('$')
-    const svc = enumName.substring(0, i)
     const n = svc + '$' + dd.name + (cred ? '_' + org : '')
     let values = DocEnums.m.get(n)
     if (values) return values
 
     const session = stores.session
     if (session.planeMode) {
+      if (!idb) return []
       values = await idb.getEnum(n)
       if (values) {
         this.m.set(n, values)
@@ -75,12 +74,12 @@ export class DocEnums {
     }
 
     const s = await getSite(svc, org)
-    const op = new AdminOperation('ADMIN$getEnum', s)
+    const op = new AdminOperation('ADMIN$getEnum', s || '')
     try {
       op.args.enumName = n
       const res = await op.post(true)
-      values = res['enum'] || []
-      if (session.syncMode)
+      values = (res['enum'] as string[]) || []
+      if (idb && session.syncMode)
         await idb.storeEnum(n, values)
       this.m.set(n, values)
       return values
@@ -90,18 +89,16 @@ export class DocEnums {
     }
   }
 
-  static async set (enumName: string, value: string[], org: string) 
+  static async set (svc: string, enumName: string, value: string[], org: string) 
     : Promise<boolean> { 
     const sf = stores.safe
-    const dd = DocDescriptor.get(enumName)
+    const dd = DocDescriptor.get(svc, enumName)
     if (dd.enum && dd.enum.length) return false
     // enum externe - 
     const cred = dd.enumCred || ''
-    const i = enumName.indexOf('$')
-    const svc = enumName.substring(0, i)
     const n = svc + '$' + dd.name + (cred ? '_' + org : '')
     let s = await getSite(svc, org)
-    const op = new AdminOperation('ADMIN$setEnum', s)
+    const op = new AdminOperation('ADMIN$setEnum', s || '')
     try {
       op.args.enumName = n
       op.args.org = org
@@ -126,14 +123,14 @@ export class CVKeys {
   static mv: Map<string, Uint8Array> = new Map()
 
   /* Retourne une clé publique de cryptage de configuation */
-  static async getCKey (site: string, name: string) : Promise<Uint8Array> {
+  static async getCKey (site: string, name: string) : Promise<Uint8Array | null> {
     let k = CVKeys.mc.get(site + '/' + name)
     if (k) return k
     const op = new AdminOperation('CONFIG$CKey', site)
     try {
       op.args.name = name
       const res = await op.post(true)
-      const s = res['key']
+      const s = res['key'] as string
       if (!s) return null
       k = keyFromB64(s)
       CVKeys.mc.set(site + '/' + name, k)
@@ -145,7 +142,7 @@ export class CVKeys {
   }
 
   /* Retourne une clé publique de cryptage de configuation */
-  static async getVKey (site: string, name: string) : Promise<Uint8Array> {
+  static async getVKey (site: string, name: string) : Promise<Uint8Array | null> {
     let k = CVKeys.mv.get(site + '/' + name)
     if (k) return k
     const op = new AdminOperation('CONFIG$VKey', site)
@@ -223,11 +220,11 @@ export class AOperation {
 
   static async getSiteUrl (site: string) : Promise<string> {
     if (AOperation.urls.size === 0) AOperation.urls = await AOperation.loadUrls()
-    return AOperation.urls.get(site)
+    return AOperation.urls.get(site) || ''
   }
 
   static async getOrgSvc (org: string) : Promise<Map<string, string>> {
-    let e: Map<string, string> = Operation.orgs.get(org)
+    let e: Map<string, string> | undefined = Operation.orgs.get(org)
     if (!e) {
       const op = new MDOperation('$GetOrgSvc')
       op.args.org = org
@@ -282,7 +279,7 @@ export class OperationG extends AOperation {
   static specialOps = new Set(['FW$setSubscription', 'FW$Sync', 'FW$HeartBeat'])
 
   authRecord: AuthRecord = new AuthRecord()
-  svc: string
+  svc: string = ''
 
   async getSvcOrgUrl () : Promise<string> {
     const e = await AOperation.getOrgSvc(this.args.org)
@@ -351,7 +348,7 @@ export class OperationG extends AOperation {
       })
       this.controller = null
       const buf = await response.bytes()
-      const obj = decode(buf)
+      const obj = decode(buf) as any
       if (response.status === 200) {
         session.opEnd()
         const hbc = obj['hbc']
@@ -412,7 +409,7 @@ export class AdminOperation extends OperationG {
   }
 }
 
-export const services = async (site: string) : Promise<{at: number, services: string[]}> => {
+export const services = async (site: string) : Promise<{at: number, services: string[]} | null> => {
   const op = new AdminOperation('CONFIG$Services', site)
   try {
     const res = await op.post()
@@ -423,7 +420,7 @@ export const services = async (site: string) : Promise<{at: number, services: st
 }
 
 export const isAdmin = async (site: string) : Promise<boolean> => {
-  if (AOperation.adminSites.has(site)) return AOperation.adminSites.get(site)
+  if (AOperation.adminSites.has(site)) return AOperation.adminSites.get(site) !== undefined
   const op = new AdminOperation('ADMIN$isAdmin', site)
   try {
     const res = await op.post()
@@ -589,7 +586,7 @@ export class AuthRecord {
   time: number
   userSign: Uint8Array | null
   // Object par role / docId : [token]
-  signatures: Object | null
+  signatures: any | null
 
   get challenge () : Uint8Array { return encoder.encode(this.userId + '/' + this.time) }
 
@@ -615,17 +612,19 @@ export class AuthRecord {
   }
 
   async sign (c: $Credential) : Promise<void> {
-    const x = await Crypt.sign(c.privs, this.challenge)
-    const sign = new Uint8Array(x)
-    if (!this.signatures) this.signatures = {}
-    this.signatures[c.docCl + '/' + c.docPk] = [c.credId, sign]
+    const x = c.privs ? await Crypt.sign(c.privs, this.challenge) : null
+    if (x) {
+      const sign = new Uint8Array(x)
+      if (!this.signatures) this.signatures = {}
+      this.signatures[c.docCl + '/' + c.docPk] = [c.credId, sign]
+    }
   }
 
 }
 
 export async function checkStatus (orgRoles: string[]) 
 : Promise<boolean> {
-  const status = {}
+  const status: any = {}
   let allOK = true
   for(const y of orgRoles) {
     let i = y.indexOf('/')

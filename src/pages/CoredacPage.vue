@@ -56,7 +56,7 @@
 
 <rev-susp v-if="dialogs.credmgnt" v-model="dialogs.credmgnt"
   svc="AS2" :org="ui.appPage.org" :cred="cred" :curcred="curcred"
-  :title="$t('CODIRcred_tit', [aut.a.nomAuteur, curcred.props.trig])"
+  :title="$t('CODIRcred_tit', [aut.a ? aut.a.nomAuteur : '', curcred.props.trig])"
   @done="onDone"
 />
 
@@ -65,7 +65,7 @@
 
 <script setup lang="ts" vapor>
 // @ts-ignore
-import { ref, Ref, onMounted, watch, computed, reactive } from 'vue'
+import { ref, Ref, watch, computed, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dkli } from '../src-fw/util'
@@ -76,7 +76,7 @@ import SelectEnum from '../components-fw/SelectEnum.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { DocDescriptor } from '../src-fw/docDescriptor'
-import { AS2$Auteur } from '../as2/documents'
+import { AS2$Auteur, AS2$EmbedCred } from '../as2/documents'
 
 const ui = stores.ui
 const session = stores.session
@@ -90,20 +90,26 @@ const sth = computed(() => 'height:' + (ui.appPage.height - 30) + 'px;' )
 
 const splitterModel = ref(33)
 const auteurs: Ref<AS2$Auteur[]> = ref([])
-const aut = reactive({ a: null, newSection: '', newNa: '', edv: '' })
+type Aut = {
+  a?: AS2$Auteur
+  newSection: string
+  newNa: string
+  edv: string
+}
+let aut = reactive({ newSection: '', newNa: '', edv: '' } as Aut)
 const docPk = ref()
 const curcred = ref()
 
-const selAut = async (a) => {
-  aut.a = a // AS2$Auteur
+const selAut = async (a: AS2$Auteur | null) => {
+  if (a) aut.a = a
   aut.newSection = a ? a.section : ''
   aut.newNa = a ? a.nomAuteur : ''
   if (a)
-    aut.edv = await DocEnums.label('AS2$Section', ui.appPage.org, aut.a.section)
+    aut.edv = await DocEnums.label('AS2', 'Section', ui.appPage.org, aut.a ? aut.a.section : '')
 }
 
-const majNa = (n) => { aut.newNa = n }
-const majSection = async (n) => { 
+const majNa = (n: string) => { aut.newNa = n }
+const majSection = async (n: string) => { 
   aut.newSection = n 
   await majAut()
 }
@@ -125,7 +131,7 @@ watch(() => [ui.appPage.org, ui.appPage.count], async () => {
 
 const majAut = async () => {
   const op = new Operation('MajAuteur', 'AS2', ui.appPage.org)
-  const dd = DocDescriptor.get('AS2$Auteur')
+  const dd = DocDescriptor.get('AS2', 'Auteur')
   op.args.autpk = dd.pkValue(aut.a)
   if (aut.newNa) op.args.nomAuteur = aut.newNa
   if (aut.newSection) op.args.section = aut.newSection
@@ -143,10 +149,10 @@ const majAut = async () => {
   }
 }
 
-const openCred = (c) => {
+const openCred = (c: AS2$EmbedCred) => {
   curcred.value = c
-  const autid = aut.a.autid
-  docPk.value = DocDescriptor.get('AS2$Auteur').pkValue({ autid })
+  const autid = aut.a ? aut.a.autid : ''
+  docPk.value = DocDescriptor.get('AS2', 'Auteur').pkValue({ autid })
   dialogs.credmgnt = true
 }
 
@@ -154,7 +160,7 @@ const onDone = async () => {
   dialogs.credmgnt = false
   await listeAuteurs()
   for(const x of auteurs.value)
-    if (x.autid === aut.a.autid) { await selAut(x); return }
+    if (aut.a && x.autid === aut.a.autid) { await selAut(x); return }
 }
 
 </script>

@@ -19,11 +19,11 @@ type service = {
 }
 
 export const useConfigStore = defineStore('config', () => {
-  const location = ref(null) // le href
+  const location: any = ref(null) // le href
 
   // Gestion des langues ***************************************************
   const localeMap = ref(new Map())
-  const locale: Ref<string> = ref()
+  const locale: Ref<string> = ref('')
   const setLocale = (loc:string) => { 
     const lgp = localeMap.value.get(loc).props
     Lang.set(lgp)
@@ -44,6 +44,7 @@ export const useConfigStore = defineStore('config', () => {
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
 
+    // @ts-expect-error
     Lang.set(localeOptions[0].props)
     localeOptions.forEach(l => { localeMap.value.set(l.value, l) })
     locale.value = localeOptions[0].value

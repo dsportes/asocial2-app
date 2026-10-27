@@ -1262,7 +1262,7 @@ bla bla
   EX3_property_name_syntax: '(BUG) - Nom [{0}] de propriété de _clé primaire_ mal formé.',
   EX3_property_name_duplicated: '(BUG) - Nom [{0}] de propriété dupliquée.',
 
-  EX3_invalid_class_name: '(BUG) - Nom de classe de document [{0}] non configurée (forme svc$DocCl_subClass attendue).',
+  EX3_invalid_class_name: '(BUG) - Nom de classe de document [{0}] non configurée.',
   EX3_unknown_org: 'Organisation [{0}] inconnue.',
   EX3_unknown_url_for_site: 'Site [{0}] non répertorié.',
   EX3_unknown_service_for_org: 'Service cloud [{1}] non configuré pour servir l\'organisation [{0}]',

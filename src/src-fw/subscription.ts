@@ -65,16 +65,16 @@ export class $Def {
 
   get isColl () { return this.type !== 1 }
   colClass (svc: string) : string{ 
-    const dd = DocDescriptor.get(svc + '$' + this.docCl)
+    const dd = DocDescriptor.get(svc, this.docCl)
     return dd && this.colName ? dd.colClass(this.colName) : '' 
   }
   
   constructor (definition: string) {
-      const defx = definition.split('/')
-      this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
-      this.docCl = defx[0]
-      if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
-      if (this.type === 3) this.colName = defx[1]
+    const defx = definition.split('/')
+    this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
+    this.docCl = defx[0]
+    if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
+    if (this.type === 3) this.colName = defx[1]
   }
 }
 
@@ -176,7 +176,7 @@ export class $Subs extends $Document {
 }
 
 export class $SubsGenerator extends $ADocument {
-  subs?: $Subs
+  subs!: $Subs
   svc: string = ''
   org: string = ''
   creds?: Map<string, $Credential>

@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { date } from 'quasar'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document, SOA, topCl } from '../src-fw//registry'
+import { Registry, $Document, SOA } from '../src-fw//registry'
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { $Perimeter } from '../src-fw/subscription'
@@ -60,7 +60,7 @@ export class $CredTempl {
     this.userId = userId
     this.svc = svc
     this.docCl = docCl
-    this.docPk = DocDescriptor.get(topCl(svc, docCl)).pkValue(src)
+    this.docPk = DocDescriptor.get(svc, docCl).pkValue(src)
     this.credId = Crypt.rnd(15)
     this.props = props
     this.signId = ''
@@ -431,9 +431,14 @@ export class $Form extends $Document {
 
   async aesU () : Promise<Uint8Array | null> {
     if (!this._aesU && this.ft) {
-      const fk = await CVKeys.getCKey(await getSite(this.svc || '', this.org || ''), this.ft.key)
-      const sf = stores.safe
-      this._aesU = await Crypt.getAESKey(fk, keyFromB64(sf.auth.D))
+      const site = await getSite(this.svc || '', this.org || '')
+      if (site) {
+        const fk = await CVKeys.getCKey(site, this.ft.key)
+        if (fk) {
+          const sf = stores.safe
+          this._aesU = await Crypt.getAESKey(fk, keyFromB64(sf.auth.D))
+        }
+      }
     }
     return this._aesU || null
   }

@@ -1,6 +1,4 @@
-// @ts-ignore
-import Dexie from 'dexie'
-// @ts-ignore
+import { Dexie, type EntityTable } from "dexie"
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
@@ -8,6 +6,7 @@ import { Crypt } from '../src-fw/crypt'
 import { AppExc } from '../src-fw/log'
 import { sleep } from '../src-fw/util'
 import { $Perimeter, $Perims, $Def } from '../src-fw/subscription'
+import { isNullOrUndefined } from "node:util"
 
 /*
 La base IDB est propriété d'un couple application / utilisateue. Son nom est: app-userId
@@ -86,10 +85,55 @@ const STORES = {
   colls: 'sodef, [so+lat]'
 }
 
+class Singleton {
+  name!: string
+  data!: Uint8Array | null
+}
+class Perim {
+  pk!: string
+  so!: string
+  data!: Uint8Array | null
+}
+class Doc {
+  sodef!: string
+  so!: string
+  lat!: number
+  v!: number
+  data!: Uint8Array | null
+}
+class Coll {
+  sodef!: string
+  so!: string
+  lat!: number
+  v!: number
+  data!: Uint8Array | null
+}
+
+class AppDB extends Dexie {
+  singletons!: EntityTable<Singleton, 'name'>
+  perims!: EntityTable<Perim, 'pk'>
+  docs!: EntityTable<Doc, 'sodef'>
+  colls!: EntityTable<Coll, 'sodef'>
+
+  constructor(dbName: string) {
+    super(dbName, { autoOpen: true })
+    this.version(1).stores({
+      singletons: 'name',
+      perims: 'pk, so',
+      docs: 'sodef, [so+lat]',
+      colls: 'sodef, [so+lat]'
+    })
+    this.singletons.mapToClass(Singleton)
+    this.perims.mapToClass(Perim)
+    this.docs.mapToClass(Doc)
+    this.colls.mapToClass(Coll)
+  }
+}
+
 type IDBrow = {
   lat: number
   v: number
-  data?: Uint8Array
+  data?: Uint8Array | null
 }
 
 type ValidP = {
@@ -111,7 +155,7 @@ export type StartPlane = {
   options: Options
 }
 
-export let idb : IDB = null // IDB courante
+export let idb: IDB | null = null // IDB courante
 
 export async function deleteIDB (appName: string, userId: string) {
   const config = stores.config
@@ -133,8 +177,7 @@ export async function volumeIDB (appName: string, userId: string)
   const myDebug = config.K.myDebug
   const name = appName + '_' + userId
   try {
-    const db = new Dexie(name, { autoOpen: true })
-    db.version(1).stores(STORES)
+    const db = new AppDB(name)
     let vp = 0, vd = 0, vc = 0
     await db.docs.each((r) => { 
       vd += (r.data ? r.data.length : 0)})
@@ -145,6 +188,7 @@ export async function volumeIDB (appName: string, userId: string)
     return [vp, vd, vc]
   } catch (e: any) {
     if (myDebug) console.log('IDB volume [' + name + '] failed: ' + e.toString())
+      return [0, 0, 0]
   }
 }
 
@@ -159,7 +203,7 @@ export class IDB {
     return ex
   }
 
-  db : any
+  db : AppDB
   keyK: Uint8Array
   myDebug: boolean
   appName: string
@@ -176,7 +220,7 @@ export class IDB {
     this.SYNCINCRNBD = config.K.SYNCINCRNBD
     this.keyK = sf.keyK
     this.userId = sf.userId
-    this.db = new Dexie(this.dbName, { autoOpen: true })
+    this.db = new AppDB(this.dbName)
     this.db.version(1).stores(STORES)
     idb = this
   }
@@ -184,7 +228,6 @@ export class IDB {
   close () {
     if (this.db) 
       try { this.db.close() } catch(e) {}
-    this.db = null
     idb = null
   }
 
@@ -206,16 +249,20 @@ export class IDB {
 
   async getOptions () : Promise<Options>{
     const x = await this.db.singletons.get('$OPTIONS$')
-    if (!x) return null
-    const obj = decode(await this.decryptData(x.data))
-    return obj
+    if (x && x.data) {
+      const y = await this.decryptData(x.data)
+      if (y) return decode(y) as Options 
+    }
+    return { orgRoles: [], pref: ''}
   }
 
   async getEnum (enumName: string) : Promise<string[]>{
     const x = await this.db.singletons.get('$ENUM$' + enumName)
-    if (!x) return null
-    const obj = decode(await this.decryptData(x.data))
-    return obj
+    if (x && x.data) {
+      const y = await this.decryptData(x.data)
+      return y ? decode(y) as string[] : []
+    }
+    return []
   }
 
   async storeEnum (enumName: string, values: string[]) {
@@ -240,14 +287,19 @@ export class IDB {
   async getPrefs () : Promise<Prefs>{
     const m: Prefs = new Map()
     const x = await this.db.singletons.get('$PREFS$')
-    const obj = decode(await this.decryptData(x.data))
-    for(const code in obj) m.set(code, obj[code])
+    if (x && x.data) {
+      const y = await this.decryptData(x.data)
+      if (y) {
+        const obj: any = decode(y)
+        for(const code in obj) m.set(code, obj[code])
+      }
+    }
     return m
   }
 
   async storePrefs (prefs: Prefs) : Promise<void> {
     try {
-      const obj = {}
+      const obj: any = {}
       for(const [code, pr] of prefs) obj[code] = pr
       const data = await this.cryptData(encode(obj)) 
       await this.db.singletons.put({ name: '$PREFS$', data })
@@ -263,11 +315,16 @@ export class IDB {
       const pk = px.pk
       const y = pk.split('/')
       const svc = y[0]; const org = y[1]; const so = svc + '/' + org
-      const obj = decode(await this.decryptData(px.data))
-      const p = new $Perimeter(svc, org, obj.code, obj.docCl, obj.docPk, obj.role, obj.plane, obj.defs, obj.name || '?')
-      let m2: Map<string, $Perimeter> = m.get(so)
-      if (!m2) { m2 = new Map(); m.set(so, m2) }
-      m2.set(p.id, p)
+      if (px.data) {
+        const y = await this.decryptData(px.data)
+        const obj: any = y ? decode(y) : null
+        if (obj) {
+          const p = new $Perimeter(svc, org, obj.code, obj.docCl, obj.docPk, obj.role, obj.plane, obj.defs, obj.name || '?')
+          let m2: Map<string, $Perimeter> | undefined = m.get(so)
+          if (!m2) { m2 = new Map(); m.set(so, m2) }
+          m2.set(p.id, p)
+        }
+      }
     }
     return m
   }
@@ -293,7 +350,7 @@ export class IDB {
           const pk = so + '/' + p.id
           if (p.defs && p.defs.length) {
             soAfter.add(so)
-            const vp = { pk, so, data: await this.cryptData(encode(p.toObj())) }
+            const vp = { pk, so, data: await this.cryptData(encode(p.toObj())) } as ValidP
             livingP.set(pk, vp)
           }
         }
@@ -336,13 +393,11 @@ export class IDB {
     - retourne une Map des préférences
     - retourne l'objet options.
   */
-  async openPlane () : Promise<StartPlane | null> {
+  async openPlane () : Promise<StartPlane> {
     try {
       await this.db.open() // Pas utile du fait auto-open ?
-      const options = await this.getOptions()
-      if (!options) return null
       return {
-        options,
+        options : await this.getOptions(),
         prefs: await this.getPrefs(),
         perims: await this.getPerims()
       }
@@ -360,30 +415,32 @@ export class IDB {
     }
   }
 
-  async setDC (svc: string, org: string, def: string, lat: number, v: number, d: Uint8Array) {
+  async setDC (svc: string, org: string, def: string, lat: number, v: number, d: Uint8Array | null) {
     try {
-      const data = await this.cryptData(d)
+      // d: null - deleted
+      // d: doc OU pks sérialisé
+      const data = !d ? null : await this.cryptData(d)
       const so = svc + '/' + org
       const sodef = so + '/' + def
       const r = { sodef, def, so, lat, v, data }
-      const n = def.split('/')
-      if (n.length === 2) await this.db.docs.put(r)
+      const n = def.split('/').length
+      if (n === 2) await this.db.docs.put(r)
       else await this.db.colls.put(r)
     } catch (e) {
-      throw IDB.EX(e, 'setDC')
+      throw IDB.EX(e, 'setDoc')
     }
   }
 
-  async getDC (svc: string, org: string, def: string) : Promise<IDBrow | null> {
+  async getDC (svc: string, org: string, def: string) : Promise<IDBrow | undefined> {
     try {
       const n = def.split('/')
       const sodef = svc + '/' + org + '/' + def
-      let r
-      if (n.length === 2) r = await this.db.docs.get(sodef)
-      else r = await this.db.colls.get(sodef)
-      if (r)
-        r.data = await this. decryptData(r.data)
-      return r
+      const r: Doc | Coll | undefined = n.length === 2 ? await this.db.docs.get(sodef) : await this.db.docs.get(sodef)
+      return !r ? undefined : { 
+        lat: r.lat, 
+        v: r.v, 
+        data: r.data ? await this.decryptData(r.data) : null
+      }
     } catch (e) {
       throw IDB.EX(e, 'getDC')
     }

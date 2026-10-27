@@ -14,7 +14,7 @@ let n = 0
 
 class AS2$Status extends ADMIN$Status {
 }
-if (ok) { n++; Registry.register(AS2$Status, 'AS2$Status') }
+if (ok) { n++; Registry.register(AS2$Status, 'AS2', 'Status') }
 
 export class AS2$EmbedCred extends EmbedCred {
   constructor (credId: string, props: any, docCl: string, docPk: string) { 
@@ -28,6 +28,7 @@ export class AS2$Auteur extends $Document {
   async compile () {}
 
   nomAuteur: string = '' // nom d'auteur
+  autid: string = ''
   section: string = '' // section du Comité de Rédaction en charge de l'auteur
   creds?: Map<string, AS2$EmbedCred>
 
@@ -52,7 +53,7 @@ export class AS2$Auteur extends $Document {
 
   static async get (org: string, autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
     const op = new Operation('AuteurDeId', 'AS2', org)
-    const pk = autPk || DocDescriptor.get('AS2$Auteur').pkValue({ autid: autid })
+    const pk = autPk || DocDescriptor.get('AS2', 'Auteur').pkValue({ autid: autid })
     op.sign(stores.safe.myCredOfDoc('AS2', org, 'Auteur', pk))
     op.args.autPk = pk
     try {
@@ -76,7 +77,7 @@ export class AS2$Auteur extends $Document {
         const a = (await Registry.compile('AS2', 'Auteur', org, obj) as unknown) as AS2$Auteur
         a.creds = new Map()
         for(const credId in creds) 
-          a.creds.set(credId, new AS2$EmbedCred(credId, creds[credId], a._clazz, a._pk))
+          a.creds.set(credId, new AS2$EmbedCred(credId, creds[credId], 'Auteur', a._pk))
         lst.push(a)
       }
       return lst
@@ -87,7 +88,7 @@ export class AS2$Auteur extends $Document {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Auteur, 'AS2$Auteur')}
+if (ok) { n++; Registry.register(AS2$Auteur, 'AS2', 'Auteur')}
 
 export class AS2$SubsGenerator extends $SubsGenerator {
 
@@ -104,7 +105,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
       }
   }
 }
-if (ok) { n++; Registry.register(AS2$SubsGenerator, 'AS2$SubsGenerator')}
+if (ok) { n++; Registry.register(AS2$SubsGenerator, 'AS2', 'SubsGenerator')}
 
 export class AS2$Publication extends $Document {
 
@@ -116,6 +117,6 @@ export class AS2$Publication extends $Document {
   volume: number = 0
 
 }
-if (ok) { n++; Registry.register(AS2$Publication, 'AS2$Publication')}
+if (ok) { n++; Registry.register(AS2$Publication, 'AS2', 'Publication')}
 
 export const AS2nbDocs = () : number => n

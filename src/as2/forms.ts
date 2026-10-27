@@ -141,7 +141,7 @@ class AS2$Form_coauteur extends $Form {
     const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
-      $1: DocDescriptor.get(this.svc + '$Auteur').pkValue({ autid: this.autid }),
+      $1: DocDescriptor.get(this.svc || '', 'Auteur').pkValue({ autid: this.autid }),
       auteur: { autid: this.autid, nomAuteur: na },
       credTemplates: {}
     }
