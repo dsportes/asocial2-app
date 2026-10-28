@@ -7,17 +7,18 @@ try {
   const nd = DocDescriptor.size()
   const nf = FormType.size()
 
+  new DocDescriptor(svc, { name: 'CoDir', virtual: true } )
+  new DocDescriptor(svc, { name: 'Redaction', virtual: true } )
+  new DocDescriptor(svc, { name: 'Section', virtual: true, enumCred: 'Redaction' })
+  new DocDescriptor(svc, { name: 'Sujet', virtual: true, enumCred: 'CoDir' })
+
   new DocDescriptor(svc, { name: 'SubsGenerator', virtual: true })
 
   new DocDescriptor(svc, { name: 'Status', sync: true, pk: [], nohash: true } )
   new DocDescriptor(svc, { name: 'Subs', pk: ['sessionId'] })
 
-  new DocDescriptor(svc, { name: 'CoDir', virtual: true } )
-  new DocDescriptor(svc, { name: 'Redaction', virtual: true } )
-  new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Form', pk: ['formId'], nohash: true, subClassBy: 'type' })
-  new DocDescriptor(svc, { name: 'Section', virtual: true, enumCred: 'Redaction' })
-  new DocDescriptor(svc, { name: 'Sujet', virtual: true, enumCred: 'CoDir' })
+  new DocDescriptor(svc, { name: 'Credential', pk: ['credId'], nohash: true, subClassBy: 'docCl' })
   new DocDescriptor(svc, { name: 'Auteur', pk: ['autid'] },
     new Map<string, collection>([
       ['section',  { key: ['section'], mutable: true, class: 'Section' }]

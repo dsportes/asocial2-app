@@ -1,17 +1,26 @@
-// @ts-ignore
-import { date } from 'quasar'
-import { schemaExcAS2 } from '../as2/schema'
-
+import { AppExc } from '../src-fw/log'
 import { Registry } from '../src-fw/registry'
+import { Descriptor } from '../src-fw/descriptor'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import { $Credential} from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 
-const ok = !schemaExcAS2()
-let n = 0
+let n = 0, nf = 0, exc: AppExc | undefined
 
-/* Credentials **************************************************************************/
+/* Classe ayant des sous-classes: *****************************************************
+- aucun document n'est instantiable avec cette classe
+*/
+class AS2$Credential extends $Credential {
+  static _descriptor = Descriptor.doc('AS2', 'Credential', 
+    { pk: ['credId'], nohash: true, subClassBy: 'docCl' })
+}
+if (!exc) { n++; exc = Registry.register(AS2$Credential) }
+
+/* Sous classes de AS2$Credentials ******************************************************
+- N'A PAS de _descriptor
+- est register en tant que sous-classe de AS2@Credential
+*/
 class AS2$Credential_CoDir extends $Credential {
   static _manager = true
   static _role = 'ad'
@@ -23,7 +32,7 @@ class AS2$Credential_CoDir extends $Credential {
     await ui.diagDisplay($t('TYPE_AS2_membrecodir_det', [this.props.name]))
   }
 }
-if (ok) { n++; Registry.register(AS2$Credential_CoDir, 'AS2$Credential_CoDir') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Credential_CoDir, AS2$Credential, 'CoDir') }
 
 class AS2$Credential_Redaction extends $Credential {
   static _manager = true
@@ -41,7 +50,7 @@ class AS2$Credential_Redaction extends $Credential {
     await ui.diagDisplay($t('TYPE_AS2_membreredaction_det', [this.props.name]))
   }
 }
-if (ok) { n++; Registry.register(AS2$Credential_Redaction, 'AS2$Credential_Redaction') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Credential_Redaction, AS2$Credential, 'Redaction') }
 
 export class AS2$Credential_Auteur extends $Credential {
 
@@ -60,6 +69,13 @@ export class AS2$Credential_Auteur extends $Credential {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Credential_Auteur, 'AS2$Credential_Auteur') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Credential_Auteur, AS2$Credential, 'Auteur') }
 
-export const AS2nbCreds = () : number => n
+export const AS2CredentialsReport = () : AppExc | undefined => {
+  if (!exc)
+    console.log(`AS2CredentialsLoading: ${n} documents, ${nf} forms`)
+  else {
+    console.log(`AS2CredentialsLoading FAILED: ${exc.toString()}`)
+    return exc
+  }
+}

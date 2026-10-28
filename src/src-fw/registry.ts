@@ -1,6 +1,6 @@
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
-import { DocDescriptor } from '../src-fw/docDescriptor'
+import { Descriptor } from '../src-fw/descriptor'
 import { AppExc } from '../src-fw/log'
 
 export type SOA = {
@@ -11,44 +11,41 @@ export type SOA = {
   admin? : boolean
 }
 
-/*
-export const subCl = (clazz: string) => {
-  const i = clazz.indexOf('_')
-  return i === -1 ? '' : clazz.substring(i + 1)
-}
+export class ClassInfo {
+  readonly svc: string
+  readonly docCl: string
+  readonly subCl: string
+  readonly descriptor: Descriptor
+  readonly clazz: Function
 
-export const medCl = (clazz: string) => {
-  let i = clazz.indexOf('_')
-  const d = i === -1 ? clazz : clazz.substring(0, i)
-  i = d.indexOf('$')
-  return i === -1 ? d : d.substring(i + 1)
-}
+  constructor (svc: string, docCl: string, subCl: string, descriptor: Descriptor, clazz: Function) {
+    this.svc = svc; this.docCl = docCl; this.subCl = subCl; this.descriptor = descriptor; this.clazz = clazz
+  }
 
-export const topCl = (svc: string, docCl: string) : string => {
-  const i = docCl.indexOf('_')
-  const d = i === -1 ? docCl : docCl.substring(0, i)
-  return d.indexOf('$') === -1 ? svc + '$' + d : d
-}
+  newD () : $ADocument {
+    const f = this.clazz
+    // @ts-expect-error
+    return new f() as $ADocument
+  }
 
-export const svcCl = (clazz: string) => {
-  const i = clazz.indexOf('$')
-  return i === -1 ? '' : clazz.substring(0, i)
-}
-*/
+  get fullName () { return this.svc + '/' + this.docCl + (this.subCl ? ('/' + this.subCl) : '')}
 
-export type ClassInfo = {
-  clazzName: string
-  fullName: string // full: svc$docCl_subCl OU svc$docCl_subCl
-  svc: string
-  topCl: string
-  subCl: string
-  docCl: string
-  manager: boolean
-  role: string
-  docDescriptor: DocDescriptor | undefined // undefined si la classe n'est pas déclarée dans un schéma
 }
 
 export class Registry {
+  // Map des classes enregistrées par svc / docCl / subCl
+  static constructors: Map<string, Function> = new Map()
+
+  // Set des classes s'étant déclarées "manager"
+  static managers : Set<Function> = new Set()
+
+  /* Pour chaque svc / role, sous-classes de Credential ayant déclaré ce role*/
+  static credClassesbyRole: Map<string, Set<Function>> = new Map()
+
+  static getCredClassesOfRole(svc: string, role: string) { 
+    return Registry.credClassesbyRole.get(svc + '/' + role) }
+
+/*
   static classInfos: Map<string, ClassInfo> = new Map()
   static classInfosByClazz: Map<string, ClassInfo> = new Map()
   static constructors: Map<string, Function> = new Map()
@@ -64,80 +61,87 @@ export class Registry {
     const s = i === -1 ? topCl : topCl.substring(0, i)
     return Registry.topClasses.has(s)
   }
+*/
 
-  /* Set des noms des classes des credential
-  assignés par role (CATEG dans I18n) */
-  static managers : Set<string> = new Set()
-
-  /* Set des classes de leur svc$docCl des credential (depuis leur sous-classe) 
-  assignés par svc$role (CATEG dans I18n) */
-  static roles : Map<string, Set<string>> = new Map()
-  static roleOfCred : Map<string, string> = new Map()
-
-  static getCredsOfRole(role: string) { return this.roles.get(role) }
-  static getRoleOfCred(cred: string) { return this.roleOfCred.get(cred) }
-
-  static register (clazz: Function, svc: string, docCl: string, subCl?: string) : void { 
-    const topCl = svc + '$' + docCl
-    const fullName = topCl + (subCl ? '_' + subCl : '')
-    if (!svc || !docCl)
-      throw new AppExc(103, 'invalid_class_name', 'Registry.register', [fullName])
-    const docDescriptor = (clazz as any)._unregistered ? undefined : DocDescriptor.get(svc, docCl)
-
-    const role = (clazz as any)._role || ''
-    if (role) {
-      const cl = svc + '$' + subCl
-      const r = svc + '$' + role
-      let e = Registry.roles.get(r)
-      if (!e) { e = new Set(); Registry.roles.set(r, e)}
-      e.add(cl)
-      Registry.roleOfCred.set(cl, r)
+  static register (clazz: Function) : AppExc | undefined {
+    let exc: AppExc | undefined
+    const _descriptor : Descriptor = (clazz as any)['_descriptor'] as Descriptor
+    if (!_descriptor)
+      exc = new AppExc(3, 'class_without_descriptor', 'Register', [clazz.name])
+    if (!exc && _descriptor.exc) exc = _descriptor.exc
+    if (!exc) {
+      Registry.constructors.set(clazz.name, clazz)
+      if ((clazz as any)['_manager'])
+        Registry.managers.add(clazz)
     }
-
-    const ci: ClassInfo = { 
-      fullName,
-      svc, 
-      docCl, 
-      subCl: subCl || '', 
-      topCl,
-      clazzName: clazz.name, // NE PAS UTILISER: nom différent en test et après build !!!
-      docDescriptor,
-      manager: (clazz as any)._manager !== undefined,
-      role
-    }
-    if (ci.manager) Registry.managers.add(ci.fullName)
-    Registry.classInfos.set(fullName, ci)
-    Registry.classInfosByClazz.set(clazz.name, ci)
-    Registry.constructors.set(clazz.name, clazz)
-    Registry.topClasses.add(ci.topCl)
+    return exc
   }
 
-  // Retourne le constructor de la SOUS-CLASSE de docCl selon la valeur de son data
+  static registerSubClass (clazz: Function, parentClazz: Function, subCl: string) : AppExc | undefined {
+    let exc: AppExc | undefined
+    const _descriptor : Descriptor = (parentClazz as any)['_descriptor'] as Descriptor
+    if (!_descriptor)
+      exc = new AppExc(3, 'subclass_without_parent_descriptor', 'RegisterSubClass', [clazz.name])
+    if (!exc) {
+      const svc = _descriptor.svc
+      const docCl = _descriptor.svc
+      const fullName = svc + '/' + docCl + '/' + subCl
+      if (!Descriptor.isSubName(subCl))
+        exc = new AppExc(3, 'subclass_name_syntax', 'RegisterSubClass', [fullName])
+      if (!exc) {
+        (clazz as any)['_parentClazz'] = parentClazz
+        (clazz as any)['_subCl'] = subCl
+        Registry.constructors.set(clazz.name, clazz)
+        if ((clazz as any)['_manager'])
+          Registry.managers.add(clazz)
+        const role: string | undefined = (clazz as any)['_role']
+        if (role) {
+          let s = Registry.credClassesbyRole.get(svc + '/' + subCl)
+          if (!s) { s = new Set(), Registry.credClassesbyRole.set(svc + '/' + subCl, s)}
+          s.add(clazz)
+        }
+      }
+    }
+    return exc
+  }
+
+  /* Retourne le ClassInfo,
+  - de la classe svc / docCl
+  - OU de la SOUS-CLASSE de svc / docCl selon la valeur de la propriété 
+    de data qui donne le nom de la sous-classe
+  */
   static getClassInfo (svc: string, docCl: string, data?: any ) : ClassInfo {
-    const topCl = svc + '$' + docCl
-    if (!Registry.hasTopClass(topCl)) 
-      throw new AppExc(103, 'invalid_class_name (3)', 'Registry.getClass', [topCl])
-    const dd = DocDescriptor.get(svc, docCl) // Exception si n'est pas déclarée
-    const subCl = data && dd.subClassBy ? data[dd.subClassBy] || '' : ''
-    const fullName = subCl ? topCl + '_' + subCl : topCl
-    const ci = Registry.classInfos.get(fullName)
-    if (!ci) 
-      throw new AppExc(103, 'invalid_class_name', 'Registry.getClassInfo', [fullName])
-    return ci
+    let clazz = Registry.constructors.get(svc + '/' + docCl)
+    if (!clazz) 
+      throw new AppExc(3, 'class_not_found', 'Registry.getClassInfo(1)', [svc + '/' + docCl])
+    const descriptor = (clazz as any)['_descriptor']
+    if (!descriptor) 
+      throw new AppExc(3, 'unregistered_class', 'Registry.getClassInfo(2)', [svc + '/' + docCl])
+    let subCl = ''
+    if (data) {
+      if (!descriptor.subClassBy)
+        throw new AppExc(3, 'subclass_property_not_declared', 'Registry.getClassInfo(3)', [svc + '/' + docCl])
+      subCl = data[descriptor.subClassBy]
+      if (!subCl)
+        throw new AppExc(3, 'subclass_property_value_not_found_in_data', 'Registry.getClassInfo(4)', 
+          [svc + '/' + docCl + ' -- ' + descriptor.subClassBy])
+      clazz = Registry.constructors.get(svc + '/' + docCl + '/' + subCl)
+      if (!clazz) 
+        throw new AppExc(3, 'subclass_not_found', 'Registry.getClassInfo(4)', [svc + '/' + docCl + '/' + subCl])
+    }
+    return new ClassInfo(svc, docCl, subCl, descriptor, clazz)
   }
 
   // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
   static newD (svc: string, docCl: string, data?: Object ) : $ADocument {
     const ci = Registry.getClassInfo(svc, docCl, data)
-    const clazz = Registry.constructors.get(ci.clazzName)
-    // @ts-expect-error
-    return new clazz() as $ADocument
+    return ci.newD() as $ADocument
   }
 
   static async compile (svc: string, docCl: string, org: string, obj: any) : Promise<$Document>{
     const doc = Registry.newD(svc, docCl, obj) as $Document
     doc._org = org
-    doc._pk = doc._docDescriptor ? doc._docDescriptor.pkValue(obj) : ''
+    doc._pk = doc._descriptor.pkValue(obj)
     doc.v = obj['v']
     if (obj['deleted']) doc.deleted = true
     else {
@@ -167,18 +171,7 @@ export class Registry {
 }
 
 export class $ADocument {
-  constructor () { }
-  __classInfo!: ClassInfo
-
-  get _classInfo () : ClassInfo { 
-    if (!this.__classInfo) 
-      // @ts-expect-error
-      this.__classInfo = Registry.classInfos.get(this.constructor.name)
-    return this.__classInfo 
-  }
-  get _docDescriptor () { return this._classInfo.docDescriptor }
-  get _svc () { return this._classInfo.svc }
-  get _topCl () { return this._classInfo.topCl }
+  get _descriptor () : Descriptor { return (this.constructor as any)['_descriptor'] }
 
 }
 

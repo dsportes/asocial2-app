@@ -140,12 +140,10 @@ import ConfirmClosesession from './dialogs-fw/ConfirmClosesession.vue'
 import DialogExc from './dialogs-fw/DialogExc.vue'
 import DialogHelp from './dialogs-fw/DialogHelp.vue'
 
-import { schemaExcAS2 } from './as2/schema'
-import { schemaExcFW } from './src-fw/schema'
-import { AS2nbDocs } from './as2/documents'
-import { AS2nbForms } from './as2/forms'
-import { AS2nbCreds } from './as2/credentials'
-import { FWnbDocs } from './src-fw/fwdocuments'
+import { AS2report } from './as2/documents'
+import { AS2FormsReport } from './as2/forms'
+import { AS2CredentialsReport } from './as2/credentials'
+import { FWreport } from './src-fw/fwdocuments'
 
 const hdrPages = ref(new Set(['test']))
 
@@ -153,15 +151,13 @@ const config = stores.config
 config.initK()
 
 {
-  let exc = schemaExcAS2()
-  if (!exc) exc = schemaExcFW()
+  let exc = AS2report()
+  if (!exc) exc = FWreport()
+  if (!exc) exc = AS2FormsReport()
+  if (!exc) exc = AS2CredentialsReport()
+
   if (exc) {
     alert(exc.toString())
-  } else {
-    console.log(AS2nbDocs() + ' documents loaded')
-    console.log(AS2nbForms() + ' forms loaded')
-    console.log(AS2nbCreds() + ' credentials loaded')
-    console.log(FWnbDocs() + ' FW documents loaded')
   }
 }
 

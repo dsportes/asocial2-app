@@ -1,7 +1,4 @@
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
-import { date } from 'quasar'
 import { Crypt } from '../src-fw/crypt'
 import { Registry, $Document, SOA } from '../src-fw//registry'
 import { DocDescriptor, FormType } from '../src-fw/docDescriptor'

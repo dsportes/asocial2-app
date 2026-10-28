@@ -1,28 +1,32 @@
-import { schemaExcAS2 } from '../as2/schema'
-
+import { AppExc } from '../src-fw/log'
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
-import { DocDescriptor } from '../src-fw/docDescriptor'
+import { Descriptor, FormType } from '../src-fw/descriptor'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { AS2$Auteur } from './documents'
 
-const ok = !schemaExcAS2()
-let n = 0
+let n = 0, nf = 0, exc: AppExc | undefined
 
-/*
-new FormType(svc, 'membrecodir', 'k1', ['A'])
-new FormType(svc, 'membreredaction', 'k1', ['A'])
-new FormType(svc, 'auteur', 'k2', ['Redaction/1'])
+if (!exc) { nf++; exc = FormType.register('AS2', 'membrecodir', 'AS2_ad', 'k1', ['A']) }
+if (!exc) { nf++; exc = FormType.register('AS2', 'membreredaction', 'AS2_ad', 'k1', ['A']) }
+if (!exc) { nf++; exc = FormType.register('AS2', 'auteur', 'AS2_auteurs', 'k2', ['Redaction/1']) }
 // Un Auteur peut aussi nommer un co-auteur
-new FormType(svc, 'coauteur', 'k2', ['Redaction/1', 'Auteur/$1'])
+if (!exc) { nf++; exc = FormType.register('AS2', 'coauteur', 'AS2_auteurs', 'k2', ['Redaction/1', 'Auteur/$1']) }
+
+/* Classe ayant des sous-classes: *****************************************************
+- aucun document n'est instantiable avec cette classe
 */
-
 class AS2$Form extends $Form {
-  constructor () { super() }
+  static _descriptor = Descriptor.doc('AS2', 'Form', 
+    { pk: ['formId'], nohash: true, subClassBy: 'type' })
 }
-if (ok) { n++; Registry.register(AS2$Form, 'AS2$Form') }
+if (!exc) { n++; exc = Registry.register(AS2$Form) }
 
+/* Sous classes de AS2$Form ******************************************************
+- N'A PAS de _descriptor
+- est register en tant que sous-classe de AS2@Credential
+*/
 class AS2$Form_membrecomite extends AS2$Form {
   docCl: string
 
@@ -60,12 +64,12 @@ class AS2$Form_membrecomite extends AS2$Form {
 class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }
 }
-if (ok) { n++; Registry.register(AS2$Form_membrecodir, 'AS2$Form_membrecodir') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_membrecomite, AS2$Form, 'membrecomite') }
 
 class AS2$Form_membreredaction extends AS2$Form_membrecomite {
   constructor () { super('Redaction') }
 }
-if (ok) { n++; Registry.register(AS2$Form_membreredaction, 'AS2$Form_membreredaction') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_membreredaction, AS2$Form, 'membreredaction') }
 
 class AS2$Form_auteur extends $Form {
   emptyEtc = { nomAuteur: '', section: '' }
@@ -106,7 +110,7 @@ class AS2$Form_auteur extends $Form {
   }
 
 }
-if (ok) { n++; Registry.register(AS2$Form_auteur, 'AS2$Form_auteur') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_auteur, AS2$Form, 'auteur') }
 
 class AS2$Form_coauteur extends $Form {
   autid: string = ''
@@ -141,13 +145,21 @@ class AS2$Form_coauteur extends $Form {
     const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
-      $1: DocDescriptor.get(this.svc || '', 'Auteur').pkValue({ autid: this.autid }),
+      $1: AS2$Auteur._descriptor.pkValue({ autid: this.autid }), // TOCHECK
+      // $1: DocDescriptor.get(this.svc || '', 'Auteur').pkValue({ autid: this.autid }),
       auteur: { autid: this.autid, nomAuteur: na },
       credTemplates: {}
     }
     this.opts.credTemplates[ct.credId] = ct
   }
 }
-if (ok) { n++; Registry.register(AS2$Form_coauteur, 'AS2$Form_coauteur') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_coauteur, AS2$Form, 'coauteur') }
 
-export const AS2nbForms = () : number => n
+export const AS2FormsReport = () : AppExc | undefined => {
+  if (!exc)
+    console.log(`AS2FormsLoading: ${n} documents, ${nf} forms`)
+  else {
+    console.log(`AS2FormsLoading FAILED: ${exc.toString()}`)
+    return exc
+  }
+}
