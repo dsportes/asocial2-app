@@ -49,7 +49,7 @@ import { ref, Ref, reactive, computed, watch } from 'vue'
 
 import { $t, sty } from '../src-fw/util'
 import stores from '../stores/all'
-import { FormType } from '../src-fw/docDescriptor'
+import { FormType } from '../src-fw/descriptor'
 
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import StdHeader from '../components-fw/StdHeader.vue'

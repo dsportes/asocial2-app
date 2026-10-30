@@ -1,51 +1,50 @@
+import d from './descriptors'
+import { AppExc } from '../src-fw/base'
 import { Registry, $Document, SOA } from '../src-fw/registry'
-import { ADMIN$Status } from '../src-fw/fwdocuments'
-import { $Credential, EmbedCred } from '../src-fw/documents'
-import { $SubsGenerator, $Perimeter } from '../src-fw/subscription'
-import { Descriptor, FormType, type collection, type idx, propType  } from '../src-fw/descriptor'
-import { AppExc } from '../src-fw/log'
+
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
 
+import { ADMIN$Status } from '../src-fw/fwdocuments'
+import { $Credential, EmbedCred } from '../src-fw/documents'
+import { $SubsGenerator, $Perimeter } from '../src-fw/subscription'
+
 let n = 0, nf = 0, exc: AppExc | undefined
-Descriptor.registerService('AS2')
 
 /*********************************************************************************/
 class AS2$Status extends ADMIN$Status {
-  static _descriptor = Descriptor.doc('AS2', 'Status', { })
+  static _descriptor = d.AS2$Status
 }
 if (!exc) { n++; exc = Registry.register(AS2$Status) }
 
 /*********************************************************************************/
 export class AS2$EmbedCred extends EmbedCred {
-  constructor (credId: string, props: any, docCl: string, docPk: string) { 
+  constructor (credId: string, props: any, docCl: string, docPk: string) {
     super(credId, props, docCl, docPk) }
 }
 
 /* Virtuels et enums **************************************************************/
 export class AS2$CoDir extends $Document {
-  static _descriptor = Descriptor.doc('AS2', 'Codir', { virtual: true })
+  static _descriptor = d.AS2$Codir
 }
 if (!exc) { n++; exc = Registry.register(AS2$CoDir) }
 
 export class AS2$Redaction extends $Document {
-  static _descriptor = Descriptor.doc('AS2', 'Redaction', { virtual: true })
+  static _descriptor = d.AS2$Redaction
 }
 if (!exc) { n++; exc = Registry.register(AS2$Redaction) }
 
 export class AS2$Section extends $Document {
-  static _descriptor = Descriptor.enum('AS2', 'Section', { virtual: true, enumCred: 'Redaction' })
-}
+  static _descriptor = d.AS2$Section}
 if (!exc) { n++; exc = Registry.register(AS2$Section) }
 
 export class AS2$Sujet extends $Document {
-  static _descriptor = Descriptor.enum('AS2', 'Sujet', { virtual: true, enumCred: 'CoDir' })
-}
+  static _descriptor = d.AS2$Sujet}
 if (!exc) { n++; exc = Registry.register(AS2$Sujet) }
 
 /*********************************************************************************/
 export class AS2$Auteur extends $Document {
-  static _descriptor = Descriptor.doc('AS2', 'Auteur', { pk: ['autid'] })
+  static _descriptor = d.AS2$Auteur
 
   // Donne le autid de svc/org/nom
   static autids: Map<string, string> = new Map()
@@ -87,7 +86,7 @@ export class AS2$Auteur extends $Document {
     } catch (e) { op.ko(e); return null }
   }
 
-  static async listeParSection (org: string, section: string, cred: $Credential) 
+  static async listeParSection (org: string, section: string, cred: $Credential)
   : Promise<AS2$Auteur[]> {
     const lst: AS2$Auteur[] = []
     const op = new Operation('ListeAuteursSection', 'AS2', org)
@@ -101,7 +100,7 @@ export class AS2$Auteur extends $Document {
         delete obj.creds
         const a = (await Registry.compile('AS2', 'Auteur', org, obj) as unknown) as AS2$Auteur
         a.creds = new Map()
-        for(const credId in creds) 
+        for(const credId in creds)
           a.creds.set(credId, new AS2$EmbedCred(credId, creds[credId], 'Auteur', a._pk))
         lst.push(a)
       }
@@ -117,7 +116,7 @@ if (!exc) { n++; exc = Registry.register(AS2$Auteur) }
 
 /*********************************************************************************/
 export class AS2$SubsGenerator extends $SubsGenerator {
-  static _descriptor = Descriptor.doc('AS2', 'SubsGenerator', { })
+  static _descriptor = d.AS2$SubsGenerator
 
   processPerimeters (lp: $Perimeter[]) {
     this.subs.setTitle('Test auteur')
@@ -135,7 +134,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
 if (!exc) { n++; exc = Registry.register(AS2$SubsGenerator) }
 
 /********************************************************************************
-Publication: 
+Publication:
 - Clés _identifiantes et de synchronisation_
   - pk: [id]
   - auteur: autid
@@ -144,15 +143,8 @@ Publication:
   - volume: volume, entier
 */
 export class AS2$Publication extends $Document {
-  static _descriptor = Descriptor.doc('AS2', 'Publication', { pk: ['pubid'], sync: true },
-    new Map<string, collection>([
-      ['sujets',  { key: ['sujets'], list: true, mutable: true, class: 'Sujet' }],
-      ['auteur',  { key: ['autid'], mutable: false, class: "Auteur" }]
-    ]),
-    new Map<string, idx>([
-      ['volume',  { type: propType.INTEGER, key: ['volume'] }]
-    ]))
- 
+  static _descriptor = d.AS2$Publication
+
   async compile () {}
 
   id: string = '' // générée aléatoirement

@@ -31,7 +31,7 @@
 <script setup lang="ts" vapor>
 // @ts-ignore
 import { Ref, ref } from 'vue'
-import { FormType } from '../src-fw/docDescriptor'
+import { FormType } from '../src-fw/descriptor'
 import { $t } from '../src-fw/util'
 
 type LabVal = {
@@ -51,15 +51,15 @@ const categs: Ref<LabVal[]> = ref([])
 const ftmap: Ref<Map<string, Map<string, FormType>>> = ref(new Map())
 
 /*
-new FormType('membrecodir', 'ad', 'k1', ['A'])
-new FormType('membreredaction', 'c1', 'k1', ['A'])
-new FormType('auteur', 'auteurs', 'k2', ['Readction/1'])
+FormType('membrecodir', 'ad', 'k1', ['A'])
+FormType('membreredaction', 'c1', 'k1', ['A'])
+FormType('auteur', 'auteurs', 'k2', ['Readction/1'])
 // Un Auteur peut aussi nommer un co-auteur
-new FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
+FormType('coauteur', 'auteurs', 'k2', ['Readction/1', 'Auteur/$1'])
 */
 
 const init = () => {
-  for(const [, ft] of FormType.all) {
+  for(const [, ft] of FormType.formTypes) {
     if (!props.allow || props.allow.has(ft.type)) { // TODO
       let e = ftmap.value.get(ft.categ)
       if (!e) { e = new Map<string, FormType>(); ftmap.value.set(ft.categ, e)}
@@ -76,7 +76,7 @@ const init = () => {
 const getFT = (c: string) : LabVal[] => {
   const l: LabVal[] = []
   const x = ftmap.value.get(c)
-  for(const [type, ft] of x) 
+  for(const [type, ft] of x)
     if (!props.allow || props.allow.has(type))
       l.push({ label: $t('TYPE_' + ft.svc + '_' + type), value: ft })
   l.sort((a, b) => a.label < b.label ? -1 : (a.label > b.label ? 1 : 0))

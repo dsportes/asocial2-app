@@ -2,8 +2,9 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'
-import { AppExc } from '../src-fw/log'
-import { DocDescriptor } from '../src-fw/docDescriptor'
+import { AppExc } from './base'
+import [ Registry ] from '../src-fw/registry'
+
 import stores from '../stores/all'
 import { onPushMsg } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
@@ -20,7 +21,7 @@ export async function getSite (svc: string, org: string) : Promise<string | unde
 }
 
 export type SubsToSync = {
-  def: string, 
+  def: string,
   v: number
 }
 
@@ -30,7 +31,7 @@ export class DocEnums {
   static async fetch (svc: string, enumName: string, org: string) : Promise<void> {
     const n = enumName + (org ? '_' + org : '')
     let lx = DocEnums.m.get(n)
-    if (!lx) 
+    if (!lx)
       lx = await DocEnums.get(svc, enumName, org)
   }
 
@@ -50,14 +51,14 @@ export class DocEnums {
     return DocEnums.labelSync (enumName, org, code)
   }
 
-  /* DocEnums.get retourne la liste des valeurs (string) 
+  /* DocEnums.get retourne la liste des valeurs (string)
   de l'énumération enumName : svc$name OU svc$name_org
   En l'absence du suffixe org, un nom de site est requis.
   */
   static async get (svc: string, enumName: string, org: string) : Promise<string[]> {
-    const dd = DocDescriptor.get(svc, enumName)
+    const dd = Registry.getClassInfo(svc, enumName)._descriptor
     if (dd.enum && dd.enum.length) return dd.enum
-    // enum externe - 
+    // enum externe -
     const cred = dd.enumCred || ''
     const n = svc + '$' + dd.name + (cred ? '_' + org : '')
     let values = DocEnums.m.get(n)
@@ -89,12 +90,12 @@ export class DocEnums {
     }
   }
 
-  static async set (svc: string, enumName: string, value: string[], org: string) 
-    : Promise<boolean> { 
+  static async set (svc: string, enumName: string, value: string[], org: string)
+    : Promise<boolean> {
     const sf = stores.safe
-    const dd = DocDescriptor.get(svc, enumName)
+    const dd = Registry.getClassInfo(svc, enumName).descriptor
     if (dd.enum && dd.enum.length) return false
-    // enum externe - 
+    // enum externe -
     const cred = dd.enumCred || ''
     const n = svc + '$' + dd.name + (cred ? '_' + org : '')
     let s = await getSite(svc, org)
@@ -175,7 +176,7 @@ export class AOperation {
     const op = new MDOperation('$GetSitesUrls')
     try {
       const res = await op.post()
-      for(const site in res.urls) 
+      for(const site in res.urls)
         m.set(site, res.urls[site])
     } catch (e) {
       await op.ko(e)
@@ -213,7 +214,7 @@ export class AOperation {
   }
 
   static async getSites (force?: boolean) : Promise<Map<string, string>> {
-    if (AOperation.urls.size === 0 || force) 
+    if (AOperation.urls.size === 0 || force)
       AOperation.urls = await AOperation.loadUrls()
     return AOperation.urls
   }
@@ -367,15 +368,15 @@ export class OperationG extends AOperation {
         throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc(8, 'HTTP_500_etc', 'post', 
+      throw new AppExc(8, 'HTTP_500_etc', 'post',
         ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
-      
+
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post', 
+      throw new AppExc(8, 'unexpected_network_service_response', 'post',
         [(this.args.svc || this.args.svc || '?'), e.toString()], e.stack || '')
     }
   }
@@ -438,7 +439,7 @@ export type ADMIN$Status = {
   at: number // time de dernière mise à jour
   txt: string // texte explicatif éventuel de l'administrateur
 }
-export const getSiteStatus = async (site: string, svc: string) 
+export const getSiteStatus = async (site: string, svc: string)
   : Promise<ADMIN$Status> => {
   const op = new AdminOperation('ADMIN$getStatus', site)
   try {
@@ -451,7 +452,7 @@ export const getSiteStatus = async (site: string, svc: string)
   }
 }
 
-export const setSiteStatus = async (site: string, svc: string, st: number, txt: string) 
+export const setSiteStatus = async (site: string, svc: string, st: number, txt: string)
   : Promise<ADMIN$Status> => {
   const op = new AdminOperation('ADMIN$setStatus', site)
   try {
@@ -513,14 +514,14 @@ abstract class A2Operation extends AOperation {
         throw AppExc.fromObj(obj)
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
-      throw new AppExc(8, 'HTTP_500_etc', 'post', 
+      throw new AppExc(8, 'HTTP_500_etc', 'post',
         ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
-      throw new AppExc(8, 'unexpected_network_service_response', 'post', 
+      throw new AppExc(8, 'unexpected_network_service_response', 'post',
         [(this.args.svc || this.args.svc || '?'), e.toString()])
     }
   }
@@ -622,7 +623,7 @@ export class AuthRecord {
 
 }
 
-export async function checkStatus (orgRoles: string[]) 
+export async function checkStatus (orgRoles: string[])
 : Promise<boolean> {
   const status: any = {}
   let allOK = true

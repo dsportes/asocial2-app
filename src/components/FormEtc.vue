@@ -1,10 +1,10 @@
 <!--
 Edite le etc d'un Form
-new FormType('membrecodir', 'k1', ['A'])
-new FormType('membreredaction', 'k1', ['A'])
-new FormType('auteur', 'k2', ['Readction/1'])
+FormType('membrecodir', 'k1', ['A'])
+FormType('membreredaction', 'k1', ['A'])
+FormType('auteur', 'k2', ['Readction/1'])
 // Un Auteur peut aussi nommer un co-auteur
-new FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
+FormType('coauteur', 'k2', ['Readction/1', 'Auteur/$1'])
 -->
 <template>
 <div v-if="fst.form">

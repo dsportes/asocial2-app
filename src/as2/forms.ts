@@ -1,7 +1,8 @@
-import { AppExc } from '../src-fw/log'
+import { AppExc } from '../src-fw/base'
 import { Registry } from '../src-fw/registry'
 import { $Form, $CredTempl } from '../src-fw/documents'
-import { Descriptor, FormType } from '../src-fw/descriptor'
+import { FormType } from '../src-fw/descriptor'
+import d from './descriptors'
 import { $t } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { AS2$Auteur } from './documents'
@@ -18,8 +19,7 @@ if (!exc) { nf++; exc = FormType.register('AS2', 'coauteur', 'AS2_auteurs', 'k2'
 - aucun document n'est instantiable avec cette classe
 */
 class AS2$Form extends $Form {
-  static _descriptor = Descriptor.doc('AS2', 'Form', 
-    { pk: ['formId'], nohash: true, subClassBy: 'type' })
+  static _descriptor = d.AS2$Form
 }
 if (!exc) { n++; exc = Registry.register(AS2$Form) }
 
@@ -32,7 +32,7 @@ class AS2$Form_membrecomite extends AS2$Form {
 
   emptyEtc = { pseudo: '' }
 
-  constructor (docCl: string) { 
+  constructor (docCl: string) {
     super(); this.docCl = docCl }
 
   /* Méthodes surchargées par type *******************************/
@@ -55,7 +55,7 @@ class AS2$Form_membrecomite extends AS2$Form {
     if (!byU) return
     const comment = $t('CREDON_' + this.docCl)
     const name = etc['pseudo']
-    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', this.docCl, 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', this.docCl,
       { pk: '1' }, comment, { name })
     this.opts.credTemplates[ct.credId] = ct
   }
@@ -78,7 +78,7 @@ class AS2$Form_auteur extends $Form {
 
   cloneEtc (byU: boolean) : Object {
     const etc: any = byU ? this.etcU : this.etcT
-    return { 
+    return {
       nomAuteur: !etc ? '' : etc['nomAuteur'],
       section: !etc ? '' : etc['section']
     }
@@ -100,7 +100,7 @@ class AS2$Form_auteur extends $Form {
     if (!byU) return
     const nomAuteur = etc['nomAuteur']
     const autid = Crypt.rnd(15)
-    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur',
       { autid: autid }, nomAuteur, { name: nomAuteur })
     this.opts = {
       auteur: { autid, nomAuteur, section: etc['section'] },
@@ -120,7 +120,7 @@ class AS2$Form_coauteur extends $Form {
 
   cloneEtc (byU: boolean) : Object {
     const etc: any = byU ? this.etcU : this.etcT
-    return { 
+    return {
       trigramme: !etc ? '' : etc['trigramme'],
       nomAuteur: !etc ? '' : etc['nomAuteur']
     }
@@ -142,11 +142,10 @@ class AS2$Form_coauteur extends $Form {
     if (!byU || !this.autid) return
     const na = etc['nomAuteur']
     const trigramme = etc['trigramme']
-    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur', 
+    const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur',
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
       $1: AS2$Auteur._descriptor.pkValue({ autid: this.autid }), // TOCHECK
-      // $1: DocDescriptor.get(this.svc || '', 'Auteur').pkValue({ autid: this.autid }),
       auteur: { autid: this.autid, nomAuteur: na },
       credTemplates: {}
     }

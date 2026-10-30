@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
-import { AppExc } from '../src-fw/log'
+import { AppExc } from './base'
 import { sleep } from '../src-fw/util'
 import { $Perimeter, $Perims, $Def } from '../src-fw/subscription'
 import { isNullOrUndefined } from "node:util"
@@ -62,8 +62,8 @@ Ouverture en mode _sync_ SANS reset:
     dont la lat est obsolète.
   - lit l'objet options et le retourne.
 
-Un appel ultérieur peut passer un objet options (résultat de la 
-fusion avec l'objet options de l'appelant): celui-ci est écrit dans la base. 
+Un appel ultérieur peut passer un objet options (résultat de la
+fusion avec l'objet options de l'appelant): celui-ci est écrit dans la base.
 
 Les autres méthodes sont:
 - getDC: retourne un document / collection
@@ -149,9 +149,9 @@ export type Options = {
   pref: string
 }
 
-export type StartPlane = { 
+export type StartPlane = {
   perims: $Perims,
-  prefs: Prefs, 
+  prefs: Prefs,
   options: Options
 }
 
@@ -179,7 +179,7 @@ export async function volumeIDB (appName: string, userId: string)
   try {
     const db = new AppDB(name)
     let vp = 0, vd = 0, vc = 0
-    await db.docs.each((r) => { 
+    await db.docs.each((r) => {
       vd += (r.data ? r.data.length : 0)})
     await db.colls.each((r) => { vc += (r.data ? r.data.length : 0)})
     await db.perims.each((r) => { vp += (r.data ? r.data.length : 0)})
@@ -197,7 +197,7 @@ session.step >= 1
 */
 export class IDB {
 
-  static EX (e: any, opName: string) { 
+  static EX (e: any, opName: string) {
     const ex = new AppExc(8, 'IDB_error', opName, [e.message])
     if (e && e.stack) ex.stack = e.stack
     return ex
@@ -226,7 +226,7 @@ export class IDB {
   }
 
   close () {
-    if (this.db) 
+    if (this.db)
       try { this.db.close() } catch(e) {}
     idb = null
   }
@@ -251,7 +251,7 @@ export class IDB {
     const x = await this.db.singletons.get('$OPTIONS$')
     if (x && x.data) {
       const y = await this.decryptData(x.data)
-      if (y) return decode(y) as Options 
+      if (y) return decode(y) as Options
     }
     return { orgRoles: [], pref: ''}
   }
@@ -301,7 +301,7 @@ export class IDB {
     try {
       const obj: any = {}
       for(const [code, pr] of prefs) obj[code] = pr
-      const data = await this.cryptData(encode(obj)) 
+      const data = await this.cryptData(encode(obj))
       await this.db.singletons.put({ name: '$PREFS$', data })
     } catch (e) {
       throw IDB.EX(e, 'storePrefs')
@@ -386,7 +386,7 @@ export class IDB {
   }
 
   // Méthodes publiques *******************************************/
-  /* openPlane : 
+  /* openPlane :
   Le constructor a été invoqué par l'appelant.
   - lit tous les perims et en retourne une Map par svc/org
   - lit tous les singletons:
@@ -436,9 +436,9 @@ export class IDB {
       const n = def.split('/')
       const sodef = svc + '/' + org + '/' + def
       const r: Doc | Coll | undefined = n.length === 2 ? await this.db.docs.get(sodef) : await this.db.docs.get(sodef)
-      return !r ? undefined : { 
-        lat: r.lat, 
-        v: r.v, 
+      return !r ? undefined : {
+        lat: r.lat,
+        v: r.v,
         data: r.data ? await this.decryptData(r.data) : null
       }
     } catch (e) {
@@ -462,16 +462,16 @@ export class IDB {
   /* Purge des obsolètes (voire tous) d'un svc/org */
   async purge (so: string, limit: number) : Promise<void> {
     if (limit && PURGEOBS) {
-      await this.db.transaction('rw', 
+      await this.db.transaction('rw',
         this.db.perims, this.db.docs, this.db.colls, async () => {
         await Promise.all([
           this.db.docs.where('so').equals(so).and(x => x.lat < limit).delete(),
           this.db.colls.where('so').equals(so).and(x => x.lat < limit).delete()
         ])
-      }) 
-    } 
+      })
+    }
     if (!limit && GC) {
-      await this.db.transaction('rw', 
+      await this.db.transaction('rw',
         this.db.perims, this.db.docs, this.db.colls, async () => {
         await Promise.all([
           this.db.perims.where('so').equals(so).delete(),

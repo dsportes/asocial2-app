@@ -1,12 +1,11 @@
+import d from './descriptors'
+import { AppExc } from './base'
 import { Registry, $Document } from './registry'
-import { Descriptor  } from '../src-fw/descriptor'
-import { AppExc } from '../src-fw/log'
 
 let n = 0, nf = 0, exc: AppExc | undefined
-Descriptor.registerService('ADMIN')
 
 export class ADMIN$Status extends $Document {
-  static _descriptor = Descriptor.doc('ADMIN', 'Status', { })
+  static _descriptor = d.ADMIN$Status
 
   static release = 0
   svc: string = ''

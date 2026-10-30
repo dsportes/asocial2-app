@@ -1,7 +1,8 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
 import { Registry, $Document, SOA } from '../src-fw//registry'
-import { DocDescriptor, FormType } from '../src-fw/docDescriptor'
+
+import { FormType } from '../src-fw/descriptor'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { $Perimeter } from '../src-fw/subscription'
 import stores from '../stores/all'
@@ -22,12 +23,12 @@ export class $CredTempl {
   credK: string
   nameK: string // crypté par clé K de U en base 64
   signId: string // signature de credId par privs en base 64
-  
+
   pubv: Uint8Array
   pubc: Uint8Array
   props: Object
 
-  static async new (userId: string, svc: string, org: string, 
+  static async new (userId: string, svc: string, org: string,
     docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
     const t = new $CredTempl(userId, svc, docCl, src, name, props)
     const sf = stores.safe
@@ -57,7 +58,7 @@ export class $CredTempl {
     this.userId = userId
     this.svc = svc
     this.docCl = docCl
-    this.docPk = DocDescriptor.get(svc, docCl).pkValue(src)
+    this.docPk = Registry.getClassInfo(svc, docCl, src).pkValue(src)
     this.credId = Crypt.rnd(15)
     this.props = props
     this.signId = ''
@@ -66,7 +67,7 @@ export class $CredTempl {
     this.pubc = new Uint8Array(0)
     this.credK = ''
   }
-  
+
 }
 
 abstract class BasicCred {
@@ -84,7 +85,7 @@ abstract class BasicCred {
     if (!su) return s1 + $t('SUSPcred_0')
     const s = su[0] ? dhcool(su[0] * 60000) : ''
     const e = su[1] ? dhcool(su[1] * 60000) : ''
-    if (su[0] === 0) 
+    if (su[0] === 0)
       return s1 + (!e ? $t('SUSPcred_4') : $t('SUSPcred_2', [e]))
     return s1 + (!e ? $t('SUSPcred_1', [s]) : $t('SUSPcred_3', [s, e]))
   }
@@ -129,9 +130,7 @@ export type $Cred = {
 /* $Credential: possiblemernt "étendu" depuis le document (v more).
 */
 export class $Credential extends BasicCred {
-  descriptor() { 
-    return (this.constructor as any)['docDescriptor']
-  }
+  // descriptor() { return (this.constructor as any)['descriptor'] }
 
   // Surchargé par sous-classe
   getPerimeters () : $Perimeter[] {
@@ -315,9 +314,7 @@ Document `Form` hébergé dans la DB spécifique de `svc / org`.
 Sous-classes applicatives $Form_type par "type"
 */
 export class $Form extends $Document {
-  descriptor() { 
-    return (this.constructor as any)['docDescriptor']
-  }
+  // descriptor() { return (this.constructor as any)['descriptor'] }
 
   /* Par commodité svc et org sont ajoutés au $Form lu (par Get ou List)
   du service. */
@@ -353,7 +350,7 @@ export class $Form extends $Document {
 
   static basicForm (soa: SOA, type: string, userId: string) {
     return $Form.new({
-      svc: soa.svc, org: soa.org, 
+      svc: soa.svc, org: soa.org,
       type, formId: Crypt.rnd(15), userId,
       v: 0, maxLife: 0, status: 0,
       etcU: null, etcT: null, msgU: null, msgT: null, opts: {}
@@ -423,7 +420,7 @@ export class $Form extends $Document {
 
   getCh () { return Crypt.rnd(9) }
 
-  get ft () : FormType | undefined { 
+  get ft () : FormType | undefined {
     return FormType.get(this.svc || '', this.type) }
 
   async aesU () : Promise<Uint8Array | null> {
@@ -466,7 +463,7 @@ export class $Form extends $Document {
     return creds
   }
 
-  static async get(svc: string, org: string, formId: string, type: string, userId: string) 
+  static async get(svc: string, org: string, formId: string, type: string, userId: string)
   : Promise<$Form | null> {
     const sf = stores.safe
     const creds = userId === sf.userId ? null : $Form.credsForTP(svc, org)
@@ -522,7 +519,7 @@ export class $Form extends $Document {
     const docCls: Set<string> = new Set()
     for (const x of filter)
       docCls.add(x.substring(0, x.indexOf('/')))
-    for(const [t, e] of FormType.all) {
+    for(const [t, e] of FormType.formTypes) {
       for(const c of e.creds) {
         const cl = c.substring(0, c.indexOf('/'))
         if (docCls.has(cl)) ft.add(e.type)
@@ -546,7 +543,7 @@ export class $Form extends $Document {
       const lst = res.forms as $FormObj[]
       if (!lst || !lst.length) return []
       const lf: $Form[] = []
-      for(const obj of lst) 
+      for(const obj of lst)
         lf.push($Form.new(obj))
       return lf
     } catch (e) {

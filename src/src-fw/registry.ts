@@ -1,7 +1,7 @@
 // @ts-ignore
 import { encode } from '@msgpack/msgpack'
 import { Descriptor } from '../src-fw/descriptor'
-import { AppExc } from '../src-fw/log'
+import { AppExc } from './base'
 
 export type SOA = {
   svc: string
@@ -28,6 +28,8 @@ export class ClassInfo {
     return new f() as $ADocument
   }
 
+  pkValue (src?: any, nohash?: boolean) : string{ return this.pkValue(src, nohash)}
+
   get fullName () { return this.svc + '/' + this.docCl + (this.subCl ? ('/' + this.subCl) : '')}
 
 }
@@ -42,7 +44,7 @@ export class Registry {
   /* Pour chaque svc / role, sous-classes de Credential ayant déclaré ce role*/
   static credClassesbyRole: Map<string, Set<Function>> = new Map()
 
-  static getCredClassesOfRole(svc: string, role: string) { 
+  static getCredClassesOfRole(svc: string, role: string) {
     return Registry.credClassesbyRole.get(svc + '/' + role) }
 
 /*
@@ -107,15 +109,15 @@ export class Registry {
 
   /* Retourne le ClassInfo,
   - de la classe svc / docCl
-  - OU de la SOUS-CLASSE de svc / docCl selon la valeur de la propriété 
+  - OU de la SOUS-CLASSE de svc / docCl selon la valeur de la propriété
     de data qui donne le nom de la sous-classe
   */
   static getClassInfo (svc: string, docCl: string, data?: any ) : ClassInfo {
     let clazz = Registry.constructors.get(svc + '/' + docCl)
-    if (!clazz) 
+    if (!clazz)
       throw new AppExc(3, 'class_not_found', 'Registry.getClassInfo(1)', [svc + '/' + docCl])
     const descriptor = (clazz as any)['_descriptor']
-    if (!descriptor) 
+    if (!descriptor)
       throw new AppExc(3, 'unregistered_class', 'Registry.getClassInfo(2)', [svc + '/' + docCl])
     let subCl = ''
     if (data) {
@@ -123,10 +125,10 @@ export class Registry {
         throw new AppExc(3, 'subclass_property_not_declared', 'Registry.getClassInfo(3)', [svc + '/' + docCl])
       subCl = data[descriptor.subClassBy]
       if (!subCl)
-        throw new AppExc(3, 'subclass_property_value_not_found_in_data', 'Registry.getClassInfo(4)', 
+        throw new AppExc(3, 'subclass_property_value_not_found_in_data', 'Registry.getClassInfo(4)',
           [svc + '/' + docCl + ' -- ' + descriptor.subClassBy])
       clazz = Registry.constructors.get(svc + '/' + docCl + '/' + subCl)
-      if (!clazz) 
+      if (!clazz)
         throw new AppExc(3, 'subclass_not_found', 'Registry.getClassInfo(4)', [svc + '/' + docCl + '/' + subCl])
     }
     return new ClassInfo(svc, docCl, subCl, descriptor, clazz)

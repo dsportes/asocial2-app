@@ -6,7 +6,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { useSafeStore } from '../stores/safe-store'
 import { useConfigStore } from '../stores/config-store'
 import { deleteIDB } from '../src-fw/idb'
-import { AppExc } from '../src-fw/log'
+import { AppExc } from './base'
 
 const STORES = {
   header: 'id', // singleton: id = '1'
@@ -25,7 +25,7 @@ export class IDBsafe {
     return ex
   }
 
-  /* On n'ouvre pas systématiquement IDB safe ce qui 
+  /* On n'ouvre pas systématiquement IDB safe ce qui
     aurait pour effet de la créer si elle n'existait pas.
     Or en mode incognito on ne veut pas la créer.
     Elle n'est ouverte QUE si elle existait.
@@ -34,7 +34,7 @@ export class IDBsafe {
     if (!safeBox) safeBox = useSafeStore()
     if (!config) config = useConfigStore()
     if (IDBsafe.db) await IDBsafe.load() // reload sur fin de session
-    else if (await Dexie.exists('safe')) 
+    else if (await Dexie.exists('safe'))
       await IDBsafe.openInAnyCase()
   }
 

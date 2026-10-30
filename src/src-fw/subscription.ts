@@ -3,9 +3,9 @@ import { encode, decode } from '@msgpack/msgpack'
 
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
+import { Registry } from '../src-fw/registry'
 import { Operation } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
-import { DocDescriptor } from '../src-fw/docDescriptor'
 import { $ADocument, $Document } from '../src-fw/registry'
 import { getStore } from '../stores/docs'
 
@@ -16,7 +16,7 @@ export type $DefsXref = Map<string, Map<string, Set<string>>>
 
 export const buildXref = () => {
   const session = stores.session
-  const m0: Map<string, Map<string, Set<string>>> = new Map() 
+  const m0: Map<string, Map<string, Set<string>>> = new Map()
   for(const [so, m] of session.perims) {
     for(const [pid, p] of m) {
       for(const def of p.defs) {
@@ -33,7 +33,7 @@ export const buildXref = () => {
 }
 
 /* versions d'une souscription: sur le serveur, détenue localement
-si versions[0] === versions[1] la souscription est à jour en session 
+si versions[0] === versions[1] la souscription est à jour en session
 */
 export type versions = [number, number]
 
@@ -50,7 +50,7 @@ export type $SubsObj = {
 export class $Def {
   /* 1: docCl/pk : le document de classe docCl de clé pk
     2: docCl : la collection des documents de classe docCl
-    3: docCl/colName/pk : la collection des documents de classe docCl 
+    3: docCl/colName/pk : la collection des documents de classe docCl
     dont la propriété colName vaut pk
   */
   readonly type: number
@@ -59,16 +59,16 @@ export class $Def {
   readonly colName?: string
 
   get definition () : string {
-    return this.type === 2 ? this.docCl : 
+    return this.type === 2 ? this.docCl :
       (this.type === 1 ? this.docCl + '/' + this.pk : this.docCl + '/' + this.colName + '/' + this.pk)
   }
 
   get isColl () { return this.type !== 1 }
-  colClass (svc: string) : string{ 
-    const dd = DocDescriptor.get(svc, this.docCl)
-    return dd && this.colName ? dd.colClass(this.colName) : '' 
+  colClass (svc: string) : string{
+    const dd = Registry.getClassInfo(svc, this.docCl).descriptor
+    return this.colName ? dd.colClass(this.colName) : ''
   }
-  
+
   constructor (definition: string) {
     const defx = definition.split('/')
     this.type = defx.length === 1 ? 2 : (defx.length === 2 ? 1 : 3)
@@ -87,7 +87,7 @@ export class $Perimeter {
 
   readonly docCl: string
   readonly code: string
-  readonly docPk: string 
+  readonly docPk: string
 
   readonly role: string
   readonly plane: boolean
@@ -96,18 +96,18 @@ export class $Perimeter {
 
   get id () { return this.code + '/' + this.docCl + '/' + this.docPk }
 
-  credential () { 
+  credential () {
     const session = stores.session
     if (session.planeMode) return null
     const sf = stores.safe
     return sf.myCredOfDoc(this.svc, this.org, this.docCl, this.docPk)
   }
 
-  get name () { 
+  get name () {
     const c = this.credential()
     return c ? c.name : this._name }
 
-  constructor (svc: string, org: string, code: string, docCl: string, docPk: string, 
+  constructor (svc: string, org: string, code: string, docCl: string, docPk: string,
     role: string, plane: boolean, definitions: string[], name: string) {
     this.svc = svc; this.org = org
     this.docCl = docCl; this.code = code; this.docPk = docPk
@@ -172,7 +172,7 @@ export class $Subs extends $Document {
       return false
     }
   }
-  
+
 }
 
 export class $SubsGenerator extends $ADocument {
@@ -184,7 +184,7 @@ export class $SubsGenerator extends $ADocument {
   roles: Set<string> = new Set()
 
   init (svc: string, org: string) {
-    this.svc = svc    
+    this.svc = svc
     this.org = org
     this.creds = stores.safe.mySimpleCreds(svc, org)
 
@@ -194,7 +194,7 @@ export class $SubsGenerator extends $ADocument {
       if (x.substring(0, i) === org) this.roles.add(x.substring(i + 1))
     }
     this.pref = session.currentPref || {}
-    
+
     this.subs = new $Subs()
     return this
   }
@@ -213,7 +213,7 @@ export class $SubsGenerator extends $ADocument {
 
 class $DefSigner {
   svc: string
-  creds: Map<string, $Credential> 
+  creds: Map<string, $Credential>
 
   constructor (svc: string, org: string) {
     this.svc = svc
@@ -234,33 +234,33 @@ class $DefSigner {
 }
 
 /* Les appels à FW$Sync se font à deux occasions:
-- pour charger des documents / collections A LA PREMIERE demande 
+- pour charger des documents / collections A LA PREMIERE demande
   au cours de la session, APRES avoir déclaré les souscriptions
 - sur réception d'une notification
 L'appel est STRICTEMENT SERIALISE: des appels parallèles conduiraient
 à des corruptions de données (principalement les collections).
 
-FW$Sync : synchronise les defs des souscriptions citées 
+FW$Sync : synchronise les defs des souscriptions citées
 - toSync = SubsToSync[]
 subsToSync = {
-  def: string, 
+  def: string,
   v: number - version la plus récente détenue en session
     - si v == 0, INTEGRALE, sinon INCREMENTALE
 }
-Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue' 
-des documents par exemple: 
+Pour chaque 'def' retourne la sous-collection 'clazz/colName/colValue'
+des documents par exemple:
   - type 0: Auteur : collection de 0-N éléments.
   - type 1: Auteur/sh(Zola) : 0-1 élément.
   - type 2: Article/auteurs/sh(Zola) : collection de 0-N éléments.
 - pour chaque def d'entrée, un élément syncs[def] est retourné
-  - type 0 et 2: { incr, v, datas: Uint8Array[], datasD: Uint8Array[], datasM: Uint8Array[] } 
+  - type 0 et 2: { incr, v, datas: Uint8Array[], datasD: Uint8Array[], datasM: Uint8Array[] }
   - type 1: { incr, v, data: Uint8Array | null } datas 0 ou 1 élément
 
 - INTEGRALE: tous les éléments connus actuellement.
-  - pour le type 1 
+  - pour le type 1
     - le document n'existe PAS : v == 0, data: absent
     - le document existe : v: sa version data: son contenu
-  - pour les types 0 et 2 
+  - pour les types 0 et 2
     - la collection est vide : v == 0 (datas moved deleted sont absents)
     - la collection n'est PAS vide:
       - datas : liste des contenus des documents
@@ -271,7 +271,7 @@ des documents par exemple:
     - document ayant disparu DEPUIS vs: v version de disparition, data: null
     - document ayant changé (pas disparu): v est sa version, data: son contenu
     - document inchangé: v: 0
-  - pour les types 0 et 2, 
+  - pour les types 0 et 2,
     - collection inchangée: v: 0 (datas dels sont absents)
     - collection changée: v et 1 à 3 listes
       - v : version du changement le plus récent
@@ -280,11 +280,11 @@ des documents par exemple:
         - ceux qui sont dans la collection et ont changé depuis vs avec data complète
       - moved : [Uint8Array] type 2 seulement
         - ceux ayant quitté la collection depuis vs avec leur data complète
-      - deleted : couples des [pk, v] des documents supprimés 
+      - deleted : couples des [pk, v] des documents supprimés
         où v est leur dh de supression
 
 Retour:
-- syncs[def]: { v, data: Uint8Array[], 
+- syncs[def]: { v, data: Uint8Array[],
   datas: Uint8Array[], moved :Uint8Array[], deleted: [[pk, v], ...]}
   - si v == -1: credential non trouvé (autres éléments null)
 - now : date-heure de l'opération IMPORTANTE. C'est la dh d'ASSERTION,

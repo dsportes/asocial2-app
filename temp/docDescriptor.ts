@@ -1,5 +1,5 @@
 import { Crypt } from '../src-fw/crypt'
-import { AppExc } from '../src-fw/log'
+import { AppExc } from './base'
 
 // Liste ordonnnée de noms de propriétés identifiantes
 export type props = string[]
@@ -78,13 +78,13 @@ export class DocDescriptor {
     return svc
   }
 
-  static get(svc: string, docCl: string) : DocDescriptor { 
+  static get(svc: string, docCl: string) : DocDescriptor {
     const dd = this.all.get(svc + '$' + docCl)
     if (dd) return dd
     throw new AppExc(103, 'invalid_class_name', 'DocDescriptor.get', [svc + '$' + docCl])
   }
 
-  static getNoexc(svc: string, docCl: string) : DocDescriptor | undefined{ 
+  static getNoexc(svc: string, docCl: string) : DocDescriptor | undefined{
     return this.all.get(svc + '$' + docCl)
   }
 
@@ -130,7 +130,7 @@ export class DocDescriptor {
     const idx = this.indexes ? this.indexes.get(idxName) : undefined
     return !idx ? false : idx.testable || false
   }
- 
+
   /* Retourne la valeur d'une collection name d'une "source" ayant les propriétés citées */
   getCollId (src: any, name: string) : string[] | null {
     const c = this.hasColls && this.colls ? this.colls.get(name) : null
@@ -188,15 +188,15 @@ export class DocDescriptor {
   checkProps (clName: string, props: props) {
     const ps = new Set()
     for (const p of props) {
-      if (!DocDescriptor.isVarName(p)) 
+      if (!DocDescriptor.isVarName(p))
         throw new AppExc(3, 'property_name_syntax', 'docDescriptor', [clName + '.' + p])
-      if (ps.has(p)) 
+      if (ps.has(p))
         throw new AppExc(3, 'property_name_duplicated', 'docDescriptor', [clName + '.' + p])
       ps.add(p)
     }
   }
 
-  constructor (svc: string, 
+  constructor (svc: string,
     arg: Descriptor,
     colls?: Map<string, collection> | null,
     indexes?: Map<string, idx> | null) {
@@ -204,7 +204,7 @@ export class DocDescriptor {
     if (!DocDescriptor.services.has(svc))
       throw new AppExc(3, 'not_configured_service', 'docDescriptor', [svc])
     this.svc = svc
-    if (!DocDescriptor.isDocName(arg.name)) 
+    if (!DocDescriptor.isDocName(arg.name))
       throw new AppExc(3, 'invalid_class_name', 'docDescriptor', [arg.name])
     const fn = this.svc + '$' + arg.name
     if (DocDescriptor.all.get(fn))
@@ -212,12 +212,12 @@ export class DocDescriptor {
     this.name = arg.name
     if (arg.pk) {
       this.checkProps(this.name, arg.pk)
-      this.pk = arg.pk 
+      this.pk = arg.pk
     }
     this.nohash = arg.nohash || false
     this.enum = arg.enum
     this.enumCred = arg.enumCred
-    if (arg.subClassBy && !DocDescriptor.isVarName(arg.subClassBy)) 
+    if (arg.subClassBy && !DocDescriptor.isVarName(arg.subClassBy))
       throw new AppExc(3, 'property_name_syntax', 'DocDescriptor', [this.name + '.' + arg.subClassBy])
     this.subClassBy = arg.subClassBy
 
@@ -256,7 +256,7 @@ export class FormType {
   static refClasses$ : Set<string> = new Set()
 
   static size () { return DocDescriptor.all.size}
-  static get (svc: string, type: string) { 
+  static get (svc: string, type: string) {
     return this.all.get(svc + '$' + type)}
 
   svc: string

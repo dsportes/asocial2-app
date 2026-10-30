@@ -16,7 +16,7 @@ import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/subscription'
 import { $Document, Registry } from '../src-fw/registry'
 import { FW$Sync, $SubsGenerator } from '../src-fw/subscription'
-// import { AppExc } from '../src-fw/log'
+// import { AppExc } from '../src-fw/base'
 import { idb } from '../src-fw/idb'
 
 let _session: any = null
@@ -39,7 +39,7 @@ type MsgNotif = {
   org: string // 'demo'
   now: number // dh de l'opération ayant publié le message
   hbc: string
-  title: string // 'myApp - demo', 
+  title: string // 'myApp - demo',
   body: string // 'Chat reçu',
   url: string // 'http...'
   defs: string // liste de def séparés par un espace
@@ -72,8 +72,8 @@ export async function onPushMsg (payload: string) {
 export type IDocStore = {
   readonly svc: string
   readonly org: string
-  getXref (def: $Def) : Set<string> 
-  
+  getXref (def: $Def) : Set<string>
+
   fetch (lp: $Perimeter[], waiting?: boolean, force?: number) : Promise<void>
   waitNextSync (p: $Perimeter) : Promise<void>
   forcedResync (p?: $Perimeter) : void
@@ -129,14 +129,14 @@ export type IDBrow = {
 export abstract class $DCItem {
   /*
    0: sync ni en queue, ni posté
-   1: sync en queue, 
+   1: sync en queue,
    2: sync posté pas revenu,
    3: posté, revenu
    4: changement notifié, à resync
   */
   syncSt: number = 0
   def: $Def
-  /* sat : service assert time. Le service affirme que le document / collection 
+  /* sat : service assert time. Le service affirme que le document / collection
   avait bien cette valeur à la date-heure de l'opération sync */
   sat: number = 0 // service assertion time
   sv: number = 0 // version du document / collection en service
@@ -164,7 +164,7 @@ type Row = {
 }
 
 type APState = {
-  /* 
+  /*
     1: inscrit, pas encore abonné
     2: actif, abonné
     3: synchro demandée au moins une fois
@@ -208,7 +208,7 @@ export class SyncQueue {
       ne l'a concerné (cad théoriquement à jour)
     Leur statut devient 1
       0: sync ni en queue, ni posté
-      1: sync en queue, 
+      1: sync en queue,
       2: sync posté pas revenu,
       3: posté, revenu
       4: changement notifié, à resync
@@ -216,7 +216,7 @@ export class SyncQueue {
   static push (svc: string, org: string, items: $DCItem[], force?: boolean) {
     for(const item of items) {
       if (item.syncSt !== 1 && item.syncSt !== 2 &&
-       (force || item.syncSt === 0 || item.syncSt === 4)) 
+       (force || item.syncSt === 0 || item.syncSt === 4))
         SyncQueue.qitems.push({ svc, org, item })
     }
     if (SyncQueue.syncRunning || !SyncQueue.qitems.length || !session().syncOK) return
@@ -245,7 +245,7 @@ export class SyncQueue {
         if (x.item.lv || x.item.def.isColl) break
       }
       const [sat, syncs, hbc] = await sync.post()
-      if (sat !== 0) { 
+      if (sat !== 0) {
         std.manageHbc(2, hbc)
         for(const definition in syncs) {
           const dcdata = (syncs as any)[definition] as $DCData
@@ -272,7 +272,7 @@ export class SyncQueue {
 /* Les DocStore sont créés en début de session pour héberger les documents
 et collections de la session pour chauqe couple svc / org.
 Ils sont détruits en fin de session.
-*/ 
+*/
 const useStore = (id: string) =>
   defineStore(`store-${id}`, () => {
 
@@ -296,7 +296,7 @@ const useStore = (id: string) =>
     const getXref = (def: $Def) : Set<string> => {
       return session().getXref(svc, org, def)
     }
-    
+
     const upd = (item: $DCItem) => {
       if (item.def.type === 1) {
         delete docs[item.def.definition]
@@ -373,7 +373,7 @@ const useStore = (id: string) =>
     /* Ces documents sont modifiés mais SURTOUT NE SONT PLUS dans la collection
     Les documents de la collection ont une classe différente pour un type 2 ou 3
     */
-    async function movedDatas (item: $DCItem, sat: number, datas: Uint8Array[]) 
+    async function movedDatas (item: $DCItem, sat: number, datas: Uint8Array[])
     : Promise<Set<string>> {
       const pks = new Set<string>()
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
@@ -398,7 +398,7 @@ const useStore = (id: string) =>
     /* Ces documents sont ajoutés ou modifiés mais SONT dans la collection
     Les documents de la collection ont une classe différente pour un type 2 ou 3
     */
-    async function manageDatas (item: $CollItem, sat: number, datas: Uint8Array[]) 
+    async function manageDatas (item: $CollItem, sat: number, datas: Uint8Array[])
       : Promise<Set<string>> {
       const pks = new Set<string>()
       const docCl = item.def.type === 2 ? item.def.docCl : item.def.colClass(svc)
@@ -467,14 +467,14 @@ const useStore = (id: string) =>
       else await storeColl(item as $CollItem, now, dcdata as $CollData)
     }
 
-    /* 
+    /*
     INTEGRAL
     - le document n'existe PAS : v == 0, data: absent
     - le document existe : v: sa version data: son contenu
     INCREMENTAL
     - document ayant disparu DEPUIS vs: v version de disparition, data: ZOMBI
     - document ayant changé (pas disparu): v est sa version, data: son contenu
-    - document inchangé: v: 0    
+    - document inchangé: v: 0
     */
     const storeDoc = async (item: $DocItem, sat: number, cd: $DocData) : Promise<void> => {
       const v  = cd.v
@@ -531,7 +531,7 @@ const useStore = (id: string) =>
       }
     }
 
-    /* 
+    /*
     INTEGRAL
     - la collection est vide : v == 0 (datas moved deleted sont absents)
     - la collection n'est PAS vide:
@@ -543,7 +543,7 @@ const useStore = (id: string) =>
       - v : version du changement le plus récent
       - datas : [Uint8Array]
         - documents AJOUTES à la collection depuis vs avec leur data complète
-        - documents qui étaient et sont toujours dans la collection 
+        - documents qui étaient et sont toujours dans la collection
           et ONT CHANGE depuis vs avec data complète
       - moved : [Uint8Array] type 3 seulement
         - ceux AYANT QUIITE la collection depuis vs avec leur data complète
@@ -578,7 +578,7 @@ const useStore = (id: string) =>
             }
           }
         }
-      } else { 
+      } else {
         if (v === 0) { // la collection est inchangée - item EXISTE - rafraichissement de sat
           item.sat = sat
           upd(item)
@@ -587,7 +587,7 @@ const useStore = (id: string) =>
             upd(item)
             if (idb) await idb.updLV(svc, org, item.def, sat, v)
           }
-        } else { 
+        } else {
           /* La collection a changé
           cd.v : est sa version
           datas et deleted : A AJOUTER (s'il n'y était pas) / CHANGES (s'il y était) pour type 2 et 3
@@ -616,7 +616,7 @@ const useStore = (id: string) =>
           if (item.sat < sat) {
             item.pks = pks
             const data = encode(Array.from(pks))
-            await manageData(item, sat, v, data)            
+            await manageData(item, sat, v, data)
           }
         }
       }
@@ -626,7 +626,7 @@ const useStore = (id: string) =>
       // Item est vierge
       if (!idb) return
       const r = await idb.getDC(svc, org, item.def.definition)
-      if (r && r.data) 
+      if (r && r.data)
         try {
           const obj = decode(r.data)
           const doc = await Registry.compile(svc, item.def.docCl, org, obj) as $Document
@@ -645,7 +645,7 @@ const useStore = (id: string) =>
       if (!idb) return
       // Item est vierge
       const r = await idb.getDC(svc, org, item.def.definition)
-      if (r && r.data && r.v > item.sv) 
+      if (r && r.data && r.v > item.sv)
         try { // sinon celui de retour de sync est plus récent
           const x = decode(r.data)
           // TOCHECK
@@ -718,7 +718,7 @@ const useStore = (id: string) =>
     const fetch = async (lp: $Perimeter[], waiting?: boolean, _force?: number) : Promise<void> => {
       const force = _force || 0
       for(const p of lp)
-        if (!activePerims[p.id]) 
+        if (!activePerims[p.id])
           activePerims[p.id] = { status: 0, lastSync: 0, resolves: [], perimeter: p }
 
       if (session().planeMode) {
@@ -754,8 +754,8 @@ const useStore = (id: string) =>
         for(const p of lp2) {
           const apstate = activePerims[p.id]
           if (apstate.lastSync === 0)
-            promises.push(new Promise((resolve) => { 
-              apstate.resolves.push(resolve) 
+            promises.push(new Promise((resolve) => {
+              apstate.resolves.push(resolve)
             }))
         }
         if (promises.length) {
@@ -770,7 +770,7 @@ const useStore = (id: string) =>
     Cependant si par superstition, ou problèmes réseau cahotiques,
     l'utilisateur veut resynchroniser des périmètres
     par crainte d'avoir perdu des "notifications",
-    il peut les forcer. 
+    il peut les forcer.
     */
     const forcedResync = (p?: $Perimeter) : void => {
       const lp1: $Perimeter[] = [] // périmètres à souscrire
@@ -792,7 +792,7 @@ const useStore = (id: string) =>
       let noSync = false
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
-        if (item.sat === 0) { 
+        if (item.sat === 0) {
           noSync = true
           break
         }
@@ -803,7 +803,7 @@ const useStore = (id: string) =>
     }
 
     /* Retour de synchronisation:
-    - check les périmètres actifs ayant fait l'objet 
+    - check les périmètres actifs ayant fait l'objet
       d'au moins une demande de synchro
     - resolve tous les promises en attente sur le périmètre
       1: inscrit, pas encore abonné
@@ -841,10 +841,10 @@ const useStore = (id: string) =>
       if (!hasNet) return
       let apstate = activePerims[p.id]
       if (!apstate && apstate.status < 2) return
-      return new Promise((resolve) => { 
-        apstate.resolves.push(resolve) 
+      return new Promise((resolve) => {
+        apstate.resolves.push(resolve)
       })
-    } 
+    }
 
     const hb = reactive({
       dh: 0, // dh de souscription
@@ -853,12 +853,12 @@ const useStore = (id: string) =>
     })
 
     /*
-    hbcMode 
+    hbcMode
       1: souscription
       2: synchronisation
       3: heart beat (ne revient pas)
       4: op avec notif
-      5: notification 
+      5: notification
     */
     const manageHbc = (hbcMode: number, hbc: string) => {
       const j = hbc.indexOf(' ')
@@ -895,7 +895,7 @@ const useStore = (id: string) =>
       }
     }
 
-    return { 
+    return {
       svc, org, getXref, getApstate, subsOK,
       getItem,
       onNotif, storeDC, checkResolves,

@@ -43,7 +43,7 @@
             datasize="auteur" width="sm"/>
 
           <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
-          <div v-for="([, c], idx) in aut.a.creds" :key="c.credId" 
+          <div v-for="([, c], idx) in aut.a.creds" :key="c.credId"
             :class="'row q-ml-lg cursor-pointer ' + dkli(idx)" @click="openCred(c)">
             <div class="col-3 font-mono q-pr-sm text-bold">{{ c.props.trig }}</div>
             <div class="col-9 text-italic q-pr-sm">{{ c.editSusp() }}</div>
@@ -75,7 +75,6 @@ import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum from '../components-fw/SelectEnum.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
-import { DocDescriptor } from '../src-fw/docDescriptor'
 import { AS2$Auteur, AS2$EmbedCred } from '../as2/documents'
 
 const ui = stores.ui
@@ -109,8 +108,8 @@ const selAut = async (a: AS2$Auteur | null) => {
 }
 
 const majNa = (n: string) => { aut.newNa = n }
-const majSection = async (n: string) => { 
-  aut.newSection = n 
+const majSection = async (n: string) => {
+  aut.newSection = n
   await majAut()
 }
 
@@ -125,13 +124,13 @@ const listeAuteurs = async () => {
   auteurs.value = await AS2$Auteur.listeParSection(ui.appPage.org, ui.appPage.section, cred.value)
 }
 
-watch(() => [ui.appPage.org, ui.appPage.count], async () => { 
-  await listeAuteurs() 
+watch(() => [ui.appPage.org, ui.appPage.count], async () => {
+  await listeAuteurs()
 })
 
 const majAut = async () => {
   const op = new Operation('MajAuteur', 'AS2', ui.appPage.org)
-  const dd = DocDescriptor.get('AS2', 'Auteur')
+  const dd = AS2$Auteur._descriptor
   op.args.autpk = dd.pkValue(aut.a)
   if (aut.newNa) op.args.nomAuteur = aut.newNa
   if (aut.newSection) op.args.section = aut.newSection
@@ -143,8 +142,8 @@ const majAut = async () => {
     if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
     await selAut(null)
-    await listeAuteurs() 
-  } catch (e) { 
+    await listeAuteurs()
+  } catch (e) {
     await op.ko(e)
   }
 }
@@ -152,7 +151,7 @@ const majAut = async () => {
 const openCred = (c: AS2$EmbedCred) => {
   curcred.value = c
   const autid = aut.a ? aut.a.autid : ''
-  docPk.value = DocDescriptor.get('AS2', 'Auteur').pkValue({ autid })
+  docPk.value = AS2$Auteur._descriptor.pkValue({ autid })
   dialogs.credmgnt = true
 }
 

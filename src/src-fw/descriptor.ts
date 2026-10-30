@@ -1,5 +1,5 @@
 import { Crypt } from './crypt'
-import { AppExc } from './log'
+import { AppExc } from './base'
 
 export type DocId = {
   svc: string, docCl: string, subCl: string
@@ -77,9 +77,9 @@ export class Descriptor {
   ) : Descriptor {
     let exc: AppExc | undefined = undefined
     const fullName = svc + '$' + docCl
-    if (!Descriptor.services.has(svc)) 
+    if (!Descriptor.services.has(svc))
       exc = new AppExc(3, 'unknown_service', 'Descriptor', [fullName])
-    if (!exc && !Descriptor.isDocName(docCl)) 
+    if (!exc && !Descriptor.isDocName(docCl))
       exc = new AppExc(3, 'doccl_syntax', 'Descriptor', [fullName])
     return new Descriptor(exc, svc, docCl, hdr, null, colls || null, indexes || null)
   }
@@ -87,16 +87,16 @@ export class Descriptor {
   public static enum (svc: string, name: string, hdr: EnumHeader) : Descriptor {
     let exc: AppExc | undefined = undefined
     const fullName = svc + '$' + name
-    if (!Descriptor.services.has(svc)) 
+    if (!Descriptor.services.has(svc))
       exc = new AppExc(3, 'unknown_service', 'Descriptor', [fullName])
-    if (!Descriptor.isDocName(name)) 
+    if (!Descriptor.isDocName(name))
       exc = new AppExc(3, 'enum_name_syntax', 'Descriptor', [fullName])
     return new Descriptor(exc, svc, name, null, hdr, null, null)
   }
 
   static services: Set<string> = new Set()
   static registerService (svc: string) : void {
-    if (!Descriptor.isSvcName(svc)) 
+    if (!Descriptor.isSvcName(svc))
       throw new AppExc(3, 'service_name_syntax', 'Descriptor', [svc])
     Descriptor.services.add(svc)
   }
@@ -116,7 +116,7 @@ export class Descriptor {
 
   readonly exc: AppExc | undefined = undefined
   readonly isDoc: boolean = true
-  readonly virtual: boolean = false 
+  readonly virtual: boolean = false
   readonly svc: string = ''
   readonly docCl: string = ''
 
@@ -152,7 +152,7 @@ export class Descriptor {
     const idx = this.indexes ? this.indexes.get(idxName) : undefined
     return !idx ? false : idx.testable || false
   }
- 
+
   /* Retourne la valeur d'une collection name d'une "source" ayant les propriétés citées */
   getCollId (src: any, name: string) : string[] {
     const c = this.colls ? this.colls.get(name) : undefined
@@ -210,10 +210,10 @@ export class Descriptor {
   checkProps (props: props) {
     const ps = new Set()
     for (const p of props) {
-      if (!Descriptor.isVarName(p)) 
-        throw new AppExc(3, 'property_name_syntax', 'docDescriptor', [this.fullName + ' - ' + p])
-      if (ps.has(p)) 
-        throw new AppExc(3, 'property_name_duplicated', 'docDescriptor', [this.fullName + ' - ' + p])
+      if (!Descriptor.isVarName(p))
+        throw new AppExc(3, 'property_name_syntax', 'Descriptor', [this.fullName + ' - ' + p])
+      if (ps.has(p))
+        throw new AppExc(3, 'property_name_duplicated', 'Descriptor', [this.fullName + ' - ' + p])
       ps.add(p)
     }
   }
@@ -226,19 +226,19 @@ export class Descriptor {
     this.svc = svc
     this.docCl = docCl
     if (exc) { this.exc = exc; return }
-    
+
     if (dhdr) {
       if (dhdr.virtual) this.virtual = true
       if (dhdr.pk) this.checkProps(dhdr.pk)
       if (dhdr.nohash) this.nohash = true
       if (dhdr.subClassBy) {
-        if (!Descriptor.isVarName(dhdr.subClassBy)) 
+        if (!Descriptor.isVarName(dhdr.subClassBy))
           throw new AppExc(3, 'property_name_syntax', 'Descriptor', [this.fullName + ' - ' + dhdr.subClassBy])
         this.subClassBy = dhdr.subClassBy
       }
       if (dhdr.sync) this.sync = true
       if (dhdr.embedCreds) this.embedCreds = true
-    } 
+    }
     if (ehdr) {
       this.isDoc = false
       if (ehdr.virtual) this.virtual = true
@@ -276,7 +276,7 @@ export class FormType {
   static refClasses$ : Set<string> = new Set()
 
   // Retourne la liste des couples [svc, type] des FormTypes déclarés
-  static getFormTypes () : [string, string][] { 
+  static getFormTypes () : [string, string][] {
     const r: [string, string][] = []
     for(const [k, ft] of FormType.formTypes) r.push([ft.svc, ft.type])
     return r
@@ -287,7 +287,7 @@ export class FormType {
 
 
   static size () { return FormType.formTypes.size}
-  static get (svc: string, type: string) { 
+  static get (svc: string, type: string) {
     return this.formTypes.get(svc + '$' + type)}
 
   readonly svc: string
@@ -313,7 +313,7 @@ export class FormType {
     }
   }
 
-  private constructor (svc: string, type: string, categ: string, key: string, creds: string[]) { 
+  private constructor (svc: string, type: string, categ: string, key: string, creds: string[]) {
     this.svc = svc
     this.type = type
     this.categ = categ

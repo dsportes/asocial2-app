@@ -34,7 +34,7 @@ import { ref, reactive, computed } from 'vue'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { $Form } from '../src-fw/documents'
-import { FormType } from '../src-fw/docDescriptor'
+import { FormType } from '../src-fw/descriptor'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -55,7 +55,7 @@ ui.navBar.hasBack = false
 const exp = ref(true)
 const diag = ref()
 const estComite = computed(() => props.formType.svc === 'AS2' && (
-  props.formType.type === 'membrecodir' || 
+  props.formType.type === 'membrecodir' ||
   props.formType.type === 'membreredaction'))
 
 // Proposition par un tiers au user ayant cet alias
@@ -80,7 +80,7 @@ const valP = () => {
 const validInv = async () => {
   const cf = ui.currentForm
   const userId = Crypt.rnd(15)
-  const st = await sf.createInvit(userId, invitCode.value) 
+  const st = await sf.createInvit(userId, invitCode.value)
   if (st === 0) {
     const form = $Form.basicForm(cf.soa, props.formType.type, userId)
     form.isInvit = true
