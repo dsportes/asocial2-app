@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'
 import { AppExc } from './base'
-import [ Registry ] from '../src-fw/registry'
+import { Registry } from '../src-fw/registry'
 
 import stores from '../stores/all'
 import { onPushMsg } from '../stores/docs'
@@ -56,11 +56,11 @@ export class DocEnums {
   En l'absence du suffixe org, un nom de site est requis.
   */
   static async get (svc: string, enumName: string, org: string) : Promise<string[]> {
-    const dd = Registry.getClassInfo(svc, enumName)._descriptor
+    const dd = Registry.getClassInfo(svc, enumName).descriptor
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
     const cred = dd.enumCred || ''
-    const n = svc + '$' + dd.name + (cred ? '_' + org : '')
+    const n = svc + '$' + dd.docCl + (cred ? '_' + org : '')
     let values = DocEnums.m.get(n)
     if (values) return values
 
@@ -97,7 +97,7 @@ export class DocEnums {
     if (dd.enum && dd.enum.length) return false
     // enum externe -
     const cred = dd.enumCred || ''
-    const n = svc + '$' + dd.name + (cred ? '_' + org : '')
+    const n = svc + '$' + dd.docCl + (cred ? '_' + org : '')
     let s = await getSite(svc, org)
     const op = new AdminOperation('ADMIN$setEnum', s || '')
     try {

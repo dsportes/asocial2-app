@@ -78,13 +78,6 @@ Les autres méthodes sont:
 const GC = false
 const PURGEOBS = false
 
-const STORES = {
-  singletons: 'name', // singletons { name, data }
-  perims: 'pk, so',
-  docs: 'sodef, [so+lat]',
-  colls: 'sodef, [so+lat]'
-}
-
 class Singleton {
   name!: string
   data!: Uint8Array | null
@@ -221,7 +214,6 @@ export class IDB {
     this.keyK = sf.keyK
     this.userId = sf.userId
     this.db = new AppDB(this.dbName)
-    this.db.version(1).stores(STORES)
     idb = this
   }
 

@@ -3,7 +3,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 // import { IDB } from './hasIDB'
 import stores from '../stores/all'
-import { Registry } from '../src-fw/registry'
+import { Registry, ClassInfo } from '../src-fw/registry'
 import { Operation } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { $ADocument, $Document } from '../src-fw/registry'
@@ -46,6 +46,11 @@ export type $SubsObj = {
   msgs: Object
 }
 
+export type $DefInfo = {
+  ci1: ClassInfo | undefined,
+  ci2: ClassInfo | undefined
+}
+
 /* Classe immutable de définition d'un document ou d'une collection */
 export class $Def {
   /* 1: docCl/pk : le document de classe docCl de clé pk
@@ -55,8 +60,8 @@ export class $Def {
   */
   readonly type: number
   readonly docCl: string
-  readonly pk?: string
-  readonly colName?: string
+  readonly pk: string = ''
+  readonly colName: string = ''
 
   get definition () : string {
     return this.type === 2 ? this.docCl :
@@ -76,10 +81,38 @@ export class $Def {
     if (this.type !== 2) this.pk = this.type === 1 ? defx[1] : defx[2]
     if (this.type === 3) this.colName = defx[1]
   }
+
+  /* Retourne le couple:
+  - ci1: le ClassInfo de la classe principale svc / docCl
+  - ci2: seulement pour un type 2
+    - si la classe docCl a une collection 'colName'
+    - le ClassInfo de la classe de cette collection.
+  SI ci1 n'est pas trouvée ou que ci2 non plus alors que le type est 2
+  (bref que la Ref ne désigne pas des classes enregistrées)
+  ci1 est undefined.
+  */
+  about (svc: string) : $DefInfo {
+    let ci1: ClassInfo | undefined, ci2: ClassInfo | undefined
+    try {
+      ci1 = Registry.getClassInfo(svc, this.docCl)
+      if (ci1 && this.type === 2) {
+        const d = ci1.descriptor
+        const c = d.colls && d.colls.get(this.colName || '')
+        if (c)
+          try { ci2 = Registry.getClassInfo(svc, c.class) }
+          catch (e) { ci1 = undefined }
+        else ci1 = undefined
+      }
+    } catch (e) {}
+    return { ci1, ci2 }
+  }
+
+  isValid (svc: string) : boolean{ return this.about(svc).ci1 !== undefined }
 }
 
 /* Classe immutable de définition d'un périmètre
 id est de la forme: docCl@code/docPk OU de la forme docCl/docPk
+Un périmètre ne contient que des defs VALIDES pour la session
 */
 export class $Perimeter {
   readonly svc: string
@@ -113,7 +146,10 @@ export class $Perimeter {
     this.docCl = docCl; this.code = code; this.docPk = docPk
     this.role = role; this.plane = plane || false; this.defs = []
     this._name = name
-    for(const d of definitions) this.defs.push(new $Def(d))
+    for(const d of definitions) {
+      const def = new $Def(d)
+      if (def.isValid(this.svc)) this.defs.push(def)
+    }
   }
 
   toObj () {

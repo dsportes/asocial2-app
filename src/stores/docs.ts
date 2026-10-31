@@ -53,10 +53,14 @@ export async function onPushMsg (payload: string) {
   const messageNotif =  decode(keyFromB64(payload)) as MsgNotif
   const st = getStore(messageNotif.svc, messageNotif.org, true)
   if (session().syncOK && st && messageNotif.defs && messageNotif.defs.length) {
-    const l: string[] = messageNotif.defs.split(' ')
+    const definitions: string[] = messageNotif.defs.split(' ')
     const defs: $Def[] = []
-    for(const x of l) defs.push(new $Def(x))
-    await st.onNotif(defs, messageNotif.now, messageNotif.hbc)
+    for(const d of definitions) {
+      const def = new $Def(d)
+      if (def.isValid(messageNotif.svc)) defs.push(def)
+    }
+    if (defineStore.length)
+      await st.onNotif(defs, messageNotif.now, messageNotif.hbc)
   }
   if (messageNotif.body) {
     // if (config().K.myDebug) console.log('Show notif EXPLICITE from app')
@@ -152,7 +156,7 @@ export class $CollItem extends $DCItem {
 }
 
 export class $DocItem extends $DCItem {
-  doc: $Document | null = null // Document compilé
+  doc: $Document | undefined = undefined // Document compilé
   constructor (def: $Def) { super(def) }
 }
 
@@ -248,11 +252,15 @@ export class SyncQueue {
       if (sat !== 0) {
         std.manageHbc(2, hbc)
         for(const definition in syncs) {
-          const dcdata = (syncs as any)[definition] as $DCData
-          const item = runningItems.get(definition)
-          if (item) {
-            item.syncSt = 3
-            await std.storeDC(item, sat, dcdata)
+          const def = new $Def(definition)
+          // SEULES les definitions VALIDES pour la session prises en compte
+          if (def.isValid(svc)) {
+            const dcdata = (syncs as any)[definition] as $DCData
+            const item = runningItems.get(definition)
+            if (item) {
+              item.syncSt = 3
+              await std.storeDC(item, sat, dcdata)
+            }
           }
         }
         std.checkResolves()
@@ -384,11 +392,14 @@ const useStore = (id: string) =>
           const v = doc.v
           pks.add(doc._pk)
           const def = new $Def(docCl + '/' + doc._pk)
-          let itemd = getItem(def) as $DocItem
-          // Si itemd n'existait pas on N'EN CREE PAS
-          if (itemd && itemd.sat < sat) {
-            itemd.doc = doc
-            await manageData(itemd, sat, v, data)
+          if (def.isValid(svc)) {
+            // NE TIENT COMPTE de def QUE si elle est valide.
+            let itemd = getItem(def) as $DocItem
+            // Si itemd n'existait pas on N'EN CREE PAS
+            if (itemd && itemd.sat < sat) {
+              itemd.doc = doc
+              await manageData(itemd, sat, v, data)
+            }
           }
         }
       }
@@ -483,7 +494,7 @@ const useStore = (id: string) =>
         // TOTEST
         if (item.sv !== -1) {
           item.sv = -1
-          item.doc = null
+          item.doc = undefined
           upd(item)
         }
         return
@@ -512,7 +523,7 @@ const useStore = (id: string) =>
             item.lat = sat
             item.lv = v
             upd(item)
-            await idb.updLV(svc, org, item.def, sat, v)
+            if (idb) await idb.updLV(svc, org, item.def, sat, v)
           }
         } else {
           if (!data) { // Existait, n'existe plus: enregistré comme deleted
@@ -636,7 +647,7 @@ const useStore = (id: string) =>
             item.lv = r.v
             upd(item)
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error(e.toString)
         }
     }
@@ -846,11 +857,12 @@ const useStore = (id: string) =>
       })
     }
 
+    type HB = { dh: number, lc: number[], lost: number    }
     const hb = reactive({
       dh: 0, // dh de souscription
       lc: [], // liste des compteurs accumulés pas en séquence
       lost: 0 // dh de constat d'un trou (lc.length > 1)
-    })
+    } as HB)
 
     /*
     hbcMode

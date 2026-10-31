@@ -4,14 +4,14 @@ import { ref, Ref, reactive, computed, watch } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import stores from './all'
 
-const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export const useFormStore = defineStore('form', () => {
 
   const form = ref()
   const isDemand = ref()
-  const fnCheck = ref()
+  // Objet dont chaque property est une Function de check
+  const fnCheck: Ref<any> = ref()
 
   const diag1 = ref('')
   const diag2 = ref('')
@@ -50,16 +50,16 @@ export const useFormStore = defineStore('form', () => {
       upd.etcc = !f.eqEtc(f.etcT, upd.etc)
       upd.msgc = upd.msg !== f.msgTS
     }
- 
+
     if (upd.etcc || upd.msgc) ui.setEditing();
     else ui.resetEditing()
   }
 
-  const setFnCheck = (_fnCheck) => {
+  const setFnCheck = (_fnCheck: any) => {
     fnCheck.value = _fnCheck
   }
 
-  const startEdit = (formCtx) => {
+  const startEdit = (formCtx: any) => {
     form.value = formCtx.form
     isDemand.value = formCtx.isDemand
     const f = form.value
@@ -87,14 +87,14 @@ export const useFormStore = defineStore('form', () => {
     await onChange()
   }
 
-  const exp = reactive({
+  let exp = reactive({
     msg: false
   })
   const expOnShow = (id: string) => {
-    for (const x of Object.keys(exp)) if (x !== id) exp[x] = false
+    for (const x of Object.keys(exp)) if (x !== id) (exp as any)[x] = false
   }
   const setExp = (id: string) => {
-    exp[id] = false
+    (exp as any)[id] = false
   }
 
   return {

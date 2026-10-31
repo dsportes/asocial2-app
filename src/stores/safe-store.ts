@@ -23,15 +23,15 @@ import { GetCredProps, AutoRevokeCred } from '../src-fw/operations'
 
 /*
 ### Safes stockés dans un directory
-Dans un directory externe de "safes", chaque "safe" est enregistré 
+Dans un directory externe de "safes", chaque "safe" est enregistré
 et accessible par sa clé primaire "userId",
 
-La proriété "llq" (_last login quarter_) est gérée par le serveur 
+La proriété "llq" (_last login quarter_) est gérée par le serveur
 et permet de récupérer tous les safes qui n'ont pas été accédés depuis longtemps
 et de les purger.
 
-La "valeur" accédée est la sérialisation par Msgpack d'un objet "Safe", 
-(cryptée ou non par le serveur) indépendante des implémentations 
+La "valeur" accédée est la sérialisation par Msgpack d'un objet "Safe",
+(cryptée ou non par le serveur) indépendante des implémentations
 à condition de respecter les contraintes suivantes:
 - les "map" vides sont null (et non pas des object vides, mal gérés sous PHP).
 - les propriétés sont des "string / number / boolean".
@@ -89,7 +89,7 @@ Le texte lui-même n'est jamais renvoyé au serveur:
   - retourne à l'appelant le Safe qu'objet.
 
 ### Micro base locale IDB `safe` d'un terminal
-Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données 
+Un device qui a été déclaré _de confiance_ par au moins un utilisateur a une micro base de données
 IDB nommée `safe` ayant les tables suivantes.
 
 #### `header`
@@ -110,9 +110,9 @@ Chaque row est associé à UN _utilisateur_ ayant déclaré le _device_ de confi
   - `cx cy` sont des _challenges_ générés aléatoirement à ce moment (des random de 24 bytes en base 64).
 */
 
-export type Managements = { 
+export type Managements = {
   label: string, // label du service [ org ]
-  svc: string, 
+  svc: string,
   org: string,
   docCls: Set<string> // Set des classes de document "manager"
 }
@@ -191,16 +191,16 @@ const decoder = new TextDecoder()
 export const useSafeStore = defineStore('safe', () => {
 
   /* Contenu en Safe Box de la base locale IDB ***********************************************/
-  const devId = ref('') 
+  const devId = ref('')
   const devName = ref('')
   // Map par userId de leur trusting
   const trustings : Ref<Map<string, Trusting>> = ref(new Map())
 
-  const myTrusting: Ref<Trusting> = computed(() => {
-    if (!userId.value) return null
+  const myTrusting: Ref<Trusting | undefined> = computed(() => {
+    if (!userId.value) return undefined
     for(const [,item] of trustings.value)
       if (item.userId === userId.value) return item
-    return null
+    return undefined
   })
 
   /* Map des "presque" constantes par user.
@@ -209,16 +209,16 @@ export const useSafeStore = defineStore('safe', () => {
   const icvs : Ref<Map<string, ICVS>> = ref(new Map())
 
   const resetSafeBox = () => {
-    nbLoads.value = ref(0)
+    nbLoads.value = 0
     icvs.value = new Map()
-    userId.value = null
+    userId.value = ''
     keyK.value = null
-    auth.value = null
-    devices.value = null
-    mySafePrefs.value = null
-    mySafeCreds.value = null
-    mySafeOptions.value = null
-    credsToCheck.value = null
+    auth.value = undefined
+    devices.value.clear()
+    mySafePrefs.value.clear()
+    mySafeCreds.value.clear()
+    mySafeOptions.value = undefined
+    credsToCheck.value = []
     credsBefore.value = null
     credsAfter.value = null
   }
@@ -228,7 +228,7 @@ export const useSafeStore = defineStore('safe', () => {
   **********************************************************************/
 
   const mySafeStore = ref('')
-  const userId = ref(null)
+  const userId: Ref<string> = ref('')
   const keyK = ref(null)
   const userName = computed(() => {
     if (!userId.value) return ''
@@ -237,27 +237,27 @@ export const useSafeStore = defineStore('safe', () => {
   })
 
   /* nombre chargement / compilation de la Safe-box */
-  const nbLoads = ref(0)
+  const nbLoads: Ref<number> = ref(0)
 
   /* Section "auth" */
-  const auth: Ref<Auth> = ref(null)
+  const auth: Ref<Auth | undefined> = ref()
 
   /* Section "devices de confiance" une entrée par device identifiée par `devid`*/
-  const devices: Ref<Map<string, Device>> = ref() // cle devid
+  const devices: Ref<Map<string, Device>> = ref(new Map()) // cle devid
 
   /* Section "préférences" organisée avec une **sous-section par application**
   Seulement les préférences de app */
-  const mySafePrefs: Ref<Map<string, Object>> = ref()
+  const mySafePrefs: Ref<Map<string, Object>> = ref(new Map())
 
   /* Section "creds": organisée avec une **sous-section par application**
   Seulement les credentials de app */
-  const mySafeCreds: Ref<Map<string, $Credential>> = ref()
+  const mySafeCreds: Ref<Map<string, $Credential>> = ref(new Map())
 
   /* Section "options": organisée avec un **objet par application**
   Seulement l'objet options de app */
-  const mySafeOptions: Ref<Object> = ref()
+  const mySafeOptions: Ref<Object | undefined> = ref()
 
-  const credsToCheck: Ref<string[]> = ref()
+  const credsToCheck: Ref<string[]> = ref([])
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
@@ -342,7 +342,7 @@ export const useSafeStore = defineStore('safe', () => {
   Sans échec: au pire rien n'est mis à jour maintenant.
   */
   const resetAliases = async (safe: Safe) => {
-    const shK = await Crypt.strongHash(keyK.value, false, false) as string
+    const shK = await Crypt.strongHash(keyK.value || '', false, false) as string
     let op = new MDOperation('$mdUserGetAAS')
     let aas : string[] // [hsha1 hsha2 store]
     try {
@@ -358,6 +358,7 @@ export const useSafeStore = defineStore('safe', () => {
     const [hsha1, hsha2, store] = aas
     const a = safe.auth.actual // jamais null
     const f = safe.auth.future // jamais null
+    // @ts-expect-error
     const ac: Alias = (a.hsha1 === hsha1 && (a.hsha2 && a.hsha2 === a.hsha2)) ? a : f
     op = new SafeOperation('$SetAliasSafe', mySafeStore.value)
     try {
@@ -387,6 +388,7 @@ export const useSafeStore = defineStore('safe', () => {
       if (!cred) continue
       const op = new GetCredProps(cred.svc, cred.org)
       if (await op.run(cred)) {
+        // @ts-expect-error
         const signId = keyToB64(await Crypt.sign(keyFromB64(auth.value.S), encoder.encode(credId)))
         const op2 = new SafeOperation('$FixOneCred', mySafeStore.value)
         op2.setArgs({ userId: userId.value, credId, signId })
@@ -415,14 +417,14 @@ export const useSafeStore = defineStore('safe', () => {
       let found = false
       for (const id in safe.devices) {
         if (id === devId.value) found = true
-        const d: Device = safe.devices[id]
+        const d: Device = (safe.devices as any)[id]
         d.devName = await dcX(keyFromB64(d.devName))
         m.set(id, d)
       }
       if (!found) // le userId doit être retiré de la liste des trustings
         await IDBsafe.delTrusting(userId.value)
       const tr = myTrusting.value as Trusting
-      if (tr && ((tr.K1 !== auth.value.K1) || (tr.K2 !== auth.value.K2))) {
+      if (auth.value && tr && ((tr.K1 !== auth.value.K1) || (tr.K2 !== auth.value.K2))) {
         tr.K1 = auth.value.K1
         tr.K2 = auth.value.K2
         await IDBsafe.saveTrusting(tr)
@@ -463,9 +465,9 @@ export const useSafeStore = defineStore('safe', () => {
   const updatePrefs = async ( mprefs: Map<string, Object>) => {
     let prefs : Object | null = {}
 
-    if (mprefs && mprefs.size) 
+    if (mprefs && mprefs.size)
       for(const [code, obj] of mprefs) prefs[code] = obj
-    
+
     const updatePrefs: UpdatePrefs = {
       app: stores.config.K.APPNAME,
       userId: userId.value,
@@ -517,8 +519,8 @@ export const useSafeStore = defineStore('safe', () => {
     - credK : contenu du credential  { svc, org, docCl, docPk, privs privd } crypté par K en base 64
     - toCheck : si true, credential _indécis_ (existence réelle à vérifier).
 
-    Lorsqu'une session de l'utilisateur se lance ou rafraîchit sa _Safe Box_ 
-    en mémoire, elle peut lire des credentials `toCheck`. 
+    Lorsqu'une session de l'utilisateur se lance ou rafraîchit sa _Safe Box_
+    en mémoire, elle peut lire des credentials `toCheck`.
     Pour chacun elle lit le document correspondant,
     - s'il existe elle invoque `FixOneCred`, l'indécision est levée,
     - s'il n'existe pas elle invoque `AutoRevokeCreds`.
@@ -565,7 +567,7 @@ export const useSafeStore = defineStore('safe', () => {
   const mySimpleCreds = (svc: string, org: string, docCl?: string) : Map<string, $Credential> => {
     const m : Map<string, $Credential> = new Map()
     for(const [credId, cred] of mySafeCreds.value)
-      if (cred.svc === svc && (!org || cred.org === org) && (!docCl || docCl === cred.docCl)) 
+      if (cred.svc === svc && (!org || cred.org === org) && (!docCl || docCl === cred.docCl))
         m.set(credId, cred)
     return m
   }
@@ -591,17 +593,17 @@ export const useSafeStore = defineStore('safe', () => {
         }
       }
       return m
-    } catch (e) { 
+    } catch (e) {
       await op.ko(e)
-      return m 
+      return m
     }
   }
 
-  const myCredOfDoc = (svc: string, org: string, docCl: string, docPk: string) 
+  const myCredOfDoc = (svc: string, org: string, docCl: string, docPk: string)
   : $Credential | null => {
     for(const [, cred] of mySafeCreds.value)
-      if (cred.svc === svc && cred.org === org 
-        && cred.docCl === docCl && cred.docPk === docPk) 
+      if (cred.svc === svc && cred.org === org
+        && cred.docCl === docCl && cred.docPk === docPk)
         return cred
     return null
   }
@@ -674,7 +676,7 @@ export const useSafeStore = defineStore('safe', () => {
     return m
   }
 
-  /* Retourne le set des docCl de type "manager" sur lesquelles l'utilisateur 
+  /* Retourne le set des docCl de type "manager" sur lesquelles l'utilisateur
   a un credential. Si la liste n'est pas vide, l'utilisateur est un "manager"
   à au moins un titre.
   */
@@ -752,8 +754,8 @@ export const useSafeStore = defineStore('safe', () => {
 
     const mdUser: MDuser = {
       userId: userId,
-      hshK: '', 
-      hsha1, hsha2: '', C: '', V: '', 
+      hshK: '',
+      hsha1, hsha2: '', C: '', V: '',
       llq,
       store: ''
     }
@@ -1115,7 +1117,7 @@ export const useSafeStore = defineStore('safe', () => {
     const asn1 = Crypt.signToAsn1(signEC)
     const sign = keyToB64(asn1)
     const Va = keyToB64(kpsv.pub)
-  
+
     const shK = await Crypt.strongHash(keyK.value, false, false) as string
     const trustDev: TrustDev = {
       userId: userId.value,
@@ -1130,7 +1132,7 @@ export const useSafeStore = defineStore('safe', () => {
     {
       const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
       console.log('PINCX !!!!!!!!!!!!!!!!!!!!!!!!!! ', pincx)
-      // vérifie par `Va` que `sign` est bien la signature de pincx 
+      // vérifie par `Va` que `sign` est bien la signature de pincx
       const V = keyFromB64(trustDev.Va)
       // Rétablit la signature en EC - ce que ne fait pas la version PHP
       const s1 = keyFromB64(trustDev.sign)
@@ -1172,7 +1174,7 @@ export const useSafeStore = defineStore('safe', () => {
     await IDBsafe.delTrusting(t.userId)
     if (session.hasLocal)
       session.noLocal = true
-    
+
     const untrustDev: UntrustDev = {
       userId: userId.value,
       shK: await Crypt.strongHash(keyK.value, false, false) as string,

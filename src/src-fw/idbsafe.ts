@@ -1,6 +1,4 @@
-// @ts-ignore
-import Dexie from 'dexie'
-// @ts-ignore
+import { Dexie, type EntityTable } from "dexie"
 import { encode, decode } from '@msgpack/msgpack'
 
 import { useSafeStore } from '../stores/safe-store'
@@ -8,16 +6,35 @@ import { useConfigStore } from '../stores/config-store'
 import { deleteIDB } from '../src-fw/idb'
 import { AppExc } from './base'
 
-const STORES = {
-  header: 'id', // singleton: id = '1'
-  trustings: 'id'
+class DbHeader {
+  id!: string
+  devId!: string
+  devName!: string
+}
+class DbTrusting {
+  id!: string
+  bin!: Uint8Array
+}
+class AppDB extends Dexie {
+  header!: EntityTable<DbHeader, 'id'>
+  trustings!: EntityTable<DbTrusting, 'id'>
+
+  constructor(dbName: string) {
+    super(dbName, { autoOpen: true })
+    this.version(1).stores({
+      header: 'id',
+      trustings: 'id'
+    })
+    this.header.mapToClass(DbHeader)
+    this.trustings.mapToClass(DbTrusting)
+  }
 }
 
-let safeBox = null
-let config = null
+let safeBox: any = null
+let config: any = null
 
 export class IDBsafe {
-  static db = null
+  static db: AppDB
 
   static EX (e: any, op: string) {
     const ex = new AppExc(8, 'IDB_SAFE_error', op, [e.message])
@@ -45,15 +62,13 @@ export class IDBsafe {
     if (!safeBox) safeBox = useSafeStore()
     if (!config) config = useConfigStore()
     if (!IDBsafe.db) try {
-      IDBsafe.db = new Dexie('safe')
-      IDBsafe.db.version(1).stores(STORES)
+      IDBsafe.db = new AppDB('safe')
       await IDBsafe.db.open()
       if (config.K.myDebug) console.log('IDB open [safe]')
       await IDBsafe.load()
     } catch (e: any) {
       if (IDBsafe.db) {
         await IDBsafe.db.close()
-        IDBsafe.db = null
       }
       console.log('Init IDBsafe failed: ' + e.message)
     }
@@ -67,7 +82,7 @@ export class IDBsafe {
     if (safeBox.devId) {
       await IDBsafe.db.trustings.each(async (r) => {
         try {
-          const obj = decode(r.bin)
+          const obj = decode(r.bin) as any
           const t : Trusting = new Trusting(obj)
           m.set(t.userId, t)
         } catch (e) {
@@ -123,13 +138,13 @@ export class Trusting {
   Kp: string = ''
   appsDb: string[] = []
 
-  constructor (obj: Object) {
-    for(const f of Object.keys(obj)) this[f] = obj[f]
+  constructor (obj: any) {
+    for(const f of Object.keys(obj)) (this as any)[f] = obj[f]
   }
 
-  get toObj () : Object {
-    const obj = {}
-    for(const f of Object.keys(this)) obj[f] = this[f]
+  get toObj () : any {
+    const obj: any = {}
+    for(const f of Object.keys(this)) obj[f] = (this as any)[f]
     return obj
   }
 

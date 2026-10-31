@@ -11,7 +11,7 @@ import { gzip, ungzip } from './pako.mjs'
 
 export let $t: any
 export let i18n: any
-export function set$t (_$t, _i18n) { $t = _$t; i18n = _i18n }
+export function set$t (_$t: any, _i18n: any) { $t = _$t; i18n = _i18n }
 
 export function gzipT (data: Uint8Array) : Uint8Array | undefined { return gzip(data) }
 
@@ -68,9 +68,9 @@ export function aujhier () {
   hier = [h.getFullYear(), h.getMonth(), h.getDate()]
 }
 
-/* 
+/*
 - sec: si true affiche les secondes
-- pash: si true mode "décoré" avec "le": "le xxx à yyy" 
+- pash: si true mode "décoré" avec "le": "le xxx à yyy"
   DHCleah: 'le {0} à {1}',
   DHClea: 'le {0}',
   DHCjah: '{0} à {1}',
@@ -122,7 +122,7 @@ export function dhstring (t: Date | number) {
 
 const encoder = new TextEncoder()
 
-export function dkli (idx) {
+export function dkli (idx: number | undefined) {
   const d = stores.ui.isDark
   return (d ? (idx ? 'dark' + (idx % 2) : 'dark0') : (idx ? 'clear' + (idx % 2) : 'clear0')) + ' '
 }
@@ -233,7 +233,7 @@ export const eqNumberA = (a: any[], b: any[]) : boolean => {
   return isSameSet(new Set(a), new Set(b))
 }
 
-export const isSameSet = (s1, s2) => {
+export const isSameSet = (s1: Set<any>, s2: Set<any>) => {
   if (s1.size !== s2.size) return false
   return [...s1].every(i => s2.has(i))
 }

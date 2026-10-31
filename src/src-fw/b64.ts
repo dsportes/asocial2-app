@@ -1,6 +1,7 @@
 /* Retourne un string en base 64 depuis un binaire */
 export function keyToB64 (key: Uint8Array | null) : string {
   if (!key) return ''
+  // @ts-expect-error
   return window.btoa(String.fromCharCode.apply(null, key))
 }
 
@@ -15,14 +16,14 @@ export function keyFromB64 (key: string) : Uint8Array {
 
 const p2 = [1, 0, 0, 0, 0, 0]; for (let i = 1; i < 6; i++) p2[i] = p2[i - 1] * 256
 
-export function b64ToInt (b64) { // b64 sur 8 char -> number integer safe
+export function b64ToInt (b64: string) { // b64 sur 8 char -> number integer safe
   const u8 = keyFromB64(b64)
   let r = 0
   for (let j = 0; j < 6; j++) r += (p2[j] * u8[j])
   return r
 }
 
-export function intToB64 (n) { // n: number integer safe -> 8 char
+export function intToB64 (n: number) { // n: number integer safe -> 8 char
   const u8 = new Uint8Array(6)
   let x = n
   for (let j = 0; j < 6; j++) {
