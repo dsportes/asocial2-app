@@ -48,21 +48,23 @@ import LineEdit from '../components-fw/LineEdit.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormExp from '../components-fw/FormExp.vue'
 
-const props = defineProps({
-  type: String,
-  svc: String,
-  champ: String,
-  size: String,
-  valbtn: Boolean
-})
+const props = defineProps<{
+  type: string,
+  svc: string,
+  champ: string,
+  size: string,
+  valbtn?: boolean
+}>()
+
+const champ = computed(() => props.champ || '')
 
 const err = defineModel()
 
 const fst = stores.form
-fst.setExp(props.champ)
+fst.setExp(champ.value)
 
-const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
-const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
+const psU = computed(() => fst.form.cloneEtc(true)[champ.value])
+const psT = computed(() => fst.form.cloneEtc(false)[champ.value])
 
 let loc1 = reactive({ inp: psU.value, err: '' })
 let loc2 = reactive({ inp: psT.value, err: '' })
@@ -70,40 +72,40 @@ let loc2 = reactive({ inp: psT.value, err: '' })
 watch(loc1, async (v) => {
   err.value = v.err
   if (!props.valbtn)
-    fst.upd.etc[props.champ] = v.inp
+    fst.upd.etc[champ.value] = v.inp
   else {
-    if (fst.upd.etc[props.champ] !== v.inp)
-      fst.upd.etc[props.champ] = ''
+    if (fst.upd.etc[champ.value] !== v.inp)
+      fst.upd.etc[champ.value] = ''
   }
   await fst.onChange()
 })
-const valB2 = async (v) => {
+const valB2 = async (v: any) => {
   loc1.inp = v
-  fst.upd.etc[props.champ] = v
+  fst.upd.etc[champ.value] = v
   await fst.onChange()
 }
 /*
 const valB = async () => {
-  fst.upd.etc[props.champ] = loc1.inp
+  fst.upd.etc[champ.value] = loc1.inp
   await fst.onChange()
 }
 */
 watch(() => fst.upd.etc, (v) => {
-  loc1.inp = v[props.champ]
+  loc1.inp = v[champ.value]
 })
 
-loc1.inp = fst.upd.etc[props.champ]
+loc1.inp = fst.upd.etc[champ.value]
 loc2.inp = fst.isDemand ? psT.value : psU.value
 
-const copyLocU = async () => { 
-  loc1.inp = psT.value 
-  if (props.valbtn) 
-    fst.upd.etc[props.champ] = loc1.inp
+const copyLocU = async () => {
+  loc1.inp = psT.value
+  if (props.valbtn)
+    fst.upd.etc[champ.value] = loc1.inp
 }
-const copyLocT = async () => { 
-  loc1.inp = psU.value 
-  if (props.valbtn) 
-    fst.upd.etc[props.champ] = loc1.inp
+const copyLocT = async () => {
+  loc1.inp = psU.value
+  if (props.valbtn)
+    fst.upd.etc[champ.value] = loc1.inp
 }
 const initLocU = () => { loc1.inp = psU.value }
 const initLocT = () => { loc1.inp = psT.value }

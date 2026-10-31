@@ -15,7 +15,10 @@ let n = 0, nf = 0, exc: AppExc | undefined
 class AS2$Credential extends $Credential {
   static _descriptor = d.AS2$Credential
 }
-if (!exc) { n++; exc = Registry.register(AS2$Credential) }
+if (!exc) {
+  exc = Registry.register(AS2$Credential)
+  n++
+}
 
 /* Sous classes de AS2$Credentials ******************************************************
 - N'A PAS de _descriptor

@@ -41,12 +41,14 @@ import { DocEnums } from '../src-fw/operation'
 
 import SelectEnum from '../components-fw/SelectEnum.vue'
 
-const props = defineProps({
-  type: String,
-  svc: String,
-  champ: String,
-  enum: String
-})
+const props = defineProps<{
+  type: string,
+  svc: string,
+  champ: string,
+  enum: string
+}>()
+
+const champ = computed(() => props.champ || '')
 
 const err = defineModel()
 
@@ -54,14 +56,14 @@ const fst = stores.form
 
 const edv = ref('')
 
-const psU = computed(() => fst.form.cloneEtc(true)[props.champ])
-const psT = computed(() => fst.form.cloneEtc(false)[props.champ])
+const psU = computed(() => fst.form.cloneEtc(true)[champ.value])
+const psT = computed(() => fst.form.cloneEtc(false)[champ.value])
 
-const loc1 = ref(fst.upd.etc[props.champ])
+const loc1 = ref(fst.upd.etc[champ.value])
 const loc2 = ref(fst.isDemand ? psT.value : psU.value)
 
-const chk = async (v) => {
-  fst.upd.etc[props.champ] = v
+const chk = async (v: any) => {
+  fst.upd.etc[champ.value] = v
   err.value = v.length < 2 ? props.enum + 'absent' : ''
   await fst.onChange()
 }
@@ -69,12 +71,12 @@ watch(loc1, async (v) => {
   await chk(v)
 })
 watch(() => fst.upd.etc, (v) => {
-  loc1.value = v[props.champ]
+  loc1.value = v[champ.value]
 })
 
-onMounted(async () => { 
-  await chk(loc1.value) 
-  if (loc2.value) edv.value = await DocEnums.label(fst.form.svc + '$' + props.enum, fst.form.org, loc2.value)
+onMounted(async () => {
+  await chk(loc1.value)
+  if (loc2.value) edv.value = await DocEnums.label(fst.form.svc, props.enum || '', fst.form.org, loc2.value)
   // console.log(edv.value)
 })
 

@@ -76,7 +76,7 @@ export class Descriptor {
     indexes?: Map<string, idx> | null
   ) : Descriptor {
     let exc: AppExc | undefined = undefined
-    const fullName = svc + '$' + docCl
+    const fullName = svc + '/' + docCl
     if (!Descriptor.services.has(svc))
       exc = new AppExc(3, 'unknown_service', 'Descriptor', [fullName])
     if (!exc && !Descriptor.isDocName(docCl))
@@ -86,7 +86,7 @@ export class Descriptor {
 
   public static enum (svc: string, name: string, hdr: EnumHeader) : Descriptor {
     let exc: AppExc | undefined = undefined
-    const fullName = svc + '$' + name
+    const fullName = svc + '/' + name
     if (!Descriptor.services.has(svc))
       exc = new AppExc(3, 'unknown_service', 'Descriptor', [fullName])
     if (!Descriptor.isDocName(name))
@@ -112,7 +112,7 @@ export class Descriptor {
   static isSvcName = (n: string) : boolean => { return Descriptor.regsvc.test(n)}
 
   static readonly regsub = /^[a-zA-Z][a-zA-Z0-9]*$/
-  static isSubName = (n: string) : boolean => { return Descriptor.regsvc.test(n)}
+  static isSubName = (n: string) : boolean => { return Descriptor.regsub.test(n)}
 
   readonly exc: AppExc | undefined = undefined
   readonly isDoc: boolean = true
@@ -218,7 +218,7 @@ export class Descriptor {
     }
   }
 
-  get fullName () { return this.svc + '$' + this.docCl }
+  get fullName () { return this.svc + '/' + this.docCl }
 
   private constructor (exc: AppExc | undefined, svc: string, docCl: string, dhdr: DocHeader | null, ehdr: EnumHeader | null,
     colls: Map<string, collection> | null,
@@ -281,14 +281,14 @@ export class FormType {
     for(const [k, ft] of FormType.formTypes) r.push([ft.svc, ft.type])
     return r
   }
-  static getFormType (svc: string, type: string) { return FormType.formTypes.get(svc + '$' + type) }
+  static getFormType (svc: string, type: string) { return FormType.formTypes.get(svc + '/' + type) }
   static hasRefClasses1 (c: string) : boolean { return FormType.refClasses1.has(c)}
   static hasRefClasses$ (c: string) : boolean { return FormType.refClasses$.has(c)}
 
 
   static size () { return FormType.formTypes.size}
   static get (svc: string, type: string) {
-    return this.formTypes.get(svc + '$' + type)}
+    return this.formTypes.get(svc + '/' + type)}
 
   readonly svc: string
   readonly type: string
@@ -303,7 +303,7 @@ export class FormType {
       return new AppExc(3, 'EX3_type_name_syntax', 'FormType', [svc + ' -- ' + type])
 
     const ft = new FormType(svc, type, categ, key, creds)
-    FormType.formTypes.set(svc + '$' + ft.type, ft)
+    FormType.formTypes.set(svc + '/' + ft.type, ft)
     for(const c of creds) {
       if (c !== 'A') {
         const cl = c.substring(0, c.indexOf('/'))

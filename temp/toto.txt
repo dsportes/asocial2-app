@@ -1,0 +1,463 @@
+➤ YN0050: The --verbose option is deprecated, the settings' descriptions are now always displayed
+
+├─ cacheFolder
+│  ├─ Description: Folder where the cache files must be written
+│  ├─ Source: <internal>
+│  └─ Value: '/home/daniel/.yarn/berry/cache'
+│
+├─ cacheMigrationMode
+│  ├─ Description: Defines the conditions under which Yarn upgrades should cause the cache archives to be regenerated.
+│  ├─ Source: <default>
+│  └─ Value: 'always'
+│
+├─ changesetBaseRefs
+│  ├─ Description: The base git refs that the current HEAD is compared against when detecting changes. Supports git branches, tags, and commits.
+│  ├─ Source: <default>
+│  └─ Value: [ 'master', 'origin/master', ... 4 more items ]
+│
+├─ changesetIgnorePatterns
+│  ├─ Description: Array of glob patterns; files matching them will be ignored when fetching the changed files
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ checksumBehavior
+│  ├─ Description: Enumeration defining what to do when a checksum doesn't match expectations
+│  ├─ Source: <default>
+│  └─ Value: 'throw'
+│
+├─ cloneConcurrency
+│  ├─ Description: Maximal number of concurrent clones
+│  ├─ Source: <default>
+│  └─ Value: 2
+│
+├─ compressionLevel
+│  ├─ Description: Zip files compression level, from 0 to 9 or mixed (a variant of 9, which stores some files uncompressed, when compression doesn't yield good results)
+│  ├─ Source: <default>
+│  └─ Value: 0
+│
+├─ constraintsPath
+│  ├─ Description: The path of the constraints file.
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/constraints.pro'
+│
+├─ defaultLanguageName
+│  ├─ Description: Default language mode that should be used when a package doesn't offer any insight
+│  ├─ Source: <default>
+│  └─ Value: 'node'
+│
+├─ defaultProtocol
+│  ├─ Description: Default resolution protocol used when resolving pure semver and tag ranges
+│  ├─ Source: <default>
+│  └─ Value: 'npm:'
+│
+├─ defaultSemverRangePrefix
+│  ├─ Description: The default save prefix: '^', '~' or ''
+│  ├─ Source: <default>
+│  └─ Value: '^'
+│
+├─ deferredVersionFolder
+│  ├─ Description: Folder where are stored the versioning files
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/.yarn/versions'
+│
+├─ enableColors
+│  ├─ Description: If true, the CLI is allowed to use colors in its output
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableConstraintsChecks
+│  ├─ Description: If true, constraints will run during installs
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableGlobalCache
+│  ├─ Description: If true, the system-wide cache folder will be used regardless of [36m`cache-folder`[39m
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableHardenedMode
+│  ├─ Description: If true, automatically enable --check-resolutions --refresh-lockfile on installs
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ enableHyperlinks
+│  ├─ Description: If true, the CLI is allowed to use hyperlinks in its output
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableImmutableCache
+│  ├─ Description: If true, the cache is reputed immutable and actions that would modify it will throw
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableImmutableInstalls
+│  ├─ Description: If true (the default on CI), prevents the install command from modifying the lockfile
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableInlineBuilds
+│  ├─ Description: If true, the CLI will print the build output on the command line
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableInlineHunks
+│  ├─ Description: If true, the installs will print unmatched patch hunks
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableMessageNames
+│  ├─ Description: If true, the CLI will prefix most messages with codes suitable for search engines
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableMirror
+│  ├─ Description: If true, the downloaded packages will be retrieved and stored in both the local and global folders
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableNetwork
+│  ├─ Description: If false, Yarn will refuse to use the network if required to
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableOfflineMode
+│  ├─ Description: If true, Yarn will attempt to retrieve files and metadata from the global cache rather than the network
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ enableProgressBars
+│  ├─ Description: If true, the CLI is allowed to show a progress bar for long-running events
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableScripts
+│  ├─ Description: If true, packages are allowed to have install scripts by default
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableStrictSettings
+│  ├─ Description: If true, unknown settings will cause Yarn to abort
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableStrictSsl
+│  ├─ Description: If false, SSL certificate errors will be ignored
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableTelemetry
+│  ├─ Description: If true, telemetry will be periodically sent, following the rules in https://yarnpkg.com/advanced/telemetry
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableTimers
+│  ├─ Description: If true, the CLI is allowed to print the time spent executing commands
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableTips
+│  ├─ Description: If true, installs will print a helpful message every day of the week
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ enableTransparentWorkspaces
+│  ├─ Description: If false, Yarn won't automatically resolve workspace dependencies unless they use the [36m`workspace:`[39m protocol
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ globalFolder
+│  ├─ Description: Folder where all system-global files are stored
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/.yarn/berry'
+│
+├─ httpProxy
+│  ├─ Description: URL of the http proxy that must be used for outgoing http requests
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ httpRetry
+│  ├─ Description: Retry times on http failure
+│  ├─ Source: <default>
+│  └─ Value: 3
+│
+├─ httpTimeout
+│  ├─ Description: Timeout of each http request in milliseconds
+│  ├─ Source: <default>
+│  └─ Value: 60000
+│
+├─ httpsCaFilePath
+│  ├─ Description: A path to a file containing one or multiple Certificate Authority signing certificates
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ httpsCertFilePath
+│  ├─ Description: Path to file containing certificate chain in PEM format
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ httpsKeyFilePath
+│  ├─ Description: Path to file containing private key in PEM format
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ httpsProxy
+│  ├─ Description: URL of the http proxy that must be used for outgoing https requests
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ ignorePath
+│  ├─ Description: If true, the local executable will be ignored when using the global one
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ immutablePatterns
+│  ├─ Description: Array of glob patterns; files matching them won't be allowed to change during immutable installs
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ initEditorConfig
+│  ├─ Description: Extra rules to define in the generator editorconfig
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ initFields
+│  ├─ Description: Additional fields to set when creating packages via the init command
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ initScope
+│  ├─ Description: Scope used when creating packages via the init command
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ injectEnvironmentFiles
+│  ├─ Description: List of all the environment files that Yarn should inject inside the process when it starts
+│  ├─ Source: <default>
+│  └─ Value: [ '.env.yarn?' ]
+│
+├─ installStatePath
+│  ├─ Description: Path of the file where the install state will be persisted
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/.yarn/install-state.gz'
+│
+├─ lastUpdateCheck
+│  ├─ Description: Last timestamp we checked whether new Yarn versions were available
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ logFilters
+│  ├─ Description: Overrides for log levels
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ networkConcurrency
+│  ├─ Description: Maximal number of concurrent requests
+│  ├─ Source: <default>
+│  └─ Value: 50
+│
+├─ networkSettings
+│  ├─ Description: Network settings per hostname (glob patterns are supported)
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ nmHoistingLimits
+│  ├─ Description: Prevents packages to be hoisted past specific levels
+│  ├─ Source: <default>
+│  └─ Value: 'none'
+│
+├─ nmMode
+│  ├─ Description: Defines in which measure Yarn must use hardlinks and symlinks when generated [36m`node_modules`[39m directories.
+│  ├─ Source: <default>
+│  └─ Value: 'classic'
+│
+├─ nmSelfReferences
+│  ├─ Description: Defines whether the linker should generate self-referencing symlinks for workspaces.
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ nodeLinker
+│  ├─ Description: The linker used for installing Node packages, one of: "pnp", "pnpm", or "node-modules"
+│  ├─ Source: /home/daniel/git/asocial2-app/.yarnrc.yml
+│  └─ Value: 'node-modules'
+│
+├─ npmAlwaysAuth
+│  ├─ Description: URL of the selected npm registry (note: npm enterprise isn't supported)
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ npmAuditExcludePackages
+│  ├─ Description: Array of glob patterns of packages to exclude from npm audit
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ npmAuditIgnoreAdvisories
+│  ├─ Description: Array of glob patterns of advisory IDs to exclude from npm audit
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ npmAuditRegistry
+│  ├─ Description: Registry to query for audit reports
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ npmAuthIdent
+│  ├─ Description: Authentication identity for the npm registry (_auth in npm and yarn v1)
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ npmAuthToken
+│  ├─ Description: Authentication token for the npm registry (_authToken in npm and yarn v1)
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ npmPublishAccess
+│  ├─ Description: Default access of the published packages
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ npmPublishRegistry
+│  ├─ Description: Registry to push packages to
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ npmRegistries
+│  ├─ Description: Settings per registry
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ npmRegistryServer
+│  ├─ Description: URL of the selected npm registry (note: npm enterprise isn't supported)
+│  ├─ Source: <default>
+│  └─ Value: 'https://registry.yarnpkg.com'
+│
+├─ npmScopes
+│  ├─ Description: Settings per package scope
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ packageExtensions
+│  ├─ Description: Map of package corrections to apply on the dependency tree
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ patchFolder
+│  ├─ Description: Folder where the patch files must be written
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/.yarn/patches'
+│
+├─ pnpEnableEsmLoader
+│  ├─ Description: If true, Yarn will generate an ESM loader ([36m`.pnp.loader.mjs`[39m). If this is not explicitly set Yarn tries to automatically detect whether ESM support is required.
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ pnpEnableInlining
+│  ├─ Description: If true, the PnP data will be inlined along with the generated loader
+│  ├─ Source: <default>
+│  └─ Value: true
+│
+├─ pnpFallbackMode
+│  ├─ Description: If true, the generated PnP loader will follow the top-level fallback rule
+│  ├─ Source: <default>
+│  └─ Value: 'dependencies-only'
+│
+├─ pnpIgnorePatterns
+│  ├─ Description: Array of glob patterns; files matching them will use the classic resolution
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ pnpMode
+│  ├─ Description: If 'strict', generates standard PnP maps. If 'loose', merges them with the n_m resolution.
+│  ├─ Source: <default>
+│  └─ Value: 'strict'
+│
+├─ pnpShebang
+│  ├─ Description: String to prepend to the generated PnP script
+│  ├─ Source: <default>
+│  └─ Value: '#!/usr/bin/env node'
+│
+├─ pnpUnpluggedFolder
+│  ├─ Description: Folder where the unplugged packages must be stored
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/.yarn/unplugged'
+│
+├─ preferDeferredVersions
+│  ├─ Description: If true, running [36m`yarn version`[39m will assume the [36m`--deferred`[39m flag unless [36m`--immediate`[39m is set
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ preferInteractive
+│  ├─ Description: If true, the CLI will automatically use the interactive mode when called from a TTY
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ preferReuse
+│  ├─ Description: If true, [36m`yarn add`[39m will attempt to reuse the most common dependency range in other workspaces.
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ preferTruncatedLines
+│  ├─ Description: If true, the CLI will truncate lines that would go beyond the size of the terminal
+│  ├─ Source: <default>
+│  └─ Value: false
+│
+├─ progressBarStyle
+│  ├─ Description: Which style of progress bar should be used (only when progress bars are enabled)
+│  ├─ Source: <default>
+│  └─ Value: undefined
+│
+├─ rcFilename
+│  ├─ Description: Name of the files where the configuration can be found
+│  ├─ Source: <default>
+│  └─ Value: '.yarnrc.yml'
+│
+├─ supportedArchitectures
+│  ├─ Description: Architectures that Yarn will fetch and inject into the resolver
+│  ├─ Source: <default>
+│  ├─ os: [ 'current' ]
+│  ├─ cpu: [ 'current' ]
+│  └─ libc: [ 'current' ]
+│
+├─ taskPoolConcurrency
+│  ├─ Description: Maximal amount of concurrent heavy task processing
+│  ├─ Source: <default>
+│  └─ Value: 4
+│
+├─ taskPoolMode
+│  ├─ Description: Execution strategy for heavy tasks
+│  ├─ Source: <default>
+│  └─ Value: 'workers'
+│
+├─ telemetryInterval
+│  ├─ Description: Minimal amount of time between two telemetry uploads, in days
+│  ├─ Source: <default>
+│  └─ Value: 7
+│
+├─ telemetryUserId
+│  ├─ Description: If you desire to tell us which project you are, you can set this field. Completely optional and opt-in.
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ tsEnableAutoTypes
+│  ├─ Description: Whether Yarn should auto-install @types/ dependencies on 'yarn add'
+│  ├─ Source: <default>
+│  └─ Value: null
+│
+├─ unsafeHttpWhitelist
+│  ├─ Description: List of the hostnames for which http queries are allowed (glob patterns are supported)
+│  ├─ Source: <default>
+│  └─ Value: []
+│
+├─ virtualFolder
+│  ├─ Description: Folder where the virtual packages (cf doc) will be mapped on the disk (must be named __virtual__)
+│  ├─ Source: <default>
+│  └─ Value: '/home/daniel/git/asocial2-app/.yarn/__virtual__'
+│
+├─ winLinkType
+│  ├─ Description: Whether Yarn should use Windows Junctions or symlinks when creating links on Windows.
+│  ├─ Source: <default>
+│  └─ Value: 'junctions'
+│
+└─ yarnPath
+   ├─ Description: Path to the local executable that must be used over the global one
+   ├─ Source: /home/daniel/.yarnrc.yml
+   └─ Value: '/home/daniel/.yarn/releases/yarn-4.4.1.cjs'

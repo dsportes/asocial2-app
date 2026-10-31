@@ -29,8 +29,7 @@ selon son type.
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, type Ref } from 'vue'
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
 import { $Form } from '../src-fw/documents'
@@ -43,10 +42,12 @@ const encoder = new TextEncoder()
 
 const emit = defineEmits(['done'])
 
-const props = defineProps({
-  formType: FormType,
-  isDemand: Boolean
-})
+const props = defineProps<{
+  formType?: FormType
+  isDemand?: boolean
+}>()
+
+const formType: Ref<any> = computed(() => props.formType || {})
 
 const sf = stores.safe
 const ui = stores.ui
@@ -54,9 +55,9 @@ ui.navBar.hasBack = false
 
 const exp = ref(true)
 const diag = ref()
-const estComite = computed(() => props.formType.svc === 'AS2' && (
-  props.formType.type === 'membrecodir' ||
-  props.formType.type === 'membreredaction'))
+const estComite = computed(() => formType.value.svc === 'AS2' && (
+  formType.value.type === 'membrecodir' ||
+  formType.value.type === 'membreredaction'))
 
 // Proposition par un tiers au user ayant cet alias
 let alias = reactive({ inp: '', err: '' })
@@ -67,7 +68,7 @@ const valA = async () => {
   const cf = ui.currentForm
   const userId = await userIdFromAlias()
   if (userId) {
-    const form = $Form.basicForm(cf.soa, props.formType.type, userId)
+    const form = $Form.basicForm(cf.soa, formType.value.type, userId)
     form.opts.alias = alias.inp
     emit('done', form)
   }
@@ -82,7 +83,7 @@ const validInv = async () => {
   const userId = Crypt.rnd(15)
   const st = await sf.createInvit(userId, invitCode.value)
   if (st === 0) {
-    const form = $Form.basicForm(cf.soa, props.formType.type, userId)
+    const form = $Form.basicForm(cf.soa, formType.value.type, userId)
     form.isInvit = true
     form.msgT = encoder.encode(invitCode.value + ' / ' + userId)
     form.opts.alias = invitCode.value
@@ -103,17 +104,17 @@ const userIdFromAlias = async () => {
 if (estComite.value) {
   const cf = ui.currentForm
   if (props.isDemand) {
-    const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)
+    const form = $Form.basicForm(cf.soa, formType.value.type, sf.userId)
     if (cf.asAdmin) form.opts.asAdmin = true
     form.opts.alias = ''
     emit('done', form)
   }
 }
 
-if (props.formType.type === 'auteur' || props.formType.type === 'coauteur') {
+if (formType.value.type === 'auteur' || formType.value.type === 'coauteur') {
   const cf = ui.currentForm
   if (props.isDemand) {
-    const form = $Form.basicForm(cf.soa, props.formType.type, sf.userId)
+    const form = $Form.basicForm(cf.soa, formType.value.type, sf.userId)
     emit('done', form)
   }
 }

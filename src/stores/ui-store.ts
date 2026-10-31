@@ -1,8 +1,5 @@
-// @ts-ignore
-import { ref, computed, reactive, useTemplateRef } from 'vue'
-// @ts-ignore
+import { ref, computed, reactive, type Ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
-// @ts-ignore
 import { setCssVar } from 'quasar'
 
 import { hasPage } from '../src-fw/help'
@@ -15,7 +12,7 @@ const HOME = 'safeHome'
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
   const $q = ref()
-  const set$t$q = (t, q) => {
+  const set$t$q = (t: any, q: any) => {
     $t.value = t
     $q.value = q
   }
@@ -61,10 +58,11 @@ export const useUiStore = defineStore('ui', () => {
   // ********************************************
 
   // Gestion de l'affichage des exceptions
+  type Texc = { resolve: Function | undefined, ex: any}
   const exc = reactive({
-    resolve: null,
+    resolve: undefined,
     ex: null
-  })
+  } as Texc)
   const displayExc = async (e: any) => {
     if (appDialogs.DialogExc) return
     appDialogs.DialogExc = true
@@ -77,17 +75,18 @@ export const useUiStore = defineStore('ui', () => {
     appDialogs.DialogExc = false
     const f = exc.resolve
     exc.ex = null
-    exc.resolve= null
+    exc.resolve= undefined
     if (f) f()
   }
 
   // Gestion d'un dialogue avec confirmation
+  type Tdiag = { txt: string, token: number, cf: number, resolve: Function | undefined}
   const diag = reactive({
     txt: '',
     token: 0,
     cf: -1,
-    resolve: null
-  })
+    resolve: undefined
+  } as Tdiag)
   const diagDisplay = async (txt: string, nbsec?: number | boolean) => {
     return new Promise((resolve) => {
       diag.token = Date.now()
@@ -111,14 +110,14 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
-  const helpstack = ref([])
+  const helpstack: Ref<string[]> = ref([])
 
   const fermerHelp = () => {
     appDialogs.DialogHelp = false
     helpstack.value.length = 0
   }
 
-  const pushhelp = (page) => {
+  const pushhelp = (page: string) => {
     if (helpstack.value.length === 0) appDialogs.DialogHelp = true
     helpstack.value.push(page)
   }
@@ -128,10 +127,11 @@ export const useUiStore = defineStore('ui', () => {
     else helpstack.value.splice(helpstack.value.length - 1, 1)
   }
 
+  type Tediting = { flag: boolean, resolve: Function | undefined }
   const editing = reactive({
     flag: false,
-    resolve: null
-  })
+    resolve: undefined
+  } as Tediting)
 
   const resolveEditing = (b: boolean) => {
     appDialogs.ConfirmClose = false
@@ -139,9 +139,9 @@ export const useUiStore = defineStore('ui', () => {
     const f = editing.resolve
     if (f) f(b)
   }
-  const setEditing = () => { 
+  const setEditing = () => {
     editing.flag = true }
-  const resetEditing = () => { 
+  const resetEditing = () => {
     editing.flag = false }
   const editingInCourse = computed(() => editing.flag )
 
@@ -166,7 +166,7 @@ export const useUiStore = defineStore('ui', () => {
 
   /*
   const getPh = () => {
-    setTimeout(() => {  
+    setTimeout(() => {
       let eltp = document.querySelector('.dialog-std')
       if (!eltp) eltp = document.querySelector('.q-page')
       if (!eltp) appPage.height = 100
@@ -257,11 +257,11 @@ export const useUiStore = defineStore('ui', () => {
   const trigPage = () => {
     appPage.count = appPage.count + 1
   }
-  const setPh = (size) => { 
+  const setPh = (size: any) => {
     appPage.height = size.height
     // console.log('RESIZE', size.height)
   }
-  
+
   const navBar = reactive({
     hasBack: false,
     idx: 0,
@@ -293,8 +293,8 @@ export const useUiStore = defineStore('ui', () => {
     fnOnUpdate: null
   })
 
-  const emojiIndex = ref()
-  const setEmoji = (idx) => {
+  const emojiIndex: Ref<any> = ref()
+  const setEmoji = (idx: any) => {
     emojiIndex.value = idx
     return idx
   }
@@ -308,7 +308,7 @@ export const useUiStore = defineStore('ui', () => {
     idc,
     set$t$q, setDark, isDark, $q, visibility, setPh,
     openMenu, closeMenu, leftMenu,
-    setScreenWH, portrait, screenHeight, screenWidth, isShort, 
+    setScreenWH, portrait, screenHeight, screenWidth, isShort,
     appDialogs, confirmQuit,
     exc, displayExc, hideExc,
     diag, diagDisplay,

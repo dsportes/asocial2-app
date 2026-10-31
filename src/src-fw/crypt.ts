@@ -107,9 +107,10 @@ export class Crypt {
   // static alg = 'rsa'
   static alg = 'ecdsa'
 
-  static async crypt (cle: Uint8Array | null, buf: Uint8Array | null) : Promise<Uint8Array | null> {
+  static async crypt (cle: Uint8Array | null | undefined, buf: Uint8Array | null | undefined)
+  : Promise<Uint8Array | null> {
     try {
-      if (buf === null || cle === null) return null
+      if (!buf || !cle) return null
       const iv = crypto.getRandomValues(new Uint8Array(12))
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['encrypt'])
       const enc = new Uint8Array(await crypto.subtle.encrypt(
@@ -123,9 +124,10 @@ export class Crypt {
     }
   }
 
-  static async decrypt (cle: Uint8Array | null, buf: Uint8Array | null) : Promise<Uint8Array | null> {
+  static async decrypt (cle: Uint8Array | null | undefined, buf: Uint8Array | null | undefined)
+  : Promise<Uint8Array | null> {
     try {
-      if (buf === null || cle === null) return null
+      if (!buf || !cle) return null
       const key = await crypto.subtle.importKey('raw', cle as BufferSource, 'AES-GCM', false, ['decrypt'])
       const iv = buf.subarray(0, 12) as BufferSource
       const enc = buf.subarray(12) as BufferSource
@@ -248,8 +250,9 @@ export class Crypt {
   }
   */
 
-  static random (nbytes: number) {
-    const u8 = new Uint8Array(nbytes)
+  static random (nbytes: number) : Uint8Array {
+    const u8: Uint8Array = new Uint8Array(nbytes)
+    // @ts-expect-error
     window.crypto.getRandomValues(u8)
     return u8
   }

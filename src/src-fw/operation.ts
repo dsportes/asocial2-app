@@ -60,7 +60,7 @@ export class DocEnums {
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
     const cred = dd.enumCred || ''
-    const n = svc + '$' + dd.docCl + (cred ? '_' + org : '')
+    const n = svc + '/' + dd.docCl + (cred ? '/' + org : '')
     let values = DocEnums.m.get(n)
     if (values) return values
 
@@ -97,7 +97,7 @@ export class DocEnums {
     if (dd.enum && dd.enum.length) return false
     // enum externe -
     const cred = dd.enumCred || ''
-    const n = svc + '$' + dd.docCl + (cred ? '_' + org : '')
+    const n = svc + '/' + dd.docCl + (cred ? '/' + org : '')
     let s = await getSite(svc, org)
     const op = new AdminOperation('ADMIN$setEnum', s || '')
     try {

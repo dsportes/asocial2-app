@@ -71,12 +71,12 @@ const checkClose = async () => {
   if (b) {
     model.value = false
     emit('close', true)
-  } else 
+  } else
     model.value = true
 }
 
 const edv = (x) => {
-  const lbl = hasMessage('ENUM_' + props.svc + '$' + props.name + '_' + x[0]) 
+  const lbl = hasMessage('ENUM_' + props.svc + '$' + props.name + '_' + x[0])
   const t = [0, x[0], lbl || x[1]]
   return t
 }
@@ -104,16 +104,16 @@ const chg = () => {
   lst.value.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
   if (lst.value.length !== lst0.value.length) { ui.setEditing(); return }
   for(let i = 0; i < lst.value.length; i++)
-    if ((lst.value[i][1] !== lst0.value[i][1]) || (lst.value[i][2] !== lst0.value[i][2])) { 
+    if ((lst.value[i][1] !== lst0.value[i][1]) || (lst.value[i][2] !== lst0.value[i][2])) {
       ui.setEditing()
       return
     }
   ui.resetEditing()
 }
 
-const init1 = async () => { 
+const init1 = async () => {
   const l = []
-  const lx = await DocEnums.get(props.svc + '$' + props.name, props.org)
+  const lx = await DocEnums.get(props.svc, props.name, props.org)
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
   lst.value = l
@@ -124,8 +124,8 @@ const init1 = async () => {
 
 onMounted(async () => {  await init1() })
 
-watch(() => props.org, async () => { 
-  await init1() 
+watch(() => props.org, async () => {
+  await init1()
 })
 
 const delItem = (idx) => {
@@ -140,7 +140,7 @@ const valEnum = async () => {
   const l = []
   for(const t of lst.value)
     if (t[1] && t[2]) l.push([t[1], t[2]])
-  await DocEnums.set(props.svc + '$' + props.name, l, props.org)
+  await DocEnums.set(props.svc, props.name, l, props.org)
   await init1()
 }
 const undoEnum = () => {
@@ -149,7 +149,7 @@ const undoEnum = () => {
 }
 const majC = async (ctx) => {
   if (!ctx.value) { await ui.diagDisplay($t('ENUMcm')); return }
-  for(let i = 0; i < lst.value.length; i++) 
+  for(let i = 0; i < lst.value.length; i++)
     if (i !== ctx.idx && lst.value[i][1] === ctx.value) {
       await ui.diagDisplay($t('ENUMdup', [i + 1]))
       return

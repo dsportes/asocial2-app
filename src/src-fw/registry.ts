@@ -72,7 +72,7 @@ export class Registry {
       exc = new AppExc(3, 'class_without_descriptor', 'Register', [clazz.name])
     if (!exc && _descriptor.exc) exc = _descriptor.exc
     if (!exc) {
-      Registry.constructors.set(clazz.name, clazz)
+      Registry.constructors.set(_descriptor.fullName, clazz)
       if ((clazz as any)['_manager'])
         Registry.managers.add(clazz)
     }
@@ -86,14 +86,16 @@ export class Registry {
       exc = new AppExc(3, 'subclass_without_parent_descriptor', 'RegisterSubClass', [clazz.name])
     if (!exc) {
       const svc = _descriptor.svc
-      const docCl = _descriptor.svc
-      const fullName = svc + '/' + docCl + '/' + subCl
+      const docCl = _descriptor.docCl
+      const fullName = _descriptor.fullName + '/' + subCl
       if (!Descriptor.isSubName(subCl))
         exc = new AppExc(3, 'subclass_name_syntax', 'RegisterSubClass', [fullName])
       if (!exc) {
-        (clazz as any)['_parentClazz'] = parentClazz
-        (clazz as any)['_subCl'] = subCl
-        Registry.constructors.set(clazz.name, clazz)
+        clazz.prototype._parentClazz = parentClazz
+        clazz.prototype._subCl = subCl
+        // (clazz as any)['_parentClazz'] = parentClazz
+        // (clazz as any)['_subCl'] = subCl
+        Registry.constructors.set(fullName, clazz)
         if ((clazz as any)['_manager'])
           Registry.managers.add(clazz)
         const role: string | undefined = (clazz as any)['_role']
@@ -138,6 +140,15 @@ export class Registry {
   static newD (svc: string, docCl: string, data?: Object ) : $ADocument {
     const ci = Registry.getClassInfo(svc, docCl, data)
     return ci.newD() as $ADocument
+  }
+
+  static isManager (svc: string, docCl: string) : boolean {
+    try {
+      const ci = Registry.getClassInfo(svc, docCl)
+      return Registry.managers.has(ci.clazz)
+    } catch (e) {
+      return false
+    }
   }
 
   static async compile (svc: string, docCl: string, org: string, obj: any) : Promise<$Document>{

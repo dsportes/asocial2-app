@@ -1,5 +1,7 @@
 // @ts-ignore
 import { register } from 'register-service-worker'
+
+/*
 import { urlFromText } from '../src/src-fw/util'
 import stores from '../src/stores/all'
 import { onPushMsg } from '../src/stores/docs'
@@ -19,7 +21,7 @@ navigator.permissions.query({ name: 'notifications' })
   console.log('Permissions cannot be asked')
 })
 
-// Traite les messages émis par le SW 
+// Traite les messages émis par le SW
 navigator.serviceWorker.onmessage = async (message) => {
   try {
     if (message.data) {
@@ -32,10 +34,11 @@ navigator.serviceWorker.onmessage = async (message) => {
         stores.session.onSwMessage(message.data)
       }
     }
-  } catch (e) { 
+  } catch (e) {
     console.log(e)
   }
 }
+*/
 
 /*
 onfocus = (event) => { useConfigStore().getFocus() }
@@ -44,17 +47,21 @@ onbeforeunload = (event) => { useConfigStore().closingApp() }
 */
 
 export let myRegistration = null
+export let _onAppUpdate = null
+export function setOnAppUpdate(f: any) {
+  _onAppUpdate = f
+}
 
 register('./sw.js', {
 
-  registered (registration) { 
+  registered (registration) {
     // @ts-expect-error
     myRegistration = registration
     const ok = myRegistration ? 'ok' : 'KO'
     console.log('Service worker is registered', ok)
   },
 
-  ready (registration) { 
+  ready (registration) {
     // @ts-expect-error
     myRegistration = registration
     const ok = myRegistration ? 'ok' : 'KO'
@@ -64,7 +71,9 @@ register('./sw.js', {
   },
 
   updated (/* registration */) {
-    stores.session.setAppUpdated()
+    if (_onAppUpdate)
+      // @ts-expect-error
+      _onAppUpdate()
   },
 
   cached (/* registration */) { }, // console.log('Content has been cached for offline use.')

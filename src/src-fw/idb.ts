@@ -197,7 +197,7 @@ export class IDB {
   }
 
   db : AppDB
-  keyK: Uint8Array
+  keyK: Uint8Array | undefined
   myDebug: boolean
   appName: string
   userId: string

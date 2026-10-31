@@ -64,7 +64,7 @@ class AS2$Form_membrecomite extends AS2$Form {
 class AS2$Form_membrecodir extends AS2$Form_membrecomite {
   constructor () { super('CoDir') }
 }
-if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_membrecomite, AS2$Form, 'membrecomite') }
+if (!exc) { n++; exc = Registry.registerSubClass(AS2$Form_membrecodir, AS2$Form, 'membrecodir') }
 
 class AS2$Form_membreredaction extends AS2$Form_membrecomite {
   constructor () { super('Redaction') }

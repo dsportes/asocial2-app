@@ -1,19 +1,53 @@
-// @ts-ignore
 import { ref, computed, reactive, Ref, watch } from 'vue'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
+import { urlFromText } from '../src-fw/util'
+import { onPushMsg } from '../stores/docs'
 import { getStore } from '../stores/docs'
 import { resetDocStores } from '../stores/docs'
 import { Crypt } from '../src-fw/crypt'
 import { $t, sleep } from '../src-fw/util'
 import { idb, IDB, Prefs, deleteIDB, StartPlane  } from '../src-fw/idb'
 import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-fw/subscription'
-import { myRegistration } from '../../src-pwa/register-sw'
+import { myRegistration, setOnAppUpdate } from '../../src-pwa/register-sw'
 import { AOperation, checkStatus } from '../src-fw/operation'
 
 export const useSessionStore = defineStore('session', () => {
+  setOnAppUpdate(setAppUpdated)
+
+  // Ecoute les changements de permissions et les route vers config
+  navigator.permissions.query({ name: 'notifications' })
+  .then(notificationPerm => {
+    const session = stores.session
+    notificationPerm.onchange = () => {
+      const p = notificationPerm.state
+      session.changePerm(p)
+    }
+    const p = notificationPerm.state
+    session.changePerm(p)
+  })
+  .catch(e => {
+    console.log('Permissions cannot be asked')
+  })
+
+  // Traite les messages émis par le SW
+  navigator.serviceWorker.onmessage = async (message) => {
+    try {
+      if (message.data) {
+        if (message.data.type === 'STOP') {
+          window.location.href = urlFromText(stores.config.K.byeHtml)
+        } else if (message.data.type === 'PUSH') {
+          console.log('Notification received by web-push')
+          await onPushMsg(message.data.payload)
+        } else {
+          stores.session.onSwMessage(message.data)
+        }
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  }
 
   /*
   0 : avant login
@@ -68,7 +102,7 @@ export const useSessionStore = defineStore('session', () => {
 
   const perims: Ref<$Perims> = ref(new Map())
   const defsXref: Ref<$DefsXref> = ref(new Map())
-  const getPerimeter = 
+  const getPerimeter =
     (svc: string, org: string, code: string, docCl: string, pk: string ) => {
     const m = !perims.value ? undefined : perims.value.get(svc + '/' + org)
     if (!m) return null
@@ -152,15 +186,15 @@ export const useSessionStore = defineStore('session', () => {
       if (hasLocal.value && st) {
         const p2sync: $Perimeter[] = [] // périmètres à synchroniser / charger de IDB
         const px: Map<string, $Perimeter> | undefined = perims.value.get(svc + '/' + org)
-        if (px) for(const [,p] of px) 
-          if (p.plane && orgRoles.value.has(p.org + '/' + p.role)) 
+        if (px) for(const [,p] of px)
+          if (p.plane && orgRoles.value.has(p.org + '/' + p.role))
             p2sync.push(p)
         await st.fetch(p2sync, false, 2)
       }
     }
   }
 
-  const setStep = async (s: number, toPage?: string) => { 
+  const setStep = async (s: number, toPage?: string) => {
     const ui = stores.ui
     const config = stores.config
     const sf = stores.safe
@@ -180,7 +214,7 @@ export const useSessionStore = defineStore('session', () => {
         // console.log('bip1')
         await doStep1(sf, ui) // préparation pour permettre le choix des options
         // console.log('bip2')
-        if (!toPage) { 
+        if (!toPage) {
           step.value = 1
           return
         }
@@ -210,7 +244,7 @@ export const useSessionStore = defineStore('session', () => {
   const credsChange = () => {
     // TOCHECK
     // @ts-expect-error
-    if (sessionId.step >= 1) 
+    if (sessionId.step >= 1)
       setTimeout(async () => { await onCredsOptionsChange() }, 1)
   }
 
@@ -238,7 +272,7 @@ export const useSessionStore = defineStore('session', () => {
       }
     }
 
-    if (step.value === 1) { 
+    if (step.value === 1) {
       await setStep(2)
     } else {
       setTimeout(async () => { await onCredsOptionsChange() }, 1)
@@ -394,7 +428,7 @@ export const useSessionStore = defineStore('session', () => {
   const sessionId = ref('')
   const wpReady = computed(() => permState.value === 'granted' && registration.value && sessionId.value)
   const sessionInfo = computed(() => subJSON.value.startsWith('???') ? subJSON.value : sessionId.value)
-  
+
   async function setRegistration (applicationServerKey: Uint8Array, location: string, APPNAME: string) {
     let nn = 1
     while (!myRegistration) {
@@ -514,10 +548,10 @@ export const useSessionStore = defineStore('session', () => {
     step, setStep, dialogs,
     syncOK, allOK, netStatus, noDoc,
     perims, getPerimeter, chgOptions, onCredsOptionsChange, getXref, setDefsXref, credsChange,
-    orgRoles, orgRolesP, 
-    prefs, pref, 
+    orgRoles, orgRolesP,
+    prefs, pref,
     edPref, setEdPref, resetEdPref, updatePrefs, currentPref,
-    okOptions, haschgOptions, 
+    okOptions, haschgOptions,
 
     opEncours, opDialog, opSignal, opSpinner, opStart, opEnd,
 

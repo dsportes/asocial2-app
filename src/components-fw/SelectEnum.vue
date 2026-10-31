@@ -1,8 +1,8 @@
 <template>
-  <q-select dense options-dense 
+  <q-select dense options-dense
     v-model="modelloc" :options="options" :label="title"
     class="q-ml-xs font-mono"
-    :disable="disable" 
+    :disable="disable"
     clearable
     use-input
     hide-selected
@@ -41,21 +41,21 @@ watch(() => modelloc.value, (t) => {
 
 function filterFn(val, update) {
   update(() => {
-    options.value = lst.value.filter(v => 
+    options.value = lst.value.filter(v =>
       v.label2.includes(val.toLowerCase()))
   })
 }
 
 const edv = (e) => {
-  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0]) 
+  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0])
   const lbl2 = (lbl1 || e[1]).toLowerCase()
   const t = { value: e[0], label: lbl1 || e[1], label2: lbl2 }
   return t
 }
 
-const load = async () => { 
+const load = async () => {
   const l = []
-  const lx = await DocEnums.get(props.svc + '$' + props.enum, props.org)
+  const lx = await DocEnums.get(props.svc, props.enum, props.org)
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
   lst.value = l
@@ -68,7 +68,7 @@ const load = async () => {
 
 const initv = () => {
   const v = model.value
-  if (v) for (const x of lst.value) if (v === x.value) 
+  if (v) for (const x of lst.value) if (v === x.value)
     return x
   return null
 }
@@ -82,7 +82,7 @@ onMounted(async () => { await load()})
 const shl = computed(() => {
   const l = []
   const s = sel.value.toLowerCase()
-  for (const x of lst.value) 
+  for (const x of lst.value)
     if (!sel.value || x[2].indexOf(s) !== -1) l.push(x)
   return l
 })

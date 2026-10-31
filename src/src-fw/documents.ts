@@ -225,7 +225,7 @@ export class $MDEvent {
     const e = new $MDEvent()
     Object.assign(e, obj)
     e.comment = !obj.comment || !sf.keyK ? '' :
-      // @ts-expect-error
+    // @ts-expect-error
       decoder.decode(await Crypt.decrypt(sf.keyK, obj.comment))
     return e
   }

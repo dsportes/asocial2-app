@@ -1,12 +1,5 @@
-// @ts-ignore
-import { ref, computed, watch, reactive } from 'vue'
-// @ts-ignore
-import type { Ref } from 'vue'
-// @ts-ignore
+import { ref, computed, type Ref } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
-// @ts-ignore
-import Dexie from 'dexie'
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
@@ -16,7 +9,7 @@ import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/ope
 import { Crypt } from '../src-fw/crypt'
 import { IDBsafe, Trusting } from '../src-fw/idbsafe'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { Registry } from '../src-fw/registry'
+import { Registry, ClassInfo } from '../src-fw/registry'
 import { $Credential } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 import { GetCredProps, AutoRevokeCred } from '../src-fw/operations'
@@ -165,9 +158,9 @@ export type Safe = {
   userId: string
   auth: Auth
   devices: Object | null
-  creds: Object | null
-  options: Object | null
-  prefs: Object | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+  creds: any | null
+  options: any | null
+  prefs: any | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
 }
 
 export type ICVS = {
@@ -212,7 +205,7 @@ export const useSafeStore = defineStore('safe', () => {
     nbLoads.value = 0
     icvs.value = new Map()
     userId.value = ''
-    keyK.value = null
+    keyK.value = undefined
     auth.value = undefined
     devices.value.clear()
     mySafePrefs.value.clear()
@@ -229,7 +222,10 @@ export const useSafeStore = defineStore('safe', () => {
 
   const mySafeStore = ref('')
   const userId: Ref<string> = ref('')
-  const keyK = ref(null)
+  const keyK: Ref<Uint8Array | undefined> = ref()
+  const shKeyK = async () : Promise<string> => {
+    return await await Crypt.strongHash(keyK.value || '', false, false) as string
+  }
   const userName = computed(() => {
     if (!userId.value) return ''
     const t = trustings.value.get(userId.value)
@@ -342,7 +338,7 @@ export const useSafeStore = defineStore('safe', () => {
   Sans échec: au pire rien n'est mis à jour maintenant.
   */
   const resetAliases = async (safe: Safe) => {
-    const shK = await Crypt.strongHash(keyK.value || '', false, false) as string
+    const shK = await shKeyK()
     let op = new MDOperation('$mdUserGetAAS')
     let aas : string[] // [hsha1 hsha2 store]
     try {
@@ -447,7 +443,8 @@ export const useSafeStore = defineStore('safe', () => {
     if (safe.prefs) {
       const pr = safe.prefs[app]
       if (pr) {
-        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(pr)))
+        // @ts-expect-error
+        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(pr))) as any
         for(const code in obj) p.set(code, obj[code])
       }
     }
@@ -463,7 +460,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Mise à jour des préférences */
   const updatePrefs = async ( mprefs: Map<string, Object>) => {
-    let prefs : Object | null = {}
+    let prefs : any | null = {}
 
     if (mprefs && mprefs.size)
       for(const [code, obj] of mprefs) prefs[code] = obj
@@ -471,7 +468,7 @@ export const useSafeStore = defineStore('safe', () => {
     const updatePrefs: UpdatePrefs = {
       app: stores.config.K.APPNAME,
       userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      shK: await shKeyK(),
       prefs: keyToB64(await Crypt.crypt(keyK.value, encode(prefs)))
     }
     const op = new SafeOperation('$UpdatePrefs', mySafeStore.value)
@@ -483,11 +480,12 @@ export const useSafeStore = defineStore('safe', () => {
   Un "objet" par application contenant ses options
   */
   const loadOptions = async (safe: Safe) : Promise<void> => {
-    mySafeOptions.value = null
+    mySafeOptions.value = undefined
     const app = stores.config.K.APPNAME
     if (safe.options) {
       const x = safe.options[app]
       if (x)
+        // @ts-expect-error
         mySafeOptions.value = decode(await Crypt.decrypt(keyK.value, keyFromB64(x)))
     }
   }
@@ -505,7 +503,7 @@ export const useSafeStore = defineStore('safe', () => {
     const so: SetOptions = {
       app: stores.config.K.APPNAME,
       userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      shK: await shKeyK(),
       options: keyToB64(await Crypt.crypt(keyK.value, encode(options || {})))
     }
     const op = new SafeOperation('$SetOptions', mySafeStore.value)
@@ -534,7 +532,8 @@ export const useSafeStore = defineStore('safe', () => {
     if (safe.creds) for (const credId in safe.creds)
       try {
         const [nameK, credK, toCheck] = safe.creds[credId] as [string, string, boolean]
-        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(credK))) as Object
+        // @ts-expect-error
+        const obj = decode(await Crypt.decrypt(keyK.value, keyFromB64(credK))) as any
         if (msvc[obj['svc']]) {
           obj['name'] = await dcX(keyFromB64(nameK))
           obj['toCheck'] = toCheck || false
@@ -580,21 +579,21 @@ export const useSafeStore = defineStore('safe', () => {
   const myFullCreds = async (svc: string, org: string, docCl?: string) : Promise<Map<string, $Credential>> => {
     const m : Map<string, $Credential> = mySimpleCreds(svc, org, docCl)
     if (!m.size) return m
-    let op: Operation
+    let op: Operation | undefined
     try {
       for(const [ ,cred] of m) {
         op = new Operation('PropsOfMyCreds', svc, cred.org)
         await op.sign(cred)
         const res = await op.post()
-        const props: Object = res.props
+        const props: any = res.props
         for(const credId of Object.keys(props)) {
           const e = m.get(credId)
           if (e) e.props = props[credId]
         }
       }
       return m
-    } catch (e) {
-      await op.ko(e)
+    } catch (e: any) {
+      if (op) await op.ko(e)
       return m
     }
   }
@@ -635,7 +634,7 @@ export const useSafeStore = defineStore('safe', () => {
     : Promise<boolean> => {
     const setNameCred : SetNameCred = {
       userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      shK: await shKeyK(),
       credId,
       nameK: keyToB64(await ecX(name)),
     }
@@ -660,7 +659,7 @@ export const useSafeStore = defineStore('safe', () => {
   const fixCreds = async (toFix: string[], toDel: string[]) => {
     const fixCreds: FixCreds = {
       userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      shK: await shKeyK(),
       toFix, toDel
     }
     const op = new SafeOperation('$FixCreds', mySafeStore.value)
@@ -672,7 +671,7 @@ export const useSafeStore = defineStore('safe', () => {
   const managerCreds = () : Map<string, $Credential> => {
     const m = new Map()
     for (const [, c] of mySafeCreds.value)
-      if (Registry.managers.has(c.svc + '$' + c.docCl)) m.set(c.credId, c)
+      if (Registry.isManager(c.svc, c.docCl)) m.set(c.credId, c)
     return m
   }
 
@@ -683,8 +682,7 @@ export const useSafeStore = defineStore('safe', () => {
   const isManager = (svc: string, org: string) : Set<string> => {
     const s: Set<string> = new Set()
      for (const [,c] of mySafeCreds.value)
-      if (c.org === org && c.svc === svc)
-        if (Registry.managers.has(c.svc + '$' + c.docCl)) s.add(c.svc + '$' + c.docCl)
+      if (Registry.isManager(c.svc, c.docCl)) s.add(c.svc + '/' + c.docCl)
     return s
   }
 
@@ -694,7 +692,7 @@ export const useSafeStore = defineStore('safe', () => {
     AOperation.reset()
     keyK.value = Crypt.random(32)
     userId.value = _userId
-    const hshK = Crypt.shaS(await Crypt.strongHash(keyK.value, false, true))
+    const hshK = Crypt.shaS(await shKeyK())
     const K1 = keyToB64(await Crypt.crypt(shp1, keyK.value))
     const K2 = !shp2 ? '' : keyToB64(await Crypt.crypt(shp2, keyK.value))
     const hshp1 = Crypt.shaS(shp1)
@@ -814,7 +812,7 @@ export const useSafeStore = defineStore('safe', () => {
     const op = new SafeOperation('$SetPhraseSafe', mySafeStore.value)
     try {
       op.args['userId'] = userId.value
-      op.args['shK'] = await Crypt.strongHash(keyK.value, false, false) as string
+      op.args['shK'] = await shKeyK()
       op.args['hshp1'] = hshp1
       op.args['K1'] = K1
       op.args['hshp2'] = hshp2
@@ -867,7 +865,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   const delSafe = async () => {
-    const shk = await Crypt.strongHash(keyK.value, false, false)
+    const shk = await shKeyK()
     let op = new MDOperation('$mdUserDel')
     try {
       op.args['userId'] = userId.value
@@ -921,7 +919,7 @@ export const useSafeStore = defineStore('safe', () => {
         session.noLocal = true
 
       try {
-        keyK.value = await Crypt.decrypt(x, keyFromB64(K))
+        keyK.value = await Crypt.decrypt(x, keyFromB64(K)) || undefined
         await compileSafe(ret.safe)
       } catch (e: any) {
         ret.status = 3
@@ -954,11 +952,11 @@ export const useSafeStore = defineStore('safe', () => {
     const cy = ret.cy
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
     try {
-      keyK.value = await Crypt.decrypt(pincxcy, keyFromB64(t.Kp))
+      keyK.value = await Crypt.decrypt(pincxcy, keyFromB64(t.Kp)) || undefined
     } catch (e) {
       return 8
     }
-    const shK = await Crypt.strongHash(keyK.value, false, false)
+    const shK = await shKeyK()
 
     op = new SafeOperation('$GetSafe', t.store)
     try {
@@ -978,20 +976,18 @@ export const useSafeStore = defineStore('safe', () => {
 
   const openSafeByPlane = async (shp: Uint8Array,  t: Trusting) : Promise<number> => {
     AOperation.reset()
-    keyK.value = null
+    keyK.value = undefined
     if (t.K1) {
       try {
-        const k = await Crypt.decrypt(shp, keyFromB64(t.K1))
+        keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K1)) || undefined
         userId.value = t.userId
-        keyK.value = k
         return 0
       } catch (e) {  }
     }
     if (t.K2) {
       try {
-        const k = await Crypt.decrypt(shp, keyFromB64(t.K2))
+        keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K2)) || undefined
         userId.value = t.userId
-        keyK.value = k
         return 0
       } catch (e) {  }
     }
@@ -1010,10 +1006,10 @@ export const useSafeStore = defineStore('safe', () => {
     const hsha1 = Crypt.shaS(sha1)
     const sha2 = !a2 ? '' : await Crypt.strongHash(encoder.encode(a2), false, true)
     const hsha2 = !sha2 ? '' : Crypt.shaS(sha2)
-    const shK = await Crypt.strongHash(keyK.value, false, false)
+    const shK = await shKeyK()
 
     // phase 1 : enregistre le futur dans le safe
-    let ac = { ...auth.value.actual }
+    let ac: any = auth.value ? { ...auth.value.actual } : {}
     ac.a1K = keyToB64(await Crypt.crypt(keyK.value, encoder.encode(ac.a1K)))
     ac.a2K = !ac.a2K ? '' : keyToB64(await Crypt.crypt(keyK.value, encoder.encode(ac.a2K)))
 
@@ -1026,8 +1022,10 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['future'] = fu
       op.args['nosafe'] = true
       const res = await op.post()
-      auth.actual = ac
-      auth.future = fu
+      if (auth.value) {
+        auth.value.actual = ac
+        auth.value.future = fu
+      }
     } catch (e: any) {
       op.ko(e)
       return false // le safe est incertain
@@ -1098,8 +1096,8 @@ export const useSafeStore = defineStore('safe', () => {
       store: mySafeStore.value,
       pseudo: pseudo,
       cx: cx,
-      K1: auth.value.K1,
-      K2: auth.value.K2,
+      K1: auth.value ? auth.value.K1 : '',
+      K2: auth.value ? auth.value.K2 : '',
       Kp: Kp
     })
     await IDBsafe.saveTrusting(t)
@@ -1118,7 +1116,7 @@ export const useSafeStore = defineStore('safe', () => {
     const sign = keyToB64(asn1)
     const Va = keyToB64(kpsv.pub)
 
-    const shK = await Crypt.strongHash(keyK.value, false, false) as string
+    const shK = await shKeyK()
     const trustDev: TrustDev = {
       userId: userId.value,
       shK,
@@ -1168,7 +1166,7 @@ export const useSafeStore = defineStore('safe', () => {
   const setUntrust = async () => {
     const session = stores.session
     await IDBsafe.openInAnyCase()
-    const t: Trusting = myTrusting.value
+    const t: Trusting | undefined = myTrusting.value
     if (!t) return 0 // était déjà untrusted
 
     await IDBsafe.delTrusting(t.userId)
@@ -1177,7 +1175,7 @@ export const useSafeStore = defineStore('safe', () => {
 
     const untrustDev: UntrustDev = {
       userId: userId.value,
-      shK: await Crypt.strongHash(keyK.value, false, false) as string,
+      shK: await shKeyK(),
       devIds: [devId.value]
     }
     const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
@@ -1201,7 +1199,7 @@ export const useSafeStore = defineStore('safe', () => {
     const untrustDev: UntrustDev = {
       userId: userId.value,
       devIds: Array.from(sId),
-      shK: await Crypt.strongHash(keyK.value, false, false) as string
+      shK: await shKeyK()
     }
     const op = new SafeOperation('$UntrustDevices', mySafeStore.value)
     let ret
@@ -1222,7 +1220,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       op.args['userId'] = userId.value
-      op.args['shK'] = await Crypt.strongHash(keyK.value, false, false) as string
+      op.args['shK'] = await shKeyK()
       ret = await op.post()
     } catch(e) {
       op.ko(e)
@@ -1238,7 +1236,7 @@ export const useSafeStore = defineStore('safe', () => {
     let ret
     try {
       op.args.userId = userId.value
-      op.args.shK = await Crypt.strongHash(keyK.value, false, false) as string
+      op.args.shK = await shKeyK()
       ret = await op.post()
       return ret.status || ret.safe
     } catch(e) {

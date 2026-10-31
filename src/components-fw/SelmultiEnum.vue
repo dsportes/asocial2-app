@@ -1,5 +1,5 @@
 <template>
-  <q-select dense options-dense 
+  <q-select dense options-dense
     v-model="modelloc" :options="options" :label="title"
     class="q-ml-xs font-mono"
     :disable="disable"
@@ -74,22 +74,22 @@ const doOk = () => {
 
 function filterFn(val, update) {
   update(() => {
-    options.value = lst.value.filter(v => 
+    options.value = lst.value.filter(v =>
       v.label2.includes(val.toLowerCase()))
   })
 }
 
 const edv = (e) => {
-  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0]) 
+  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0])
   const lbl2 = (lbl1 || e[1]).toLowerCase()
   const t = { value: e[0], label: lbl1 || e[1], label2: lbl2 }
   return t
 }
 
-const load = async () => { 
+const load = async () => {
   const l = []
   mopts.value = new Map()
-  const lx = await DocEnums.get(props.svc + '$' + props.enum, props.org)
+  const lx = await DocEnums.get(props.svc, props.enum, props.org)
   for(const e of lx) {
     const t = edv(e)
     l.push(t)
@@ -116,7 +116,7 @@ onMounted(async () => { await load()})
 const shl = computed(() => {
   const l = []
   const s = sel.value.toLowerCase()
-  for (const x of lst.value) 
+  for (const x of lst.value)
     if (!sel.value || x[2].indexOf(s) !== -1) l.push(x)
   return l
 })
