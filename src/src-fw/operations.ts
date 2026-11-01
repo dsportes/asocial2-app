@@ -39,7 +39,7 @@ export const FW$getStatus = async (svc: string, org: string) : Promise<ADMIN$Sta
   }
 }
 
-export const FW$setStatus = async (svc: string, org: string, st: number, txt: string) 
+export const FW$setStatus = async (svc: string, org: string, st: number, txt: string)
   : Promise<ADMIN$Status> => {
   const op = new Operation ('FW$setStatus', svc, org)
   try {
@@ -55,7 +55,7 @@ export const FW$setStatus = async (svc: string, org: string, st: number, txt: st
 
 export class ListManagers extends Operation {
   constructor (svc: string, org: string) { super('ListManagers', svc, org) }
-  async run () : Promise<EmbedCred[]>{
+  async run () : Promise<EmbedCred[]> {
     try {
       const res = await this.post()
       const lst = res['creds'] as $Cred[]

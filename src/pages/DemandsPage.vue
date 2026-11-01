@@ -57,9 +57,10 @@ const ui = stores.ui
 
 watch(() => ui.demandsPageInit, async () => { await init() })
 
-const fctx = ref(null)
+// @ts-expect-error
+const fctx: Ref<FormCtx> = ref()
 
-const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+const nav = async (n: number) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()
   if (!b) return
   const u = ui.navBar
@@ -103,7 +104,7 @@ const onUpdate = (newId?: string) => {
       event = events.value[i]
       if (event.eventId === old) { idx = i; break}
     }
-    if (idx !== -1) await selEvent(event, idx)
+    if (event && idx !== -1) await selEvent(event, idx)
     else {
       if (events.value.length)
         await selEvent(events.value[0], 0)
@@ -158,7 +159,7 @@ const init = async () => {
   ui.navBar.hasBack = false
 }
 
-onMounted(async () => { 
+onMounted(async () => {
   await init() })
 
 </script>

@@ -33,9 +33,9 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { Ref, onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 
+import { SOA } from '../src-fw/base'
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import StdHeader from '../components-fw/StdHeader.vue'
@@ -44,19 +44,18 @@ import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { sty } from '../src-fw/util'
 
-// @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui
 
-const setOS2 = async (soa) => { 
+const setOS2 = async (soa: SOA) => {
   ui.adminPage.soa = soa }
-const setOS3 = async () => { 
+const setOS3 = async () => {
   ui.adminPage.soa = { ...ui.adminPage.soa } }
 
-onMounted(async () => { 
+onMounted(async () => {
   const isAdmin = await isMDAdmin()
-  ui.resetAdminPage(isAdmin) 
+  ui.resetAdminPage(isAdmin)
 })
 
 </script>

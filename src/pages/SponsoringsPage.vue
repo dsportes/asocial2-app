@@ -48,7 +48,7 @@ import { ref, Ref, watch } from 'vue'
 
 import stores from '../stores/all'
 import { $t, dkli, dhcool } from '../src-fw/util'
-import { $Form } from '../src-fw/documents'
+import { $Form, FormCtx } from '../src-fw/documents'
 import FormZoom from '../components-fw/FormZoom.vue'
 
 const stic = ['add', 'person', 'local_police', 'check', 'close']
@@ -57,9 +57,10 @@ const stclr = ['', 'warning', 'warning', 'green-5', 'negative']
 const ui = stores.ui
 const sf = stores.safe
 
-const fctx = ref(null)
+// @ts-expect-error
+const fctx: Ref<FormCtx> = ref()
 
-const nav = async (n) => { // navigation vers 1:next 2: previous, 3:first, 4:last
+const nav = async (n: number) => { // navigation vers 1:next 2: previous, 3:first, 4:last
   const b = await ui.mayClose()
   if (!b) return
   const u = ui.navBar
@@ -91,12 +92,12 @@ const onUpdate = (newId?: string) => {
   setTimeout(async () => {
     forms.value = await $Form.filteredList(u.soa.svc, u.soa.org, u.asAdmin)
     let idx = -1
-    let form: $Form = null
+    let form: $Form | undefined = undefined
     for(let i = 0; i < forms.value.length; i++) {
       form = forms.value[i]
       if (form && form.formId === old) { idx = i; break}
     }
-    if (idx !== -1) selForm(form, idx)
+    if (form && idx !== -1) selForm(form, idx)
     else {
       if (forms.value.length)
         selForm(forms.value[0], 0)
@@ -109,7 +110,8 @@ const selForm0 = () => {
   const u = ui.currentForm
   u.form = null
   u.zoomed = false
-  fctx.value = null
+  // @ts-expect-error
+  fctx.value = undefined
   const nb = ui.navBar
   nb.idx = -1
   nb.nb = forms.value.length
@@ -120,7 +122,7 @@ const selForm = (form: $Form, idx: number) => {
   const u = ui.currentForm
   u.form = form
   u.zoomed = true
-  fctx.value = { form: u.form, isDemand: false }
+  fctx.value = { form, isDemand: false, comment: '' } as FormCtx
   const nb = ui.navBar
   nb.idx = idx
   nb.nb = forms.value.length

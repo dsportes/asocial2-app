@@ -1,7 +1,7 @@
 <template>
 <div>
   <std-header/>
- 
+
   <div :class="'column full-width' + (dialogs.newdemand ? ' disabled' : '')">
     <div class="tbs row items-center justify-between">
       <div class="row q-gutter-xs items-center">
@@ -20,7 +20,7 @@
   </div>
 
   <dialog-std0 v-if="dialogs.newdemand" v-model="dialogs.newdemand" width="pwsm" vh="80"
-    :title="$t('FORMnewd', [$t('TYPE_' + formType.svc + '_' +formType.type).substring(2)])"
+    :title="$t('FORMnewd', [$t('TYPE_' + formType.svc + '_' + formType.type).substring(2)])"
     hdrclass="tbs" vue="DemandsHeader" @close="close">
     <template #default>
       <form-zoom v-if="fctx" v-model="fctx" @done="onDone"/>
@@ -32,11 +32,12 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, reactive } from 'vue'
+import { ref, Ref, reactive } from 'vue'
 import stores from '../stores/all'
 
 import { $t } from '../src-fw/util'
+import { FormType} from '../src-fw/descriptor'
+import { FormCtx, $Form  } from '../src-fw/documents'
 import StdHeader from '../components-fw/StdHeader.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 
@@ -54,15 +55,17 @@ const fst = stores.form
 
 ui.navBar.hasBack = false
 
-const formType = ref(null)
+// @ts-expect-error
+const formType: Ref<FormType> = ref()
 
-const selFt = (ft) => {
+const selFt = (ft: FormType) => {
   formType.value = ft
   ui.currentForm.increation = true
 }
 
 const nocreate = () => {
-  formType.value = null
+  // @ts-expect-error
+  formType.value = undefined
   ui.currentForm.increation = false
 }
 
@@ -70,14 +73,16 @@ const dialogs = reactive({
   newdemand: false
 })
 
-const fctx = ref(null)
+// @ts-expect-error
+const fctx: Ref<FormCtx> = ref()
 
 const close = async () => {
   const b = await ui.mayClose()
   if (b) {
     dialogs.newdemand = false
-    formType.value = ''
-  } else 
+    // @ts-expect-error
+    formType.value = undefined
+  } else
     dialogs.newdemand = true
 }
 
@@ -97,7 +102,7 @@ const oknew = (soa: SOA) => {
   dialogs.newdemand = true
 }
 
-const onForm = (form) => {
+const onForm = (form: $Form) => {
   ui.currentForm.form = form
   ui.currentForm.increation = false
   fctx.value = { form, isDemand: true, comment: '' }
@@ -105,7 +110,8 @@ const onForm = (form) => {
 }
 
 const onDone = (ok: boolean) => { // si false pas créé
-  formType.value = ''
+  // @ts-expect-error
+  formType.value = undefined
   dialogs.newdemand = false
   if (ok)
     ui.currentEvent.fnOnUpdate(fctx.value.form.formId)

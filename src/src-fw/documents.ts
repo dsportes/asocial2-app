@@ -70,7 +70,7 @@ export class $CredTempl {
 
 }
 
-abstract class BasicCred {
+export abstract class BasicCred {
   credId: string = ''
   props: any
   docCl: string = ''
@@ -282,6 +282,12 @@ export class $MDEvent {
     op.args.chk = Crypt.shaS([this.eventId, this.type, this.userId, this.svc, this.org].join('/'))
     await op.post()
   }
+}
+
+export type FormCtx = {
+  form: $Form,
+  isDemand: boolean,
+  comment: string
 }
 
 export type Upd = {

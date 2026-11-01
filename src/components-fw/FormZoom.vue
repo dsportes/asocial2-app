@@ -1,7 +1,7 @@
 <template>
 <div v-if="fctx && fst.form">
-  <q-expansion-item 
-    :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status) + (fst.form.isInvit ? ' [' + $t('FORMisinvit') + ']' : '')" 
+  <q-expansion-item
+    :label="$t('FORMabout') + $t('FORMstatus_' + fst.form.status) + (fst.form.isInvit ? ' [' + $t('FORMisinvit') + ']' : '')"
     dense switch-toggle-side class="q-ma-sm full-width"
     header-class="text-bold titre-md text-italic">
     <div>
@@ -148,12 +148,7 @@ import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormEtc from '../components/FormEtc.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { $Form } from '../src-fw/documents'
-
-export type FormCtx = {
-  form: $Form,
-  isDemand: boolean
-}
+import { $Form, FormCtx } from '../src-fw/documents'
 
 const stic = ['add', 'person', 'local_police', 'check', 'close']
 const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']

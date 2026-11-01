@@ -58,8 +58,8 @@ import TypeMenu from '../components-fw/TypeMenu.vue'
 import FormZoom from '../components-fw/FormZoom.vue'
 import SelectSvcorg from '../components-fw/SelectSvcorg.vue'
 import FormNew from '../components/FormNew.vue'
-import { SOA } from '../stores/ui-store'
-import { $Form } from '../src-fw/documents'
+import { SOA } from '../src-fw/base'
+import { $Form, FormCtx } from '../src-fw/documents'
 
 // @ts-ignore
 import superman from '../assets/superman.jpg'
@@ -72,13 +72,16 @@ const dialogs = reactive({
   newproposal: false
 })
 
+// @ts-expect-error
 const formType: Ref<FormType> = ref()
 const ftLabel = computed(() => {
   if (!formType.value) return '?'
   const y = $t('TYPE_' + formType.value.svc + '_' + formType.value.type)
   return y.substring(2)
 })
-const fctx = ref(null)
+
+// @ts-expect-error
+const fctx: Ref<FormCtx> = ref()
 
 watch(() => [ui.currentForm.asAdmin, ui.currentForm.soa], async () => {
   const soa = ui.currentForm.soa
@@ -106,10 +109,11 @@ const reset = () => {
   cf.asAdmin = false
 }
 
-const openNewP = (ft) => {
+const openNewP = (ft: FormType) => {
   formType.value = ft
   fst.form = null
-  fctx.value = null
+  // @ts-expect-error
+  fctx.value = undefined
   dialogs.newproposal = true
 }
 
@@ -117,20 +121,23 @@ const close = async () => {
   const b = await ui.mayClose()
   if (b) {
     dialogs.newproposal = false
-    formType.value = null
-    fctx.value = null
-  } else
+    // @ts-expect-error
+    formType.value = undefined
+    // @ts-expect-error
+    fctx.value = undefined
+    } else
     dialogs.newproposal = true
 }
 
-const onForm = (form) => {
+const onForm = (form: $Form) => {
   ui.currentForm.form = form
   fctx.value = { form, isDemand: false, comment: '' }
   fst.startEdit(fctx.value)
 }
 
 const onDone = (ok: boolean) => { // si false pas créé
-  formType.value = null
+  // @ts-expect-error
+  formType.value = undefined
   dialogs.newproposal = false
   if (ok)
     ui.currentForm.fnOnUpdate(fctx.value.form.formId)

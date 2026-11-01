@@ -12,7 +12,7 @@
     <date-time :title="$t('CODIRcred_del1')" v-model="ddel"/>
     <div v-if="ddel" class="row items-center q-gutter-sm justify-between">
       <div class="col text-italic q-my-sm">{{ dsuspL2() }}</div>
-      <btn-cond class="col-auto" confirm 
+      <btn-cond class="col-auto" confirm
         :label="$t('iconfirm')" color="warning"
         icon="check" @ok="okSusp(1)"/>
     </div>
@@ -27,8 +27,8 @@
     <date-time2 :title="$t('CODIRcred_susp1')" v-model="dsusp"/>
     <div v-if="dsusp.length === 2" class="row items-center q-gutter-sm justify-between">
       <div class="col text-italic q-my-sm">{{ dsuspL() }}</div>
-      <btn-cond class="col-auto" confirm 
-        :label="$t('iconfirm')" color="warning" 
+      <btn-cond class="col-auto" confirm
+        :label="$t('iconfirm')" color="warning"
         icon="check" @ok="okSusp(3)"/>
     </div>
   </div>
@@ -47,27 +47,28 @@ import DateTime from '../components-fw/DateTime.vue'
 import DateTime2 from '../components-fw/DateTime2.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { UpdateCredentialSusp } from '../as2/operations'
+import { BasicCred, $Credential } from '../src-fw/documents.js'
 
-const model = defineModel()
-const props = defineProps({
-  svc: String,
-  org: String,
-  docCl: String,
-  docPk: String,
-  title: String,
-  curcred: Object, // credential à altérer
-  cred: Object // Credential du manager de l'opération
-})
+const model = defineModel<boolean>()
+const props = defineProps<{
+  svc: string,
+  org: string,
+  docCl?: string,
+  docPk?: string,
+  title: string,
+  curcred: BasicCred, // credential à altérer
+  cred?: $Credential // Credential du manager de l'opération
+}>()
 const emit = defineEmits(['done'])
 
 const tab = ref('suspc')
 
 const ddel = ref()
-const ddelN = computed(() =>  
+const ddelN = computed(() =>
   ddel.value ? Math.floor(date.extractDate(ddel.value, 'YYYY-MM-DD HH:mm').getTime() / 60000) : 0)
 const dsusp = ref([0, 0])
 const dsuspL = () => props.curcred.editSusp(dsusp.value)
-const dsuspL2 = () => props.curcred.editSusp(null, ddelN.value)
+const dsuspL2 = () => props.curcred.editSusp(undefined, ddelN.value)
 
 const init = () => {
   const c = props.curcred

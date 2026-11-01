@@ -2,7 +2,7 @@
 <div>
   <std-header/>
   <div class="tbp row items-center justify-between">
-    <q-select v-model="ui.appPage.org" dense options-dense 
+    <q-select v-model="ui.appPage.org" dense options-dense
       class="col-auto q-mr-md"
       style="min-width:150px; height:40px" :label="$t('org')"
       transition-show="flip-up" transition-hide="flip-down"
@@ -10,12 +10,12 @@
       :options="orgs"/>
 
     <select-enum v-if="ui.appPage.org" class="col q-mr-md"
-      svc="AS2" :org="ui.appPage.org" enum="Sujet" 
-      :title="$t('CODIRnosuj')" 
+      svc="AS2" :org="ui.appPage.org" enum="Sujet"
+      :title="$t('CODIRnosuj')"
       v-model="ui.appPage.sujet"
       :disable="ui.editingInCourse"/>
 
-    <btn-cond v-if="ui.appPage.org" icon="edit" class="col-auto" color="warning" 
+    <btn-cond v-if="ui.appPage.org" icon="edit" class="col-auto" color="warning"
       @ok="dialogs.edit = true"/>
 
   </div>
@@ -34,8 +34,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, reactive, watch } from 'vue'
+import { ref, Ref, reactive, watch } from 'vue'
 import stores from '../stores/all'
 
 import { $t } from '../src-fw/util'
@@ -47,7 +46,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 const ui = stores.ui
 const sf = stores.safe
 const session = stores.session
-const orgs = ref([])
+const orgs: Ref<string[]> = ref([])
 const dialogs = reactive({
   edit: false
 })
@@ -59,13 +58,13 @@ watch(() => ui.appPage.sujet, (v) => {
 const init = () => {
   ui.appPage.org = ''
   ui.appPage.sujet = ''
-  const s = new Set()
+  const s: Set<string> = new Set()
   if (session.planeMode) {
     for(const x of session.orgRolesP) {
       const i = x.indexOf('/')
       s.add(x.substring(0, i))
     }
-  } else 
+  } else
     for(const [,c] of sf.mySimpleCreds('AS2', '', 'CoDir')) s.add(c.org)
   orgs.value = Array.from(s).sort()
   if (orgs.value.length) ui.appPage.org = orgs.value[0]

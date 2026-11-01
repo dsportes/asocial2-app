@@ -1,16 +1,5 @@
 <template>
 <div class="column items-center">
-  <btn-cond label="T0A" class="q-ml-xs" @ok="t0a"/>
-  <btn-cond label="T0B" class="q-ml-xs" @ok="t0b"/>
-  <btn-cond v-if="hasBtn1" label="T1" class="q-ml-xs" @ok="t1"/>
-  <btn-cond label="T2" class="q-ml-xs" @ok="t2"/>
-  <btn-cond label="TCAS" class="q-ml-xs" @ok="tcas"/>
-  <btn-cond label="TCASLIST" class="q-ml-xs" @ok="tclist"/>
-  <btn-cond label="SelCode" class="q-ml-xs" @ok="dialogs.selCode = true"/>
-  <btn-cond icon="add" :label="$t('plus1')" @ok="plus1"/>
-  <btn-cond class="q-ml-sm" icon="remove" :label="$t('moins1')" @ok="moins1"/>
-  <div class="font-mono q-pa-sm">{{echo}}</div>
-  <div>{{ doc1.nom }}</div>
   <q-file class="full-width q-ma-xs" filled v-model="fileList"
     :label="$t('pickfile')" max-file-size="50000000" max-file="1">
     <template v-slot:append>
@@ -27,16 +16,11 @@
 
 <script setup lang="ts" vapor>
 
-// @ts-ignore
-import { ref, Ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
-import { saveAs } from 'file-saver'
-// @ts-ignore
+import { ref, Ref, computed, reactive, watch } from 'vue'
+
 import ext2mime from 'ext2mime'
 import { readFile, fileDescr } from '../src-fw/util'
-import { $Document } from '../src-fw/registry'
+
 import { keyToB64 } from '../src-fw/b64'
 import { SafeOperation, Operation } from '../src-fw/operation'
 import { getData, putData } from '../src-fw/net'
@@ -44,40 +28,10 @@ import { Crypt, fromPem, u8ToHex, testECDH, testSH } from '../src-fw/crypt'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SelectCode from '../dialogs-fw/SelectCode.vue'
 import stores from '../stores/all'
-import { IDocStore, getStore } from '../stores/docs'
 
-const as2org1: IDocStore = getStore('as2', 'org1')
-const as2org2: IDocStore = getStore('as2', 'org2')
-const assoorg3: IDocStore = getStore('asso', 'org3')
-
-// @ts-expect-error
-as2org1.set('Auteur', 'pko', { nom: 'toto'})
-// @ts-expect-error
-as2org1.set('Auteur', 'pki', { nom: 'titi'})
-// @ts-expect-error
-as2org2.set('Auteur', 'pku', { nom: 'tutu'})
-// @ts-expect-error
-assoorg3.set('Asso', 'pka', { nom: 'tata'})
-
-// @ts-expect-error
-console.log(as2org1.get('Auteur', 'pki').nom)
-
-const doc1 = ref(as2org1.get('Auteur', 'pki'))
-
-const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 
-const ui = stores.ui
-const dataSt = stores.data
 const session = stores.session
-
-const t0a = () => {
-  doc1.value.nom = 'tada'
-}
-const t0b = () => {
-  as2org1.del()
-}
-
 
 const dialogs = reactive({
   selCode: false
@@ -86,15 +40,12 @@ const dialogs = reactive({
 /* scripts de test *************************************************/
 const hasBtn1 = computed(() => session.pref.obj.btn1)
 
-const selValues = ref([])
+const selValues: Ref<string[]> = ref([])
 for (let i = 0; i < 10; i++)
   for(const x of ['rose', 'lilas', 'JASmin', 'tuLIPe'])
     selValues.value.push(x + '_' + i)
 
-function plus1 () : void { dataSt.setCpt(dataSt.cpt + 1)}
-function moins1 () : void { dataSt.setCpt(dataSt.cpt - 1)}
-
-function selC (c) { console.log('Selected:', c) }
+function selC (c: string) { console.log('Selected:', c) }
 const echo = ref('')
 
 const fileList = ref(null)
@@ -132,11 +83,13 @@ async function downloadFile () : Promise<void> {
 
 async function uploadFile () : Promise<void> {
   await getPutUrl(false)
-  if (echo.value) try {
-    await putData(echo.value, fd.value.u8)
-  } catch (e: any) {
-    echo.value = 'err:' + (e.code || '???')
-  }
+  if (echo.value)
+    try {
+      // @ts-expect-error
+      await putData(echo.value, fd.value.u8)
+    } catch (e: any) {
+      echo.value = 'err:' + (e.code || '???')
+    }
 }
 
 /* Test shaS en PHP */
@@ -165,7 +118,7 @@ const t2 = async () => {
 const t2sv = async () => {
   // rsa.KJUR.crypto.ECDSA.concatSigToASN1Sig()
   const x = 'toto est tres tres beau'
-  const args = {
+  const args: any = {
     x: encoder.encode(x)
   }
   const privPem = `-----BEGIN PRIVATE KEY-----

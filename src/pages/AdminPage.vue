@@ -6,13 +6,13 @@
       :text="edLabels" :rows="15" :checklabel="$t('record')" :zctrl="zctrl"
       :rw="adp.mdAdmin" @done="saveLabels"/>
 
-    <div class="titre-md text-italic q-mb-sm">{{ $t(sites.length ? 'APsites' : 'APnosites') }}</div>
+    <div class="titre-md text-italic q-mb-sm">{{ $t(sites.size ? 'APsites' : 'APnosites') }}</div>
     <scroll-area size="sm" class="pwsm">
-      <div v-for="([site, url], idx) of sites" :key="site" 
+      <div v-for="([site, url], idx) of sites" :key="site"
         :class="'row items-center cursor-pointer ' + dkli(idx) + (site === ui.adminPage.site ? ' current': ' nocurrent')"
         @click="setCurSite(site)">
         <div class="col-1">
-          <btn-cond v-if="adp.mdAdmin" round color="warning" icon="delete" 
+          <btn-cond v-if="adp.mdAdmin" round color="warning" icon="delete"
             @ok="delSite(site)"/>
         </div>
         <div class="col-3 font-mono">{{ site }}</div>
@@ -57,9 +57,9 @@
         <div :class="sty() + ' row items-center no-wrap'">
           <div class="q-mr-md col-auto">{{ $t('APchorg') }}</div>
           <select-org class="col" @select="selOrg" initval="?"/>
-          <btn-cond class="q-ml-sm col-auto" icon="refresh" 
+          <btn-cond class="q-ml-sm col-auto" icon="refresh"
             :disable="!org" round @ok="selOrg(org)"/>
-          <btn-cond class="q-ml-sm col-auto" icon="check" 
+          <btn-cond class="q-ml-sm col-auto" icon="check"
             round @ok="doreset"/>
         </div>
       </div>
@@ -154,7 +154,8 @@
 // @ts-ignore
 import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'
 import stores from '../stores/all'
-import { $t, dkli, dhcool, sty, zp } from '../src-fw/util'
+import { LabelSvc } from '../src-fw/base'
+import { $t, dkli, sty } from '../src-fw/util'
 import StatusSite from '../components-fw/StatusSite.vue'
 import StatusOrg from '../components-fw/StatusOrg.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -166,22 +167,12 @@ import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import ChooseIt from '../dialogs-fw/ChooseIt.vue'
-import { $Cred } from '../src-fw/documents'
+import { BasicCred, EmbedCred, $Credential } from '../src-fw/documents'
 import RevSusp from '../dialogs-fw/RevSusp.vue'
-// import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import { AOperation, MDOperation, isAdmin, services, pingStore } from '../src-fw/operation'
 import { ListManagers, UpdateCredential } from '../src-fw/operations'
-// @ts-ignore
+
 import superman from '../assets/superman.jpg'
-
-
-/* export type SOA = {
-  svc: string
-  org: string
-  svcLabel?: string
-  site?: string
-  admin? : boolean
-} */
 
 const ui = stores.ui
 const sf = stores.safe
@@ -201,9 +192,7 @@ const edLabelsAv = ref()
 const zctrl = ref(0)
 
 const loadSites = async (force?: boolean) => {
-  const ls = Array.from(await AOperation.getSites(force))
-  ls.sort((a,b) => a[0] > b[0] ? 1 : (a[0] < b[0] ? -1 : 0))
-  sites.value = ls
+  sites.value = await AOperation.getSites(force)
 }
 
 const labelSvc = (svc: string) => {
@@ -233,16 +222,17 @@ const saveLabels = async (json: string) => {
     await AOperation.setServicesLabels(JSON.stringify(x, null, '\t'))
     await loadLabels(true)
     zctrl.value = Date.now()
-  } catch (e) {
+  } catch (e: any) {
     ui.diagDisplay($t('APjsonerr', [e.message]))
   }
 }
-
-let curSite = reactive({
+type Site = { org: string, site: string, services: Set<string>, svc: string, svcLabel: string, admin: boolean }
+let curSite: Site = reactive({
   org: '',
   site: '',
   services: new Set(),
   svc: '',
+  svcLabel: '',
   admin: false
 })
 const newsite = ref(false)
@@ -316,7 +306,7 @@ const setCurSite = async (site: string) => {
   }
 }
 
-const selSvcx1 = (x) => {
+const selSvcx1 = (x: LabelSvc) => {
   curSite.svc = x.svc
   curSite.svcLabel = x.label
 }
@@ -359,7 +349,7 @@ const setSite = async (site: string, url: string) => {
   }
 }
 
-const selSvc = (optSvc: { svc: string, label: string }) => {
+const selSvc = (optSvc: LabelSvc) => {
   svc.value = optSvc.svc
 }
 
@@ -374,7 +364,7 @@ const selOrg = async (_org: string) => {
   } else org.value = ''
 }
 
-const updSite = (_site, ctx) => {
+const updSite = (_site: string, ctx: any) => {
   site.value = _site
   svc.value = ctx.svc
   argscf.value = [org.value, ctx.svc, ctx.sitebf, ctx.site]
@@ -390,12 +380,12 @@ const delSvc = (_svc: string) => {
 }
 
 const newCtx = (opt?: boolean) => {
-  const c = new Object()
-  if (opt) c['excl'] = new Set(Array.from(orgSvcs.value.keys()))
+  const c: any = {}
+  if (opt) c.excl = new Set(Array.from(orgSvcs.value.keys()))
   return c
 }
 
-const selSiteNv = (site, ctx) => {
+const selSiteNv = (site: string) => {
   siteNv.value = site
 }
 
@@ -408,7 +398,7 @@ const declare = async () => {
   ctxSvc.value = newCtx(true)
 }
 
-const confirm = async (c) => {
+const confirm = async (c: number) => {
   dialogs.cf = false
   if (!c) org.value = ''
   else {
@@ -427,14 +417,14 @@ const confirm = async (c) => {
 
 const surl = computed(() => AOperation.urls.get(ui.adminPage.soa.site) || '?')
 
-const lstMgr: Ref<$Cred[]> = ref([]) // Cred []
+const lstMgr: Ref<EmbedCred[]> = ref([])
 
 watch(() => adp.value.tab, (t) => {
   if (t === 'sites') init1()
 })
 
 watch(() => adp.value.soa, async (soa) => {
-  if (adp.value.tab === 'managers' && adp.value.soa.svc && adp.value.soa.org) 
+  if (adp.value.tab === 'managers' && adp.value.soa.svc && adp.value.soa.org)
     await dolist()
 })
 
@@ -445,7 +435,7 @@ const dolist = async () => {
   // console.log(lstMgr.value.length)
 }
 
-const chgName = async (ctx) => {
+const chgName = async (ctx: any) => {
   const op = new UpdateCredential(ui.adminPage.soa.svc, ui.adminPage.soa.org)
   const props = { ...ctx.m.props, name: ctx.value }
   const status = await op.run(ctx.m.credId, ctx.m.docCl, ctx.m.docPk, props)
@@ -453,9 +443,10 @@ const chgName = async (ctx) => {
   else await dolist()
 }
 
-const curcred = ref()
-const tit = ref()
-const edCred = (m) => {
+// @ts-expect-error
+const curcred: Ref<$BasicCred> = ref()
+const tit: Ref<string> = ref('')
+const edCred = (m: BasicCred) => {
   curcred.value = m
   tit.value = $t('CREDON_' + m.docCl) + ' - ' + m.props.name
   dialogs.credmgnt = true

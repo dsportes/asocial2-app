@@ -1,6 +1,14 @@
+export type SOA = {
+  svc: string
+  org: string
+  svcLabel?: string
+  site?: string
+  admin? : boolean
+}
 
+export type LabelSvc = { svc: string, label: string }
 export class AppExc {
-  /* 
+  /*
   codes: serveur
   1000: erreurs fonctionnelles FW
   2000: erreurs fonctionnelles APP

@@ -74,7 +74,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 import SelectEnum from '../components-fw/SelectEnum.vue'
 import { Operation, DocEnums } from '../src-fw/operation'
-import { $Credential } from '../src-fw/documents'
+import { BasicCred, $Credential } from '../src-fw/documents'
 import { AS2$Auteur, AS2$EmbedCred } from '../as2/documents'
 
 const ui = stores.ui
@@ -97,7 +97,8 @@ type Aut = {
 }
 let aut: Aut = reactive({ newSection: '', newNa: '', edv: '' } as Aut)
 const docPk = ref()
-const curcred = ref()
+// @ts-expect-error
+const curcred: Ref<BasicCred> = ref()
 
 const selAut = async (a: AS2$Auteur | null) => {
   if (a) aut.a = a
@@ -113,7 +114,7 @@ const majSection = async (n: string) => {
   await majAut()
 }
 
-const cred = computed(() => {
+const cred: Ref<$Credential> = computed(() => {
   const m = sf.mySimpleCreds('AS2', ui.appPage.org, 'Redaction') as Map<string, $Credential>
   return Array.from(m.values())[0]
 })

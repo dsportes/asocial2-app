@@ -3,11 +3,22 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { setCssVar } from 'quasar'
 
 import { hasPage } from '../src-fw/help'
+import { SOA } from '../src-fw/base'
 import { useConfigStore } from '../stores/config-store'
 import { useSessionStore } from '../stores/session-store'
 
 const large = 900
 const HOME = 'safeHome'
+
+export type CurrentForm = {
+  soa: SOA,
+  asAdmin: boolean,
+  pft: Set<any>, // possible form types
+  zoomed: boolean,
+  increation: boolean,
+  form: any,
+  fnOnUpdate: any
+}
 
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
@@ -235,7 +246,8 @@ export const useUiStore = defineStore('ui', () => {
     site?: string
     admin? : boolean
   } */
-  const adminPage = reactive({
+  type AdminPage = { tab: string, soa: SOA, pingop: string, pingst: string, mdAdmin: boolean }
+  const adminPage: AdminPage = reactive({
     tab: 'sites', // orgs
     soa: { svc: '', org: '', svcLabel: '', site: '', admin: false },
     pingop: '',
@@ -276,7 +288,8 @@ export const useUiStore = defineStore('ui', () => {
     loginPage.tab = 'login'
   }
 
-  const currentForm = reactive({
+
+  const currentForm: CurrentForm = reactive({
     soa: { svc: '', org: '', admin: false },
     asAdmin: false,
     pft: new Set(), // possible form types

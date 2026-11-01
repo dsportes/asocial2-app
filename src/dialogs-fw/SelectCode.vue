@@ -7,7 +7,7 @@
       @ok="ok"/>
   </template>
   <template #hdr>
-    <q-input :class="sty() + ' full-width q-ma-xs'" filled 
+    <q-input :class="sty() + ' full-width q-ma-xs'" filled
       v-model="filter" :label="$t('SLCsel')">
       <template v-slot:append>
         <q-icon name="close" @click="filter = ''" class="cursor-pointer" />
@@ -25,26 +25,25 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch } from 'vue'
+import { ref, Ref, watch } from 'vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { sty } from '../src-fw/util'
 
 const model = defineModel()
 
-const props = defineProps({
-  values: Array,
-  title: String
-})
+const props = defineProps<{
+  values: string[],
+  title: string
+}>()
 
 const filter = ref('')
-const svalues = ref([])
-const filtered = ref([])
+const svalues: Ref<string[]> = ref([])
+const filtered: Ref<string[]> = ref([])
 
 const init = () => {
   svalues.value = [ ...props.values ]
-  if (svalues.length) svalues.value.sort((a,b) => a < b ? -1 : (a > b ? 1 : 0 ))
+  if (svalues.value.length) svalues.value.sort((a,b) => a < b ? -1 : (a > b ? 1 : 0 ))
   doFilter()
 }
 
@@ -65,7 +64,7 @@ const emit = defineEmits([
   'close' // sortie SANS sélection
 ])
 
-const sel = (code) => {
+const sel = (code: string) => {
   emit('select', code)
   model.value = false
 }

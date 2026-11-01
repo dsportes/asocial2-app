@@ -15,7 +15,7 @@
     <select-options v-if="session.step === 1"/>
   </div>
 
-  <!--date-time2 v-model="dt" :class="sty('md') + ' q-my-md'" 
+  <!--date-time2 v-model="dt" :class="sty('md') + ' q-my-md'"
     @ok="chgdt" title="Test saisie période" :checkfn="checkDT"/-->
 </div>
 </template>
@@ -39,7 +39,7 @@ import SelectOptions from '../components-fw/SelectOptions.vue'
 const ui = stores.ui
 const session = stores.session
 
-/* Test Date-time 
+/* Test Date-time
 const nowInMin = Math.floor(Date.now() / 60000) * 60000
 const dt = ref({
   start: nowInMin - 60000,
@@ -47,7 +47,7 @@ const dt = ref({
 })
 
 const chgdt = (okdt) => {
-  console.log(okdt.star ? date.formatDate(okdt.start, 'YYYY-MM-DD HH:mm') : 0, 
+  console.log(okdt.star ? date.formatDate(okdt.start, 'YYYY-MM-DD HH:mm') : 0,
     okdt.end ? date.formatDate(okdt.end, 'YYYY-MM-DD HH:mm') : 0)
 }
 
@@ -58,12 +58,12 @@ const checkDT = (v) => {
 }
 Fin test Date-time */
 
-const logok = async (x) => {
+const logok = async (x: string) => {
   if (x === 'calc') await step(2)
   else await step(1)
 }
 
-const step = async (s: number) => { 
+const step = async (s: number) => {
   await session.setStep(s) }
 
 </script>

@@ -10,27 +10,28 @@
 
 <script setup lang="ts" vapor>
 // @ts-ignore
-import { ref, watch, onMounted } from 'vue'
+import { ref, Ref, watch, onMounted } from 'vue'
 
 import stores from '../stores/all'
+import { LabelSvc } from '../src-fw/base'
 import { AOperation } from '../src-fw/operation'
 
 const session = stores.session
 const config = stores.config
 
-const model = defineModel() // { label: string, svc: string }
+const model = defineModel<LabelSvc>() // { label: string, svc: string }
 
-const props = defineProps({
-  reset: Number,
-  restricted: Boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
-  initval: String, // Valeur initiale, si '?' force à ''
-  /* objet permettant à l'appelant de situer l'instance du composant 
+const props = defineProps< {
+  reset?: number,
+  restricted?: boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
+  initval?: string, // Valeur initiale, si '?' force à ''
+  /* objet permettant à l'appelant de situer l'instance du composant
   ayant émis l'événement.
   si ctx.incl est fourni, set des SEULS services sélectionnables.
   si ctx.excl est fourni, set des services NON sélectionnables.
   */
-  ctx: Object
-})
+  ctx?: any
+}>()
 
 // Emet 2 arguments: svc (ou ''), ctx (ou null)
 const emit = defineEmits(['select'])
@@ -48,14 +49,14 @@ const init = async () => {
     if (props.ctx) {
       if (props.ctx.excl && props.ctx.excl.has(svc)) continue
       if (props.ctx.incl && !props.ctx.incl.has(svc)) continue
-    } 
-    const x = { label: label + ' [' + svc + ']', svc: svc }
+    }
+    const x = { label: label + ' [' + svc + ']', svc: svc } as LabelSvc
     m.set(svc, x)
     opts.value.push(x)
-    opts.value.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
+    opts.value.sort((a: LabelSvc, b: LabelSvc) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
   }
   let v
-  if (props.initval) { 
+  if (props.initval) {
     if (props.initval !== '?') v = m.get(props.initval) // peut être undefined
   } else {
     if (session.currentSvc) v = m.get(session.currentSvc)
@@ -65,15 +66,15 @@ const init = async () => {
   local.value = v
 }
 
-watch(() => local.value, (v) => { 
+watch(() => local.value, (v) => {
   if (v) {
     model.value = v
-    emit('select', v, props.ctx || null)
+    emit('select', v, props.ctx || undefined)
   }
 })
 
-watch(() => [props.ctx, props.initval, props.restricted, props.reset], async () => { 
-  await init() 
+watch(() => [props.ctx, props.initval, props.restricted, props.reset], async () => {
+  await init()
 })
 
 onMounted(async () => { await init() })
