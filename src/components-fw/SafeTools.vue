@@ -34,16 +34,16 @@ tous les dialogues de gestion des "dsonnées de sécurité".
         @open="dialogs.SafeCrP = true"/>
 
       <q-separator color="primary" class="q-my-xs q-mx-lg"/>
-      
-      <bar-open v-if="sf.myTrusting === null" :bubble="$t('HPtrust_2')"
+
+      <bar-open v-if="!sf.myTrusting" :bubble="$t('HPtrust_2')"
         :title="$t('HPtrust_1')"
         @open="dialogs.DevTrustit = true"/>
 
-      <bar-open v-if="sf.myTrusting !== null" :bubble="$t('HPchgpin_2')"
+      <bar-open v-if="sf.myTrusting" :bubble="$t('HPchgpin_2')"
         :title="$t('HPchgpin_1')"
         @open="dialogs.DevTrustit = true"/>
 
-      <bar-open v-if="sf.myTrusting !== null" :bubble="$t('HPuntrust_2')"
+      <bar-open v-if="sf.myTrusting" :bubble="$t('HPuntrust_2')"
         :title="$t('HPuntrust_1', [sf.devName])"
         @open="dialogs.DevUntrustit = true"/>
 

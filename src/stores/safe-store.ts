@@ -4,6 +4,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from './all'
 import { quarter } from '../src-fw/util'
+import { AppExc } from '../src-fw/base'
 
 import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/operation'
 import { Crypt } from '../src-fw/crypt'
@@ -964,7 +965,7 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['shK'] = shK
       ret = await op.post()
     } catch (e) {
-      op.ko(e)
+      await op.ko(e)
       return -1
     }
     // status: 1-pas de safe avec ce user 2:shk 3:shp
@@ -1089,6 +1090,7 @@ export const useSafeStore = defineStore('safe', () => {
     // `Kp`: clé K du safe de l'utilisateur cryptée par `SH(PIN / cx / cy)`
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + cx + '/' + cy, false, true) as Uint8Array
     const pincx: Uint8Array = await Crypt.strongHash(pin + '/' + cx, false, true) as Uint8Array
+    const pincxb64 = keyToB64(pincx)
     const Kp = keyToB64(await Crypt.crypt(pincxcy, keyK.value))
 
     const t: Trusting = new Trusting({
@@ -1130,15 +1132,20 @@ export const useSafeStore = defineStore('safe', () => {
     {
       const pincx: string = await Crypt.strongHash(pin + '/' + t.cx, false, false) as string
       console.log('PINCX !!!!!!!!!!!!!!!!!!!!!!!!!! ', pincx)
+      if (pincx !== pincxb64)
+        throw new AppExc(3, 'bug_signature', 'setTrust-pincx')
       // vérifie par `Va` que `sign` est bien la signature de pincx
       const V = keyFromB64(trustDev.Va)
       // Rétablit la signature en EC - ce que ne fait pas la version PHP
-      const s1 = keyFromB64(trustDev.sign)
-      const sign = Crypt.signFromAsn1(s1)
+      const asn1 = keyFromB64(trustDev.sign)
+      const sign2 = Crypt.signFromAsn1(asn1)
+      const signb64 = keyToB64(sign2)
+      if ( sign !== signb64)
+        throw new AppExc(3, 'bug_signature', 'setTrust-sign')
       const pcb = keyFromB64(pincx)
-      oksign = await Crypt.verify(V, sign, pcb)
+      oksign = await Crypt.verify(V, sign2, pcb)
       if (!oksign)
-        console.log('BUG signature PIN !!!!!!!!!!!!!!!!!!!!!!!!!!')
+        throw new AppExc(3, 'bug_signature', 'setTrust-verify')
     }
 
     const op = new SafeOperation('$TrustDevice', mySafeStore.value)

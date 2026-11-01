@@ -4,7 +4,7 @@
   <q-splitter v-model="splitterModel" horizontal class="pwsm" :style="sth">
     <template v-slot:before>
       <div v-if="session.hasNet" v-for="([, c], idx) in creds" :key="c.credId"
-        :class="'cursor-pointer q-my-sm select ' + sty(idx)"
+        :class="'cursor-pointer q-my-sm select ' + dkli(idx)"
         @click="select(c)">
         <div>
           <div class="row">
@@ -22,7 +22,7 @@
       </div>
 
       <div v-else v-for="(p, idx) in myPerims" :key="p.id"
-        :class="'cursor-pointer q-my-sm select row q-gutter-sm' + sty(idx)"
+        :class="'cursor-pointer q-my-sm select row q-gutter-sm' + dkli(idx)"
         @click="selectp(p)">
         <div class="col-2">{{ p.org }}</div>
         <div class="col">{{ p.name }}</div>
@@ -41,7 +41,7 @@
       <div v-if="session.hasNet" class="row">
         <div class="col-5 text-italic">{{ $t('AUTcol_trig') }}</div>
         <div class="col-7 q-pl-sm ">
-          <line-edit :text="cred.props.trig || $t('AUTnotrig')" 
+          <line-edit :text="cred.props.trig || $t('AUTnotrig')"
             width="sm" datasize="trig" @change="editTrig"/>
         </div>
       </div>
@@ -64,7 +64,7 @@
           {{ $t('nopower') }}
         </div>
         <div v-else>
-          <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'pubs'" 
+          <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'pubs'"
             size="lg" flat style="position:absolute;right:0;top:0" />
           <div class="fs-xs font-mono">{{ aut.autid }}</div>
 
@@ -132,7 +132,7 @@ import { ref, Ref, computed, onMounted, watch, reactive } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
-import { $t, sty, dhcool } from '../src-fw/util'
+import { $t, sty, dhcool, dkli } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { getStore } from '../stores/docs'
 import { AS2$Auteur, AS2$Publication } from '../as2/documents'
@@ -159,12 +159,12 @@ watch(() => ui.appPage.tab, async (t) => {
 
 const splitterModel = ref(50)
 
-const creds: Ref<Map<string, $Credential>> = ref()
-const myPerims: Ref<$Perimeter[]> = ref()
+const creds: Ref<Map<string, $Credential>> = ref(new Map())
+const myPerims: Ref<$Perimeter[]> = ref([])
 const org = ref()
-const std = computed(() => getStore('AS2', org.value))
+const std: Ref<any> = computed(() => getStore('AS2', org.value))
 const perimetre = ref()
-const cred = ref(null)
+const cred: Ref<$Credential | undefined> = ref()
 
 watch(perimetre, (p) => {
   ui.appPage.aut = p ? std.value.getDoc('Auteur', p.docPk) : null
@@ -174,26 +174,28 @@ watch(perimetre, (p) => {
 const aut = computed(() => ui.appPage.aut)
 /*
   perimetre.value ? std.value.getDoc('Auteur', perimetre.value.docPk) : null)
-watch(aut, (v) => { 
+watch(aut, (v) => {
   console.log(v ? v.nomAuteur : 'personne') })
 */
 
 const coauts: Ref<$Cred[]> = computed(() => {
   const co = []
-  if (aut.value && aut.value.embedCreds) for(const cr in aut.value.embedCreds)
-      if (cr !== cred.value.credId) co.push(aut.value.embedCreds[cr])
+  if (aut.value && aut.value.embedCreds)
+    for(const cr in aut.value.embedCreds)
+      if (!cred.value || cr !== cred.value.credId)
+        co.push(aut.value.embedCreds[cr])
   return co
 })
 
-const init = async () => { 
+const init = async () => {
   if (session.hasNet) {
-    creds.value = await sf.myFullCreds('AS2', '', 'Auteur') 
+    creds.value = await sf.myFullCreds('AS2', '', 'Auteur')
     // console.log(creds.value.size)
   } else {
     const l = []
     for (const [so, m2] of session.perims)
       if (so.startsWith('AS2'))
-        for(const [, p] of m2) 
+        for(const [, p] of m2)
           if(p.docCl === 'Auteur') l.push(p)
     myPerims.value = l
   }
@@ -201,16 +203,16 @@ const init = async () => {
 
 onMounted(async () => { await init()})
 
-const lbls = (s) => DocEnums.labelSync('AS2$Section', org.value, s)
+const lbls = (s: any) => DocEnums.labelSync('AS2$Section', org.value, s)
 
-const selectp = async (p) => {
+const selectp = async (p: $Perimeter) => {
   org.value = p.org
   perimetre.value = p
   await std.value.fetch([perimetre.value])
 }
 
 const select = async (c: $Credential) => {
-  await DocEnums.fetch('AS2$Section', c.org)
+  await DocEnums.fetch('AS2', 'Section', c.org)
   cred.value = c
   org.value = c.org
   perimetre.value = session.getPerimeter('AS2', c.org, '', 'Auteur', c.docPk)
@@ -226,22 +228,27 @@ const select = async (c: $Credential) => {
 }
 
 const editTrig = async (trig: string) => {
+  if (!cred.value) return
   const op = new Operation('UpdPropsCred', 'AS2', org.value)
-  const c = cred.value
+  const c = cred.value as $Credential
   op.setArgs({ credId: c.credId, docCl: c.docCl, docPk: c.docPk, props: { trig: trig } })
   await op.sign(c)
   try {
     const res = await op.post()
     if (res.status) await ui.diagDisplay($t('STCR_' + res.status))
-    else creds.value.get(c.credId).props = res.props
-  } catch (e) { op.ko(e) }
+    else {
+      const e = creds.value.get(c.credId)
+      if (e) e.props = res.props
+    }
+  } catch (e) { await op.ko(e) }
 }
 
 const majNP = async (nom: string) => {
-  if (await sf.updateCredName(cred.value.credId, nom)) cred.value.name = nom
+  if (cred.value && await sf.updateCredName(cred.value.credId, nom)) cred.value.name = nom
 }
 
 const majAut = async (nomAuteur: string) => {
+  if (!cred.value) return
   const op = new Operation('MajAuteur', 'AS2', org.value)
   op.args.autpk = cred.value.docPk
   op.args.nomAuteur = nomAuteur
@@ -252,7 +259,7 @@ const majAut = async (nomAuteur: string) => {
     console.log('majaut2')
     if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
-  } catch (e) { 
+  } catch (e) {
     await op.ko(e)
   }
 }
@@ -264,13 +271,14 @@ const selCo = (cx: $Cred) => {
 type Pubs = {
   a: AS2$Publication[]
   m: Map<string, AS2$Publication>
-  c: AS2$Publication
+  c: AS2$Publication | null
 }
 
-const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null })
+// @ts-expect-error
+const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null } as Pubs)
 const curPub = computed(() => pubs.n || (ui.navBar.nb ? pubs.a[ui.navBar.idx] : null))
 
-const pubsItem = computed(() => 
+const pubsItem = computed(() =>
   !perimetre.value ? null : std.value.getItem('Publication/auteur/' + perimetre.value.docPk))
 
 const pubsInit = () => {
@@ -303,7 +311,7 @@ const listPubs = async () => {
   if (pubidAv) {
     let i = 0
     for(const p of pubs.a)
-      if (p.pubid === pubidAv) { ui.navBar.idx = i; return } 
+      if (p.pubid === pubidAv) { ui.navBar.idx = i; return }
       else i++
   }
 }

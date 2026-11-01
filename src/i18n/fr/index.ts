@@ -423,7 +423,7 @@ Si l'indisponibilité était lié à un incident technique temporaire bla ble
 `,
 
 
-  
+
   /* UAP : SafeCr */
   UAPtit_u: 'Création de votre Safe Box',
   UAPtit_a: 'Changement des alias de votre Safe Box',
@@ -531,7 +531,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APnosites: 'Aucun site n\'est géré actuellement.',
   APsiteadmin: 'Administrateur du site',
   APsinfo: 'Site [{0}] - URL: [{1}]',
-  
+
   APnomanagers: 'Aucun "manager" trouvé.',
   APnc: '(inconnu)',
   APsvclabels: 'Liste des services',
@@ -545,7 +545,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APnewsvcorg: 'Nouveau service:',
   APneworg: 'Nouvelle organisation: {0}',
   APcfdelsite_tit: 'Suppression d\'un site',
-  APcfdelsite_txt: `Voulez-vous vraiment supprimer ce site ? 
+  APcfdelsite_txt: `Voulez-vous vraiment supprimer ce site ?
 - Si non, cliquer sur "JE RENONCE"'
 - Si oui, cliquer sur "JE CONFIRME ..."
 `,
@@ -553,7 +553,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APcfdelsite_0: 'Je renonce',
 
   APcfupda_tit: 'Suppression d\'un service',
-  APcfupda_txt: `Voulez-vous vraiment supprimer le service [{1}] pour [{0}] ? 
+  APcfupda_txt: `Voulez-vous vraiment supprimer le service [{1}] pour [{0}] ?
 - Si non, cliquer sur "JE RENONCE"'
 - Si oui, cliquer sur "JE CONFIRME ..."
 `,
@@ -568,7 +568,7 @@ Quant une session de l'application s'ouvre, elle référence toujours une liste 
   APcfupdb_0: 'Je renonce',
   APcfupdc_tit: 'Suppression d\'un dernier service',
   APcfupdc_txt: `Voulez-vous vraiment supprimer le dernier service [{1}] supporté pour [{0}] ?
-- Ceci revient à rendre **invalider de facto** l'organisation. 
+- Ceci revient à rendre **invalider de facto** l'organisation.
 - Si non, cliquer sur "JE RENONCE"'
 - Si oui, cliquer sur "JE CONFIRME ..."
 `,
@@ -626,7 +626,7 @@ bla bla
   APlimitpast: 'La date et l\'heure sont dans le passé, ce qui équivaut à une suppression du pouvoir.',
   APupdok: 'Le pouvoir a été mis à jour.',
   APdelok: 'Le pouvoir a été supprimé.',
-  APupdko: 'Echec de mise à pouvoir qui n\'a pas été trouvé.', 
+  APupdko: 'Echec de mise à pouvoir qui n\'a pas été trouvé.',
   APlistmgr: 'Mise à jour du pouvoir',
 
   SButtitle: 'Profil utilisateur',
@@ -932,7 +932,7 @@ Un utilisateur peut **certifier** un terminal en lesquel il a _confiance_ :
 
 ### Ouvrir une session AVEC Internet
 C'est le mode _normal_ SYNCHRONISE: les documents et fichiers de la base centrale sont accédés en respectant les _pouvoirs_ de la session ouverte.
-Quand la session a accès à la mémoire locale _cache_ des documents, 
+Quand la session a accès à la mémoire locale _cache_ des documents,
 - les documents lus depuis Internet sont stockés localement en _Cache_ cryptée pour l'utilisateur,
 - en cours de session, leurs mise à jour éventuelles sont notifiées à la session qui recharge ceux ayant changé,
 - beaucoup de documents sont accessibles sans utiliser Internet.
@@ -1112,7 +1112,7 @@ Fermer la fenêtre corespond à un NON sélection.
   FORMnewex: 'Proposition à un utilisateur enregistré',
   FORMnewinv: 'Proposition à une personne N\'AYANT PAS ENCORE de compte',
   FORMpfxinv_label: 'Préfixe du code d\'invitation',
-  FORMinvcode: 'Code confidentiel à communiquer au destinataire de l\'invitation:', 
+  FORMinvcode: 'Code confidentiel à communiquer au destinataire de l\'invitation:',
   FORMcopythat: 'J\'ai bien noté',
   FORMinvko: 'Incident technique, l\'invitation N\'A PAS été enregistrée.',
   FORMisinvit: 'invitation',
@@ -1257,6 +1257,8 @@ bla bla
 
   EX99_interrupted: 'Interrompu par l\'utilisateur',
 
+  EX3_bug_signature: '(BUG) - Signature malformée.',
+
   EX3_not_configured_service: '(BUG) - Service cloud [{0}] non configuré.',
   EX3_document_name_duplicated: '(BUG) - Nom de classe de document [{0}] dupliquée.',
   EX3_property_name_syntax: '(BUG) - Nom [{0}] de propriété de _clé primaire_ mal formé.',
@@ -1271,31 +1273,31 @@ bla bla
   EX8_IDB_error: `Erreur technique d\'accès à la base locale.
 Détail: [{0}]
 `,
-  EX8_IDB_SAFE_error: `Erreur technique d\'accès à la base locale _Cache_. 
+  EX8_IDB_SAFE_error: `Erreur technique d\'accès à la base locale _Cache_.
 Détail: [{0}]
 `,
   EX8_HTTP_not_200: 'Erreur technique inattendue d\'accès Internet. Code HTTP non 200: Status: [{0}] - StatusText: [{1}]',
   EX8_HTTP_500_etc: 'Erreur technique inattendue d\'accès renvoyée par le _service cloud_ [{1}]. Code HTTP 500... Status: [{0}] - StatusText: [{2}]',
-  EX8_unexpected_network_service_response: `Erreur technique inattendue d\'accès renvoyée par le _service cloud_ [{0}]. 
+  EX8_unexpected_network_service_response: `Erreur technique inattendue d\'accès renvoyée par le _service cloud_ [{0}].
 Détail: [{1}]
 `,
 
   EX101_masterdir_no_admin: 'Droit d\'Administration du _Master Directory_ requis pour l\'opération [{0}].',
   EX101_operation_admin_required: 'Droit d\'Administration du _service cloud_ requis pour cette opération.',
   EX101_operation_authentication_required: '(BUG) - Opération [{0}] invoquée sans authentication de l\'utilisateur.',
-  EX101_operation_no_user_keys_cv: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}]. 
+  EX101_operation_no_user_keys_cv: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
 Détail: _clé de vérification non trouvée_
 `,
-  EX101_operation_bad_signature: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}]. 
+  EX101_operation_bad_signature: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
 Détail: _échec de vérification de la signature_
 `,
-  EX101_operation_bad_credentials: `Pouvoirs non validés de l\'utilisateur [{1}] pour l\'opération demamdée [{0}]. 
+  EX101_operation_bad_credentials: `Pouvoirs non validés de l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
 Détail: [{0}].
 `,
-  EX101_operation_svcorg_read_required: `Service cloud [{0}] bloqué pour l\'organisation [{1}] sur appel de l\'opération [{2}]. 
+  EX101_operation_svcorg_read_required: `Service cloud [{0}] bloqué pour l\'organisation [{1}] sur appel de l\'opération [{2}].
 Détail: _code blocage_ {3}
 `,
-  EX101_operation_svcorg_readwrite_required: `Service cloud [{0}] bloqué en _lecture seulement_ pour l\'organisation [{1}] sur appel de l\'opération [{2}]. 
+  EX101_operation_svcorg_readwrite_required: `Service cloud [{0}] bloqué en _lecture seulement_ pour l\'organisation [{1}] sur appel de l\'opération [{2}].
   Détail: _code blocage_ {3}
 `,
 
@@ -1348,7 +1350,7 @@ Détail: [{0}]
 Détail: [{0}]
 `,
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
-  EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application: [classe:{1}, id:{2}];' + 
+  EX105_credential_required_not_found: 'Un pouvoir requis n\'a pas été transmis au service par l\'application: [classe:{1}, id:{2}];' +
     ' Le pouvoir a été récemment supprimé ou suspendu (ou c\'est un BUG)',
   EX105_session_synch_failure: `Détection de la perte de la synchronisation des documents de la session par l'opération [{0}] du _service cloud_ [{1}] pour l'organisation [{2}].
 Détail: le compteur de suivi de la session a disparu (contrôle de synchronisation impossible).
@@ -1421,15 +1423,15 @@ Détail: url:[{3}] erreur:[{4}]
 
   CREDON_CoDir: 'Membre du Comité Directeur',
   CREDON_CoDir_bub: `### Membre du Comité Directeur
-  bla bla 
+  bla bla
   `,
   CREDON_Redaction: 'Membre du Comité de Rédaction',
   CREDON_Redaction_bub: `### Membre du Comité de Rédaction
-  bla bla 
+  bla bla
   `,
   CREDON_Auteur: 'Auteur',
   CREDON_Auteur_bub: `### Auteur
-  bla bla 
+  bla bla
   `,
 
   PAGEauteur: 'Mes articles',
