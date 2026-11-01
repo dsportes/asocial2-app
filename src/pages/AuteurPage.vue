@@ -136,6 +136,7 @@ import { $t, sty, dhcool, dkli } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'
 import { getStore } from '../stores/docs'
 import { AS2$Auteur, AS2$Publication } from '../as2/documents'
+import { EmbedCred } from '../src-fw/documents'
 import { Registry } from '../src-fw/registry'
 import BtnCond from '../components-fw/BtnCond.vue'
 import NavBar2 from '../components-fw/NavBar2.vue'
@@ -171,19 +172,18 @@ watch(perimetre, (p) => {
   ui.appPage.articles = std.value.getSColl('Auteur', p.docPk)
 })
 
-const aut = computed(() => ui.appPage.aut)
+const aut: Ref<AS2$Auteur> = computed(() => ui.appPage.aut)
 /*
   perimetre.value ? std.value.getDoc('Auteur', perimetre.value.docPk) : null)
 watch(aut, (v) => {
   console.log(v ? v.nomAuteur : 'personne') })
 */
 
-const coauts: Ref<$Cred[]> = computed(() => {
-  const co = []
-  if (aut.value && aut.value.embedCreds)
-    for(const cr in aut.value.embedCreds)
-      if (!cred.value || cr !== cred.value.credId)
-        co.push(aut.value.embedCreds[cr])
+const coauts: Ref<EmbedCred[]> = computed(() => {
+  const co: EmbedCred[] = []
+  if (aut.value && aut.value.creds)
+    for(const [credId, cr] of aut.value.creds)
+      if (!cred.value || cred.value.credId !== credId) co.push(cr)
   return co
 })
 
@@ -264,18 +264,20 @@ const majAut = async (nomAuteur: string) => {
   }
 }
 
-const selCo = (cx: $Cred) => {
+const selCo = (cx: EmbedCred) => {
   console.log('co-auteur', cx.credId, cx.props.name, cx.props.trig)
 }
 
-type Pubs = {
+interface Pubs {
   a: AS2$Publication[]
   m: Map<string, AS2$Publication>
   c: AS2$Publication | null
+  n: number
 }
 
 // @ts-expect-error
-const pubs: Ref<Pubs> = reactive({ a: [], m: new Map(), c: null } as Pubs)
+const pubs: Tpubs = reactive(
+  { a: [], m: new Map(), c: null, n: 0 } as Pubs)
 const curPub = computed(() => pubs.n || (ui.navBar.nb ? pubs.a[ui.navBar.idx] : null))
 
 const pubsItem = computed(() =>
@@ -299,12 +301,12 @@ watch(pubsItem, async () => {
 const listPubs = async () => {
   if (!pubsItem.value) { pubsInit(); return }
   const pubidAv = curPub.value ? curPub.value.pubid : ''
-  const pk = aut.value.pk
+  const pk = aut.value._pk
   // const s = std.value.getSColl('Publication', 'auteur', perimetre.value.docPk)
   for(const pubpk of pubsItem.value.pks)
     pubs.m.set(pubpk, std.value.getDoc('Publication', pubpk))
   pubs.a = Array.from(pubs.m.values())
-  pubs.a.sort((a,b) => (a.v > b.v ? -1 : (a.v < b.v ? 1 : 0)))
+  pubs.a.sort((a: any,b: any) => (a.v > b.v ? -1 : (a.v < b.v ? 1 : 0)))
   ui.navBar.nb = pubs.a.length
   ui.navBar.idx = 0
   if (!pubs.a.length) return
@@ -356,7 +358,7 @@ const undo = () => {
   if (pubs.n) pubs.n = null
 }
 
-const navigate = async (n) => {
+const navigate = async (n: number) => {
   console.log('n=', n)
   if (n < 5) {
     switch (n) { // 1:next 2: previous, 3:first, 4:last

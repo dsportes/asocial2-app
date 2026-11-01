@@ -95,7 +95,7 @@ type Aut = {
   newNa: string
   edv: string
 }
-let aut = reactive({ newSection: '', newNa: '', edv: '' } as Aut)
+let aut: Aut = reactive({ newSection: '', newNa: '', edv: '' } as Aut)
 const docPk = ref()
 const curcred = ref()
 

@@ -122,10 +122,8 @@ export class Registry {
     if (!descriptor)
       throw new AppExc(3, 'unregistered_class', 'Registry.getClassInfo(2)', [svc + '/' + docCl])
     let subCl = ''
-    if (data) {
-      if (!descriptor.subClassBy)
-        throw new AppExc(3, 'subclass_property_not_declared', 'Registry.getClassInfo(3)', [svc + '/' + docCl])
-      subCl = data[descriptor.subClassBy]
+    if (descriptor.subClassBy) {
+      subCl = data ? data[descriptor.subClassBy] : ''
       if (!subCl)
         throw new AppExc(3, 'subclass_property_value_not_found_in_data', 'Registry.getClassInfo(4)',
           [svc + '/' + docCl + ' -- ' + descriptor.subClassBy])
