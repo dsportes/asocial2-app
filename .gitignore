@@ -5,6 +5,7 @@ node_modules
 src/app/firebaseConfig.ts
 
 .yarn
+install-state.gz
 .pnp.cjs
 .pnp.loader.mjs
 
