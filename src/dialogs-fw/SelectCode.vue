@@ -30,7 +30,7 @@ import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { sty } from '../src-fw/util'
 
-const model = defineModel()
+const model = defineModel<boolean>()
 
 const props = defineProps<{
   values: string[],

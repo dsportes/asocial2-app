@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref } from 'vue'
 
 import stores from '../stores/all'
@@ -31,18 +30,18 @@ import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
-const props = defineProps({
-  vue: String,
+const props = defineProps<{
+  vue?: string,
   title: String, // titre de la top bar
-  help: String,  // code de loa page d'aide s'il y en a une
-  hdrclass: String,
-  noclose: Boolean,
-  width: String
-})
-const wx = {sm: '30', md: '40', lg: '50'}
+  help?: string,  // code de loa page d'aide s'il y en a une
+  hdrclass?: string,
+  noclose?: boolean,
+  width?: string
+}>()
+const wx: any = {sm: '30', md: '40', lg: '50'}
 const styc = ref('max-width: ' + wx[props.width || 'md'] + 'rem !important; width: 95vw !important;')
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close'])
 
 const onClose = () => { 

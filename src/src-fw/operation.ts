@@ -2,7 +2,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'
-import { AppExc } from './base'
+import { AppExc, CodeLabel } from './base'
 import { Registry } from '../src-fw/registry'
 
 import stores from '../stores/all'
@@ -26,7 +26,7 @@ export type SubsToSync = {
 }
 
 export class DocEnums {
-  static m : Map<string, string[]> = new Map()
+  static m : Map<string, CodeLabel[]> = new Map()
 
   static async fetch (svc: string, enumName: string, org: string) : Promise<void> {
     const n = enumName + (org ? '_' + org : '')
@@ -55,7 +55,7 @@ export class DocEnums {
   de l'énumération enumName : svc$name OU svc$name_org
   En l'absence du suffixe org, un nom de site est requis.
   */
-  static async get (svc: string, enumName: string, org: string) : Promise<string[]> {
+  static async get (svc: string, enumName: string, org: string) : Promise<CodeLabel[]> {
     const dd = Registry.getClassInfo(svc, enumName).descriptor
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
@@ -79,7 +79,7 @@ export class DocEnums {
     try {
       op.args.enumName = n
       const res = await op.post(true)
-      values = (res['enum'] as string[]) || []
+      values = (res['enum'] as CodeLabel[]) || []
       if (idb && session.syncMode)
         await idb.storeEnum(n, values)
       this.m.set(n, values)
@@ -90,7 +90,7 @@ export class DocEnums {
     }
   }
 
-  static async set (svc: string, enumName: string, value: string[], org: string)
+  static async set (svc: string, enumName: string, value: CodeLabel[], org: string)
     : Promise<boolean> {
     const sf = stores.safe
     const dd = Registry.getClassInfo(svc, enumName).descriptor

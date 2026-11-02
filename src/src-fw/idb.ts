@@ -3,10 +3,9 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { Crypt } from '../src-fw/crypt'
-import { AppExc } from './base'
+import { AppExc, CodeLabel } from './base'
 import { sleep } from '../src-fw/util'
 import { $Perimeter, $Perims, $Def } from '../src-fw/subscription'
-import { isNullOrUndefined } from "node:util"
 
 /*
 La base IDB est propriété d'un couple application / utilisateue. Son nom est: app-userId
@@ -248,16 +247,16 @@ export class IDB {
     return { orgRoles: [], pref: ''}
   }
 
-  async getEnum (enumName: string) : Promise<string[]>{
+  async getEnum (enumName: string) : Promise<CodeLabel[]>{
     const x = await this.db.singletons.get('$ENUM$' + enumName)
     if (x && x.data) {
       const y = await this.decryptData(x.data)
-      return y ? decode(y) as string[] : []
+      return y ? decode(y) as CodeLabel[] : []
     }
     return []
   }
 
-  async storeEnum (enumName: string, values: string[]) {
+  async storeEnum (enumName: string, values: CodeLabel[]) {
     try {
       const data = await this.cryptData(encode(values))
       await this.db.singletons.put({ name: '$ENUM$' + enumName, data })

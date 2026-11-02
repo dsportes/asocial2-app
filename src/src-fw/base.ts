@@ -6,6 +6,8 @@ export type SOA = {
   admin? : boolean
 }
 
+export type CodeLabel = [string, string]
+
 export type LabelSvc = { svc: string, label: string }
 export class AppExc {
   /*

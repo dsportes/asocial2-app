@@ -8,7 +8,7 @@ Event: close
 <div class="q-pa-xs column items-center">
   <div class="wmd full-width q-pa-xs">
     <div v-for="([uid, t], idx) of sf.trustings" :key="uid" 
-      :class="'q-my-sm ' + dkli(idx)">
+      :class="'q-my-sm ' + dkli(idx as number)">
       <div class="row">
         <btn-cond icon="delete" color="warning" confirm @ok="delu(uid)"
           class="col-1"/>
@@ -42,7 +42,6 @@ Event: close
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t, dkli, edvol } from '../src-fw/util'
@@ -54,7 +53,7 @@ import { IDBsafe } from '../src-fw/idbsafe'
 
 const sf = stores.safe
 
-const model = defineModel()
+const model = defineModel<boolean>()
 
 /* volume des bases par "userId / app"
   - undefined: pas de base
@@ -62,7 +61,7 @@ const model = defineModel()
   N : volume utile
 */
 const dbs: Ref<Map<string, number>> = ref(new Map())
-const vol = (userId, app) => dbs.value.get(userId + '/' + app) || 0
+const vol = (userId: string, app: string) => dbs.value.get(userId + '/' + app) || 0
 
 const setDbs = async () => {
   for(const [u, t] of sf.trustings) {

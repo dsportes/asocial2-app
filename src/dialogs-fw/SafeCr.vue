@@ -107,11 +107,11 @@ import DialogStd2 from '../dialogs-fw/DialogStd2.vue'
 const sf = stores.safe
 const ui = stores.ui
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close', 'done', 'creation'])
-const props = defineProps ({
-  mode: String // u: nouvel user, a: chagt alias, p: chgt phrase
-})
+const props = defineProps<{
+  mode: string // u: nouvel user, a: chagt alias, p: chgt phrase
+}>()
 
 const dialogs = reactive({
   close: false
@@ -122,7 +122,7 @@ const close2 = () => {
   else { model.value = false; emit('close', true) }
 }
 
-const chooseBack = (n) => {
+const chooseBack = (n: number) => {
   dialogs.close = false
   if (n) { model.value = false; emit('close', true) }
 }
@@ -140,9 +140,9 @@ type al = {
 let entryA = reactive({ inp: '', err: '' })
 let entryP = reactive({ inp: '', err: '' })
 
-const aliases: Ref<al[]> = reactive([])
+const aliases: al[] = reactive([])
 const expandA = ref(false)
-const freeA = ref(true)
+const freeA: Ref<boolean | number> = ref(true)
 const errVA = ref(false)
 const initA = ref('')
 
@@ -156,7 +156,7 @@ const resetA = () => {
 }
 watch(expandA, (v) => { resetA() })
 
-const phrases : Ref<al[]> = reactive([])
+const phrases : al[] = reactive([])
 const expandP = ref(false)
 const errVP = ref(false)
 const initP = ref('')
@@ -173,7 +173,7 @@ watch(expandP, (v) => { resetP() })
 
 const init = () => {
   if (props.mode === 'a' || props.mode === 'u') {
-    aliases.lenth = 0
+    aliases.length = 0
     resetA()
   }
   if (props.mode === 'p' || props.mode === 'u') {

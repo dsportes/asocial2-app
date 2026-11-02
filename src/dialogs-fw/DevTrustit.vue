@@ -37,6 +37,7 @@ import { ref, computed, watch, reactive } from 'vue'
 
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
+import { Trusting } from '../src-fw/idbsafe'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 import InputB from '../components-fw/InputB.vue'
@@ -45,7 +46,7 @@ const ui = stores.ui
 const sf = stores.safe
 
 const emit = defineEmits(['close', 'done'])
-const model = defineModel()
+const model = defineModel<boolean>()
 
 const newDev = ref(false)
 let devName = reactive({ inp: '', err: '' })
@@ -67,7 +68,8 @@ init()
 
 const dup = computed(() => {
   let b = false
-  sf.trustings.forEach(e => {
+  const sft = sf.trustings as Map<string, Trusting>
+  sft.forEach(e => {
     if (e.userId !== sf.userId && e.pseudo === newPseudo.inp) b = true
   })
   return b

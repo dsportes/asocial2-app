@@ -19,9 +19,14 @@ Run
 ET PUIS: localhost:8086/pwa
 
 # Install yarn
-Par npm installe la version legacy 1.22
+Se mettre sous le HOME
+npm install -g yarn
+        - npm installe la version legacy 1.22
 
-Dernière version: yarn set version stable
+yarn set version stable
+        - crée un HOME/.yarn/releases/yarn-4.18.1.cjs
+
+Le répertoire releases est à copier dans le .yarn du projet.
 
 # Fontes
 Les noms des fontes ne doivent pas contenir de caractères qui nécessitent un encodeURL.

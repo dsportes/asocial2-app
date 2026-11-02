@@ -1,5 +1,5 @@
 import { Crypt } from './crypt'
-import { AppExc } from './base'
+import { AppExc, CodeLabel } from './base'
 
 export type DocId = {
   svc: string, docCl: string, subCl: string
@@ -65,7 +65,7 @@ export type DocHeader = {
 }
 
 export type EnumHeader = {
-  enum?: string[]
+  enum?: CodeLabel[]
   enumCred?: string
   virtual?: boolean
 }
@@ -129,7 +129,7 @@ export class Descriptor {
   readonly colls : Map<string, collection> | null = null
   readonly indexes: Map<string, idx> | null = null
 
-  readonly enum: string[] = []
+  readonly enum: CodeLabel[] = []
   readonly enumCred: string = ''
 
   /* Retourne la valeur du pk d'une "source" ayant les propriétés citées dans pk */

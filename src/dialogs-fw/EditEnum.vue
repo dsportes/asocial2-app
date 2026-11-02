@@ -45,8 +45,8 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, Ref, computed, watch, onMounted } from 'vue'
+import { CodeLabel } from '../src-fw/base'
 import stores from '../stores/all'
 import { $t, hasMessage, dkli } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -56,15 +56,15 @@ import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 
 const ui = stores.ui
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close', 'done'])
 
-const props = defineProps({
-  svc: String,
-  name: String, // 'Section'
-  org: String,
-  title: String
-})
+const props = defineProps<{
+  svc: string,
+  name: string, // 'Section'
+  org: string,
+  title: string
+}>()
 
 const checkClose = async () => {
   const b = await ui.mayClose()
@@ -74,20 +74,20 @@ const checkClose = async () => {
   } else
     model.value = true
 }
+type Tlst = [number, string, string] // index, code, label
 
-const edv = (x) => {
-  const lbl = hasMessage('ENUM_' + props.svc + '$' + props.name + '_' + x[0])
-  const t = [0, x[0], lbl || x[1]]
-  return t
+const edv = ([c, l]: CodeLabel) : Tlst => {
+  const lbl: string = hasMessage('ENUM_' + props.svc + '$' + props.name + '_' + c)
+  return [0, l, lbl || l] as Tlst
 }
 
-const lst = ref([])
-const lst0 = ref([])
+const lst: Ref<Tlst[]> = ref([])
+const lst0: Ref<Tlst[]> = ref([])
 const selc = ref('')
 const sell = ref('')
 
 const lstD = computed(() => {
-  const l = []
+  const l: Tlst[] = []
   for(let i = 0; i < lst.value.length; i++) {
     const t = lst.value[i]
     if ( !t[1] || !t[2] ||
@@ -112,8 +112,8 @@ const chg = () => {
 }
 
 const init1 = async () => {
-  const l = []
-  const lx = await DocEnums.get(props.svc, props.name, props.org)
+  const l: Tlst[] = []
+  const lx: CodeLabel[] = await DocEnums.get(props.svc, props.name, props.org)
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0))
   lst.value = l
@@ -128,7 +128,7 @@ watch(() => props.org, async () => {
   await init1()
 })
 
-const delItem = (idx) => {
+const delItem = (idx: number) => {
   lst.value.splice(idx, 1)
   chg()
 }
@@ -137,7 +137,7 @@ const addItem = async () => {
   chg()
 }
 const valEnum = async () => {
-  const l = []
+  const l: CodeLabel[] = []
   for(const t of lst.value)
     if (t[1] && t[2]) l.push([t[1], t[2]])
   await DocEnums.set(props.svc, props.name, l, props.org)
@@ -147,7 +147,7 @@ const undoEnum = () => {
   lst.value = [...lst0.value]
   ui.resetEditing()
 }
-const majC = async (ctx) => {
+const majC = async (ctx: any) => {
   if (!ctx.value) { await ui.diagDisplay($t('ENUMcm')); return }
   for(let i = 0; i < lst.value.length; i++)
     if (i !== ctx.idx && lst.value[i][1] === ctx.value) {
@@ -157,7 +157,7 @@ const majC = async (ctx) => {
   lst.value[ctx.idx][1] = ctx.value
   chg()
 }
-const majL = async (ctx) => {
+const majL = async (ctx: any) => {
   if (!ctx.value) { await ui.diagDisplay($t('ENUMlm')); return }
   lst.value[ctx.idx][2] = ctx.value
   chg()

@@ -23,7 +23,7 @@ Events: close done
     <div class="pwsm q-pa-xs">
     <div class="q-my-md text-center titre-md">{{$t('HPprefslist')}}</div>
     <scroll-area class='pwsm'><template #default>
-      <div :class="dkli(idx)" v-for="(code, idx) of st" :key="code">
+      <div :class="dkli(idx as number)" v-for="(code, idx) of st" :key="code">
         <div :class="pSel(code) + 'row q-my-xs cursor-pointer select'"
           @click="selPref(code)">
           <div class="col-6 font-mono q-pr-sm">{{code}}</div>
@@ -84,9 +84,7 @@ Events: close done
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, reactive, computed, watch } from 'vue'
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, dkli, dhcool } from '../src-fw/util'
@@ -105,7 +103,7 @@ const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
   edprf: false
@@ -119,16 +117,17 @@ watch(model, (v) => {
 const diag = computed(() => session.edPref ? session.edPref.diag : '' )
 const toSave = ref(true)
 
-const myPrefs: Ref<Map<string, Object>> = ref(new Map())
-const myPrefsOrig: Ref<Map<string, Object>> = ref(sf.mySafePrefs)
-const st = reactive({}) // 0: inchangé 1: ajouté 2: modifié 3: supprimé
+const myPrefs: Ref<Map<string, any>> = ref(new Map())
+const myPrefsOrig: Ref<Map<string, any>> = ref(sf.mySafePrefs)
+const st: any = reactive({}) // 0: inchangé 1: ajouté 2: modifié 3: supprimé
 const nbc = computed(() => {
   let n = 0
   for(const c in st) if (st[c] !== 0) n++
   return n
 })
 const coolTime = (code: string) : string => {
-  return st[code] === 1 ? $t('HPprefs_new') : dhcool(myPrefs.value.get(code).time)
+  const p = myPrefs.value.get(code)
+  return st[code] === 1 ? $t('HPprefs_new') : dhcool(p ? p.time : 0)
 }
 
 watch(() => sf.mySafePrefs, () => { 
@@ -157,7 +156,7 @@ const checkClose = async () => {
     model.value = true
 }
 
-const selP = ref(null)
+const selP: Ref<string> = ref('')
 const stc = computed(() => selP.value ? st[selP.value] : 0)
 
 const styl = ['', 'text-italic text-warning text-bold', 'text-warning text-bold', 'text-strike']
@@ -165,7 +164,7 @@ const pSel = (code: string) =>
   (selP.value === code ? 'bord2w ' : 'bord2c ') + styl[st[code]] + ' '
 
 const selPref = (code: string) => {
-  if (selP.value === code) selP.value = null
+  if (selP.value === code) selP.value = ''
   else selP.value = code
 }
 const rawText = computed(() => !selP.value ? '???' : JSON.stringify(myPrefs.value.get(selP.value), null, '\t'))
@@ -175,7 +174,7 @@ const delPref = () => { // 0: inchangé 1: ajouté 2: modifié 3: supprimé
     if (stc.value === 1) delete st[selP.value]
     else st[selP.value] = 3
   }
-  selP.value = null
+  selP.value = ''
 }
 
 const undoPref = () => {

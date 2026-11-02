@@ -79,10 +79,7 @@ Events: close done
 </template>
 
 <script setup lang="ts" vapor>
-
-// @ts-ignore
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-// @ts-ignore
+import { ref, Ref, reactive, computed, onMounted, watch } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { saveAs } from 'file-saver'
@@ -92,6 +89,7 @@ import { Auth, MDuser } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
 import { $t, quarter, readFile } from '../src-fw/util'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
+import { ICVS } from '../stores/safe-store'
 
 import BarOpen from '../components-fw/BarOpen.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -106,7 +104,7 @@ const encoder = new TextEncoder()
 const ui = stores.ui
 const sf = stores.safe
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close', 'done'])
 const dialogs = reactive({
   backupCf: false,
@@ -139,7 +137,8 @@ onMounted(async () => {
   await init()
 })
 
-let entryP = reactive( { inp: '', err: '', np: 0, shp: null } )
+type Tentry = { inp: string, err: string, np: number, shp?: Uint8Array }
+let entryP: Tentry = reactive( { inp: '', err: '', np: 0 } )
 const filename = ref('')
 
 const doExport = async () => {
@@ -151,7 +150,7 @@ const doExport = async () => {
   dialogs.backupCf = true
 }
 
-const backupCf = async (n) => {
+const backupCf = async (n: number) => {
   if (n === 0) return
   safe.value.auth.actual = { a1k: '', hsha1: '', a2k: '', hsha2: ''}
   safe.value.auth.future = null
@@ -166,25 +165,27 @@ const backupCf = async (n) => {
   model.value = false
 }
 
-const fileList = ref(null)
-const fd = ref(null)
-const icvs = ref(null)
+const fileList: Ref<any> = ref(null)
+const fd: Ref<any> = ref(null)
+// @ts-expect-error
+const icvs: Ref<ICVS> = ref()
 const userId = ref('')
-const keyK = ref(null)
-const shp = ref(null)
-const hshp = ref(null)
-const safe = ref(null)
+// @ts-expect-error
+const keyK: Ref<Uint8Array> = ref()
+// @ts-expect-error
+const shp: Ref<Uint8Array> = ref()
+const hshp: Ref<string> = ref('')
+const safe: Ref<any> = ref()
 const store = ref('')
 
 const reset = () => {
   fileList.value = null
   fd.value = null
-  safe.value = null
-  icvs.value = null
+  safe.value = undefined
   userId.value = ''
-  keyK.value = null
-  shp.value = null
-  hshp.value = null
+  // @ts-expect-error
+  icvs.value = undefined; keyK.value = undefined; shp.value = undefined
+  hshp.value = ''
   store.value = ''
   resetA()
 }
@@ -202,21 +203,24 @@ watch(fileList, async (file: any) : Promise<void> => {
 })
 
 const doImport = async () => {
-  safe.value = null
+  safe.value = undefined
+  if (!fd.value.u8) return
   try {
     shp.value = await Crypt.strongHash(entryP.inp, true, true) as Uint8Array
     hshp.value = Crypt.shaS(shp.value)
-    const bin = await Crypt.decrypt(shp.value, fd.value.u8)
-    safe.value = decode(bin)
+    const bin = await Crypt.decrypt(shp.value, fd.value.u8) as Uint8Array
+    safe.value = decode(bin) as any
     userId.value = safe.value.userId
     const a = safe.value.auth as Auth
     const K = a.hshp1 === hshp.value ? a.K1 : (a.hshp2 === hshp.value ? a.K2 : null)
     try {
-      keyK.value = K === null ? null : await Crypt.decrypt(shp.value, keyFromB64(K))
+      // @ts-expect-error
+      keyK.value = K === null ? undefined : await Crypt.decrypt(shp.value, keyFromB64(K))
       // console.log(keyToB64(keyK.value))
     } catch (e: any) {
       await ui.diagDisplay($t('SFXimpsafe_ko2'))
-      keyK.value = null
+      // @ts-expect-error
+      keyK.value = undefined
       return
     }
     icvs.value = await sf.mdUserGetICVS(safe.value.userId)
@@ -275,7 +279,7 @@ const correcA = () => {
   errVA.value = false
 }
 
-const importCf = async (n) => {
+const importCf = async (n: number) => {
   if (n === 0) return
   const d = new Date()
   const llq = quarter(d)

@@ -16,7 +16,7 @@
         <div class="titre-md q-my-sm">{{ $t('HPtrustings_l', sf.devices.size) }}</div>
         <scroll-area>
         <template #default>
-          <div v-for="([id, dev], idx) in sf.devices" :key="id" :class="'row ' + dkli(idx)">
+          <div v-for="([id, dev], idx) in sf.devices" :key="id" :class="'row ' + dkli(idx as number)">
             <btn-cond class="col-1" :icon="delTrustSet.has(id) ? 'undo' : 'delete'"
               :color="delTrustSet.has(id) ? 'primary' : 'warning'"
               @ok="delTrustIt(id)"/>
@@ -39,7 +39,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -51,7 +50,7 @@ const ui = stores.ui
 const sf = stores.safe
 
 const emit = defineEmits(['close', 'done'])
-const model = defineModel()
+const model = defineModel<boolean>()
 
 const closeIt = () => {
   delTrustSet.value.clear()
@@ -61,7 +60,7 @@ const closeIt = () => {
 
 const delTrustSet = ref(new Set())
 
-const delTrustIt = (id) => {
+const delTrustIt = (id: string) => {
   if (delTrustSet.value.has(id)) delTrustSet.value.delete(id)
   else delTrustSet.value.add(id)
 }

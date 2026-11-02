@@ -244,7 +244,7 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Section "préférences" organisée avec une **sous-section par application**
   Seulement les préférences de app */
-  const mySafePrefs: Ref<Map<string, Object>> = ref(new Map())
+  const mySafePrefs: Ref<Map<string, any>> = ref(new Map())
 
   /* Section "creds": organisée avec une **sous-section par application**
   Seulement les credentials de app */
@@ -829,7 +829,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Retourne true / false / -1 */
-  const mdAliasFree = async (alias: string) => {
+  const mdAliasFree = async (alias: string) : Promise<boolean | number> => {
     const op = new MDOperation('$mdAliasFree')
     try {
       op.args['alias'] = Crypt.shaS(await Crypt.strongHash(alias, false, true))

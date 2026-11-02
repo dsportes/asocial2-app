@@ -184,7 +184,9 @@ type svcOrg = {
 }
 
 const svcOrgs: Ref<svcOrg[]> = ref([])
+// @ts-expect-error
 const curso: Ref<svcOrg> = ref()
+// @ts-expect-error
 const curcr: Ref<$Credential> = ref()
 
 const reset = (keepCur: boolean) => {
@@ -204,20 +206,23 @@ const reset = (keepCur: boolean) => {
     e.creds.push(c)
   }
   so.sort()
-  for(const k of so) svcOrgs.value.push(mx.get(k))
+  for(const k of so) {
+    const x = mx.get(k)
+    if (x) svcOrgs.value.push(x)
+  }
   if (keepCur) {
     let svo = null
     for(const x of svcOrgs.value) if (x.k === before) svo = x
     if (svo)
       setTimeout(async () => { await selectSo(svo) }, 50)
     else {
-      curso.value = null
-      curcr.value = null
+      // @ts-expect-error
+      curso.value = undefined; curcr.value = undefined
       step.value = 1
     }
   } else {
-    curso.value = null
-    curcr.value = null
+    // @ts-expect-error
+    curso.value = undefined; curcr.value = undefined
     step.value = 1
   }
 }
@@ -247,13 +252,13 @@ const reset2 = async () => {
   if (so.creds.length) selectCr(so.creds[0])
 }
 
-const selectCr = (c) => {
+const selectCr = (c: $Credential) => {
   curcr.value = c
   step.value = 3
 }
 
-const undodel = () => {
-  const c = curcr.value
+const undodel = (c: $Credential) => {
+  curcr.value = c
   c.alert = 0
   todel.value.delete(c.credId)
 }
@@ -264,7 +269,7 @@ const cftodel = () => {
   todel.value.set(c.credId, c)
 }
 
-const chgName = async (text) => {
+const chgName = async (text: string) => {
   const c = curcr.value
   console.log('New comment', text)
   if (sf.updateCredName(c.credId, text))
