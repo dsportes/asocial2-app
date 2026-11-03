@@ -3,6 +3,18 @@ import { encode } from '@msgpack/msgpack'
 import { Descriptor } from '../src-fw/descriptor'
 import { AppExc } from './base'
 
+interface Described {
+  get _descriptor () : Descriptor 
+}
+
+class FakeDoc implements Described {
+  descriptor : Descriptor
+  get _descriptor () : Descriptor { return this.descriptor }
+  constructor (d: Descriptor) {
+    this.descriptor = d
+  }
+}
+
 export type SOA = {
   svc: string
   org: string
@@ -16,13 +28,17 @@ export class ClassInfo {
   readonly docCl: string
   readonly subCl: string
   readonly descriptor: Descriptor
-  readonly clazz: Function
+  readonly clazz: Function | FakeDoc 
 
-  constructor (svc: string, docCl: string, subCl: string, descriptor: Descriptor, clazz: Function) {
-    this.svc = svc; this.docCl = docCl; this.subCl = subCl; this.descriptor = descriptor; this.clazz = clazz
+  constructor (svc: string, docCl: string, subCl: string, descriptor: Descriptor, 
+    clazz: Function | FakeDoc) {
+    this.svc = svc; this.docCl = docCl; this.subCl = subCl; this.descriptor = descriptor; 
+    this.clazz = clazz
   }
 
   newD () : $ADocument {
+    if (this.descriptor.virtual)
+      throw new AppExc(3, 'document_not_instantiable', 'Registry.getClassInfo(5)', [this.fullName])
     const f = this.clazz
     // @ts-expect-error
     return new f() as $ADocument
@@ -36,7 +52,7 @@ export class ClassInfo {
 
 export class Registry {
   // Map des classes enregistrées par svc / docCl / subCl
-  static constructors: Map<string, Function> = new Map()
+  static constructors: Map<string, Function | FakeDoc> = new Map()
 
   // Set des classes s'étant déclarées "manager"
   static managers : Set<Function> = new Set()
@@ -47,23 +63,11 @@ export class Registry {
   static getCredClassesOfRole(svc: string, role: string) {
     return Registry.credClassesbyRole.get(svc + '/' + role) }
 
-/*
-  static classInfos: Map<string, ClassInfo> = new Map()
-  static classInfosByClazz: Map<string, ClassInfo> = new Map()
-  static constructors: Map<string, Function> = new Map()
-  static topClasses: Set<string> = new Set()
-
-  static hasClass (fullName: string) : boolean {
-    return Registry.classInfos.has(fullName)
+  static registerEnum (descriptor: Descriptor) {
+    const fd = new FakeDoc(descriptor)
+    const fullName = descriptor.svc + '/' + descriptor.docCl
+    Registry.constructors.set(fullName, fd)
   }
-
-  // Depuis soit svc$docCl, soit svc$docCl_subCl
-  static hasTopClass (topCl: string) : boolean {
-    const i = topCl.indexOf('_')
-    const s = i === -1 ? topCl : topCl.substring(0, i)
-    return Registry.topClasses.has(s)
-  }
-*/
 
   static register (clazz: Function) : AppExc | undefined {
     let exc: AppExc | undefined
@@ -143,7 +147,7 @@ export class Registry {
   static isManager (svc: string, docCl: string) : boolean {
     try {
       const ci = Registry.getClassInfo(svc, docCl)
-      return Registry.managers.has(ci.clazz)
+      return  !ci.descriptor.isDoc ? false : Registry.managers.has(ci.clazz as Function)
     } catch (e) {
       return false
     }
@@ -181,9 +185,8 @@ export class Registry {
   }
 }
 
-export class $ADocument {
+export class $ADocument implements Described {
   get _descriptor () : Descriptor { return (this.constructor as any)['_descriptor'] }
-
 }
 
 export class $Document extends $ADocument{

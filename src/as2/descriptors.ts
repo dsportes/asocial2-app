@@ -3,13 +3,14 @@ import {Descriptor, collection, idx, propType } from '../src-fw/descriptor'
 Descriptor.registerService('AS2')
 
 export default {
+  AS2$Sujet : Descriptor.enum('AS2', 'Sujet', { enumCred: 'CoDir' }),
+  AS2$Auteur: Descriptor.doc('AS2', 'Auteur', { pk: ['autid'] }),
 
   AS2$Status : Descriptor.doc('AS2', 'Status', { }),
   AS2$Codir : Descriptor.doc('AS2', 'Codir', { virtual: true }),
   AS2$Redaction : Descriptor.doc('AS2', 'Redaction', { virtual: true }),
-  AS2$Section:  Descriptor.enum('AS2', 'Section', { virtual: true, enumCred: 'Redaction' }),
-  AS2$Sujet : Descriptor.enum('AS2', 'Sujet', { virtual: true, enumCred: 'CoDir' }),
-  AS2$Auteur: Descriptor.doc('AS2', 'Auteur', { pk: ['autid'] }),
+  AS2$Section:  Descriptor.enum('AS2', 'Section', { enumCred: 'Redaction' }),
+
   AS2$SubsGenerator  : Descriptor.doc('AS2', 'SubsGenerator', { }),
   AS2$Publication : Descriptor.doc('AS2', 'Publication', { pk: ['pubid'], sync: true },
     new Map<string, collection>([

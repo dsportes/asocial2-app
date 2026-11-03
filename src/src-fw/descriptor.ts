@@ -1,5 +1,6 @@
 import { Crypt } from './crypt'
 import { AppExc, CodeLabel } from './base'
+import { Registry } from './registry'
 
 export type DocId = {
   svc: string, docCl: string, subCl: string
@@ -16,7 +17,6 @@ Enumérations:
   - si enumCred est présent: singleton svc$name_org
     enumCred est le docCl du credential requis pour maj (docPk: '1')
 */
-
 
 /* Type d'index :
 HASH : string, base64 du shaS(string[])
@@ -61,13 +61,12 @@ export type DocHeader = {
   subClassBy?: string
   sync?: boolean
   embedCreds?: boolean // les credentials sont embarqués dans la propriété creds
-  virtual?: boolean
+  virtual?: boolean // document non instantiable
 }
 
 export type EnumHeader = {
   enum?: CodeLabel[]
   enumCred?: string
-  virtual?: boolean
 }
 
 export class Descriptor {
@@ -91,7 +90,9 @@ export class Descriptor {
       exc = new AppExc(3, 'unknown_service', 'Descriptor', [fullName])
     if (!Descriptor.isDocName(name))
       exc = new AppExc(3, 'enum_name_syntax', 'Descriptor', [fullName])
-    return new Descriptor(exc, svc, name, null, hdr, null, null)
+    const d = new Descriptor(exc, svc, name, null, hdr, null, null)
+    Registry.registerEnum(d)
+    return d
   }
 
   static services: Set<string> = new Set()
@@ -228,6 +229,7 @@ export class Descriptor {
     if (exc) { this.exc = exc; return }
 
     if (dhdr) {
+      this.isDoc = true
       if (dhdr.virtual) this.virtual = true
       if (dhdr.pk) this.checkProps(dhdr.pk)
       if (dhdr.nohash) this.nohash = true
@@ -241,7 +243,7 @@ export class Descriptor {
     }
     if (ehdr) {
       this.isDoc = false
-      if (ehdr.virtual) this.virtual = true
+      this.virtual = true
       if (ehdr.enum) this.enum = ehdr.enum
       if (ehdr.enumCred) this.enumCred = ehdr.enumCred
     }

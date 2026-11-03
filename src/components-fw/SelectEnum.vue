@@ -12,26 +12,30 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, onMounted, watch } from 'vue'
+import { ref, Ref, onMounted, watch } from 'vue'
 import { DocEnums } from '../src-fw/operation'
-import { $t, hasMessage } from '../src-fw/util'
+import { hasMessage } from '../src-fw/util'
+import { CodeLabel } from '../src-fw/base'
 
-const props = defineProps({
-  title: String,
-  disable: Boolean,
-  svc: String,
-  org: String,
-  enum: String
-})
+const props = defineProps<{
+  title: string,
+  disable?: boolean,
+  svc: string,
+  org: string,
+  enum: string
+}>()
 
-const model = defineModel()
+const model = defineModel<string>()
 
-const modelloc = ref()
-const options = ref([])
-const lst = ref([])
+type Tlst = { value: string, label: string, label2: string }
+
+// @ts-expect-error
+const modelloc: Ref<Tlst> = ref()
+const options: Ref<Tlst[]> = ref([])
+const lst: Ref<Tlst[]>= ref([])
 
 const emit = defineEmits(['select'])
+
 watch(() => modelloc.value, (t) => {
   if (model.value !== t.value) {
     model.value = t.value
@@ -39,23 +43,22 @@ watch(() => modelloc.value, (t) => {
   }
 })
 
-function filterFn(val, update) {
+function filterFn(val: string, update: Function) {
   update(() => {
     options.value = lst.value.filter(v =>
       v.label2.includes(val.toLowerCase()))
   })
 }
 
-const edv = (e) => {
-  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0])
-  const lbl2 = (lbl1 || e[1]).toLowerCase()
-  const t = { value: e[0], label: lbl1 || e[1], label2: lbl2 }
-  return t
+const edv = ([c, l]: CodeLabel) : Tlst => {
+  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + c)
+  const lbl2 = (lbl1 || l).toLowerCase()
+  return { value: c, label: lbl1 || l, label2: lbl2 }
 }
 
 const load = async () => {
-  const l = []
-  const lx = await DocEnums.get(props.svc, props.enum, props.org)
+  const l: Tlst[] = []
+  const lx: CodeLabel[] = await DocEnums.get(props.svc, props.enum, props.org)
   for(const e of lx) l.push(edv(e))
   l.sort((a,b) => a.label > b.label ? 1 : (a.label < b.label ? -1 : 0))
   lst.value = l
@@ -76,27 +79,8 @@ const initv = () => {
 watch(() => [props.svc, props.org, props.enum], async () => {
   await load()
 })
+
 onMounted(async () => { await load()})
-
-/*
-const shl = computed(() => {
-  const l = []
-  const s = sel.value.toLowerCase()
-  for (const x of lst.value)
-    if (!sel.value || x[2].indexOf(s) !== -1) l.push(x)
-  return l
-})
-
-const clic = (t) => {
-  model.value = t[0]
-  menu.value = false
-  emit('select', t)
-}
-
-const cr = () => {
-  if (shl.value.length === 1) clic(shl.value[0])
-}
-  */
 
 </script>
 

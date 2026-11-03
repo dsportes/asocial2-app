@@ -34,6 +34,7 @@ export class AS2$Redaction extends $Document {
 }
 if (!exc) { n++; exc = Registry.register(AS2$Redaction) }
 
+/*
 export class AS2$Section extends $Document {
   static _descriptor = d.AS2$Section}
 if (!exc) { n++; exc = Registry.register(AS2$Section) }
@@ -41,6 +42,7 @@ if (!exc) { n++; exc = Registry.register(AS2$Section) }
 export class AS2$Sujet extends $Document {
   static _descriptor = d.AS2$Sujet}
 if (!exc) { n++; exc = Registry.register(AS2$Sujet) }
+*/
 
 /*********************************************************************************/
 export class AS2$Auteur extends $Document {

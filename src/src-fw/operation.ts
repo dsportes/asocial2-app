@@ -57,6 +57,7 @@ export class DocEnums {
   */
   static async get (svc: string, enumName: string, org: string) : Promise<CodeLabel[]> {
     const dd = Registry.getClassInfo(svc, enumName).descriptor
+    if (dd.isDoc) return []
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
     const cred = dd.enumCred || ''
@@ -94,7 +95,7 @@ export class DocEnums {
     : Promise<boolean> {
     const sf = stores.safe
     const dd = Registry.getClassInfo(svc, enumName).descriptor
-    if (dd.enum && dd.enum.length) return false
+    if (dd.isDoc || (dd.enum && dd.enum.length)) return false
     // enum externe -
     const cred = dd.enumCred || ''
     const n = svc + '/' + dd.docCl + (cred ? '/' + org : '')

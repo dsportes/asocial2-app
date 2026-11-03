@@ -30,33 +30,34 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, onMounted, watch, computed } from 'vue'
 import { DocEnums } from '../src-fw/operation'
 import { hasMessage, eqNumberA } from '../src-fw/util'
-import BtnCond from '../components-fw/BtnCond.vue'
+import { CodeLabel } from '../src-fw/base'
 
 const MAXV = 3
 
-const props = defineProps({
-  title: String,
-  disable: Boolean,
-  svc: String,
-  org: String,
-  enum: String,
-  maxValues: Number
-})
+const props = defineProps<{
+  title: string,
+  disable?: boolean,
+  svc: string,
+  org: string,
+  enum: string,
+  maxValues: number
+}>()
 
-const model = defineModel()
+const model = defineModel<string[]>()
 
-const modelloc = ref([])
-const options = ref([])
-const mopts: Ref<Map<string, any>> = ref()
-const lst = ref([])
+type Tlst = { value: string, label: string, label2: string }
+
+const modelloc: Ref<Tlst[]> = ref([])
+const options: Ref<Tlst[]> = ref([])
+const mopts: Ref<Map<string, Tlst>> = ref(new Map())
+const lst: Ref<Tlst[]> = ref([])
 const initM = ref()
 
 const mlst = computed(() => {
-  const l = []
+  const l: string[] = []
   for(const x of modelloc.value) l.push(x.value)
   return l
 })
@@ -72,24 +73,23 @@ const doOk = () => {
   emit('ok', mlst.value)
 }
 
-function filterFn(val, update) {
+function filterFn(val: string, update: Function) {
   update(() => {
     options.value = lst.value.filter(v =>
       v.label2.includes(val.toLowerCase()))
   })
 }
 
-const edv = (e) => {
-  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + e[0])
-  const lbl2 = (lbl1 || e[1]).toLowerCase()
-  const t = { value: e[0], label: lbl1 || e[1], label2: lbl2 }
-  return t
+const edv = ([c, l]: CodeLabel) : Tlst => {
+  const lbl1 = hasMessage('ENUM_' + props.svc + '$' + props.enum + '_' + c)
+  const lbl2 = (lbl1 || l).toLowerCase()
+  return { value: c, label: lbl1 || l, label2: lbl2 }
 }
 
 const load = async () => {
-  const l = []
+  const l: Tlst[] = []
   mopts.value = new Map()
-  const lx = await DocEnums.get(props.svc, props.enum, props.org)
+  const lx: CodeLabel[] = await DocEnums.get(props.svc, props.enum, props.org)
   for(const e of lx) {
     const t = edv(e)
     l.push(t)
@@ -101,8 +101,10 @@ const load = async () => {
   if (model.value) {
     const mv = props.maxValues || MAXV
     const mx = model.value.length < mv ?  model.value.length : mv
-    for(let i = 0; i < mx; i++)
-      modelloc.value.push(mopts.value.get(model.value[i]))
+    for(let i = 0; i < mx; i++) {
+      const x = mopts.value.get(model.value[i])
+      if (x) modelloc.value.push(x)
+    }
     initM.value = [...model.value]
   } else initM.value = []
 }
