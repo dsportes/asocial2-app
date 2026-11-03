@@ -7,15 +7,13 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-// import { computed } from 'vue'
 import stores from '../stores/all'
 
 const fst = stores.form
-const props = defineProps({
-  name: String,
-  label: String
-})
+const props = defineProps<{
+  name: string,
+  label: string
+}>()
 
 </script>
 

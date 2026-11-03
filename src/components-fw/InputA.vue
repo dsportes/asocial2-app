@@ -1,4 +1,4 @@
-<!-- Input stanadrdisé A 
+<!-- Input standardisé A 
 Commentaires dans Input-B.
 -->
 <template>
@@ -20,7 +20,7 @@ Commentaires dans Input-B.
         @ok="ui.visibility = !ui.visibility" color="none"/>
       <btn-cond v-if="!simple"
         round size="md" icon="close" @ok="model = ''"
-        :disable="disable || model.length === 0" color="none"/>
+        :disable="disable || !model || model.length === 0" color="none"/>
       <btn-cond v-if="!noundo && hasInitVal && !disable && chg"
         size="md" icon="undo" color="none" round 
         @ok="undo" />
@@ -52,25 +52,26 @@ import stores from '../stores/all'
 import { $t, hasMessage } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
+import { S } from 'vue-router/dist/options-B1Pk0SIa.mjs'
 
 const ui = stores.ui
 const config = stores.config
 
-const model = defineModel() // Dans le script accessible par model.value
+const model = defineModel<string>() // Dans le script accessible par model.value
 const emit = defineEmits(['validate', 'change'])
 
-const props = defineProps({
-  simple: Boolean,
-  noundo: Boolean,
-  size: String, // obligatoire
-  prefix: String, // obligatoire
-  initval: String,
-  disable: Boolean,
+const props = defineProps<{
+  simple?: boolean,
+  noundo?: boolean,
+  size: string, // obligatoire
+  prefix: string, // obligatoire
+  initval?: string,
+  disable?: boolean,
   noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
-  list: Array,
-  fncheck: Function,
-  ctx: Object
-})
+  list?: string[],
+  fncheck?: Function,
+  ctx?: any
+}>()
 
 const star = config.K.phrasestar[props.size] || 0
 
@@ -97,16 +98,17 @@ const bubble = computed(() => {
 })
 
 const mayStar = computed(() => 
-  star && !props.disable && model.value.length > star && model.value.endsWith('*'))
+  star && !props.disable && model.value && model.value.length > star && model.value.endsWith('*'))
 
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
   return hasMessage(e) ? $t(e) : ''
 })
 
-const fill = (v) => {
-  const x = v.substring(0, v.length - 1)
-  let s = ''; while (s.length < sz.value[1]) s += x
+const fill = (v: string | undefined) => {
+  const vx = v || ''
+  const x = vx.substring(0, vx.length - 1)
+  let s = ''; while (s.length < sz.value[1]) s += vx
   return s
 }
 

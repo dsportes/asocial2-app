@@ -9,6 +9,11 @@ export type SOA = {
 export type CodeLabel = [string, string]
 
 export type LabelSvc = { svc: string, label: string }
+
+export type StartEnd = { start: number, end: number, err?: number }
+
+export type InputE= { inp: string, err: string }
+
 export class AppExc {
   /*
   codes: serveur

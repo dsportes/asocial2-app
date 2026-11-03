@@ -24,7 +24,7 @@
         <div class="row">
           <div class="col-10 font-mono fs-md mh text-italic">
             {{cred.props && cred.props.name ?  cred.props.name : '?'}}</div>
-          <div class="col-2 ellipsis q-pr-sm fs-sm font-mono">{{cred.credPk}}</div>
+          <div class="col-2 ellipsis q-pr-sm fs-sm font-mono">{{cred.credId}}</div>
         </div>
         <div v-if="comment && cred.name" class="font-mono text-bold">{{ cred.name }}</div>
       </div>
@@ -36,10 +36,10 @@ import BtnBubbletxt from '../components-fw/BtnBubbletxt.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { $Credential } from '../src-fw/documents'
 
-const props = defineProps({
+const props = defineProps<{
   cred: $Credential,
   comment: Boolean
-})
+}>()
 
 const emit = defineEmits(['undo', 'select'])
 

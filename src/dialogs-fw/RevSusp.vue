@@ -25,7 +25,7 @@
       {{ $t('CODIRcred_susp' + (curcred.props.susp ? '3' : '2')) }}
     </div>
     <date-time2 :title="$t('CODIRcred_susp1')" v-model="dsusp"/>
-    <div v-if="dsusp.length === 2" class="row items-center q-gutter-sm justify-between">
+    <div v-if="!dsusp.err" class="row items-center q-gutter-sm justify-between">
       <div class="col text-italic q-my-sm">{{ dsuspL() }}</div>
       <btn-cond class="col-auto" confirm
         :label="$t('iconfirm')" color="warning"
@@ -37,11 +37,9 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch, computed } from 'vue'
-// @ts-ignore
+import { ref, Ref, watch, computed } from 'vue'
 import { date } from 'quasar'
-
+import { StartEnd } from '../src-fw/base'
 import BtnCond from '../components-fw/BtnCond.vue'
 import DateTime from '../components-fw/DateTime.vue'
 import DateTime2 from '../components-fw/DateTime2.vue'
@@ -66,7 +64,7 @@ const tab = ref('suspc')
 const ddel = ref()
 const ddelN = computed(() =>
   ddel.value ? Math.floor(date.extractDate(ddel.value, 'YYYY-MM-DD HH:mm').getTime() / 60000) : 0)
-const dsusp = ref([0, 0])
+const dsusp: Ref<StartEnd> = ref({start: 0, end: 0})
 const dsuspL = () => props.curcred.editSusp(dsusp.value)
 const dsuspL2 = () => props.curcred.editSusp(undefined, ddelN.value)
 
@@ -80,7 +78,7 @@ watch(tab, (v) => {
   if (v === 'delc') {
     ddel.value = date.formatDate(Date.now(), 'YYYY-MM-DD HH:mm')
   } else {
-    dsusp.value = [0, 0]
+    dsusp.value = { start: 0, end: 0 }
   }
 })
 
@@ -95,7 +93,7 @@ const okSusp = async (t: number) => {
   const op = new UpdateCredentialSusp(props.svc, props.org)
   const status = await op.run(cc, lprops, props.cred)
 
-  dsusp.value = [0, 0]
+  dsusp.value = { start: 0, end: 0 }
   emit('done')
 }
 

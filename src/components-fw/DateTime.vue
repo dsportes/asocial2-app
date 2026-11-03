@@ -38,20 +38,19 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, watch } from 'vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import { $t } from '../src-fw/util'
 
-const model = defineModel()
+const model = defineModel<string>()
 const emit = defineEmits(['ok']) 
-const props = defineProps({
-  checkfn: Function,
-  label: String,
-  noOkBtn: Boolean,
-  disable: Boolean,
-  undoFn: Function
-})
+const props = defineProps<{
+  checkfn?: Function,
+  label?: string,
+  noOkBtn?: boolean,
+  disable?: boolean,
+  undoFn?: Function
+}>()
 const diag = ref('')
 
 const valid = ref(model.value !== '')

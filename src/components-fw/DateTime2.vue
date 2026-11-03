@@ -17,47 +17,49 @@
   
   <div class="row col-auto justify-around">
     <date-time v-model="m1" :label="$t('startdt')" no-ok-btn class="q-mx-sm col-auto"
-      :undoFn="next.start !== m1 ? undoM1 : null" :disable="disable"/>
+      :undoFn="chgM1 ? undoM1 : undefined" :disable="disable"/>
     <date-time v-model="m2" :label="$t('enddt')" no-ok-btn class="q-mx-sm col-auto"
-      :undoFn="next.end !== m2 ? undoM2 : null" :disable="disable"/>
+      :undoFn="chgM2 ? undoM2 : undefined" :disable="disable"/>
   </div>
 </div>
 </template>
 
 <script setup lang="ts" vapor>
-export type startEnd = {
-  start: number
-  end: number
-}
-
-// @ts-ignore
 import { ref, Ref, watch, reactive, computed } from 'vue'
-// @ts-ignore
+
 import { date } from 'quasar'
+import { StartEnd } from '../src-fw/base'
 import BtnCond from '../components-fw/BtnCond.vue'
 import DateTime from '../components-fw/DateTime.vue'
 import { $t } from '../src-fw/util'
 
-const model: Ref<startEnd> = defineModel()
+const model = defineModel<StartEnd>()
 const emit = defineEmits(['ok']) 
-const props = defineProps({
-  checkfn: Function,
-  title: String,
-  disable: Boolean
-})
+const props = defineProps<{
+  checkfn?: Function,
+  title?: string,
+  disable?: boolean
+}>()
+
+const d2s = (d: number) : string => date.formatDate(d * 60000, 'YYYY-MM-DD HH:mm')
+
 const diag = ref('')
 const m1 = ref('')
 const m2 = ref('')
+
 const m1i = ref(0)
 const m2i = ref(0)
-const next = reactive({
-  start: model.value.start,
-  end: model.value.end
-})
+const next: StartEnd = reactive({
+  start: model.value ? model.value.start : 0,
+  end: model.value ? model.value.end : 0
+} as StartEnd )
+
+const chgM1 = computed(() => d2s(next.start) !== m1.value)
+const chgM2 = computed(() => d2s(next.end) !== m2.value)
 
 const init = () => {
-  m1i.value = model.value[0]
-  m2i.value = model.value[1]
+  m1i.value = model.value ? model.value.start : 0
+  m2i.value = model.value ? model.value.end : 0
   m1.value = m1i.value ? date.formatDate(m1i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
   m2.value = m2i.value ? date.formatDate(m2i.value * 60000, 'YYYY-MM-DD HH:mm') : ''
   check()
@@ -73,9 +75,7 @@ const undoM2 = () => {
 
 watch(() => [m1.value, m2.value], () => { 
   check()
-  /* console.log('check', 
-    next.start ? date.formatDate(next.start, 'YYYY-MM-DD HH:mm') : 0,
-    next.end ? date.formatDate(next.end, 'YYYY-MM-DD HH:mm') : 0) */
+  /* console.log('check', next.start ? d2s(next.start) : '', next.end ? d2s(next.end) : '') */
 })
 
 const check = () => {
@@ -90,8 +90,8 @@ const check = () => {
   else if (next.start && next.end && next.start === next.end)
     diag.value = $t('startEnd2')
   else diag.value = props.checkfn ? props.checkfn(next) : ''
-  const x = [next.start, next.end]
-  if (diag.value) x.push(1)
+  const x = { start: next.start, end: next.end } as StartEnd
+  if (diag.value) x.err = 1
   model.value = x
 }
 

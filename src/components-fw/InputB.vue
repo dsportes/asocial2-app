@@ -1,4 +1,4 @@
-<!-- Input stanadrdisé B - voir aussi InputA
+<!-- Input standardisé B - voir aussi InputA
 InputA et InputB étendent la capacité du <q-input> avec:
 - un contrôle syntaxique paramétrable.
 - l'appel d'une fonction de validation.
@@ -58,7 +58,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
 <template>
 <div class="row">
   <btn-bubble class="col-auto q-mr-sm self-start" :text="$t(bubble)"/>
-  <q-input class="col" v-model="model.inp" counter dense
+  <q-input v-if="model" class="col" v-model="model.inp" counter dense
     :disable="disable"
     filled
     input-class="font-mono"
@@ -80,9 +80,9 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
       <btn-cond v-if="!nv" size="md" label="OK"
         :disable="disable || model.err !== ''" padding="0 xs"
         @ok="emit('validate', true)" />
-      <!--btn-cond v-if="mayStar"
+      <btn-cond v-if="mayStar"
         size="md" icon="star" color="warning" round
-        @ok="model.inp = fill(model.inp)"/-->
+        @ok="model.inp = fill(model.inp)"/>
       <q-btn v-if="list && list.length" size="lg" icon="arrow_drop_down"
         dense padding="none" color="primary">
         <q-menu auto-close>
@@ -103,6 +103,7 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
 // @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
+import { InputE } from '../src-fw/base'
 import { $t, hasMessage } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
@@ -110,18 +111,18 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 const ui = stores.ui
 const config = stores.config
 
-const model = defineModel() // Dans le script accessible par model.value
+const model = defineModel<InputE>() // Dans le script accessible par model.value
 const emit = defineEmits(['validate', 'change'])
 
-const props = defineProps({
-  size: String, // obligatoire
-  prefix: String, // obligatoire
-  initval: String,
-  disable: Boolean,
-  noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
-  list: Array,
-  fncheck: Function
-})
+const props = defineProps<{
+  size: string, // obligatoire
+  prefix: string, // obligatoire
+  initval?: string,
+  disable?: boolean,
+  noval: boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
+  list?: string[],
+  fncheck?: Function
+}>()
 
 const star = config.K.phrasestar[props.size] || 0
 
@@ -146,14 +147,14 @@ const bubble = computed(() => {
 })
 
 const mayStar = computed(() =>
-  star && !props.disable && model.value.inp.length > star && model.value.inp.endsWith('*'))
+  star && !props.disable && model.value && model.value.inp.length > star && model.value.inp.endsWith('*'))
 
 const ph = computed(() => {
   const e = (props.prefix || '') + '_ph'
   return hasMessage(e) ? $t(e) : ''
 })
 
-const fill = (v) => {
+const fill = (v: string) => {
   const x = v.substring(0, v.length - 1)
   let s = ''; while (s.length < sz.value[1]) s += x
   return s
@@ -161,15 +162,15 @@ const fill = (v) => {
 
 const hasInitVal = computed(() => props.initval && props.initval.length )
 
-if (hasInitVal.value) model.value.inp = props.initval
+if (hasInitVal.value && props.initval && model.value) model.value.inp = props.initval
 
-const chg = computed(() => !props.disable && hasInitVal.value && props.initval !== model.value.inp)
+const chg = computed(() => model.value && !props.disable && hasInitVal.value && props.initval !== model.value.inp)
 const hint = computed(() =>
-  $t('minmax', sz.value) + (!model.value.err && !nv.value ? $t('pressret') : ''))
+  $t('minmax', sz.value) + (model.value && !model.value.err && !nv.value ? $t('pressret') : ''))
 const undo = () => {
-  if (props.initval) model.value = props.initVal }
+  if (model.value && props.initval) model.value.inp = props.initval }
 
-const xe = (inp) => {
+const xe = (inp: string) => {
   if (reg && inp.length && !reg.test(inp)) return 'badform'
   if (inp.length < sz.value[0]) return 'tooshort'
   if (inp.length > sz.value[1]) return 'toolong'
@@ -177,24 +178,25 @@ const xe = (inp) => {
   return props.fncheck ?  props.fncheck(inp) : ''
 }
 
-watch(() => model.value.inp, (v) => {
+/*
+watch(() => model.value.inp, (v: string) => {
   model.value.err = xe(model.value.inp)
   if (model.value.err === '' && !props.disable) emit('change', true)
 })
 model.value.err = xe(model.value.inp)
+*/
 
 const val = () => {
-  if (!nv.value && !props.disable && (mayStar.value || model.value.err === '')) {
-    if (mayStar.value) {
-      const s = fill(model.value.inp)
-      const e = xe(s)
-      if (e === '') {
-        model.value.inp = s
-        model.value.err = ''
-        emit ('validate', true)
-      }
-    } else  emit ('validate', true)
-  }
+  if (!model.value || nv.value || props.disable || model.value.err !== '') return
+  if (mayStar.value) {
+    const s = fill(model.value.inp)
+    const e = xe(s)
+    if (e === '') {
+      model.value.inp = s
+      model.value.err = ''
+      emit ('validate', true)
+    }
+  } else  emit ('validate', true)
 }
 
 </script>

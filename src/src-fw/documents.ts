@@ -3,6 +3,7 @@ import { Crypt } from '../src-fw/crypt'
 import { Registry, $Document, SOA } from '../src-fw//registry'
 
 import { FormType } from '../src-fw/descriptor'
+import { StartEnd } from '../src-fw/base'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { $Perimeter } from '../src-fw/subscription'
 import stores from '../stores/all'
@@ -76,15 +77,15 @@ export abstract class BasicCred {
   docCl: string = ''
   docPk: string = ''
 
-  editSusp (susp?: number[], limit?: number) : string {
+  editSusp (susp?: StartEnd, limit?: number) : string {
     const su = susp || this.props.susp
     const li = limit || this.props.limit || 0
     const b = li !== 0 && li < Math.floor(Date.now() / 60000)
     const s1 = li ? $t('SUSPcred_' + (b ? '6' : '5'), [dhcool(li * 60000)]) : ''
     if (b) return s1
     if (!su) return s1 + $t('SUSPcred_0')
-    const s = su[0] ? dhcool(su[0] * 60000) : ''
-    const e = su[1] ? dhcool(su[1] * 60000) : ''
+    const s = su[0] ? dhcool(su.start * 60000) : ''
+    const e = su[1] ? dhcool(su.end * 60000) : ''
     if (su[0] === 0)
       return s1 + (!e ? $t('SUSPcred_4') : $t('SUSPcred_2', [e]))
     return s1 + (!e ? $t('SUSPcred_1', [s]) : $t('SUSPcred_3', [s, e]))
