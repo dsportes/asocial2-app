@@ -1,5 +1,5 @@
 import { Crypt } from './crypt'
-import { AppExc, CodeLabel } from './base'
+import { AppExc, type CodeLabel } from './base'
 import { Registry } from './registry'
 
 export type DocId = {
@@ -173,7 +173,7 @@ export class Descriptor {
   getIdx (src: any, name: string) : any {
     const i = this.indexes ? this.indexes.get(name) : undefined
     if (!i) return null
-    const key0 = i.key ? i.key[0] : name
+    const key0 = (i.key ? i.key[0] : name) as string
     const v0 = src[key0]
     switch (i.type) {
       case propType.STRING : { return v0 || '' }

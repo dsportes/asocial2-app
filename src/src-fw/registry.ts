@@ -14,14 +14,6 @@ class FakeDoc implements Described {
   }
 }
 
-export type SOA = {
-  svc: string
-  org: string
-  svcLabel?: string
-  site?: string
-  admin? : boolean
-}
-
 export class ClassInfo {
   readonly svc: string
   readonly docCl: string

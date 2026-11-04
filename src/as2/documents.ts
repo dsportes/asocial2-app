@@ -1,6 +1,7 @@
 import d from './descriptors'
 import { AppExc } from '../src-fw/base'
-import { Registry, $Document, SOA } from '../src-fw/registry'
+import { Registry, $Document } from '../src-fw/registry'
+import { SOA } from '../src-fw/base'
 
 import stores from '../stores/all'
 import { Operation } from '../src-fw/operation'
