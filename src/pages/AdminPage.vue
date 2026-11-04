@@ -19,7 +19,7 @@
         <div class="col-8 font-mono">
           <div v-if="!adp.mdAdmin" class="font-mono">{{ url }}</div>
           <line-edit v-else width="sm" :text="url" :ctx="{site: site}"
-            @change="editSite"/>
+            datasize="site" @change="editSite"/>
         </div>
       </div>
     </scroll-area>
@@ -131,7 +131,7 @@
       <div class="ellipsis">{{$t('CREDON_' + m.docCl)}}</div>
       <div class="row">
         <div v-if="sf.mySafeCreds.has(m.credId)" class="col-auto text-bold font-mono q-mr-sm">[{{ $t('me') }}]</div>
-        <line-edit class="col" width="sm" :text="m.props.name || '?'"
+        <line-edit class="col" width="sm" :text="m.props.name || '?'" datasize="pseudo"
           :ctx="{ m: m }" @change="chgName"/>
       </div>
       <div class="row q-gutter-sm no-wrap">
@@ -150,8 +150,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-
-// @ts-ignore
 import { ref, Ref, computed, reactive, onMounted, watch  } from 'vue'
 import stores from '../stores/all'
 import { LabelSvc } from '../src-fw/base'

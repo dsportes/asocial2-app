@@ -345,8 +345,6 @@ export const useUiStore = defineStore('ui', () => {
   }
 })
 
-// @ts-ignore
 if (import.meta.hot) {
-  // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useUiStore, import.meta.hot));
 }

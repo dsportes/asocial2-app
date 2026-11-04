@@ -1,6 +1,4 @@
-// @ts-ignore
 import { defineStore } from '#q-app'
-// @ts-ignore
 import { createPinia } from 'pinia'
 
 /*
@@ -8,7 +6,6 @@ import { createPinia } from 'pinia'
  * extend the `PiniaCustomProperties` interface.
  * @see https://pinia.vuejs.org/core-concepts/plugins.html#typing-new-store-properties
  */
-// @ts-ignore
 declare module 'pinia' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface PiniaCustomProperties {

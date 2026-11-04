@@ -1,7 +1,7 @@
 <!-- Affichage d'une ligne "liste de credential"-->
 <template>
 <div>
-  <div class="row items-center q-gutter-xs">
+  <div v-if="model" class="row items-center q-gutter-xs">
     <q-icon :name="ic1" size="24px" class="col-auto"/>
     <btn-cond v-if="!restricted" class="col-auto" icon="content_copy" color="warning"
       @ok="emit('duplicate', model)"/>
@@ -22,13 +22,12 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, watch, computed } from 'vue'
-import { $t } from '../src-fw/util'
+import { $t } from '../src/src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import LineEdit from '../components-fw/LineEdit.vue'
 
-type ListCreds = {
+type LcRow = {
   profId: string
   name: string
   nameB: string // 
@@ -38,23 +37,24 @@ type ListCreds = {
   crIdsB: Set<string> // Set des ids des credentials avant changement
 }
 
-const model = defineModel()
-const props = defineProps({
-  lcmap: Object, // Map<id, ListCreds
-  restricted: Boolean // pas de duplicate / delete / undo
-})
+const model = defineModel<LcRow>()
+const props = defineProps<{
+  lcmap: Map<string, LcRow>
+  restricted?: boolean // pas de duplicate / delete / undo
+}>()
 const emit = defineEmits(['namechange', 'delete', 'undo', 'duplicate'])
 
-const ic1 = computed(() => model.value.ex && model.exB ? 'equal' : (model.ex && !model.exB ? 'close' : 'add'))
+const ic1 = computed(() => model.value && model.value.ex && model.value.exB ? 'equal' :
+ (model.value && model.value.ex && !model.value.exB ? 'close' : 'add'))
 
-const cl = (n) => 'font-mono q-px-xs ' + (n === 0 ? 'bg-negative text-white text-bold' : '')
+const cl = (n: number) => 'font-mono q-px-xs ' + (n === 0 ? 'bg-negative text-white text-bold' : '')
 
 const edname = ref('')
 const dup = ref('')
 const menu = ref(false)
 watch(menu, (after, before) => {
   if (after && !before) { // ouverture
-    edname.value = model.value.name
+    edname.value = model.value ? model.value.name : ''
   }
 })
 

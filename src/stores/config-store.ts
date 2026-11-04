@@ -21,13 +21,13 @@ export const localeOptions: LocaleOption[] = [
   { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', props: langFr }
 ]
   
-
 type service = {
   url: string
   api: number
 }
 
 export const useConfigStore = defineStore('config', () => {
+  let i18n: any
   const location: any = ref(null) // le href
 
   // Gestion des langues ***************************************************
@@ -36,6 +36,7 @@ export const useConfigStore = defineStore('config', () => {
   const setLocale = (loc: string) => { 
     const x = localeMap.value.get(loc)
     if (x) {
+      i18n.locale.value = loc
       if (x.props) Lang.set(x.props)
       locale.value = loc
     }
@@ -48,6 +49,7 @@ export const useConfigStore = defineStore('config', () => {
   const K = ref()
 
   const initK = () => {
+    i18n = useI18n()
     location.value = window.location['href']
     K.value = { ...AppK}
     const custom = JSON.parse(customR)
@@ -67,7 +69,7 @@ export const useConfigStore = defineStore('config', () => {
     Lang.set(localeOptions[0].props)
     localeOptions.forEach(l => { localeMap.value.set(l.value, l) })
     locale.value = localeOptions[0].value
-    useI18n().locale.value = locale.value
+    i18n.locale.value = locale.value
     console.log(Array.from(localeMap.value.values())[0]['label'])
   }
 
@@ -83,8 +85,6 @@ Pinia supports Hot Module replacement so you can edit your stores
 and interact with them directly in your app without reloading the page, 
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
 */
-// @ts-ignore
 if (import.meta.hot) {
-  // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useConfigStore, import.meta.hot));
 }

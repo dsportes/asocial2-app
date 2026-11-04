@@ -18,7 +18,7 @@ import { hasMessage } from '../src-fw/util'
 import { CodeLabel } from '../src-fw/base'
 
 const props = defineProps<{
-  title: string,
+  title?: string,
   disable?: boolean,
   svc: string,
   org: string,

@@ -17,8 +17,8 @@ const lst: Ref<string[]> = computed(() => session.orgs.lst)
 
 const local = defineModel<string>('')
 const props = defineProps<{
-  reset: number,
-  initval: string, // Valeur initiale, si '?' force à ''
+  reset?: number,
+  initval?: string, // Valeur initiale, si '?' force à ''
   /* objet permettant à l'appelant de situer l'instance du composant 
   ayant émis l'événement. */
   ctx?: any

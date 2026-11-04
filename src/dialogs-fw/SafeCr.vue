@@ -89,7 +89,6 @@ Events: close done
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, reactive, watch, computed } from 'vue'
 
 import stores from '../stores/all'

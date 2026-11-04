@@ -1270,8 +1270,6 @@ export const useSafeStore = defineStore('safe', () => {
   }
 })
 
-// @ts-ignore
 if (import.meta.hot) {
-  // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useSafeStore, import.meta.hot));
 }

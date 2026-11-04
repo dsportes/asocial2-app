@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
+
 import { ref, computed } from 'vue'
 
 import stores from '../stores/all'

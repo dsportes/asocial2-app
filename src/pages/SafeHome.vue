@@ -21,10 +21,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch } from 'vue'
-// @ts-ignore
-import { date } from 'quasar'
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'
 
@@ -33,8 +29,6 @@ import ModeNet from '../components-fw/ModeNet.vue'
 import ModeLocal from '../components-fw/ModeLocal.vue'
 import LoginCreate from '../components-fw/LoginCreate.vue'
 import SelectOptions from '../components-fw/SelectOptions.vue'
-
-// import DateTime2 from '../components-fw/DateTime2.vue'
 
 const ui = stores.ui
 const session = stores.session

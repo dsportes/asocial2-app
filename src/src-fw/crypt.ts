@@ -1,9 +1,5 @@
 import { concat } from './util'
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
 import { sha256 } from 'js-sha256'
-// @ts-ignore
 // import rsa from 'jsrsasign'
 import { KJUR } from './dsportes_jsrsasign.mjs'
 import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
@@ -51,7 +47,7 @@ export function hexToArrayBuffer (hex: string) : ArrayBuffer {
 }
 
 export function u8ToHex (u8: Uint8Array) : string{
-  // @ts-ignore
+  // @ts-expect-error
   return arrayBuffertohex(u8.buffer)
 }
 

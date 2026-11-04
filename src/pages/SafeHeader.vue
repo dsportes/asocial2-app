@@ -29,9 +29,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-// import { useI18n } from 'vue-i18n'
-// @ts-ignore
 import { computed } from 'vue'
 
 import stores from '../stores/all'
@@ -40,9 +37,8 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import { $t } from '../src-fw/util'
 
 import SafeTools from '../components-fw/SafeTools.vue'
-// @ts-ignore
+
 import anonymous from '../assets/anonymous-w.svg'
-// @ts-ignore
 import flowers from '../assets/flowers.png'
 
 const session = stores.session

@@ -39,7 +39,7 @@ type Categ = {
 }
 
 const props = defineProps<{
-  disable: boolean,
+  disable?: boolean,
   title: string,
   allow?: Set<string> // fac : set des FormTypes autorisés
 }>()

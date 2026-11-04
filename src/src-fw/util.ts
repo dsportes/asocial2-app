@@ -1,10 +1,6 @@
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-// @ts-ignore
-import { keyToB64, keyFromB64, toUrl, fromUrl } from '../src-fw/b64'
+import { keyFromB64 } from '../src-fw/b64'
 import stores from '../stores/all'
 
-// @ts-ignore
 import { gzip, ungzip } from './pako.mjs'
 
 // const stores = null

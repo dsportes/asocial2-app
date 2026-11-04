@@ -31,8 +31,8 @@ import { SOA } from '../src-fw/base'
 
 const props = defineProps<{
   restricted?: boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
-  initorg: string, // Valeur initiale, si '?' force à ''
-  initsvc: string, // Valeur initiale, si '?' force à ''
+  initorg?: string, // Valeur initiale, si '?' force à ''
+  initsvc?: string, // Valeur initiale, si '?' force à ''
   /* objet permettant à l'appelant de situer l'instance du composant 
   ayant émis l'événement.
   si ctx.excl est fourni, liste des services NON sélectionnables.

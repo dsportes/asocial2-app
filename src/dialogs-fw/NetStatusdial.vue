@@ -30,9 +30,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref } from 'vue'
-
 import stores from '../stores/all'
 import { $t, sleep } from '../src-fw/util'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'

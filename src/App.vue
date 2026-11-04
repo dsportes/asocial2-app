@@ -94,12 +94,8 @@
 </template>
 
 <script setup lang="ts" vapor>
-
-// @ts-ignore
 import { ref, watchEffect, onMounted } from 'vue'
-// @ts-ignore
 import { useI18n } from 'vue-i18n'
-// @ts-ignore
 import { useQuasar } from 'quasar'
 
 import stores from './stores/all'
@@ -147,8 +143,18 @@ import { FWreport } from './src-fw/fwdocuments'
 
 const hdrPages = ref(new Set(['test']))
 
+const i18n = useI18n()
+const $t = i18n.t // Pour rendre accessible $t dans le code
+const $q = useQuasar()
+set$t($t, i18n)
+
+const ui = stores.ui
+ui.set$t$q($t, $q)
+
 const config = stores.config
 config.initK()
+
+const session = stores.session
 
 {
   let exc = AS2report()
@@ -160,15 +166,6 @@ config.initK()
     alert(exc.toString())
   }
 }
-
-const session = stores.session
-const ui = stores.ui
-
-const i18n = useI18n()
-const $t = i18n.t // Pour rendre accessible $t dans le code
-const $q = useQuasar()
-set$t($t, i18n)
-ui.set$t$q($t, $q)
 
 onMounted(async () => { // Sur onMounted parce que async
   await session.setRegistration(keyFromB64(fromUrl(config.K.vapidPublicKey)), config.location, config.K.APPNAME)

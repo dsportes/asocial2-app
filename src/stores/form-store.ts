@@ -1,6 +1,4 @@
-// @ts-ignore
 import { ref, Ref, reactive, computed, watch } from 'vue'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import stores from './all'
 
@@ -113,8 +111,6 @@ Pinia supports Hot Module replacement so you can edit your stores
 and interact with them directly in your app without reloading the page,
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
 */
-// @ts-ignore
 if (import.meta.hot) {
-  // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useFormStore, import.meta.hot));
 }

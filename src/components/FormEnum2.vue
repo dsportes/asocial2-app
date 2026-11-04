@@ -31,7 +31,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'

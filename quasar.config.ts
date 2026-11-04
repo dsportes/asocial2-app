@@ -12,7 +12,6 @@ const htmlPlugin = () => {
   }
 }
 
-// @ts-ignore
 export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts

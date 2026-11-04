@@ -44,7 +44,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, reactive, computed, watch } from 'vue'
 
 import { $t, sty } from '../src-fw/util'
@@ -61,7 +60,6 @@ import FormNew from '../components/FormNew.vue'
 import { SOA } from '../src-fw/base'
 import { $Form, FormCtx } from '../src-fw/documents'
 
-// @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const ui = stores.ui

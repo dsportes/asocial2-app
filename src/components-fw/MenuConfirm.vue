@@ -17,10 +17,9 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, watch } from 'vue'
-
 import { $t } from '../src-fw/util'
+
 const code = defineModel()
 
 const m = ref(true)

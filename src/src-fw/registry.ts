@@ -1,4 +1,3 @@
-// @ts-ignore
 import { encode } from '@msgpack/msgpack'
 import { Descriptor } from '../src-fw/descriptor'
 import { AppExc } from './base'

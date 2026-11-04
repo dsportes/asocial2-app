@@ -53,7 +53,7 @@
       <div class="row">
         <div class="col-5 text-italic">{{ $t('AUTcol_np') }}</div>
         <div class="col-7 q-pl-sm font-mono">
-          <line-edit :text="perimetre.name" @change="majNP"
+          <line-edit :text="perimetre.name" @change="majNP" datasize="auteur"
             width="sm" :disable="session.planeMode"/>
         </div>
       </div>
@@ -127,7 +127,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, computed, onMounted, watch, reactive } from 'vue'
 import stores from '../stores/all'
 import { $Credential, $Cred } from '../src-fw/documents'

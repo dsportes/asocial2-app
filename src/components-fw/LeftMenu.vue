@@ -69,7 +69,6 @@ Contrôlé par ui.leftMenu
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
 import stores from '../stores/all'
 import { $t, sty } from '../src-fw/util'
@@ -81,9 +80,7 @@ import BtnCond from '../components-fw/BtnCond.vue'
 import SafeTools from '../components-fw/SafeTools.vue'
 import SelectOptionsdial from '../dialogs-fw/SelectOptionsdial.vue'
 
-// @ts-ignore
 import superman from '../assets/superman.jpg'
-// @ts-ignore
 import invitation from '../assets/invitation.png'
 
 const sf = stores.safe

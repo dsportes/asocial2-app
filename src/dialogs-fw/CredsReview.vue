@@ -56,7 +56,7 @@
             <div v-if="step === 3" class="q-my-sm">
               <line-edit width="sm"
                 class="q-my-sm" prefix="CRRabout" :text="curcr.name || ''"
-                @change="chgName"/>
+                @change="chgName" datasize="pseudo"/>
 
               <cred-row2 :cred="curcr" class="q-my-sm"/>
 
@@ -85,7 +85,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, watch, computed } from 'vue'
 
 import { $t, sty, dkli } from '../src-fw/util'
@@ -106,7 +105,7 @@ const ui = stores.ui
 
 const sth = computed(() => 'height:' + (ui.appPage.height - 50) + 'px;' )
 
-const model = defineModel()
+const model = defineModel<boolean>()
 const emit = defineEmits(['close'])
 const splitterModel = ref(60)
 

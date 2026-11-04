@@ -24,11 +24,8 @@ Présente une barre avec un bulle gauche, titre, icon, bulle droite:
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
-
 import stores from '../stores/all'
-
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const emit = defineEmits(['open'])

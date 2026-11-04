@@ -34,7 +34,7 @@ import { NavBar } from '../stores/ui-store'
 const nav = defineModel<NavBar>()
 
 const props = defineProps<{
-  disable: boolean
+  disable?: boolean
 }>()
 
 const navig = async (n: number) => {

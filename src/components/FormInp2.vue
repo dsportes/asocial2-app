@@ -7,11 +7,11 @@
         v-model="loc1" :noval="!valbtn" :initval="psU" @validate="valB"/-->
 
       <line-edit v-if="fst.isDemand && fst.editable"
-        class="col font-mono text-bold"
+        class="col font-mono text-bold" datasize="text"
         :text="loc1.inp" @change="valB2" prefix="FORMdem_2"/>
 
       <input-b v-else
-        class="col font-mono text-bold q-mt-sm" prefix="FORMdem_2"
+        class="col font-mono text-bold q-mt-sm" prefix="FORMdem_2" size="text"
         v-model="loc2" noval :initval="loc2.inp" disable/>
       <btn-cond v-if="fst.isDemand && fst.editable && fst.visT && psT" class="col-auto q-ml-sm"
         flat icon="content_paste" @ok="copyLocU"/>
@@ -23,11 +23,11 @@
       <!--input-b v-if="!fst.isDemand && fst.editable"
         class="col font-mono text-bold q-mt-sm" :size="size" prefix="FORMprop_2"
         v-model="loc1" :noval="!valbtn" :initval="psT" @validate="valB"/-->
-      <line-edit v-if="!fst.isDemand && fst.editable"
+      <line-edit v-if="!fst.isDemand && fst.editable" datasize="text"
         class="col font-mono text-bold"
         :text="loc1.inp" @change="valB2" prefix="FORMprop_2"/>
       <input-b v-else
-        class="col font-mono text-bold q-mt-sm" prefix="FORMprop_2"
+        class="col font-mono text-bold q-mt-sm" prefix="FORMprop_2" size="text"
         v-model="loc2" noval :initval="loc2.inp" disable/>
       <btn-cond v-if="!fst.isDemand && fst.editable && fst.visU && psU" class="col-auto q-ml-sm"
         flat icon="content_paste" @ok="copyLocT"/>
@@ -39,8 +39,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, reactive, computed, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
 import InputB from '../components-fw/InputB.vue'

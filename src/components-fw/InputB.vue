@@ -99,8 +99,6 @@ En cas d'usage de "fncheck", les valeurs retournées doivent avoir une traductio
 </template>
 
 <script setup lang="ts" vapor>
-
-// @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { InputE } from '../src-fw/base'

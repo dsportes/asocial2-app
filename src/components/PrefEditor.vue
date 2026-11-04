@@ -29,49 +29,43 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch } from 'vue'
-// @ts-ignore
+import { ref, Ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { $t } from '../src-fw/util'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
+import { LocaleOption } from '../src-fw/base'
+import { EdPref } from '../stores/session-store'
 
 const session = stores.session
 const config = stores.config
 const ui = stores.ui
-const i18n = useI18n()
-const opts = config.localeMap
 
-const obj = ref(session.edPref.obj)
-const orig = ref(session.edPref.orig)
+const opts = Array.from(config.localeMap.values()) as LocaleOption[]
+const lang: Ref<LocaleOption> = ref(config.optionLocale)
 
-const defaults = {
-  lang: 'fr',
+const obj: Ref<any> = ref(session.edPref.obj)
+const orig: Ref<any> = ref(session.edPref.orig)
+
+const defaults: any = {
+  lang: lang.value.value,
   dark: true,
-
   btn1: false,
   btn2: false,
   title: '(aucun)'
 }
 
-const lang = ref()
-const setLang = (opt) => {
-  config.setLocale(opt.value)
-  i18n.locale.value = opt.value
-  obj.value.lang = opt.value
+const setLang = (langOpt: LocaleOption) => {
+  config.setLocale(langOpt.value)
+  obj.value.lang = langOpt.value
 }
 
 for(const p in defaults)
   if (!obj.value[p]) obj.value[p] = defaults[p]
 
-let x; for (const [,opt] of opts) if (orig.value.lang === opt.value) x = opt
-lang.value = x || Array.from(opts.values())[0]['value']
-setLang(lang.value)
-
 ui.setDark(obj.value.dark)
 
-const clr = (p) => obj.value[p] !== defaults[p] ? 'warning' : 'none'
+const clr = (p: any) => obj.value[p] !== defaults[p] ? 'warning' : 'none'
 
 const check = () => {
   session.edPref.diag = ''
@@ -88,8 +82,7 @@ const check = () => {
       session.edPref.diag = 'titre trop long'
   }
 }
-
-watch(lang, (opt) => { setLang(opt); check() })
+watch(lang, (langOpt) => { setLang(langOpt); check() })
 watch(() => obj.value.btn1, (ap, av) => { check() })
 watch(() => obj.value.btn2, (ap, av) => { check() })
 watch(() => obj.value.title, (ap, av) => { check() })

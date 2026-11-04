@@ -1,4 +1,3 @@
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'

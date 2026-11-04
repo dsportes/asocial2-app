@@ -46,7 +46,6 @@ Commentaires dans Input-B.
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import { $t, hasMessage } from '../src-fw/util'

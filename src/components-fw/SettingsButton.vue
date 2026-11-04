@@ -474,7 +474,6 @@ const cl = (lg: LocaleOption) =>
   config.optionLocale.value === lg.value ? 'disabled' : ''
 
 const choix = (lg: LocaleOption) : void => {
-  i18n.locale.value = lg.value
   config.setLocale(lg.value)
 }
 

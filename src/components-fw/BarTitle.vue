@@ -10,9 +10,7 @@ Affiche une bulle et un titre
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
-
 import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const props = defineProps({

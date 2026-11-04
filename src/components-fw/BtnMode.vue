@@ -35,7 +35,6 @@
 
 <script setup lang="ts" vapor>
 import stores from '../stores/all'
-// @ts-ignore
 import { ref, computed } from 'vue'
 import { $t } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'

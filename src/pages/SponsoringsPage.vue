@@ -43,7 +43,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, Ref, watch } from 'vue'
 
 import stores from '../stores/all'

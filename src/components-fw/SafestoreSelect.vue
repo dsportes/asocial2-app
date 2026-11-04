@@ -38,7 +38,7 @@ const def: string = $t('SECsite_std')
 const model = defineModel<string>() // Dans le script accessible par model.value
 
 const props = defineProps<{
-  prefix: string,
+  prefix?: string
 }>()
 
 const pfx = ref(props.prefix || 'SECsite')

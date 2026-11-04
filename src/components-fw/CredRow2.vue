@@ -38,7 +38,7 @@ import { $Credential } from '../src-fw/documents'
 
 const props = defineProps<{
   cred: $Credential,
-  comment: Boolean
+  comment?: boolean
 }>()
 
 const emit = defineEmits(['undo', 'select'])

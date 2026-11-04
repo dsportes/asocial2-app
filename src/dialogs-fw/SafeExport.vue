@@ -156,7 +156,7 @@ const backupCf = async (n: number) => {
   safe.value.auth.future = null
   const bin = encode(safe.value)
   const buf: Uint8Array = await Crypt.crypt(entryP.shp, bin) as Uint8Array
-  // @ts-ignore
+  // @ts-expect-error
   const blob = new Blob([buf], { type: 'application/octet-stream'})
   saveAs(blob, filename.value)
   await ui.diagDisplay($t('SFXbkpok', [filename.value]))

@@ -1,7 +1,3 @@
-// @ts-ignore
-import { encode, decode } from '@msgpack/msgpack'
-
-// import { IDB } from './hasIDB'
 import stores from '../stores/all'
 import { Registry, ClassInfo } from '../src-fw/registry'
 import { Operation } from '../src-fw/operation'

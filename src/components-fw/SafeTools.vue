@@ -159,7 +159,7 @@ const sf = stores.safe
 
 const emit = defineEmits(['close'])
 const props = defineProps<{
-  short: boolean
+  short?: boolean
 }>()
 const dialogs = reactive({
   SafeCrA: false,

@@ -21,7 +21,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { watch } from 'vue'
 import stores from '../stores/all'
 import { sty } from '../src-fw/util'

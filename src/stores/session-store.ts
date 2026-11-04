@@ -13,6 +13,14 @@ import { $Def, $Perimeter, $Perims, $DefsXref, buildXref, $Subs } from '../src-f
 import { myRegistration, setOnAppUpdate } from '../../src-pwa/register-sw'
 import { AOperation, checkStatus } from '../src-fw/operation'
 
+export type EdPref = {
+  code: string
+  obj: any | null
+  orig: any | null
+  diag: string
+  chg: false
+}
+
 export const useSessionStore = defineStore('session', () => {
   setOnAppUpdate(setAppUpdated)
 
@@ -349,13 +357,6 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  type EdPref = {
-    code: string
-    obj: any | null
-    orig: any | null
-    diag: string
-    chg: false
-  }
   let edPref = reactive({ code:'', obj: {}, orig: {}, diag: '', chg: false } as EdPref)
   const setEdPref = (code: string, obj: any, orig: any) => {
     edPref.code = code
@@ -436,7 +437,6 @@ export const useSessionStore = defineStore('session', () => {
       await sleep(300 * nn++)
     }
     registration.value = myRegistration
-    // @ts-ignore
     const pm = registration.value.pushManager
     if (!pm) {
       subJSON.value = '??? Souscription non obtenue - pushManager non accessible'
@@ -567,9 +567,7 @@ Pinia supports Hot Module replacement so you can edit your stores
 and interact with them directly in your app without reloading the page,
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
 */
-// @ts-ignore
 if (import.meta.hot) {
-  // @ts-ignore
   import.meta.hot.accept(acceptHMRUpdate(useSessionStore, import.meta.hot));
 }
 

@@ -1,4 +1,3 @@
-// @ts-ignore
 declare const self: ServiceWorkerGlobalScope &
   typeof globalThis & { skipWaiting: () => void };
 
@@ -8,14 +7,10 @@ console.log('In MY custom-sw')
  * is picked up by the build system ONLY if
  * quasar.config file > pwa > workboxMode is set to "InjectManifest"
  */
-// @ts-ignore
 import { clientsClaim } from 'workbox-core'
-// @ts-ignore
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching'
-// @ts-ignore
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 
-// @ts-ignore
 import { decode } from '@msgpack/msgpack'
 
 function keyFromB64 (key: string) : Uint8Array {
@@ -45,7 +40,6 @@ const mf = self.__WB_MANIFEST
 }
 
 // Use with precache injection
-// @ts-ignore
 // if (process.env.PROD) {
   console.log('precacheAndRoute')
   precacheAndRoute(mf)
@@ -57,13 +51,10 @@ cleanupOutdatedCaches()
 // Non-SSR fallbacks to index.html
 // Production SSR fallbacks to offline.html (except for dev)
 
-// @ts-ignore
 if (process.env.PROD) {
   registerRoute(
     new NavigationRoute(
-      // @ts-ignore
       createHandlerBoundToURL(import.meta.env.QUASAR_PWA_FALLBACK_HTML),
-      // @ts-ignore
       { denylist: [new RegExp(process.env.PWA_SERVICE_WORKER_REGEX), /workbox-(.)*\.js$/] }
     )
   )
@@ -76,10 +67,8 @@ const localState = { }
 self.addEventListener('message', async (event) => {
   if (event.data && event.data.type === 'STARTING') {
     console.log('SW: detection of duplicate starting')
-    // @ts-ignore
     const clientList = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
     for(const client of clientList) {
-      // @ts-ignore
       if (client.id !== event.source.id) event.source.postMessage({ type: 'STOP' })
     }
   } else if (event.data && event.data.type === 'CLOSING') {
@@ -95,22 +84,17 @@ self.addEventListener('message', async (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   console.log('SW: On notification click')
-  // @ts-ignore
   event.notification.close()
-  // @ts-ignore
   const u = event?.notification?.data?.url
-  // @ts-expect-error
   const urlToOpen = u || localState['location']
   if (!urlToOpen) return
 
   // This looks to see if the current is already open and focuses if it is
-  // @ts-ignore
   event.waitUntil( clients.matchAll({type: 'window'})
   // @ts-expect-error
     .then((clientList) => {
       for (const client of clientList)
         if ('focus' in client) return client.focus()
-      // @ts-ignore
       if (clients.openWindow) return clients.openWindow(urlToOpen);
     })
   )
@@ -118,7 +102,6 @@ self.addEventListener('notificationclick', (event) => {
 
 // Gestion de Web-Push *******************************************************************
 self.addEventListener('push', async (event) => {
-  // @ts-ignore
   const x = event.data ? event.data.text() : null
   let buf
   if (x && x.startsWith('{')) {
@@ -136,7 +119,6 @@ self.addEventListener('push', async (event) => {
   }
   */
   try {
-    // @ts-ignore
     const windowClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
     let found = false
     for (const client of windowClients) {
@@ -152,16 +134,11 @@ self.addEventListener('push', async (event) => {
         body: payload.body, // texte à afficher
         data: { url: payload.url } // données arbitraires à transmettre sur click
       }
-      // @ts-expect-error
       const title = payload.title || (localState['APPNAME'] + ' - ' + payload.org)
-      // @ts-ignore
       await self.registration.showNotification(title, options)
       /*
-      // @ts-ignore
       const options = { body: 'From browser: ' + payload.notification.body }
-      // @ts-ignore
       if (payload.data.url) options.data = { url: payload.data.url }
-      // @ts-ignore
       await self.registration.showNotification(payload.notification.title, options)
       */
     }

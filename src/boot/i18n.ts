@@ -1,18 +1,14 @@
-// @ts-ignore
 import { defineBoot } from '#q-app'
-// @ts-ignore
 import { createI18n } from 'vue-i18n'
-
 import messages from '../i18n'
 
 export type MessageLanguages = keyof typeof messages
 // Type-define 'en-US' as the master schema for the resource
-// @ts-ignore
+// @ts-expect-error
 export type MessageSchema = typeof messages['en-EN']
 
 // See https://vue-i18n.intlify.dev/guide/advanced/typescript.html#global-resource-schema-type-definition
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-// @ts-ignore
 declare module 'vue-i18n' {
   // define the locale messages schema
   export interface DefineLocaleMessage extends MessageSchema {}

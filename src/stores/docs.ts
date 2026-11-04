@@ -65,10 +65,9 @@ export async function onPushMsg (payload: string) {
   if (messageNotif.body) {
     // if (config().K.myDebug) console.log('Show notif EXPLICITE from app')
     const options = { body: messageNotif.body }
-    // @ts-ignore
+    // @ts-expect-error
     if (messageNotif.url) options.data = { url: messageNotif.url || config().location }
     const t = messageNotif.title || (config().K.APPNAME + ' - ' + messageNotif.org)
-    // @ts-ignore
     await session().registration.showNotification(t, options)
   }
 }
