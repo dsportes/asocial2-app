@@ -9,21 +9,20 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
-const sizes = {
+const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: '0.75' }
+const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: '0.2' }
+const sizes: any = {
   xs: '50px',
   sm: '100px',
   md: '170px',
   lg: '240px'
 }
 
-const props = defineProps({
-  size: String,
-  noborder: Boolean
-})
+const props = defineProps<{
+  size?: string,
+  noborder?: boolean
+}>()
 const sz = computed(() => {
   const p = props.size
   return !p ? '170px' : (sizes[p] ?  sizes[p] : p)

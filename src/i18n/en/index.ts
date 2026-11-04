@@ -5,6 +5,16 @@ export default {
   lang: 'The language is English',
   blabla: 'blu blu', // Test surcharge traductions
 
-  darkclear: 'Dark / clear'
+  RLtit1: 'New version available',
+  genhelp: 'General Help',
+  darkclear: 'Dark / clear',
+  theme: 'Graphical theme',
+  SButtitle: 'User profile',
+  servicestatus: 'Services status',
+  crypto: 'Cryptography',
+  endsession: 'Close session',
+  closeApp: 'Close / restart application',
+  app: 'Application:',
+  build: 'Build:',
 
 }

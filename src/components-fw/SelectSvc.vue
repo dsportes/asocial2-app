@@ -9,8 +9,8 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, Ref, watch, onMounted } from 'vue'
+
+import { ref, watch, onMounted } from 'vue'
 
 import stores from '../stores/all'
 import { LabelSvc } from '../src-fw/base'

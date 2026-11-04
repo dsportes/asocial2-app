@@ -8,7 +8,7 @@ Emit: 'navigate', n' quand navigation vers,
  1:next 2: previous, 3:first, 4:last, 5:set "liste", 6: set "detail"
 -->
 <template>
-<div :class="'row justify-between items-center ' + sty() + (nav.disable ? ' disabled' : '')"
+<div v-if="nav" :class="'row justify-between items-center ' + sty() + (nav.disable ? ' disabled' : '')"
   style="width:200px">
   <btn-cond v-if="!nav.listMode" icon="list_alt" flat 
     :color="clr" @ok="nav5"/>
@@ -32,31 +32,33 @@ Emit: 'navigate', n' quand navigation vers,
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
 import { sty } from '../src-fw/util'
+import stores from '../stores/all'
+import { NavBar } from '../stores/ui-store'
 import BtnCond from '../components-fw/BtnCond.vue'
 
-const nav = defineModel()
+const nav = defineModel<NavBar>()
 
-import stores from '../stores/all'
 const ui = stores.ui
 
 const clr = computed(() => ui.editingInCourse ? 'warning' : 'none' )
 
 const nav5 = async () => {
-  if (await ui.mayClose2()) {
-    nav.listMode = true
+  if (await ui.mayClose2() && nav.value) {
+    nav.value.listMode = true
     emit('navigate', 5)
   }
 }
 
 const nav6 = () => {
-  nav.listMode = false
-  emit('navigate', 6)
+  if (nav.value) {
+    nav.value.listMode = false
+    emit('navigate', 6)
+  }
 }
 
-const navx= async (n) => {
+const navx= async (n: number) => {
   if (await ui.mayClose2())
     emit('navigate', n)
 }

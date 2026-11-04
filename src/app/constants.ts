@@ -2,6 +2,8 @@ export const K = {
   BUILD: 'v2.1',
   APPNAME: 'asocial2',
 
+  LANG: 'fr',
+
   SERVICES: {
     AS2: { api: 1 },
     ASSO2: { api: 1 },

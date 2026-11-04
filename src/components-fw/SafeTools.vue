@@ -131,8 +131,6 @@ tous les dialogues de gestion des "dsonnées de sécurité".
 </template>
 
 <script setup lang="ts" vapor>
-
-// @ts-ignore
 import { reactive } from 'vue'
 
 import stores from '../stores/all'
@@ -152,10 +150,7 @@ import DevTrustit from '../dialogs-fw/DevTrustit.vue'
 import SafeExport from '../dialogs-fw/SafeExport.vue'
 import SelectOptionsdial from '../dialogs-fw/SelectOptionsdial.vue'
 
-// @ts-ignore
 import skull from '../assets/skull.png'
-
-// @ts-ignore
 import safebox from '../assets/safe-box.png'
 
 const ui = stores.ui
@@ -163,9 +158,9 @@ const session = stores.session
 const sf = stores.safe
 
 const emit = defineEmits(['close'])
-const props = defineProps({
-  short: Boolean
-})
+const props = defineProps<{
+  short: boolean
+}>()
 const dialogs = reactive({
   SafeCrA: false,
   SafeCrP: false,

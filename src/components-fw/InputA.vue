@@ -64,10 +64,10 @@ const props = defineProps<{
   simple?: boolean,
   noundo?: boolean,
   size: string, // obligatoire
-  prefix: string, // obligatoire
+  prefix?: string,
   initval?: string,
   disable?: boolean,
-  noval: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
+  noval?: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
   list?: string[],
   fncheck?: Function,
   ctx?: any
@@ -80,7 +80,7 @@ const nv = ref(props.noval || false)
 const err = ref('')
 
 watch(() => props.noval, (v) => {
-  nv.value = v
+  if (v) nv.value = v
 })
 
 const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
@@ -88,7 +88,7 @@ const sz = ref(stores.config.K.sizes[props.size] || [0, 80])
 const reg = sz.value.length > 2 ? config.K.regexp[sz.value[2]] || null : null
 
 const bubble = computed(() => {
-  let b = props.prefix + '_bub'
+  let b = (props.prefix || '') + '_bub'
   if (hasMessage(b)) return b
   if (sz.value.length > 2) {
     b = 'REGexp_' + sz.value[2]

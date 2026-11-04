@@ -63,8 +63,7 @@ Event émis: logged
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, Ref, reactive, computed, watch, onMounted } from 'vue'
 import stores from '../stores/all'
 import { IDBsafe } from '../src-fw/idbsafe'
 import { $t } from '../src-fw/util'
@@ -73,15 +72,18 @@ import InputB from '../components-fw/InputB.vue'
 import { Crypt } from '../src-fw/crypt'
 import BarTitle from '../components-fw/BarTitle.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
+import { InputE } from '../src-fw/base'
+import { Trusting } from '../src-fw/idbsafe'
+import { ICVS } from '../stores/safe-store'
 
 const sf = stores.safe
 const ui = stores.ui
 const session = stores.session
 
-const trustingsCached = ref([])
+const trustingsCached: Ref<Trusting[]> = ref([])
 
-watch(() => sf.trustings, (t) => {
-  const l = []
+watch(() => sf.trustings, (t: Map<string, Trusting>) => {
+  const l: Trusting[] = []
   for(const [,u] of t) if (u.hasAppDb()) l.push(u)
   trustingsCached.value = l
   // console.log('trustings', t.size, l.length)
@@ -98,10 +100,12 @@ onMounted(async () => {
 
 const emit = defineEmits(['logged'])
 
-let pin = reactive({ inp: '', err: '' })
-let entryPP = reactive({inp:'', err:''})
-const selectedUser = ref(null)
-const selectedUserpl = ref(null)
+let pin: InputE = reactive({ inp: '', err: '' })
+let entryPP: InputE = reactive({inp:'', err:''})
+// @ts-expect-error
+const selectedUser: Ref<Trusting> = ref()
+// @ts-expect-error
+const selectedUserpl: Ref<Trusting> = ref()
 
 const mayPlane = computed(() => 
   session.noNet && session.hasLocal && trustingsCached.value.length)
@@ -115,8 +119,8 @@ const preselect = () => {
   else if (mayPin.value && sf.trustings.size === 1)
     selectedUser.value = sf.trustings.size[0]
   else {
-    selectedUser.value = null
-    selectedUserpl.value = null
+    // @ts-expect-error
+    selectedUserpl.value = undefined; selectedUser.value = undefined
   }
 }
 
@@ -126,12 +130,12 @@ watch(() => session.hasNet, () => {
   preselect()
 })
 
-const selectUser = (u) => { // u est un Trusting
+const selectUser = (u: Trusting) => {
   pin.inp = ''; pin.err = '' 
   selectedUser.value = u
 }
 
-const selectUserpl = (u) => { // u est un Trusting
+const selectUserpl = (u: Trusting) => {
   entryPP.inp = ''; entryPP.err = '' 
   selectedUserpl.value = u
 }
@@ -157,14 +161,16 @@ let entryA = reactive({inp:'', err:''})
 let entryP = reactive({inp:'', err:''})
 const stepAP = ref(0)
 const diagAP = ref(1)
-const safeIS = ref(null)
+// @ts-expect-error
+const safeIS: Ref<ICVS> = ref()
 
 const resetAP = () => {
   entryA.inp = ''; entryA.err = ''
   entryP.inp = ''; entryP.err = ''
   stepAP.value = 0
   diagAP.value = 1
-  safeIS.value = null
+  // @ts-expect-error
+  safeIS.value = undefined
 }
 
 const valA = async () => {

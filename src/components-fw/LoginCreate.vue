@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { reactive, ref } from 'vue'
 import stores from '../stores/all'
 
@@ -103,7 +102,9 @@ const onCode = async () => {
   else await getInvit()
 }
 
-const onCreation = async ({ st, a1, a2, shp1, shp2 }) => {
+type CreatArgs = { st: string, a1: string, a2: string, shp1: Uint8Array, shp2: Uint8Array }
+
+const onCreation = async ({ st, a1, a2, shp1, shp2 } :  CreatArgs ) => {
   const invit = adm.value ? '' : keyToB64(shi.value)
   const status = await sf.createSafe(st, a1, a2, shp1, shp2, userId.value, invit)
   if (!status) {

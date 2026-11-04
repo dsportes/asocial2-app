@@ -9,12 +9,11 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { computed } from 'vue'
 
-const props = defineProps({
-  ps: Object
-})
+const props = defineProps<{
+  ps: any
+}>()
 
 const clPSab = computed(() => props.ps.exav && !props.ps.exap ? ' text-strike' : 
   (props.ps.chgab ? ' text-bold text-warning' : ''))

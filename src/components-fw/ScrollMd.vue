@@ -28,25 +28,24 @@ L'image doit figurer dans public/images
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'
 
 import SdNoir from './SdNoir.vue'
 import SdBlanc from './SdBlanc.vue'
 
-const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: 0.75 }
-const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: 0.2 }
+const thumbStyle = { borderRadius: '5px', backgroundColor: '#027be3', width: '5px', opacity: '0.75' }
+const barStyle = { borderRadius: '9px', backgroundColor: '#027be3', width: '9px', opacity: '0.2' }
 
 const config = stores.config
 const url = config.K.DOC_URLS[config.locale]
 const ui = stores.ui
 
-const props = defineProps({
-  inverse: Boolean,
-  height: String,
-  text: String, // texte MD à afficher
-})
+const props = defineProps<{
+  inverse?: boolean,
+  height?: string,
+  text: string, // texte MD à afficher
+}>()
 
 const text2 = () => {
   return props.text ? props.text.replaceAll('href="$$/', 'href="' + url) : ''

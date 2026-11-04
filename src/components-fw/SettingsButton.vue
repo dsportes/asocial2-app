@@ -82,11 +82,11 @@
 
         <div class="q-pa-xs column items-center">
           <div class="row">
-            <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('app')}}</div>
+            <div class="text-right titre-md text-italic q-pr-sm">{{$t('app')}}</div>
             <div class="font-mono text-bold">{{config.K.APPNAME}}</div>
           </div>
           <div class="row">
-            <div class="col-6 text-right titre-md text-italic q-pr-sm">{{$t('build')}}</div>
+            <div class="text-right titre-md text-italic q-pr-sm">{{$t('build')}}</div>
             <div class="font-mono text-bold">{{config.K.BUILD}}</div>
           </div>
           <btn-cond label="Import Safe" size="sm" flat icon="warning"
@@ -383,17 +383,14 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, computed, reactive, watch } from 'vue'
-// @ts-ignore
+import { ref, Ref, computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-// @ts-ignore
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
 import { SOA } from '../src-fw/registry'
 import { LocPref } from '../stores/safe-store'
-import { localeOption } from '../stores/config-store'
+import { LocaleOption } from '../src-fw/base'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { $t, sty, reloadPage, dhcool, coolBye } from '../src-fw/util'
 import { keyToB64 } from '../src-fw/b64'
@@ -410,7 +407,6 @@ import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
 import DialogStd1 from '../dialogs-fw/DialogStd1.vue'
 import PrefEditor from '../components/PrefEditor.vue'
 
-// @ts-ignore
 import superman from '../assets/superman.jpg'
 
 const i18n = useI18n()
@@ -419,9 +415,7 @@ const session = stores.session
 const sf = stores.safe
 const ui = stores.ui
 
-const dateed = ref('2026/09/27')
-
-const dialogs = reactive({
+const dialogs: any = reactive({
   SafeExport: false,
   ServiceStatus: false,
   theme: false,
@@ -431,15 +425,10 @@ const dialogs = reactive({
   userProfile: false
 })
 
-let so = reactive({
-  org: '',
-  site: '',
-  svc: '',
-  ready: false,
-  admin: false
-})
+let so: SOA = reactive({ svc: '',  org: '', svcLabel: '', site: '', admin: false })
+
 const surl = computed(() => 
-  AOperation.urls.get(so.site) || '?')
+  AOperation.urls.get(so.site || '') || '?')
 const usid = ref('')
 const genId = () => {
   usid.value = Crypt.rnd(15)
@@ -450,15 +439,13 @@ const setOS = async (soa: SOA) => {
   so.svcLabel = soa.svcLabel
   so.site = soa.site
   so.admin = soa.admin
-  so.ready = true
 }
 const closeSS = () => {
   so.org = ''
   so.svc = ''
   so.svcLabel = ''
   so.site = ''
-  so.admin = ''
-  so.ready = false
+  so.admin = false
   dialogs.ServiceStatus = false
 }
 
@@ -483,10 +470,10 @@ watch(tab, (t) => {
   if (t === 'hot') resetHot()
 })
 
-const cl = (lg: localeOption) => 
+const cl = (lg: LocaleOption) => 
   config.optionLocale.value === lg.value ? 'disabled' : ''
 
-const choix = (lg: localeOption) : void => {
+const choix = (lg: LocaleOption) : void => {
   i18n.locale.value = lg.value
   config.setLocale(lg.value)
 }
@@ -526,7 +513,7 @@ let ps = reactive({ inp: '', err: ''})
 const validPs = async () => {
   const sh = await Crypt.strongHash(ps.inp, false, true) as Uint8Array
   cr.b64 = keyToB64(sh)
-  cr.shaps = Crypt.sha(sh, false)
+  cr.shaps = Crypt.sha(sh, false) as string
   cr.shaSps = Crypt.shaS(sh)
 }
 

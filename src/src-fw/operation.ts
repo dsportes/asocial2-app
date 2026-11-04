@@ -439,6 +439,7 @@ export type ADMIN$Status = {
   st: number // code 0: inconnu 1: UP 9: DOWN
   at: number // time de dernière mise à jour
   txt: string // texte explicatif éventuel de l'administrateur
+  now?: number
 }
 export const getSiteStatus = async (site: string, svc: string)
   : Promise<ADMIN$Status> => {

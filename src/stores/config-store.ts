@@ -1,17 +1,26 @@
-// @ts-ignore
 import { ref, Ref, computed } from 'vue'
-// @ts-ignore
 import { defineStore, acceptHMRUpdate } from 'pinia'
-// @ts-ignore
+
 import { useI18n } from 'vue-i18n'
-// @ts-ignore
 import { Lang } from 'quasar'
-// @ts-ignore
+import langFr from 'quasar/lang/fr'
+// import langDe from 'quasar/lang/de'
+
+import { LocaleOption } from '../src-fw/base'
 import customR from '../assets/custom.json?raw'
 import { K as AppK } from '../app/constants'
-import { localeOptions } from '../boot/appconfig'
 
-export interface localeOption { value: string, label: string, flag: string, props: any }
+/*
+onfocus = (event) => { useConfigStore().getFocus() }
+onblur = (event) => { useConfigStore().lostFocus() }
+onbeforeunload = (event) => { useConfigStore().closingApp() }
+*/
+
+export const localeOptions: LocaleOption[] = [
+  { value: 'en', label: 'English 🇬🇧',  flag: '🇬🇧' },
+  { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', props: langFr }
+]
+  
 
 type service = {
   url: string
@@ -22,12 +31,14 @@ export const useConfigStore = defineStore('config', () => {
   const location: any = ref(null) // le href
 
   // Gestion des langues ***************************************************
-  const localeMap = ref(new Map())
+  const localeMap: Ref<Map<string, LocaleOption>> = ref(new Map())
   const locale: Ref<string> = ref('')
-  const setLocale = (loc:string) => { 
-    const lgp = localeMap.value.get(loc).props
-    Lang.set(lgp)
-    locale.value = loc
+  const setLocale = (loc: string) => { 
+    const x = localeMap.value.get(loc)
+    if (x) {
+      if (x.props) Lang.set(x.props)
+      locale.value = loc
+    }
   }
   const optionLocale = computed(() => localeMap.value.get(locale.value))
 
@@ -37,14 +48,22 @@ export const useConfigStore = defineStore('config', () => {
   const K = ref()
 
   const initK = () => {
-    const custom = JSON.parse(customR)
     location.value = window.location['href']
     K.value = { ...AppK}
+    const custom = JSON.parse(customR)
     for(const f in custom) K.value[f] = custom[f]
+
     appname.value = K.value.APPNAME
     for (const svc in K.value.SERVICES) services.value.set(svc, K.value.SERVICES[svc])
 
-    // @ts-expect-error
+    let i = 0
+    for(const e of localeOptions)
+      if (e.value !== K.value.LANG) i++; else break
+    if (i !== 0) {
+      const x = localeOptions[i]
+      localeOptions.splice(i, 1)
+      localeOptions.unshift(x)
+    }
     Lang.set(localeOptions[0].props)
     localeOptions.forEach(l => { localeMap.value.set(l.value, l) })
     locale.value = localeOptions[0].value

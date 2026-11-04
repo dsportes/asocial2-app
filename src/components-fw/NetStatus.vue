@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
+
 import { computed } from 'vue'
 
 import stores from '../stores/all'
@@ -59,11 +59,11 @@ const session = stores.session
 const status = computed(() => session.netStatus)
 const entries = computed(() => Array.from(Object.keys(session.netStatus)))
 
-const elt = (site, svc?) => {
+const elt = (site: string, svc?: string) => {
   const e = status.value[site]
   return !svc ? e : e[svc]
 }
-const st = (site, svc?, org?) => {
+const st = (site: string, svc?: string, org?: string) => {
   const e = elt(site, svc)
   if (!org) {
     const s = e.$ST$

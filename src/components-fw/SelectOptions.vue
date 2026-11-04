@@ -22,7 +22,7 @@
     :class="dkli(idx) + ' q-my-sm q-pl-lg'">
     <div class="titre-md">{{ r.label }}</div>
     <div class="row q-gutter-md">
-      <q-checkbox dense v-for="org in r.orgs" :key="org.code" v-model="org.sel" 
+      <q-checkbox dense v-for="org in r.orgs" :key="org.org" v-model="org.sel" 
         :label="org.org"/>
     </div>
   </div>
@@ -31,7 +31,6 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { Ref, ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import BtnCond from '../components-fw/BtnCond.vue'
@@ -60,12 +59,6 @@ watch(() => session.okOptions, async (v) => {
   if (v > okn.value) 
     await ok() })
 
-/*
-const dialogs = reactive({
-  close: false
-})
-*/
-
 watch(() => session.resetdb, async (v) => {
   if (v) await ui.diagDisplay($t('OPTSresetdb'))
 })
@@ -75,7 +68,7 @@ const prCodes = ref()
 const defp = ref()
 const selPref = ref()
 const selPrefi = ref()
-const orgRoles: Ref<OrgRole[]> = ref()
+const orgRoles: Ref<OrgRole[]> = ref([])
 
 // const test = ['doda/AS2_auteurs', 'doda/AS2_ad', 'demo/AS2_auteurs' ]
 
@@ -85,9 +78,8 @@ const init = () => {
   prCodes.value.unshift(defp.value)
   selPref.value = session.pref && prCodes.value.indexOf(session.pref) !== -1 ? session.pref : defp.value
   selPrefi.value = selPref.value
-  const x = []
-  for(const y of session.orgRolesP) {
-  // for(const y of test) {
+  const x: OrgRole[] = []
+  for(const y of session.orgRolesP as Set<string>) {
     const i = y.indexOf('/')
     const org = y.substring(0, i)
     const role = y.substring(i + 1)
@@ -102,7 +94,7 @@ const init = () => {
   }
   x.sort((a,b) => a.label < b.label ? 1 : (a.label < b.label ? -1 : 0))
   for(const y of x)
-    y.orgs.sort((a,b) => a.code < b.code ? 1 : (a.code < b.code ? -1 : 0))
+    y.orgs.sort((a,b) => a.org < b.org ? 1 : (a.org < b.org ? -1 : 0))
   for(const y of session.orgRoles) {
     const i = y.indexOf('/')
     const org = y.substring(0, i)

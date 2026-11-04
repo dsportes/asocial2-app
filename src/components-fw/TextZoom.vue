@@ -24,22 +24,21 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, reactive, watch } from 'vue'
 
 import { sty } from '../src-fw/util'
 
 import BtnCond from '../components-fw/BtnCond.vue'
 
-const props = defineProps({ 
-  label: String,
-  text: String,
-  rows: Number,
-  mw: Number,
-  rw: Boolean,
-  checklabel: String,
-  zctrl: Number
-})
+const props = defineProps<{ 
+  label: string,
+  text: string,
+  rows?: number,
+  mw?: number,
+  rw?: boolean,
+  checklabel?: string,
+  zctrl?: number
+}>()
 
 const emit = defineEmits(['done'])
 

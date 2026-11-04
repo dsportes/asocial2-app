@@ -8,7 +8,7 @@ Emit:
 - 'navigate', n' quand navigation vers 1:next 2: previous, 3:first, 4:last
 -->
 <template>
-<div :class="'row justify-between items-center ' + sty() + (disable ? ' disabled' : '')"
+<div v-if="nav" :class="'row justify-between items-center ' + sty() + (disable ? ' disabled' : '')"
   style="width:200px">
   <btn-cond icon="arrow_back" class="q-mr-sm" flat color="none"
     :disable="!nav.hasBack" @ok="nav.hasBack = false; emit('back', true)"/>
@@ -17,7 +17,7 @@ Emit:
   <btn-cond icon="chevron_left" flat color="none" @ok="navig(2)"
     :disable="!nav.hasBack || nav.idx <= 0"/>
   <div class="q-mx-sm text-center" style="width:40px">
-    {{ nav.hasback ? (nav.idx + 1) + ' / ' + nav.nb : ''}}
+    {{ nav.hasBack ? (nav.idx + 1) + ' / ' + nav.nb : ''}}
   </div>
   <btn-cond icon="chevron_right" flat color="none" @ok="navig(1)"
     :disable="!nav.hasBack || nav.idx >= (nav.nb - 1)"/>
@@ -29,16 +29,17 @@ Emit:
 <script setup lang="ts" vapor>
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
+import { NavBar } from '../stores/ui-store'
 
-const nav = defineModel()
+const nav = defineModel<NavBar>()
 
-const props = defineProps({
-  disable: Boolean
-})
+const props = defineProps<{
+  disable: boolean
+}>()
 
-const navig = async (n) => {
-  const f = nav.value.fnnav
-  if (f) await f(n)
+const navig = async (n: number) => {
+  if (nav.value && nav.value.fnnav) 
+    await nav.value.fnnav(n)
 }
 
 const emit = defineEmits(['back', 'navigate'])

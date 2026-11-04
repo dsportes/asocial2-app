@@ -8,8 +8,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, Ref, watch, onMounted, computed } from 'vue'
 
 import { AOperation } from '../src-fw/operation'
 import stores from '../stores/all'
@@ -20,18 +19,18 @@ const idc = ref(ui.idc())
 
 const model = defineModel()
 
-const props = defineProps({
-  forstore: Boolean,
-  reset: Number,
-  initval: String,
-  disable: Boolean,
-  ctx: Object
-})
+const props = defineProps<{
+  forstore?: boolean,
+  reset?: number,
+  initval?: string,
+  disable?: boolean,
+  ctx?: any
+}>()
 
 const defSite = computed(() => 
   props.initval && props.initval === '?' ? '' : props.initval)
 
-const opts = ref([])
+const opts: Ref<string[]> = ref([])
 
 const emit = defineEmits(['select'])
 

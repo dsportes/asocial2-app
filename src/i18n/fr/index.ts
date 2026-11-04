@@ -41,7 +41,7 @@ export default {
   revoke: 'Révoquer',
   declare: 'Déclarer',
   app: 'Application:',
-  build: 'Build',
+  build: 'Build:',
   alias: 'Alias',
   close: 'Fermer',
   ns: ' (ns)',

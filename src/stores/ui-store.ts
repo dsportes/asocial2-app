@@ -20,6 +20,15 @@ export type CurrentForm = {
   fnOnUpdate: any
 }
 
+export type NavBar = {
+  hasBack: boolean,
+  idx: number,
+  nb: number,
+  listMode?: boolean,
+  disable?: boolean,
+  fnnav?: Function
+}
+
 export const useUiStore = defineStore('ui', () => {
   const $t = ref()
   const $q = ref()
@@ -274,11 +283,10 @@ export const useUiStore = defineStore('ui', () => {
     // console.log('RESIZE', size.height)
   }
 
-  const navBar = reactive({
+  const navBar: NavBar = reactive({
     hasBack: false,
     idx: 0,
-    nb: 0,
-    fnnav: null
+    nb: 0
   })
 
   const loginPage = reactive({

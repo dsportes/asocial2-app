@@ -8,24 +8,21 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, computed, watch } from 'vue'
-// @ts-ignore
+import { ref, Ref, computed, watch } from 'vue'
 import stores from '../stores/all'
 import InputA from '../components-fw/InputA.vue'
 
 const session = stores.session
-const lst = computed(() => session.orgs.lst)
+const lst: Ref<string[]> = computed(() => session.orgs.lst)
 
-const local = defineModel()
-const props = defineProps({
-  reset: Number,
-  initval: String, // Valeur initiale, si '?' force à ''
+const local = defineModel<string>('')
+const props = defineProps<{
+  reset: number,
+  initval: string, // Valeur initiale, si '?' force à ''
   /* objet permettant à l'appelant de situer l'instance du composant 
-  ayant émis l'événement.
-  */
-  ctx: Object
-})
+  ayant émis l'événement. */
+  ctx?: any
+}>()
 
 const c = localStorage.getItem('org')
 if (c) {
@@ -42,7 +39,7 @@ const val = () => {
   if (defOrg.value !== local.value) {
     session.addOrg(local.value)
     const c = localStorage.getItem('org')
-    if (c !== local.value) localStorage.setItem('org', local.value)
+    if (c !== local.value) localStorage.setItem('org', local.value || '')
     emit('select', local.value, props.ctx || null)
   }
 }

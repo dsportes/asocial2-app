@@ -21,25 +21,24 @@ event : 'select', svc (org est session.orgs.c)
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref } from 'vue'
 import stores from '../stores/all'
 import { getSite, isAdmin } from '../src-fw/operation'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SelectSvc from '../components-fw/SelectSvc.vue'
 import SelectOrg from '../components-fw/SelectOrg.vue'
-import { SOA } from '../src-fw/registry'
+import { SOA } from '../src-fw/base'
 
-const props = defineProps({
-  restricted: Boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
-  initorg: String, // Valeur initiale, si '?' force à ''
-  initsvc: String, // Valeur initiale, si '?' force à ''
+const props = defineProps<{
+  restricted?: boolean, // N'accepte QUE les services déclarés dans la configuration de l'app
+  initorg: string, // Valeur initiale, si '?' force à ''
+  initsvc: string, // Valeur initiale, si '?' force à ''
   /* objet permettant à l'appelant de situer l'instance du composant 
   ayant émis l'événement.
   si ctx.excl est fourni, liste des services NON sélectionnables.
   */
-  ctx: Object
-})
+  ctx?: any
+}>()
 
 const session = stores.session
 
@@ -53,10 +52,10 @@ const svc = ref()
 const org = ref()
 const diag = ref(false)
 
-const selSvc = (x) => {
+const selSvc = (x: string) => {
   if (x) svc.value = x
 }
-const selOrg = (x) => {
+const selOrg = (x: string) => {
   if (x) org.value = x
 }
 

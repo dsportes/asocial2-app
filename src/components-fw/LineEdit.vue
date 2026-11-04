@@ -25,22 +25,20 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
 import { ref, watch } from 'vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import InputA from '../components-fw/InputA.vue'
 
-const props = defineProps({
-  prefix: String,
-  text: String,
-  disable: Boolean,
-  widthmenu: String,
-  // width: String,
-  datasize: String,
-  ctx: Object,
-  fncheck: Function,
-  idx: Number
-})
+const props = defineProps<{
+  prefix?: string,
+  text: string,
+  disable?: boolean,
+  widthmenu?: string,
+  datasize: string,
+  ctx?: any,
+  fncheck?: Function,
+  idx?: number
+}>()
 
 const emit = defineEmits(['change'])
 

@@ -1,11 +1,5 @@
 import { register } from 'register-service-worker'
 
-/*
-onfocus = (event) => { useConfigStore().getFocus() }
-onblur = (event) => { useConfigStore().lostFocus() }
-onbeforeunload = (event) => { useConfigStore().closingApp() }
-*/
-
 export let myRegistration = null
 export let _onAppUpdate = null
 export function setOnAppUpdate(f: any) {

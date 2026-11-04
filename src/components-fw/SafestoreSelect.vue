@@ -25,38 +25,30 @@ Résultat en v-model.
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, watch } from 'vue'
+import { ref, Ref, watch } from 'vue'
 import stores from '../stores/all'
-// import InputA from '../components-fw/InputA.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import { pingStore } from '../src-fw/operation'
 import { $t } from '../src-fw/util'
 
-const sf = stores.safe
-const config = stores.config
-
 const exp = ref(false)
-const def = $t('SECsite_std')
-// const sites = config.K.FAVORITE_SITES.sort()
-// const vals = ref([def, ...sites])
+const def: string = $t('SECsite_std')
 
-const model = defineModel() // Dans le script accessible par model.value
+const model = defineModel<string>() // Dans le script accessible par model.value
 
-const props = defineProps({
-  prefix: String,
-})
+const props = defineProps<{
+  prefix: string,
+}>()
 
 const pfx = ref(props.prefix || 'SECsite')
-const store = ref(def)
+const store: Ref<string> = ref(def)
 const err = ref(0)
 
 model.value = ''
 
 const check = async () => {
-  const s = store.value
-  if (s === def) {
+  if (store.value === def) {
     err.value = 0
     model.value = ''
     exp.value = false

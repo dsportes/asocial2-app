@@ -6,6 +6,8 @@ export type SOA = {
   admin? : boolean
 }
 
+export type LocaleOption = { value: string, label: string, flag: string, props?: any }
+
 export type CodeLabel = [string, string]
 
 export type LabelSvc = { svc: string, label: string }

@@ -48,8 +48,7 @@
 </template>
 
 <script setup lang="ts" vapor>
-// @ts-ignore
-import { ref, computed, onMounted } from 'vue'
+import { ref, Ref, computed, onMounted } from 'vue'
 
 import stores from '../stores/all'
 import { $t } from '../src-fw/util'
@@ -57,6 +56,7 @@ import { AutoRevokeCred } from '../src-fw/operations'
 import BtnCond from '../components-fw/BtnCond.vue'
 import TextZoom from '../components-fw/TextZoom.vue'
 import { isMDAdmin } from '../src-fw/operation'
+import { $Credential } from '../src-fw/documents'
 
 const sf = stores.safe
 const ui = stores.ui
@@ -68,19 +68,9 @@ onMounted(async () => {
   isMdAdmin.value = await isMDAdmin()
 })
 
-/*
-const admins = ref('')
+const mgrCreds: Ref<Map<string, $Credential>> = ref(sf.managerCreds())
 
-if (sf.userId && sf.auth.admins) {
-  let x = sf.auth.admins
-  x.replaceAll('/', ' ')
-  admins.value = x
-}
-*/
-
-const mgrCreds = ref(sf.managerCreds())
-
-const revok = async (c) => {
+const revok = async (c: $Credential) => {
   let op = new AutoRevokeCred(c.svc, c.org)
   const ok = await op.run(c)
   if (!ok) {

@@ -119,7 +119,7 @@ const props = defineProps<{
   prefix: string, // obligatoire
   initval?: string,
   disable?: boolean,
-  noval: boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
+  noval?: boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
   list?: string[],
   fncheck?: Function
 }>()
