@@ -80,23 +80,21 @@ export class Registry {
     if (!_descriptor)
       exc = new AppExc(3, 'subclass_without_parent_descriptor', 'RegisterSubClass', [clazz.name])
     if (!exc) {
-      const svc = _descriptor.svc
-      const docCl = _descriptor.docCl
       const fullName = _descriptor.fullName + '/' + subCl
       if (!Descriptor.isSubName(subCl))
         exc = new AppExc(3, 'subclass_name_syntax', 'RegisterSubClass', [fullName])
       if (!exc) {
         clazz.prototype._parentClazz = parentClazz
         clazz.prototype._subCl = subCl
-        // (clazz as any)['_parentClazz'] = parentClazz
-        // (clazz as any)['_subCl'] = subCl
         Registry.constructors.set(fullName, clazz)
-        if ((clazz as any)['_manager'])
+        if ((clazz as any)['_manager']) {
+          (clazz as any)['_manager'] = subCl
           Registry.managers.add(clazz)
+        }
         const role: string | undefined = (clazz as any)['_role']
         if (role) {
-          let s = Registry.credClassesbyRole.get(svc + '/' + subCl)
-          if (!s) { s = new Set(), Registry.credClassesbyRole.set(svc + '/' + subCl, s)}
+          let s = Registry.credClassesbyRole.get(_descriptor.svc + '/' + subCl)
+          if (!s) { s = new Set(), Registry.credClassesbyRole.set(_descriptor.svc + '/' + subCl, s)}
           s.add(clazz)
         }
       }
@@ -135,7 +133,23 @@ export class Registry {
     return ci.newD() as $ADocument
   }
 
-  static isManager (svc: string, docCl: string) : boolean {
+  /* Retourne le set des noms des sous-classes ('subCl')
+  des classes de documents du svc donné et ayant pour docCl 'Credential' */
+  static managersOfSvc (svc: string) : Set<string> {
+    const s: Set<string> = new Set()
+    for(const clazz of Registry.managers) {
+      const d = (clazz as any)['_descriptor'] as Descriptor
+      if (d && d.svc === svc && d.docCl === 'Credential')
+        s.add((clazz as any)['_manager'])
+    }
+    return s
+  }
+
+  // TOCHECK - _manager est sur une subCl !!!!
+  static isManager (clazz: Function) : boolean {
+    return Registry.managers.has(clazz)
+  }
+  static isManager2 (svc: string, docCl: string) : boolean {
     try {
       const ci = Registry.getClassInfo(svc, docCl)
       return  !ci.descriptor.isDoc ? false : Registry.managers.has(ci.clazz as Function)

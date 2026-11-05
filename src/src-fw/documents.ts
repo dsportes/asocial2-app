@@ -1,6 +1,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 import { Crypt } from '../src-fw/crypt'
-import { Registry, $Document, SOA } from '../src-fw//registry'
+import { Registry, $Document } from '../src-fw//registry'
+import { SOA } from '../src-fw/base'
 
 import { FormType } from '../src-fw/descriptor'
 import { StartEnd } from '../src-fw/base'
