@@ -128,6 +128,7 @@ export class Descriptor {
   readonly svc: string = ''
   readonly docCl: string = ''
   get fullName () : string { return this.svc + '/' + this.docCl }
+  get dbName () : string { return (this.svc + '$' + this.docCl).toUpperCase() }
   // @ts-expect-error
   clazz: Function
   readonly subClasses: Map<string, Function> = new Map()
