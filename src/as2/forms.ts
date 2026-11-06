@@ -19,9 +19,8 @@ if (!exc) { nf++; exc = FormType.register('AS2', 'coauteur', 'AS2_auteurs', 'k2'
 - aucun document n'est instantiable avec cette classe
 */
 class AS2$Form extends $Form {
-  static _descriptor = d.AS2$Form
 }
-if (!exc) { n++; exc = Registry.register(AS2$Form) }
+if (!exc) { n++; exc = Registry.register(AS2$Form, d.AS2$Form) }
 
 /* Sous classes de AS2$Form ******************************************************
 - N'A PAS de _descriptor
@@ -36,7 +35,7 @@ class AS2$Form_membrecomite extends AS2$Form {
     super(); this.docCl = docCl }
 
   /* Méthodes surchargées par type *******************************/
-  cloneEtc (byU: boolean) : Object {
+  cloneEtc (byU: boolean) : any {
     if (byU) return { pseudo: this.etcU ? (this.etcU as any)['pseudo'] : '' }
     const alias = this.opts ? this.opts.alias || '' : ''
     return { pseudo: this.etcT ? (this.etcT as any)['pseudo'] : alias }
@@ -76,14 +75,14 @@ class AS2$Form_auteur extends $Form {
 
   constructor () { super() }
 
-  cloneEtc (byU: boolean) : Object {
+  cloneEtc (byU: boolean) : any {
     const etc: any = byU ? this.etcU : this.etcT
     return {
       nomAuteur: !etc ? '' : etc['nomAuteur'],
       section: !etc ? '' : etc['section']
     }
   }
-  eqEtc (x: Object | null, y: Object | null) : boolean {
+  eqEtc (x: any | null, y: any | null) : boolean {
     const x1: any = x || this.emptyEtc
     const y1: any = y || this.emptyEtc
     return (x1['nomAuteur'] === y1['nomAuteur']) && (x1['section'] === y1['section'])
@@ -118,14 +117,14 @@ class AS2$Form_coauteur extends $Form {
 
   constructor () { super() }
 
-  cloneEtc (byU: boolean) : Object {
+  cloneEtc (byU: boolean) : any {
     const etc: any = byU ? this.etcU : this.etcT
     return {
       trigramme: !etc ? '' : etc['trigramme'],
       nomAuteur: !etc ? '' : etc['nomAuteur']
     }
   }
-  eqEtc (x: Object | null, y: Object | null) : boolean {
+  eqEtc (x: any | null, y: any | null) : boolean {
     const x1: any = x || this.emptyEtc
     const y1: any = y || this.emptyEtc
     return (x1['trigramme'] === y1['trigramme']) && (x1['nomAuteur'] === y1['nomAuteur'])
@@ -145,7 +144,7 @@ class AS2$Form_coauteur extends $Form {
     const ct = await $CredTempl.new(this.userId, this.svc || '', this.org || '', 'Auteur',
       { autid: this.autid } , na, { name: na, trig: trigramme })
     this.opts = {
-      $1: AS2$Auteur._descriptor.pkValue({ autid: this.autid }), // TOCHECK
+      $1: AS2$Auteur.descriptor.pkValue({ autid: this.autid }), // TOCHECK
       auteur: { autid: this.autid, nomAuteur: na },
       credTemplates: {}
     }

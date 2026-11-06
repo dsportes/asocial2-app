@@ -14,9 +14,8 @@ let n = 0, nf = 0, exc: AppExc | undefined
 
 /*********************************************************************************/
 class AS2$Status extends ADMIN$Status {
-  static _descriptor = d.AS2$Status
 }
-if (!exc) { n++; exc = Registry.register(AS2$Status) }
+if (!exc) { n++; exc = Registry.register(AS2$Status, d.AS2$Status) }
 
 /*********************************************************************************/
 export class AS2$EmbedCred extends EmbedCred {
@@ -26,19 +25,15 @@ export class AS2$EmbedCred extends EmbedCred {
 
 /* Virtuels et enums **************************************************************/
 export class AS2$CoDir extends $Document {
-  static _descriptor = d.AS2$Codir
 }
-if (!exc) { n++; exc = Registry.register(AS2$CoDir) }
+if (!exc) { n++; exc = Registry.register(AS2$CoDir, d.AS2$Codir) }
 
 export class AS2$Redaction extends $Document {
-  static _descriptor = d.AS2$Redaction
 }
-if (!exc) { n++; exc = Registry.register(AS2$Redaction) }
+if (!exc) { n++; exc = Registry.register(AS2$Redaction, d.AS2$Redaction) }
 
 /*********************************************************************************/
 export class AS2$Auteur extends $Document {
-  static _descriptor = d.AS2$Auteur
-
   // Donne le autid de svc/org/nom
   static autids: Map<string, string> = new Map()
 
@@ -70,7 +65,7 @@ export class AS2$Auteur extends $Document {
 
   static async get (org: string, autid?: string, autPk?: string) : Promise<AS2$Auteur | null> {
     const op = new Operation('AuteurDeId', 'AS2', org)
-    const pk = autPk || AS2$Auteur._descriptor.pkValue({ autid: autid })
+    const pk = autPk || AS2$Auteur.descriptor.pkValue({ autid: autid })
     op.sign(stores.safe.myCredOfDoc('AS2', org, 'Auteur', pk))
     op.args.autPk = pk
     try {
@@ -105,11 +100,10 @@ export class AS2$Auteur extends $Document {
   }
 
 }
-if (!exc) { n++; exc = Registry.register(AS2$Auteur) }
+if (!exc) { n++; exc = Registry.register(AS2$Auteur, d.AS2$Auteur) }
 
 /*********************************************************************************/
 export class AS2$SubsGenerator extends $SubsGenerator {
-  static _descriptor = d.AS2$SubsGenerator
 
   processPerimeters (lp: $Perimeter[]) {
     this.subs.setTitle('Test auteur')
@@ -124,7 +118,7 @@ export class AS2$SubsGenerator extends $SubsGenerator {
       }
   }
 }
-if (!exc) { n++; exc = Registry.register(AS2$SubsGenerator) }
+if (!exc) { n++; exc = Registry.register(AS2$SubsGenerator, d.AS2$SubsGenerator) }
 
 /********************************************************************************
 Publication:
@@ -136,8 +130,6 @@ Publication:
   - volume: volume, entier
 */
 export class AS2$Publication extends $Document {
-  static _descriptor = d.AS2$Publication
-
   async compile () {}
 
   id: string = '' // générée aléatoirement
@@ -147,7 +139,7 @@ export class AS2$Publication extends $Document {
   volume: number = 0 // volume total des fichiers attachés
 
 }
-if (!exc) { n++; exc = Registry.register(AS2$Publication) }
+if (!exc) { n++; exc = Registry.register(AS2$Publication, d.AS2$Publication) }
 
 export const AS2report = () : AppExc | undefined => {
   if (!exc)

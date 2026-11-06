@@ -255,7 +255,8 @@ const init1 = () => {
   curSite.svc = ''
   curSite.svcLabel = ''
   curSite.admin = false
-  curSite.services = new Set(),
+  // oxlint-disable-next-line no-unused-expressions
+  curSite.services.clear(),
   adp.value.soa.site = ''
   newsite.value = false
   nsite.inp = ''; nsite.err = ''

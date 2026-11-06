@@ -1,6 +1,5 @@
 import { Crypt } from './crypt'
 import { AppExc, type CodeLabel } from './base'
-import { Registry } from './registry'
 
 export type DocId = {
   svc: string, docCl: string, subCl: string
@@ -70,6 +69,15 @@ export type EnumHeader = {
 }
 
 export class Descriptor {
+  private static services: Set<string> = new Set()
+  static hasService (svc: string) : boolean { return this.services.has(svc) }
+
+  private static enums: Map<string, Descriptor> = new Map()
+
+  static getEnumDescriptor (svc: string, enumName: string) : Descriptor | undefined {
+    return this.enums.get(svc + '/' + enumName)
+  }
+
   public static doc (svc: string, docCl: string, hdr: DocHeader,
     colls?: Map<string, collection>,
     indexes?: Map<string, idx> | null
@@ -91,11 +99,10 @@ export class Descriptor {
     if (!Descriptor.isDocName(name))
       exc = new AppExc(3, 'enum_name_syntax', 'Descriptor', [fullName])
     const d = new Descriptor(exc, svc, name, null, hdr, null, null)
-    Registry.registerEnum(d)
+    this.enums.set(svc + '/' + name, d)
     return d
   }
 
-  static services: Set<string> = new Set()
   static registerService (svc: string) : void {
     if (!Descriptor.isSvcName(svc))
       throw new AppExc(3, 'service_name_syntax', 'Descriptor', [svc])
@@ -120,6 +127,13 @@ export class Descriptor {
   readonly virtual: boolean = false
   readonly svc: string = ''
   readonly docCl: string = ''
+  get fullName () : string { return this.svc + '/' + this.docCl }
+  // @ts-expect-error
+  clazz: Function
+  readonly subClasses: Map<string, Function> = new Map()
+  subClass (subCl: string) : Function | undefined {
+    return this.subClasses.get(subCl)
+  }
 
   readonly pk: string[] = []
   readonly nohash: boolean = false
@@ -198,7 +212,7 @@ export class Descriptor {
     - clé: nom de la collection
     - valeur: valeur de la propriété clé de la collection dans le document
   */
-  extractColls (src: Object) : Map<string, string[]> {
+  extractColls (src: any) : Map<string, string[]> {
     const m = new Map()
     if (!this.colls) return m
     if (this.colls) for(const [colName, ] of this.colls) {
@@ -218,8 +232,6 @@ export class Descriptor {
       ps.add(p)
     }
   }
-
-  get fullName () { return this.svc + '/' + this.docCl }
 
   private constructor (exc: AppExc | undefined, svc: string, docCl: string, dhdr: DocHeader | null, ehdr: EnumHeader | null,
     colls: Map<string, collection> | null,
@@ -280,7 +292,7 @@ export class FormType {
   // Retourne la liste des couples [svc, type] des FormTypes déclarés
   static getFormTypes () : [string, string][] {
     const r: [string, string][] = []
-    for(const [k, ft] of FormType.formTypes) r.push([ft.svc, ft.type])
+    for(const [,ft] of FormType.formTypes) r.push([ft.svc, ft.type])
     return r
   }
   static getFormType (svc: string, type: string) { return FormType.formTypes.get(svc + '/' + type) }
@@ -299,7 +311,7 @@ export class FormType {
   readonly creds: string[]
 
   static register (svc: string, type: string, categ: string, key: string, creds: string[]) : AppExc | undefined {
-    if (!Descriptor.services.has(svc))
+    if (!Descriptor.hasService(svc))
       return new AppExc(3, 'EX3_not_configured_service', 'FormType', [svc])
     if (!Descriptor.isVarName(type))
       return new AppExc(3, 'EX3_type_name_syntax', 'FormType', [svc + ' -- ' + type])

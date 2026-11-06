@@ -130,7 +130,7 @@ watch(() => [ui.appPage.org, ui.appPage.count], async () => {
 
 const majAut = async () => {
   const op = new Operation('MajAuteur', 'AS2', ui.appPage.org)
-  const dd = AS2$Auteur._descriptor
+  const dd = AS2$Auteur.descriptor
   op.args.autpk = dd.pkValue(aut.a)
   if (aut.newNa) op.args.nomAuteur = aut.newNa
   if (aut.newSection) op.args.section = aut.newSection
@@ -151,7 +151,7 @@ const majAut = async () => {
 const openCred = (c: AS2$EmbedCred) => {
   curcred.value = c
   const autid = aut.a ? aut.a.autid : ''
-  docPk.value = AS2$Auteur._descriptor.pkValue({ autid })
+  docPk.value = AS2$Auteur.descriptor.pkValue({ autid })
   dialogs.credmgnt = true
 }
 

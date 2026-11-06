@@ -4,11 +4,16 @@ export const K = {
 
   LANG: 'fr',
 
+  MANAGERS: new Map([
+    ['AS2', ['CoDir', 'Redaction']]
+  ]),
+
   SERVICES: {
     AS2: { api: 1 },
     ASSO2: { api: 1 },
     SAFE: { api: 1 }
   },
+
   MASTERDIR_URL: 'http://localhost:8091/master/',
   STDSAFE_URL: 'http://localhost:8091/safe/',
 
@@ -54,7 +59,7 @@ export const K = {
   },
 
   regexp: {
-    b64: new RegExp('^[0-9a-zA-Z\-_]*$'),
+    b64: new RegExp('^[0-9a-zA-Z-_]*$'),
     num: new RegExp('^[0-9]*$'),
     an0: new RegExp('^[0-9a-zA-Z]*$'),
     an1: new RegExp('^[a-z][0-9a-z]*$'),

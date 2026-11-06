@@ -1,4 +1,4 @@
-import {Descriptor, collection, idx, propType } from '../src-fw/descriptor'
+import {Descriptor } from '../src-fw/descriptor'
 
 Descriptor.registerService('ADMIN')
 

@@ -26,7 +26,6 @@ Résultat en v-model.
 
 <script setup lang="ts" vapor>
 import { ref, Ref, watch } from 'vue'
-import stores from '../stores/all'
 import BtnBubble from '../components-fw/BtnBubble.vue'
 import SelectSite from '../components-fw/SelectSite.vue'
 import { pingStore } from '../src-fw/operation'

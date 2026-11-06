@@ -35,7 +35,7 @@ export const useSessionStore = defineStore('session', () => {
     const p = notificationPerm.state
     session.changePerm(p)
   })
-  .catch(e => {
+  .catch(_e => {
     console.log('Permissions cannot be asked')
   })
 
@@ -148,7 +148,7 @@ export const useSessionStore = defineStore('session', () => {
     return s
   }
 
-  const doStep1 = async (sf: any, ui: any) => {
+  const doStep1 = async (sf: any, _ui: any) => {
     AOperation.reset()
     resetDocStores()
     if (hasLocal.value) {

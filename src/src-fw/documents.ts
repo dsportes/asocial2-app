@@ -28,10 +28,10 @@ export class $CredTempl {
 
   pubv: Uint8Array
   pubc: Uint8Array
-  props: Object
+  props: any
 
   static async new (userId: string, svc: string, org: string,
-    docCl: string, src: Object, name: string, props: Object ) : Promise<$CredTempl> {
+    docCl: string, src: any, name: string, props: any ) : Promise<$CredTempl> {
     const t = new $CredTempl(userId, svc, docCl, src, name, props)
     const sf = stores.safe
     t.signId = keyToB64(await Crypt.sign(keyFromB64(sf.auth.S), encoder.encode(t.credId)))
@@ -56,11 +56,11 @@ export class $CredTempl {
     return t
   }
 
-  constructor (userId: string, svc: string, docCl: string, src: Object, name: string, props: Object ) {
+  constructor (userId: string, svc: string, docCl: string, src: any, name: string, props: any ) {
     this.userId = userId
     this.svc = svc
     this.docCl = docCl
-    this.docPk = Registry.getClassInfo(svc, docCl, src).pkValue(src)
+    this.docPk = Registry.getDescriptor(svc, docCl).pkValue(src)
     this.credId = Crypt.rnd(15)
     this.props = props
     this.signId = ''
@@ -274,7 +274,6 @@ export class $MDEvent {
   }
 
   async mdEventDel () {
-    const sf = stores.safe
     const op = new MDOperation('$mdEventDel')
     /*
     const eventId = this.args['eventId'] as string
@@ -293,7 +292,7 @@ export type FormCtx = {
 }
 
 export type Upd = {
-  etc: Object,
+  etc: any,
   msg: string,
   msgc: boolean,
   etcc: boolean
@@ -306,8 +305,8 @@ export type $FormObj = {
   v: number  //  version du document (_epoch_).
   maxLife: number //  EPOCH en MINUTES de suppression automatique du formulaire.
   status: number // de 1 à 4.
-  etcU: Object | null  // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
-  etcT: Object | null  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
+  etcU: any  // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
+  etcT: any  // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null  // message écrit par U.
   msgT: Uint8Array | null  // message écrit par le tiers.
   opts?: any | null // options éventuelles de validation (calculées par compileEtc)
@@ -335,8 +334,8 @@ export class $Form extends $Document {
   v: number = 0 //  version du document (_epoch_).
   maxLife: number = 0 //  EPOCH en SECONDES de suppression automatique du formulaire.
   status: number = 0 // de 1 à 4.
-  etcU: Object | null = null // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
-  etcT: Object | null = null // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
+  etcU: any // objet de structure spécifique du type. Saisi par l'utilisateur et le tiers.
+  etcT: any // valeur de etc _avant_: en statut 1 c'est le dernier état en statut 2, en statut 2 c'est le dernier état en statut 1. Permet un _undo_ de remord de U quand il avait modifié etc mais que finalement il accepte la dernière proposition de T (et symétriquement pour T).
   msgU: Uint8Array | null = null // message écrit par U.
   msgT: Uint8Array | null = null // message écrit par le tiers.
   isInvit?:boolean
@@ -371,19 +370,19 @@ export class $Form extends $Document {
   ****************************************************************/
   /* Clone etc passé en argument OU s'il est null initilise un etc
   avec des valeurs initiales / par défaut */
-  cloneEtc (byU: boolean) : Object {
+  cloneEtc (byU: boolean) : any {
     const etc = byU ? this.etcU : this.etcT
-    return etc === null ? { } : decode(encode(etc)) as Object
+    return etc === null ? { } : decode(encode(etc)) as any
   }
 
   /* Test l'égalité entre 2 etc */
-  eqEtc (x: Object | null, y: Object | null) : boolean {
+  eqEtc (x: any, y: any) : boolean {
     if (!x || !y) return false
     return equ8(encode(x), encode(y))
   }
 
   /* Retourne le code d'une erreur empâchant la "validation" du form */
-  async checkEtc (etc: Object) : Promise<string> {
+  async checkEtc (_etc: any) : Promise<string> {
     return ''
   }
 
@@ -391,7 +390,7 @@ export class $Form extends $Document {
   A CHAQUE ENREGISTREMENT et AVANT VALIDATION.
   - process différent pour une demande (byU est true) ou une proposition
   */
-  async compileEtc (etc: Object, byU: boolean) : Promise<void> {
+  async compileEtc (_etc: any, _byU: any) : Promise<void> {
   }
 
   /***************************************************************
@@ -527,7 +526,7 @@ export class $Form extends $Document {
     const docCls: Set<string> = new Set()
     for (const x of filter)
       docCls.add(x.substring(0, x.indexOf('/')))
-    for(const [t, e] of FormType.formTypes) {
+    for(const [, e] of FormType.formTypes) {
       for(const c of e.creds) {
         const cl = c.substring(0, c.indexOf('/'))
         if (docCls.has(cl)) ft.add(e.type)
@@ -614,7 +613,7 @@ export class $Form extends $Document {
     }
   }
 
-  async updateByUT (args: Object, opName: string, byU: boolean) : Promise<boolean> {
+  async updateByUT (args: any, opName: string, byU: boolean) : Promise<boolean> {
     const ui = stores.ui
     const sf = stores.safe
     const op = new Operation(opName, this.svc || '', this.org || '')

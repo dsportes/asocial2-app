@@ -799,13 +799,9 @@ const useStore = (id: string) =>
     */
     const getLastSync = (apstate: APState) : number => {
       let lastSync = 0
-      let noSync = false
       for(const def of apstate.perimeter.defs) {
         const item = getItem(def)
-        if (item.sat === 0) {
-          noSync = true
-          break
-        }
+        if (item.sat === 0) break
         if (lastSync === 0) lastSync = item.sat
         else if (item.sat < lastSync) lastSync = item.sat
       }

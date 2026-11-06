@@ -1,4 +1,4 @@
-<!-- Input standardisé A 
+<!-- Input standardisé A
 Commentaires dans Input-B.
 -->
 <template>
@@ -22,12 +22,12 @@ Commentaires dans Input-B.
         round size="md" icon="close" @ok="model = ''"
         :disable="disable || !model || model.length === 0" color="none"/>
       <btn-cond v-if="!noundo && hasInitVal && !disable && chg"
-        size="md" icon="undo" color="none" round 
+        size="md" icon="undo" color="none" round
         @ok="undo" />
       <btn-cond v-if="!nv" size="md" label="OK" padding="0 xs"
         :disable="disable || err !== '' || !chg"
         @ok="emit('validate', true)" />
-      <btn-cond v-if="!simple && mayStar" 
+      <btn-cond v-if="!simple && mayStar"
         size="md" icon="star" color="warning" round
         @ok="model = fill(model)"/>
       <btn-cond v-if="list && list.length" size="md" icon="arrow_drop_down"
@@ -66,7 +66,7 @@ const props = defineProps<{
   prefix?: string,
   initval?: string,
   disable?: boolean,
-  noval?: Boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
+  noval?: boolean, // pas d'émission de 'validate' (ni 'check', ni 'Enter')
   list?: string[],
   fncheck?: Function,
   ctx?: any
@@ -96,7 +96,7 @@ const bubble = computed(() => {
   return 'REGexp_all'
 })
 
-const mayStar = computed(() => 
+const mayStar = computed(() =>
   star && !props.disable && model.value && model.value.length > star && model.value.endsWith('*'))
 
 const ph = computed(() => {
@@ -113,7 +113,7 @@ const fill = (v: string | undefined) => {
 
 const hasInitVal = computed(() => props.initval && props.initval.length )
 const chg = computed(() => !props.disable && hasInitVal.value && props.initval !== model.value)
-const hint = computed(() => 
+const hint = computed(() =>
   $t('minmax', sz.value) + (!err.value && !nv.value ? $t('pressret') : ''))
 const undo = () => {
   if (props.initval) model.value = props.initval }
@@ -127,7 +127,7 @@ const xe = () => {
   return props.fncheck ?  props.fncheck(model.value, props.ctx) : ''
 }
 
-watch(() => model.value, (v) => { 
+watch(() => model.value, (v) => {
   err.value = xe()
   if (err.value === '' && !props.disable) emit('change', true)
 })

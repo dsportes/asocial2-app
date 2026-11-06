@@ -147,7 +147,7 @@ import MdEditor from '../components-fw/MdEditor.vue'
 import BtnCond from '../components-fw/BtnCond.vue'
 import FormEtc from '../components/FormEtc.vue'
 import DialogStd0 from '../dialogs-fw/DialogStd0.vue'
-import { $Form, FormCtx } from '../src-fw/documents'
+import { FormCtx } from '../src-fw/documents'
 
 const stic = ['add', 'person', 'local_police', 'check', 'close']
 const stclr = ['primary', 'warning', 'warning', 'green-5', 'negative']

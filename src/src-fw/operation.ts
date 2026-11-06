@@ -2,7 +2,7 @@ import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'
 import { AppExc, CodeLabel } from './base'
-import { Registry } from '../src-fw/registry'
+import { Descriptor } from '../src-fw/descriptor'
 
 import stores from '../stores/all'
 import { onPushMsg } from '../stores/docs'
@@ -55,8 +55,10 @@ export class DocEnums {
   En l'absence du suffixe org, un nom de site est requis.
   */
   static async get (svc: string, enumName: string, org: string) : Promise<CodeLabel[]> {
-    const dd = Registry.getClassInfo(svc, enumName).descriptor
-    if (dd.isDoc) return []
+    const d = Descriptor.getEnumDescriptor(svc, enumName)
+    if (d) return []
+    // @ts-expect-error
+    const dd = d as Descriptor
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
     const cred = dd.enumCred || ''
@@ -93,8 +95,11 @@ export class DocEnums {
   static async set (svc: string, enumName: string, value: CodeLabel[], org: string)
     : Promise<boolean> {
     const sf = stores.safe
-    const dd = Registry.getClassInfo(svc, enumName).descriptor
-    if (dd.isDoc || (dd.enum && dd.enum.length)) return false
+    const d = Descriptor.getEnumDescriptor(svc, enumName)
+    if (d) return false
+    // @ts-expect-error
+    const dd = d as Descriptor
+    if (dd.enum && dd.enum.length) return false
     // enum externe -
     const cred = dd.enumCred || ''
     const n = svc + '/' + dd.docCl + (cred ? '/' + org : '')
@@ -270,6 +275,10 @@ export class AOperation {
     await stores.ui.displayExc(e)
   }
 
+  log (e: any) {
+    console.log(e.toString())
+  }
+
   setArgs (args: any) {
     for(const p of Object.keys(args)) this.args[p] = args[p]
   }
@@ -369,7 +378,7 @@ export class OperationG extends AOperation {
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
       throw new AppExc(8, 'HTTP_500_etc', 'post',
-        ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
+        ['' + response.status, (this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
@@ -377,7 +386,7 @@ export class OperationG extends AOperation {
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
       throw new AppExc(8, 'unexpected_network_service_response', 'post',
-        [(this.args.svc || this.args.svc || '?'), e.toString()], e.stack || '')
+        [(this.args.svc || '?'), e.toString()], e.stack || '')
     }
   }
 
@@ -416,6 +425,7 @@ export const services = async (site: string) : Promise<{at: number, services: st
     const res = await op.post()
     return res
   } catch(e) {
+    op.log(e)
     return null
   }
 }
@@ -448,8 +458,9 @@ export const getSiteStatus = async (site: string, svc: string)
     const res = await op.post()
     return res['status']
   } catch(e) {
+    op.log(e)
     await stores.ui.diagDisplay($t('site_err'))
-    return  { st: 0, at: 0, txt: '' }
+    return { st: 0, at: 0, txt: '' }
   }
 }
 
@@ -516,14 +527,14 @@ abstract class A2Operation extends AOperation {
       // autres status: 500...
       const txt = new TextDecoder().decode(buf)
       throw new AppExc(8, 'HTTP_500_etc', 'post',
-        ['' + response.status, (this.args.svc || this.args.svc || '?'), txt])
+        ['' + response.status, (this.args.svc || '?'), txt])
     } catch (e: any) {
       session.opEnd()
       this.controller = null
       if (e instanceof AppExc) throw e
       if (this.aborted) throw new AppExc(99, 'interrupted', this.opName)
       throw new AppExc(8, 'unexpected_network_service_response', 'post',
-        [(this.args.svc || this.args.svc || '?'), e.toString()])
+        [(this.args.svc || '?'), e.toString()])
     }
   }
 }
@@ -546,6 +557,7 @@ export const pingStore = async (store: string) : Promise<boolean> => {
     const ret = await op.post()
     return ret['pingstore'] || false
   } catch(e) {
+    op.log(e)
     return false
   }
 }
@@ -582,7 +594,7 @@ en arguments un objet de classe `AuthRecord`, construit par l'application et aya
 */
 export class AuthRecord {
   svc: string = ''
-  args: Object = ''
+  args: any = ''
   userId: string
   sessionId: string
   time: number
@@ -663,7 +675,7 @@ export async function checkStatus (orgRoles: string[])
         }
       }
     } catch (e) {
-      // await (op.ko(e))
+      op.log(e)
       status[site]['$ST$'] = 0
       allOK = false
     }

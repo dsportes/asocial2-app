@@ -143,7 +143,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   const pophelp = () => {
-    if (helpstack.value.length === 1) fermerHelp
+    if (helpstack.value.length === 1) fermerHelp()
     else helpstack.value.splice(helpstack.value.length - 1, 1)
   }
 

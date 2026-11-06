@@ -1,4 +1,4 @@
-<!-- Bouton : affiche une bulle d'aide de texte MD sur click 
+<!-- Bouton : affiche une bulle d'aide de texte MD sur click
 Dans le texte MD les liens externes vers la documentation sont écrits sous cette forme:
 
 Dans la documentation générale, lire <a href="$$/appli/alertes.html" target="_blank">Alertes et restrictions d'accès associées</a>
@@ -20,7 +20,7 @@ L'image doit figurer dans public/images
     <div class="cursor-pointer">
       <div class="row no-wrap items-center">
         <q-icon name="question_mark" class="q-mr-xs col-auto"
-          :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'" 
+          :color="!$q.dark.isActive ? 'indigo-2' : 'indigo-9'"
           size="20px">
           <q-menu auto-close :class="($q.dark.isActive ? 'clear' : 'dark')"
             anchor="center middle" self="center middle"
@@ -36,11 +36,11 @@ L'image doit figurer dans public/images
 <script setup lang="ts" vapor>
 import ScrollMd from '../components-fw/ScrollMd.vue'
 
-const props = defineProps({ 
-  text: String, // texte MD à afficher
-  tclass: String,
-  bub: String
-})
+const props = defineProps<{
+  text: string, // texte MD à afficher
+  tclass?: string,
+  bub: string
+}>()
 
 </script>
 

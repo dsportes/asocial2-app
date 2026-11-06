@@ -205,7 +205,7 @@ bla bla
   PAGEdemands: 'Mes demandes / propositions reçues',
   PAGEdemands_label: 'Mes demandes, création et suivi',
   PAGEdemands_bub: `### Mes demandes, création et suivi des propositions reçues:
-  - faire une nouvelle demande d\'invitation: solliciter des tiers pour que l\'un d'entre eux fasse une proposition.
+  - faire une nouvelle demande d'invitation: solliciter des tiers pour que l'un d'entre eux fasse une proposition.
   - lister mes procédures _en cours_:
     - mes demandes n'ayant pas encore été prises en compte par un tiers,
     - les propositions faites par tiers, soit suite à une de mes demandes, soit de leur propre inititiative.
@@ -289,7 +289,7 @@ bla bla
   op_FormFilteredList: 'Lecture des demandes / propositions concernant les "autres"',
   op_FormUpdByT: 'Mise à jour d\'une proposition',
   op_FormUpdByU: 'Mise à jour d\'une demande',
-  op_FormGet: 'Lecture d\`une demande / proposition',
+  op_FormGet: 'Lecture d\'une demande / proposition',
   op_FormValidateByU: 'Mise à jour d\'une demande / proposition par l\'utilisateur cible',
   op_FormValidateByT: 'Mise à jour d\'une demande / proposition par l\'utilisateur tiers',
   op_$UpdateProfiles: 'Mise à jour des listes de pouvoirs.',
@@ -323,7 +323,7 @@ bla bla
   op_$SetOptions: 'Fixation du status d\'une organisation ou un service',
   op_ADMIN$getEnum: 'Lecture d\'une énumération',
   op_ListeAuteursSection: 'Liste des auteurs par section',
-  op_UpdateCredentialSusp: 'Mise à jour d\'un pouvoir d\èun auteur',
+  op_UpdateCredentialSusp: 'Mise à jour d\'un pouvoir d\'un auteur',
   op_UpdateCredential: 'Misqe à jour d\'un pouvoir d\'un "manager"',
   op_AutoRevokeCred: 'Auto révocation d\'un pouvoir',
   op_post: 'Requête HTTP',
@@ -498,7 +498,7 @@ Si l'indisponibilité était lié à un incident technique temporaire bla ble
   LCRtit_label: 'Gérer mes "listes de pouvoirs"',
   LCRtit_bub: `### Gérer mes "listes de pouvoirs"
 Une **liste de pouvoirs**,
-- porte un nom (court) de votre choix explicitant l\'usage que vous en faites,
+- porte un nom (court) de votre choix explicitant l'usage que vous en faites,
 - est une simple liste de certains de vos pouvoirs.
 
 La liste (virtuelle) **Générale** est définie par défaut et contient à tout instant tous vos pouvoirs (elle ne peut pas être modifiée),
@@ -614,7 +614,7 @@ Si c'est le dernier **manager**, la vie de l'organisation peut en être gravemen
   APrevcf_0: 'Je renonce à la révocation',
   APrevcf_1: 'Je confirme la révocation',
   APtarget_label: 'A propos de l\'utilisateur cible',
-  APtarget_bub: `# A propos de l\'utilisateur cible
+  APtarget_bub: `# A propos de l'utilisateur cible
 bla bla
 `,
   APdelcred: 'Supprimer ce pouvoir',
@@ -760,7 +760,7 @@ Suppression sélective des utilisateurs et de leurs sessions.
   HPnocalc: '(pas calculé)',
 
   HPadminA_label: 'Gérer mes rôles d\'Adiministrateur',
-  HPadminA_bub: `# Gérer mes rôles d\'Adiminstrateur Technique
+  HPadminA_bub: `# Gérer mes rôles d'Adiminstrateur Technique
   bla bla
 `,
   HPadminA_add: 'M\'ajouter en tant qu\'Administrateur',
@@ -829,7 +829,7 @@ bla bla
 `,
   SECsite_label: 'Site de confiance',
   SECsite_bub: `## Site de confiance
-Le _site de confiance_ choisi par un utilisateur héberge son **dossier personnel d\'authentification**.
+Le _site de confiance_ choisi par un utilisateur héberge son **dossier personnel d'authentification**.
 - Pour toute autre personne que son propriétaire, le dossier est **opaque et anonyme**:
   - les _pseudos et phrase secrètes_ qui y figurent ne sont lisibles que par lui.
   - il est _crypté_ par un jeu de clés qui ne se révellent que par la connaissance dd'une phrase longue connue de son seul proriétaire.
@@ -984,7 +984,7 @@ bla bla
 bla bla
 `,
   SFTphrase_label: 'Changer les phrases d\'ouverture de la Safe Box',
-  SFTphrase_bub: `### Changer les phrases d\'ouverture de la Safe Box
+  SFTphrase_bub: `### Changer les phrases d'ouverture de la Safe Box
 bla bla
 `,
   SFTopal: 'Opérations DANGEREUSES à utiliser avec précaution',
@@ -1202,7 +1202,7 @@ bla bla
   EX_toAdmin: 'L\'erreur a été transmise à l\'administrateur technique.',
   EX1_label: 'Données erronées (erreur de saisie ?)',
   EX1_bub: `### Données erronées
-  A priori une erreur de saisie a provoqué cette anomalie: corriger et relancer l\'opération.
+  A priori une erreur de saisie a provoqué cette anomalie: corriger et relancer l'opération.
 
   _Il n'est toutefois pas impossible que la saisie soit correcte et la détection d'anomalie ait un BUG._
   `,
@@ -1248,11 +1248,11 @@ bla bla
   `,
 
   EX99_label: 'Interruption volontaire d\'une opération par appui volontaire sur le bouton rouge',
-  EX99_bub: `### Interruption volontaire d\'une opération
+  EX99_bub: `### Interruption volontaire d'une opération
   - par appui volontaire sur le bouton rouge.
-  - il est impossible de savoir si l\'opération s\'est bien effectuée ou non.
+  - il est impossible de savoir si l'opération s'est bien effectuée ou non.
 
-  Regarder les données affichées pour en déduire si l\'opération est allée à son terme ou a été interrompue avant.
+  Regarder les données affichées pour en déduire si l'opération est allée à son terme ou a été interrompue avant.
   `,
 
   EX99_interrupted: 'Interrompu par l\'utilisateur',
@@ -1270,34 +1270,34 @@ bla bla
   EX3_unknown_service_for_org: 'Service cloud [{1}] non configuré pour servir l\'organisation [{0}]',
   EX3_safeStore_url_not_found: 'Aucun _Storage de Safe Box_ déclaré avec le code [{0}]',
 
-  EX8_IDB_error: `Erreur technique d\'accès à la base locale.
+  EX8_IDB_error: `Erreur technique d'accès à la base locale.
 Détail: [{0}]
 `,
-  EX8_IDB_SAFE_error: `Erreur technique d\'accès à la base locale _Cache_.
+  EX8_IDB_SAFE_error: `Erreur technique d'accès à la base locale _Cache_.
 Détail: [{0}]
 `,
   EX8_HTTP_not_200: 'Erreur technique inattendue d\'accès Internet. Code HTTP non 200: Status: [{0}] - StatusText: [{1}]',
   EX8_HTTP_500_etc: 'Erreur technique inattendue d\'accès renvoyée par le _service cloud_ [{1}]. Code HTTP 500... Status: [{0}] - StatusText: [{2}]',
-  EX8_unexpected_network_service_response: `Erreur technique inattendue d\'accès renvoyée par le _service cloud_ [{0}].
+  EX8_unexpected_network_service_response: `Erreur technique inattendue d'accès renvoyée par le _service cloud_ [{0}].
 Détail: [{1}]
 `,
 
   EX101_masterdir_no_admin: 'Droit d\'Administration du _Master Directory_ requis pour l\'opération [{0}].',
   EX101_operation_admin_required: 'Droit d\'Administration du _service cloud_ requis pour cette opération.',
   EX101_operation_authentication_required: '(BUG) - Opération [{0}] invoquée sans authentication de l\'utilisateur.',
-  EX101_operation_no_user_keys_cv: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
+  EX101_operation_no_user_keys_cv: `Impossible d'authentifier l'utilisateur [{1}] pour l'opération demamdée [{0}].
 Détail: _clé de vérification non trouvée_
 `,
-  EX101_operation_bad_signature: `Impossible d\'authentifier l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
+  EX101_operation_bad_signature: `Impossible d'authentifier l'utilisateur [{1}] pour l'opération demamdée [{0}].
 Détail: _échec de vérification de la signature_
 `,
-  EX101_operation_bad_credentials: `Pouvoirs non validés de l\'utilisateur [{1}] pour l\'opération demamdée [{0}].
+  EX101_operation_bad_credentials: `Pouvoirs non validés de l'utilisateur [{1}] pour l'opération demamdée [{0}].
 Détail: [{0}].
 `,
-  EX101_operation_svcorg_read_required: `Service cloud [{0}] bloqué pour l\'organisation [{1}] sur appel de l\'opération [{2}].
+  EX101_operation_svcorg_read_required: `Service cloud [{0}] bloqué pour l'organisation [{1}] sur appel de l'opération [{2}].
 Détail: _code blocage_ {3}
 `,
-  EX101_operation_svcorg_readwrite_required: `Service cloud [{0}] bloqué en _lecture seulement_ pour l\'organisation [{1}] sur appel de l\'opération [{2}].
+  EX101_operation_svcorg_readwrite_required: `Service cloud [{0}] bloqué en _lecture seulement_ pour l'organisation [{1}] sur appel de l'opération [{2}].
   Détail: _code blocage_ {3}
 `,
 
@@ -1313,8 +1313,8 @@ Détail: _code blocage_ {3}
   EX103_unknown_master_operation: '(BUG) - Code d\'opération d\'accès au _Master Directory_ [{0}] inconnu.',
   EX103_unknown_safe_operation: '(BUG) - Code d\'opération d\'accès à un _Stockage de Safe Box_ [{0}] inconnu.',
   EX103_unknown_operation: '(BUG) - Code d\'opération d\'accès à un _service cloud_ [{0}] inconnu.',
-  EX103_unsupported_API: `(BUG de configuration) - Discordance entre le niveau d\'API supporté par l\'application et celui accepté par le _service cloud_ [{0}].
-Détail: supporté par l\'application:[{3}] - acceptés par le service: de [{1}] à [{2}] - build du service: [{4}].`,
+  EX103_unsupported_API: `(BUG de configuration) - Discordance entre le niveau de l'API supporté par l'application et celui accepté par le _service cloud_ [{0}].
+Détail: supporté par l'application:[{3}] - acceptés par le service: de [{1}] à [{2}] - build du service: [{4}].`,
   EX103_invalid_object_argument: '(BUG) - Argument _objet_ [{2}] invalide sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
   EX103_invalid_bin_argument: '(BUG) - Argument _binaire_ [{2}] invalide sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
   EX103_invalid_array_argument: '(BUG) - Argument _array_ [{2}] invalide sur l\'appel de l\'opération [{0}] du _service cloud_ [{1}].',
@@ -1346,7 +1346,7 @@ Détail: [{0}]
   EX105_service_arguments_notdecodable: 'Opération sur _service cloud_ en échec inattendu: impossible de décoder les arguments.',
   EX105_masterdir_arguments_notdecodable: 'Opération sur _Master Directory_ en échec inattendu: impossible de décoder les arguments.',
   EX105_safe_arguments_notdecodable: 'Opération sur _Stockage de Safe Box_ en échec inattendu: impossible de décoder les arguments.',
-  EX105_masterdir_case_chk: `Tentative d\'accès au _Master Directory_ avec une clé d\'authentification non valide.
+  EX105_masterdir_case_chk: `Tentative d'accès au _Master Directory_ avec une clé d'authentification non valide.
 Détail: [{0}]
 `,
   EX105_userid_not_found_in_masterdir: 'L\'utilisateur [{0}] n\'est pas enregistré.',
@@ -1366,10 +1366,10 @@ Détail: [{1}]
 `,
 
   EX108_masterdir_challenge_too_old: 'Authentification en échec sur appel de l\'opération [{0}] du _Master Directory_',
-  EX108_remote_md_safes_access_status: `Incident technique inattendu d\'accès au _Master Directory_ ou _stockage de Safe Box_ depuis l'opération [{0}] du service cloud [{1}] pou l'organisation [{2}].
+  EX108_remote_md_safes_access_status: `Incident technique inattendu d'accès au _Master Directory_ ou _stockage de Safe Box_ depuis l'opération [{0}] du service cloud [{1}] pou l'organisation [{2}].
 Détail: url:[{3}] status:[{4} - {5}]
 `,
-  EX108_remote_md_safes_access_exc: `Incident technique inattendu d\'accès au _Master Directory_ ou _stockage de Safe Box_ depuis l'opération [{0}] du service cloud [{1}] pou l'organisation [{2}].
+  EX108_remote_md_safes_access_exc: `Incident technique inattendu d'accès au _Master Directory_ ou _stockage de Safe Box_ depuis l'opération [{0}] du service cloud [{1}] pou l'organisation [{2}].
 Détail: url:[{3}] erreur:[{4}]
 `,
 
@@ -1378,7 +1378,7 @@ Détail: url:[{3}] erreur:[{4}]
   EX110_DbConnector_missing_crypt_key: '(BUG de configuration) - Clé de cryptage non trouvée pour la Base de Données [{0}].',
   EX110_startSRV_certificate_not_found: '(BUG de configuration) - Certificat HTTPS du service non trouvé avec le path [{0}].',
   EX110_startSRV_private_key_not_found: '(BUG de configuration) - Certificat HTTPS du service non trouvé avec le path [{0}].',
-  EX110_DB_lock: `Incident technique inattendu, contention / verrou sur la Base de Données rencontré sur l\'opération [{0}] du _service cloud_ [{1}] sur le site [{2}].
+  EX110_DB_lock: `Incident technique inattendu, contention / verrou sur la Base de Données rencontré sur l'opération [{0}] du _service cloud_ [{1}] sur le site [{2}].
   Détail: [{0}]
 `,
   EX110_SQLite_path_not_found: '(BUG de configuration) - Path [{1}] de la Base de données SQLite [{0}] non trouvé',

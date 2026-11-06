@@ -2,166 +2,61 @@ import { encode } from '@msgpack/msgpack'
 import { Descriptor } from '../src-fw/descriptor'
 import { AppExc } from './base'
 
-interface Described {
-  get _descriptor () : Descriptor 
-}
-
-class FakeDoc implements Described {
-  descriptor : Descriptor
-  get _descriptor () : Descriptor { return this.descriptor }
-  constructor (d: Descriptor) {
-    this.descriptor = d
-  }
-}
-
-export class ClassInfo {
-  readonly svc: string
-  readonly docCl: string
-  readonly subCl: string
-  readonly descriptor: Descriptor
-  readonly clazz: Function | FakeDoc 
-
-  constructor (svc: string, docCl: string, subCl: string, descriptor: Descriptor, 
-    clazz: Function | FakeDoc) {
-    this.svc = svc; this.docCl = docCl; this.subCl = subCl; this.descriptor = descriptor; 
-    this.clazz = clazz
-  }
-
-  newD () : $ADocument {
-    if (this.descriptor.virtual)
-      throw new AppExc(3, 'document_not_instantiable', 'Registry.getClassInfo(5)', [this.fullName])
-    const f = this.clazz
-    // @ts-expect-error
-    return new f() as $ADocument
-  }
-
-  pkValue (src?: any, nohash?: boolean) : string{ return this.pkValue(src, nohash)}
-
-  get fullName () { return this.svc + '/' + this.docCl + (this.subCl ? ('/' + this.subCl) : '')}
-
-}
-
 export class Registry {
-  // Map des classes enregistrées par svc / docCl / subCl
-  static constructors: Map<string, Function | FakeDoc> = new Map()
+  // Map des classes enregistrées par svc / docCl
+  static constructors: Map<string, Function> = new Map()
 
-  // Set des classes s'étant déclarées "manager"
-  static managers : Set<Function> = new Set()
-
-  /* Pour chaque svc / role, sous-classes de Credential ayant déclaré ce role*/
-  static credClassesbyRole: Map<string, Set<Function>> = new Map()
-
-  static getCredClassesOfRole(svc: string, role: string) {
-    return Registry.credClassesbyRole.get(svc + '/' + role) }
-
-  static registerEnum (descriptor: Descriptor) {
-    const fd = new FakeDoc(descriptor)
-    const fullName = descriptor.svc + '/' + descriptor.docCl
-    Registry.constructors.set(fullName, fd)
-  }
-
-  static register (clazz: Function) : AppExc | undefined {
-    let exc: AppExc | undefined
-    const _descriptor : Descriptor = (clazz as any)['_descriptor'] as Descriptor
-    if (!_descriptor)
-      exc = new AppExc(3, 'class_without_descriptor', 'Register', [clazz.name])
-    if (!exc && _descriptor.exc) exc = _descriptor.exc
-    if (!exc) {
-      Registry.constructors.set(_descriptor.fullName, clazz)
-      if ((clazz as any)['_manager'])
-        Registry.managers.add(clazz)
-    }
-    return exc
+  static register (clazz: Function, descriptor: Descriptor) : AppExc | undefined {
+    if (descriptor.exc) return descriptor.exc
+    this.constructors.set(descriptor.fullName, clazz)
+    const cl = clazz as any
+    descriptor.clazz = clazz
+    cl._descriptor = descriptor
+    return undefined
   }
 
   static registerSubClass (clazz: Function, parentClazz: Function, subCl: string) : AppExc | undefined {
-    let exc: AppExc | undefined
-    const _descriptor : Descriptor = (parentClazz as any)['_descriptor'] as Descriptor
-    if (!_descriptor)
-      exc = new AppExc(3, 'subclass_without_parent_descriptor', 'RegisterSubClass', [clazz.name])
-    if (!exc) {
-      const fullName = _descriptor.fullName + '/' + subCl
-      if (!Descriptor.isSubName(subCl))
-        exc = new AppExc(3, 'subclass_name_syntax', 'RegisterSubClass', [fullName])
-      if (!exc) {
-        clazz.prototype._parentClazz = parentClazz
-        clazz.prototype._subCl = subCl
-        Registry.constructors.set(fullName, clazz)
-        if ((clazz as any)['_manager']) {
-          (clazz as any)['_manager'] = subCl
-          Registry.managers.add(clazz)
-        }
-        const role: string | undefined = (clazz as any)['_role']
-        if (role) {
-          let s = Registry.credClassesbyRole.get(_descriptor.svc + '/' + subCl)
-          if (!s) { s = new Set(), Registry.credClassesbyRole.set(_descriptor.svc + '/' + subCl, s)}
-          s.add(clazz)
-        }
-      }
-    }
-    return exc
+    const pc = parentClazz as any
+    const d : Descriptor = (parentClazz as any)['_descriptor'] as Descriptor
+    if (!d)
+      return new AppExc(3, 'subclass_without_parent_descriptor', 'RegisterSubClass', [clazz.name])
+    d.subClasses.set(subCl, clazz)
+    const cl = clazz as any
+    cl._parentClazz = pc
+    cl._subCl = subCl
+    return undefined
   }
 
-  /* Retourne le ClassInfo,
-  - de la classe svc / docCl
-  - OU de la SOUS-CLASSE de svc / docCl selon la valeur de la propriété
-    de data qui donne le nom de la sous-classe
-  */
-  static getClassInfo (svc: string, docCl: string, data?: any ) : ClassInfo {
-    let clazz = Registry.constructors.get(svc + '/' + docCl)
-    if (!clazz)
-      throw new AppExc(3, 'class_not_found', 'Registry.getClassInfo(1)', [svc + '/' + docCl])
-    const descriptor = (clazz as any)['_descriptor']
-    if (!descriptor)
-      throw new AppExc(3, 'unregistered_class', 'Registry.getClassInfo(2)', [svc + '/' + docCl])
-    let subCl = ''
-    if (descriptor.subClassBy) {
-      subCl = data ? data[descriptor.subClassBy] : ''
-      if (!subCl)
-        throw new AppExc(3, 'subclass_property_value_not_found_in_data', 'Registry.getClassInfo(4)',
-          [svc + '/' + docCl + ' -- ' + descriptor.subClassBy])
-      clazz = Registry.constructors.get(svc + '/' + docCl + '/' + subCl)
-      if (!clazz)
-        throw new AppExc(3, 'subclass_not_found', 'Registry.getClassInfo(4)', [svc + '/' + docCl + '/' + subCl])
-    }
-    return new ClassInfo(svc, docCl, subCl, descriptor, clazz)
+  static getDescriptor (svc: string, docCl: string) : Descriptor {
+    const cl = this.constructors.get(svc + '/' + docCl) as any
+    const d = cl ? cl.descriptor || cl.parentClazz.descriptor : undefined
+    if (!d)
+      throw new AppExc(3, 'class_without_descriptor', 'getDescriptor', [svc + '/' + docCl])
+    return d
   }
 
   // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
-  static newD (svc: string, docCl: string, data?: Object ) : $ADocument {
-    const ci = Registry.getClassInfo(svc, docCl, data)
-    return ci.newD() as $ADocument
-  }
-
-  /* Retourne le set des noms des sous-classes ('subCl')
-  des classes de documents du svc donné et ayant pour docCl 'Credential' */
-  static managersOfSvc (svc: string) : Set<string> {
-    const s: Set<string> = new Set()
-    for(const clazz of Registry.managers) {
-      const d = (clazz as any)['_descriptor'] as Descriptor
-      if (d && d.svc === svc && d.docCl === 'Credential')
-        s.add((clazz as any)['_manager'])
+  static newD (svc: string, docCl: string, data?: any ) : $ADocument {
+    const d = this.getDescriptor(svc, docCl)
+    let cl: Function
+    if (d.subClassBy) {
+      const subCl = data ? data[d.subClassBy] : ''
+      if (!subCl)
+        throw new AppExc(3, 'subclass_id_not_found', 'newD', [svc + '/' + docCl, d.subClassBy])
+      cl = d.subClasses.get(subCl) as Function
+      if (!cl)
+        throw new AppExc(3, 'subclass_not-registered', 'newD', [svc + '/' + docCl, d.subClassBy, subCl])
+    } else {
+      cl = d.clazz
     }
-    return s
-  }
-
-  // TOCHECK - _manager est sur une subCl !!!!
-  static isManager (clazz: Function) : boolean {
-    return Registry.managers.has(clazz)
-  }
-  static isManager2 (svc: string, docCl: string) : boolean {
-    try {
-      const ci = Registry.getClassInfo(svc, docCl)
-      return  !ci.descriptor.isDoc ? false : Registry.managers.has(ci.clazz as Function)
-    } catch (e) {
-      return false
-    }
+    // @ts-expect-error
+    return new cl()
   }
 
   static async compile (svc: string, docCl: string, org: string, obj: any) : Promise<$Document>{
     const doc = Registry.newD(svc, docCl, obj) as $Document
     doc._org = org
-    doc._pk = doc._descriptor.pkValue(obj)
+    doc._pk = doc.descriptor.pkValue(obj)
     doc.v = obj['v']
     if (obj['deleted']) doc.deleted = true
     else {
@@ -190,8 +85,19 @@ export class Registry {
   }
 }
 
-export class $ADocument implements Described {
-  get _descriptor () : Descriptor { return (this.constructor as any)['_descriptor'] }
+export class $ADocument {
+  private static _descriptor: Descriptor
+  private static _subCl: string
+  private static _parentClazz: Function
+
+  static get descriptor () : Descriptor { return this._descriptor || (this._parentClazz as any)['_descriptor'] }
+  static get subCl () : string { return this._subCl || '' }
+  static get parentClazz() : Function | undefined { return this._parentClazz || undefined}
+
+  get descriptor () : Descriptor { return (this.constructor as any)['descriptor'] }
+  get subCl () : string { return (this.constructor as any)['subCl'] }
+  get parentClazz () : Function { return (this.constructor as any)['parentClazz'] }
+
 }
 
 export class $Document extends $ADocument{

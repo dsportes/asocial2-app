@@ -10,7 +10,6 @@ import { SafeOperation, MDOperation, Operation, AOperation } from '../src-fw/ope
 import { Crypt } from '../src-fw/crypt'
 import { IDBsafe, Trusting } from '../src-fw/idbsafe'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
-import { Registry, ClassInfo } from '../src-fw/registry'
 import { $Credential } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 import { GetCredProps, AutoRevokeCred } from '../src-fw/operations'
@@ -158,10 +157,10 @@ export type Auth = {
 export type Safe = {
   userId: string
   auth: Auth
-  devices: Object | null
-  creds: any | null
-  options: any | null
-  prefs: any | null // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
+  devices: any
+  creds: any
+  options: any
+  prefs: any // pour chaque application, liste des préférences déclarées (ordonnée par date d'utilisation)
 }
 
 export type ICVS = {
@@ -225,7 +224,7 @@ export const useSafeStore = defineStore('safe', () => {
   const userId: Ref<string> = ref('')
   const keyK: Ref<Uint8Array | undefined> = ref()
   const shKeyK = async () : Promise<string> => {
-    return await await Crypt.strongHash(keyK.value || '', false, false) as string
+    return await Crypt.strongHash(keyK.value || '', false, false) as string
   }
   const userName = computed(() => {
     if (!userId.value) return ''
@@ -252,14 +251,14 @@ export const useSafeStore = defineStore('safe', () => {
 
   /* Section "options": organisée avec un **objet par application**
   Seulement l'objet options de app */
-  const mySafeOptions: Ref<Object | undefined> = ref()
+  const mySafeOptions: Ref<any> = ref()
 
   const credsToCheck: Ref<string[]> = ref([])
 
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
     let y
-    try { y = await Crypt.decrypt(keyK.value, b) } catch (e) { return '' }
+    try { y = await Crypt.decrypt(keyK.value, b) } catch (e) { console.log(e); return '' }
     if (!y || y.length === 0) return ''
     return decoder.decode(y)
   }
@@ -269,7 +268,7 @@ export const useSafeStore = defineStore('safe', () => {
     if (!s || s.length === 0) return u8Empty
     const b = encoder.encode(s)
     let y
-    try { y = await Crypt.crypt(keyK.value, b) } catch (e) { return u8Empty }
+    try { y = await Crypt.crypt(keyK.value, b) } catch (e) { console.log(e); return u8Empty }
     return !y || y.length === 0 ? u8Empty : y
   }
 
@@ -346,13 +345,13 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['userId'] = userId.value
       op.args['shK'] = shK
       const res = await op.post()
-      const x = res['aas']
       aas = res['aas']
       if (!aas) return
     } catch (e: any) {
+      op.log(e)
       return
     }
-    const [hsha1, hsha2, store] = aas
+    const [hsha1, ] = aas
     const a = safe.auth.actual // jamais null
     const f = safe.auth.future // jamais null
     // @ts-expect-error
@@ -364,10 +363,11 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['actual'] = ac
       op.args['future'] = null
       op.args['nosafe'] = true
-      const res = await op.post()
+      await op.post()
       safe.auth.actual = ac
       safe.auth.future = null
     } catch (e: any) {
+      op.log(e)
       return
     }
   }
@@ -395,7 +395,7 @@ export const useSafeStore = defineStore('safe', () => {
           await op.ko(e)
         }
       } else {
-        const op3 = new AutoRevokeCred(cred.svc, cred.org)
+        new AutoRevokeCred(cred.svc, cred.org)
         await op.run(cred)
       }
     }
@@ -440,7 +440,7 @@ export const useSafeStore = defineStore('safe', () => {
   **************************************************************************************/
   const loadPrefs = async (safe: Safe) : Promise<void> => {
     const app = stores.config.K.APPNAME
-    const p = new Map<string, Object>() // clé: app
+    const p = new Map<string, any>() // clé: app
     if (safe.prefs) {
       const pr = safe.prefs[app]
       if (pr) {
@@ -460,7 +460,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Mise à jour des préférences */
-  const updatePrefs = async ( mprefs: Map<string, Object>) => {
+  const updatePrefs = async ( mprefs: Map<string, any>) => {
     let prefs : any | null = {}
 
     if (mprefs && mprefs.size)
@@ -499,7 +499,7 @@ export const useSafeStore = defineStore('safe', () => {
   }
 
   /* Mise à jour des options */
-  const setOptions = async (options: Object) => {
+  const setOptions = async (options: any) => {
 
     const so: SetOptions = {
       app: stores.config.K.APPNAME,
@@ -672,7 +672,7 @@ export const useSafeStore = defineStore('safe', () => {
   const managerCreds = () : Map<string, $Credential> => {
     const m = new Map()
     for (const [, c] of mySafeCreds.value)
-      if (Registry.isManager(c.svc, c.docCl)) m.set(c.credId, c)
+      if (stores.config.isManager(c.svc, c.docCl)) m.set(c.credId, c)
     return m
   }
 
@@ -680,10 +680,10 @@ export const useSafeStore = defineStore('safe', () => {
   a un credential. Si la liste n'est pas vide, l'utilisateur est un "manager"
   à au moins un titre.
   */
-  const isManager = (svc: string, org: string) : Set<string> => {
+  const isManager = () : Set<string> => {
     const s: Set<string> = new Set()
      for (const [,c] of mySafeCreds.value)
-      if (Registry.isManager(c.svc, c.docCl)) s.add(c.svc + '/' + c.docCl)
+      if (stores.config.isManager(c.svc, c.docCl)) s.add(c.svc + '/' + c.docCl)
     return s
   }
 
@@ -923,6 +923,7 @@ export const useSafeStore = defineStore('safe', () => {
         keyK.value = await Crypt.decrypt(x, keyFromB64(K)) || undefined
         await compileSafe(ret.safe)
       } catch (e: any) {
+        console.log(e)
         ret.status = 3
       }
     }
@@ -955,6 +956,7 @@ export const useSafeStore = defineStore('safe', () => {
     try {
       keyK.value = await Crypt.decrypt(pincxcy, keyFromB64(t.Kp)) || undefined
     } catch (e) {
+      console.log(e)
       return 8
     }
     const shK = await shKeyK()
@@ -983,14 +985,14 @@ export const useSafeStore = defineStore('safe', () => {
         keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K1)) || undefined
         userId.value = t.userId
         return 0
-      } catch (e) {  }
+      } catch (e) { console.log(e) }
     }
     if (t.K2) {
       try {
         keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K2)) || undefined
         userId.value = t.userId
         return 0
-      } catch (e) {  }
+      } catch (e) { console.log(e) }
     }
     return 1
   }
@@ -1022,7 +1024,7 @@ export const useSafeStore = defineStore('safe', () => {
       op.args['actual'] = ac
       op.args['future'] = fu
       op.args['nosafe'] = true
-      const res = await op.post()
+      await op.post()
       if (auth.value) {
         auth.value.actual = ac
         auth.value.future = fu
@@ -1034,13 +1036,12 @@ export const useSafeStore = defineStore('safe', () => {
 
     // phase 2: enregistre le futur dans MD
     op = new MDOperation('$mdUserSetAA')
-    let aas : string[] // [hsha1 hsha2 store]
     try {
       op.args['userId'] = userId.value
       op.args['shK'] = shK
       op.args['sha1'] = sha1
       op.args['sha2'] = sha2
-      const res = await op.post()
+      await op.post()
     } catch (e: any) {
       op.ko(e)
       return false // le safe est incertain
@@ -1238,7 +1239,7 @@ export const useSafeStore = defineStore('safe', () => {
     return ret.status
   }
 
-  const getSafe = async () : Promise<number | Object> => {
+  const getSafe = async () : Promise<number | any> => {
     const op = new SafeOperation('$GetSafe', mySafeStore.value)
     let ret
     try {

@@ -67,12 +67,12 @@ Events: close done
     </template>
   </dialog-std1>
 
-  <choose-it v-if="dialogs.backupCf" v-model="dialogs.backupCf" 
-    prefix="SFXcfex" options="pw" 
-    :args="[entryP.np, filename]" @giveup="backupCf(0)" @option="backupCf"/>
+  <choose-it v-if="dialogs.backupCf" v-model="dialogs.backupCf"
+    prefix="SFXcfex" options="pw"
+    :args="['' + entryP.np, filename]" @giveup="backupCf(0)" @option="backupCf"/>
 
-  <choose-it v-if="dialogs.importCf" v-model="dialogs.importCf" 
-    prefix="SFXcfimp" options="pw" 
+  <choose-it v-if="dialogs.importCf" v-model="dialogs.importCf"
+    prefix="SFXcfimp" options="pw"
     :args="[store || $t('SECsite_std'), alias]" @giveup="importCf(0)" @option="importCf"/>
 
 </div>
@@ -295,11 +295,11 @@ const importCf = async (n: number) => {
 
   const mdUser: MDuser = {
     userId: userId.value,
-    hshK: safe.value.auth.hshK, 
-    hsha1, 
+    hshK: safe.value.auth.hshK,
+    hsha1,
     hsha2: '',
-    C: safe.value.auth.C, 
-    V: safe.value.auth.D, 
+    C: safe.value.auth.C,
+    V: safe.value.auth.D,
     llq,
     store: store.value
   }

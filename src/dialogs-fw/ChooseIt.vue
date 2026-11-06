@@ -25,23 +25,23 @@
 </q-dialog>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts" vapor>
+import { ref, Ref } from 'vue'
 import { sty } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import SdNb from '../components-fw/SdNb.vue'
 
-const props = defineProps({
-  prefix: String,
-  args: Array,
-  options: String
-})
+const props = defineProps<{
+  prefix: string,
+  args?: Array<string>,
+  options: string
+}>()
 
-const model = defineModel()
+const model = defineModel<boolean>()
 
-const opts = ref(new Array(props.options ? props.options.length : 0))
-for(let i = 0; i < (props.options ? props.options.length : 0); i++) 
-  opts.value[i] = props.options.charAt(i) === 'w'
+const opts: Ref<boolean[]> = ref(new Array<boolean>())
+for(let i = 0; i < (props.options ? props.options.length : 0); i++)
+  opts.value.push(props.options.charAt(i) === 'w')
 
 const emit = defineEmits(['giveup', 'option'])
 

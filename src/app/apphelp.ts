@@ -11,21 +11,21 @@ import pages_struct_fr from '../assets/help/pages_struct_fr.md?raw'
 import panel_outils_fr from '../assets/help/panel_outils_fr.md?raw'
 import top_bar_fr from '../assets/help/top_bar_fr.md?raw'
 import top_bar$png from '../assets/help/top_bar.png'
-import incognito from '../assets/incognito_blanc.svg'
+// import incognito from '../assets/incognito_blanc.svg'
 
 export const readme = myreadme
 
-export const sources = { 
-  bientot_fr, 
-  bientot_en, 
-  boite_automaj_fr, 
-  defaut$png, 
+export const sources = {
+  bientot_fr,
+  bientot_en,
+  boite_automaj_fr,
+  defaut$png,
   dial_editeur_fr,
-  DOCpg_fr, 
-  pages_fr, 
-  pages_struct_fr, 
-  panel_outils_fr, 
-  top_bar_fr, 
+  DOCpg_fr,
+  pages_fr,
+  pages_struct_fr,
+  panel_outils_fr,
+  top_bar_fr,
   top_bar$png
 }
 

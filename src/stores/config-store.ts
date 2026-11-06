@@ -20,7 +20,7 @@ export const localeOptions: LocaleOption[] = [
   { value: 'en', label: 'English 🇬🇧',  flag: '🇬🇧' },
   { value: 'fr', label: 'Français 🇫🇷', flag: '🇫🇷', props: langFr }
 ]
-  
+
 type service = {
   url: string
   api: number
@@ -33,7 +33,7 @@ export const useConfigStore = defineStore('config', () => {
   // Gestion des langues ***************************************************
   const localeMap: Ref<Map<string, LocaleOption>> = ref(new Map())
   const locale: Ref<string> = ref('')
-  const setLocale = (loc: string) => { 
+  const setLocale = (loc: string) => {
     const x = localeMap.value.get(loc)
     if (x) {
       i18n.locale.value = loc
@@ -44,7 +44,7 @@ export const useConfigStore = defineStore('config', () => {
   const optionLocale = computed(() => localeMap.value.get(locale.value))
 
   const appname = ref('')
-  const services: Ref<Map<string, service>> = ref(new Map()) 
+  const services: Ref<Map<string, service>> = ref(new Map())
 
   const K = ref()
 
@@ -73,16 +73,25 @@ export const useConfigStore = defineStore('config', () => {
     console.log(Array.from(localeMap.value.values())[0]['label'])
   }
 
+  /*
+  const isManager = (svc: string, docCl: string) : boolean => {
+    const x = K.value.MANAGERS.get(svc)
+    return x !== undefined && (x.indexOf(docCl) !== -1)
+  }
+  */
+
   return {
-    location, K, initK, locale, optionLocale, setLocale, appname, services, localeMap
+    location, K, initK, locale, optionLocale, setLocale,
+    appname, services, localeMap,
+    // isManager
   }
 
 })
 
 /*
 https://pinia.vuejs.org/cookbook/hot-module-replacement.html
-Pinia supports Hot Module replacement so you can edit your stores 
-and interact with them directly in your app without reloading the page, 
+Pinia supports Hot Module replacement so you can edit your stores
+and interact with them directly in your app without reloading the page,
 allowing you to keep the existing state, add, or even remove state, actions, and getters.
 */
 if (import.meta.hot) {

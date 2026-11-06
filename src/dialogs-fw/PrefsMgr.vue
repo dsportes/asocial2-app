@@ -130,7 +130,7 @@ const coolTime = (code: string) : string => {
   return st[code] === 1 ? $t('HPprefs_new') : dhcool(p ? p.time : 0)
 }
 
-watch(() => sf.mySafePrefs, () => { 
+watch(() => sf.mySafePrefs, () => {
   init()
 })
 
@@ -142,7 +142,7 @@ const init = () => {
   }
 }
 
-watch(st, (v) => { 
+watch(st, (v) => {
   for(const code in v) if (v[code]) { ui.setEditing(); return }
   ui.resetEditing()
 })
@@ -152,7 +152,7 @@ const checkClose = async () => {
   if (b) {
     model.value = false
     emit('close', true)
-  } else 
+  } else
     model.value = true
 }
 
@@ -160,7 +160,7 @@ const selP: Ref<string> = ref('')
 const stc = computed(() => selP.value ? st[selP.value] : 0)
 
 const styl = ['', 'text-italic text-warning text-bold', 'text-warning text-bold', 'text-strike']
-const pSel = (code: string) => 
+const pSel = (code: string) =>
   (selP.value === code ? 'bord2w ' : 'bord2c ') + styl[st[code]] + ' '
 
 const selPref = (code: string) => {
@@ -239,7 +239,7 @@ const edValid = () => { // était 0, 1 ou 2
 }
 
 const validate = async () => {
-  const m = new Map<string, Object>()
+  const m = new Map<string, any>()
   for(const code in st) {
     const s = st[code]
     if (s !== 3) m.set(code, myPrefs.value.get(code))

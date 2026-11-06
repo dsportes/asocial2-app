@@ -3,7 +3,7 @@
 <q-layout container view="hHh lpR fFf" :class="sty()" :style="styc">
   <q-header>
     <q-toolbar :class="hdrclass ? hdrclass : 'tbs'" dense>
-      <btn-cond color="none" size="lg" icon="chevron_left" flat 
+      <btn-cond color="none" size="lg" icon="chevron_left" flat
         @ok="onClose"/>
       <q-toolbar-title class="titre-lg text-center q-mx-sm">{{title}}</q-toolbar-title>
       <slot name="btn"/>
@@ -32,7 +32,7 @@ import BtnBubble from '../components-fw/BtnBubble.vue'
 
 const props = defineProps<{
   vue?: string,
-  title: String, // titre de la top bar
+  title: string, // titre de la top bar
   help?: string,  // code de loa page d'aide s'il y en a une
   hdrclass?: string,
   noclose?: boolean,
@@ -44,7 +44,7 @@ const styc = ref('max-width: ' + wx[props.width || 'md'] + 'rem !important; widt
 const model = defineModel<boolean>()
 const emit = defineEmits(['close'])
 
-const onClose = () => { 
+const onClose = () => {
   if (!props.noclose) model.value = false
   emit('close', true)
 }
