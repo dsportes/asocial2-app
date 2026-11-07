@@ -1,9 +1,11 @@
 import stores from '../stores/all'
-import { Registry, ClassInfo } from '../src-fw/registry'
+import { Registry } from '../src-fw/registry'
+import { Descriptor } from '../src-fw/descriptor'
 import { Operation } from '../src-fw/operation'
 import { $Credential } from '../src-fw/documents'
 import { $ADocument, $Document } from '../src-fw/registry'
 import { getStore } from '../stores/docs'
+import { logexc } from '../src-fw/base'
 
 // Map par svc/org des périmètres identifiés par leur id
 export type $Perims = Map<string, Map<string, $Perimeter>>
@@ -39,12 +41,12 @@ export type $SubsObj = {
   url: string
   title: string
   defs: string[]
-  msgs: Object
+  msgs: any
 }
 
 export type $DefInfo = {
-  ci1: ClassInfo | undefined,
-  ci2: ClassInfo | undefined
+  ci1: Descriptor | undefined,
+  ci2: Descriptor | undefined
 }
 
 /* Classe immutable de définition d'un document ou d'une collection */
@@ -66,7 +68,7 @@ export class $Def {
 
   get isColl () { return this.type !== 1 }
   colClass (svc: string) : string{
-    const dd = Registry.getClassInfo(svc, this.docCl).descriptor
+    const dd = Registry.getDescriptor(svc, this.docCl)
     return this.colName ? dd.colClass(this.colName) : ''
   }
 
@@ -88,18 +90,17 @@ export class $Def {
   ci1 est undefined.
   */
   about (svc: string) : $DefInfo {
-    let ci1: ClassInfo | undefined, ci2: ClassInfo | undefined
+    let ci1: Descriptor | undefined, ci2: Descriptor | undefined
     try {
-      ci1 = Registry.getClassInfo(svc, this.docCl)
+      ci1 = Registry.getDescriptor(svc, this.docCl)
       if (ci1 && this.type === 2) {
-        const d = ci1.descriptor
-        const c = d.colls && d.colls.get(this.colName || '')
+        const c = ci1.colls && ci1.colls.get(this.colName || '')
         if (c)
-          try { ci2 = Registry.getClassInfo(svc, c.class) }
-          catch (e) { ci1 = undefined }
+          try { ci2 = Registry.getDescriptor(svc, c.class) }
+          catch (e: any) { logexc(e); ci1 = undefined }
         else ci1 = undefined
       }
-    } catch (e) {}
+    } catch (e: any) { logexc(e) }
     return { ci1, ci2 }
   }
 
@@ -161,7 +162,7 @@ export class $Perimeter {
 /* Classe immuable après construction / setDef - Souscription d'une organisation */
 export class $Subs extends $Document {
   title: string = '' // titre des notifications web-push
-  msgs: Object = {} // messages des définitions
+  msgs: any = {} // messages des définitions
   // { def: msg ... } - def: sa définition. msg: est un message ou ''
   url: string = '' // url de l'application à ouvrir par le terminal sur web-push
   defs: string[] = [] // définitions de la souscription
@@ -204,15 +205,15 @@ export class $Subs extends $Document {
       return false
     }
   }
-
 }
+
 
 export class $SubsGenerator extends $ADocument {
   subs!: $Subs
   svc: string = ''
   org: string = ''
   creds?: Map<string, $Credential>
-  pref?: Object
+  pref?: any
   roles: Set<string> = new Set()
 
   init (svc: string, org: string) {
@@ -227,7 +228,8 @@ export class $SubsGenerator extends $ADocument {
     }
     this.pref = session.currentPref || {}
 
-    this.subs = new $Subs()
+    this.subs = Registry.newD(svc, 'Subs') as $Subs
+    // this.subs = new $Subs()
     return this
   }
 
@@ -345,15 +347,14 @@ export class FW$Sync {
     } else return false
   }
 
-
-  async post () : Promise<[number, Object | null, string]> {
+  async post () : Promise<[number, any | null, string]> {
     try {
       for(const cred of this.creds)
         await this.op.sign(cred)
       const res = await this.op.post()
       const hbc = res.hbc
       return [res.now, res.syncs, hbc]
-    } catch (e) {
+    } catch (e: any) {
       await this.op.ko(e)
       return [0, null, '']
     }

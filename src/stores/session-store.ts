@@ -2,6 +2,7 @@ import { ref, computed, reactive, Ref, watch } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
 
 import stores from './all'
+import { logexc } from '../src-fw/base'
 import { urlFromText } from '../src-fw/util'
 import { onPushMsg } from '../stores/docs'
 import { getStore } from '../stores/docs'
@@ -52,8 +53,8 @@ export const useSessionStore = defineStore('session', () => {
           stores.session.onSwMessage(message.data)
         }
       }
-    } catch (e) {
-      console.log(e)
+    } catch (e: any) {
+      logexc(e)
     }
   }
 
@@ -407,8 +408,8 @@ export const useSessionStore = defineStore('session', () => {
       opDialog.value = true
       opCount()
       if (opTimer2) clearTimeout(opTimer2)
-    } catch(e) { // !!!!
-      console.log(e)
+    } catch(e: any) { // !!!!
+      logexc(e)
     }
   }
 

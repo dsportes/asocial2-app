@@ -12,6 +12,7 @@ import { IDBsafe, Trusting } from '../src-fw/idbsafe'
 import { keyToB64, keyFromB64 } from '../src-fw/b64'
 import { $Credential } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
+import { logexc } from '../src-fw/base'
 import { GetCredProps, AutoRevokeCred } from '../src-fw/operations'
 
 /*
@@ -258,7 +259,7 @@ export const useSafeStore = defineStore('safe', () => {
   const dcX = async (b: Uint8Array) : Promise<string> => {
     if (!b || b.length === 0) return ''
     let y
-    try { y = await Crypt.decrypt(keyK.value, b) } catch (e) { console.log(e); return '' }
+    try { y = await Crypt.decrypt(keyK.value, b) } catch (e: any) { logexc(e); return '' }
     if (!y || y.length === 0) return ''
     return decoder.decode(y)
   }
@@ -268,7 +269,7 @@ export const useSafeStore = defineStore('safe', () => {
     if (!s || s.length === 0) return u8Empty
     const b = encoder.encode(s)
     let y
-    try { y = await Crypt.crypt(keyK.value, b) } catch (e) { console.log(e); return u8Empty }
+    try { y = await Crypt.crypt(keyK.value, b) } catch (e: any) { logexc(e); return u8Empty }
     return !y || y.length === 0 ? u8Empty : y
   }
 
@@ -284,8 +285,8 @@ export const useSafeStore = defineStore('safe', () => {
     if (ret.status === 0)
       try {
         if (!nocomp) await compileSafe(ret.safe)
-      } catch (e) {
-        console.log(e)
+      } catch (e: any) {
+        logexc(e)
       }
     return ret.status
   }
@@ -348,7 +349,7 @@ export const useSafeStore = defineStore('safe', () => {
       aas = res['aas']
       if (!aas) return
     } catch (e: any) {
-      op.log(e)
+      logexc(e)
       return
     }
     const [hsha1, ] = aas
@@ -367,7 +368,7 @@ export const useSafeStore = defineStore('safe', () => {
       safe.auth.actual = ac
       safe.auth.future = null
     } catch (e: any) {
-      op.log(e)
+      logexc(e)
       return
     }
   }
@@ -543,8 +544,8 @@ export const useSafeStore = defineStore('safe', () => {
           m.set(c.credId, c)
           orgs.add(c.org)
         }
-      } catch (e) {
-        console.log(e)
+      } catch (e: any) {
+        logexc(e)
       }
     let chg = false
     if (nbLoads.value > 1) {
@@ -923,7 +924,7 @@ export const useSafeStore = defineStore('safe', () => {
         keyK.value = await Crypt.decrypt(x, keyFromB64(K)) || undefined
         await compileSafe(ret.safe)
       } catch (e: any) {
-        console.log(e)
+        logexc(e)
         ret.status = 3
       }
     }
@@ -955,8 +956,8 @@ export const useSafeStore = defineStore('safe', () => {
     const pincxcy: Uint8Array = await Crypt.strongHash(pin + '/' + t.cx + '/' + cy, false, true) as Uint8Array
     try {
       keyK.value = await Crypt.decrypt(pincxcy, keyFromB64(t.Kp)) || undefined
-    } catch (e) {
-      console.log(e)
+    } catch (e: any) {
+      logexc(e)
       return 8
     }
     const shK = await shKeyK()
@@ -985,14 +986,14 @@ export const useSafeStore = defineStore('safe', () => {
         keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K1)) || undefined
         userId.value = t.userId
         return 0
-      } catch (e) { console.log(e) }
+      } catch (e: any) { logexc(e) }
     }
     if (t.K2) {
       try {
         keyK.value = await Crypt.decrypt(shp, keyFromB64(t.K2)) || undefined
         userId.value = t.userId
         return 0
-      } catch (e) { console.log(e) }
+      } catch (e: any) { logexc(e) }
     }
     return 1
   }

@@ -8,7 +8,7 @@ import { Operation } from '../src-fw/operation'
 
 import { ADMIN$Status } from '../src-fw/fwdocuments'
 import { $Credential, EmbedCred } from '../src-fw/documents'
-import { $SubsGenerator, $Perimeter } from '../src-fw/subscription'
+import { $Subs, $SubsGenerator, $Perimeter } from '../src-fw/subscription'
 
 let n = 0, nf = 0, exc: AppExc | undefined
 
@@ -101,6 +101,11 @@ export class AS2$Auteur extends $Document {
 
 }
 if (!exc) { n++; exc = Registry.register(AS2$Auteur, d.AS2$Auteur) }
+
+/*********************************************************************************/
+export class AS2$Subs extends $Subs {
+}
+if (!exc) { n++; exc = Registry.register(AS2$Subs, d.AS2$Subs) }
 
 /*********************************************************************************/
 export class AS2$SubsGenerator extends $SubsGenerator {

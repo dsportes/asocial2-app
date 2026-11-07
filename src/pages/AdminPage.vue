@@ -105,7 +105,7 @@
     @giveup="confirmDS(0)"
     @option="confirmDS"/>
 
-  <div v-if="adp.tab === 'orgs'" class="pwmd">
+  <div v-if="adp.tab === 'orgs' && ui.adminPage.soa" class="pwmd">
     <status-site v-if="ui.adminPage.soa.site" v-model="ui.adminPage.soa" class="q-mt-md"/>
 
     <div v-if="ui.adminPage.soa.site" class="q-my-sm titre-md">
@@ -185,7 +185,7 @@ const dialogs = reactive({
 const adp = computed(() => ui.adminPage )
 const sites: Ref<Map<string, string>> = ref(new Map())
 const svcLabels : Ref<Map<string, string>> = ref(new Map())
-const edLabels = ref()
+const edLabels = ref('')
 const edLabelsAv = ref()
 const zctrl = ref(0)
 

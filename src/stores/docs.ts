@@ -16,7 +16,7 @@ import { keyFromB64 } from '../src-fw/b64'
 import { $Perimeter, $Def } from '../src-fw/subscription'
 import { $Document, Registry } from '../src-fw/registry'
 import { FW$Sync, $SubsGenerator } from '../src-fw/subscription'
-// import { AppExc } from '../src-fw/base'
+import { logexc } from '../src-fw/base'
 import { idb } from '../src-fw/idb'
 
 let _session: any = null
@@ -434,8 +434,8 @@ const useStore = (id: string) =>
       try {
         const row = decode(data) as Row
         return await Registry.compile(svc, docCl, org, row)
-      } catch (e) {
-        console.log(e)
+      } catch (e: any) {
+        logexc(e)
         return undefined
         // TODO
       }

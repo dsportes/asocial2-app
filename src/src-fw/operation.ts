@@ -1,7 +1,7 @@
 import { encode, decode } from '@msgpack/msgpack'
 
 import { $t, hasMessage } from '../src-fw/util'
-import { AppExc, CodeLabel } from './base'
+import { AppExc, CodeLabel, logexc } from './base'
 import { Descriptor } from '../src-fw/descriptor'
 
 import stores from '../stores/all'
@@ -275,10 +275,6 @@ export class AOperation {
     await stores.ui.displayExc(e)
   }
 
-  log (e: any) {
-    console.log(e.toString())
-  }
-
   setArgs (args: any) {
     for(const p of Object.keys(args)) this.args[p] = args[p]
   }
@@ -424,8 +420,8 @@ export const services = async (site: string) : Promise<{at: number, services: st
   try {
     const res = await op.post()
     return res
-  } catch(e) {
-    op.log(e)
+  } catch(e: any) {
+    logexc(e)
     return null
   }
 }
@@ -458,7 +454,7 @@ export const getSiteStatus = async (site: string, svc: string)
     const res = await op.post()
     return res['status']
   } catch(e) {
-    op.log(e)
+    logexc(e)
     await stores.ui.diagDisplay($t('site_err'))
     return { st: 0, at: 0, txt: '' }
   }
@@ -557,7 +553,7 @@ export const pingStore = async (store: string) : Promise<boolean> => {
     const ret = await op.post()
     return ret['pingstore'] || false
   } catch(e) {
-    op.log(e)
+    logexc(e)
     return false
   }
 }
@@ -675,7 +671,7 @@ export async function checkStatus (orgRoles: string[])
         }
       }
     } catch (e) {
-      op.log(e)
+      logexc(e)
       status[site]['$ST$'] = 0
       allOK = false
     }

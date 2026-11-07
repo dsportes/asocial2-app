@@ -79,12 +79,13 @@ Events: close done
 </template>
 
 <script setup lang="ts" vapor>
-import { ref, Ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, Ref, reactive, onMounted, watch } from 'vue'
 import { encode, decode } from '@msgpack/msgpack'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 
 import stores from '../stores/all'
+import { logexc } from '../src-fw/base'
 import { Auth, MDuser } from '../stores/safe-store'
 import { Crypt } from '../src-fw/crypt'
 import { $t, quarter, readFile } from '../src-fw/util'
@@ -194,8 +195,8 @@ watch(fileList, async (file: any) : Promise<void> => {
   if (file) try {
     fd.value = await readFile(file, true)
     console.log(fd.value.size)
-  } catch (e) {
-    console.log(e)
+  } catch (e: any) {
+    logexc(e)
     fd.value = null
     await ui.diagDisplay($t('SFXimpsafe_ko1'))
   }

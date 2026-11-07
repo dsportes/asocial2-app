@@ -1,4 +1,4 @@
-import { encode } from '@msgpack/msgpack'
+// import { encode } from '@msgpack/msgpack'
 import { Descriptor } from '../src-fw/descriptor'
 import { AppExc } from './base'
 
@@ -29,26 +29,32 @@ export class Registry {
 
   static getDescriptor (svc: string, docCl: string) : Descriptor {
     const cl = this.constructors.get(svc + '/' + docCl) as any
-    const d = cl ? cl.descriptor || cl.parentClazz.descriptor : undefined
+    if (!cl)
+      throw new AppExc(3, 'class_without_descriptor', 'getDescriptor', [svc + '/' + docCl])
+    let d = cl.descriptor
+    if (!d && cl.parentClazz) d = cl.parentClazz.descriptor
     if (!d)
       throw new AppExc(3, 'class_without_descriptor', 'getDescriptor', [svc + '/' + docCl])
     return d
   }
 
-  // Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
+  /* Construit un document de la SOUS-CLASSE de docCl selon la valeur de son data
+  Si des sous-classes sont prévues (subClassBy existe), la valeur de
+  cette sous-classe doit exister par exemple 'sc1':
+  - si une sous-classe correspondante c_sc1 a bien été enregistrée, c'est elle qui est instantiée.
+  - sinon c'est la classe "parent" c, qui est instantiée,
+    elle traite le cas 'sc1' sans avoir besoin d'une sous-classe spécifique.
+  */
   static newD (svc: string, docCl: string, data?: any ) : $ADocument {
     const d = this.getDescriptor(svc, docCl)
-    let cl: Function
+    let cl: Function | undefined = undefined
     if (d.subClassBy) {
       const subCl = data ? data[d.subClassBy] : ''
       if (!subCl)
         throw new AppExc(3, 'subclass_id_not_found', 'newD', [svc + '/' + docCl, d.subClassBy])
       cl = d.subClasses.get(subCl) as Function
-      if (!cl)
-        throw new AppExc(3, 'subclass_not-registered', 'newD', [svc + '/' + docCl, d.subClassBy, subCl])
-    } else {
-      cl = d.clazz
     }
+    if (!cl) cl = d.clazz
     // @ts-expect-error
     return new cl()
   }
@@ -108,6 +114,7 @@ export class $Document extends $ADocument{
 
   async compile() { }
 
+  /*
   serial () : Uint8Array {
     const obj: any = {}
     if (!this.deleted) for(const p of Object.keys(this))
@@ -117,5 +124,6 @@ export class $Document extends $ADocument{
     obj._pk = this._pk
     return encode(obj)
   }
+  */
 
 }

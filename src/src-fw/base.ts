@@ -6,6 +6,14 @@ export type SOA = {
   admin? : boolean
 }
 
+let myDebug: boolean = false
+export function setMyDebug (_myDebug: boolean) {
+  myDebug = _myDebug }
+
+export function logexc (e: any) {
+  if (myDebug) console.error(e)
+}
+
 export type LocaleOption = { value: string, label: string, flag: string, props?: any }
 
 export type CodeLabel = [string, string]

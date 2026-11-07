@@ -244,7 +244,10 @@ export class Descriptor {
     if (dhdr) {
       this.isDoc = true
       if (dhdr.virtual) this.virtual = true
-      if (dhdr.pk) this.checkProps(dhdr.pk)
+      if (dhdr.pk) {
+        this.checkProps(dhdr.pk)
+        this.pk = dhdr.pk
+      }
       if (dhdr.nohash) this.nohash = true
       if (dhdr.subClassBy) {
         if (!Descriptor.isVarName(dhdr.subClassBy))

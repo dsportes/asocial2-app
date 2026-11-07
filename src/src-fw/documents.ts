@@ -72,7 +72,7 @@ export class $CredTempl {
 
 }
 
-export abstract class BasicCred {
+export abstract class BasicCred extends $Document {
   credId: string = ''
   props: any
   docCl: string = ''
@@ -170,7 +170,6 @@ export class $Credential extends BasicCred {
   /* Factory similaire au constructor
   mais créé la sous-classe correspondant à docCl */
   static new (obj: any): $Credential {
-    // @ts-expect-error
     const c = Registry.newD(obj.svc, 'Credential', obj) as $Credential
     for (const p of $Credential.lp1) (c as any)[p] = obj[p] || null
     if (!c.credId) c.credId = Crypt.rnd(15)
@@ -179,11 +178,13 @@ export class $Credential extends BasicCred {
 
   get limit () { return this.props && this.props.limit ? this.props.limit : 0 }
 
+  /*
   get serial () : Uint8Array {
     const obj: any = {}
     for (const p of $Credential.lp1) obj[p] = (this as any)[p] || null
     return encode(obj)
   }
+  */
 
   get hasDispProps () { return false }
 

@@ -1,5 +1,6 @@
 import { ref, Ref, computed } from 'vue'
 import { defineStore, acceptHMRUpdate } from 'pinia'
+import { setMyDebug } from '../src-fw/base'
 
 import { useI18n } from 'vue-i18n'
 import { Lang } from 'quasar'
@@ -51,7 +52,8 @@ export const useConfigStore = defineStore('config', () => {
   const initK = () => {
     i18n = useI18n()
     location.value = window.location['href']
-    K.value = { ...AppK}
+    K.value = { ...AppK }
+    setMyDebug(K.value.myDebug)
     const custom = JSON.parse(customR)
     for(const f in custom) K.value[f] = custom[f]
 

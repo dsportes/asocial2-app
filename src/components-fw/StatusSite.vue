@@ -1,5 +1,5 @@
 <template>
-<div v-if="status !== null" class="row justify-between">
+<div v-if="status" class="row justify-between">
   <btn-cond class="col-auto q-pr-sm" round icon="refresh" @ok="setStatus"/>
   <div class="col">
     <div>{{$t('svcStatus_now', [dhcool(status.now || 0)])}}</div>
@@ -7,7 +7,7 @@
       {{$t('svcStatus_' + status.st, [dhcool(status.at)])}}</div>
     <div>{{status.txt || $t('nocomment')}}</div>
 
-    <q-expansion-item v-model="setstat" v-if="so && so.site && so.admin" 
+    <q-expansion-item v-model="setstat" v-if="so && so.site && so.admin"
       class="q-my-sm tbs" switch-toggle-side dense>
       <template v-slot:header>
         <div class="row justify-between full-width">
@@ -63,12 +63,12 @@ const updStatus = async (st: number) => {
   }
 }
 
-onMounted(async () => { 
-  await setStatus() 
+onMounted(async () => {
+  await setStatus()
 })
 
-watch(() => so.value, async (v) => { 
-  await setStatus() 
+watch(() => so.value, async (v) => {
+  await setStatus()
 })
 </script>
 

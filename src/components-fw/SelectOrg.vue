@@ -15,11 +15,11 @@ import InputA from '../components-fw/InputA.vue'
 const session = stores.session
 const lst: Ref<string[]> = computed(() => session.orgs.lst)
 
-const local = defineModel<string>('')
+const local = defineModel<string>()
 const props = defineProps<{
   reset?: number,
   initval?: string, // Valeur initiale, si '?' force à ''
-  /* objet permettant à l'appelant de situer l'instance du composant 
+  /* objet permettant à l'appelant de situer l'instance du composant
   ayant émis l'événement. */
   ctx?: any
 }>()
@@ -50,7 +50,7 @@ const init = () => {
     emit('select', local.value, props.ctx || null)
 }
 
-watch(() => [props.initval, props.ctx, props.reset], () => 
+watch(() => [props.initval, props.ctx, props.reset], () =>
   init() )
 
 init()

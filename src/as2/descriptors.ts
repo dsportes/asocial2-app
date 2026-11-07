@@ -4,9 +4,9 @@ Descriptor.registerService('AS2')
 
 export default {
   AS2$Status : Descriptor.doc('AS2', 'Status', { nohash: true }),
-  AS2$Subs : Descriptor.doc('AS2', 'Subs', 
+  AS2$Subs : Descriptor.doc('AS2', 'Subs',
     { pk: ['sessionId'], nohash: true },
-    undefined, 
+    undefined,
     new Map<string, idx>([['defs', { type: propType.LIST}]])
   ),
   AS2$Credential: Descriptor.doc('AS2', 'Credential',
@@ -25,7 +25,7 @@ export default {
   ),
   AS2$Section:  Descriptor.enum('AS2', 'Section', { enumCred: 'Redaction' }),
   AS2$Sujet : Descriptor.enum('AS2', 'Sujet', { enumCred: 'CoDir' }),
-  AS2$Auteur: Descriptor.doc('AS2', 'Auteur', 
+  AS2$Auteur: Descriptor.doc('AS2', 'Auteur',
     { pk: ['autid'], sync: true, embedCreds: true },
     new Map<string, collection>([
       ['section',  { key: ['section'], mutable: true, class: 'Section' }]
@@ -34,7 +34,7 @@ export default {
       ['nom',  { type: propType.STRING, key: ['nomAuteur'], testable: true }]
     ])
   ),
-  AS2$Publication : Descriptor.doc('AS2', 'Publication', 
+  AS2$Publication : Descriptor.doc('AS2', 'Publication',
     { pk: ['pubid'], sync: true },
     new Map<string, collection>([
       ['sujets',  { key: ['sujets'], list: true, mutable: true, class: 'Sujet' }],

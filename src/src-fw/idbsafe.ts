@@ -4,7 +4,7 @@ import { encode, decode } from '@msgpack/msgpack'
 import { useSafeStore } from '../stores/safe-store'
 import { useConfigStore } from '../stores/config-store'
 import { deleteIDB } from '../src-fw/idb'
-import { AppExc } from './base'
+import { AppExc, logexc } from './base'
 
 class DbHeader {
   id!: string
@@ -85,8 +85,8 @@ export class IDBsafe {
           const obj = decode(r.bin) as any
           const t : Trusting = new Trusting(obj)
           m.set(t.userId, t)
-        } catch (e) {
-          console.log(e)
+        } catch (e: any) {
+          logexc(e)
         }
       })
       safeBox.trustings = m
