@@ -20,10 +20,10 @@
 
       <template v-slot:after>
         <div v-if="!session.planeMode && aut.a" class="q-pa-xs">
-          <div class="row justify-end">
+          <!--div class="row justify-end">
             <btn-cond :label="$t('validate')" icon="check" confirm @ok="majAut"
               v-if="aut.newSection !== aut.a.section || aut.newNa !== aut.a.nomAuteur"/>
-          </div>
+          </div-->
 
           <div class="row items-center q-gutter-md">
             <div class="titre-md text-italic col-auto">{{ $t('CODIRsa') }}</div>
@@ -40,7 +40,7 @@
             <div class="font-mono">{{ aut.a.nomAuteur }}</div>
           </div>
           <line-edit :text="aut.newNa" @change="majNa" class="q-ml-lg"
-            datasize="auteur" width="sm"/>
+            datasize="auteur" width="sm" confirm/>
 
           <div class="titre-md text-italic q-mt-sm">{{ $t('CODIRcreds') }}</div>
           <div v-for="([, c], idx) in aut.a.creds" :key="c.credId"
@@ -99,15 +99,18 @@ const docPk = ref()
 // @ts-expect-error
 const curcred: Ref<BasicCred> = ref()
 
-const selAut = async (a: AS2$Auteur | null) => {
-  if (a) aut.a = a
+const selAut = async (a: AS2$Auteur | undefined) => {
+  aut.a = a
   aut.newSection = a ? a.section : ''
   aut.newNa = a ? a.nomAuteur : ''
   if (a)
     aut.edv = await DocEnums.label('AS2', 'Section', ui.appPage.org, aut.a ? aut.a.section : '')
 }
 
-const majNa = (n: string) => { aut.newNa = n }
+const majNa = async (n: string) => {
+  aut.newNa = n
+  await majAut()
+}
 const majSection = async (n: string) => {
   aut.newSection = n
   await majAut()
@@ -119,9 +122,16 @@ const cred: Ref<$Credential> = computed(() => {
 })
 
 const listeAuteurs = async () => {
-  await selAut(null)
+  const idav = aut.a ? aut.a.autid : ''
+  await selAut(undefined)
   if (!ui.appPage.org || !ui.appPage.section || session.planeMode) return
   auteurs.value = await AS2$Auteur.listeParSection(ui.appPage.org, ui.appPage.section, cred.value)
+  for(const a of auteurs.value) {
+    if (a.autid === idav) {
+      await selAut(a)
+      break
+    }
+  }
 }
 
 watch(() => [ui.appPage.org, ui.appPage.count], async () => {
@@ -136,12 +146,9 @@ const majAut = async () => {
   if (aut.newSection) op.args.section = aut.newSection
   await op.sign(cred.value)
   try {
-    console.log('majaut1')
     const res = await op.post()
-    console.log('majaut2')
     if (res.status)
       await ui.diagDisplay($t('AUTko_' + res.status))
-    await selAut(null)
     await listeAuteurs()
   } catch (e) {
     await op.ko(e)

@@ -55,11 +55,13 @@ watch(() => ui.appPage.section, (v) => {
   ui.trigPage()
 })
 
+/*
 const selSection = (t: string) => {
   const iv = ui.appPage.section
   ui.appPage.section = t
   ui.trigPage()
 }
+*/
 
 const init = () => {
   ui.appPage.org = ''

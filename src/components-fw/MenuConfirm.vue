@@ -10,7 +10,7 @@
       </div>
       <q-input class="font-mono fs-lg" style="width:60px;"
         dense standout v-model="text" placeholder="000"/>
-      <q-btn class="q-mt-sm" flat color="primary" 
+      <q-btn class="q-mt-sm" flat color="primary"
         :label="$t('giveup')" @click="m = false;  emit('confirm', false)"/>
     </div>
   </q-menu>
@@ -20,7 +20,7 @@
 import { ref, watch } from 'vue'
 import { $t } from '../src-fw/util'
 
-const code = defineModel()
+const code = defineModel<string>()
 
 const m = ref(true)
 

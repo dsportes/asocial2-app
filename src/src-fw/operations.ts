@@ -72,7 +72,7 @@ export class ListManagers extends Operation {
 export class UpdateCredential extends Operation {
   constructor (svc: string, org: string) { super('UpdateCredential', svc, org) }
 
-  async run (credId: string, docCl: string, docPk: string, props: Object) {
+  async run (credId: string, docCl: string, docPk: string, props: any) {
     try {
       this.setArgs({ credId, docCl, docPk, props } )
       const res = await this.post()

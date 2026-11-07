@@ -124,7 +124,7 @@
     </div>
   </div>
 
-  <div v-if="ui.adminPage.tab === 'managers' && ui.adminPage.soa.svc && ui.adminPage.soa.org" class="pwmd">
+  <div v-if="ui.adminPage.tab === 'managers' && ui.adminPage.soa && ui.adminPage.soa.svc && ui.adminPage.soa.org" class="pwmd">
     <div v-if="!lstMgr.length" class="titre_md text-italic">{{ $t('APnomanagers') }}</div>
 
     <div v-else class="q-my-xs" v-for="(m, idx) in lstMgr" :key="m.credId" :class="dkli(idx)">

@@ -1,5 +1,5 @@
 <template>
-<dialog-std0 v-model="model" @close="checkClose"
+<dialog-std0 v-model="model" @close="checkClose" noclose
   :title="title" vh="80"
   :help="$t('ENUMtit_bub')">
   <template #btn>
@@ -69,16 +69,17 @@ const props = defineProps<{
 const checkClose = async () => {
   const b = await ui.mayClose()
   if (b) {
+    ui.resetEditing()
     model.value = false
     emit('close', true)
-  } else
-    model.value = true
+  }
 }
+
 type Tlst = [number, string, string] // index, code, label
 
 const edv = ([c, l]: CodeLabel) : Tlst => {
   const lbl: string = hasMessage('ENUM_' + props.svc + '$' + props.name + '_' + c)
-  return [0, l, lbl || l] as Tlst
+  return [0, c, lbl || l] as Tlst
 }
 
 const lst: Ref<Tlst[]> = ref([])
@@ -142,6 +143,7 @@ const valEnum = async () => {
     if (t[1] && t[2]) l.push([t[1], t[2]])
   await DocEnums.set(props.svc, props.name, l, props.org)
   await init1()
+  emit('done')
 }
 const undoEnum = () => {
   lst.value = [...lst0.value]

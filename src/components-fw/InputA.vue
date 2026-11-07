@@ -51,7 +51,6 @@ import stores from '../stores/all'
 import { $t, hasMessage } from '../src-fw/util'
 import BtnCond from '../components-fw/BtnCond.vue'
 import BtnBubble from '../components-fw/BtnBubble.vue'
-import { S } from 'vue-router/dist/options-B1Pk0SIa.mjs'
 
 const ui = stores.ui
 const config = stores.config

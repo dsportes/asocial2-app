@@ -67,16 +67,16 @@
           <btn-cond icon="open_in_new" @ok="ui.appPage.tab = 'pubs'"
             size="lg" flat style="position:absolute;right:0;top:0" />
           <div class="fs-xs font-mono">{{ aut.autid }}</div>
-
           <div class="row">
             <div class="col-5 row items-center q-gutter-xs">
               <span class="text-italic">{{ $t('AUTna_label') }}</span>
               <btn-bubble :text="$t('AUTna_bub')"/>
             </div>
             <div class="col-7 q-pl-sm font-mono">
-              <line-edit :text="aut.nomAuteur" @change="majAut"
+              <line-edit :text="aut.nomAuteur"
                 datasize="auteur" width="md"
-                :disable="session.planeMode"/>
+                :disable="session.planeMode"
+                @change="majAut"/>
             </div>
           </div>
           <div class="row">
@@ -129,7 +129,7 @@
 <script setup lang="ts" vapor>
 import { ref, Ref, computed, onMounted, watch, reactive } from 'vue'
 import stores from '../stores/all'
-import { $Credential, $Cred } from '../src-fw/documents'
+import { $Credential } from '../src-fw/documents'
 import { $Perimeter } from '../src-fw/subscription'
 import { $t, sty, dhcool, dkli } from '../src-fw/util'
 import { Crypt } from '../src-fw/crypt'

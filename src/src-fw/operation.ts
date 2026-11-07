@@ -56,8 +56,7 @@ export class DocEnums {
   */
   static async get (svc: string, enumName: string, org: string) : Promise<CodeLabel[]> {
     const d = Descriptor.getEnumDescriptor(svc, enumName)
-    if (d) return []
-    // @ts-expect-error
+    if (!d) return []
     const dd = d as Descriptor
     if (dd.enum && dd.enum.length) return dd.enum
     // enum externe -
@@ -96,8 +95,7 @@ export class DocEnums {
     : Promise<boolean> {
     const sf = stores.safe
     const d = Descriptor.getEnumDescriptor(svc, enumName)
-    if (d) return false
-    // @ts-expect-error
+    if (!d) return false
     const dd = d as Descriptor
     if (dd.enum && dd.enum.length) return false
     // enum externe -
