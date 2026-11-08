@@ -3,6 +3,11 @@
 
 import { defineConfig } from '#q-app'
 
+/* Ce plugin permet d'invoquer la page depuis un sous-folder
+et pas seulement depuis la racine du site:
+https://.../sousite/index.html
+Sans ce plugin il doit être invoqué par https://.../index.html
+*/
 const htmlPlugin = () => {
   return {
     name: 'html-transform',
@@ -50,7 +55,7 @@ export default defineConfig((ctx) => {
         browser: [ 'es2022', 'firefox115', 'chrome115', 'safari14' ],
         node: 'node20'
       },
-      
+
       vueRouterMode: 'hash', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
@@ -83,7 +88,7 @@ export default defineConfig((ctx) => {
           // assetsInclude: ['**/*.gltf'],
           assetsInclude: ['./assets/*.*'],
         }
-      }, 
+      },
 
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
@@ -97,7 +102,7 @@ export default defineConfig((ctx) => {
             ssr: ctx.mode.ssr || ctx.mode.ssg,
 
             // you need to set i18n resource including paths !
-            include: [ctx.appPaths.resolve.app("src/i18n")]        
+            include: [ctx.appPaths.resolve.app("src/i18n")]
         }],
         [htmlPlugin, {}]
       ]
