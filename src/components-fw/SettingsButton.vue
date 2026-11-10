@@ -388,9 +388,8 @@ import { useI18n } from 'vue-i18n'
 import { encode, decode } from '@msgpack/msgpack'
 
 import stores from '../stores/all'
-import { SOA } from '../src-fw/registry'
 import { LocPref } from '../stores/safe-store'
-import { LocaleOption } from '../src-fw/base'
+import { LocaleOption, SOA } from '../src-fw/base'
 import { Crypt, toPem } from '../src-fw/crypt'
 import { $t, sty, reloadPage, dhcool, coolBye } from '../src-fw/util'
 import { keyToB64 } from '../src-fw/b64'
@@ -427,7 +426,7 @@ const dialogs: any = reactive({
 
 let so: SOA = reactive({ svc: '',  org: '', svcLabel: '', site: '', admin: false })
 
-const surl = computed(() => 
+const surl = computed(() =>
   AOperation.urls.get(so.site || '') || '?')
 const usid = ref('')
 const genId = () => {
@@ -470,7 +469,7 @@ watch(tab, (t) => {
   if (t === 'hot') resetHot()
 })
 
-const cl = (lg: LocaleOption) => 
+const cl = (lg: LocaleOption) =>
   config.optionLocale.value === lg.value ? 'disabled' : ''
 
 const choix = (lg: LocaleOption) : void => {
